@@ -1,3 +1,18 @@
+/**
+ * @module images
+ *
+ * @remarks
+ * Este módulo expone una ruta para servir imágenes directamente desde el almacenamiento de Supabase,
+ * construyendo la URL de acceso público a partir de la ruta solicitada por el usuario.
+ *
+ * Sí, es una cochinada: estamos haciendo proxy de archivos estáticos a través de la API, lo cual no es óptimo
+ * ni recomendable para producción (por temas de performance, escalabilidad y costos).
+ *
+ * @reason
+ * Sin embargo, esta solución es necesaria para poder controlar los encabezados de caché y CORS,
+ * y para poder servir imágenes de buckets públicos sin exponer directamente la URL de Supabase al cliente.
+ * Además, permite centralizar la lógica de acceso y autenticación si en el futuro se requiere proteger ciertos recursos.
+ */
 import { Hono } from "hono";
 import type { Bindings, Variables } from "../bindings";
 
@@ -19,13 +34,7 @@ images.get("/*", async (c) => {
     return c.text("Internal Server Error", 500);
   }
 
-  // Construct the full URL to the Supabase storage
-  // Assuming the path includes the bucket name and the file path
-  // e.g. /images/products/gpu/rtx-3080.jpg -> https://project.supabase.co/storage/v1/object/public/products/gpu/rtx-3080.jpg
-
-  // We need to be careful about how the path is passed.
-  // If the user requests /images/my-bucket/my-image.jpg
-  // We want to fetch ${supabaseUrl}/storage/v1/object/public/my-bucket/my-image.jpg
+  // Construye la URL pública al archivo en Supabase Storage usando la ruta solicitada.
 
   const storageUrl = `${supabaseUrl}/storage/v1/object/public/${path}`;
 
@@ -37,7 +46,7 @@ images.get("/*", async (c) => {
     }
 
     const newHeaders = new Headers(response.headers);
-    // Set cache control headers to cache images at the edge
+    // Configurar encabezados de caché y CORS adecuados para las imágenes
     newHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
     newHeaders.set("Access-Control-Allow-Origin", "*");
 

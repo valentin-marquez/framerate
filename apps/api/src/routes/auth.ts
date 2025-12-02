@@ -5,13 +5,12 @@ import { authMiddleware } from "../middleware/auth";
 
 const auth = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// Apply middleware to all routes in this group
+// Aplica el middleware a todas las rutas en este grupo
 auth.use("*", authMiddleware);
 
-// GET /auth/me
-// Returns the current user's profile
+// Devuelve el perfil del usuario actual
 auth.get("/me", async (c) => {
-  const user = c.get("user"); // Set by middleware
+  const user = c.get("user"); // Obtener el usuario del contexto
   const supabase = createSupabaseClient(c.env);
 
   const { data: profile, error } = await supabase

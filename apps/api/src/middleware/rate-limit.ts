@@ -1,25 +1,29 @@
+import { WorkersKVStore } from "@hono-rate-limiter/cloudflare";
 import type { Context, Next } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
+import type { Bindings, Variables } from "../bindings";
 import { Logger } from "../lib/logger";
 
 const logger = new Logger("RateLimit");
 
-// In Cloudflare Workers, we can use a simple in-memory store for rate limiting per isolate
-// For distributed consistency, we would need KV or Durable Objects, but this is a good start
-// to prevent massive abuse from a single connection.
+type AppEnv = { Bindings: Bindings; Variables: Variables };
 
-export const apiRateLimiter = rateLimiter({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  standardHeaders: "draft-6", // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-  keyGenerator: (c: Context) => {
-    // Cloudflare specific header for client IP
-    const ip = c.req.header("CF-Connecting-IP") || "unknown";
-    return ip;
-  },
-  handler: (c: Context, _next: Next) => {
-    const ip = c.req.header("CF-Connecting-IP") || "unknown";
-    logger.warn(`Rate limit exceeded for IP: ${ip}`);
-    return c.json({ error: "Too many requests, please try again later." }, 429);
-  },
-});
+/**
+ * Crea un middleware de limitación de tasa utilizando Cloudflare WorkersKV.
+ * Debe ser llamado dentro de un manejador de solicitudes para acceder a los bindings.
+ */
+export function createApiRateLimiter() {
+  return (c: Context<AppEnv>, next: Next) =>
+    rateLimiter<AppEnv>({
+      windowMs: 15 * 60 * 1000, // 15 minutes el calculo es: 15 minutos * 60 segundos * 1000 milisegundos
+      limit: 100, // limitar a 100 solicitudes por ventana por IP
+      standardHeaders: "draft-6",
+      keyGenerator: (c) => c.req.header("cf-connecting-ip") ?? "unknown",
+      store: new WorkersKVStore({ namespace: c.env.RATE_LIMIT_KV as KVNamespace }),
+      handler: (c: Context) => {
+        const ip = c.req.header("cf-connecting-ip") ?? "unknown";
+        logger.warn(`Rate limit exceeded for IP: ${ip}`);
+        return c.json({ error: "Too many requests, please try again later." }, 429);
+      },
+    })(c, next);
+}

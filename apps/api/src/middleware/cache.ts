@@ -2,21 +2,22 @@ import type { MiddlewareHandler } from "hono";
 import { cache as honoCache } from "hono/cache";
 
 /**
- * Wrapper around hono/cache that only enables caching if the Cache API is available.
- * This prevents "Cache Middleware is not enabled because caches is not defined" warnings
- * during local development with Bun.
+ * Envoltura alrededor de hono/cache que solo habilita el almacenamiento en caché
+ * si la API de Cache está disponible. Esto previene las advertencias
+ * "Cache Middleware is not enabled because caches is not defined"
+ * durante el desarrollo local con Bun.
  */
 export const cache = (options: {
   cacheName: string;
   cacheControl: string;
   wait?: boolean;
 }): MiddlewareHandler => {
-  // Check if the Cache API is available (Cloudflare Workers)
+  // Verifica si la API de Cache está disponible (Cloudflare Workers)
   if (typeof caches !== "undefined") {
     return honoCache(options);
   }
 
-  // If not available (e.g. local Bun), just proceed
+  // si no está disponible, devuelve un middleware vacío
   return async (_c, next) => {
     await next();
   };

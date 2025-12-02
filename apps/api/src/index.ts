@@ -1,21 +1,20 @@
-import { findAvailablePort } from "@framerate/utils";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import type { Bindings, Variables } from "./bindings";
 import { Logger } from "./lib/logger";
-import { apiRateLimiter } from "./middleware/rate-limit";
+import { createApiRateLimiter } from "./middleware/rate-limit";
 import { routes } from "./routes";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 const logger = new Logger("API");
 
 // Middleware
-app.use("*", secureHeaders()); // Add security headers (X-XSS-Protection, etc.)
+app.use("*", secureHeaders());
 app.use(
   "*",
   cors({
-    origin: ["https://framerate.cl", "http://localhost:3000"], // Restrict to your domains
+    origin: ["https://framerate.cl", "http://localhost:3000"],
     allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Length"],
@@ -31,26 +30,21 @@ app.use("*", async (c, next) => {
   logger.http(`${c.req.method} ${c.req.path} - ${c.res.status} - ${ms}ms`);
 });
 
-// Apply Rate Limiting to public routes
-// Note: We use a wildcard to match versioned routes
-app.use("/*/products/*", apiRateLimiter);
-app.use("/*/categories/*", apiRateLimiter);
-app.use("/*/auth/*", apiRateLimiter);
+const rateLimiter = createApiRateLimiter();
+app.use("/*/products/*", rateLimiter);
+app.use("/*/categories/*", rateLimiter);
+app.use("/*/auth/*", rateLimiter);
 
 // Routes
 app.get("/", (c) => {
   return c.json({
     message: "Welcome to Framerate API",
-    version: Bun.env.npm_package_version || "unknown",
+    version: "1.0.0",
   });
 });
 
-// Register routes dynamically
 for (const route of routes) {
   app.route(route.path, route.route);
 }
 
-export default {
-  fetch: app.fetch,
-  port: await findAvailablePort(3000),
-};
+export default app;

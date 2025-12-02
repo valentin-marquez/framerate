@@ -40,7 +40,7 @@ products.get(
     const supabase = createSupabaseClient(c.env);
     const slug = c.req.param("slug");
 
-    // Get product details
+    // obtener el producto principal
     const { data: product, error: productError } = await supabase
       .from("api_products")
       .select(
@@ -57,7 +57,7 @@ products.get(
       return c.json({ error: "Invalid product data" }, 500);
     }
 
-    // Fetch variants if group_id exists
+    // Obtener variantes si existe group_id
     let variants: Record<string, unknown>[] = [];
     if (product.group_id) {
       const { data: variantsData } = await supabase
@@ -71,7 +71,7 @@ products.get(
       }
     }
 
-    // Get active listings for this product
+    // Obtener listados activos para este producto
     const { data: listings, error: listingsError } = await supabase
       .from("listings")
       .select(`
@@ -88,7 +88,7 @@ products.get(
 
     if (listingsError) {
       console.error("Error fetching listings:", listingsError);
-      // We still return the product even if listings fail
+      // Aún devolvemos el producto aunque fallen los listados
     }
 
     return c.json({
@@ -112,33 +112,33 @@ products.get(
     const limit = Number(c.req.query("limit")) || 20;
     const offset = (page - 1) * limit;
 
-    // Standard Filters
+    // Filtros estándar
     const category = c.req.query("category") || undefined;
     const brand = c.req.query("brand") || undefined;
     const search = c.req.query("search") || undefined;
     const minPrice = c.req.query("min_price") ? Number(c.req.query("min_price")) : undefined;
     const maxPrice = c.req.query("max_price") ? Number(c.req.query("max_price")) : undefined;
 
-    // Construct specs filters object
-    // Supports:
-    // ?specs[socket]=AM5  -> Exact match
-    // ?specs[speed][min]=3200 -> Range min
-    // ?specs[speed][max]=6000 -> Range max
-    // biome-ignore lint/suspicious/noExplicitAny: Complex filter object
+    // Construcción del objeto de filtros para especificaciones
+    // Soporta:
+    // ?specs[socket]=AM5  -> Coincidencia exacta
+    // ?specs[speed][min]=3200 -> Rango mínim
+    // ?specs[speed][max]=6000 -> Rango máximo
+    // biome-ignore lint/suspicious/noExplicitAny: Objeto de filtro complejo
     const specsFilters: Record<string, any> = {};
-    const queries = c.req.queries(); // Returns Record<string, string[]>
+    const queries = c.req.queries(); // Devuelve un objeto Record<string, string[]>
 
     for (const [key, values] of Object.entries(queries)) {
-      // Match specs[key] or specs[key][sub]
-      // We only take the first value for now as our RPC expects single values/objects
+      // Coincide con specs[key] o specs[key][sub]
+      // Por ahora, solo tomamos el primer valor ya que el RPC espera valores/objetos únicos
       const value = values[0];
 
       if (key.startsWith("specs[")) {
-        // Parse keys like "specs[speed][min]" or "specs[socket]"
+        // Analiza claves como "specs[speed][min]" o "specs[socket]"
         const matches = key.match(/specs\[(.*?)\](?:\[(.*?)\])?/);
         if (matches) {
           const specKey = matches[1];
-          const subKey = matches[2]; // 'min' or 'max' or undefined
+          const subKey = matches[2];
 
           if (subKey) {
             if (!specsFilters[specKey]) specsFilters[specKey] = {};
@@ -150,7 +150,7 @@ products.get(
       }
     }
 
-    // Call the RPC function
+    // Llama a la función RPC en Supabase
     const { data, error } = await supabase.rpc("filter_products", {
       p_category_slug: category,
       p_brand_slug: brand,
@@ -166,11 +166,10 @@ products.get(
       return c.json({ error: error.message }, 500);
     }
 
-    // The RPC returns a flat list, we need to get the total count from the first row (if exists)
-    // or 0 if empty. The RPC includes 'total_count' column.
+    // La función RPC devuelve una lista plana; obtenemos el total desde la primera fila (si existe)
+    // o 0 si está vacío. La RPC incluye una columna 'total_count'.
     const total = data && data.length > 0 ? Number(data[0].total_count) : 0;
 
-    // Remove total_count from the response objects to keep it clean
     const cleanData = data?.map((item: Record<string, unknown>) => {
       const { total_count: _total_count, ...rest } = item;
       return rest;

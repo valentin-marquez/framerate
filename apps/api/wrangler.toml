@@ -2,9 +2,22 @@ name = "framerate-api"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 
+# Este archivo de configuración es para el despliegue de la API en Cloudflare Workers.
+# La sección `[vars]` (actualmente comentada) se utiliza para definir variables de entorno
+# como `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`. Estas variables son esenciales
+# para conectarse al backend de Supabase y se configuran directamente durante el despliegue
+# en el panel de Cloudflare Workers. Dado que estos valores son sensibles, no se incluyen
+# en este archivo y deben gestionarse de forma segura en el entorno de despliegue.
 # [vars]
 # SUPABASE_URL = "..."
 # SUPABASE_PUBLISHABLE_KEY = "..."
+
+# Espacio de nombres KV para limitación de tasa
+# Créalo con: wrangler kv:namespace create "RATE_LIMIT_KV"
+# Luego actualiza el id abajo con el id devuelto
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "377bf2829bff463ea0dffdaed077a550"
 
 [observability]
 enabled = true

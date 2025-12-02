@@ -27,7 +27,7 @@ export const authMiddleware = createMiddleware<{ Bindings: Bindings; Variables: 
       return c.json({ error: "Invalid or expired token" }, 401);
     }
 
-    // Attach user to context if needed, or just proceed
+    // Adjunta el usuario al contexto si es necesario, o simplemente continúa
     c.set("user", user);
 
     await next();
