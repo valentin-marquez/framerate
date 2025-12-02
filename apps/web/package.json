@@ -13,6 +13,7 @@
     "@fontsource-variable/manrope": "^5.2.8",
     "@fontsource-variable/martian-mono": "^5.2.7",
     "@fontsource-variable/space-grotesk": "^5.2.10",
+    "@framerate/db": "workspace:*",
     "@phosphor-icons/react": "^2.1.10",
     "@react-router/node": "^7.9.2",
     "@react-router/serve": "^7.9.2",

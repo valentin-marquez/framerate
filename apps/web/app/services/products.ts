@@ -1,0 +1,59 @@
+import { api } from "../lib/api";
+import type { Product, ProductDetail } from "../utils/db-types";
+
+export type { Product, ProductDetail };
+
+export interface ProductsResponse {
+  data: Product[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface ProductFilters {
+  page?: number;
+  limit?: number;
+  category?: string;
+  brand?: string;
+  search?: string;
+  min_price?: number;
+  max_price?: number;
+  specs?: Record<string, string | { min?: string; max?: string }>;
+}
+
+export const productsService = {
+  search: (query: string, limit = 50, offset = 0) =>
+    api.get<Product[]>(`/v1/products/search`, {
+      params: { q: query, limit: limit.toString(), offset: offset.toString() },
+    }),
+
+  getBySlug: (slug: string) => api.get<ProductDetail>(`/v1/products/${slug}`),
+
+  getAll: (filters: ProductFilters = {}) => {
+    const params: Record<string, string> = {};
+
+    if (filters.page) params.page = filters.page.toString();
+    if (filters.limit) params.limit = filters.limit.toString();
+    if (filters.category) params.category = filters.category;
+    if (filters.brand) params.brand = filters.brand;
+    if (filters.search) params.search = filters.search;
+    if (filters.min_price) params.min_price = filters.min_price.toString();
+    if (filters.max_price) params.max_price = filters.max_price.toString();
+
+    if (filters.specs) {
+      Object.entries(filters.specs).forEach(([key, value]) => {
+        if (typeof value === "object") {
+          if (value.min) params[`specs[${key}][min]`] = value.min;
+          if (value.max) params[`specs[${key}][max]`] = value.max;
+        } else {
+          params[`specs[${key}]`] = value;
+        }
+      });
+    }
+
+    return api.get<ProductsResponse>(`/v1/products`, { params });
+  },
+};
