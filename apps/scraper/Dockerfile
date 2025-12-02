@@ -20,6 +20,8 @@ COPY package.json bun.lock turbo.json ./
 COPY packages/config/package.json ./packages/config/package.json
 COPY packages/db/package.json ./packages/db/package.json
 COPY packages/utils/package.json ./packages/utils/package.json
+COPY apps/api/package.json ./apps/api/package.json
+COPY apps/web/package.json ./apps/web/package.json
 COPY apps/scraper/package.json ./apps/scraper/package.json
 
 RUN bun install --frozen-lockfile --production
