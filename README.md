@@ -1,14 +1,14 @@
 # Framerate.cl - Arquitectura y Patrones de Diseño
 
-![Bun](https://img.shields.io/badge/Bun-000000?style=flat-square&logo=bun&logoColor=white)
-![Turborepo](https://img.shields.io/badge/Turborepo-EF2D5E?style=flat-square&logo=turborepo&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/React-20232a?style=flat-square&logo=react&logoColor=61DAFB)
-![Hono](https://img.shields.io/badge/Hono-E05D44?style=flat-square&logo=hono&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
-![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Biome](https://img.shields.io/badge/Biome-60A5FA?style=flat-square&logo=biome&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-000000?style=plastic&logo=bun&logoColor=white)
+![Turborepo](https://img.shields.io/badge/Turborepo-EF2D5E?style=plastic&logo=turborepo&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=plastic&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-20232a?style=plastic&logo=react&logoColor=61DAFB)
+![Hono](https://img.shields.io/badge/Hono-E05D44?style=plastic&logo=hono&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=plastic&logo=supabase&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=plastic&logo=cloudflare&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=plastic&logo=docker&logoColor=white)
+![Biome](https://img.shields.io/badge/Biome-60A5FA?style=plastic&logo=biome&logoColor=white)
 
 **Sistema de Comparación de Precios para Componentes PC**  
 *Documento Técnico - Diciembre 2025*
