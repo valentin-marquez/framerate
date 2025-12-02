@@ -136,6 +136,36 @@ El servidor iniciará en `http://localhost:3000`.
 
 Existen scripts adicionales en el paquete `@framerate/db` para mantenimiento de datos generados por este scraper, como la agrupación de variantes (`group-variants`).
 
+## Deploy en Coolify
+
+Para desplegar el servicio en Coolify, se deben configurar los siguientes elementos:
+
+### Healthcheck
+Definir un healthcheck para verificar la salud del servicio:
+
+- **Método**: `GET`
+- **Esquema**: `http`
+- **Host**: `localhost`
+- **Puerto**: `3001`
+- **Path**: `/health`
+- **Código de retorno esperado**: `200`
+- **Texto de respuesta esperado**: `OK`
+- **Intervalo (s)**: `30`
+- **Timeout (s)**: `10`
+- **Retries**: `3`
+- **Start Period (s)**: `30`
+
+### Tareas Programadas
+Agregar una tarea programada para cada endpoint de scraping:
+
+1. **Scrape PC Express**:
+   - **Frecuencia**: `0 3 * * *` (Ejecutar diariamente a las 3:00 AM).
+   - **Endpoint**: `POST /v1/pc-express/crawl`
+
+2. **Scrape SP Digital**:
+   - **Frecuencia**: `0 4 * * *` (Ejecutar diariamente a las 4:00 AM).
+   - **Endpoint**: `POST /v1/sp-digital/crawl`.
+
 ## Tests
 
 El proyecto incluye tests unitarios para validar la normalización de datos:
