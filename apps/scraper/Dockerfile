@@ -33,5 +33,8 @@ RUN bun install --frozen-lockfile
 # Set working directory to the scraper app
 WORKDIR /app/apps/scraper
 
+# Expose the port
+EXPOSE 3001
+
 # Start the scraper
 CMD ["bun", "run", "start"]

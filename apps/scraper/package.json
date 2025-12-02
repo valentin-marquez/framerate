@@ -15,7 +15,6 @@
 		"@framerate/utils": "workspace:*",
 		"@supabase/supabase-js": "^2.84.0",
 		"hono": "^4.10.6",
-		"kuron": "^0.0.3",
 		"openai": "^6.9.1",
 		"puppeteer": "^24.31.0",
 		"sharp": "^0.34.5"

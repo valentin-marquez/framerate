@@ -12,7 +12,12 @@ images.get("/*", async (c) => {
     return c.text("Invalid image path", 400);
   }
 
-  const supabaseUrl = c.env.SUPABASE_URL;
+  const supabaseUrl = c.env.SUPABASE_URL || Bun.env.SUPABASE_URL;
+
+  if (!supabaseUrl) {
+    console.error("SUPABASE_URL is not defined");
+    return c.text("Internal Server Error", 500);
+  }
 
   // Construct the full URL to the Supabase storage
   // Assuming the path includes the bucket name and the file path

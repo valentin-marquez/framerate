@@ -3,7 +3,6 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger as honoLogger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
-import { cron } from "@/cron";
 import { Logger } from "@/lib/logger";
 import { routes } from "@/routes";
 
@@ -24,6 +23,11 @@ app.get("/", (c) => {
   });
 });
 
+// Health check para Coolify
+app.get("/health", (c) => {
+  return c.text("OK");
+});
+
 // Registrar rutas
 for (const route of routes) {
   app.route(route.path, route.route);
@@ -37,7 +41,6 @@ logger.info("Servicio de scraper iniciado.");
 
 export default {
   fetch: app.fetch,
-  scheduled: cron.scheduled,
   idleTimeout: 255, // Máximo permitido por Bun es 255 segundos
   port: await findAvailablePort(3001),
 };
