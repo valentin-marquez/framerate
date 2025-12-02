@@ -11,7 +11,7 @@
 ![Biome](https://img.shields.io/badge/Biome-60A5FA?style=flat-square&logo=biome&logoColor=white)
 
 **Sistema de Comparación de Precios para Componentes PC**  
-*Documento Técnico - Noviembre 2025*
+*Documento Técnico - Diciembre 2025*
 
 ## 1. Introducción
 
@@ -28,12 +28,27 @@ Framerate.cl es una plataforma de comparación de precios especializada en compo
 ## 2. Arquitectura de Capas
 
 ### 2.1 Capa de Presentación (apps/web)
-El frontend es una aplicación moderna construida con **React Router v7** (anteriormente Remix). Utiliza **Server-Side Rendering (SSR)** desplegado en Cloudflare Pages para optimizar SEO, performance y experiencia de usuario. Aunque utiliza renderizado en el servidor, mantiene la separación de responsabilidades consumiendo la API pública.
+El frontend es una aplicación moderna construida con **React Router v7** (anteriormente Remix). Utiliza **Server-Side Rendering (SSR)** con **Tailwind CSS v4** y **Vite** como bundler. Aunque utiliza renderizado en el servidor, mantiene la separación de responsabilidades consumiendo la API pública.
+
+> **Estado Actual:** El frontend está en etapa inicial con la estructura base configurada (SSR habilitado, routing, estilos). Pendiente: implementar vistas de productos, consumo de API, y despliegue en Cloudflare Pages.
 
 > **Patrón:** El frontend (incluso en el lado del servidor) nunca accede directamente a la base de datos. Toda comunicación pasa por la API Gateway implementada en Workers, garantizando seguridad y control de acceso centralizado.
 
 ### 2.2 Capa de API (apps/api)
-Los Cloudflare Workers funcionan como API Gateway. Implementados con Hono framework, proporcionan endpoints RESTful con rate limiting y validación de requests. Esta capa tiene acceso de solo lectura a Supabase utilizando la anon key con Row Level Security.
+Los Cloudflare Workers funcionan como API Gateway. Implementados con **Hono framework**, proporcionan endpoints RESTful con rate limiting y validación de requests. Esta capa tiene acceso de solo lectura a Supabase utilizando la anon key con Row Level Security.
+
+**Endpoints Implementados:**
+- `GET /v1/products` - Listado con filtros (categoría, marca, precio, specs)
+- `GET /v1/products/:slug` - Detalle de producto con listings y variantes
+- `GET /v1/products/search` - Búsqueda por término
+- `GET /v1/categories` - Listado de categorías
+- `GET /v1/images/:path` - Proxy de imágenes con cache
+
+**Middleware Activo:**
+- Rate limiting por IP (100 req/15min)
+- Cache API para respuestas (listados: 5min, detalles: 1hr)
+- CORS restringido a dominios permitidos
+- Security headers
 
 ### 2.3 Capa de Datos (Supabase)
 Supabase PostgreSQL funciona como única fuente de verdad. Almacena productos canónicos, listings de tiendas, histórico de precios y metadatos. La seguridad se implementa mediante Row Level Security policies que permiten lectura pública pero escritura restringida únicamente al scraper mediante service role key.
@@ -46,47 +61,104 @@ No expone APIs públicas ni acepta conexiones entrantes. Su única función es e
 ## 3. Patrones de Diseño para Scraping
 
 ### 3.1 Patrón: Base Crawler Abstracto
-Todos los crawlers heredan de una clase base abstracta que define el contrato y comportamiento común. Esto garantiza consistencia y facilita la adición de nuevas tiendas sin duplicar lógica.
+Todos los crawlers heredan de una clase base abstracta (`BaseCrawler`) que define el contrato y comportamiento común. Esto garantiza consistencia y facilita la adición de nuevas tiendas sin duplicar lógica.
 
-**Responsabilidades del BaseCrawler:**
-*   Rate limiting y respeto por robots.txt
-*   Manejo de errores y reintentos con backoff exponencial
+**Responsabilidades del BaseCrawler (Implementado ✅):**
+*   Rate limiting configurable por tienda (`requestDelay`)
+*   Pool de páginas Puppeteer para concurrencia controlada
 *   Logging estructurado de operaciones
-*   User-Agent rotation y proxy management
-*   Extracción de metadatos comunes (timestamps, URLs)
+*   Fetch con headers realistas (User-Agent, Sec-Ch-Ua, etc.)
+*   Bloqueo de recursos innecesarios (imágenes, fonts, CSS) para velocidad
+*   Procesamiento por lotes (`fetchHtmlBatch`)
+
+**Pendiente de implementar:**
+*   Respeto por robots.txt
+*   Backoff exponencial en errores HTTP
+*   User-Agent rotation (actualmente 1 UA fijo)
+*   Proxy management
 
 ### 3.2 Patrón: Strategy para Selectores
-Cada tienda tiene su propia estrategia de extracción implementada como un conjunto de selectores y transformadores. Cuando una tienda cambia su HTML, solo se actualiza su estrategia específica sin afectar otros crawlers. Los selectores se versionan y se mantiene fallback a selectores anteriores para resiliencia.
+Cada tienda tiene su propia estrategia de extracción implementada como un conjunto de selectores y transformadores. Cuando una tienda cambia su HTML, solo se actualiza su estrategia específica sin afectar otros crawlers.
 
-### 3.3 Patrón: Queue-Based Processing
-El scraping no ocurre sincrónicamente. Las URLs a scrapear se encolan en Kuron con prioridades y metadatos. Workers independientes procesan la cola respetando rate limits por tienda. Esto permite paralelización controlada y recovery automático de fallos.
+**Crawlers Implementados:**
+- `PcExpressCrawler`: Usa HTMLRewriter de Bun para parsing rápido sin JS
+- `SpDigitalCrawler`: Usa Puppeteer (headless) + meta tags estructurados
 
-> **Ventaja:** Si un crawler falla, el job se reintenta automáticamente. Si una tienda está caída, los jobs se posponen sin bloquear el scraping de otras tiendas.
+**Categorías Soportadas (10):** GPU, CPU, PSU, Motherboard, Case, RAM, HDD, SSD, Case Fan, CPU Cooler
 
-### 3.4 Patrón: Fingerprinting para Matching
-El matching de productos entre tiendas utiliza un sistema de fingerprinting multicapa. Primero se intenta match por MPN (Part Number del fabricante), luego por EAN/UPC, y finalmente por fingerprint de especificaciones normalizadas. Cada método tiene un score de confianza asociado.
+**Pendiente:** Versionado de selectores y fallback automático
 
-**Algoritmo de Matching:**
-1.  Extraer MPN del título o metadatos (confianza: 95%)
-2.  Buscar en base de datos por MPN exacto
-3.  Si no hay match, extraer EAN de structured data (confianza: 100%)
-4.  Si no hay match, generar fingerprint de specs normalizadas
-5.  Buscar por fingerprint con umbral de similitud 0.85 (confianza: 75%)
-6.  Si confianza menor a 80%, encolar para revisión manual
+### 3.3 Procesamiento Concurrente
+El scraping utiliza **Bun Workers** para procesamiento en paralelo y **Kuron** para scheduling de tareas programadas (cron cada 4 horas).
+
+**Arquitectura Actual:**
+- Workers procesan productos en lotes de 4 (`BATCH_SIZE`)
+- Pool de páginas Puppeteer con concurrencia configurable (3-4 páginas)
+- Procesamiento síncrono por categoría con paralelización interna
+
+> **Nota:** El sistema actual no usa colas distribuidas (BullMQ). Los jobs se procesan directamente en el worker que los inicia. Para escalar horizontalmente, se planea migrar a un sistema de colas real.
+
+### 3.4 Matching de Productos
+El matching de productos entre tiendas utiliza actualmente el **MPN (Manufacturer Part Number)** como identificador único.
+
+**Algoritmo de Matching (Implementado):**
+1.  Extraer MPN del título, metadatos o meta tags del producto
+2.  Buscar en base de datos por MPN exacto (`findExistingProduct`)
+3.  Si existe, actualizar specs y crear/actualizar listing
+4.  Si no existe, crear nuevo producto canónico
+
+**Pendiente de implementar:**
+- Fingerprinting de especificaciones normalizadas
+- Score de confianza por método de match
+- Cola de revisión manual para matches dudosos
+- Agrupación automática de variantes (`product_groups`)
+
+> **Nota:** El campo EAN fue removido del schema. El matching se basa exclusivamente en MPN.
 
 ### 3.5 Patrón: Normalización de Datos
-Los datos scrapeados pasan por un pipeline de normalización antes de almacenarse. Precios se convierten a números, textos se limpian de caracteres especiales, especificaciones se extraen con expresiones regulares y se validan contra schemas. Solo datos válidos y normalizados llegan a la base de datos.
+Los datos scrapeados pasan por un pipeline de normalización extensivo antes de almacenarse.
+
+**Pipeline Implementado:**
+1. **Normalización de títulos** (`normalizers/`): Limpieza y estandarización por categoría
+2. **Extracción de specs** (`processors/`): Regex + mapeo de claves a formato canónico
+3. **Extracción IA** (`processors/ai/`): LLM (Groq/DeepSeek) para specs complejas con cache en BD
+4. **Validación de productos**: Filtros por términos excluidos ("caja abierta", "usado", etc.)
+5. **Procesamiento de imágenes**: Compresión con Sharp, upload a Supabase Storage
+
+**Normalizadores por Categoría:** GPU, CPU, PSU, Motherboard, Case, RAM, HDD, SSD, Case Fan, CPU Cooler
+
+> **Cache de IA:** Las extracciones de specs por IA se cachean en `cached_specs_extractions` usando MPN como clave.
 
 ### 3.6 Patrón: Incremental Updates
-El scraper no reescribe toda la base de datos en cada ejecución. Utiliza timestamps y comparación de hashes para detectar cambios reales. Solo se actualizan productos cuyo precio, stock o URL han cambiado. El histórico de precios se mantiene en tabla separada para análisis temporal.
+El scraper no reescribe toda la base de datos en cada ejecución.
+
+**Implementado:**
+- Upsert de listings por `(store_id, external_id)` - solo actualiza si cambió
+- `last_scraped_at` se actualiza en cada scrape
+- Histórico de precios en tabla `price_history` (registro por cada scrape)
+- Cache de marcas en memoria para evitar race conditions
+
+**Pendiente:**
+- Comparación de hashes para detectar cambios reales (evitar writes innecesarios)
+- Detección de productos descontinuados
 
 ## 4. Estrategias de Modularidad
 
 ### 4.1 Shared Types Package
-Todos los tipos TypeScript se definen en packages/db y packages/utils y se importan en todas las apps. Esto garantiza que frontend, API y scraper hablen el mismo lenguaje. Cambios en el schema de datos se propagan automáticamente y generan errores de compilación si algo no está sincronizado.
+Todos los tipos TypeScript se definen en `packages/db` y se importan en todas las apps. Esto garantiza que frontend, API y scraper hablen el mismo lenguaje.
 
-### 4.2 Plugin System para Crawlers
-Cada tienda es un plugin independiente que se registra en el crawler manager. Agregar una nueva tienda consiste en crear un archivo nuevo que implemente la interfaz StoreCrawler. El sistema descubre automáticamente los crawlers disponibles y los ejecuta según configuración.
+**Estructura de packages/db:**
+- `types.ts`: Tipos autogenerados de Supabase (`Database`, `Tables`, `TablesInsert`)
+- `specs.ts`: Interfaces de especificaciones por categoría (`GpuSpecs`, `CpuSpecs`, etc.)
+- `storage.ts`: Utilidades para Supabase Storage (buckets, URLs, validación)
+
+### 4.2 Crawlers como Módulos
+Cada tienda es una clase independiente que extiende `BaseCrawler`. Agregar una nueva tienda consiste en:
+1. Crear archivo en `crawlers/` implementando `parseProduct` y `getProductUrls`
+2. Definir mapeo de categorías a URLs
+3. Registrar en el worker (`scraper.worker.ts`)
+
+**Tiendas Implementadas:** PC Express, SP Digital
 
 ### 4.3 Configuration as Code
 Toda configuración vive en código TypeScript con tipos estrictos. No hay archivos JSON o YAML que puedan corromperse. Las configuraciones de tiendas incluyen URLs base, selectores, rate limits, y headers HTTP. Los cambios se versionan en Git y se despliegan atómicamente.
@@ -96,105 +168,150 @@ El código está organizado por dominios de negocio, no por capas técnicas. Exi
 
 ## 5. Resiliencia y Manejo de Errores
 
-### 5.1 Circuit Breaker Pattern
-Si una tienda falla repetidamente (por ejemplo, está caída o bloqueó nuestro scraper), el circuit breaker la marca como unavailable temporalmente. Los crawlers dejan de intentar scrapearla por un período de cooldown. Esto previene que un sitio problemático consuma recursos innecesariamente.
+### 5.1 Graceful Degradation (✅ Implementado)
+Si algunos campos no se pueden extraer (por ejemplo, el MPN no está presente), el scraper continúa con los datos disponibles. Los productos sin MPN se crean igualmente. La extracción IA tiene fallback a procesadores regex si falla.
 
-### 5.2 Graceful Degradation
-Si algunos campos no se pueden extraer (por ejemplo, el MPN no está presente), el scraper continúa con los datos disponibles. No hay all-or-nothing. Los productos se marcan con metadata indicando qué campos están incompletos para posterior revisión.
+### 5.2 Manejo de Race Conditions (✅ Implementado)
+- Cache en memoria de marcas (`brandCache`) con deduplicación de promesas
+- Manejo de errores de clave duplicada (código 23505) con retry
+- Upsert atómico de listings por constraint único
 
-### 5.3 Dead Letter Queue
-Los jobs que fallan múltiples veces van a una dead letter queue. Un proceso separado analiza estos fallos, agrupa por tipo de error, y genera alertas. Esto permite identificar problemas sistemáticos (como cambios en el HTML de tiendas) que requieren intervención humana.
+### 5.3 Rate Limiting de IA (✅ Implementado)
+- `RateLimiter` class para Groq API (10 RPM)
+- Retry automático en errores 429 con delay de 5s
 
-### 5.4 Monitoring y Observabilidad
-Cada crawler emite métricas estructuradas: productos scrapeados, errores, tiempos de respuesta, rate de matching exitoso. Estas métricas se agregan y permiten detectar degradaciones antes de que los usuarios lo noten. Dashboards muestran salud de cada tienda en tiempo real.
+### 5.4 Pendiente de Implementar
+- **Circuit Breaker:** Marcar tiendas como unavailable temporalmente después de N fallos
+- **Dead Letter Queue:** Cola de jobs fallidos para análisis
+- **Métricas estructuradas:** Dashboards de salud por tienda
+- **Alertas automáticas:** Notificaciones cuando selectores dejan de funcionar
 
 ## 6. Optimización de Performance
 
-### 6.1 Caching Estratégico
-Los Workers cachean respuestas en Cloudflare KV con TTLs diferenciados. Listados de productos se cachean por 5 minutos, detalles específicos por 15 minutos, búsquedas populares por 1 minuto. Cache invalidation ocurre cuando el scraper actualiza datos relevantes.
+### 6.1 Caching en API (✅ Implementado)
+Los Workers cachean respuestas usando la **Cache API** de Cloudflare (no KV):
+- Listados de productos: 5 minutos (`max-age=300`)
+- Detalles de producto: 1 hora (`max-age=3600`)
+- Imágenes proxy: 1 año (`max-age=31536000, immutable`)
 
-### 6.2 Batch Processing
-El scraper agrupa inserts y updates en batches. En lugar de hacer una query por producto, acumula cambios y los escribe en transacciones de 100 productos. Esto reduce dramáticamente la carga en Supabase y mejora throughput.
+> **Nota:** En desarrollo local (Bun), el cache se desactiva automáticamente ya que la Cache API no está disponible.
 
-### 6.3 Indexación Inteligente
-La base de datos tiene índices específicos para los queries más frecuentes: búsqueda por categoría y fabricante, lookup por MPN, joins de productos con listings. Los índices se monitorizan y optimizan basándose en query plans reales.
+### 6.2 Batch Processing (✅ Implementado)
+El scraper procesa en lotes de 4 productos simultáneos (`BATCH_SIZE = 4`). Cada lote:
+- Obtiene HTML en paralelo
+- Parsea productos concurrentemente
+- Escribe a BD (no en batch SQL, pero reduce round-trips de fetch)
 
-### 6.4 Lazy Loading de Imágenes
-Las imágenes de productos se almacenan en Supabase Storage con transformaciones automáticas. El frontend carga thumbnails pequeños inicialmente y full-size solo cuando el usuario interactúa. Cloudflare Images puede agregarse posteriormente para CDN de imágenes.
+### 6.3 Indexación en Base de Datos (✅ Implementado)
+Migraciones de índices optimizados:
+- `20251125064000_add_indexes_for_foreign_keys.sql`
+- `20251125063000_fix_rls_performance.sql`
+- Función `filter_products` con filtros eficientes
+
+### 6.4 Procesamiento de Imágenes (✅ Implementado)
+- Imágenes descargadas y comprimidas con **Sharp**
+- Conversión automática a WebP
+- Resize progresivo si excede límite de tamaño
+- Upload a Supabase Storage con deduplicación por MPN
 
 ## 7. Consideraciones de Seguridad
 
-### 7.1 Separación de Credenciales
-El scraper usa service role key de Supabase con acceso completo. Los Workers usan anon key con acceso limitado por RLS. El frontend no tiene credenciales en absoluto. Cada capa tiene exactamente los permisos que necesita, nada más.
+### 7.1 Separación de Credenciales (✅ Implementado)
+| Capa | Key | Permisos |
+|------|-----|----------|
+| Scraper | `SUPABASE_SERVICE_ROLE_KEY` | Lectura/Escritura completa |
+| API | `SUPABASE_PUBLISHABLE_KEY` | Solo lectura (RLS) |
+| Frontend | Ninguna | Sin acceso directo a BD |
 
-### 7.2 Rate Limiting en API
-Los Workers implementan rate limiting por IP usando Cloudflare KV. Los usuarios anónimos tienen límites más restrictivos que usuarios autenticados (si implementas auth). Esto previene abuso y scraping de tu propia API.
+### 7.2 Rate Limiting en API (✅ Implementado)
+- 100 requests por IP cada 15 minutos
+- Usa header `CF-Connecting-IP` para identificar clientes
+- Respuesta 429 con mensaje descriptivo
 
-### 7.3 Sanitización de Inputs
-Todos los datos scrapeados se sanitizan antes de almacenarse. HTML se stripea, JavaScript se remueve, URLs se validan. Esto previene XSS si un sitio externo intenta inyectar código malicioso en sus propios listados.
+### 7.3 Row Level Security (✅ Implementado)
+Todas las tablas tienen RLS habilitado:
+- Lectura pública para productos, listings, categorías, tiendas
+- Escritura restringida a service role
+- Usuarios autenticados pueden gestionar sus quotes y alertas
 
-### 7.4 Servidor Local Aislado
-El servidor de scraping no acepta conexiones entrantes. Solo hace requests salientes a tiendas y a Supabase API. No hay puertos expuestos, no hay superficie de ataque. Si necesitas administrarlo, usas Coolify localmente o SSH con keys.
+### 7.4 Headers de Seguridad (✅ Implementado)
+- `secureHeaders()` middleware de Hono
+- CORS restringido a `framerate.cl` y `localhost:3000`
+
+### 7.5 Pendiente
+- Sanitización explícita de HTML scrapeado (actualmente implícita en el parsing)
 
 ## 8. Plan de Escalabilidad
 
-### 8.1 Escalar Horizontalmente Crawlers
-Cuando una tienda tenga miles de productos, puedes agregar más workers que procesen la misma queue. BullMQ garantiza que cada job se procesa exactamente una vez. Puedes tener 10 workers scrapeando en paralelo sin coordinación explícita.
+### 8.1 Arquitectura Actual
+- **Scraper:** Bun Workers con procesamiento síncrono por categoría
+- **API:** Cloudflare Workers (serverless, escala automáticamente)
+- **BD:** Supabase PostgreSQL (plan gratuito actualmente)
 
-### 8.2 Particionar por Categoría
-A medida que agregues más categorías (no solo componentes PC), puedes crear crawlers especializados. Uno para GPUs, otro para CPUs, otro para periféricos. Cada uno es independiente y puede optimizarse para las particularidades de su categoría.
+### 8.2 Opciones de Escalado Horizontal
+1. **Múltiples instancias de scraper** con particionamiento por tienda
+2. **Migración a colas reales** (BullMQ + Redis) para distribución de jobs
+3. **Read replicas** de Supabase para separar tráfico de lectura
 
-### 8.3 Read Replicas
-Supabase soporta read replicas. Si el tráfico crece, puedes configurar los Workers para leer de replicas cercanas geográficamente mientras el scraper escribe al primary. Esto reduce latencia y carga en la base principal.
-
-### 8.4 CDN para Assets Estáticos
-Las imágenes de productos pueden migrarse a Cloudflare R2 o Images. Esto libera espacio en Supabase Storage y aprovecha el CDN global de Cloudflare para delivery ultra rápido. El cambio es transparente para el código gracias a abstracción de storage.
+### 8.3 Optimizaciones Futuras
+- Cloudflare R2 para imágenes (en lugar de Supabase Storage)
+- Cloudflare KV para cache distribuido
+- Workers KV para rate limiting distribuido
 
 ## 9. Mantenibilidad a Largo Plazo
 
-### 9.1 Testing Strategy
-Los crawlers tienen unit tests que mockean las respuestas HTTP. Cuando una tienda cambia su HTML, guardas el nuevo HTML como fixture y actualizas los tests. Los tests garantizan que tus selectores siguen funcionando. También hay integration tests que verifican el flujo completo sin tocar sitios reales.
+### 9.1 Testing (✅ Parcialmente Implementado)
+**Tests existentes en `apps/scraper/tests/`:**
+- `gpu-normalization.test.ts` - Normalización de títulos de GPUs
+- `psu-normalization.test.ts` - Normalización de PSUs
+- `motherboard-normalization.test.ts` - Normalización de motherboards
+- `cpu-cooler-normalization.test.ts` - Normalización de coolers
+- `case-normalization.test.ts` - Normalización de gabinetes
+- `ia-extraction.test.ts` - Extracción con IA
+- `psu-ia-extraction.test.ts` - Extracción IA de PSUs
 
-### 9.2 Versionado de Selectores
-Cada configuración de tienda tiene un número de versión. Cuando detectas que los selectores dejaron de funcionar, creas una nueva versión con los selectores actualizados. El sistema intenta primero la versión nueva, y si falla, hace fallback a la anterior. Esto da tiempo para debugging sin downtime.
+**Pendiente:**
+- Fixtures de HTML para tests de crawlers
+- Integration tests end-to-end
+- Tests de API endpoints
 
-### 9.3 Documentación Viviente
-Cada crawler tiene comentarios explicando qué extrae y por qué. Las decisiones de diseño se documentan en el código mismo. Los tipos TypeScript sirven como documentación auto-actualizable. Un README en cada package explica su propósito y cómo usarlo.
+### 9.2 Migraciones Versionadas (✅ Implementado)
+Más de 30 migraciones SQL en `packages/db/supabase/migrations/`. Cada cambio al schema es versionado y reproducible.
 
-### 9.4 Migrations Versionadas
-Los cambios al schema de Supabase se hacen mediante migrations SQL versionadas. Nunca se modifica la base de datos manualmente. Cada migration tiene un rollback correspondiente. Esto permite deployments seguros y reversibles.
+### 9.3 Documentación
+- README en cada package/app
+- Tipos TypeScript como documentación
+- Comentarios en normalizadores explicando lógica
 
-## 10. Conclusión y Próximos Pasos
+## 10. Estado Actual y Roadmap
 
-La arquitectura propuesta para Framerate.cl balancea simplicidad en el inicio con capacidad de crecimiento futuro. El uso de tecnologías modernas como Bun, Cloudflare Workers y Supabase permite comenzar con costos mínimos mientras se mantiene la puerta abierta para escalar a millones de usuarios.
+### 10.1 Completado ✅
+- [x] Setup monorepo con Turborepo + Bun
+- [x] Schema de Supabase con 2 tiendas (PC Express, SP Digital)
+- [x] Crawlers funcionales para 10 categorías
+- [x] Pipeline de normalización completo
+- [x] Extracción de specs con IA (Groq/DeepSeek)
+- [x] API REST con endpoints de productos y categorías
+- [x] Rate limiting y cache en API
+- [x] Storage de imágenes con compresión
+- [x] Histórico de precios
+- [x] Tests de normalización
 
-La separación estricta entre scraping, almacenamiento y presentación garantiza que cada componente pueda evolucionar independientemente. El monorepo con shared types asegura consistencia sin sacrificar modularidad.
+### 10.2 En Progreso 🚧
+- [ ] Frontend funcional con listado y comparación
+- [ ] Búsqueda avanzada con filtros de specs
+- [ ] Agrupación automática de variantes
 
-### Roadmap Sugerido
+### 10.3 Pendiente 📋
+- [ ] Sistema de colas distribuidas (BullMQ/Redis)
+- [ ] Circuit breaker y dead letter queue
+- [ ] Fingerprinting para matching avanzado
+- [ ] Alertas de precio para usuarios
+- [ ] Comparador de builds
+- [ ] Despliegue en Cloudflare Pages (web)
+- [ ] Métricas y dashboards
+- [ ] Más tiendas (EyL Store, AllTec, etc.)
 
-1.  **Fase 1 - MVP (2-3 semanas):**
-    *   Setup monorepo con Turborepo
-    *   Schema de Supabase con 3 tiendas principales
-    *   Crawler básico para 1 categoría (GPUs)
-    *   API mínima en Workers
-        *   Frontend básico con listado y comparación
-        *   **Aquí vamos: Implementación de SPDigital en scraper** (estructura base y productos iniciales)
-    2.  **Fase 2 - Refinamiento (2-3 semanas):**
-    *   Agregar 5 tiendas más
-    *   Implementar matching por fingerprint
-    *   Sistema de queue con BullMQ
-    *   Histórico de precios y gráficos
-    *   Búsqueda y filtros avanzados
-3.  **Fase 3 - Expansión (4-6 semanas):**
-    *   Más categorías (CPUs, RAM, etc.)
-    *   Alertas de precio para usuarios
-    *   Sistema de recomendaciones
-    *   Comparador de builds completos
-    *   Monetización con links de afiliados
+---
 
-> **Nota Final:** Esta arquitectura está diseñada para ser implementada incrementalmente. No necesitas construir todo de una vez. Comienza con lo mínimo viable, valida con usuarios reales, y expande basándote en feedback y métricas. La modularidad te permite iterar rápidamente sin comprometer la calidad técnica.
-
-....
-bien ahora empezaremos con la implementacion de spdigital en scraper 
-
-para esto empezaremos implementando la estructura base y luego empezaremos con los diferentes productos.  para sp digital hay dos formas de hacer las cosas hay mucha informacion expuesta mediante no renderizar javascript, el problema esta en que si bien hay mucha info tambien
+> **Nota:** Este documento refleja el estado real de implementación a Diciembre 2025. La arquitectura está diseñada para ser implementada incrementalmente.
