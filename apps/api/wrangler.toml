@@ -1,0 +1,9 @@
+name = "framerate-api"
+compatibility_date = "2024-11-01"
+
+# [vars]
+# SUPABASE_URL = "..."
+# SUPABASE_PUBLISHABLE_KEY = "..."
+
+[observability]
+enabled = true

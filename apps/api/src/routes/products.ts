@@ -1,0 +1,191 @@
+import { Hono } from "hono";
+import type { Bindings, Variables } from "../bindings";
+import { createSupabaseClient } from "../lib/supabase";
+import { cache } from "../middleware/cache";
+
+const products = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// GET /products/search?q=term
+products.get("/search", async (c) => {
+  const supabase = createSupabaseClient(c.env);
+  const query = c.req.query("q");
+  const limit = Number(c.req.query("limit")) || 50;
+  const offset = Number(c.req.query("offset")) || 0;
+
+  if (!query) {
+    return c.json({ error: 'Query parameter "q" is required' }, 400);
+  }
+
+  const { data, error } = await supabase.rpc("search_products" as any, {
+    search_term: query,
+    p_limit: limit,
+    p_offset: offset,
+  });
+
+  if (error) {
+    return c.json({ error: error.message }, 500);
+  }
+
+  return c.json(data);
+});
+
+// GET /products/:slug
+products.get(
+  "/:slug",
+  cache({
+    cacheName: "product-detail",
+    cacheControl: "max-age=3600",
+  }),
+  async (c) => {
+    const supabase = createSupabaseClient(c.env);
+    const slug = c.req.param("slug");
+
+    // Get product details
+    const { data: product, error: productError } = await supabase
+      .from("api_products")
+      .select(
+        "id, name, slug, image_url, specs, prices, brand, category, listings_count, mpn, group_id",
+      )
+      .eq("slug", slug)
+      .single();
+
+    if (productError || !product) {
+      return c.json({ error: productError?.message || "Product not found" }, 404);
+    }
+
+    if (!product.id) {
+      return c.json({ error: "Invalid product data" }, 500);
+    }
+
+    // Fetch variants if group_id exists
+    let variants: Record<string, unknown>[] = [];
+    if (product.group_id) {
+      const { data: variantsData } = await supabase
+        .from("api_products")
+        .select("name, slug, image_url, specs, prices")
+        .eq("group_id", product.group_id)
+        .neq("id", product.id); // Exclude current product
+
+      if (variantsData) {
+        variants = variantsData;
+      }
+    }
+
+    // Get active listings for this product
+    const { data: listings, error: listingsError } = await supabase
+      .from("listings")
+      .select(`
+      price_cash,
+      price_normal,
+      url,
+      is_active,
+      last_scraped_at,
+      store:stores(name, slug, logo_url)
+    `)
+      .eq("product_id", product.id)
+      .eq("is_active", true)
+      .order("price_cash", { ascending: true });
+
+    if (listingsError) {
+      console.error("Error fetching listings:", listingsError);
+      // We still return the product even if listings fail
+    }
+
+    return c.json({
+      ...product,
+      variants,
+      listings: listings || [],
+    });
+  },
+);
+
+// GET /products
+products.get(
+  "/",
+  cache({
+    cacheName: "products-list",
+    cacheControl: "max-age=300",
+  }),
+  async (c) => {
+    const supabase = createSupabaseClient(c.env);
+    const page = Number(c.req.query("page")) || 1;
+    const limit = Number(c.req.query("limit")) || 20;
+    const offset = (page - 1) * limit;
+
+    // Standard Filters
+    const category = c.req.query("category") || undefined;
+    const brand = c.req.query("brand") || undefined;
+    const search = c.req.query("search") || undefined;
+    const minPrice = c.req.query("min_price") ? Number(c.req.query("min_price")) : undefined;
+    const maxPrice = c.req.query("max_price") ? Number(c.req.query("max_price")) : undefined;
+
+    // Construct specs filters object
+    // Supports:
+    // ?specs[socket]=AM5  -> Exact match
+    // ?specs[speed][min]=3200 -> Range min
+    // ?specs[speed][max]=6000 -> Range max
+    // biome-ignore lint/suspicious/noExplicitAny: Complex filter object
+    const specsFilters: Record<string, any> = {};
+    const queries = c.req.queries(); // Returns Record<string, string[]>
+
+    for (const [key, values] of Object.entries(queries)) {
+      // Match specs[key] or specs[key][sub]
+      // We only take the first value for now as our RPC expects single values/objects
+      const value = values[0];
+
+      if (key.startsWith("specs[")) {
+        // Parse keys like "specs[speed][min]" or "specs[socket]"
+        const matches = key.match(/specs\[(.*?)\](?:\[(.*?)\])?/);
+        if (matches) {
+          const specKey = matches[1];
+          const subKey = matches[2]; // 'min' or 'max' or undefined
+
+          if (subKey) {
+            if (!specsFilters[specKey]) specsFilters[specKey] = {};
+            specsFilters[specKey][subKey] = value;
+          } else {
+            specsFilters[specKey] = value;
+          }
+        }
+      }
+    }
+
+    // Call the RPC function
+    const { data, error } = await supabase.rpc("filter_products", {
+      p_category_slug: category,
+      p_brand_slug: brand,
+      p_min_price: minPrice,
+      p_max_price: maxPrice,
+      p_search: search,
+      p_specs_filters: specsFilters,
+      p_limit: limit,
+      p_offset: offset,
+    });
+
+    if (error) {
+      return c.json({ error: error.message }, 500);
+    }
+
+    // The RPC returns a flat list, we need to get the total count from the first row (if exists)
+    // or 0 if empty. The RPC includes 'total_count' column.
+    const total = data && data.length > 0 ? Number(data[0].total_count) : 0;
+
+    // Remove total_count from the response objects to keep it clean
+    const cleanData = data?.map((item: Record<string, unknown>) => {
+      const { total_count: _total_count, ...rest } = item;
+      return rest;
+    });
+
+    return c.json({
+      data: cleanData || [],
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: total ? Math.ceil(total / limit) : 0,
+      },
+    });
+  },
+);
+
+export default products;

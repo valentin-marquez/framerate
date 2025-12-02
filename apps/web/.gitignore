@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Production
+dist/
+build/
+
+# React Router
+.react-router/
+
+# Environment
+.env
+.env.local

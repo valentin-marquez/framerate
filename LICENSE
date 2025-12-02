@@ -1,0 +1,43 @@
+# Licensing Information
+
+The Framerate.cl monorepo is a collection of applications and packages with different licensing terms.
+The specific license for each component is detailed below.
+
+## 1. Proprietary Components (Source Available)
+
+The following components are **Proprietary**. You may view the source code for educational purposes, but you may **NOT** use, copy, modify, distribute, or deploy this software for any commercial purpose or to operate a competitive service without prior written consent.
+
+- **apps/scraper**: The core scraping engine and data processing logic.
+- **apps/web**: The frontend application and brand identity.
+  - Copyright (c) 2025 Valentin Marquez. All rights reserved.
+
+## 2. Open Source Components (MIT License)
+
+The following components are provided under the **MIT License**. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the conditions of the MIT License.
+
+- **apps/api**: The API Gateway (Hono/Cloudflare Workers).
+- **packages/**: Shared libraries and configurations.
+
+---
+
+### MIT License (Applies to Open Source Components)
+
+Copyright (c) 2025 Valentin Marquez
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -1,0 +1,10 @@
+{
+  "extends": "//",
+  "linter": {
+    "rules": {
+      "correctness": {
+        "noUnusedImports": "error"
+      }
+    }
+  }
+}

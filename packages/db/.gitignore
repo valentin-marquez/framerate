@@ -1,0 +1,9 @@
+# Dependencies
+node_modules/
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+
+# Environment
+.env

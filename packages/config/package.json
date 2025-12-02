@@ -1,0 +1,11 @@
+{
+  "name": "@framerate/config",
+  "version": "0.0.0",
+  "license": "MIT",
+  "exports": {
+    "./tsconfig": "./tsconfig.base.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

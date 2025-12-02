@@ -1,0 +1,43 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"ui": "tui",
+	"tasks": {
+		"build": {
+			"dependsOn": [
+				"^build"
+			],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				".env*"
+			],
+			"outputs": [
+				"dist/**",
+				".wrangler/**"
+			]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"lint": {
+			"dependsOn": [
+				"^lint"
+			]
+		},
+		"test": {
+			"dependsOn": []
+		},
+		"check-types": {
+			"dependsOn": [
+				"^check-types"
+			]
+		},
+		"generate:types": {
+			"cache": false
+		},
+		"db:push": {
+			"cache": false,
+			"interactive": true
+		}
+	}
+}

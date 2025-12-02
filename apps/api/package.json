@@ -1,0 +1,20 @@
+{
+	"name": "api",
+	"private": true,
+	"license": "MIT",
+	"scripts": {
+		"dev": "bun run --hot src/index.ts",
+		"lint": "biome lint .",
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@framerate/db": "workspace:*",
+		"@framerate/utils": "workspace:*",
+		"@supabase/supabase-js": "^2.84.0",
+		"hono": "^4.10.6",
+		"hono-rate-limiter": "^0.4.2"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	}
+}
