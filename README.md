@@ -30,8 +30,6 @@ Framerate.cl es una plataforma de comparación de precios especializada en compo
 ### 2.1 Capa de Presentación (apps/web)
 El frontend es una aplicación moderna construida con **React Router v7** (anteriormente Remix). Utiliza **Server-Side Rendering (SSR)** con **Tailwind CSS v4** y **Vite** como bundler. Aunque utiliza renderizado en el servidor, mantiene la separación de responsabilidades consumiendo la API pública.
 
-> **Estado Actual:** El frontend está en etapa inicial con la estructura base configurada (SSR habilitado, routing, estilos). Pendiente: implementar vistas de productos, consumo de API, y despliegue en Cloudflare Pages.
-
 > **Patrón:** El frontend (incluso en el lado del servidor) nunca accede directamente a la base de datos. Toda comunicación pasa por la API Gateway implementada en Workers, garantizando seguridad y control de acceso centralizado.
 
 ### 2.2 Capa de API (apps/api)
@@ -63,7 +61,7 @@ No expone APIs públicas ni acepta conexiones entrantes. Su única función es e
 ### 3.1 Patrón: Base Crawler Abstracto
 Todos los crawlers heredan de una clase base abstracta (`BaseCrawler`) que define el contrato y comportamiento común. Esto garantiza consistencia y facilita la adición de nuevas tiendas sin duplicar lógica.
 
-**Responsabilidades del BaseCrawler (Implementado ✅):**
+**Responsabilidades del BaseCrawler:**
 *   Rate limiting configurable por tienda (`requestDelay`)
 *   Pool de páginas Puppeteer para concurrencia controlada
 *   Logging estructurado de operaciones
@@ -101,7 +99,7 @@ El scraping utiliza **Bun Workers** para procesamiento en paralelo y **Kuron** p
 ### 3.4 Matching de Productos
 El matching de productos entre tiendas utiliza actualmente el **MPN (Manufacturer Part Number)** como identificador único.
 
-**Algoritmo de Matching (Implementado):**
+**Algoritmo de Matching:**
 1.  Extraer MPN del título, metadatos o meta tags del producto
 2.  Buscar en base de datos por MPN exacto (`findExistingProduct`)
 3.  Si existe, actualizar specs y crear/actualizar listing
@@ -168,15 +166,15 @@ El código está organizado por dominios de negocio, no por capas técnicas. Exi
 
 ## 5. Resiliencia y Manejo de Errores
 
-### 5.1 Graceful Degradation (✅ Implementado)
+### 5.1 Graceful Degradation
 Si algunos campos no se pueden extraer (por ejemplo, el MPN no está presente), el scraper continúa con los datos disponibles. Los productos sin MPN se crean igualmente. La extracción IA tiene fallback a procesadores regex si falla.
 
-### 5.2 Manejo de Race Conditions (✅ Implementado)
+### 5.2 Manejo de Race Conditions
 - Cache en memoria de marcas (`brandCache`) con deduplicación de promesas
 - Manejo de errores de clave duplicada (código 23505) con retry
 - Upsert atómico de listings por constraint único
 
-### 5.3 Rate Limiting de IA (✅ Implementado)
+### 5.3 Rate Limiting de IA
 - `RateLimiter` class para Groq API (10 RPM)
 - Retry automático en errores 429 con delay de 5s
 
@@ -188,7 +186,7 @@ Si algunos campos no se pueden extraer (por ejemplo, el MPN no está presente), 
 
 ## 6. Optimización de Performance
 
-### 6.1 Caching en API (✅ Implementado)
+### 6.1 Caching en API
 Los Workers cachean respuestas usando la **Cache API** de Cloudflare (no KV):
 - Listados de productos: 5 minutos (`max-age=300`)
 - Detalles de producto: 1 hora (`max-age=3600`)
@@ -196,19 +194,19 @@ Los Workers cachean respuestas usando la **Cache API** de Cloudflare (no KV):
 
 > **Nota:** En desarrollo local (Bun), el cache se desactiva automáticamente ya que la Cache API no está disponible.
 
-### 6.2 Batch Processing (✅ Implementado)
+### 6.2 Batch Processing
 El scraper procesa en lotes de 4 productos simultáneos (`BATCH_SIZE = 4`). Cada lote:
 - Obtiene HTML en paralelo
 - Parsea productos concurrentemente
 - Escribe a BD (no en batch SQL, pero reduce round-trips de fetch)
 
-### 6.3 Indexación en Base de Datos (✅ Implementado)
+### 6.3 Indexación en Base de Datos
 Migraciones de índices optimizados:
 - `20251125064000_add_indexes_for_foreign_keys.sql`
 - `20251125063000_fix_rls_performance.sql`
 - Función `filter_products` con filtros eficientes
 
-### 6.4 Procesamiento de Imágenes (✅ Implementado)
+### 6.4 Procesamiento de Imágenes
 - Imágenes descargadas y comprimidas con **Sharp**
 - Conversión automática a WebP
 - Resize progresivo si excede límite de tamaño
@@ -216,25 +214,25 @@ Migraciones de índices optimizados:
 
 ## 7. Consideraciones de Seguridad
 
-### 7.1 Separación de Credenciales (✅ Implementado)
+### 7.1 Separación de Credenciales
 | Capa | Key | Permisos |
 |------|-----|----------|
 | Scraper | `SUPABASE_SERVICE_ROLE_KEY` | Lectura/Escritura completa |
 | API | `SUPABASE_PUBLISHABLE_KEY` | Solo lectura (RLS) |
 | Frontend | Ninguna | Sin acceso directo a BD |
 
-### 7.2 Rate Limiting en API (✅ Implementado)
+### 7.2 Rate Limiting en API
 - 100 requests por IP cada 15 minutos
 - Usa header `CF-Connecting-IP` para identificar clientes
 - Respuesta 429 con mensaje descriptivo
 
-### 7.3 Row Level Security (✅ Implementado)
+### 7.3 Row Level Security
 Todas las tablas tienen RLS habilitado:
 - Lectura pública para productos, listings, categorías, tiendas
 - Escritura restringida a service role
 - Usuarios autenticados pueden gestionar sus quotes y alertas
 
-### 7.4 Headers de Seguridad (✅ Implementado)
+### 7.4 Headers de Seguridad
 - `secureHeaders()` middleware de Hono
 - CORS restringido a `framerate.cl` y `localhost:3000`
 
@@ -260,7 +258,7 @@ Todas las tablas tienen RLS habilitado:
 
 ## 9. Mantenibilidad a Largo Plazo
 
-### 9.1 Testing (✅ Parcialmente Implementado)
+### 9.1 Testing
 **Tests existentes en `apps/scraper/tests/`:**
 - `gpu-normalization.test.ts` - Normalización de títulos de GPUs
 - `psu-normalization.test.ts` - Normalización de PSUs
@@ -275,42 +273,13 @@ Todas las tablas tienen RLS habilitado:
 - Integration tests end-to-end
 - Tests de API endpoints
 
-### 9.2 Migraciones Versionadas (✅ Implementado)
+### 9.2 Migraciones Versionadas
 Más de 30 migraciones SQL en `packages/db/supabase/migrations/`. Cada cambio al schema es versionado y reproducible.
 
 ### 9.3 Documentación
 - README en cada package/app
 - Tipos TypeScript como documentación
 - Comentarios en normalizadores explicando lógica
-
-## 10. Estado Actual y Roadmap
-
-### 10.1 Completado ✅
-- [x] Setup monorepo con Turborepo + Bun
-- [x] Schema de Supabase con 2 tiendas (PC Express, SP Digital)
-- [x] Crawlers funcionales para 10 categorías
-- [x] Pipeline de normalización completo
-- [x] Extracción de specs con IA (Groq/DeepSeek)
-- [x] API REST con endpoints de productos y categorías
-- [x] Rate limiting y cache en API
-- [x] Storage de imágenes con compresión
-- [x] Histórico de precios
-- [x] Tests de normalización
-
-### 10.2 En Progreso 🚧
-- [ ] Frontend funcional con listado y comparación
-- [ ] Búsqueda avanzada con filtros de specs
-- [ ] Agrupación automática de variantes
-
-### 10.3 Pendiente 📋
-- [ ] Sistema de colas distribuidas (BullMQ/Redis)
-- [ ] Circuit breaker y dead letter queue
-- [ ] Fingerprinting para matching avanzado
-- [ ] Alertas de precio para usuarios
-- [ ] Comparador de builds
-- [ ] Despliegue en Cloudflare Pages (web)
-- [ ] Métricas y dashboards
-- [ ] Más tiendas (EyL Store, AllTec, etc.)
 
 ---
 
