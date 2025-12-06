@@ -207,17 +207,24 @@ export class SpDigitalCrawler extends BaseCrawler {
     const parseStockValue = (label: string) => {
       // Buscar la etiqueta y el contenido del div siguiente
       // Patrón: Stock online</span></span><div ...>Contenido</div>
-      const regex = new RegExp(`${label}<\\/span>[\\s\\S]*?<div[^>]*>([^<]+)<\\/div>`, "i");
+      // Usamos \\s* para permitir espacios antes del cierre del span
+      const regex = new RegExp(
+        `${label}\\s*<\\/span>[\\s\\S]*?<div[^>]*>([\\s\\S]*?)<\\/div>`,
+        "i",
+      );
       const match = html.match(regex);
 
       if (match?.[1]) {
         const content = match[1].trim();
+
         // Si dice "No disponible", es 0
         if (content.toLowerCase().includes("no disponible")) {
           return 0;
         }
-        // Si dice "X unidad" o "X unidades"
-        const numberMatch = content.match(/(\d+)\s*unidad/i);
+
+        // Intentar extraer solo los dígitos primero
+        // Esto maneja "1 unidad", "10 unidades", "1", "Stock: 5", etc.
+        const numberMatch = content.match(/(\d+)/);
         if (numberMatch?.[1]) {
           return Number.parseInt(numberMatch[1], 10);
         }
