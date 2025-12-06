@@ -156,11 +156,10 @@ export class SpDigitalCrawler extends BaseCrawler {
       // Precio normal (otros medios de pago) desde el HTML
       const originalPrice = this.extractOriginalPrice(html) || price;
 
-      // Stock desde disponibilidad en metaetiqueta
-      const hasStock = metaData.availability?.toLowerCase() === "in stock";
-
       // Extraer cantidad de stock real
+      // SP Digital suele tener mal la metadata de stock, así que confiamos en el HTML
       const stockQuantity = this.extractStockQuantity(html);
+      const hasStock = stockQuantity > 0;
 
       // Imagen desde og:image o media.spdigital.cl
       let imageUrl = metaData.image;
@@ -188,7 +187,7 @@ export class SpDigitalCrawler extends BaseCrawler {
         price,
         originalPrice,
         stock: hasStock,
-        stockQuantity: stockQuantity > 0 ? stockQuantity : hasStock ? 1 : 0,
+        stockQuantity,
         mpn: metaData.mpn,
         imageUrl,
         specs,
@@ -205,17 +204,29 @@ export class SpDigitalCrawler extends BaseCrawler {
   private extractStockQuantity(html: string): number {
     let totalStock = 0;
 
-    // Stock Online
-    const onlineStockMatch = html.match(/Stock online<\/span>[\s\S]*?>(\d+)\s*unidades/i);
-    if (onlineStockMatch?.[1]) {
-      totalStock += Number.parseInt(onlineStockMatch[1], 10);
-    }
+    const parseStockValue = (label: string) => {
+      // Buscar la etiqueta y el contenido del div siguiente
+      // Patrón: Stock online</span></span><div ...>Contenido</div>
+      const regex = new RegExp(`${label}<\\/span>[\\s\\S]*?<div[^>]*>([^<]+)<\\/div>`, "i");
+      const match = html.match(regex);
 
-    // Stock en Tienda
-    const storeStockMatch = html.match(/Stock en tienda<\/span>[\s\S]*?>(\d+)\s*unidades/i);
-    if (storeStockMatch?.[1]) {
-      totalStock += Number.parseInt(storeStockMatch[1], 10);
-    }
+      if (match?.[1]) {
+        const content = match[1].trim();
+        // Si dice "No disponible", es 0
+        if (content.toLowerCase().includes("no disponible")) {
+          return 0;
+        }
+        // Si dice "X unidad" o "X unidades"
+        const numberMatch = content.match(/(\d+)\s*unidad/i);
+        if (numberMatch?.[1]) {
+          return Number.parseInt(numberMatch[1], 10);
+        }
+      }
+      return 0;
+    };
+
+    totalStock += parseStockValue("Stock online");
+    totalStock += parseStockValue("Stock en tienda");
 
     return totalStock;
   }
@@ -348,10 +359,8 @@ export class SpDigitalCrawler extends BaseCrawler {
 
       const specs = this.extractSpecsFromTable(html);
 
-      const hasStock =
-        html.includes("Agregar al carrito") &&
-        !html.includes("Sin stock") &&
-        !html.includes("Agotado");
+      const stockQuantity = this.extractStockQuantity(html);
+      const hasStock = stockQuantity > 0;
 
       return {
         url,
@@ -359,7 +368,7 @@ export class SpDigitalCrawler extends BaseCrawler {
         price,
         originalPrice: price,
         stock: hasStock,
-        stockQuantity: hasStock ? 1 : 0,
+        stockQuantity,
         mpn: specs.mpn || specs.sku,
         imageUrl,
         specs,
