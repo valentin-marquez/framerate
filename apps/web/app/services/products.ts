@@ -21,7 +21,22 @@ export interface ProductFilters {
   search?: string;
   min_price?: number;
   max_price?: number;
+  sort?: "price_asc" | "price_desc" | "popularity" | "discount" | "name";
   specs?: Record<string, string | { min?: string; max?: string }>;
+}
+
+export interface ProductDrop {
+  product_id: string;
+  product_name: string;
+  product_slug: string;
+  product_image_url: string | null;
+  category_slug: string;
+  product_specs: Record<string, any>;
+  current_price: number;
+  previous_price: number;
+  discount_percentage: number;
+  store_name: string;
+  store_logo_url: string | null;
 }
 
 export const productsService = {
@@ -29,6 +44,13 @@ export const productsService = {
     api.get<Product[]>(`/v1/products/search`, {
       params: { q: query, limit: limit.toString(), offset: offset.toString() },
     }),
+
+  getDrops: (limit = 20, minDiscount = 10) =>
+    api.get<ProductDrop[]>(`/v1/products/drops`, {
+      params: { limit: limit.toString(), minDiscount: minDiscount.toString() },
+    }),
+
+  trackView: (slug: string) => api.post(`/v1/products/${slug}/view`, {}),
 
   getBySlug: (slug: string) => api.get<ProductDetail>(`/v1/products/${slug}`),
 
@@ -42,6 +64,7 @@ export const productsService = {
     if (filters.search) params.search = filters.search;
     if (filters.min_price) params.min_price = filters.min_price.toString();
     if (filters.max_price) params.max_price = filters.max_price.toString();
+    if (filters.sort) params.sort = filters.sort;
 
     if (filters.specs) {
       Object.entries(filters.specs).forEach(([key, value]) => {

@@ -29,6 +29,48 @@ products.get("/search", async (c) => {
   return c.json(data);
 });
 
+// GET /products/drops
+products.get(
+  "/drops",
+  cache({
+    cacheName: "product-drops",
+    cacheControl: "max-age=300", // 5 minutes
+  }),
+  async (c) => {
+    const supabase = createSupabaseClient(c.env);
+    const limit = Number(c.req.query("limit")) || 20;
+    const minDiscount = Number(c.req.query("minDiscount")) || 10;
+
+    const { data, error } = await supabase.rpc("get_price_drops", {
+      min_discount_percent: minDiscount,
+      lookback_days: 30,
+      limit_count: limit,
+    });
+
+    if (error) {
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json(data);
+  },
+);
+
+// POST /products/:slug/view
+products.post("/:slug/view", async (c) => {
+  const supabase = createSupabaseClient(c.env);
+  const slug = c.req.param("slug");
+
+  const { error } = await supabase.rpc("increment_product_view", {
+    p_slug: slug,
+  });
+
+  if (error) {
+    return c.json({ error: error.message }, 500);
+  }
+
+  return c.json({ success: true });
+});
+
 // GET /products/:slug
 products.get(
   "/:slug",
@@ -118,6 +160,7 @@ products.get(
     const search = c.req.query("search") || undefined;
     const minPrice = c.req.query("min_price") ? Number(c.req.query("min_price")) : undefined;
     const maxPrice = c.req.query("max_price") ? Number(c.req.query("max_price")) : undefined;
+    const sort = c.req.query("sort") || "price_asc";
 
     // Construcción del objeto de filtros para especificaciones
     // Soporta:
@@ -158,6 +201,7 @@ products.get(
       p_max_price: maxPrice,
       p_search: search,
       p_specs_filters: specsFilters,
+      p_sort_by: sort,
       p_limit: limit,
       p_offset: offset,
     });

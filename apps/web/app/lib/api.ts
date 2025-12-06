@@ -1,3 +1,5 @@
+import type { Category } from "~/utils/db-types";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 if (!API_URL) {
@@ -76,3 +78,7 @@ export const api = {
   delete: <T>(endpoint: string, options?: FetchOptions) =>
     fetcher<T>(endpoint, { ...options, method: "DELETE" }),
 };
+
+export async function getCategories() {
+  return api.get<Category[]>("/v1/categories");
+}

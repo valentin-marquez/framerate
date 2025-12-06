@@ -762,6 +762,26 @@ export type Database = {
         }[]
       }
       get_category_filters: { Args: { p_category_slug: string }; Returns: Json }
+      get_price_drops: {
+        Args: {
+          limit_count?: number
+          lookback_days?: number
+          min_discount_percent?: number
+        }
+        Returns: {
+          category_slug: string
+          current_price: number
+          discount_percentage: number
+          previous_price: number
+          product_id: string
+          product_image_url: string
+          product_name: string
+          product_slug: string
+          product_specs: Json
+          store_logo_url: string
+          store_name: string
+        }[]
+      }
       get_storage_url: {
         Args: { bucket_name: string; file_path: string }
         Returns: string

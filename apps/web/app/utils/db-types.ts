@@ -3,8 +3,8 @@ import type { MergeDeep } from "type-fest";
 
 // Typed JSON structures
 export interface ProductPrices {
-  price_cash: number;
-  price_normal: number;
+  cash: number;
+  normal: number;
 }
 
 export interface ProductBrand {
@@ -29,6 +29,7 @@ export type Database = MergeDeep<
             category: ProductCategory | null;
             specs: ProductSpecs;
             prices: ProductPrices | null;
+            popularity_score: number;
           };
         };
       };
