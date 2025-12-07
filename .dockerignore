@@ -3,3 +3,13 @@ node_modules
 .turbo
 dist
 .env
+.env.*
+!.env.example
+*.log
+.vscode
+.idea
+*.md
+!README.md
+build
+coverage
+.cache
