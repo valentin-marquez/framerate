@@ -8,7 +8,15 @@ export class SpDigitalTracker extends BaseTracker {
   private browserPromise: Promise<Browser> | null = null;
 
   private async getBrowser(): Promise<Browser> {
-    if (this.browser) return this.browser;
+    if (this.browser) {
+      if (this.browser.isConnected()) {
+        return this.browser;
+      }
+      this.logger.warn("Puppeteer disconnected. Resetting instance.");
+      this.browser = null;
+      this.browserPromise = null;
+    }
+
     if (this.browserPromise) return this.browserPromise;
 
     this.logger.info("Launching new Puppeteer instance...");
@@ -19,13 +27,18 @@ export class SpDigitalTracker extends BaseTracker {
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage", 
+          "--disable-dev-shm-usage",
           "--disable-gpu",
         ],
       })
       .then((browser) => {
         this.logger.info("Puppeteer instance launched.");
         this.browser = browser;
+        browser.on("disconnected", () => {
+          this.logger.warn("Puppeteer disconnected.");
+          this.browser = null;
+          this.browserPromise = null;
+        });
         return browser;
       });
 
