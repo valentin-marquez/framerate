@@ -1,4 +1,3 @@
-import { findAvailablePort } from "@framerate/utils";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger as honoLogger } from "hono/logger";
@@ -42,5 +41,5 @@ logger.info("Servicio de collector iniciado.");
 export default {
   fetch: app.fetch,
   idleTimeout: 255, 
-  port: await findAvailablePort(3001),
+  port: process.env.PORT || 3001,
 };
