@@ -6,13 +6,14 @@ RUN bun x turbo prune --scope=collector --docker
 
 # STAGE 2: Base System
 FROM oven/bun:1 AS base
+USER root
 WORKDIR /app
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     chromium \
     curl \
     wget \
     fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
-    --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
