@@ -11,7 +11,13 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@framerate/utils": "workspace:*",
+    "@supabase/supabase-js": "^2.86.2",
+    "cheerio": "^1.1.2",
+    "elysia": "latest",
+    "p-limit": "^7.2.0",
+    "puppeteer": "^24.32.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

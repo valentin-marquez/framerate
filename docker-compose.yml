@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  collector:
+    build:
+      context: .
+      dockerfile: apps/collector/Dockerfile
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - PORT=3001
+    networks:
+      - framerate-network
+
+  tracker:
+    build:
+      context: .
+      dockerfile: apps/tracker/Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - PORT=3000
+    networks:
+      - framerate-network
+
+networks:
+  framerate-network:
+    driver: bridge

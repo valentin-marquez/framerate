@@ -2,7 +2,7 @@
 FROM oven/bun:1 AS pruner
 WORKDIR /app
 COPY . .
-RUN bun x turbo prune --scope=tracker --docker
+RUN bun x turbo prune --scope=collector --docker
 
 # STAGE 2: Base System
 FROM oven/bun:1 AS base
@@ -32,6 +32,6 @@ WORKDIR /app
 COPY --from=installer /app/node_modules ./node_modules
 COPY --from=pruner /app/out/full/ .
 
-WORKDIR /app/apps/tracker
-EXPOSE 3000
+WORKDIR /app/apps/collector
+EXPOSE 3001
 CMD ["bun", "src/index.ts"]

@@ -1,15 +1,13 @@
+import { Logger } from "@framerate/utils";
 import { Elysia } from "elysia";
+import { config } from "./config";
+import { trackRoutes } from "./routes/track";
 
-const app = new Elysia().get("/", () => "Tracker Service is running").listen(3000);
+const logger = new Logger("Tracker");
 
-console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
+const app = new Elysia()
+  .use(trackRoutes)
+  .get("/health", () => ({ status: "ok" }))
+  .listen(config.PORT);
 
-// Placeholder for cron job
-const INTERVAL = 1000 * 60 * 60; // 1 hour
-
-console.log("Tracker service started");
-
-setInterval(() => {
-  console.log("Running inventory update...");
-  // TODO: Implement inventory update logic
-}, INTERVAL);
+logger.info(`🦊 Tracker Service is running at ${app.server?.hostname}:${app.server?.port}`);
