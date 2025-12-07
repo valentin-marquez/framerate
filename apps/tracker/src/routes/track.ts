@@ -6,13 +6,15 @@ export const trackRoutes = new Elysia({ prefix: "/track" })
   .post(
     "/batch",
     async ({ body, trackerService }) => {
-      const limit = body.limit ?? 50;
+      const limit = body?.limit ?? 0;
       const result = await trackerService.trackBatch(limit);
       return result;
     },
     {
-      body: t.Object({
-        limit: t.Optional(t.Number()),
-      }),
+      body: t.Optional(
+        t.Object({
+          limit: t.Optional(t.Number()),
+        }),
+      ),
     },
   );

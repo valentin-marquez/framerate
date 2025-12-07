@@ -53,7 +53,7 @@ export class TrackerService {
    * Tracks a batch of listings by fetching data from the database, processing each listing
    * with its respective tracker, and updating the database with the results.
    *
-   * @param limit - The maximum number of listings to process in a single batch. Defaults to 50.
+   * @param limit - The maximum number of listings to process in a single batch. Defaults to 0 (process all).
    * @returns A promise that resolves to an object containing the counts of processed, errors, and updated listings:
    *          - `processed`: The number of listings successfully processed.
    *          - `errors`: The number of listings that encountered errors during processing.
@@ -61,12 +61,17 @@ export class TrackerService {
    *
    * @throws An error if the initial database fetch fails.
    */
-  async trackBatch(limit = 50) {
-    const { data: listings, error } = await this.supabase
+  async trackBatch(limit = 0) {
+    let query = this.supabase
       .from("listings")
       .select("id, url, price_cash, price_normal, stock_quantity")
-      .order("last_scraped_at", { ascending: true, nullsFirst: true })
-      .limit(limit);
+      .order("last_scraped_at", { ascending: true, nullsFirst: true });
+
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+
+    const { data: listings, error } = await query;
 
     if (error) {
       throw new Error(`Failed to fetch listings: ${error.message}`);

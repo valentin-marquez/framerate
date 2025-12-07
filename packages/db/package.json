@@ -14,7 +14,7 @@
     "db:reset": "supabase db reset",
     "db:push": "supabase db push",
     "db:link": "bun src/scripts/db-link.ts",
-    "group-variants": "bun run --env-file=../../apps/scraper/.env src/scripts/group-variants.ts"
+    "group-variants": "bun run src/scripts/group-variants.ts"
   },
   "dependencies": {
     "@framerate/utils": "workspace:*",

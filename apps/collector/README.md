@@ -1,10 +1,23 @@
 # Framerate Collector Service
 
-Servicio encargado de extraer, normalizar y almacenar información de productos de hardware desde diversas tiendas chilenas. Este servicio es el núcleo de la ingesta de datos para Framerate.cl.
+![Hono](https://img.shields.io/badge/Hono-API-E36002?style=flat&logo=hono)
+![Bun](https://img.shields.io/badge/Bun-Runtime-000000?style=flat&logo=bun)
+![Puppeteer](https://img.shields.io/badge/Puppeteer-Scraping-40B5A4?style=flat&logo=puppeteer)
+
+Servicio encargado de la **ingesta, normalización y descubrimiento** de productos de hardware desde diversas tiendas chilenas. Este servicio es el núcleo de la entrada de datos para Framerate.cl.
+
+## Diferencias con el Tracker
+
+| Característica | Collector (`apps/collector`) | Tracker (`apps/tracker`) |
+|----------------|--------------------------|--------------------------|
+| **Objetivo** | Descubrir nuevos productos | Actualizar existentes |
+| **Frecuencia** | Baja (Diaria/Semanal) | Alta (Horaria/Minutal) |
+| **Complejidad**| Alta (Specs, Imágenes, IA) | Baja (Solo Precio/Stock) |
+| **Técnica** | Puppeteer (Navegador completo) | Fetch + HTML Parsing |
 
 ## Arquitectura y Flujo de Datos
 
-El siguiente diagrama describe el flujo completo del proceso de recolección (collector), desde la solicitud inicial hasta el almacenamiento en la base de datos.
+El siguiente diagrama describe el flujo completo del proceso de recolección, desde la solicitud inicial hasta el almacenamiento en la base de datos.
 
 ```mermaid
 graph TD
@@ -69,9 +82,25 @@ graph TD
 
 Este servicio está diseñado para ejecutarse como tareas programadas (Scheduled Tasks) en Coolify o mediante CRON jobs.
 
+### Healthcheck
+
+Definir un healthcheck para verificar la salud del servicio:
+
+- **Método**: `GET`
+- **Esquema**: `http`
+- **Host**: `localhost`
+- **Puerto**: `3001`
+- **Path**: `/health`
+- **Código de retorno esperado**: `200`
+- **Texto de respuesta esperado**: `OK`
+- **Intervalo (s)**: `30`
+- **Timeout (s)**: `10`
+- **Retries**: `3`
+- **Start Period (s)**: `30`
+
 ### Endpoints de Ejecución
 
-El servicio expone endpoints HTTP para iniciar los procesos de recolección.
+El servicio expone endpoints HTTP para iniciar los procesos de recolección (crawling).
 
 #### PC Express
 Ejecutar recolección de todas las categorías (Recomendado: 03:00 AM):
@@ -92,7 +121,7 @@ curl -X POST "http://localhost:3001/v1/pc-express/crawl?category=gpu"
 
 ## Tiendas Soportadas
 
-Actualmente el scraper soporta las siguientes tiendas chilenas de hardware:
+Actualmente el collector soporta las siguientes tiendas chilenas de hardware:
 
 - **PC Express** (`pc-express`)
 - **SP Digital** (`sp-digital`)
@@ -135,66 +164,24 @@ src/
 ├── workers/        # Bun Workers para ejecución paralela
 ├── lib/            # Utilidades (Supabase, Logger, Storage)
 ├── routes/         # Endpoints de la API
-└── cron/           # Tareas programadas (si aplica)
+└── queues/         # Gestión de colas de procesamiento
 ```
 
-## Ejecución
+## Instalación y Desarrollo
 
-### Instalación
-```sh
+```bash
+# Instalar dependencias
 bun install
-```
 
-### Desarrollo
-Inicia el servidor en modo watch:
-```sh
+# Iniciar servidor en modo watch
 bun run dev
 ```
-El servidor iniciará en `http://localhost:3000`.
+El servidor iniciará en `http://localhost:3001`.
 
-### Endpoints Principales
-
-- `POST /v1/pc-express/crawl` - Inicia scraping de PC Express
-- `POST /v1/sp-digital/crawl` - Inicia scraping de SP Digital
-
-### Scripts de Utilidad
-
-Existen scripts adicionales en el paquete `@framerate/db` para mantenimiento de datos generados por este scraper, como la agrupación de variantes (`group-variants`).
-
-## Deploy en Coolify
-
-Para desplegar el servicio en Coolify, se deben configurar los siguientes elementos:
-
-### Healthcheck
-Definir un healthcheck para verificar la salud del servicio:
-
-- **Método**: `GET`
-- **Esquema**: `http`
-- **Host**: `localhost`
-- **Puerto**: `3001`
-- **Path**: `/health`
-- **Código de retorno esperado**: `200`
-- **Texto de respuesta esperado**: `OK`
-- **Intervalo (s)**: `30`
-- **Timeout (s)**: `10`
-- **Retries**: `3`
-- **Start Period (s)**: `30`
-
-### Tareas Programadas
-Agregar una tarea programada para cada endpoint de scraping:
-
-1. **Scrape PC Express**:
-   - **Frecuencia**: `0 3 * * *` (Ejecutar diariamente a las 3:00 AM).
-   - **Endpoint**: `POST /v1/pc-express/crawl`
-
-2. **Scrape SP Digital**:
-   - **Frecuencia**: `0 4 * * *` (Ejecutar diariamente a las 4:00 AM).
-   - **Endpoint**: `POST /v1/sp-digital/crawl`.
-
-## Tests
+### Tests
 
 El proyecto incluye tests unitarios para validar la normalización de datos:
 
-```sh
+```bash
 bun test
 ```

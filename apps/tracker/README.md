@@ -18,18 +18,31 @@ Servicio de alta frecuencia para el monitoreo de precios y stock de componentes 
 
 Este servicio está diseñado para ejecutarse frecuentemente mediante tareas programadas (Scheduled Tasks) en Coolify.
 
+### Healthcheck
+
+Definir un healthcheck para verificar la salud del servicio:
+
+- **Método**: `GET`
+- **Esquema**: `http`
+- **Host**: `localhost`
+- **Puerto**: `3000`
+- **Path**: `/health`
+- **Código de retorno esperado**: `200`
+- **Texto de respuesta esperado**: `OK`
+- **Intervalo (s)**: `30`
+- **Timeout (s)**: `10`
+- **Retries**: `3`
+- **Start Period (s)**: `30`
+
 ### Actualización de Precios y Stock
 
 Para actualizar todos los productos listados en la base de datos:
 
 ```bash
-curl -X POST http://localhost:3000/track/batch \
-  -H "Content-Type: application/json" \
-  -d '{"limit": 0}'
+curl -X POST http://localhost:3000/track/batch
 ```
 
-- `limit: 0`: Procesa **todos** los productos pendientes (ordenados por antigüedad de actualización).
-- `limit: N`: Procesa los `N` productos más antiguos.
+Este comando procesa **todos** los productos pendientes (ordenados por antigüedad de actualización).
 
 Se recomienda ejecutar este comando cada 30 minutos o 1 hora, dependiendo de la cantidad de productos y recursos del servidor.
 
