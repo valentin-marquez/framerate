@@ -93,6 +93,7 @@ export function CardProduct({ product, className }: CardProductProps) {
   };
 
   const formattedCashPrice = prices?.cash ? formatPrice(prices.cash) : "Sin precio";
+  console.log(prices);
   const formattedNormalPrice = prices?.normal ? formatPrice(prices.normal) : null;
 
   const discountPercentage =

@@ -1,3 +1,4 @@
+import * as cheerio from "cheerio";
 import { BaseCrawler, type ProductData } from "./base";
 
 export type SpDigitalCategory =
@@ -78,7 +79,8 @@ export class SpDigitalCrawler extends BaseCrawler {
       const categoryUrl = this.buildCategoryUrl(categorySlug, page);
       this.logger.info(`Fetching page ${page}: ${categoryUrl}`);
 
-      const html = await this.fetchHtml(categoryUrl);
+      // Wait for product cards to ensure the list is loaded
+      const html = await this.fetchHtml(categoryUrl, ".Fractal-ProductCard--image");
       const urls = await this.getProductUrls(html);
 
       if (urls.length === 0) {
@@ -126,164 +128,179 @@ export class SpDigitalCrawler extends BaseCrawler {
     return urls;
   }
 
+  // Override fetchHtml to wait for stock selector on product pages
+  public async fetchHtml(url: string, waitForSelector?: string): Promise<string> {
+    // If it looks like a product page (not a category page), wait for stock info
+    // Category pages usually end in / or have /categories/
+    if (!url.includes("/categories/") && !waitForSelector) {
+      // Wait for the stock container or price
+      return super.fetchHtml(url, 'div[class*="product-detail-module--availability"]');
+    }
+    return super.fetchHtml(url, waitForSelector);
+  }
+
   /**
-   * Analiza el HTML de una página de producto extrayendo datos de metaetiquetas y tablas.
-   * SP Digital incluye metaetiquetas con información estructurada del producto.
+   * Analiza el HTML de una página de producto extrayendo datos usando la lógica de Tracker.
    */
   async parseProduct(html: string, url: string): Promise<ProductData | null> {
     try {
-      // Extraer datos de metaetiquetas
-      const metaData = this.extractMetaTags(html);
+      // If we are parsing from a fresh fetch, we might want to ensure we waited for stock.
+      // However, parseProduct receives HTML string, so the waiting must happen before calling this.
+      // In BaseCrawler.fetchHtmlBatch, we don't pass a selector.
+      // We should probably override fetchHtmlBatch or just rely on the fact that we are using Puppeteer
+      // and hopefully the stock is there.
+      // But to be safe, let's re-fetch if we suspect missing data? No, that's inefficient.
+      // The best place to wait is in the fetch phase.
+      
+      // Since we can't easily change how fetchHtmlBatch calls fetchHtml for each URL without changing BaseCrawler significantly,
+      // and we already modified BaseCrawler to accept waitForSelector, we should use it.
+      // But parseProduct is called AFTER fetch.
+      
+      // Wait! BaseCrawler.fetchHtmlBatch calls this.fetchHtml(url).
+      // We can override fetchHtml in SpDigitalCrawler to always pass the selector!
+      
+      const $ = cheerio.load(html);
+      const result = {
+        priceCash: 0,
+        priceNormal: 0,
+        stockQuantity: 0,
+        available: false,
+        title: "",
+        imageUrl: "",
+        mpn: "",
+        brand: "",
+      };
 
-      // Título desde og:title (limpiando el sufijo "| SP Digital")
-      const title = metaData.title?.replace(/\s*\|\s*SP Digital.*$/i, "").trim();
-      if (!title) {
-        this.logger.warn(`Could not extract title from meta tags, trying fallback for ${url}`);
-        return this.parseProductFallback(html, url);
+      // 1. Availability from JSON-LD
+      const scripts = $('script[type="application/ld+json"]');
+      scripts.each((_, script) => {
+        try {
+          const content = $(script).html() || "[]";
+          const json = JSON.parse(content);
+          const products = Array.isArray(json) ? json : [json];
+          const product = products.find((p: any) => p["@type"] === "Product");
+
+          if (product) {
+            if (product.offers) {
+              result.available = product.offers.availability === "https://schema.org/InStock";
+            }
+            if (product.name) result.title = product.name;
+            if (product.image) {
+              result.imageUrl = Array.isArray(product.image) ? product.image[0] : product.image;
+            }
+            if (product.mpn) result.mpn = product.mpn;
+            if (product.brand) {
+              result.brand = typeof product.brand === "object" ? product.brand.name : product.brand;
+            }
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      });
+
+      // 2. Price Cash (Transfer) from Meta
+      const metaPrice = $('meta[property="product:price:amount"]').attr("content");
+      if (metaPrice) {
+        result.priceCash = Number.parseInt(metaPrice, 10) || 0;
       }
 
-      if (this.shouldExcludeProduct(title)) {
+      // 3. Price Normal (Other payment methods)
+      // Look for "Otros medios de pago" and find the price
+      const otherPaymentSpan = $("span")
+        .filter((_, el) => $(el).text().includes("Otros medios de pago"))
+        .first();
+
+      if (otherPaymentSpan.length > 0) {
+        // The price is usually in a sibling or close container.
+        let next = otherPaymentSpan.next();
+        while (next.length > 0) {
+          if (next.text().includes("$")) {
+            const priceText = next.text().replace(/[^\d]/g, "");
+            result.priceNormal = Number.parseInt(priceText, 10) || 0;
+            break;
+          }
+          next = next.next();
+        }
+      }
+
+      // Fallback for normal price if not found (use cash price)
+      if (result.priceNormal === 0) {
+        result.priceNormal = result.priceCash;
+      }
+
+      // 4. Stock Quantity
+      // Sum of "Stock online" and "Stock en tienda"
+      const stockSpans = $("span").filter(
+        (_, el) =>
+          $(el).text().includes("Stock online") || $(el).text().includes("Stock en tienda"),
+      );
+
+      stockSpans.each((_, span) => {
+        const parent = $(span).parent();
+        if (parent.length > 0) {
+          const quantityDiv = parent.find('div[class*="product-detail-module--availability"]');
+          if (quantityDiv.length > 0) {
+            const text = quantityDiv.text() || "";
+            // Si dice "No disponible", es 0
+            if (text.toLowerCase().includes("no disponible")) {
+              return;
+            }
+            const match = text.match(/(\d+)/);
+            if (match?.[1]) {
+              result.stockQuantity += Number.parseInt(match[1], 10);
+            }
+          }
+        }
+      });
+
+      // Fallback Title if not found in JSON-LD
+      if (!result.title) {
+        const metaTitle = $('meta[property="og:title"]').attr("content");
+        result.title = metaTitle?.replace(/\s*\|\s*SP Digital.*$/i, "").trim() || "";
+      }
+
+      // Fallback Image if not found in JSON-LD
+      if (!result.imageUrl) {
+        const metaImage = $('meta[property="og:image"]').attr("content");
+        result.imageUrl = metaImage || "";
+      }
+
+      // Fallback MPN/Brand from Meta
+      if (!result.mpn) {
+        result.mpn = $('meta[property="product:mfr_part_no"]').attr("content") || "";
+      }
+      if (!result.brand) {
+        result.brand = $('meta[property="product:brand"]').attr("content") || "";
+      }
+
+      // Extraer especificaciones de la tabla Fractal-SpecTable (Logic from original Collector)
+      const specs = this.extractSpecsFromTable(html);
+      if (result.brand) {
+        specs.brand = result.brand;
+      }
+
+      if (this.shouldExcludeProduct(result.title)) {
         return null;
       }
 
-      // Precio efectivo (transferencia) desde metaetiqueta
-      const price = metaData.price;
-      if (!price) {
-        this.logger.warn(`Could not extract price from meta tags, trying fallback for ${url}`);
-        return this.parseProductFallback(html, url);
-      }
-
-      // Precio normal (otros medios de pago) desde el HTML
-      const originalPrice = this.extractOriginalPrice(html) || price;
-
-      // Extraer cantidad de stock real
-      // SP Digital suele tener mal la metadata de stock, así que confiamos en el HTML
-      const stockQuantity = this.extractStockQuantity(html);
-      const hasStock = stockQuantity > 0;
-
-      // Imagen desde og:image o media.spdigital.cl
-      let imageUrl = metaData.image;
-      if (!imageUrl) {
-        const imageMatch = html.match(
-          /<img[^>]*src="((?:https?:)?\/\/media\.spdigital\.cl\/[^"]+)"[^>]*>/,
-        );
-        imageUrl = imageMatch?.[1];
-      }
-      if (imageUrl?.startsWith("//")) {
-        imageUrl = `https:${imageUrl}`;
-      }
-
-      // Extraer especificaciones de la tabla Fractal-SpecTable
-      const specs = this.extractSpecsFromTable(html);
-
-      // Agregar marca a especificaciones
-      if (metaData.brand) {
-        specs.brand = metaData.brand;
-      }
+      // Final check on stock
+      const hasStock = result.available && result.stockQuantity > 0;
 
       return {
         url,
-        title,
-        price,
-        originalPrice,
+        title: result.title,
+        price: result.priceCash,
+        originalPrice: result.priceNormal,
         stock: hasStock,
-        stockQuantity,
-        mpn: metaData.mpn,
-        imageUrl,
+        stockQuantity: result.stockQuantity,
+        mpn: result.mpn,
+        imageUrl: result.imageUrl,
         specs,
       };
     } catch (error) {
       this.logger.error(`Error parsing product ${url}:`, String(error));
       return null;
     }
-  }
-
-  /**
-   * Extrae la cantidad de stock disponible (Online + Tienda).
-   */
-  private extractStockQuantity(html: string): number {
-    let totalStock = 0;
-
-    const parseStockValue = (label: string) => {
-      // Buscar la etiqueta y el contenido del div siguiente
-      // Patrón: Stock online</span></span><div ...>Contenido</div>
-      // Usamos \\s* para permitir espacios antes del cierre del span
-      const regex = new RegExp(
-        `${label}\\s*<\\/span>[\\s\\S]*?<div[^>]*>([\\s\\S]*?)<\\/div>`,
-        "i",
-      );
-      const match = html.match(regex);
-
-      if (match?.[1]) {
-        const content = match[1].trim();
-
-        // Si dice "No disponible", es 0
-        if (content.toLowerCase().includes("no disponible")) {
-          return 0;
-        }
-
-        // Intentar extraer solo los dígitos primero
-        // Esto maneja "1 unidad", "10 unidades", "1", "Stock: 5", etc.
-        const numberMatch = content.match(/(\d+)/);
-        if (numberMatch?.[1]) {
-          return Number.parseInt(numberMatch[1], 10);
-        }
-      }
-      return 0;
-    };
-
-    totalStock += parseStockValue("Stock online");
-    totalStock += parseStockValue("Stock en tienda");
-
-    return totalStock;
-  }
-
-  /**
-   * Extrae datos de las metaetiquetas del HTML.
-   */
-  private extractMetaTags(html: string): {
-    mpn?: string;
-    brand?: string;
-    price?: number;
-    title?: string;
-    availability?: string;
-    image?: string;
-  } {
-    const getMetaContent = (property: string): string | undefined => {
-      const regex = new RegExp(`<meta[^>]*property="${property}"[^>]*content="([^"]*)"`, "i");
-      const match = html.match(regex);
-      return match?.[1];
-    };
-
-    const priceStr = getMetaContent("product:price:amount");
-    const price = priceStr ? Number.parseInt(priceStr, 10) : undefined;
-
-    return {
-      mpn: getMetaContent("product:mfr_part_no"),
-      brand: getMetaContent("product:brand"),
-      price: price && !Number.isNaN(price) ? price : undefined,
-      title: getMetaContent("og:title"),
-      availability: getMetaContent("product:availability"),
-      image: getMetaContent("og:image"),
-    };
-  }
-
-  /**
-   * Extrae el precio normal (no efectivo) del HTML.
-   */
-  private extractOriginalPrice(html: string): number | undefined {
-    // Buscar el precio en el span con clase Fractal-Price--price que NO está en el contenedor de transferencia
-    const priceMatch = html.match(
-      /Fractal-Typography--typographyBestPriceSm[^>]*>[\s\S]*?Fractal-Price--price[^>]*>\$?([\d.,]+)/i,
-    );
-
-    if (priceMatch?.[1]) {
-      const cleaned = priceMatch[1].replace(/[^\d]/g, "");
-      const price = Number.parseInt(cleaned, 10);
-      return Number.isNaN(price) ? undefined : price;
-    }
-
-    return undefined;
   }
 
   /**
@@ -317,72 +334,5 @@ export class SpDigitalCrawler extends BaseCrawler {
     const excludedKeywords = ["Controladora", "Adaptador"];
     const lowerTitle = title.toLowerCase();
     return excludedKeywords.some((keyword) => lowerTitle.includes(keyword.toLowerCase()));
-  }
-
-  /**
-   * Fallback para analizar productos cuando las metaetiquetas no están disponibles.
-   */
-  private async parseProductFallback(html: string, url: string): Promise<ProductData | null> {
-    try {
-      const titleMatch = html.match(
-        /<h1[^>]*class="[^"]*Fractal-Typography[^"]*"[^>]*>([^<]+)<\/h1>/,
-      );
-      const title = titleMatch?.[1]?.trim();
-
-      if (!title) {
-        this.logger.warn(`Could not extract title from ${url}`);
-        return null;
-      }
-
-      if (this.shouldExcludeProduct(title)) {
-        return null;
-      }
-
-      const priceMatch = html.match(
-        /<span[^>]*class="[^"]*Fractal-Price--price[^"]*"[^>]*>\$?([\d.,]+)<\/span>/,
-      );
-
-      const parsePrice = (priceStr: string | undefined): number | undefined => {
-        if (!priceStr) return undefined;
-        const cleaned = priceStr.replace(/[^\d]/g, "");
-        const price = Number.parseInt(cleaned, 10);
-        return Number.isNaN(price) ? undefined : price;
-      };
-
-      const price = parsePrice(priceMatch?.[1]);
-
-      if (!price) {
-        this.logger.warn(`Could not extract price from ${url}`);
-        return null;
-      }
-
-      const imageMatch = html.match(
-        /<img[^>]*src="((?:https?:)?\/\/media\.spdigital\.cl\/[^"]+)"[^>]*>/,
-      );
-      let imageUrl = imageMatch?.[1];
-      if (imageUrl?.startsWith("//")) {
-        imageUrl = `https:${imageUrl}`;
-      }
-
-      const specs = this.extractSpecsFromTable(html);
-
-      const stockQuantity = this.extractStockQuantity(html);
-      const hasStock = stockQuantity > 0;
-
-      return {
-        url,
-        title,
-        price,
-        originalPrice: price,
-        stock: hasStock,
-        stockQuantity,
-        mpn: specs.mpn || specs.sku,
-        imageUrl,
-        specs,
-      };
-    } catch (error) {
-      this.logger.error(`Error in fallback parsing ${url}:`, String(error));
-      return null;
-    }
   }
 }

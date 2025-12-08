@@ -153,12 +153,12 @@ export abstract class BaseCrawler {
     }
   }
 
-  public async fetchHtml(url: string): Promise<string> {
+  public async fetchHtml(url: string, waitForSelector?: string): Promise<string> {
     this.logger = new Logger(this.name || "Crawler");
     await this.waitRateLimit();
 
     if (this.useHeadless) {
-      return this.fetchWithPuppeteer(url);
+      return this.fetchWithPuppeteer(url, waitForSelector);
     }
 
     return this.fetchWithFetch(url);
@@ -198,7 +198,7 @@ export abstract class BaseCrawler {
     }
   }
 
-  private async fetchWithPuppeteer(url: string): Promise<string> {
+  private async fetchWithPuppeteer(url: string, waitForSelector?: string): Promise<string> {
     const page = await this.getPage();
 
     try {
@@ -210,6 +210,14 @@ export abstract class BaseCrawler {
 
       // Esperar a que el contenido principal esté cargado
       await page.waitForSelector("body", { timeout: 10000 });
+
+      if (waitForSelector) {
+        try {
+          await page.waitForSelector(waitForSelector, { timeout: 5000 });
+        } catch (e) {
+          this.logger.warn(`Timeout waiting for selector: ${waitForSelector}`);
+        }
+      }
 
       const content = await page.content();
       this.releasePage(page);
