@@ -29,53 +29,53 @@ import { cleanHtmlEntities, normalizeGenericTitle } from "./utils";
  * @param manufacturer - Fabricante desde especificaciones/meta tags (opcional, usado como fallback)
  */
 export function normalizeTitle(
-  title: string,
-  category: CategorySlug,
-  mpn?: string,
-  manufacturer?: string,
+	title: string,
+	category: CategorySlug,
+	mpn?: string,
+	manufacturer?: string,
 ): string {
-  switch (category) {
-    case "hdd":
-      return normalizeHddTitle(title, mpn, manufacturer);
-    case "ssd":
-      return normalizeSsdTitle(title, mpn, manufacturer);
-    case "gpu":
-      return normalizeGpuTitle(title, mpn, manufacturer);
-    case "motherboard":
-      return normalizeMotherboardTitle(title, mpn, manufacturer);
-    case "psu":
-      return normalizePsuTitle(title, mpn, manufacturer);
-    case "ram":
-      return normalizeRamTitle(title, mpn, manufacturer);
-    case "case_fan":
-      return normalizeCaseFanTitle(title, mpn, manufacturer);
-    case "cpu_cooler":
-      return normalizeCpuCoolerTitle(title, mpn, manufacturer);
-    case "cpu":
-      return normalizeCpuTitle(title, mpn, manufacturer);
-    case "case":
-      return normalizeCaseTitle(title, mpn, manufacturer);
-    default:
-      return normalizeGenericTitle(title);
-  }
+	switch (category) {
+		case "hdd":
+			return normalizeHddTitle(title, mpn, manufacturer);
+		case "ssd":
+			return normalizeSsdTitle(title, mpn, manufacturer);
+		case "gpu":
+			return normalizeGpuTitle(title, mpn, manufacturer);
+		case "motherboard":
+			return normalizeMotherboardTitle(title, mpn, manufacturer);
+		case "psu":
+			return normalizePsuTitle(title, mpn, manufacturer);
+		case "ram":
+			return normalizeRamTitle(title, mpn, manufacturer);
+		case "case_fan":
+			return normalizeCaseFanTitle(title, mpn, manufacturer);
+		case "cpu_cooler":
+			return normalizeCpuCoolerTitle(title, mpn, manufacturer);
+		case "cpu":
+			return normalizeCpuTitle(title, mpn, manufacturer);
+		case "case":
+			return normalizeCaseTitle(title, mpn, manufacturer);
+		default:
+			return normalizeGenericTitle(title);
+	}
 }
 
 /**
  * Utilidades de normalización exportadas
  */
 export const TitleNormalizer = {
-  normalize: normalizeTitle,
-  normalizeCase: normalizeCaseTitle,
-  normalizeCpu: normalizeCpuTitle,
-  normalizeCpuCooler: normalizeCpuCoolerTitle,
-  normalizeHdd: normalizeHddTitle,
-  normalizeSsd: normalizeSsdTitle,
-  normalizeGpu: normalizeGpuTitle,
-  normalizeMotherboard: normalizeMotherboardTitle,
-  normalizePsu: normalizePsuTitle,
-  normalizeRam: normalizeRamTitle,
-  normalizeCaseFan: normalizeCaseFanTitle,
-  cleanHtmlEntities,
+	normalize: normalizeTitle,
+	normalizeCase: normalizeCaseTitle,
+	normalizeCpu: normalizeCpuTitle,
+	normalizeCpuCooler: normalizeCpuCoolerTitle,
+	normalizeHdd: normalizeHddTitle,
+	normalizeSsd: normalizeSsdTitle,
+	normalizeGpu: normalizeGpuTitle,
+	normalizeMotherboard: normalizeMotherboardTitle,
+	normalizePsu: normalizePsuTitle,
+	normalizeRam: normalizeRamTitle,
+	normalizeCaseFan: normalizeCaseFanTitle,
+	cleanHtmlEntities,
 };
 
 export { normalizeCaseTitle } from "./case";

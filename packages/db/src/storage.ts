@@ -10,26 +10,32 @@
  * Buckets de almacenamiento disponibles en el proyecto.
  */
 export const StorageBuckets = {
-  STORE_LOGOS: "store-logos",
-  PRODUCT_IMAGES: "product-images",
+	STORE_LOGOS: "store-logos",
+	PRODUCT_IMAGES: "product-images",
 } as const;
 
-export type StorageBucket = (typeof StorageBuckets)[keyof typeof StorageBuckets];
+export type StorageBucket =
+	(typeof StorageBuckets)[keyof typeof StorageBuckets];
 
 /**
  * Tipos MIME permitidos para cada bucket.
  */
 export const AllowedMimeTypes = {
-  [StorageBuckets.STORE_LOGOS]: ["image/png", "image/jpeg", "image/webp", "image/svg+xml"],
-  [StorageBuckets.PRODUCT_IMAGES]: ["image/png", "image/jpeg", "image/webp"],
+	[StorageBuckets.STORE_LOGOS]: [
+		"image/png",
+		"image/jpeg",
+		"image/webp",
+		"image/svg+xml",
+	],
+	[StorageBuckets.PRODUCT_IMAGES]: ["image/png", "image/jpeg", "image/webp"],
 } as const;
 
 /**
  * Límites de tamaño de archivo para cada bucket (en bytes).
  */
 export const FileSizeLimits = {
-  [StorageBuckets.STORE_LOGOS]: 1048576, // 1MB
-  [StorageBuckets.PRODUCT_IMAGES]: 2097152, // 2MB
+	[StorageBuckets.STORE_LOGOS]: 1048576, // 1MB
+	[StorageBuckets.PRODUCT_IMAGES]: 2097152, // 2MB
 } as const;
 
 /**
@@ -44,11 +50,11 @@ export const FileSizeLimits = {
  * getStoreLogoPath("pc-express", "webp") // "pc-express.webp"
  */
 export function getStoreLogoPath(
-  storeSlug: string,
-  extension: "png" | "jpeg" | "jpg" | "webp" | "svg" = "png",
+	storeSlug: string,
+	extension: "png" | "jpeg" | "jpg" | "webp" | "svg" = "png",
 ): string {
-  const sanitizedSlug = storeSlug.toLowerCase().trim();
-  return `${sanitizedSlug}.${extension}`;
+	const sanitizedSlug = storeSlug.toLowerCase().trim();
+	return `${sanitizedSlug}.${extension}`;
 }
 
 /**
@@ -65,17 +71,17 @@ export function getStoreLogoPath(
  * getProductImagePath("ROG-STRIX-RTX4080", "png") // "ROG-STRIX-RTX4080.png"
  */
 export function getProductImagePath(
-  mpn: string,
-  extension: "png" | "jpeg" | "jpg" | "webp" = "webp",
+	mpn: string,
+	extension: "png" | "jpeg" | "jpg" | "webp" = "webp",
 ): string {
-  // Sanitizar MPN: eliminar caracteres especiales que podrían causar problemas en URLs
-  const sanitizedMpn = mpn
-    .trim()
-    .replace(/[/\\:*?"<>|]/g, "-") // Reemplazar caracteres de ruta inválidos
-    .replace(/\s+/g, "-") // Reemplazar espacios con guiones
-    .replace(/-+/g, "-"); // Colapsar múltiples guiones
+	// Sanitizar MPN: eliminar caracteres especiales que podrían causar problemas en URLs
+	const sanitizedMpn = mpn
+		.trim()
+		.replace(/[/\\:*?"<>|]/g, "-") // Reemplazar caracteres de ruta inválidos
+		.replace(/\s+/g, "-") // Reemplazar espacios con guiones
+		.replace(/-+/g, "-"); // Colapsar múltiples guiones
 
-  return `${sanitizedMpn}.${extension}`;
+	return `${sanitizedMpn}.${extension}`;
 }
 
 /**
@@ -95,12 +101,12 @@ export function getProductImagePath(
  * // Retorna: "https://abc123.supabase.co/storage/v1/object/public/store-logos/sp-digital.png"
  */
 export function getStoragePublicUrl(
-  supabaseUrl: string,
-  bucket: StorageBucket,
-  filePath: string,
+	supabaseUrl: string,
+	bucket: StorageBucket,
+	filePath: string,
 ): string {
-  const baseUrl = supabaseUrl.replace(/\/$/, ""); // Eliminar barra final
-  return `${baseUrl}/storage/v1/object/public/${bucket}/${filePath}`;
+	const baseUrl = supabaseUrl.replace(/\/$/, ""); // Eliminar barra final
+	return `${baseUrl}/storage/v1/object/public/${bucket}/${filePath}`;
 }
 
 /**
@@ -112,12 +118,12 @@ export function getStoragePublicUrl(
  * @returns La URL pública para el logo de la tienda
  */
 export function getStoreLogoUrl(
-  supabaseUrl: string,
-  storeSlug: string,
-  extension: "png" | "jpeg" | "jpg" | "webp" | "svg" = "png",
+	supabaseUrl: string,
+	storeSlug: string,
+	extension: "png" | "jpeg" | "jpg" | "webp" | "svg" = "png",
 ): string {
-  const filePath = getStoreLogoPath(storeSlug, extension);
-  return getStoragePublicUrl(supabaseUrl, StorageBuckets.STORE_LOGOS, filePath);
+	const filePath = getStoreLogoPath(storeSlug, extension);
+	return getStoragePublicUrl(supabaseUrl, StorageBuckets.STORE_LOGOS, filePath);
 }
 
 /**
@@ -129,12 +135,16 @@ export function getStoreLogoUrl(
  * @returns La URL pública para la imagen del producto
  */
 export function getProductImageUrl(
-  supabaseUrl: string,
-  mpn: string,
-  extension: "png" | "jpeg" | "jpg" | "webp" = "webp",
+	supabaseUrl: string,
+	mpn: string,
+	extension: "png" | "jpeg" | "jpg" | "webp" = "webp",
 ): string {
-  const filePath = getProductImagePath(mpn, extension);
-  return getStoragePublicUrl(supabaseUrl, StorageBuckets.PRODUCT_IMAGES, filePath);
+	const filePath = getProductImagePath(mpn, extension);
+	return getStoragePublicUrl(
+		supabaseUrl,
+		StorageBuckets.PRODUCT_IMAGES,
+		filePath,
+	);
 }
 
 /**
@@ -144,9 +154,12 @@ export function getProductImageUrl(
  * @param mimeType - El tipo MIME a validar
  * @returns Verdadero si el tipo MIME está permitido
  */
-export function isAllowedMimeType(bucket: StorageBucket, mimeType: string): boolean {
-  const allowedTypes = AllowedMimeTypes[bucket] as readonly string[];
-  return allowedTypes.includes(mimeType);
+export function isAllowedMimeType(
+	bucket: StorageBucket,
+	mimeType: string,
+): boolean {
+	const allowedTypes = AllowedMimeTypes[bucket] as readonly string[];
+	return allowedTypes.includes(mimeType);
 }
 
 /**
@@ -156,8 +169,11 @@ export function isAllowedMimeType(bucket: StorageBucket, mimeType: string): bool
  * @param fileSize - El tamaño del archivo en bytes
  * @returns Verdadero si el tamaño del archivo está dentro del límite
  */
-export function isWithinSizeLimit(bucket: StorageBucket, fileSize: number): boolean {
-  return fileSize <= FileSizeLimits[bucket];
+export function isWithinSizeLimit(
+	bucket: StorageBucket,
+	fileSize: number,
+): boolean {
+	return fileSize <= FileSizeLimits[bucket];
 }
 
 /**
@@ -167,6 +183,6 @@ export function isWithinSizeLimit(bucket: StorageBucket, fileSize: number): bool
  * @returns La extensión del archivo sin el punto, o null si no se encuentra
  */
 export function extractFileExtension(urlOrFilename: string): string | null {
-  const match = urlOrFilename.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
-  return match ? match[1].toLowerCase() : null;
+	const match = urlOrFilename.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
+	return match ? match[1].toLowerCase() : null;
 }

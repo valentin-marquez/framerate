@@ -1,11 +1,12 @@
 import type { PcExpressCategory } from "@/crawlers/pc-express";
 import type { SpDigitalCategory } from "@/crawlers/sp-digital";
+import type { MyShopCategory } from "@/crawlers/myshop";
 
-export type CrawlerType = "pc-express" | "sp-digital";
+export type CrawlerType = "pc-express" | "sp-digital" | "myshop";
 
 export interface CollectorJobData {
-  crawler: CrawlerType;
-  category?: PcExpressCategory | SpDigitalCategory | "all";
-  categoryUrl?: string;
-  productUrl?: string;
+	crawler: CrawlerType;
+	category?: PcExpressCategory | SpDigitalCategory | MyShopCategory | "all";
+	categoryUrl?: string;
+	productUrl?: string;
 }

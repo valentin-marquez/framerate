@@ -3,22 +3,33 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", ".wrangler/**"]
+      "dependsOn": [
+        "^build",
+        "check-types"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "outputs": [
+        "dist/**",
+        ".wrangler/**"
+      ]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
     "test": {
-      "dependsOn": []
+      "dependsOn": [
+        "check-types"
+      ]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": [
+        "^check-types"
+      ],
+      "outputs": []
     },
     "generate:types": {
       "cache": false

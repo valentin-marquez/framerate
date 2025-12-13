@@ -10,20 +10,20 @@ auth.use("*", authMiddleware);
 
 // Devuelve el perfil del usuario actual
 auth.get("/me", async (c) => {
-  const user = c.get("user"); // Obtener el usuario del contexto
-  const supabase = createSupabaseClient(c.env);
+	const user = c.get("user"); // Obtener el usuario del contexto
+	const supabase = createSupabaseClient(c.env);
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+	const { data: profile, error } = await supabase
+		.from("profiles")
+		.select("*")
+		.eq("id", user.id)
+		.single();
 
-  if (error) {
-    return c.json({ error: error.message }, 500);
-  }
+	if (error) {
+		return c.json({ error: error.message }, 500);
+	}
 
-  return c.json({ user, profile });
+	return c.json({ user, profile });
 });
 
 export default auth;

@@ -10,14 +10,14 @@ import { describe, expect, test } from "bun:test";
 const TIMEOUT = 60000;
 
 describe("IA Extraction", () => {
-  test(
-    "should extract HDD specs from full description",
-    async () => {
-      const { HddIAExtractor } = await import("@/processors/ai/hdd");
-      const hddExtractor = new HddIAExtractor();
+	test(
+		"should extract HDD specs from full description",
+		async () => {
+			const { HddIAExtractor } = await import("@/processors/ai/hdd");
+			const hddExtractor = new HddIAExtractor();
 
-      console.log("\n--- Testing HDD Extraction ---");
-      const hddText = `
+			console.log("\n--- Testing HDD Extraction ---");
+			const hddText = `
 				WD Blue 1TB Desktop Hard Disk Drive - 7200 RPM SATA 6Gb/s 64MB Cache 3.5 Inch - WD10EZEX
 				Brand: Western Digital
 				Series: Blue
@@ -32,25 +32,25 @@ describe("IA Extraction", () => {
 				Hard Drive Rotational Speed: 7200 RPM
 			`;
 
-      const specs = await hddExtractor.extract("TEST-HDD-MPN-001", hddText);
-      console.log("HDD Specs Result:", JSON.stringify(specs, null, 2));
+			const specs = await hddExtractor.extract("TEST-HDD-MPN-001", hddText);
+			console.log("HDD Specs Result:", JSON.stringify(specs, null, 2));
 
-      expect(specs).toBeDefined();
-      expect(specs).not.toBeNull();
-      expect(specs!.capacity).toBeDefined();
-      expect(specs!.rpm).toBeDefined();
-    },
-    TIMEOUT,
-  );
+			expect(specs).toBeDefined();
+			expect(specs).not.toBeNull();
+			expect(specs?.capacity).toBeDefined();
+			expect(specs?.rpm).toBeDefined();
+		},
+		TIMEOUT,
+	);
 
-  test(
-    "should extract SSD specs from full description",
-    async () => {
-      const { SsdIAExtractor } = await import("@/processors/ai/ssd");
-      const ssdExtractor = new SsdIAExtractor();
+	test(
+		"should extract SSD specs from full description",
+		async () => {
+			const { SsdIAExtractor } = await import("@/processors/ai/ssd");
+			const ssdExtractor = new SsdIAExtractor();
 
-      console.log("\n--- Testing SSD Extraction ---");
-      const ssdText = `
+			console.log("\n--- Testing SSD Extraction ---");
+			const ssdText = `
 				Samsung 980 PRO SSD 1TB PCIe 4.0 NVMe Gen 4 Gaming M.2 Internal Solid State Drive Memory Card, Maximum Speed, Thermal Control, MZ-V8P1T0B
 				NEXT-LEVEL SSD PERFORMANCE: Unleash the power of the Samsung 980 PRO PCIe 4.0 NVMe SSD for next-level computing. 
 				MAXIMUM SPEED: 980 PRO is raising the bar for NVMe SSDs, delivering read speeds up to 7,000 MB/s.
@@ -62,62 +62,65 @@ describe("IA Extraction", () => {
 				FLASH MEMORY BRAND: Samsung
 			`;
 
-      const specs = await ssdExtractor.extract("TEST-SSD-MPN-001", ssdText);
-      console.log("SSD Specs Result:", JSON.stringify(specs, null, 2));
+			const specs = await ssdExtractor.extract("TEST-SSD-MPN-001", ssdText);
+			console.log("SSD Specs Result:", JSON.stringify(specs, null, 2));
 
-      expect(specs).toBeDefined();
-      expect(specs).not.toBeNull();
-      expect(specs!.capacity).toBeDefined();
-      expect(specs!.format).toBeDefined();
-    },
-    TIMEOUT,
-  );
+			expect(specs).toBeDefined();
+			expect(specs).not.toBeNull();
+			expect(specs?.capacity).toBeDefined();
+			expect(specs?.format).toBeDefined();
+		},
+		TIMEOUT,
+	);
 
-  describe("Short Descriptions", () => {
-    const shortTests = [
-      {
-        type: "SSD",
-        text: "Unidad SSD ADATA Legend 860, 1TB,M.2 2280, NVMe PCIe 4.0, Lec. 6000MB/s Esc. 5000MB/s",
-        mpn: "TEST-SSD-SHORT-001",
-      },
-      {
-        type: "SSD",
-        text: "Unidad SSD Crucial E100, 1TB, M.2 2280, NVMe PCIe 4.0 x4, Lect 5000MB/s Escr 4500MB/s",
-        mpn: "TEST-SSD-SHORT-002",
-      },
-      {
-        type: "HDD",
-        text: 'Disco Duro 20TB Seagate IronWolf Pro, 3.5", SATA III, 6Gbit/s, 7200RPM, 256MB Caché',
-        mpn: "TEST-HDD-SHORT-001",
-      },
-      {
-        type: "HDD",
-        text: 'Disco Duro 4TB WD Gold Clase empresarial, 3.5", 7200 RPM, caché 256MB, SATA, tecnología OptiNAND',
-        mpn: "TEST-HDD-SHORT-002",
-      },
-    ];
+	describe("Short Descriptions", () => {
+		const shortTests = [
+			{
+				type: "SSD",
+				text: "Unidad SSD ADATA Legend 860, 1TB,M.2 2280, NVMe PCIe 4.0, Lec. 6000MB/s Esc. 5000MB/s",
+				mpn: "TEST-SSD-SHORT-001",
+			},
+			{
+				type: "SSD",
+				text: "Unidad SSD Crucial E100, 1TB, M.2 2280, NVMe PCIe 4.0 x4, Lect 5000MB/s Escr 4500MB/s",
+				mpn: "TEST-SSD-SHORT-002",
+			},
+			{
+				type: "HDD",
+				text: 'Disco Duro 20TB Seagate IronWolf Pro, 3.5", SATA III, 6Gbit/s, 7200RPM, 256MB Caché',
+				mpn: "TEST-HDD-SHORT-001",
+			},
+			{
+				type: "HDD",
+				text: 'Disco Duro 4TB WD Gold Clase empresarial, 3.5", 7200 RPM, caché 256MB, SATA, tecnología OptiNAND',
+				mpn: "TEST-HDD-SHORT-002",
+			},
+		];
 
-    for (const testCase of shortTests) {
-      test(
-        `should extract ${testCase.type} from: ${testCase.text.substring(0, 30)}...`,
-        async () => {
-          console.log(`\nTesting ${testCase.type}: ${testCase.text}`);
-          // biome-ignore lint/suspicious/noExplicitAny: Testing multiple types
-          let specs: any;
-          if (testCase.type === "SSD") {
-            const { SsdIAExtractor } = await import("@/processors/ai/ssd");
-            const ssdExtractor = new SsdIAExtractor();
-            specs = await ssdExtractor.extract(testCase.mpn, testCase.text);
-          } else {
-            const { HddIAExtractor } = await import("@/processors/ai/hdd");
-            const hddExtractor = new HddIAExtractor();
-            specs = await hddExtractor.extract(testCase.mpn, testCase.text);
-          }
-          console.log(`Result for ${testCase.mpn}:`, JSON.stringify(specs, null, 2));
-          expect(specs).toBeDefined();
-        },
-        TIMEOUT,
-      );
-    }
-  });
+		for (const testCase of shortTests) {
+			test(
+				`should extract ${testCase.type} from: ${testCase.text.substring(0, 30)}...`,
+				async () => {
+					console.log(`\nTesting ${testCase.type}: ${testCase.text}`);
+					// biome-ignore lint/suspicious/noExplicitAny: Testing multiple types
+					let specs: any;
+					if (testCase.type === "SSD") {
+						const { SsdIAExtractor } = await import("@/processors/ai/ssd");
+						const ssdExtractor = new SsdIAExtractor();
+						specs = await ssdExtractor.extract(testCase.mpn, testCase.text);
+					} else {
+						const { HddIAExtractor } = await import("@/processors/ai/hdd");
+						const hddExtractor = new HddIAExtractor();
+						specs = await hddExtractor.extract(testCase.mpn, testCase.text);
+					}
+					console.log(
+						`Result for ${testCase.mpn}:`,
+						JSON.stringify(specs, null, 2),
+					);
+					expect(specs).toBeDefined();
+				},
+				TIMEOUT,
+			);
+		}
+	});
 });

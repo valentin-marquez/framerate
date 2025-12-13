@@ -1,30 +1,38 @@
 {
   "name": "framerate",
-  "devDependencies": {
-    "@biomejs/biome": "2.3.7",
-    "turbo": "^2.6.1",
-    "typescript": "^5.0.0"
-  },
-  "packageManager": "^bun@1.2.9",
   "private": true,
-  "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "clean": "turbo run clean && rm -rf node_modules",
-    "check-types": "turbo run check-types",
-    "format": "biome format --write .",
-    "check": "biome check .",
-    "db:push": "turbo run db:push",
-    "generate:types": "turbo run generate:types",
-    "dev:web": "turbo run dev --filter=web",
-    "dev:api": "turbo run dev --filter=api",
-    "dev:collector": "turbo run dev --filter=collector",
-    "dev:tracker": "turbo run dev --filter=tracker"
-  },
+  "packageManager": "^bun@1.2.9",
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "biome": "biome check --write .",
+    "biome:check": "biome check .",
+    "biome:format": "biome format --write .",
+    "biome:format:check": "biome format .",
+    "biome:lint": "biome lint --write .",
+    "biome:lint:check": "biome lint .",
+    "check-types": "turbo run check-types",
+    "db:push": "turbo run db:push",
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=api",
+    "dev:collector": "turbo run dev --filter=collector",
+    "dev:tracker": "turbo run dev --filter=tracker",
+    "dev:web": "turbo run dev --filter=web",
+    "generate:types": "turbo run generate:types",
+    "prepare": "simple-git-hooks",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.7",
+    "simple-git-hooks": "^2.13.1",
+    "turbo": "^2.6.1",
+    "typescript": "^5.0.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "bun run biome && bun run generate:types",
+    "pre-push": "bun run check-types && bun run build"
+  }
 }
