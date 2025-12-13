@@ -23,7 +23,8 @@
     "dev:web": "turbo run dev --filter=web",
     "generate:types": "turbo run generate:types",
     "prepare": "simple-git-hooks",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "lint": "turbo run biome:lint"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.7",
@@ -33,6 +34,6 @@
   },
   "simple-git-hooks": {
     "pre-commit": "bun run biome && bun run generate:types",
-    "pre-push": "bun run check-types && bun run build"
+    "pre-push": "bun run biome:check && bun run build"
   }
 }

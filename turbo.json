@@ -40,6 +40,12 @@
     },
     "group-variants": {
       "cache": false
+    },
+    "lint": {
+      "outputs": []
+    },
+    "biome:lint": {
+      "outputs": []
     }
   }
 }
