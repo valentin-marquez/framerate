@@ -15,14 +15,17 @@
     "db:push": "supabase db push",
     "db:pull": "supabase db pull",
     "db:link": "bun src/scripts/db-link.ts",
-    "group-variants": "bun run src/scripts/group-variants.ts"
+    "group-variants": "bun run src/scripts/group-variants.ts",
+    "test": "vitest"
   },
   "dependencies": {
     "@framerate/utils": "workspace:*",
-    "@supabase/supabase-js": "^2.0.0"
+    "@supabase/supabase-js": "^2.87.1",
+    "@supabase/ssr": "^0.8.0"
   },
   "devDependencies": {
     "supabase": "^2.63.1",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
   }
 }

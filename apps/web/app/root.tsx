@@ -9,7 +9,7 @@ import {
 } from "react-router";
 import type { Route } from "./+types/root";
 import "@/styles/app.css";
-import { createBrowserClient } from "@supabase/ssr";
+import { client } from "@framerate/db";
 import clsx from "clsx";
 import { useState } from "react";
 import {
@@ -99,7 +99,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App({ loaderData }: Route.ComponentProps) {
 	const { env, user, categories } = loaderData;
 	const [supabase] = useState(() =>
-		createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY),
+		client({ url: env.SUPABASE_URL, key: env.SUPABASE_ANON_KEY }),
 	);
 
 	return (

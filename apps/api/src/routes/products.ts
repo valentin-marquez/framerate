@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
-import { createSupabaseClient } from "@/lib/supabase";
+import { createSupabase } from "@/lib/supabase";
 import { cache } from "@/middleware/cache";
 
 const products = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // GET /products/search?q=term
 products.get("/search", async (c) => {
-	const supabase = createSupabaseClient(c.env);
+	const supabase = createSupabase(c.env);
 	const query = c.req.query("q");
 	const limit = Number(c.req.query("limit")) || 50;
 	const offset = Number(c.req.query("offset")) || 0;
@@ -37,7 +37,7 @@ products.get(
 		cacheControl: "max-age=300", // 5 minutes
 	}),
 	async (c) => {
-		const supabase = createSupabaseClient(c.env);
+		const supabase = createSupabase(c.env);
 		const limit = Number(c.req.query("limit")) || 20;
 		const minDiscount = Number(c.req.query("minDiscount")) || 10;
 
@@ -57,7 +57,7 @@ products.get(
 
 // POST /products/:slug/view
 products.post("/:slug/view", async (c) => {
-	const supabase = createSupabaseClient(c.env);
+	const supabase = createSupabase(c.env);
 	const slug = c.req.param("slug");
 
 	const { error } = await supabase.rpc("increment_product_view", {
@@ -79,7 +79,7 @@ products.get(
 		cacheControl: "max-age=3600",
 	}),
 	async (c) => {
-		const supabase = createSupabaseClient(c.env);
+		const supabase = createSupabase(c.env);
 		const slug = c.req.param("slug");
 
 		// obtener el producto principal
@@ -152,7 +152,7 @@ products.get(
 		cacheControl: "max-age=300",
 	}),
 	async (c) => {
-		const supabase = createSupabaseClient(c.env);
+		const supabase = createSupabase(c.env);
 		const page = Number(c.req.query("page")) || 1;
 		const limit = Number(c.req.query("limit")) || 20;
 		const offset = (page - 1) * limit;

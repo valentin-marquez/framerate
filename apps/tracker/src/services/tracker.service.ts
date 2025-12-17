@@ -1,6 +1,6 @@
 import type { Database, Tables } from "@framerate/db";
+import { client, type SupabaseClient } from "@framerate/db";
 import { Logger } from "@framerate/utils";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import pLimit from "p-limit";
 import { config } from "../config";
 import type { BaseTracker, TrackerResult } from "../domain/trackers/base";
@@ -54,10 +54,11 @@ export class TrackerService {
 	private lightLimit = pLimit(20);
 
 	constructor() {
-		this.supabase = createClient<Database>(
-			config.SUPABASE_URL,
-			config.SUPABASE_SERVICE_ROLE_KEY,
-		);
+		this.supabase = client({
+			url: config.SUPABASE_URL,
+			key: config.SUPABASE_SERVICE_ROLE_KEY,
+			options: { auth: { persistSession: false } },
+		});
 
 		this.myShopTracker = new MyShopTracker();
 		this.trackers = [

@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
-import { createSupabaseClient } from "@/lib/supabase";
+import { createSupabase } from "@/lib/supabase";
 
 const categories = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // GET /categories/:slug/filters
 categories.get("/:slug/filters", async (c) => {
-	const supabase = createSupabaseClient(c.env);
+	const supabase = createSupabase(c.env);
 	const slug = c.req.param("slug");
 
 	const { data, error } = await supabase.rpc("get_category_filters", {
@@ -22,7 +22,7 @@ categories.get("/:slug/filters", async (c) => {
 
 // GET /categories
 categories.get("/", async (c) => {
-	const supabase = createSupabaseClient(c.env);
+	const supabase = createSupabase(c.env);
 
 	const { data, error } = await supabase
 		.from("categories")

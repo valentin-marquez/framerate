@@ -1,7 +1,7 @@
 import { Logger } from "@framerate/utils";
 import { createMiddleware } from "hono/factory";
 import type { Bindings, Variables } from "@/bindings";
-import { createSupabaseClient } from "@/lib/supabase";
+import { createSupabase } from "@/lib/supabase";
 
 const logger = new Logger("AuthMiddleware");
 
@@ -17,7 +17,7 @@ export const authMiddleware = createMiddleware<{
 	}
 
 	const token = authHeader.replace("Bearer ", "");
-	const supabase = createSupabaseClient(c.env);
+	const supabase = createSupabase(c.env);
 
 	const {
 		data: { user },

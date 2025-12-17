@@ -1,5 +1,4 @@
-import type { Database } from "@framerate/db";
-import { createClient } from "@supabase/supabase-js";
+import { client } from "@framerate/db";
 
 const supabaseUrl = Bun.env.SUPABASE_URL;
 const supabaseKey = Bun.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -13,9 +12,8 @@ if (!supabaseKey) {
 	throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
-	auth: {
-		persistSession: false,
-		autoRefreshToken: false,
-	},
+export const supabase = client({
+	url: supabaseUrl,
+	key: supabaseKey,
+	options: { auth: { persistSession: false } },
 });

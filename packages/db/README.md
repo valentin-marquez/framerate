@@ -113,6 +113,32 @@ packages/db/
 
 ## 6. Gestión de Almacenamiento (Storage)
 
+<!-- existing storage content kept -->
+
+## 7. Supabase Clients
+
+`@framerate/db` exports factory helpers to create Supabase clients for common contexts:
+
+- `client(config)` - universal client factory for workers, browser or service role usage.
+- `server(config)` - SSR client factory (cookie-aware) for React Router / SSR contexts.
+
+Usage examples:
+
+```ts
+import { client, server } from "@framerate/db";
+
+// Worker or server-side with publishable key
+const supabase = client({ url: process.env.SUPABASE_URL!, key: process.env.SUPABASE_PUBLISHABLE_KEY! });
+
+// Service role (scripts, collectors)
+const supabaseAdmin = client({ url: process.env.SUPABASE_URL!, key: process.env.SUPABASE_SERVICE_ROLE_KEY!, options: { auth: { persistSession: false } } });
+
+// SSR
+const { supabase, headers } = server({ url, anonKey, request });
+```
+
+These factories are typed with the package `Database` types so you get end-to-end type-safety.
+
 El paquete exporta utilidades para gestionar archivos en Supabase Storage.
 
 ### 6.1 Buckets

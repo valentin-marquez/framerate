@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
-import { createSupabaseClient } from "@/lib/supabase";
+import { createSupabase } from "@/lib/supabase";
 import { authMiddleware } from "@/middleware/auth";
 
 const auth = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -11,7 +11,7 @@ auth.use("*", authMiddleware);
 // Devuelve el perfil del usuario actual
 auth.get("/me", async (c) => {
 	const user = c.get("user"); // Obtener el usuario del contexto
-	const supabase = createSupabaseClient(c.env);
+	const supabase = createSupabase(c.env);
 
 	const { data: profile, error } = await supabase
 		.from("profiles")
