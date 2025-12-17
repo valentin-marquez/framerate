@@ -1,10 +1,9 @@
--- Add PC Express store
 INSERT INTO public.stores (name, slug, url, logo_url, is_active)
 VALUES (
-    'PC Express',
-    'pc-express',
-    'https://tienda.pc-express.cl',
-    'https://pc-express.cl/servicios/images/logo.png',
+    'MyShop',
+    'myshop',
+    'https://www.myshop.cl',
+    'https://static.myshop.cl/logoheader/808321.webp',
     true
 )
 ON CONFLICT (slug) DO UPDATE SET

@@ -1,9 +1,9 @@
+import { Logger } from "@framerate/utils";
 import { WorkersKVStore } from "@hono-rate-limiter/cloudflare";
 import type { Context, Next } from "hono";
 import type { ClientRateLimitInfo } from "hono-rate-limiter";
 import { rateLimiter } from "hono-rate-limiter";
-import type { Bindings, Variables } from "../bindings";
-import { Logger } from "../lib/logger";
+import type { Bindings, Variables } from "@/bindings";
 
 const logger = new Logger("RateLimit");
 

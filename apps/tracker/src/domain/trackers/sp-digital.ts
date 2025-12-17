@@ -1,4 +1,4 @@
-import puppeteer, { type Browser } from "puppeteer";
+import puppeteer, { type Browser, type Page } from "puppeteer";
 import { BaseTracker, type TrackerResult } from "./base";
 
 export class SpDigitalTracker extends BaseTracker {
@@ -46,7 +46,7 @@ export class SpDigitalTracker extends BaseTracker {
 	}
 
 	async track(url: string): Promise<TrackerResult> {
-		let page;
+		let page: Page | undefined;
 		try {
 			this.logger.info(`Starting track for: ${url}`);
 			const browser = await this.getBrowser();
@@ -87,6 +87,7 @@ export class SpDigitalTracker extends BaseTracker {
 					try {
 						const json = JSON.parse(script.textContent || "[]");
 						const products = Array.isArray(json) ? json : [json];
+						// biome-ignore lint/suspicious/noExplicitAny: JSON-LD structure is dynamic
 						const product = products.find((p: any) => p["@type"] === "Product");
 
 						if (product?.offers) {

@@ -1,17 +1,14 @@
--- 1. Crear tabla de métricas de productos
+-- 1. Create Product Metrics Table
 CREATE TABLE IF NOT EXISTS public.product_metrics (
     product_id uuid PRIMARY KEY REFERENCES public.products(id) ON DELETE CASCADE,
     views_count bigint DEFAULT 0,
     clicks_count bigint DEFAULT 0,
     updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
 );
-
 ALTER TABLE public.product_metrics ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY "Public metrics are viewable by everyone" 
 ON public.product_metrics FOR SELECT USING (true);
-
--- 2. Función para incrementar vistas (Analíticas)
+-- 2. Function to increment views (Analytics)
 CREATE OR REPLACE FUNCTION public.increment_product_view(p_slug text)
 RETURNS void
 LANGUAGE plpgsql
@@ -32,11 +29,9 @@ BEGIN
     END IF;
 END;
 $$;
-
--- 3. Actualizar Vista api_products para incluir popularidad
--- Necesitamos eliminar la vista primero porque estamos cambiando orden/tipos de columnas
+-- 3. Update View api_products to include popularity
+-- We need to drop the view first because we are changing column order/types
 DROP VIEW IF EXISTS public.api_products CASCADE;
-
 CREATE OR REPLACE VIEW public.api_products
 WITH (security_invoker = true)
 AS
@@ -46,30 +41,30 @@ SELECT
     p.slug,
     p.image_url,
     p.specs,
-    -- Precios agrupados
+    -- Grouped Prices
     jsonb_build_object(
         'cash', (SELECT MIN(l.price_cash) FROM public.listings l WHERE l.product_id = p.id AND l.is_active = true),
         'normal', (SELECT MIN(l.price_normal) FROM public.listings l WHERE l.product_id = p.id AND l.is_active = true)
     ) as prices,
-    -- Marca agrupada
+    -- Grouped Brand
     jsonb_build_object(
         'name', b.name,
         'slug', b.slug
     ) as brand,
-    -- Categoría agrupada
+    -- Grouped Category
     jsonb_build_object(
         'name', c.name,
         'slug', c.slug
     ) as category,
-    -- Conteo de listados
+    -- Listings Count
     (
         SELECT COUNT(*)
         FROM public.listings l
         WHERE l.product_id = p.id AND l.is_active = true
     ) as listings_count,
-    -- Métricas
+    -- Metrics
     COALESCE(pm.views_count, 0) as popularity_score,
-    -- Ayudantes de filtro
+    -- Filter helpers
     c.slug as category_slug,
     b.slug as brand_slug,
     p.mpn,
@@ -79,10 +74,8 @@ FROM
     JOIN public.categories c ON p.category_id = c.id
     JOIN public.brands b ON p.brand_id = b.id
     LEFT JOIN public.product_metrics pm ON p.id = pm.product_id;
-
--- 4. Actualizar filter_products para soportar ordenamiento
+-- 4. Update filter_products to support sorting
 DROP FUNCTION IF EXISTS public.filter_products(text, text, integer, integer, text, jsonb, integer, integer);
-
 CREATE OR REPLACE FUNCTION public.filter_products(
     p_category_slug text DEFAULT NULL,
     p_brand_slug text DEFAULT NULL,
@@ -120,7 +113,7 @@ DECLARE
     v_max numeric;
     v_value text;
 BEGIN
-    -- Consulta base
+    -- Base query
     v_query := '
         WITH filtered_items AS (
             SELECT *, count(*) OVER() as full_count
@@ -128,7 +121,7 @@ BEGIN
             WHERE 1=1
     ';
 
-    -- Filtros estándar
+    -- Standard Filters
     IF p_category_slug IS NOT NULL THEN
         v_query := v_query || format(' AND category_slug = %L', p_category_slug);
     END IF;
@@ -149,7 +142,7 @@ BEGIN
         v_query := v_query || format(' AND to_tsvector(''spanish'', name || '' '' || (brand->>''name'') || '' '' || (category->>''name'') || '' '' || COALESCE(mpn, '''')) @@ plainto_tsquery(''spanish'', %L)', p_search);
     END IF;
 
-    -- Filtros dinámicos de especificaciones
+    -- Dynamic Specs Filters
     FOR v_spec_key, v_spec_filter IN SELECT * FROM jsonb_each(p_specs_filters)
     LOOP
         IF v_spec_filter ? 'min' OR v_spec_filter ? 'max' THEN
@@ -171,22 +164,22 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- Lógica de ordenamiento
+    -- Sorting Logic
     CASE p_sort_by
         WHEN 'price_desc' THEN
             v_query := v_query || ' ORDER BY (prices->>''cash'')::int DESC';
         WHEN 'popularity' THEN
             v_query := v_query || ' ORDER BY popularity_score DESC';
         WHEN 'discount' THEN
-            -- Ordenar por porcentaje de descuento: (normal - efectivo) / normal
+            -- Sort by discount percentage: (normal - cash) / normal
             v_query := v_query || ' ORDER BY ( ((prices->>''normal'')::numeric - (prices->>''cash'')::numeric) / NULLIF((prices->>''normal'')::numeric, 0) ) DESC';
         WHEN 'name' THEN
             v_query := v_query || ' ORDER BY name ASC';
-        ELSE -- price_asc o por defecto
+        ELSE -- price_asc or default
             v_query := v_query || ' ORDER BY (prices->>''cash'')::int ASC';
     END CASE;
 
-    -- Paginación
+    -- Pagination
     v_query := v_query || format('
             LIMIT %s OFFSET %s
         )
@@ -198,4 +191,3 @@ BEGIN
     RETURN QUERY EXECUTE v_query;
 END;
 $$;
-

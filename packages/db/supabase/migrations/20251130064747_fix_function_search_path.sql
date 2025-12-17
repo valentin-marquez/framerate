@@ -19,7 +19,6 @@ AS $$
     LIMIT p_limit
     OFFSET p_offset;
 $$;
-
 -- Corregir get_category_filters para fijar el search_path
 -- Se agrega "SET search_path = public" para evitar hijacking de esquemas.
 CREATE OR REPLACE FUNCTION public.get_category_filters(p_category_slug text)

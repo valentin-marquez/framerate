@@ -1,12 +1,10 @@
--- Establecer zona horaria por defecto a Chile (America/Santiago)
--- Esto afecta cómo se muestran las marcas de tiempo al consultar sin conversión explícita
+-- Set default timezone to Chile (America/Santiago)
+-- This affects how timestamps are displayed when queried without explicit timezone conversion
 
--- Establecer zona horaria de la base de datos
+-- Set the database timezone to Chile
 ALTER DATABASE postgres SET timezone TO 'America/Santiago';
-
--- También establecer para la sesión actual
+-- Also set for current session
 SET timezone TO 'America/Santiago';
-
--- Nota: Las marcas de tiempo se almacenan en UTC internamente, pero se muestran en hora de Chile al consultar.
--- Este es el enfoque recomendado ya que mantiene la integridad de los datos mientras muestra la hora local.
-
+-- Note: Timestamps stored with timezone (timestamptz) will still be stored in UTC internally,
+-- but will be displayed in Chile time when queried.
+-- This is the recommended approach as it maintains data integrity while showing local time.;

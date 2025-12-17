@@ -1,6 +1,6 @@
--- Vista: api_products
--- Vista optimizada para consumo de API.
--- Oculta IDs internos y timestamps, y estructura datos como objetos JSON.
+-- View: api_products
+-- Optimized view for API consumption.
+-- Hides internal IDs and timestamps, and structures data as JSON objects.
 CREATE OR REPLACE VIEW public.api_products AS
 SELECT
     p.id,
@@ -8,28 +8,28 @@ SELECT
     p.slug,
     p.image_url,
     p.specs,
-    -- Precios agrupados
+    -- Grouped Prices
     jsonb_build_object(
         'cash', (SELECT MIN(l.price_cash) FROM public.listings l WHERE l.product_id = p.id AND l.is_active = true),
         'normal', (SELECT MIN(l.price_normal) FROM public.listings l WHERE l.product_id = p.id AND l.is_active = true)
     ) as prices,
-    -- Marca agrupada
+    -- Grouped Brand
     jsonb_build_object(
         'name', b.name,
         'slug', b.slug
     ) as brand,
-    -- Categoría agrupada
+    -- Grouped Category
     jsonb_build_object(
         'name', c.name,
         'slug', c.slug
     ) as category,
-    -- Conteo de listados
+    -- Listings Count
     (
         SELECT COUNT(*)
         FROM public.listings l
         WHERE l.product_id = p.id AND l.is_active = true
     ) as listings_count,
-    -- Ayudantes de filtro (mantenidos en la raíz para cláusulas WHERE eficientes)
+    -- Filter helpers (kept at root for efficient WHERE clauses)
     c.slug as category_slug,
     b.slug as brand_slug,
     p.mpn
@@ -37,13 +37,10 @@ FROM
     public.products p
     JOIN public.categories c ON p.category_id = c.id
     JOIN public.brands b ON p.brand_id = b.id;
-
--- Otorgar acceso
+-- Grant access
 GRANT SELECT ON public.api_products TO anon, authenticated, service_role;
-
--- Actualizar función de búsqueda para retornar la nueva estructura de vista
+-- Update search function to return the new view structure
 DROP FUNCTION IF EXISTS public.search_products(text, int, int);
-
 CREATE OR REPLACE FUNCTION public.search_products(
     search_term text,
     p_limit int DEFAULT 50,
@@ -62,4 +59,3 @@ AS $$
     LIMIT p_limit
     OFFSET p_offset;
 $$;
-

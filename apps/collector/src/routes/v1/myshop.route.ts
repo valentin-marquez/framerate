@@ -1,8 +1,5 @@
 import { Hono } from "hono";
-import {
-	MYSHOP_CATEGORIES,
-	type MyShopCategory,
-} from "@/crawlers/myshop";
+import { MYSHOP_CATEGORIES, type MyShopCategory } from "@/crawlers/myshop";
 import { Logger } from "@/lib/logger";
 
 const app = new Hono();
@@ -33,7 +30,7 @@ app.post("/crawl", async (c) => {
 
 		// Enviamos el mensaje indicando que el crawler es "myshop"
 		worker.postMessage({
-			crawler: "myshop", 
+			crawler: "myshop",
 			category,
 		});
 

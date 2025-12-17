@@ -1,6 +1,6 @@
+import type { MyShopCategory } from "@/crawlers/myshop";
 import type { PcExpressCategory } from "@/crawlers/pc-express";
 import type { SpDigitalCategory } from "@/crawlers/sp-digital";
-import type { MyShopCategory } from "@/crawlers/myshop";
 
 export type CrawlerType = "pc-express" | "sp-digital" | "myshop";
 

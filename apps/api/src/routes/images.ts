@@ -14,7 +14,7 @@
  * Además, permite centralizar la lógica de acceso y autenticación si en el futuro se requiere proteger ciertos recursos.
  */
 import { Hono } from "hono";
-import type { Bindings, Variables } from "../bindings";
+import type { Bindings, Variables } from "@/bindings";
 
 const images = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 

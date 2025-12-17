@@ -1,35 +1,55 @@
 import { BaseCrawler, type ProductData } from "./base";
 
-// Definición de Tipos de la API (Basado en tu myshop-request.ts)
-interface MyShopResponse {
-	resultado: {
-		items: MyShopItem[];
-		paginacion: {
-			paginacion_show: boolean;
-		}[]; // Simplificado
-		productos: {
-			ini: number;
-			fin: number;
-			count: number;
-		};
+// --- Tipos de la API (Basados en la respuesta real) ---
+
+export interface MyShopApiResponse {
+	codigo: number;
+	servicio: string;
+	mensaje: string;
+	resultado: MyShopResult;
+}
+
+export interface MyShopResult {
+	// Array de productos devueltos en la página actual
+	items: MyShopItem[];
+	// Booleano clave para saber si existen más páginas
+	paginacion_show: boolean;
+	productos: {
+		count: number; // Total de items en la categoría
 	};
 }
 
-interface MyShopItem {
+export interface MyShopItem {
 	id_producto: number;
+	id_familia: number;
+	familia: string; // Ej: "Procesadores AMD"
 	nombre: string;
-	partno: string; // MPN
+
+	// Identificadores
+	codigo: string;
+	partno: string; // MPN limpio (Ej: "100-100000065BOX")
 	marca: string;
-	precio: number; // Precio efectivo
-	precio_normal: number;
+
+	// Precios (Raw numbers)
+	precio: number; // Precio Oferta/Transferencia (El más bajo)
+	precio_normal: number; // Precio Lista
 	precio_tarjeta: number;
-	precio_tarjeta_fmt: string;
-	url: string;
-	foto: string;
+
+	// Estado y Datos
+	nuevo: number; // 0 o 1
+	url: string; // URL Relativa: "/producto/..."
+	foto: string; // URL Absoluta
+
 	stock_total: number;
+
+	// Label polimórfico: puede ser false (bool) o un string (ej: "Agotado", "-13%")
+	label: string | boolean;
+
 	disponibleInternet: boolean;
 	disponibleTienda: boolean;
 }
+
+// --- Configuración de Categorías ---
 
 export type MyShopCategory =
 	| "gpu"
@@ -45,96 +65,152 @@ export type MyShopCategory =
 
 // Mapeo de categorías de Framerate -> idFamilia de MyShop
 export const MYSHOP_CATEGORIES: Record<MyShopCategory, string[]> = {
-	gpu: ["33"],
-	cpu: ["143"],
+	gpu: ["33"], // Tarjetas de Video
+	cpu: ["143", "144"], // Procesadores AMD e Intel
 	psu: ["64"],
 	motherboard: ["32"],
 	ram: ["35"],
 	cpu_cooler: ["150", "151"], // Aire y Líquida
-	case_fan: ["148"],
 	case: ["36"],
-	hdd: ["72"],
 	ssd: ["136", "135"],
+	hdd: ["72"],
+	case_fan: ["148"],
 };
 
+// --- Implementación del Crawler ---
+
 export class MyShopCrawler extends BaseCrawler {
-	name = "MyShop";
-	baseUrl = "https://www.myshop.cl";
-	apiUrl = "https://www.myshop.cl/servicio/producto";
-
-	// Cache para almacenar los datos "ricos" de la API y no perderlos al pasar a parseProduct
-	private productApiCache = new Map<string, MyShopItem>();
-
 	/**
-	 * Obtiene todas las URLs usando la API POST en lugar de navegar HTML.
+	 * Implementa la interfaz esperada por processCategory.
+	 * Devuelve todas las URLs de productos para una categoría.
 	 */
 	async getAllProductUrlsForCategory(
 		category: MyShopCategory,
 	): Promise<string[]> {
+		const products = await this.crawlCategory(category);
+		return products.map((p) => p.url);
+	}
+	name = "MyShop";
+	baseUrl = "https://www.myshop.cl";
+	apiUrl = "https://www.myshop.cl/servicio/producto";
+
+	/**
+	 * Método principal que reemplaza getAllProductUrlsForCategory + parseProduct
+	 * Extrae todos los productos de una categoría usando la API directamente
+	 */
+	async crawlCategory(category: MyShopCategory): Promise<ProductData[]> {
+		// Obtenemos los IDs de familia para la categoría solicitada
 		const familyIds = MYSHOP_CATEGORIES[category];
-		const allUrls: string[] = [];
 
-		this.logger.info(
-			`[MyShop] Iniciando scrape API para categoría: ${category} (IDs: ${familyIds.join(", ")})`,
-		);
+		if (!familyIds) {
+			this.logger.warn(
+				`[MyShop] No family IDs configuration for category: ${category}`,
+			);
+			return [];
+		}
 
-		for (const idFamilia of familyIds) {
+		const products: ProductData[] = [];
+
+		// Iterar sobre cada ID de familia (ej: AMD e Intel para CPUs)
+		for (const familyId of familyIds) {
 			let page = 1;
-			let hasMore = true;
+			let hasMorePages = true;
 
-			while (hasMore) {
+			this.logger.info(
+				`[MyShop] Crawling category ${category} (Family ID: ${familyId})`,
+			);
+
+			while (hasMorePages) {
 				try {
 					this.logger.info(
-						`[MyShop] Fetching API Familia ${idFamilia} - Pagina ${page}`,
+						`[MyShop] Fetching API Familia ${familyId} - Página ${page}`,
 					);
-					const data = await this.fetchApiPage(idFamilia, page);
 
+					// Llamada a la API
+					const data = await this.fetchApiPage(familyId, page);
+
+					// 1. Validaciones básicas de respuesta
 					if (
 						!data ||
+						!data.resultado ||
 						!data.resultado.items ||
 						data.resultado.items.length === 0
 					) {
-						hasMore = false;
+						this.logger.info(
+							`[MyShop] No items found for family ${familyId} on page ${page}. Stopping.`,
+						);
+						hasMorePages = false;
 						continue;
 					}
 
+					// 2. Procesamiento de Items
 					for (const item of data.resultado.items) {
-						// Construir URL absoluta
-						const fullUrl = item.url.startsWith("http")
+						// Normalización de URL
+						const itemUrl = item.url.startsWith("http")
 							? item.url
 							: `${this.baseUrl}${item.url}`;
 
-						// Guardar en cache para usar en parseProduct sin re-scrape
-						this.productApiCache.set(fullUrl, item);
-						allUrls.push(fullUrl);
+						// Lógica de Stock Robusta
+						// Si el label contiene "agotado", forzamos stock false.
+						const isAgotadoLabel =
+							typeof item.label === "string" &&
+							item.label.toLowerCase().includes("agotado");
+
+						// Hay stock si (stock > 0 O disponible online) Y (no dice "Agotado")
+						const hasStock =
+							(item.stock_total > 0 || item.disponibleInternet) &&
+							!isAgotadoLabel;
+
+						// Limpieza del MPN
+						const cleanMpn = item.partno ? item.partno.trim() : "";
+
+						products.push({
+							url: itemUrl,
+							title: item.nombre,
+							// MyShop suele tener 'precio' como el de transferencia (más bajo)
+							price: item.precio,
+							// Usamos el precio tarjeta como referencia del "original" o más alto
+							originalPrice:
+								item.precio_tarjeta > item.precio
+									? item.precio_tarjeta
+									: item.precio_normal,
+							stock: hasStock,
+							stockQuantity: item.stock_total,
+							mpn: cleanMpn, // Mapeo directo del JSON con limpieza
+							imageUrl: item.foto,
+							specs: {
+								manufacturer: item.marca,
+								family: item.familia, // Dato extra útil para debug
+							},
+						});
 					}
 
-					// Verificar si hay más páginas
-					// La lógica de paginación de MyShop a veces es tricky, verificamos si devolvió items
-					// y si el contador de productos indica que faltan.
-					const { count, fin } = data.resultado.productos;
-					if (fin >= count || data.resultado.items.length === 0) {
-						hasMore = false;
-					} else {
+					// 3. Lógica de Paginación
+					// La API tiene una propiedad explícita para saber si mostrar paginación
+					if (data.resultado.paginacion_show === true) {
 						page++;
-						// Pequeña pausa para no saturar la API
-						await this.waitRateLimit();
+						await this.waitRateLimit(); // Respetar rate limits
+					} else {
+						this.logger.info(
+							`[MyShop] No more pages for family ${familyId} (paginacion_show: false)`,
+						);
+						hasMorePages = false;
 					}
 				} catch (error) {
 					this.logger.error(
-						`Error en API MyShop (Pag ${page}):`,
+						`[MyShop] Error crawling family ${familyId} page ${page}:`,
 						String(error),
 					);
-					hasMore = false;
+					// Abortamos esta familia para evitar bucles infinitos en caso de error 500 constante
+					hasMorePages = false;
 				}
 			}
 		}
 
-		const uniqueUrls = [...new Set(allUrls)];
 		this.logger.info(
-			`[MyShop] Total URLs encontradas para ${category}: ${uniqueUrls.length}`,
+			`[MyShop] Total products found for ${category}: ${products.length}`,
 		);
-		return uniqueUrls;
+		return products;
 	}
 
 	/**
@@ -143,7 +219,7 @@ export class MyShopCrawler extends BaseCrawler {
 	private async fetchApiPage(
 		idFamilia: string,
 		page: number,
-	): Promise<MyShopResponse | null> {
+	): Promise<MyShopApiResponse | null> {
 		const payload = {
 			tipo: "3",
 			page: String(page),
@@ -157,7 +233,6 @@ export class MyShopCrawler extends BaseCrawler {
 				"User-Agent": this.getUserAgent(),
 				Origin: this.baseUrl,
 				Referer: this.baseUrl,
-				// Headers adicionales copiados de tu myshop-request.ts
 				Accept: "application/json, text/plain, */*",
 				"Sec-Fetch-Site": "same-origin",
 				"Sec-Fetch-Mode": "cors",
@@ -166,66 +241,22 @@ export class MyShopCrawler extends BaseCrawler {
 		});
 
 		if (!response.ok) {
-			throw new Error(`API Status: ${response.status}`);
+			throw new Error(
+				`[MyShop] API Status: ${response.status} ${response.statusText}`,
+			);
 		}
 
-		return (await response.json()) as MyShopResponse;
+		return (await response.json()) as MyShopApiResponse;
 	}
 
-	async getProductUrls(html: string): Promise<string[]> {
-		// No se usa en este crawler porque sobrescribimos getAllProductUrlsForCategory
+	// Métodos legacy que ya no se usan pero mantenemos por compatibilidad con BaseCrawler
+	async getProductUrls(_html: string): Promise<string[]> {
+		// No se usa en este crawler porque usamos crawlCategory directamente
 		return [];
 	}
 
-	async parseProduct(html: string, url: string): Promise<ProductData | null> {
-		// 1. Intentar recuperar datos de la cache de la API
-		const apiData = this.productApiCache.get(url);
-
-		if (!apiData) {
-			this.logger.warn(
-				`[MyShop] Producto no encontrado en cache API, saltando: ${url}`,
-			);
-			// Fallback: Si quisieras, podrías implementar scraping HTML puro aquí
-			return null;
-		}
-
-		// 2. Construir objeto base con datos de alta calidad de la API
-		const product: ProductData = {
-			url,
-			title: apiData.nombre,
-			price: apiData.precio, // Precio oferta/transferencia
-			originalPrice: apiData.precio_tarjeta,
-			stock: apiData.stock_total > 0,
-			stockQuantity: apiData.stock_total,
-			mpn: apiData.partno, // Dato vital para tu sistema
-			imageUrl: apiData.foto,
-			specs: {
-				manufacturer: apiData.marca,
-			},
-		};
-
-		// 3. (Opcional) Parsear HTML para specs adicionales
-		// Como el sistema tiene normalización por IA usando el MPN,
-		// quizás no sea estrictamente necesario scrapear la tabla de specs del HTML
-		// si el HTML es complejo o sucio.
-		// Sin embargo, si quieres extraer specs del HTML, aquí iría el HTMLRewriter.
-
-		try {
-			// Ejemplo simple para extraer descripción si existe
-			const rewriter = new HTMLRewriter();
-			// Aquí agregarías lógica si descubres selectores específicos para specs en el HTML
-			// Por ahora, confiamos en el MPN + API Data
-			rewriter.transform(html);
-		} catch (e) {
-			this.logger.warn(`Error parsing HTML details for ${url}: ${e}`);
-		}
-
-		// Limpieza de datos
-		if (product.mpn) {
-			// A veces el MPN viene sucio en MyShop
-			product.mpn = product.mpn.trim();
-		}
-
-		return product;
+	async parseProduct(_html: string, _url: string): Promise<ProductData | null> {
+		// No se usa en este crawler porque procesamos todo en crawlCategory
+		return null;
 	}
 }

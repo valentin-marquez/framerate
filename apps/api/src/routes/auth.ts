@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import type { Bindings, Variables } from "../bindings";
-import { createSupabaseClient } from "../lib/supabase";
-import { authMiddleware } from "../middleware/auth";
+import type { Bindings, Variables } from "@/bindings";
+import { createSupabaseClient } from "@/lib/supabase";
+import { authMiddleware } from "@/middleware/auth";
 
 const auth = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 

@@ -1,7 +1,7 @@
+import { Logger } from "@framerate/utils";
 import { createMiddleware } from "hono/factory";
-import type { Bindings, Variables } from "../bindings";
-import { Logger } from "../lib/logger";
-import { createSupabaseClient } from "../lib/supabase";
+import type { Bindings, Variables } from "@/bindings";
+import { createSupabaseClient } from "@/lib/supabase";
 
 const logger = new Logger("AuthMiddleware");
 

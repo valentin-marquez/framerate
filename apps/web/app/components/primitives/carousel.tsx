@@ -5,8 +5,10 @@ import {
 	Children,
 	createContext,
 	type ReactNode,
+	useCallback,
 	useContext,
 	useEffect,
+	useId,
 	useRef,
 	useState,
 } from "react";
@@ -20,6 +22,10 @@ export type CarouselContextType = {
 	visibleItemsCount: number;
 	setVisibleItemsCount: (newVisibleItemsCount: number) => void;
 	disableDrag: boolean;
+	// Stable slide ids used to avoid using array index as React keys
+	slides: string[];
+	registerSlide: (id: string) => void;
+	unregisterSlide: (id: string) => void;
 };
 
 const CarouselContext = createContext<CarouselContextType | undefined>(
@@ -51,6 +57,17 @@ function CarouselProvider({
 	const [itemsCount, setItemsCount] = useState<number>(0);
 	const [visibleItemsCount, setVisibleItemsCount] = useState<number>(1);
 
+	// Stable slide ids list for indicators to use as keys
+	const [slides, setSlides] = useState<string[]>([]);
+
+	const registerSlide = useCallback((id: string) => {
+		setSlides((prev) => (prev.includes(id) ? prev : [...prev, id]));
+	}, []);
+
+	const unregisterSlide = useCallback((id: string) => {
+		setSlides((prev) => prev.filter((s) => s !== id));
+	}, []);
+
 	const handleSetIndex = (newIndex: number) => {
 		setIndex(newIndex);
 		onIndexChange?.(newIndex);
@@ -70,6 +87,10 @@ function CarouselProvider({
 				visibleItemsCount,
 				setVisibleItemsCount,
 				disableDrag,
+				// expose slides and register/unregister helpers for stable keys
+				slides,
+				registerSlide,
+				unregisterSlide,
 			}}
 		>
 			{children}
@@ -195,8 +216,7 @@ function CarouselIndicator({
 	className,
 	classNameButton,
 }: CarouselIndicatorProps) {
-	const { index, itemsCount, setIndex } = useCarousel();
-	const indicatorsCount = Array.from({ length: itemsCount });
+	const { index, slides, setIndex } = useCarousel();
 	return (
 		<div
 			className={cn(
@@ -205,9 +225,9 @@ function CarouselIndicator({
 			)}
 		>
 			<div className="flex space-x-2">
-				{Array.from({ length: itemsCount }, (_, i) => (
+				{slides.map((id, i) => (
 					<button
-						key={`slide-${i}`}
+						key={id}
 						type="button"
 						aria-label={`Go to slide ${i + 1}`}
 						onClick={() => setIndex(i)}
@@ -337,8 +357,17 @@ export type CarouselItemProps = {
 };
 
 function CarouselItem({ children, className }: CarouselItemProps) {
+	const { registerSlide, unregisterSlide } = useCarousel();
+	const id = useId();
+
+	useEffect(() => {
+		registerSlide(id);
+		return () => unregisterSlide(id);
+	}, [id, registerSlide, unregisterSlide]);
+
 	return (
 		<motion.div
+			data-carousel-id={id}
 			className={cn(
 				"w-full min-w-0 shrink-0 grow-0 overflow-hidden",
 				className,

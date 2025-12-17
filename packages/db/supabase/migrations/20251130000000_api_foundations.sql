@@ -1,10 +1,9 @@
--- 1. Índice GIN para filtrado de especificaciones
--- Permite consultas eficientes de la columna JSONB specs (ej. encontrar todos los productos con "socket": "AM5")
+-- 1. GIN Index for Specs Filtering
+-- Allows efficient querying of JSONB specs column (e.g., finding all products with "socket": "AM5")
 CREATE INDEX IF NOT EXISTS idx_products_specs ON public.products USING gin (specs);
-
--- 2. Vista: products_with_prices
--- Agrega información del producto con los precios más bajos de listados activos.
--- Esto simplifica las consultas de la API pre-calculando el "mejor precio" y uniendo tablas relacionadas.
+-- 2. View: products_with_prices
+-- Aggregates product info with lowest prices from active listings.
+-- This simplifies API queries by pre-calculating the "best price" and joining related tables.
 CREATE OR REPLACE VIEW public.products_with_prices AS
 SELECT
     p.id,
@@ -43,13 +42,11 @@ FROM
     JOIN public.categories c ON p.category_id = c.id
     JOIN public.brands b ON p.brand_id = b.id
     LEFT JOIN public.product_groups g ON p.group_id = g.id;
-
--- Otorgar acceso a la vista
+-- Grant access to the view
 GRANT SELECT ON public.products_with_prices TO anon, authenticated, service_role;
-
--- 3. Función: search_products
--- Búsqueda de texto completo en nombre, marca, categoría y MPN.
--- Retorna filas de la vista products_with_prices.
+-- 3. Function: search_products
+-- Full text search across name, brand, category, and MPN.
+-- Returns rows from the products_with_prices view.
 CREATE OR REPLACE FUNCTION public.search_products(
     search_term text,
     p_limit int DEFAULT 50,
@@ -68,11 +65,10 @@ AS $$
     LIMIT p_limit
     OFFSET p_offset;
 $$;
-
--- 4. Función: get_category_filters
--- Retorna claves y valores de filtro disponibles para una categoría específica.
--- Útil para construir UI de filtros dinámicos (búsqueda facetada).
--- Ejemplo de salida: {"socket": ["AM5", "LGA1700"], "form_factor": ["ATX", "ITX"]}
+-- 4. Function: get_category_filters
+-- Returns available filter keys and values for a specific category.
+-- Useful for building dynamic filter UI (faceted search).
+-- Example output: {"socket": ["AM5", "LGA1700"], "form_factor": ["ATX", "ITX"]}
 CREATE OR REPLACE FUNCTION public.get_category_filters(p_category_slug text)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -100,4 +96,3 @@ BEGIN
     RETURN result;
 END;
 $$;
-

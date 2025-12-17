@@ -1,3 +1,5 @@
+-- 20251130000001_fix_view_security.sql
+
 -- Corregir la vista products_with_prices para que respete RLS (Row Level Security)
 -- Al agregar "security_invoker = true", la vista chequeará los permisos del usuario 
 -- que consulta (anon/authenticated) en lugar de usar los permisos del creador de la vista.

@@ -1,5 +1,5 @@
--- 1. Corregir advertencia de seguridad en la vista
--- Re-crear la vista con security_invoker = true
+-- 1. Fix Security Warning on View
+-- Re-create the view with security_invoker = true
 CREATE OR REPLACE VIEW public.api_products
 WITH (security_invoker = true)
 AS
@@ -9,28 +9,28 @@ SELECT
     p.slug,
     p.image_url,
     p.specs,
-    -- Precios agrupados
+    -- Grouped Prices
     jsonb_build_object(
         'cash', (SELECT MIN(l.price_cash) FROM public.listings l WHERE l.product_id = p.id AND l.is_active = true),
         'normal', (SELECT MIN(l.price_normal) FROM public.listings l WHERE l.product_id = p.id AND l.is_active = true)
     ) as prices,
-    -- Marca agrupada
+    -- Grouped Brand
     jsonb_build_object(
         'name', b.name,
         'slug', b.slug
     ) as brand,
-    -- Categoría agrupada
+    -- Grouped Category
     jsonb_build_object(
         'name', c.name,
         'slug', c.slug
     ) as category,
-    -- Conteo de listados
+    -- Listings Count
     (
         SELECT COUNT(*)
         FROM public.listings l
         WHERE l.product_id = p.id AND l.is_active = true
     ) as listings_count,
-    -- Ayudantes de filtro
+    -- Filter helpers
     c.slug as category_slug,
     b.slug as brand_slug,
     p.mpn,
@@ -39,9 +39,8 @@ FROM
     public.products p
     JOIN public.categories c ON p.category_id = c.id
     JOIN public.brands b ON p.brand_id = b.id;
-
--- 2. Función auxiliar para extraer números de cadenas de especificaciones
--- ej. "3200 MHz" -> 3200, "16 GB" -> 16
+-- 2. Helper function to extract numbers from specs strings
+-- e.g. "3200 MHz" -> 3200, "16 GB" -> 16
 CREATE OR REPLACE FUNCTION public.extract_numeric_value(input_text text)
 RETURNS numeric
 LANGUAGE sql
@@ -49,16 +48,15 @@ IMMUTABLE STRICT
 AS $$
     SELECT (regexp_matches(input_text, '(\d+(\.\d+)?)'))[1]::numeric;
 $$;
-
--- 3. Función de filtrado avanzado
--- Permite filtrar por rangos numéricos en especificaciones JSONB
+-- 3. Advanced Filter Function
+-- Allows filtering by numeric ranges on JSONB specs
 CREATE OR REPLACE FUNCTION public.filter_products(
     p_category_slug text DEFAULT NULL,
     p_brand_slug text DEFAULT NULL,
     p_min_price integer DEFAULT NULL,
     p_max_price integer DEFAULT NULL,
     p_search text DEFAULT NULL,
-    p_specs_filters jsonb DEFAULT '{}'::jsonb, -- ej. {"speed": {"min": 3000}, "capacity": {"min": 16}}
+    p_specs_filters jsonb DEFAULT '{}'::jsonb, -- e.g. {"speed": {"min": 3000}, "capacity": {"min": 16}}
     p_limit integer DEFAULT 20,
     p_offset integer DEFAULT 0
 )
@@ -87,7 +85,7 @@ DECLARE
     v_max numeric;
     v_value text;
 BEGIN
-    -- Consulta base en la vista segura
+    -- Base query on the secure view
     v_query := '
         WITH filtered_items AS (
             SELECT *, count(*) OVER() as full_count
@@ -95,7 +93,7 @@ BEGIN
             WHERE 1=1
     ';
 
-    -- Filtros estándar
+    -- Standard Filters
     IF p_category_slug IS NOT NULL THEN
         v_query := v_query || format(' AND category_slug = %L', p_category_slug);
     END IF;
@@ -116,15 +114,15 @@ BEGIN
         v_query := v_query || format(' AND to_tsvector(''spanish'', name || '' '' || (brand->>''name'') || '' '' || (category->>''name'') || '' '' || COALESCE(mpn, '''')) @@ plainto_tsquery(''spanish'', %L)', p_search);
     END IF;
 
-    -- Filtros dinámicos de especificaciones
-    -- Iterar sobre claves en p_specs_filters
+    -- Dynamic Specs Filters
+    -- Iterate over keys in p_specs_filters
     FOR v_spec_key, v_spec_filter IN SELECT * FROM jsonb_each(p_specs_filters)
     LOOP
-        -- Verificar filtros de rango (min/max)
+        -- Check for Range Filters (min/max)
         IF v_spec_filter ? 'min' OR v_spec_filter ? 'max' THEN
             IF v_spec_filter ? 'min' THEN
                 v_min := (v_spec_filter->>'min')::numeric;
-                -- Usar extract_numeric_value para comparación
+                -- Use extract_numeric_value for comparison
                 v_query := v_query || format(' AND public.extract_numeric_value(specs->>%L) >= %s', v_spec_key, v_min);
             END IF;
             IF v_spec_filter ? 'max' THEN
@@ -132,12 +130,12 @@ BEGIN
                 v_query := v_query || format(' AND public.extract_numeric_value(specs->>%L) <= %s', v_spec_key, v_max);
             END IF;
         ELSE
-            -- Coincidencia exacta (o contención de array si se quisiera)
-            -- Asumiendo coincidencia de cadena simple por ahora si no es min/max
-            v_value := v_spec_filter->>0; -- Tomar primer valor si es array, o el valor mismo
+            -- Exact Match (or array containment if we wanted)
+            -- Assuming simple string match for now if not min/max
+            v_value := v_spec_filter->>0; -- Take first value if array, or value itself
             IF v_value IS NULL THEN
                  v_value := v_spec_filter::text; -- Fallback
-                 -- Eliminar comillas si era una cadena json
+                 -- Remove quotes if it was a json string
                  IF left(v_value, 1) = '"' THEN v_value := substring(v_value from 2 for length(v_value)-2); END IF;
             END IF;
             
@@ -145,7 +143,7 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- Paginación y Ejecución
+    -- Pagination and Execution
     v_query := v_query || format('
             ORDER BY (prices->>''cash'')::int ASC
             LIMIT %s OFFSET %s
@@ -158,4 +156,3 @@ BEGIN
     RETURN QUERY EXECUTE v_query;
 END;
 $$;
-

@@ -198,6 +198,7 @@ export class SpDigitalCrawler extends BaseCrawler {
 					const content = $(script).html() || "[]";
 					const json = JSON.parse(content);
 					const products = Array.isArray(json) ? json : [json];
+					// biome-ignore lint/suspicious/noExplicitAny: JSON-LD structure is dynamic
 					const product = products.find((p: any) => p["@type"] === "Product");
 
 					if (product) {

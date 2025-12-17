@@ -683,7 +683,7 @@ async function processProduct(
 	return { success: true, productId, listingId };
 }
 
-// Procesamiento por lotes (Universal - funciona con cualquier crawler)
+// Procesamiento por lotes (Universal - funciona con cualquier crawler basado en scraping)
 async function processBatch(
 	crawler: BaseCrawler,
 	urls: string[],
@@ -692,10 +692,8 @@ async function processBatch(
 	storeId: string,
 	crawlerType: CrawlerType,
 ): Promise<BatchResult[]> {
-	// Obtener todo el HTML en paralelo usando el método batch del crawler
+	// ...existing code...
 	const htmlResults = await crawler.fetchHtmlBatch(urls);
-
-	// Procesar cada producto en paralelo
 	const processPromises = urls.map(async (url): Promise<BatchResult> => {
 		const html = htmlResults.get(url);
 		if (!html) {
@@ -704,7 +702,6 @@ async function processBatch(
 				result: { success: false, error: "Failed to fetch HTML" },
 			};
 		}
-
 		try {
 			const product = await crawler.parseProduct(html, url);
 			if (!product) {
@@ -713,7 +710,6 @@ async function processBatch(
 					result: { success: false, error: "Failed to parse product" },
 				};
 			}
-
 			const result = await processProduct(
 				product,
 				category,
@@ -721,7 +717,6 @@ async function processBatch(
 				storeId,
 				crawlerType,
 			);
-
 			return { url, result };
 		} catch (error) {
 			return {
@@ -733,8 +728,56 @@ async function processBatch(
 			};
 		}
 	});
-
 	return Promise.all(processPromises);
+}
+
+// Procesamiento genérico para tiendas API-first (como MyShop)
+async function processApiCategory(
+	getProducts: (category: string) => Promise<ProductData[]>,
+	category: string,
+	storeId: string,
+	crawlerType: CrawlerType,
+	transformProduct?: (raw: ProductData) => ProductData,
+): Promise<number> {
+	const startTime = Date.now();
+	logger.info(`=== [API] Processing ${crawlerType} category: ${category} ===`);
+
+	// Obtener todos los productos de la categoría
+	const products = await getProducts(category);
+	logger.info(`[API] Found ${products.length} products for ${category}`);
+	if (products.length === 0) return 0;
+
+	// Obtener o crear categoría en BD
+	const categoryId = await getOrCreateCategory(category as CategorySlug);
+	if (!categoryId) {
+		logger.error(`[API] Could not resolve category: ${category}`);
+		return 0;
+	}
+
+	let processedCount = 0;
+	for (const rawProduct of products) {
+		const product = transformProduct
+			? transformProduct(rawProduct)
+			: rawProduct;
+		const result = await processProduct(
+			product,
+			category as CategorySlug,
+			categoryId,
+			storeId,
+			crawlerType,
+		);
+		if (result.success) processedCount++;
+		else if (result.error)
+			logger.warn(
+				`[API][${category}] ${result.error}: ${product.url?.slice(-50)}`,
+			);
+	}
+
+	const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+	logger.info(
+		`=== [API] ${category} completed: ${processedCount} products in ${duration}s ===`,
+	);
+	return processedCount;
 }
 
 // Procesamiento de categoría
@@ -906,7 +949,6 @@ async function handleMyShopJob(job: CollectorJobData): Promise<JobResult> {
 	const startTime = Date.now();
 	const crawler = new MyShopCrawler();
 
-	// Asegúrate de que exista una tienda con slug 'myshop' en tu base de datos
 	const storeId = await getStoreId("myshop");
 	if (!storeId) {
 		throw new Error("Store 'myshop' not found");
@@ -917,36 +959,30 @@ async function handleMyShopJob(job: CollectorJobData): Promise<JobResult> {
 			? (Object.keys(MYSHOP_CATEGORIES) as MyShopCategory[])
 			: [job.category as MyShopCategory];
 
-	logger.info(`Categories: ${categoriesToProcess.join(", ")}`);
+	logger.info(`[MyShop] Categories: ${categoriesToProcess.join(", ")}`);
 
 	const results: Record<string, number> = {};
 	let totalProcessed = 0;
 
-	try {
-		for (const category of categoriesToProcess) {
-			// Nota: Aquí processCategory llamará internamente a tu getAllProductUrlsForCategory
-			// llenando la caché de la API que implementamos en el paso anterior.
-			const count = await processCategory(
-				crawler,
-				category as CategorySlug,
-				storeId,
-				"myshop" as CrawlerType,
-			);
-			results[category] = count;
-			totalProcessed += count;
-		}
-	} finally {
-		await crawler.closeBrowser();
+	for (const category of categoriesToProcess) {
+		const count = await processApiCategory(
+			(cat) => crawler.crawlCategory(cat as MyShopCategory),
+			category,
+			storeId,
+			"myshop",
+		);
+		results[category] = count;
+		totalProcessed += count;
 	}
 
 	const duration = (Date.now() - startTime) / 1000;
 	logger.info(
-		`Job completed: ${totalProcessed} products in ${duration.toFixed(1)}s`,
+		`[MyShop] Job completed: ${totalProcessed} products in ${duration.toFixed(1)}s`,
 	);
 
 	return {
 		status: "success",
-		crawler: "myshop" as CrawlerType,
+		crawler: "myshop",
 		categories: categoriesToProcess,
 		results,
 		totalCount: totalProcessed,

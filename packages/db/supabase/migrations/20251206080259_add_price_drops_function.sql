@@ -68,5 +68,4 @@ BEGIN
     LIMIT limit_count;
 END;
 $$;
-
 GRANT EXECUTE ON FUNCTION get_price_drops(float, int, int) TO anon, authenticated, service_role;

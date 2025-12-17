@@ -1,10 +1,10 @@
+import { Logger } from "@framerate/utils";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
-import type { Bindings, Variables } from "./bindings";
-import { Logger } from "./lib/logger";
-import { createApiRateLimiter } from "./middleware/rate-limit";
-import { routes } from "./routes";
+import type { Bindings, Variables } from "@/bindings";
+import { createApiRateLimiter } from "@/middleware/rate-limit";
+import { routes } from "@/routes";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 const logger = new Logger("API");

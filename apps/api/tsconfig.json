@@ -1,5 +1,5 @@
 {
-  "extends": "@framerate/config/tsconfig.base.json",
+  "extends": "@framerate/config/tsconfig",
   "compilerOptions": {
     "strict": true,
     "jsx": "react-jsx",
@@ -9,7 +9,8 @@
       "@/*": ["./src/*"]
     },
     "types": [
-      "@cloudflare/workers-types"
+      "@cloudflare/workers-types",
+      "bun"
     ]
   },
   "exclude": [

@@ -1,5 +1,5 @@
--- Corregir advertencia de seguridad: Ruta de búsqueda de función mutable
--- Establecer search_path explícito para la función get_storage_url
+-- Fix security warning: Function Search Path Mutable
+-- Set explicit search_path for get_storage_url function
 
 CREATE OR REPLACE FUNCTION public.get_storage_url(bucket_name text, file_path text)
 RETURNS text
@@ -20,4 +20,3 @@ AS $$
             )
         END;
 $$;
-

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import type { Bindings, Variables } from "../bindings";
-import { createSupabaseClient } from "../lib/supabase";
+import type { Bindings, Variables } from "@/bindings";
+import { createSupabaseClient } from "@/lib/supabase";
 
 const categories = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 

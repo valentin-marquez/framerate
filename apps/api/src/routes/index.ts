@@ -1,7 +1,7 @@
-import auth from "./auth";
-import categories from "./categories";
-import images from "./images";
-import products from "./products";
+import auth from "@/routes/auth";
+import categories from "@/routes/categories";
+import images from "@/routes/images";
+import products from "@/routes/products";
 
 const API_VERSION = "v1";
 

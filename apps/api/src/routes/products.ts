@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import type { Bindings, Variables } from "../bindings";
-import { createSupabaseClient } from "../lib/supabase";
-import { cache } from "../middleware/cache";
+import type { Bindings, Variables } from "@/bindings";
+import { createSupabaseClient } from "@/lib/supabase";
+import { cache } from "@/middleware/cache";
 
 const products = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 

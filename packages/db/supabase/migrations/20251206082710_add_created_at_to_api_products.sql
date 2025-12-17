@@ -1,6 +1,5 @@
 -- Recreate api_products view with created_at
 DROP VIEW IF EXISTS public.api_products CASCADE;
-
 CREATE OR REPLACE VIEW public.api_products
 WITH (security_invoker = true)
 AS
@@ -44,10 +43,8 @@ FROM
     JOIN public.categories c ON p.category_id = c.id
     JOIN public.brands b ON p.brand_id = b.id
     LEFT JOIN public.product_metrics pm ON p.id = pm.product_id;
-
 -- Update filter_products to include created_at and use it for sorting
 DROP FUNCTION IF EXISTS public.filter_products(text, text, integer, integer, text, jsonb, text, integer, integer);
-
 CREATE OR REPLACE FUNCTION public.filter_products(
     p_category_slug text DEFAULT NULL,
     p_brand_slug text DEFAULT NULL,

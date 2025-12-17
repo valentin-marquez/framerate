@@ -1,3 +1,4 @@
+-- Add SP Digital store
 INSERT INTO public.stores (name, slug, url, logo_url, is_active)
 VALUES (
     'SP Digital',
@@ -11,4 +12,3 @@ ON CONFLICT (slug) DO UPDATE SET
     url = EXCLUDED.url,
     logo_url = EXCLUDED.logo_url,
     is_active = EXCLUDED.is_active;
-

@@ -6,6 +6,8 @@ export interface TrackerResult {
 	stock: boolean;
 	stockQuantity?: number;
 	available: boolean;
+	url?: string;
+	meta?: Record<string, unknown>;
 }
 
 export abstract class BaseTracker {

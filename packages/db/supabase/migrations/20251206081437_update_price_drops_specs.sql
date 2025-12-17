@@ -1,5 +1,4 @@
 DROP FUNCTION IF EXISTS get_price_drops(float, int, int);
-
 CREATE OR REPLACE FUNCTION get_price_drops(
     min_discount_percent float DEFAULT 10,
     lookback_days int DEFAULT 30,
@@ -72,5 +71,4 @@ BEGIN
     LIMIT limit_count;
 END;
 $$;
-
 GRANT EXECUTE ON FUNCTION get_price_drops(float, int, int) TO anon, authenticated, service_role;

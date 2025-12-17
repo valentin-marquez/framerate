@@ -13,6 +13,7 @@
     "migration:new": "supabase migration new",
     "db:reset": "supabase db reset",
     "db:push": "supabase db push",
+    "db:pull": "supabase db pull",
     "db:link": "bun src/scripts/db-link.ts",
     "group-variants": "bun run src/scripts/group-variants.ts"
   },

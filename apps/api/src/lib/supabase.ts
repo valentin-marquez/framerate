@@ -1,6 +1,6 @@
 import type { Database } from "@framerate/db";
 import { createClient } from "@supabase/supabase-js";
-import type { Bindings } from "../bindings";
+import type { Bindings } from "@/bindings";
 
 export const createSupabaseClient = (env: Bindings) => {
 	const url =

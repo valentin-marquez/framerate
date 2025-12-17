@@ -14,10 +14,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": [
-			"**/*.ts",
-			"**/*.tsx"
-		]
+		"includes": ["**/*.ts", "**/*.tsx"]
 	},
 	"formatter": {
 		"enabled": true

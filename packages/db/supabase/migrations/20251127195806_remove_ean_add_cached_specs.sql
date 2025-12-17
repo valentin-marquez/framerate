@@ -1,7 +1,6 @@
--- Eliminar columna EAN de productos ya que no se usa en Chile
+-- Remove EAN column from products as it is not used in Chile
 alter table public.products drop column if exists ean;
-
--- Crear tabla cached_specs_extractions para almacenar especificaciones extraídas por IA
+-- Create cached_specs_extractions table to store AI-extracted specs
 create table public.cached_specs_extractions (
     id uuid primary key default gen_random_uuid(),
     mpn text not null unique,
@@ -9,13 +8,9 @@ create table public.cached_specs_extractions (
     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-
--- Habilitar RLS
+-- Enable RLS
 alter table public.cached_specs_extractions enable row level security;
-
--- Políticas
--- Permitir acceso de lectura a todos (consistente con otras tablas)
+-- Policies
+-- Allow read access to everyone (consistent with other tables)
 create policy "Public cached_specs_extractions are viewable by everyone" on public.cached_specs_extractions for select using (true);
-
--- Permitir insertar/actualizar solo al rol de servicio (implícito, ya que ninguna otra política lo permite)
-
+-- Allow insert/update only to service role (implicit, as no other policy allows it);
