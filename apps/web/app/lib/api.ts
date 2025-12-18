@@ -65,21 +65,21 @@ async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise
 export const api = {
   get: <T>(endpoint: string, options?: FetchOptions) => fetcher<T>(endpoint, { ...options, method: "GET" }),
 
-  post: <T>(endpoint: string, body: any, options?: FetchOptions) =>
+  post: <T>(endpoint: string, body: unknown, options?: FetchOptions) =>
     fetcher<T>(endpoint, {
       ...options,
       method: "POST",
       body: JSON.stringify(body),
     }),
 
-  put: <T>(endpoint: string, body: any, options?: FetchOptions) =>
+  put: <T>(endpoint: string, body: unknown, options?: FetchOptions) =>
     fetcher<T>(endpoint, {
       ...options,
       method: "PUT",
       body: JSON.stringify(body),
     }),
 
-  patch: <T>(endpoint: string, body: any, options?: FetchOptions) =>
+  patch: <T>(endpoint: string, body: unknown, options?: FetchOptions) =>
     fetcher<T>(endpoint, {
       ...options,
       method: "PATCH",

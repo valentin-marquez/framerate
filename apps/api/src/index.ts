@@ -9,7 +9,6 @@ import { routes } from "@/routes";
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 const logger = new Logger("API");
 
-// Middleware
 app.use("*", secureHeaders());
 app.use(
   "*",
@@ -35,7 +34,6 @@ app.use("/*/products/*", rateLimiter);
 app.use("/*/categories/*", rateLimiter);
 app.use("/*/auth/*", rateLimiter);
 
-// Routes
 app.get("/", (c) => {
   return c.json({
     message: "Welcome to Framerate API",
