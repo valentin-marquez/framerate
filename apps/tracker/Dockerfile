@@ -1,22 +1,9 @@
-FROM oven/bun:1 AS pruner
+FROM framerate-base:latest AS pruner
 WORKDIR /app
 COPY . .
-RUN bun x turbo prune --scope=tracker --docker
+RUN bun x turbo prune --scope=collector --docker
 
-FROM oven/bun:1 AS base
-USER root
-WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    chromium \
-    curl \
-    wget \
-    fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-freefont-ttf libxss1 \
-    && rm -rf /var/lib/apt/lists/*
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
-    NODE_ENV=production
+FROM framerate-base:latest AS base
 
 FROM base AS installer
 WORKDIR /app
@@ -29,6 +16,6 @@ WORKDIR /app
 COPY --from=installer /app/node_modules ./node_modules
 COPY --from=pruner /app/out/full/ .
 
-WORKDIR /app/apps/tracker
+WORKDIR /app/apps/collector
 EXPOSE 3000
 CMD ["bun", "src/index.ts"]
