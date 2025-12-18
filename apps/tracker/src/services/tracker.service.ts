@@ -54,6 +54,9 @@ export class TrackerService {
   private mediumLimit = pLimit(config.MEDIUM_CONCURRENCY);
   private lightLimit = pLimit(config.LIGHT_CONCURRENCY);
 
+  // Simple per-domain rate limiter: stores last request timestamp (ms)
+  private lastRequestAt = new Map<string, number>();
+
   constructor() {
     this.supabase = client({
       url: config.SUPABASE_URL,
@@ -204,6 +207,17 @@ export class TrackerService {
               : this.lightLimit;
 
         return limiter(async () => {
+          // Rate limiting per domain to avoid 403 responses from being too aggressive
+          const domain = tracker.domain;
+          const delayMs =
+            tracker instanceof SpDigitalTracker || tracker instanceof MyShopTracker
+              ? config.RATE_DELAY_HEAVY_MS
+              : tracker instanceof PcExpressTracker
+                ? config.RATE_DELAY_MEDIUM_MS
+                : config.RATE_DELAY_LIGHT_MS;
+
+          await this.waitForDomain(domain, delayMs);
+
           const start = Date.now();
           // Use URL-based tracking for all trackers (MyShop is now URL-based)
           const result = await tracker.track(listing.url);
@@ -229,6 +243,18 @@ export class TrackerService {
     }
 
     return { processed, errors, updated };
+  }
+
+  private async waitForDomain(domain: string, delayMs: number) {
+    const now = Date.now();
+    const last = this.lastRequestAt.get(domain) ?? 0;
+    const nextAllowed = last + delayMs;
+    if (nextAllowed > now) {
+      const wait = nextAllowed - now;
+      this.logger.info(`Waiting ${wait}ms before calling ${domain} to respect rate limit`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+    this.lastRequestAt.set(domain, Date.now());
   }
 
   /**
@@ -269,6 +295,11 @@ export class TrackerService {
         price_normal: result.priceNormal || result.price,
         recorded_at: new Date().toISOString(),
       });
+
+      // Log where the price was found if tracker provided that metadata
+      if (result.meta?.priceFoundAt) {
+        this.logger.info(`Listing ${listing.id} price found at: ${String(result.meta.priceFoundAt)}`);
+      }
     }
 
     return {

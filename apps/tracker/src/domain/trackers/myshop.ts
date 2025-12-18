@@ -61,12 +61,14 @@ export class MyShopTracker extends BaseTracker {
           stockQuantity: 0,
           availableOnline: false,
           availableStore: false,
+          priceFoundAt: undefined as string | undefined,
         } as {
           price: number;
           priceNormal: number;
           stockQuantity: number;
           availableOnline: boolean;
           availableStore: boolean;
+          priceFoundAt?: string;
         };
 
         const tag = document.querySelector("div.tag-status");
@@ -94,19 +96,63 @@ export class MyShopTracker extends BaseTracker {
           }
         }
 
-        const metaPrice = document.querySelector('meta[property="product:price:amount"]') as HTMLMetaElement | null;
-        if (metaPrice?.content) {
-          result.price = Number.parseInt(metaPrice.content.replace(/[^\d]/g, ""), 10) || 0;
-          result.priceNormal = result.price;
-        } else {
-          const elWithDollar = Array.from(document.querySelectorAll("*[class*='price'], *:not(script)")).find(
-            (el) => (el.textContent || "").includes("$") && /(\d+)/.test(el.textContent || ""),
-          );
-          if (elWithDollar) {
-            const priceText = (elWithDollar.textContent || "").replace(/[^\d]/g, "");
-            result.price = Number.parseInt(priceText, 10) || 0;
-            result.priceNormal = result.price;
+        // Prefer explicit selectors when present: main-price (usually the discounted/cheapest) and normal-price
+        const mainPriceEl = document.querySelector(".main-price") as Element | null;
+        const normalPriceEl = document.querySelector(".normal-price") as Element | null;
+
+        if (mainPriceEl) {
+          const txt = mainPriceEl.textContent || "";
+          const m = txt.match(/(\d[\d.,]*)/);
+          if (m?.[1]) {
+            const cleaned = m[1].replace(/[^\d]/g, "");
+            result.price = Number.parseInt(cleaned, 10) || 0;
+            result.priceFoundAt = ".main-price";
           }
+        }
+
+        if (normalPriceEl) {
+          const txt = normalPriceEl.textContent || "";
+          const m = txt.match(/(\d[\d.,]*)/);
+          if (m?.[1]) {
+            const cleaned = m[1].replace(/[^\d]/g, "");
+            result.priceNormal = Number.parseInt(cleaned, 10) || 0;
+            // If we don't have a primary price yet, use normal as price
+            if (!result.price) result.price = result.priceNormal;
+            result.priceFoundAt = result.priceFoundAt ? `${result.priceFoundAt}+ .normal-price` : ".normal-price";
+          }
+        }
+
+        // Fallback to meta tag or generic search if neither selector provided a price
+        if (!result.price) {
+          const metaPrice = document.querySelector('meta[property="product:price:amount"]') as HTMLMetaElement | null;
+          if (metaPrice?.content) {
+            result.price = Number.parseInt(metaPrice.content.replace(/[^\d]/g, ""), 10) || 0;
+            result.priceNormal = result.price;
+            result.priceFoundAt = result.priceFoundAt
+              ? `${result.priceFoundAt}+ meta`
+              : "meta[property=product:price:amount]";
+          } else {
+            const elWithDollar = Array.from(document.querySelectorAll("*[class*='price'], *:not(script)")).find(
+              (el) => (el.textContent || "").includes("$") && /(\d+)/.test(el.textContent || ""),
+            );
+            if (elWithDollar) {
+              const priceText = (elWithDollar.textContent || "").match(/(\d[\d.,]*)/)?.[1] ?? "";
+              const cleaned = priceText.replace(/[^\d]/g, "");
+              result.price = Number.parseInt(cleaned, 10) || 0;
+              result.priceNormal = result.priceNormal || result.price;
+              try {
+                const snippet = (elWithDollar as Element).outerHTML?.slice(0, 256) ?? "";
+                result.priceFoundAt = result.priceFoundAt ? `${result.priceFoundAt}+ element` : `element:${snippet}`;
+              } catch (_e) {
+                // ignore
+              }
+            }
+          }
+        }
+
+        // Ensure the recorded `price` is the cheapest when both main and normal are available
+        if (typeof result.price === "number" && typeof result.priceNormal === "number") {
+          result.price = Math.min(result.price, result.priceNormal);
         }
 
         return result;
@@ -124,6 +170,9 @@ export class MyShopTracker extends BaseTracker {
         stockQuantity: data.stockQuantity,
         available,
         url,
+        meta: {
+          priceFoundAt: data.priceFoundAt ?? undefined,
+        },
       };
     } catch (error) {
       this.logger.error(`Error tracking ${url}:`, error);

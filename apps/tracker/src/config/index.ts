@@ -8,6 +8,10 @@ const envSchema = z.object({
   HEAVY_CONCURRENCY: z.coerce.number().int().positive().default(6),
   MEDIUM_CONCURRENCY: z.coerce.number().int().positive().default(15),
   LIGHT_CONCURRENCY: z.coerce.number().int().positive().default(30),
+  // Rate limiting per domain (ms)
+  RATE_DELAY_HEAVY_MS: z.coerce.number().int().nonnegative().default(1000),
+  RATE_DELAY_MEDIUM_MS: z.coerce.number().int().nonnegative().default(500),
+  RATE_DELAY_LIGHT_MS: z.coerce.number().int().nonnegative().default(200),
 });
 
 export const config = envSchema.parse(process.env);
