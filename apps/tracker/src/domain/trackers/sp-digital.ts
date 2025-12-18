@@ -1,6 +1,7 @@
 import type { Browser, Page } from "puppeteer";
-import { BaseTracker, type TrackerResult } from "./base";
-import type { PuppeteerPool } from "./puppeteer-pool";
+import { BaseTracker, type TrackerResult } from "@/domain/trackers/base";
+import type { PuppeteerPool } from "@/domain/trackers/puppeteer-pool";
+import { getUserAgent } from "@/domain/trackers/user-agents";
 
 /**
  * Rastreador para el sitio web de SP Digital (spdigital.cl).
@@ -38,9 +39,7 @@ export class SpDigitalTracker extends BaseTracker {
           req.continue();
         }
       });
-      await page.setUserAgent(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      );
+      await page.setUserAgent(getUserAgent());
 
       this.logger.info(`Navigating to page...`);
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
@@ -60,7 +59,9 @@ export class SpDigitalTracker extends BaseTracker {
             const json = JSON.parse(script.textContent || "[]");
             const products = Array.isArray(json) ? json : [json];
 
-            const product = products.find((p: any) => p["@type"] === "Product");
+            const product = products.find(
+              (p) => typeof p === "object" && p !== null && (p as { [key: string]: unknown })["@type"] === "Product",
+            );
 
             if (product?.offers) {
               result.available = product.offers.availability === "https://schema.org/InStock";

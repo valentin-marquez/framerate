@@ -12,6 +12,8 @@ const envSchema = z.object({
   RATE_DELAY_HEAVY_MS: z.coerce.number().int().nonnegative().default(1000),
   RATE_DELAY_MEDIUM_MS: z.coerce.number().int().nonnegative().default(500),
   RATE_DELAY_LIGHT_MS: z.coerce.number().int().nonnegative().default(200),
+  USER_AGENT_STRATEGY: z.enum(["random", "roundrobin"]).default("random"),
+  USER_AGENT_LIST: z.string().optional(),
 });
 
 export const config = envSchema.parse(process.env);

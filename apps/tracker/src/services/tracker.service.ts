@@ -2,12 +2,12 @@ import type { Database, Tables } from "@framerate/db";
 import { client, type SupabaseClient } from "@framerate/db";
 import { Logger } from "@framerate/utils";
 import pLimit from "p-limit";
-import { config } from "../config";
-import type { BaseTracker, TrackerResult } from "../domain/trackers/base";
-import { MyShopTracker } from "../domain/trackers/myshop";
-import { PcExpressTracker } from "../domain/trackers/pc-express";
-import { PuppeteerPool } from "../domain/trackers/puppeteer-pool";
-import { SpDigitalTracker } from "../domain/trackers/sp-digital";
+import { config } from "@/config";
+import type { BaseTracker, TrackerResult } from "@/domain/trackers/base";
+import { MyShopTracker } from "@/domain/trackers/myshop";
+import { PcExpressTracker } from "@/domain/trackers/pc-express";
+import { PuppeteerPool } from "@/domain/trackers/puppeteer-pool";
+import { SpDigitalTracker } from "@/domain/trackers/sp-digital";
 
 type Listing = Pick<Tables<"listings">, "id" | "url" | "price_cash" | "price_normal" | "stock_quantity"> & {
   product?: Pick<Tables<"products">, "mpn"> | null;

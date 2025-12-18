@@ -1,4 +1,4 @@
-import { BaseTracker, type TrackerResult } from "./base";
+import { BaseTracker, type TrackerResult } from "@/domain/trackers/base";
 
 /**
  * PcExpressTracker es un rastreador para productos en tienda.pc-express.cl.

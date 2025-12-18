@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { TrackerService } from "../services/tracker.service";
+import { TrackerService } from "@/services/tracker.service";
 
 export const trackRoutes = new Elysia({ prefix: "/track" })
   .decorate("trackerService", new TrackerService())

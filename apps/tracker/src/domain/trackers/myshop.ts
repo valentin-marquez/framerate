@@ -1,7 +1,8 @@
 import type { Browser, Page } from "puppeteer";
-import type { TrackerResult } from "./base";
-import { BaseTracker } from "./base";
-import type { PuppeteerPool } from "./puppeteer-pool";
+import type { TrackerResult } from "@/domain/trackers/base";
+import { BaseTracker } from "@/domain/trackers/base";
+import type { PuppeteerPool } from "@/domain/trackers/puppeteer-pool";
+import { getUserAgent } from "@/domain/trackers/user-agents";
 
 /**
  * MyShopTracker es una implementación de rastreador para myshop.cl.
@@ -46,9 +47,7 @@ export class MyShopTracker extends BaseTracker {
         }
       });
 
-      await page.setUserAgent(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      );
+      await page.setUserAgent(getUserAgent());
 
       this.logger.info("Navigating to page...");
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });

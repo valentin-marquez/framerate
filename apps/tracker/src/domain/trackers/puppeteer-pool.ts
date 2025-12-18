@@ -1,5 +1,10 @@
 import { Logger } from "@framerate/utils";
-import puppeteer, { type Browser } from "puppeteer";
+import type { Browser } from "puppeteer";
+import puppeteerExtra from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+
+// use stealth plugin to reduce webdriver detection
+puppeteerExtra.use(StealthPlugin());
 
 export class PuppeteerPool {
   private browsers: Browser[] = [];
@@ -19,7 +24,7 @@ export class PuppeteerPool {
       this.logger.info(`Initializing pool with ${this.poolSize} browsers...`);
 
       const launchPromises = Array.from({ length: this.poolSize }, () =>
-        puppeteer.launch({
+        puppeteerExtra.launch({
           headless: true,
           args: [
             "--no-sandbox",

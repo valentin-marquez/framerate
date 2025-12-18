@@ -1,6 +1,6 @@
 import { Logger } from "@framerate/utils";
 import { Elysia } from "elysia";
-import { trackRoutes } from "./routes/track";
+import { trackRoutes } from "@/routes/track";
 
 const logger = new Logger("Tracker");
 
