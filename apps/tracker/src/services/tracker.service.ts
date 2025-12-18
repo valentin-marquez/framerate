@@ -5,6 +5,8 @@ import pLimit from "p-limit";
 import { config } from "../config";
 import type { BaseTracker, TrackerResult } from "../domain/trackers/base";
 import { MyShopTracker } from "../domain/trackers/myshop";
+import { PcExpressTracker } from "../domain/trackers/pc-express";
+import { PuppeteerPool } from "../domain/trackers/puppeteer-pool";
 import { SpDigitalTracker } from "../domain/trackers/sp-digital";
 
 type Listing = Pick<Tables<"listings">, "id" | "url" | "price_cash" | "price_normal" | "stock_quantity"> & {
@@ -46,9 +48,11 @@ export class TrackerService {
   private supabase: SupabaseClient<Database>;
   private trackers: BaseTracker[];
   private myShopTracker: MyShopTracker;
+  private puppeteerPool: PuppeteerPool;
   private logger: Logger;
-  private heavyLimit = pLimit(5);
-  private lightLimit = pLimit(20);
+  private heavyLimit = pLimit(config.HEAVY_CONCURRENCY);
+  private mediumLimit = pLimit(config.MEDIUM_CONCURRENCY);
+  private lightLimit = pLimit(config.LIGHT_CONCURRENCY);
 
   constructor() {
     this.supabase = client({
@@ -57,12 +61,11 @@ export class TrackerService {
       options: { auth: { persistSession: false } },
     });
 
-    this.myShopTracker = new MyShopTracker();
-    this.trackers = [
-      this.myShopTracker,
-      // new PcExpressTracker(),
-      // new SpDigitalTracker(),
-    ];
+    // Initialize Puppeteer pool
+    this.puppeteerPool = new PuppeteerPool(config.PUPPETEER_POOL_SIZE);
+
+    this.myShopTracker = new MyShopTracker(this.puppeteerPool);
+    this.trackers = [this.myShopTracker, new SpDigitalTracker(this.puppeteerPool), new PcExpressTracker()];
     this.logger = new Logger("TrackerService");
   }
 
@@ -70,8 +73,8 @@ export class TrackerService {
    * Tracks a batch of listings by fetching data from the database, processing each listing
    * with its respective tracker, and updating the database with the results.
    *
-   * This method now intelligently uses MPN-based tracking for MyShop products (much faster)
-   * and falls back to URL-based tracking for other stores or products without MPN.
+   * MyShop is now tracked via URL (Puppeteer) like other stores; listings are processed
+   * individually using the appropriate tracker.
    *
    * @param limit - The maximum number of listings to process in a single batch. Defaults to 0 (process all).
    * @returns A promise that resolves to an object containing the counts of processed, errors, and updated listings:
@@ -115,77 +118,63 @@ export class TrackerService {
 
     this.logger.info(`Processing ${listings.length} listings...`);
 
-    // Group listings by store for efficient batch processing
-    const myShopListings = listings.filter((l) => l.url.includes("myshop.cl") && l.product?.mpn);
-    const otherListings = listings.filter((l) => !l.url.includes("myshop.cl") || !l.product?.mpn);
+    const startTime = Date.now();
 
-    this.logger.info(`MyShop listings with MPN: ${myShopListings.length}, Other/No-MPN: ${otherListings.length}`);
+    // Group listings by tracker domain to process each domain in parallel
+    const groupedByDomain = this.groupListingsByDomain(listings);
 
     let processed = 0;
     let errors = 0;
     let updated = 0;
 
-    // Process MyShop listings in batch (super fast via cache)
-    if (myShopListings.length > 0) {
-      const batchResult = await this.processMyShopBatch(myShopListings);
-      processed += batchResult.processed;
-      errors += batchResult.errors;
-      updated += batchResult.updated;
+    const domainEntries = Array.from(groupedByDomain.entries());
+
+    this.logger.info(`Processing ${listings.length} listings across ${domainEntries.length} domains`);
+
+    const domainResults = await Promise.allSettled(
+      domainEntries.map(([domain, domainListings]) => {
+        this.logger.info(`Processing ${domainListings.length} listings for ${domain}`);
+        return this.processIndividualListings(domainListings);
+      }),
+    );
+
+    for (const result of domainResults) {
+      if (result.status === "fulfilled") {
+        processed += result.value.processed;
+        errors += result.value.errors;
+        updated += result.value.updated;
+      } else {
+        this.logger.error("Domain processing failed:", result.reason);
+      }
     }
 
-    // Process other listings individually (slower)
-    if (otherListings.length > 0) {
-      const individualResult = await this.processIndividualListings(otherListings);
-      processed += individualResult.processed;
-      errors += individualResult.errors;
-      updated += individualResult.updated;
-    }
+    const duration = Date.now() - startTime;
+    const avgTimePerListing = processed > 0 ? duration / processed : 0;
+    this.logger.info(
+      `Batch complete: ${processed} processed, ${updated} updated, ${errors} errors | ` +
+        `Duration: ${(duration / 1000).toFixed(2)}s | Avg: ${avgTimePerListing.toFixed(0)}ms/listing`,
+    );
 
-    this.logger.info(`Batch complete: ${processed} processed, ${updated} updated, ${errors} errors`);
-
-    return { processed, errors, updated };
+    return { processed, errors, updated, duration, avgTimePerListing };
   }
 
-  /**
-   * Process MyShop listings in batch using MPN-based tracking.
-   * This is MUCH faster as it uses the pre-populated cache.
-   */
-  private async processMyShopBatch(listings: Listing[]) {
-    this.logger.info(`Processing ${listings.length} MyShop listings via MPN batch...`);
+  private groupListingsByDomain(listings: Listing[]): Map<string, Listing[]> {
+    const groups = new Map<string, Listing[]>();
 
-    const mpns = listings.map((l) => l.product?.mpn).filter(Boolean) as string[];
+    for (const listing of listings) {
+      const tracker = this.getTracker(listing.url);
+      if (!tracker) continue;
 
-    let processed = 0;
-    let errors = 0;
-    let updated = 0;
-
-    try {
-      // Get all results in one batch call
-      const results = await this.myShopTracker.trackBatch(mpns);
-
-      // Update database for each listing
-      for (const listing of listings) {
-        const mpn = listing.product?.mpn;
-        if (!mpn) continue;
-
-        const result = results.get(mpn);
-        if (!result) {
-          this.logger.warn(`No result found for MPN: ${mpn} (listing: ${listing.id})`);
-          errors++;
-          continue;
-        }
-
-        const updateResult = await this.updateListing(listing, result);
-        processed++;
-        if (updateResult.updated) updated++;
-        if (updateResult.error) errors++;
+      const domain = tracker.domain;
+      const arr = groups.get(domain);
+      if (!arr) {
+        groups.set(domain, [listing]);
+      } else {
+        arr.push(listing);
       }
-    } catch (error) {
-      this.logger.error("Error processing MyShop batch:", error);
-      errors += listings.length;
     }
 
-    return { processed, errors, updated };
+    return groups;
   }
 
   /**
@@ -206,17 +195,20 @@ export class TrackerService {
           return Promise.reject(new Error(`No tracker found for URL: ${listing.url}`));
         }
 
-        const limiter = tracker instanceof SpDigitalTracker ? this.heavyLimit : this.lightLimit;
+        // Select limiter by tracker type
+        const limiter =
+          tracker instanceof SpDigitalTracker || tracker instanceof MyShopTracker
+            ? this.heavyLimit
+            : tracker instanceof PcExpressTracker
+              ? this.mediumLimit
+              : this.lightLimit;
 
         return limiter(async () => {
-          // For MyShop without MPN, try to use trackByMpn if we can extract it
-          if (tracker instanceof MyShopTracker && listing.product?.mpn) {
-            const result = await this.myShopTracker.trackByMpn(listing.product.mpn);
-            return { listing, result };
-          }
-
-          // Otherwise use URL-based tracking
+          const start = Date.now();
+          // Use URL-based tracking for all trackers (MyShop is now URL-based)
           const result = await tracker.track(listing.url);
+          const elapsed = Date.now() - start;
+          this.logger.info(`Tracked ${listing.url} in ${elapsed}ms`);
           return { listing, result };
         });
       }),
@@ -290,20 +282,13 @@ export class TrackerService {
   }
 
   /**
-   * Get cache statistics from MyShop tracker.
-   * Useful for monitoring and debugging.
+   * Cleanup resources used by the service (e.g., Puppeteer pool)
    */
-  getCacheStats() {
-    return this.myShopTracker.getCacheStats();
-  }
-
-  /**
-   * Force refresh the MyShop cache.
-   * Useful when you want to ensure fresh data.
-   */
-  async refreshMyShopCache() {
-    this.logger.info("Forcing MyShop cache refresh...");
-    await this.myShopTracker.forceCacheRefresh();
-    this.logger.info("MyShop cache refreshed");
+  async cleanup() {
+    try {
+      await this.puppeteerPool.destroy();
+    } catch (error) {
+      this.logger.warn("Error during cleanup:", error);
+    }
   }
 }

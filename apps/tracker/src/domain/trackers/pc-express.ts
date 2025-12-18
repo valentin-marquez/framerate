@@ -1,5 +1,13 @@
 import { BaseTracker, type TrackerResult } from "./base";
 
+/**
+ * PcExpressTracker es un rastreador para productos en tienda.pc-express.cl.
+ * Obtiene la página del producto, extrae los precios al contado y normal, y determina la disponibilidad de stock.
+ *
+ * Métodos:
+ *   - track(url): Obtiene la página del producto y retorna price, priceNormal, stock, stockQuantity y availability.
+ *   - parsePrice(priceStr): Parsea una cadena de precio y retorna su valor numérico.
+ */
 export class PcExpressTracker extends BaseTracker {
   name = "PC-Express";
   domain = "tienda.pc-express.cl";

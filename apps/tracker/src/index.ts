@@ -11,9 +11,6 @@ const app = new Elysia()
     endpoints: {
       health: "GET /health",
       trackBatch: "POST /track/batch",
-      cacheStats: "GET /track/cache/stats",
-      cacheRefresh: "POST /track/cache/refresh",
-      cacheHealth: "GET /track/cache/health",
     },
   }))
 
@@ -28,6 +25,6 @@ const app = new Elysia()
 
   .listen(3000);
 
-logger.info(`🦊 Tracker Service is running at ${app.server?.hostname}:${app.server?.port}`);
+logger.info(`El servicio Tracker está ejecutándose en ${app.server?.hostname}:${app.server?.port}`);
 
 export type App = typeof app;
