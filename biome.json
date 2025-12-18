@@ -1,28 +1,17 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
-	"assist": {
-		"actions": {
-			"source": {
-				"organizeImports": "on"
-			}
-		}
-	},
-	"vcs": {
-		"enabled": true,
-		"clientKind": "git",
-		"useIgnoreFile": true
-	},
+	"root": true,
+	"extends": [
+		"@framerate/config/biome"
+	],
 	"files": {
-		"ignoreUnknown": false,
-		"includes": ["**/*.ts", "**/*.tsx"]
-	},
-	"formatter": {
-		"enabled": true
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true
-		}
+		"includes": [
+			"**/*.ts",
+			"**/*.tsx",
+			"package.json",
+			"README.md",
+			"*.md",
+			"*.json"
+		]
 	}
 }

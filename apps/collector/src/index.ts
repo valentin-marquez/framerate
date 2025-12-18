@@ -15,30 +15,30 @@ app.use("*", prettyJSON());
 logger.info("Iniciando el servicio de collector...");
 
 app.get("/", (c) => {
-	return c.json({
-		name: "framerate-collector",
-		message: "El servicio de collector está en funcionamiento.",
-		version: Bun.env.npm_package_version || "unknown",
-	});
+  return c.json({
+    name: "framerate-collector",
+    message: "El servicio de collector está en funcionamiento.",
+    version: Bun.env.npm_package_version || "unknown",
+  });
 });
 
 app.get("/health", (c) => {
-	return c.text("OK");
+  return c.text("OK");
 });
 
 // Registrar rutas
 for (const route of routes) {
-	app.route(route.path, route.route);
+  app.route(route.path, route.route);
 }
 
 app.notFound((c) => {
-	return c.json({ message: "No encontrado" }, 404);
+  return c.json({ message: "No encontrado" }, 404);
 });
 
 logger.info("Servicio de collector iniciado.");
 
 export default {
-	fetch: app.fetch,
-	idleTimeout: 255,
-	port: process.env.PORT || 3001,
+  fetch: app.fetch,
+  idleTimeout: 255,
+  port: process.env.PORT || 3001,
 };

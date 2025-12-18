@@ -1,0 +1,36 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
+  "root": false,
+
+  // NOTE: This file is kept for compatibility. Prefer `./biome.json` (exported as `@framerate/config/biome`).
+  // The canonical shared configuration lives in `packages/config/biome.json`.
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+
+  // Allow comments when parsing JSON files (e.g. tsconfig.json, .vscode/settings.json)
+  "json": {
+    "parser": {
+      "allowComments": true
+    }
+  },
+
+  // Ignore files matched by .gitignore
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+
+  // Linter config (base recommended rules)
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  }
+}

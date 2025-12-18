@@ -6,31 +6,31 @@ import { createSupabase } from "@/lib/supabase";
 const logger = new Logger("AuthMiddleware");
 
 export const authMiddleware = createMiddleware<{
-	Bindings: Bindings;
-	Variables: Variables;
+  Bindings: Bindings;
+  Variables: Variables;
 }>(async (c, next) => {
-	const authHeader = c.req.header("Authorization");
+  const authHeader = c.req.header("Authorization");
 
-	if (!authHeader) {
-		logger.warn("Missing Authorization header");
-		return c.json({ error: "Missing Authorization header" }, 401);
-	}
+  if (!authHeader) {
+    logger.warn("Missing Authorization header");
+    return c.json({ error: "Missing Authorization header" }, 401);
+  }
 
-	const token = authHeader.replace("Bearer ", "");
-	const supabase = createSupabase(c.env);
+  const token = authHeader.replace("Bearer ", "");
+  const supabase = createSupabase(c.env);
 
-	const {
-		data: { user },
-		error,
-	} = await supabase.auth.getUser(token);
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
 
-	if (error || !user) {
-		logger.warn(`Invalid token: ${error?.message}`);
-		return c.json({ error: "Invalid or expired token" }, 401);
-	}
+  if (error || !user) {
+    logger.warn(`Invalid token: ${error?.message}`);
+    return c.json({ error: "Invalid or expired token" }, 401);
+  }
 
-	// Adjunta el usuario al contexto si es necesario, o simplemente continúa
-	c.set("user", user);
+  // Adjunta el usuario al contexto si es necesario, o simplemente continúa
+  c.set("user", user);
 
-	await next();
+  await next();
 });

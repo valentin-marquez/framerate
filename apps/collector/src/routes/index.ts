@@ -5,16 +5,16 @@ import spDigitalRoute from "./v1/sp-digital.route";
 const API_VERSION = "v1";
 
 export const routes = [
-	{
-		path: `/${API_VERSION}/pc-express`,
-		route: pcExpressRoute,
-	},
-	{
-		path: `/${API_VERSION}/sp-digital`,
-		route: spDigitalRoute,
-	},
-	{
-		path: `/${API_VERSION}/myshop`,
-		route: myshopRoute,
-	},
+  {
+    path: `/${API_VERSION}/pc-express`,
+    route: pcExpressRoute,
+  },
+  {
+    path: `/${API_VERSION}/sp-digital`,
+    route: spDigitalRoute,
+  },
+  {
+    path: `/${API_VERSION}/myshop`,
+    route: myshopRoute,
+  },
 ];

@@ -19,45 +19,45 @@ import type { Bindings, Variables } from "@/bindings";
 const images = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 images.get("/*", async (c) => {
-	// Handle /v1/images/bucket/file.jpg or /images/bucket/file.jpg
-	const parts = c.req.path.split("/images/");
-	const path = parts.length > 1 ? parts[1] : null;
+  // Handle /v1/images/bucket/file.jpg or /images/bucket/file.jpg
+  const parts = c.req.path.split("/images/");
+  const path = parts.length > 1 ? parts[1] : null;
 
-	if (!path) {
-		return c.text("Invalid image path", 400);
-	}
+  if (!path) {
+    return c.text("Invalid image path", 400);
+  }
 
-	const supabaseUrl = c.env.SUPABASE_URL || Bun.env.SUPABASE_URL;
+  const supabaseUrl = c.env.SUPABASE_URL || Bun.env.SUPABASE_URL;
 
-	if (!supabaseUrl) {
-		console.error("SUPABASE_URL is not defined");
-		return c.text("Internal Server Error", 500);
-	}
+  if (!supabaseUrl) {
+    console.error("SUPABASE_URL is not defined");
+    return c.text("Internal Server Error", 500);
+  }
 
-	// Construye la URL pública al archivo en Supabase Storage usando la ruta solicitada.
+  // Construye la URL pública al archivo en Supabase Storage usando la ruta solicitada.
 
-	const storageUrl = `${supabaseUrl}/storage/v1/object/public/${path}`;
+  const storageUrl = `${supabaseUrl}/storage/v1/object/public/${path}`;
 
-	try {
-		const response = await fetch(storageUrl);
+  try {
+    const response = await fetch(storageUrl);
 
-		if (!response.ok) {
-			return c.text("Image not found", 404);
-		}
+    if (!response.ok) {
+      return c.text("Image not found", 404);
+    }
 
-		const newHeaders = new Headers(response.headers);
-		// Configurar encabezados de caché y CORS adecuados para las imágenes
-		newHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
-		newHeaders.set("Access-Control-Allow-Origin", "*");
+    const newHeaders = new Headers(response.headers);
+    // Configurar encabezados de caché y CORS adecuados para las imágenes
+    newHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+    newHeaders.set("Access-Control-Allow-Origin", "*");
 
-		return new Response(response.body, {
-			status: response.status,
-			headers: newHeaders,
-		});
-	} catch (error) {
-		console.error("Error fetching image:", error);
-		return c.text("Internal Server Error", 500);
-	}
+    return new Response(response.body, {
+      status: response.status,
+      headers: newHeaders,
+    });
+  } catch (error) {
+    console.error("Error fetching image:", error);
+    return c.text("Internal Server Error", 500);
+  }
 });
 
 export default images;
