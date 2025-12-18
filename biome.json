@@ -1,17 +1,8 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
-	"root": true,
-	"extends": [
-		"@framerate/config/biome"
-	],
-	"files": {
-		"includes": [
-			"**/*.ts",
-			"**/*.tsx",
-			"package.json",
-			"README.md",
-			"*.md",
-			"*.json"
-		]
-	}
+  "$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
+  "root": true,
+  "extends": ["@framerate/config/biome"],
+  "files": {
+    "includes": ["**/*.ts", "**/*.tsx", "package.json", "README.md", "*.md", "*.json"]
+  }
 }
