@@ -13,13 +13,21 @@ try {
   await $`supabase gen types typescript --project-id ${projectId} --schema public > src/types.ts`;
   logger.info("Tipos generados exitosamente en src/types.ts");
 
-  // Formatear el archivo generado con Biome usando Bun
+  // Formatear el archivo generado con Biome usando --write para aplicar los cambios
   try {
-    await $`bun run biome format src/types.ts`;
+    // Intentamos usar el binario directamente con --write para que Biome aplique los cambios
+    await $`biome format --write src/types.ts`;
     logger.info("Archivo `src/types.ts` formateado correctamente con Biome");
   } catch (formatError) {
-    logger.error("Error al formatear `src/types.ts` con Biome:", formatError);
-    process.exit(1);
+    // Si eso falla, intentamos el script de npm como fallback
+    logger.warn("Fallo al formatear con 'biome format --write'. Intentando 'bun run biome:format' como alternativa.");
+    try {
+      await $`bun run biome:format`;
+      logger.info("Archivo `src/types.ts` formateado correctamente con 'bun run biome:format'");
+    } catch {
+      // No interrumpimos el proceso de generación por un fallo de formateo; lo logueamos y seguimos
+      logger.warn("No fue posible formatear `src/types.ts`. Continúo sin interrumpir el proceso. Error:", formatError);
+    }
   }
 } catch (error) {
   logger.error("Error al generar tipos:", error);
