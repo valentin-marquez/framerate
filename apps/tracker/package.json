@@ -11,6 +11,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@framerate/db": "workspace:*",
     "@framerate/utils": "workspace:*",
     "@supabase/supabase-js": "^2.86.2",
     "cheerio": "^1.1.2",
