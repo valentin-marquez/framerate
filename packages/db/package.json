@@ -20,11 +20,12 @@
   },
   "dependencies": {
     "@framerate/utils": "workspace:*",
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.87.1",
-    "@supabase/ssr": "^0.8.0"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
-    "supabase": "^2.63.1",
+    "supabase": "^2.67.2",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   }

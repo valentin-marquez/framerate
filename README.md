@@ -119,7 +119,7 @@ Los datos scrapeados pasan por un pipeline de normalización extensivo antes de 
 **Pipeline Implementado:**
 1. **Normalización de títulos** (`normalizers/`): Limpieza y estandarización por categoría
 2. **Extracción de specs** (`processors/`): Regex + mapeo de claves a formato canónico
-3. **Extracción IA** (`processors/ai/`): LLM (Groq/DeepSeek) para specs complejas con cache en BD
+3. **Extracción IA** (`processors/ai/`): LLM (DeepSeek) para specs complejas con cache en BD
 4. **Validación de productos**: Filtros por términos excluidos ("caja abierta", "usado", etc.)
 5. **Procesamiento de imágenes**: Compresión con Sharp, upload a Supabase Storage
 
@@ -175,8 +175,8 @@ Si algunos campos no se pueden extraer (por ejemplo, el MPN no está presente), 
 - Upsert atómico de listings por constraint único
 
 ### 5.3 Rate Limiting de IA
-- `RateLimiter` class para Groq API (10 RPM)
-- Retry automático en errores 429 con delay de 5s
+- Usamos **DeepSeek** como proveedor (sin limitación explícita por parte del proveedor).
+- No imponemos rate limiter en el servicio; seguimos manejando reintentos en errores transitorios (5xx/429) con backoff corto.
 
 ### 5.4 Pendiente de Implementar
 - **Circuit Breaker:** Marcar tiendas como unavailable temporalmente después de N fallos

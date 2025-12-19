@@ -8,6 +8,48 @@ export type Database = {
   };
   public: {
     Tables: {
+      ai_extraction_jobs: {
+        Row: {
+          attempts: number;
+          category: string;
+          context: Json | null;
+          created_at: string;
+          error_message: string | null;
+          id: string;
+          mpn: string;
+          raw_text: string;
+          result: Json | null;
+          status: Database["public"]["Enums"]["job_status"];
+          updated_at: string;
+        };
+        Insert: {
+          attempts?: number;
+          category: string;
+          context?: Json | null;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          mpn: string;
+          raw_text: string;
+          result?: Json | null;
+          status?: Database["public"]["Enums"]["job_status"];
+          updated_at?: string;
+        };
+        Update: {
+          attempts?: number;
+          category?: string;
+          context?: Json | null;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          mpn?: string;
+          raw_text?: string;
+          result?: Json | null;
+          status?: Database["public"]["Enums"]["job_status"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       brands: {
         Row: {
           created_at: string;
@@ -728,6 +770,28 @@ export type Database = {
     };
     Functions: {
       extract_numeric_value: { Args: { input_text: string }; Returns: number };
+      fetch_pending_jobs: {
+        Args: { limit_count: number };
+        Returns: {
+          attempts: number;
+          category: string;
+          context: Json | null;
+          created_at: string;
+          error_message: string | null;
+          id: string;
+          mpn: string;
+          raw_text: string;
+          result: Json | null;
+          status: Database["public"]["Enums"]["job_status"];
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "ai_extraction_jobs";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       filter_products: {
         Args: {
           p_brand_slug?: string;
@@ -785,7 +849,7 @@ export type Database = {
       increment_product_view: { Args: { p_slug: string }; Returns: undefined };
     };
     Enums: {
-      [_ in never]: never;
+      job_status: "pending" | "processing" | "completed" | "failed";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -904,6 +968,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      job_status: ["pending", "processing", "completed", "failed"],
+    },
   },
 } as const;

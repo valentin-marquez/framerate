@@ -1,14 +1,3 @@
-export { BaseIAExtractor, SYSTEM_PROMPT } from "./ai/base";
-export { CaseIAExtractor } from "./ai/case";
-export { CaseFanIAExtractor } from "./ai/case-fan";
-export { CpuIAExtractor } from "./ai/cpu";
-export { CpuCoolerIAExtractor } from "./ai/cpu-cooler";
-export { GpuIAExtractor } from "./ai/gpu";
-export { HddIAExtractor } from "./ai/hdd";
-export { MotherboardIAExtractor } from "./ai/motherboard";
-export { PsuIAExtractor } from "./ai/psu";
-export { RamIAExtractor } from "./ai/ram";
-export { SsdIAExtractor } from "./ai/ssd";
 export { CaseProcessor } from "./case";
 export { CaseFanProcessor } from "./case-fan";
 export { CpuProcessor } from "./cpu";

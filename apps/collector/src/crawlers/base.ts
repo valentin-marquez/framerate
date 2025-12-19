@@ -5,12 +5,12 @@ import { Logger } from "@/lib/logger";
 export interface ProductData {
   url: string;
   title: string;
-  price: number;
-  originalPrice?: number;
+  price?: number | null;
+  originalPrice?: number | null;
   stock: boolean;
-  stockQuantity?: number;
-  mpn?: string;
-  imageUrl?: string;
+  stockQuantity?: number | null;
+  mpn?: string | null;
+  imageUrl?: string | null;
   specs?: GpuSpecs | Record<string, string>;
 }
 

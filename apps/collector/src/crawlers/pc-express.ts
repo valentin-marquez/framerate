@@ -76,6 +76,13 @@ export class PcExpressCrawler extends BaseCrawler {
 
       const pageHtml = await this.fetchHtml(pageUrl);
       const pageUrls = await this.getProductUrls(pageHtml);
+
+      this.logger.info(`Found ${pageUrls.length} product URLs on page ${page}`);
+      if (pageUrls.length === 0) {
+        this.logger.warn(`No product URLs found on page ${page}, stopping pagination early.`);
+        break;
+      }
+
       allUrls.push(...pageUrls);
     }
 
@@ -100,6 +107,18 @@ export class PcExpressCrawler extends BaseCrawler {
       },
     });
 
+    // Backup: some versions put the product link on the name
+    rewriter.on(".product-list__name a", {
+      element: (element) => {
+        const link = element.getAttribute("href");
+        if (link) {
+          const decodedHref = link.replace(/&amp;/g, "&");
+          const absoluteUrl = decodedHref.startsWith("http") ? decodedHref : `${this.baseUrl}${decodedHref}`;
+          urls.push(absoluteUrl);
+        }
+      },
+    });
+
     rewriter.transform(html);
 
     return urls;
@@ -109,9 +128,12 @@ export class PcExpressCrawler extends BaseCrawler {
     const product: ProductData = {
       url,
       title: "",
-      price: 0,
+      price: null,
+      originalPrice: null,
       stock: false,
       specs: {},
+      mpn: null,
+      imageUrl: null,
     };
 
     let priceCashStr = "";
@@ -169,12 +191,13 @@ export class PcExpressCrawler extends BaseCrawler {
     rewriter.on("span[id^='stock-sucursal-']", {
       text(text) {
         const content = text.text.trim();
-        if (content) {
-          // "1 unidad", "2 unidades", "Sin stock"
-          const match = content.match(/(\d+)\s+unidad/i);
-          if (match?.[1]) {
-            stockCount += Number.parseInt(match[1], 10);
-          }
+        if (!content) return;
+        // Match "+20 unidades" or "20 unidades" or "20"
+        const match = content.match(/\+?(\d+)/);
+        if (match?.[1]) {
+          stockCount += Number.parseInt(match[1], 10);
+        } else if (/sin stock/i.test(content)) {
+          // explicit no stock -> no-op
         }
       },
     });
@@ -189,7 +212,15 @@ export class PcExpressCrawler extends BaseCrawler {
       },
     });
 
+    // Also fallback to og:image if no thumbnail found
     rewriter.transform(html);
+
+    if (!product.imageUrl) {
+      const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+      if (ogMatch?.[1]) product.imageUrl = ogMatch[1];
+    }
+
+    // Note: we call transform earlier when handling image fallback
 
     // Post-procesamiento
 
@@ -199,31 +230,94 @@ export class PcExpressCrawler extends BaseCrawler {
     // Marca
     if (brandRaw) {
       if (!product.specs) product.specs = {};
-      // Usar aserción de tipo a Record<string, string> para evitar any
       (product.specs as Record<string, string>).manufacturer = brandRaw.trim();
+    } else {
+      // Fallback: try parsing the 'Marca' field in the codes block
+      const matchBrand = html.match(
+        /<p[^>]*>\s*<span[^>]*>\s*Marca\s*<\/span>\s*:\s*(?:<span[^>]*>\s*<a[^>]*>([^<]+)<\/a>\s*<\/span>|([^<]+))\s*<\/p>/i,
+      );
+      const brandVal = matchBrand?.[1] || matchBrand?.[2];
+      if (brandVal) {
+        if (!product.specs) product.specs = {};
+        (product.specs as Record<string, string>).manufacturer = brandVal.trim();
+      }
     }
 
-    // MPN: "Manufacturer Part Number: 90YV0N12-M0AA00"
-    const mpnMatch = mpnRaw.replace(/Manufacturer Part Number:/i, "").trim();
+    // MPN: try raw selector first and fallback to the 'codes' block in the page
+    const mpnMatch = (() => {
+      const m = mpnRaw.replace(/Manufacturer Part Number:/i, "").trim();
+      if (m) return m;
+      const matchHtml = html.match(/<p[^>]*>\s*<span[^>]*>\s*MPN\s*<\/span>\s*:\s*([^<]*)<\/p>/i);
+      if (matchHtml?.[1]) return matchHtml[1].trim();
+      return null;
+    })();
 
     if (!mpnMatch) {
-      this.logger.warn(`MPN not found or empty for product: ${url} skipping.`);
-      return null;
-    }
-
-    if (mpnMatch) {
+      this.logger.warn(`MPN not found or empty for product: ${url}. Continuing without MPN.`);
+      product.mpn = null;
+    } else {
       product.mpn = mpnMatch;
     }
 
-    // Precios
-    product.price = this.parsePrice(priceCashStr);
-    product.originalPrice = this.parsePrice(priceNormalStr);
+    // Precios: try parsed selectors, fallback to price blocks and JSON-LD
+    let cash = this.parsePrice(priceCashStr);
+    let normal = this.parsePrice(priceNormalStr);
 
-    // Stock
-    product.stock = stockCount > 0;
-    product.stockQuantity = stockCount;
+    // Parse price blocks if missing
+    if (cash === null || normal === null) {
+      const priceBlockRegex =
+        /<div[^>]*class=["'][^"']*rm-product-page__price[^"']*["'][^>]*>[\s\S]*?<h3[^>]*class=["']?([^"'>]*)["']?[^>]*>([^<]+)<\/h3>/gi;
+      let m: RegExpExecArray | null = null;
+      for (;;) {
+        m = priceBlockRegex.exec(html);
+        if (m === null) break;
+        const classes = (m[1] || "").toLowerCase();
+        const text = m[2] || "";
+        const parsed = this.parsePrice(text);
+        if (classes.includes("text-primary") && cash === null) cash = parsed;
+        else if (!classes.includes("text-primary") && normal === null) normal = parsed;
+      }
+    }
 
-    // Extraer especificaciones técnicas si están disponibles
+    // JSON-LD fallback
+    if ((cash === null || normal === null) && /<script[^>]*type=["']application\/ld\+json["'][^>]*>/i.test(html)) {
+      const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i);
+      if (jsonLdMatch?.[1]) {
+        try {
+          const ld = JSON.parse(jsonLdMatch[1]);
+          const productLd = Array.isArray(ld)
+            ? ld.find(
+                (p: unknown) =>
+                  typeof p === "object" && p !== null && (p as Record<string, unknown>)["@type"] === "Product",
+              ) || ld[0]
+            : ld;
+          const offers = (productLd as unknown as { offers?: unknown })?.offers;
+          if (offers) {
+            let priceVal: unknown;
+            if (Array.isArray(offers)) {
+              priceVal = offers.length > 0 ? (offers[0] as Record<string, unknown>).price : undefined;
+            } else if (typeof offers === "object" && offers !== null) {
+              priceVal = (offers as Record<string, unknown>).price;
+            }
+            if (priceVal && cash === null) cash = Number.parseInt(String(priceVal), 10) || null;
+            const sku = (productLd as unknown as Record<string, unknown>).sku;
+            if (sku && !product.mpn) product.mpn = String(sku);
+          }
+        } catch (_e) {
+          // ignore malformed JSON-LD
+        }
+      }
+    }
+
+    product.price = cash;
+    product.originalPrice = normal ?? cash;
+
+    // Stock: consider counts and add-to-cart button as indicator
+    const hasAddToCart = /id=["']button-cart["']|add-to-cart-btn/.test(html);
+    product.stock = stockCount > 0 || hasAddToCart;
+    product.stockQuantity = stockCount > 0 ? stockCount : null;
+
+    // Extraer especificaciones técnicas si están disponibles (tabla o dt/dd)
     const techSpecs = this.extractTechnicalSpecs(html);
     if (Object.keys(techSpecs).length > 0) {
       product.specs = {
@@ -232,9 +326,13 @@ export class PcExpressCrawler extends BaseCrawler {
       };
     }
 
-    // Validar
-    if (!product.title || product.price === 0 || !product.imageUrl) {
-      this.logger.warn(`Failed to parse product: ${url}`);
+    // Basic validation: require title and an image (try og:image fallback earlier)
+    if (!product.title) {
+      this.logger.warn(`Failed to parse product: ${url} missing title`);
+      return null;
+    }
+    if (!product.imageUrl) {
+      this.logger.warn(`Failed to parse product: ${url} missing image`);
       return null;
     }
 
@@ -243,252 +341,48 @@ export class PcExpressCrawler extends BaseCrawler {
 
   private extractTechnicalSpecs(html: string): Record<string, string> {
     const specs: Record<string, string> = {};
-    let specsHtml = "";
 
-    if (html.includes("technical-specifications-container")) {
-      const match = html.match(
-        /<div[^>]*id=["']technical-specifications-container["'][^>]*>[\s\S]*?<\/div>\s*<\/div>/i,
-      );
-      if (match) specsHtml = match[0];
+    // 1) Table rows pattern with <span>Key</span> / <span>Value</span>
+    const rowRegex =
+      /<tr[^>]*>[\s\S]*?<td[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/td>[\s\S]*?<td[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/td>[\s\S]*?<\/tr>/gi;
+    let match: RegExpExecArray | null = null;
+    for (;;) {
+      match = rowRegex.exec(html);
+      if (match === null) break;
+      const key = match[1]?.trim();
+      const value = match[2]?.trim();
+      if (key && value) specs[key] = value;
     }
 
-    if (!specsHtml && html.includes("product-detail-specs")) {
-      const match = html.match(/<div[^>]*id=["']product-detail-specs["'][^>]*>[\s\S]*?<\/div>\s*<\/div>/i);
-      if (match) specsHtml = match[0];
+    // 2) dt / dd pairs fallback
+    const dtRegex = /<dt[^>]*>\s*([^<]+?)\s*<\/dt>\s*<dd[^>]*>\s*([\s\S]*?)\s*<\/dd>/gi;
+    for (;;) {
+      match = dtRegex.exec(html);
+      if (match === null) break;
+      const key = match[1]?.trim();
+      const value = match[2]?.replace(/<[^>]+>/g, "").trim();
+      if (key && value && !specs[key]) specs[key] = value;
     }
 
-    if (!specsHtml && html.includes("tab-description")) {
-      const match = html.match(
-        /<div[^>]*id=["']tab-description["'][^>]*>([\s\S]*?)(?=<div[^>]*class=["'][^"']*tab-pane[^"']*["']|<\/div>\s*<\/div>\s*<\/div>)/i,
-      );
-      if (match) specsHtml = match[1];
-    }
-
-    if (!specsHtml && html.includes("tab-content")) {
-      const match = html.match(
-        /<div[^>]*class=["'][^"']*tab-content[^"']*["'][^>]*>([\s\S]*?)<\/div>\s*(?:<\/div>|$)/i,
-      );
-      if (match) specsHtml = match[1];
-    }
-
-    if (!specsHtml) {
-      specsHtml = html;
-    }
-
-    const spanPattern =
-      /<dt[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/dt>\s*<dd[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/dd>/gi;
-
-    for (const match of specsHtml.matchAll(spanPattern)) {
-      const rawKey = match[1].trim();
-      const rawValue = match[2].trim();
-      if (rawKey && rawValue) {
-        const normalizedKey = this.normalizeSpecKey(rawKey);
-        specs[normalizedKey] = rawValue;
-      }
-    }
-
-    const simplePattern = /<dt[^>]*>\s*([^<]+?)\s*<\/dt>\s*<dd[^>]*>\s*([^<]+?)\s*<\/dd>/gi;
-
-    for (const match of specsHtml.matchAll(simplePattern)) {
-      const rawKey = match[1].trim();
-      const rawValue = match[2].trim();
-      if (rawKey && rawValue && !specs[this.normalizeSpecKey(rawKey)]) {
-        const normalizedKey = this.normalizeSpecKey(rawKey);
-        specs[normalizedKey] = rawValue;
-      }
-    }
-
-    const dtDdListPattern = /<dt[^>]*>(?:<span[^>]*>)?([^<]+)(?:<\/span>)?<\/dt>\s*<dd[^>]*>([\s\S]*?)<\/dd>/gi;
-
-    for (const match of specsHtml.matchAll(dtDdListPattern)) {
-      const rawKey = match[1].trim();
-      const ddContent = match[2];
-      const normalizedKey = this.normalizeSpecKey(rawKey);
-      if (specs[normalizedKey]) continue;
-
-      if (ddContent.includes("<li")) {
-        const liPattern = /<li[^>]*>([^<]+)<\/li>/gi;
-        const items: string[] = [];
-        for (const liMatch of ddContent.matchAll(liPattern)) {
-          const item = liMatch[1].trim();
-          if (item) items.push(item);
-        }
-        if (items.length > 0) {
-          specs[normalizedKey] = items.join(", ");
-        }
-      }
-    }
-
-    const tableRowPattern = /<tr[^>]*>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>\s*<\/tr>/gi;
-
-    for (const match of specsHtml.matchAll(tableRowPattern)) {
-      const rawKey = match[1].trim();
-      const rawValue = match[2].trim();
-      if (
-        rawKey &&
-        rawValue &&
-        rawKey.toLowerCase() !== "característica" &&
-        rawKey.toLowerCase() !== "detalle" &&
-        !specs[this.normalizeSpecKey(rawKey)]
-      ) {
-        const normalizedKey = this.normalizeSpecKey(rawKey);
-        specs[normalizedKey] = rawValue;
-      }
+    // 3) Simple table row fallback (td,td)
+    const simpleRowRegex = /<tr[^>]*>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>\s*<\/tr>/gi;
+    for (;;) {
+      match = simpleRowRegex.exec(html);
+      if (match === null) break;
+      const key = match[1]?.trim();
+      const value = match[2]?.trim();
+      if (key && value && !specs[key]) specs[key] = value;
     }
 
     this.logger.info(`Extracted ${Object.keys(specs).length} specs from product`);
     return specs;
   }
 
-  private normalizeSpecKey(key: string): string {
-    const keyMap: Record<string, string> = {
-      frecuencia: "frequency",
-      "frecuencia base": "frequency",
-      "frecuencia turbo": "frequency_turbo",
-      "frecuencia turbo máxima": "frequency_turbo",
-      "boost máximo": "frequency_turbo",
-      núcleos: "cores",
-      hilos: "threads",
-      "núcleos / hilos": "cores_threads",
-      cache: "cache",
-      caché: "cache",
-      enchufe: "socket",
-      socket: "socket",
-      núcleo: "core_name",
-      "proceso de manufactura": "manufacturing_process",
-      tdp: "tdp",
-      "smt (hyper-threading)": "smt",
-      virtualización: "virtualization",
-      "¿incluye cooler?": "cooler_included",
-      cooler: "cooler_included",
-      "gráficos integrados": "integrated_graphics",
-      marca: "manufacturer",
-      fabricante: "manufacturer",
-      memoria: "memory",
-      bus: "bus",
-      gpu: "gpu_model",
-      frecuencias: "frequencies",
-      "frecuencias core (base / boost / oc)": "frequencies",
-      "frecuencia memorias": "memory_frequency",
-      "frecuencia de memoria": "memory_frequency",
-      perfil: "profile",
-      refrigeración: "cooling",
-      slots: "slots",
-      largo: "length",
-      iluminación: "illumination",
-      backplate: "backplate",
-      "¿backplate?": "backplate",
-      "conectores de energía": "power_connectors",
-      "conectores de poder": "power_connectors",
-      "puertos de video": "video_ports",
-      potencia: "wattage",
-      "potencia de salida": "wattage",
-      certificación: "certification",
-      certificacion: "certification",
-      "factor de forma": "form_factor",
-      tamaño: "form_factor",
-      tamano: "form_factor",
-      pfc: "pfc_active",
-      "pfc activo": "pfc_active",
-      "pfc activa": "pfc_active",
-      tecnología: "pfc_active",
-      tecnologia: "pfc_active",
-      modular: "modular",
-      modularidad: "modular",
-      "corriente en la línea de 12 v": "rail_12v",
-      "corriente 12v": "rail_12v",
-      "corriente en la línea de 5 v": "rail_5v",
-      "corriente 5v": "rail_5v",
-      "corriente en la línea de 3.3 v": "rail_3v3",
-      "corriente 3.3v": "rail_3v3",
-      conectores: "storage_connectors",
-      modelo: "model",
-      dimensiones: "dimensions",
-      chipset: "chipset",
-      "slots memorias": "memory_slots",
-      "canales memoria": "memory_channels",
-      formato: "form_factor",
-      "soporte rgb": "rgb_support",
-      "puertos de energía": "power_connectors",
-      "soporte sli": "sli_support",
-      "soporte crossfire": "crossfire_support",
-      "soporte raid": "raid_support",
-      puertos: "io_ports",
-      expansiones: "expansion_slots",
-      "tamaño máximo de placa madre": "max_motherboard_size",
-      "tamaño maximo de placa madre": "max_motherboard_size",
-      "fuente de poder": "psu_included",
-      "panel lateral": "side_panel",
-      color: "color",
-      "largo máximo de tarjeta de video": "max_gpu_length",
-      "largo maximo de tarjeta de video": "max_gpu_length",
-      "alto máximo de cooler": "max_cooler_height",
-      "alto maximo de cooler": "max_cooler_height",
-      peso: "weight",
-      "ubicación de la psu": "psu_position",
-      "ubicacion de la psu": "psu_position",
-      "slots de expansión": "expansion_slots",
-      "slots de expansion": "expansion_slots",
-      bahías: "drive_bays",
-      bahias: "drive_bays",
-      "espacios para vent. frontales": "front_fans",
-      "espacios para vent. traseros": "rear_fans",
-      "espacios para vent. laterales": "side_fans",
-      "espacios para vent. superiores": "top_fans",
-      "espacios para vent. inferiores": "bottom_fans",
-      "ventiladores incluidos": "included_fans",
-      capacidad: "capacity",
-      tipo: "type",
-      velocidad: "speed",
-      voltaje: "voltage",
-      "latencia cl (cas)": "latency_cl",
-      "latencia cl": "latency_cl",
-      "latencia trcd": "latency_trcd",
-      "latencia trp": "latency_trp",
-      "latencia tras": "latency_tras",
-      "soporte ecc": "ecc_support",
-      "soporte full buffered": "full_buffered",
-      línea: "line",
-      linea: "line",
-      rpm: "rpm",
-      búfer: "buffer",
-      bufer: "buffer",
-      "¿posee dram?": "has_dram",
-      "tipo memoria nand": "nand_type",
-      controladora: "controller",
-      "lectura secuencial (según fabricante)": "read_speed",
-      "escritura secuencial (según fabricante)": "write_speed",
-      "lectura secuencial": "read_speed",
-      "escritura secuencial": "write_speed",
-      "flujo de aire": "airflow",
-      "nivel de ruido": "noise_level",
-      "presión estática": "static_pressure",
-      "presion estatica": "static_pressure",
-      bearing: "bearing",
-      rodamiento: "bearing",
-      "tipo de rodamiento": "bearing",
-      "¿incluye hub?": "includes_hub",
-      "incluye hub": "includes_hub",
-      "conexiones de poder disponibles": "power_connectors",
-      "conexiones de poder": "power_connectors",
-      "control de iluminación": "lighting_control",
-      "control de iluminacion": "lighting_control",
-      "tamaño ventilador": "fan_size",
-      "tamano ventilador": "fan_size",
-      altura: "height",
-      "¿heatpipes?": "has_heatpipes",
-      heatpipes: "has_heatpipes",
-      ruido: "noise_level",
-      "sockets compatibles": "compatible_sockets",
-    };
-
-    const normalized = key.toLowerCase().trim();
-    return keyMap[normalized] || normalized.replace(/\s+/g, "_");
-  }
-
-  private parsePrice(priceStr: string): number {
-    const clean = priceStr.replace(/[^\d]/g, "");
-    return Number.parseInt(clean, 10) || 0;
+  private parsePrice(priceStr: string): number | null {
+    if (!priceStr) return null;
+    const clean = String(priceStr).replace(/[^\d]/g, "");
+    if (!clean) return null;
+    return Number.parseInt(clean, 10);
   }
 
   private addLimitToUrl(url: string, limit: number): string {
@@ -498,25 +392,35 @@ export class PcExpressCrawler extends BaseCrawler {
   }
 
   private getTotalPages(html: string): number {
-    let totalPages = 1;
-    const rewriter = new HTMLRewriter();
-    let paginationText = "";
+    // 1) Try summary text like "Mostrando del 1 al 20 de 38 (2 páginas)"
+    const summaryMatch = html.match(/\((\d+)\s+páginas?\)/i);
+    if (summaryMatch?.[1]) {
+      const pages = Number.parseInt(summaryMatch[1], 10);
+      this.logger.info(`getTotalPages: detected ${pages} pages via summary text`);
+      return pages;
+    }
 
-    rewriter.on(".row.row-flex .text-right", {
-      text(text) {
-        paginationText += text.text;
-        if (text.lastInTextNode) {
-          const match = paginationText.match(/\((\d+)\s+página[s]?\)/i);
-          if (match?.[1]) {
-            totalPages = Number.parseInt(match[1], 10);
-          }
-          paginationText = "";
-        }
-      },
-    });
+    // 2) Parse the pagination list and look for numeric page items
+    const liRegex = /<li[^>]*class=["'][^"']*page-item[^"']*["'][^>]*>([\s\S]*?)<\/li>/gi;
+    const numberRegex = /(?:<a[^>]*>(\d+)<\/a>|<span[^>]*>(\d+)<\/span>)/i;
+    const pages: number[] = [];
+    let liMatch: RegExpExecArray | null = null;
+    for (;;) {
+      liMatch = liRegex.exec(html);
+      if (liMatch === null) break;
+      const liContent = liMatch[1];
+      const numMatch = liContent.match(numberRegex);
+      const num = numMatch ? Number(numMatch[1] || numMatch[2]) : NaN;
+      if (num && !Number.isNaN(num)) pages.push(num);
+    }
+    if (pages.length > 0) {
+      const maxPage = Math.max(...pages);
+      this.logger.info(`getTotalPages: detected ${maxPage} pages via pagination list`);
+      return maxPage;
+    }
 
-    rewriter.transform(html);
-
-    return totalPages;
+    // 3) Fallback to 1
+    this.logger.info("getTotalPages: pagination not found, defaulting to 1");
+    return 1;
   }
 }

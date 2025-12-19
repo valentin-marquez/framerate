@@ -1,4 +1,5 @@
 import type { RamSpecs } from "@framerate/db";
+import { RamSchema } from "@framerate/db";
 
 function parseBoolean(value?: string): boolean {
   if (!value) return false;
@@ -76,7 +77,7 @@ export const RamProcessor = {
     const titleSpeed = extractSpeedFromTitle(title);
     const titleFormat = extractFormatFromTitle(title);
 
-    return {
+    const normalized: RamSpecs = {
       manufacturer: rawSpecs.manufacturer || rawSpecs.fabricante || rawSpecs.marca || "",
       capacity: rawSpecs.capacity || rawSpecs.capacidad || titleCapacity || "",
       type: rawSpecs.type || rawSpecs.tipo || titleType || "",
@@ -93,5 +94,8 @@ export const RamProcessor = {
         rawSpecs.full_buffered || rawSpecs.soporte_full_buffered || rawSpecs["soporte full buffered"] || "",
       ),
     };
+
+    // Validate & clean with Zod schema. This will throw if invalid — desirable to catch normalization issues early.
+    return RamSchema.parse(normalized);
   },
 };
