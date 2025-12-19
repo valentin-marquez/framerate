@@ -8,7 +8,7 @@ export class GpuStrategy extends BaseExtractor<GpuSpecs> {
   }
 
   protected async extractWithLLM(text: string, context?: any, lastError?: string) {
-    const prompt = `GPU specs. Schema:\n${JSON.stringify(GpuSchema.describe ? {} : {}, null, 0)}\n\nTexto: ${text}${context ? `\nContext: ${JSON.stringify(context)}` : ""}${lastError ? `\n\nPrevious validation error: ${lastError}. Please correct the JSON and return ONLY valid JSON.` : ""}`;
+    const prompt = `GPU specs. Schema:\nTexto: ${text}${context ? `\nContext: ${JSON.stringify(context)}` : ""}${lastError ? `\n\nPrevious validation error: ${lastError}. Please correct the JSON and return ONLY valid JSON.` : ""}`;
 
     const completion = await this.callLLM({
       messages: [
