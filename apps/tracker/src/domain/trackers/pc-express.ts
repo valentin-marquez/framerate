@@ -3,10 +3,6 @@ import { BaseTracker, type TrackerResult } from "@/domain/trackers/base";
 /**
  * PcExpressTracker es un rastreador para productos en tienda.pc-express.cl.
  * Obtiene la página del producto, extrae los precios al contado y normal, y determina la disponibilidad de stock.
- *
- * Métodos:
- *   - track(url): Obtiene la página del producto y retorna price, priceNormal, stock, stockQuantity y availability.
- *   - parsePrice(priceStr): Parsea una cadena de precio y retorna su valor numérico.
  */
 export class PcExpressTracker extends BaseTracker {
   name = "PC-Express";
@@ -34,40 +30,30 @@ export class PcExpressTracker extends BaseTracker {
         throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
       }
 
-      let priceCashStr = "";
-      let priceNormalStr = "";
+      const html = await response.text();
+
+      // Extraer precio efectivo: $XXX.XXX Efectivo/Transferencia
+      const cashPriceMatch = html.match(/\$\s*([\d,.]+)\s*(?:<\/[^>]+>)*\s*Efectivo(?:\/Transferencia)?/i);
+      const price = cashPriceMatch?.[1] ? this.parsePrice(cashPriceMatch[1]) : 0;
+
+      // Extraer precio normal: $XXX.XXX Otros medios de pago
+      const normalPriceMatch = html.match(/\$\s*([\d,.]+)\s*(?:<\/[^>]+>)*\s*Otros\s+medios\s+de\s+pago/i);
+      const priceNormal = normalPriceMatch?.[1] ? this.parsePrice(normalPriceMatch[1]) : price;
+
+      // Extraer stock: +20 unidades o 20 unidades
       let stockCount = 0;
-
-      const rewriter = new HTMLRewriter();
-
-      rewriter.on(".rm-product__price--cash h3", {
-        text(text) {
-          priceCashStr += text.text;
-        },
-      });
-
-      rewriter.on(".rm-product__price--normal h3", {
-        text(text) {
-          priceNormalStr += text.text;
-        },
-      });
-
-      rewriter.on("span[id^='stock-sucursal-']", {
-        text(text) {
-          const content = text.text.trim();
-          if (content) {
-            const match = content.match(/(\d+)\s+unidad/i);
-            if (match?.[1]) {
-              stockCount += Number.parseInt(match[1], 10);
-            }
+      const stockMatches = html.matchAll(
+        /<span[^>]*id=["']stock-sucursal-[^"']*["'][^>]*>([^<]*(?:<[^>]+>[^<]*)*)<\/span>/gi,
+      );
+      for (const match of stockMatches) {
+        const content = match[1]?.replace(/<[^>]+>/g, "").trim();
+        if (content) {
+          const stockMatch = content.match(/\+?(\d+)\s*unidad/i);
+          if (stockMatch?.[1]) {
+            stockCount += Number.parseInt(stockMatch[1], 10);
           }
-        },
-      });
-
-      await rewriter.transform(response).text();
-
-      const price = this.parsePrice(priceCashStr);
-      const priceNormal = this.parsePrice(priceNormalStr);
+        }
+      }
 
       return {
         price,
@@ -87,7 +73,7 @@ export class PcExpressTracker extends BaseTracker {
   }
 
   private parsePrice(priceStr: string): number {
-    const clean = priceStr.replace(/[^\d]/g, "");
+    const clean = String(priceStr).replace(/[^\d]/g, "");
     return Number.parseInt(clean, 10) || 0;
   }
 }

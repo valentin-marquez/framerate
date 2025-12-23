@@ -61,7 +61,12 @@ export class PuppeteerPool {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    const browser = this.availableBrowsers.pop()!;
+    const browser = this.availableBrowsers.pop();
+    if (!browser) {
+      // In the unlikely event of a race, retry acquiring a browser
+      return this.acquire();
+    }
+
     return browser;
   }
 

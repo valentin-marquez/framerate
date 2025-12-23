@@ -1,19 +1,7 @@
+import type { Category, CategoryMap } from "@/constants/categories";
 import { BaseCrawler, type ProductData } from "./base";
 
-export type PcExpressCategory =
-  | "gpu"
-  | "cpu"
-  | "psu"
-  | "motherboard"
-  | "case"
-  | "ram"
-  | "hdd"
-  | "ssd"
-  | "case_fan"
-  | "cpu_cooler";
-
-// Mapeo de categorías a IDs de ruta en PC-Express
-export const PC_EXPRESS_CATEGORIES: Record<PcExpressCategory, string[]> = {
+export const PC_EXPRESS_CATEGORIES: CategoryMap<string[]> = {
   gpu: ["475"],
   cpu: ["337", "367", "591", "309", "348", "380", "583", "588", "600"],
   psu: ["460_461"],
@@ -26,7 +14,7 @@ export const PC_EXPRESS_CATEGORIES: Record<PcExpressCategory, string[]> = {
   cpu_cooler: ["169"],
 };
 
-export class PcExpressCrawler extends BaseCrawler {
+export class PcExpressCrawler extends BaseCrawler<Category> {
   name = "PC-Express";
   baseUrl = "https://tienda.pc-express.cl";
 
@@ -34,7 +22,7 @@ export class PcExpressCrawler extends BaseCrawler {
     return `${this.baseUrl}/index.php?route=product/category&path=${pathId}`;
   }
 
-  async getAllProductUrlsForCategory(category: PcExpressCategory): Promise<string[]> {
+  async getAllProductUrlsForCategory(category: Category): Promise<string[]> {
     const pathIds = PC_EXPRESS_CATEGORIES[category];
     const allUrls: string[] = [];
 
@@ -324,6 +312,29 @@ export class PcExpressCrawler extends BaseCrawler {
         ...(product.specs as Record<string, string>),
         ...techSpecs,
       };
+    }
+
+    // Extraer descripción / contexto (HTML y texto limpio) para IA
+    const descHtmlMatch = html.match(/<div[^>]*class=["']product-description__content["'][^>]*>([\s\S]*?)<\/div>/i);
+    if (descHtmlMatch?.[1]) {
+      const descHtml = descHtmlMatch[1].trim();
+      const descText = descHtml
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      product.context = { description_html: descHtml, description_text: descText };
+    } else {
+      const secMatch = html.match(/<div[^>]*id=["']product-description["'][^>]*>([\s\S]*?)<\/div>/i);
+      if (secMatch?.[1]) {
+        const secHtml = secMatch[1].trim();
+        const secText = secHtml
+          .replace(/<script[\s\S]*?<\/script>/gi, "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        product.context = { description_html: secHtml, description_text: secText };
+      }
     }
 
     // Basic validation: require title and an image (try og:image fallback earlier)

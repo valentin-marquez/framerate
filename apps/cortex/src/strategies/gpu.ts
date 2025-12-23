@@ -1,30 +1,19 @@
 import type { GpuSpecs } from "@framerate/db";
 import { GpuSchema } from "@framerate/db";
-import { BaseExtractor, SYSTEM_PROMPT } from "@/strategies/base";
+import type { ZodType } from "zod";
+import { BaseExtractor } from "@/strategies/base";
 
 export class GpuStrategy extends BaseExtractor<GpuSpecs> {
   protected getZodSchema() {
-    return GpuSchema as any;
+    return GpuSchema as unknown as ZodType<GpuSpecs>;
   }
 
-  protected async extractWithLLM(text: string, context?: any, lastError?: string) {
-    const prompt = `GPU specs. Schema:\nTexto: ${text}${context ? `\nContext: ${JSON.stringify(context)}` : ""}${lastError ? `\n\nPrevious validation error: ${lastError}. Please correct the JSON and return ONLY valid JSON.` : ""}`;
-
-    const completion = await this.callLLM({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-    });
-
-    const content = completion.choices?.[0]?.message?.content;
-    if (!content) throw new Error("Empty LLM response");
-
-    return JSON.parse(content) as GpuSpecs;
-  }
-
-  async process(job: any) {
+  async process(job: {
+    raw_text?: string | null;
+    mpn?: string;
+    category?: string;
+    context?: Record<string, unknown> | undefined;
+  }) {
     const specs = await this.extractWithRetry(`Title: ${job.raw_text ?? ""}`, job.context);
     return {
       extracted: true,

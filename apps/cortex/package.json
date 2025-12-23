@@ -13,6 +13,7 @@
     "@framerate/db": "workspace:*",
     "@framerate/utils": "workspace:*",
     "@supabase/supabase-js": "^2.87.1",
+    "dedent": "^1.7.1",
     "openai": "^6.9.1",
     "zod": "^4.2.1"
   },

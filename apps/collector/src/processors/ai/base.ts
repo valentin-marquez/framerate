@@ -14,12 +14,19 @@ export async function scheduleExtraction(category: string, mpn: string, text: st
     return;
   }
 
+  // Store context raw (crudo) as the user requested. If undefined, save as null.
+  const rawContext = context ?? null;
+
   try {
+    logger.info(
+      `Enqueuing AI job for MPN=${mpn} category=${category} contextType=${rawContext === null ? "null" : typeof rawContext}`,
+    );
+
     const { error } = await supabase.from("ai_extraction_jobs").insert({
       mpn,
       category,
       raw_text: text,
-      context: context ?? null,
+      context: rawContext,
     });
 
     if (error) {
@@ -45,6 +52,18 @@ export async function extractForCategory<T = unknown>(
   }
 
   try {
+    try {
+      const preview =
+        context == null
+          ? String(context)
+          : typeof context === "string"
+            ? context.slice(0, 200)
+            : JSON.stringify(context).slice(0, 200);
+      logger.info(
+        `IA extract invoked for mpn=${mpn} category=${category} contextType=${context == null ? "null" : typeof context} ctxPreview=${preview}`,
+      );
+    } catch (_e) {}
+
     const { data: cached, error: cacheError } = await supabase
       .from("cached_specs_extractions")
       .select("specs")

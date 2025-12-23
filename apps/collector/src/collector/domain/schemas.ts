@@ -19,6 +19,9 @@ export const ScrapedProductSchema = z.object({
 
   // Specs are dynamic but should be a record of string -> string|number
   specs: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+
+  // Optional context (e.g. HTML/text description) to help AI extractors
+  context: z.any().optional(),
 });
 
 export type ScrapedProduct = z.infer<typeof ScrapedProductSchema>;

@@ -1,30 +1,19 @@
 import type { CaseFanSpecs } from "@framerate/db";
 import { CaseFanSchema } from "@framerate/db";
-import { BaseExtractor, SYSTEM_PROMPT } from "@/strategies/base";
+import type { ZodType } from "zod";
+import { BaseExtractor } from "@/strategies/base";
 
 export class CaseFanStrategy extends BaseExtractor<CaseFanSpecs> {
   protected getZodSchema() {
-    return CaseFanSchema as any;
+    return CaseFanSchema as unknown as ZodType<CaseFanSpecs>;
   }
 
-  protected async extractWithLLM(text: string, context?: any, lastError?: string) {
-    const prompt = `Case Fan specs. Schema:\nTexto: ${text}${context ? `\nContext: ${JSON.stringify(context)}` : ""}${lastError ? `\n\nPrevious validation error: ${lastError}. Please correct the JSON and return ONLY valid JSON.` : ""}`;
-
-    const completion = await this.callLLM({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-    });
-
-    const content = completion.choices?.[0]?.message?.content;
-    if (!content) throw new Error("Empty LLM response");
-
-    return JSON.parse(content) as CaseFanSpecs;
-  }
-
-  async process(job: any) {
+  async process(job: {
+    raw_text?: string | null;
+    mpn?: string;
+    category?: string;
+    context?: Record<string, unknown> | undefined;
+  }) {
     const specs = await this.extractWithRetry(`Title: ${job.raw_text ?? ""}`, job.context);
     return {
       extracted: true,

@@ -12,6 +12,8 @@ export interface ProductData {
   mpn?: string | null;
   imageUrl?: string | null;
   specs?: GpuSpecs | Record<string, string>;
+  // Optional arbitrary context (HTML/text) useful for AI extraction
+  context?: unknown;
 }
 
 // Pool de páginas para concurrencia
@@ -21,7 +23,7 @@ interface PagePool {
   availablePages: Page[];
 }
 
-export abstract class BaseCrawler {
+export abstract class BaseCrawler<T = string> {
   abstract name: string;
   abstract baseUrl: string;
 
@@ -48,28 +50,70 @@ export abstract class BaseCrawler {
    */
   protected async getBrowser(): Promise<Browser> {
     if (!BaseCrawler.browserInstance) {
-      const puppeteer = await import("puppeteer");
-      BaseCrawler.browserInstance = await puppeteer.launch({
-        headless: true,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-gpu",
-          "--no-first-run",
-          "--no-zygote",
-          "--disable-extensions",
-          "--disable-background-networking",
-          "--disable-sync",
-          "--disable-translate",
-          "--metrics-recording-only",
-          "--mute-audio",
-          "--no-default-browser-check",
-          "--safebrowsing-disable-auto-update",
-        ],
-      });
-      this.logger.info("Browser instance created");
+      // Prefer puppeteer-extra + stealth plugin to reduce detection. Fall back to plain puppeteer if not available.
+      try {
+        // Dynamically import and handle default interop
+        const puppeteerExtraModule: unknown = await import("puppeteer-extra");
+        const stealthModule: unknown = await import("puppeteer-extra-plugin-stealth");
+        // Cast to any only where necessary for runtime calls
+        const puppeteerExtra =
+          (puppeteerExtraModule as unknown as any)?.default || (puppeteerExtraModule as unknown as any);
+        // biome-ignore lint/suspicious/noExplicitAny: runtime plugin interop
+        const stealthPlugin = (stealthModule as unknown as any)?.default || (stealthModule as unknown as any);
+
+        // biome-ignore lint/suspicious/noExplicitAny: using plugin API at runtime
+        (puppeteerExtra as any).use((stealthPlugin as any)());
+
+        // biome-ignore lint/suspicious/noExplicitAny: launching puppeteer-extra
+        BaseCrawler.browserInstance = await (puppeteerExtra as any).launch({
+          headless: true,
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--no-first-run",
+            "--no-zygote",
+            "--disable-extensions",
+            "--disable-background-networking",
+            "--disable-sync",
+            "--disable-translate",
+            "--metrics-recording-only",
+            "--mute-audio",
+            "--no-default-browser-check",
+            "--safebrowsing-disable-auto-update",
+          ],
+        });
+
+        this.logger.info("Browser instance created using puppeteer-extra + stealth plugin");
+      } catch (err) {
+        // Fallback to standard puppeteer
+        this.logger.warn("puppeteer-extra or stealth plugin not available, falling back to puppeteer: ", String(err));
+        const puppeteer = await import("puppeteer");
+        BaseCrawler.browserInstance = await puppeteer.launch({
+          headless: true,
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--no-first-run",
+            "--no-zygote",
+            "--disable-extensions",
+            "--disable-background-networking",
+            "--disable-sync",
+            "--disable-translate",
+            "--metrics-recording-only",
+            "--mute-audio",
+            "--no-default-browser-check",
+            "--safebrowsing-disable-auto-update",
+          ],
+        });
+        this.logger.info("Browser instance created using puppeteer");
+      }
     }
+
+    if (!BaseCrawler.browserInstance) throw new Error("Browser instance not initialized");
     return BaseCrawler.browserInstance;
   }
 

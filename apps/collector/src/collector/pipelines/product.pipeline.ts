@@ -80,9 +80,29 @@ export class ProductPipeline {
     rawSpecs: Record<string, string>,
     title: string,
     mpn?: string | null,
+    context?: unknown,
   ) {
     if (mpn) {
-      const specs = await extractForCategory(category, mpn, `Title: ${title}\nSpecs: ${JSON.stringify(rawSpecs)}`);
+      try {
+        const ctxPreview =
+          context == null
+            ? String(context)
+            : typeof context === "string"
+              ? context.slice(0, 200)
+              : JSON.stringify(context).slice(0, 200);
+        this.logger.info(
+          `IA request: mpn=${mpn} category=${category} contextType=${context == null ? "null" : typeof context} ctxPreview=${ctxPreview}`,
+        );
+      } catch (_e) {
+        // ignore preview errors
+      }
+
+      const specs = await extractForCategory(
+        category,
+        mpn,
+        `Title: ${title}\nSpecs: ${JSON.stringify(rawSpecs)}`,
+        context,
+      );
       if (specs) return specs;
     }
 
@@ -212,7 +232,7 @@ export class ProductPipeline {
     if (!brandId) return { success: false, error: `Could not resolve brand: ${brandName}` };
 
     // normalize specs
-    const normalizedSpecs = await this.normalizeSpecs(ctx.category, rawSpecs, raw.title ?? "", raw.mpn);
+    const normalizedSpecs = await this.normalizeSpecs(ctx.category, rawSpecs, raw.title ?? "", raw.mpn, raw.context);
 
     // Validate normalized specs against DB schemas (ProductSpecsSchema union)
     if (normalizedSpecs && typeof normalizedSpecs === "object") {

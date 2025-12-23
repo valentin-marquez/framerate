@@ -1,20 +1,9 @@
 import * as cheerio from "cheerio";
+import type { Category, CategoryMap } from "@/constants/categories";
 import { BaseCrawler, type ProductData } from "./base";
 
-export type SpDigitalCategory =
-  | "gpu"
-  | "cpu"
-  | "psu"
-  | "motherboard"
-  | "case"
-  | "ram"
-  | "hdd"
-  | "ssd"
-  | "case_fan"
-  | "cpu_cooler";
-
 // Mapeo de categorías a slugs de URL en SP Digital
-export const SP_DIGITAL_CATEGORIES: Record<SpDigitalCategory, string[]> = {
+export const SP_DIGITAL_CATEGORIES: CategoryMap<string[]> = {
   gpu: ["componentes-tarjeta-de-video"],
   cpu: ["componentes-procesador"],
   psu: ["componentes-fuente-de-poder-fuentes-de-poder"],
@@ -27,7 +16,7 @@ export const SP_DIGITAL_CATEGORIES: Record<SpDigitalCategory, string[]> = {
   cpu_cooler: ["componentes-refrigeracion-y-ventilacion-disipador-cpu"],
 };
 
-export class SpDigitalCrawler extends BaseCrawler {
+export class SpDigitalCrawler extends BaseCrawler<Category> {
   name = "SP Digital";
   baseUrl = "https://www.spdigital.cl";
   protected useHeadless = true;
@@ -45,7 +34,7 @@ export class SpDigitalCrawler extends BaseCrawler {
     return `${this.baseUrl}/categories/${categorySlug}/${page}/`;
   }
 
-  async getAllProductUrlsForCategory(category: SpDigitalCategory): Promise<string[]> {
+  async getAllProductUrlsForCategory(category: Category): Promise<string[]> {
     const categorySlugs = SP_DIGITAL_CATEGORIES[category];
     const allUrls: string[] = [];
 
@@ -172,6 +161,7 @@ export class SpDigitalCrawler extends BaseCrawler {
       };
 
       // 1. Availability from JSON-LD
+      let jsonLdDescription: string | undefined;
       const scripts = $('script[type="application/ld+json"]');
       scripts.each((_, script) => {
         try {
@@ -192,6 +182,11 @@ export class SpDigitalCrawler extends BaseCrawler {
             if (product.mpn) result.mpn = product.mpn;
             if (product.brand) {
               result.brand = typeof product.brand === "object" ? product.brand.name : product.brand;
+            }
+            if (product.description) {
+              // Keep the raw description from JSON-LD (could contain newlines/formatting)
+              jsonLdDescription =
+                typeof product.description === "string" ? product.description : String(product.description);
             }
           }
         } catch (_e) {
@@ -279,6 +274,14 @@ export class SpDigitalCrawler extends BaseCrawler {
         specs.brand = result.brand;
       }
 
+      // Extraer descripción/contexto para IA — usar JSON-LD si está disponible
+      let descriptionContext: { description_html: string; description_text: string } | undefined;
+      if (jsonLdDescription) {
+        const html = jsonLdDescription.trim();
+        const txt = jsonLdDescription.replace(/\s+/g, " ").trim();
+        descriptionContext = { description_html: html, description_text: txt };
+      }
+
       if (this.shouldExcludeProduct(result.title)) {
         return null;
       }
@@ -296,6 +299,7 @@ export class SpDigitalCrawler extends BaseCrawler {
         mpn: result.mpn,
         imageUrl: result.imageUrl,
         specs,
+        context: descriptionContext,
       };
     } catch (error) {
       this.logger.error(`Error parsing product ${url}:`, String(error));

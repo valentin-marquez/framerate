@@ -9,20 +9,22 @@ if (!config.DEEPSEEK_API_KEY) {
 }
 
 const openai = new OpenAI({ apiKey: config.DEEPSEEK_API_KEY, baseURL: "https://api.deepseek.com" });
-export async function callLLM(params: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming) {
-  const paramsWithDefaults = {
+export async function callLLM(params: Partial<OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming>) {
+  const paramsWithDefaults: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
     ...params,
-    model: params.model ?? config.AI_MODEL,
-    temperature: params.temperature ?? 0,
-    top_p: params.top_p ?? 1,
+    model: params?.model ?? config.AI_MODEL,
+    temperature: params?.temperature ?? 0,
+    top_p: params?.top_p ?? 1,
+    messages: params?.messages ?? [],
   };
 
   const makeRequest = async () => {
     try {
       return await openai.chat.completions.create(paramsWithDefaults);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // DeepSeek claims to not constrain rate; still handle transient server errors with a retry
-      if (error?.status === 429 || (error?.status >= 500 && error?.status < 600)) {
+      const err = error as { status?: number } | undefined;
+      if (err?.status === 429 || (err?.status && err.status >= 500 && err.status < 600)) {
         logger.warn("Transient server error from DeepSeek, retrying after delay...");
         await new Promise((r) => setTimeout(r, 2000));
         return await openai.chat.completions.create(paramsWithDefaults);
