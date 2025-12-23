@@ -3,42 +3,25 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build",
-        "check-types"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        ".env*"
-      ],
-      "outputs": [
-        "dist/**",
-        ".wrangler/**"
-      ]
+      "dependsOn": ["^build", "check-types"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", ".wrangler/**"]
     },
     "tracker#build": {
-      "outputs": [
-        "dist/**"
-      ]
+      "outputs": ["dist/**"]
     },
     "web#build": {
-      "outputs": [
-        "dist/**"
-      ]
+      "outputs": ["dist/**"]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "test": {
-      "dependsOn": [
-        "check-types"
-      ]
+      "dependsOn": ["check-types"]
     },
     "check-types": {
-      "dependsOn": [
-        "^check-types"
-      ],
+      "dependsOn": ["^check-types"],
       "outputs": []
     },
     "generate:types": {
