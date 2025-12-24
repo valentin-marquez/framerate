@@ -29,61 +29,93 @@ export class SpDigitalTracker extends BaseTracker {
         ["image", "stylesheet", "font"].includes(req.resourceType()) ? req.abort() : req.continue();
       });
       await page.setUserAgent(getUserAgent());
-      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+
+      // Esperar networkidle2 para que React termine de renderizar
+      await page.goto(url, { waitUntil: "networkidle2", timeout: 45000 });
+
+      // Esperar explícitamente por el JSON-LD de React Helmet
+      await page.waitForSelector('script[type="application/ld+json"]', { timeout: 10000 }).catch(() => {
+        this.logger.warn(`Timeout waiting for JSON-LD script on ${url}`);
+      });
 
       const data = await page.evaluate(() => {
-        const result = { priceCash: 0, priceNormal: 0, stockQuantity: 0, available: false };
+        const result = {
+          priceCash: 0,
+          priceNormal: 0,
+          stockQuantity: 0,
+          available: false,
+        };
 
         // Extraer desde JSON-LD
         const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+
         for (const script of scripts) {
           try {
-            const json = JSON.parse(script.textContent || "[]");
-            const products = Array.isArray(json) ? json : [json];
-            const product = products.find((p) => p?.["@type"] === "Product");
+            const jsonText = script.textContent || "";
+            if (!jsonText.trim()) continue;
 
-            if (product?.offers) {
-              result.available = product.offers.availability === "https://schema.org/InStock";
-              result.priceCash = Number.parseInt(String(product.offers.price), 10) || 0;
+            const json = JSON.parse(jsonText);
+            const items = Array.isArray(json) ? json : [json];
+
+            for (const item of items) {
+              if (item?.["@type"] === "Product" && item.offers) {
+                result.available = item.offers.availability === "https://schema.org/InStock";
+
+                const priceValue = item.offers.price;
+                if (priceValue !== undefined && priceValue !== null) {
+                  const parsedPrice =
+                    typeof priceValue === "string"
+                      ? Number.parseFloat(priceValue.replace(/[^\d.]/g, ""))
+                      : Number(priceValue);
+                  result.priceCash = Math.round(parsedPrice) || 0;
+                }
+                break;
+              }
             }
-          } catch (_e) {
-            // Ignore
-          }
+
+            if (result.priceCash > 0) break;
+          } catch (e) {}
         }
 
-        // Extraer precio normal (otros medios de pago)
+        // Extraer precio normal (otros medios de pago) del DOM
         const spans = Array.from(document.querySelectorAll("span"));
         const otherPaymentSpan = spans.find((s) => s.textContent?.includes("Otros medios de pago"));
         if (otherPaymentSpan) {
           let next = otherPaymentSpan.nextElementSibling;
-          while (next) {
-            if (next.textContent?.includes("$")) {
-              result.priceNormal = Number.parseInt(next.textContent.replace(/[^\d]/g, ""), 10) || 0;
+          let attempts = 0;
+          while (next && attempts < 5) {
+            const text = next.textContent || "";
+            if (text.includes("$")) {
+              result.priceNormal = Number.parseInt(text.replace(/[^\d]/g, ""), 10) || 0;
               break;
             }
             next = next.nextElementSibling;
+            attempts++;
           }
         }
 
-        if (result.priceNormal === 0) result.priceNormal = result.priceCash;
+        if (result.priceNormal === 0 && result.priceCash > 0) {
+          result.priceNormal = result.priceCash;
+        }
 
-        // Extraer cantidad de stock
+        // Extraer cantidad de stock del DOM
         const availabilityDivs = document.querySelectorAll('div[class*="product-detail-module--availability"]');
         for (const div of availabilityDivs) {
-          const match = (div.textContent || "").match(/(\d+)/);
-          if (match?.[1]) result.stockQuantity += Number.parseInt(match[1], 10);
+          const match = (div.textContent || "").match(/(\d+)\s*unidades?/i);
+          if (match?.[1]) {
+            result.stockQuantity += Number.parseInt(match[1], 10);
+          }
         }
 
         return result;
       });
 
-      const hasStock = data.available;
-      const stockQty = data.stockQuantity > 0 ? data.stockQuantity : hasStock ? 1 : 0;
+      const stockQty = data.stockQuantity > 0 ? data.stockQuantity : data.available ? 1 : 0;
 
       return {
         price: data.priceCash,
-        priceNormal: data.priceNormal,
-        stock: hasStock,
+        priceNormal: data.priceNormal || data.priceCash,
+        stock: data.available,
         stockQuantity: stockQty,
         available: data.available,
       };

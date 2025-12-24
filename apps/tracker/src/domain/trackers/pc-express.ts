@@ -32,13 +32,34 @@ export class PcExpressTracker extends BaseTracker {
 
       const html = await response.text();
 
-      // Extraer precio efectivo: $XXX.XXX Efectivo/Transferencia
-      const cashPriceMatch = html.match(/\$\s*([\d,.]+)\s*(?:<\/[^>]+>)*\s*Efectivo(?:\/Transferencia)?/i);
-      const price = cashPriceMatch?.[1] ? this.parsePrice(cashPriceMatch[1]) : 0;
+      // Extraer precios desde el formato HTML
+      let price = 0;
+      let priceNormal = 0;
 
-      // Extraer precio normal: $XXX.XXX Otros medios de pago
-      const normalPriceMatch = html.match(/\$\s*([\d,.]+)\s*(?:<\/[^>]+>)*\s*Otros\s+medios\s+de\s+pago/i);
-      const priceNormal = normalPriceMatch?.[1] ? this.parsePrice(normalPriceMatch[1]) : price;
+      // Buscar todos los bloques de precio dentro de rm-product-page__price
+      const priceBlocks = html.matchAll(/<div[^>]*class="[^"]*rm-product-page__price[^"]*"[^>]*>([\s\S]*?)<\/div>/gi);
+
+      for (const block of priceBlocks) {
+        const blockHtml = block[1];
+
+        // Extraer el precio del h3
+        const priceMatch = blockHtml.match(/<h3[^>]*>\$\s*([\d.,]+)<\/h3>/i);
+        if (!priceMatch) continue;
+
+        const extractedPrice = this.parsePrice(priceMatch[1]);
+
+        // Determinar si es efectivo o normal según el texto que sigue
+        if (/Efectivo/i.test(blockHtml)) {
+          price = extractedPrice;
+        } else if (/Otros\s+medios\s+de\s+pago/i.test(blockHtml)) {
+          priceNormal = extractedPrice;
+        }
+      }
+
+      // Si no se encontró precio normal, usar el precio efectivo
+      if (priceNormal === 0 && price > 0) {
+        priceNormal = price;
+      }
 
       // Extraer stock: +20 unidades o 20 unidades
       let stockCount = 0;

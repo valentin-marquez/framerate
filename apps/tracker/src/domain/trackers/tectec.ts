@@ -1,168 +1,147 @@
+import type { Browser, Page } from "puppeteer";
 import { BaseTracker, type TrackerResult } from "@/domain/trackers/base";
+import type { PuppeteerPool } from "@/domain/trackers/puppeteer-pool";
+import { getUserAgent } from "@/domain/trackers/user-agents";
 
 /**
  * Rastreador para Tectec (tectec.cl).
- * Extrae precio, disponibilidad y stock desde HTML.
+ * Extrae precio, disponibilidad y stock desde JSON-LD y HTML.
  */
 export class TectecTracker extends BaseTracker {
   name = "Tectec";
   domain = "tectec.cl";
+  private puppeteerPool: PuppeteerPool;
+
+  constructor(puppeteerPool: PuppeteerPool) {
+    super();
+    this.puppeteerPool = puppeteerPool;
+  }
 
   async track(url: string): Promise<TrackerResult> {
+    let page: Page | undefined;
+    let browser: Browser | null = null;
     try {
-      const html = await this.fetchHtml(url);
+      browser = await this.puppeteerPool.acquire();
+      page = await browser.newPage();
 
-      // Extraer precios del formulario cart
-      let price = 0;
-      let priceNormal = 0;
+      await page.setRequestInterception(true);
+      page.on("request", (req) => {
+        ["image", "stylesheet", "font"].includes(req.resourceType()) ? req.abort() : req.continue();
+      });
+      await page.setUserAgent(getUserAgent());
 
-      const formMatch = html.match(/<form[^>]*class=["'][^"']*cart[^"']*["'][\s\S]*?<\/form>/i)?.[0];
-      if (formMatch) {
-        const priceRe = /\$\s*([0-9.,]+)/g;
-        const nums: number[] = [];
-        let pm: RegExpExecArray | null = priceRe.exec(formMatch);
-        while (pm !== null) {
-          const cleaned = pm[1].replace(/[.,]/g, "");
-          const val = Number.parseInt(cleaned, 10);
-          if (!Number.isNaN(val)) nums.push(val);
-          pm = priceRe.exec(formMatch);
-        }
-        if (nums.length > 0) {
-          price = Math.min(...nums); // Precio más bajo (transferencia)
-          priceNormal = Math.max(...nums); // Precio más alto (tarjeta)
-          if (price === priceNormal) priceNormal = price;
-        }
-      }
+      await page.goto(url, { waitUntil: "networkidle2", timeout: 45000 });
+      await page.waitForSelector('script[type="application/ld+json"]', { timeout: 10000 }).catch(() => {
+        this.logger.warn(`Timeout waiting for JSON-LD script on ${url}`);
+      });
 
-      // Fallback: JSON-LD (mejorado para manejar @graph y priceSpecification)
-      if (price === 0) {
-        const jsonLdMatch = html.match(
-          /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i,
-        )?.[1];
-        if (jsonLdMatch) {
+      const data = await page.evaluate(() => {
+        const result = {
+          price: 0,
+          priceNormal: 0,
+          stock: false,
+          stockQuantity: 0,
+        };
+
+        // Extraer desde JSON-LD
+        const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+
+        for (const script of scripts) {
           try {
-            const ld: unknown = JSON.parse(jsonLdMatch);
+            const jsonText = script.textContent || "";
+            if (!jsonText.trim()) continue;
 
-            type ProductLd = { "@type": "Product"; offers?: unknown };
+            const json = JSON.parse(jsonText);
 
-            const isProductLd = (item: unknown): item is ProductLd =>
-              typeof item === "object" && item !== null && (item as Record<string, unknown>)["@type"] === "Product";
-
-            let productLd: ProductLd | undefined;
-
-            if (
-              typeof ld === "object" &&
-              ld !== null &&
-              "@graph" in ld &&
-              Array.isArray((ld as Record<string, unknown>)["@graph"])
-            ) {
-              const graph = (ld as Record<string, unknown>)["@graph"] as unknown[];
-              productLd = graph.find(isProductLd);
-            } else if (Array.isArray(ld)) {
-              productLd = (ld as unknown[]).find(isProductLd) ?? ((ld as unknown[])[0] as ProductLd | undefined);
-            } else if (isProductLd(ld)) {
-              productLd = ld;
+            // Buscar en @graph si existe
+            let items: any[] = [];
+            if (json["@graph"] && Array.isArray(json["@graph"])) {
+              items = json["@graph"];
+            } else if (Array.isArray(json)) {
+              items = json;
+            } else {
+              items = [json];
             }
 
-            if (productLd?.offers) {
-              const offers = Array.isArray(productLd.offers) ? (productLd.offers as unknown[])[0] : productLd.offers;
+            // Buscar el Product
+            const product = items.find((item: any) => item?.["@type"] === "Product");
+            if (!product?.offers) continue;
 
-              // Intentar obtener precio de priceSpecification (formato nuevo de Tectec)
-              const getPriceSpecs = (o: unknown): unknown[] | undefined => {
-                if (typeof o !== "object" || o === null) return undefined;
-                const rec = o as Record<string, unknown>;
-                if (Array.isArray(rec.priceSpecification)) return rec.priceSpecification as unknown[];
-                if (rec.priceSpecification) return [rec.priceSpecification];
-                return undefined;
-              };
+            const offers = Array.isArray(product.offers) ? product.offers[0] : product.offers;
 
-              const priceSpecs = getPriceSpecs(offers);
+            // Extraer precios de priceSpecification
+            if (offers.priceSpecification) {
+              const specs = Array.isArray(offers.priceSpecification)
+                ? offers.priceSpecification
+                : [offers.priceSpecification];
 
-              if (priceSpecs) {
-                const prices: number[] = [];
-                for (const spec of priceSpecs) {
-                  if (typeof spec === "object" && spec !== null && "price" in (spec as Record<string, unknown>)) {
-                    const p = (spec as Record<string, unknown>).price;
-                    const priceVal = Number.parseInt(String(p).replace(/[^0-9]/g, ""), 10);
-                    if (!Number.isNaN(priceVal) && priceVal > 0) {
-                      prices.push(priceVal);
-                    }
-                  }
-                }
-
-                if (prices.length > 0) {
-                  price = Math.min(...prices);
-                  priceNormal = Math.max(...prices);
-                  if (price === priceNormal && prices.length > 1) {
-                    priceNormal = price;
-                  }
+              const prices: number[] = [];
+              for (const spec of specs) {
+                if (spec?.price) {
+                  const priceVal =
+                    typeof spec.price === "string"
+                      ? Number.parseInt(spec.price.replace(/[^\d]/g, ""), 10)
+                      : Number(spec.price);
+                  if (priceVal > 0) prices.push(priceVal);
                 }
               }
 
-              // Fallback: formato antiguo con price directo
-              if (
-                price === 0 &&
-                typeof offers === "object" &&
-                offers !== null &&
-                "price" in (offers as Record<string, unknown>)
-              ) {
-                const priceVal = Number.parseInt(
-                  String((offers as Record<string, unknown>).price).replace(/[^0-9]/g, ""),
-                  10,
-                );
-                if (!Number.isNaN(priceVal) && priceVal > 0) {
-                  price = priceVal;
-                  priceNormal = priceVal;
-                }
+              if (prices.length > 0) {
+                result.price = Math.min(...prices);
+                result.priceNormal = Math.max(...prices);
               }
             }
-          } catch (e) {
-            this.logger.warn(`Error parsing JSON-LD for ${url}:`, e);
+
+            // Extraer disponibilidad
+            if (offers.availability) {
+              result.stock = offers.availability === "https://schema.org/InStock";
+            }
+
+            break;
+          } catch (e) {}
+        }
+
+        // Extraer stock quantity del HTML
+        const stockElements = document.querySelectorAll("p.stock");
+        for (const element of stockElements) {
+          const text = element.textContent || "";
+          if (text.includes("in-stock")) {
+            const match = text.match(/(\d+)/);
+            if (match?.[1]) {
+              result.stockQuantity = Number.parseInt(match[1], 10);
+            } else if (/disponible/i.test(text)) {
+              result.stockQuantity = 1;
+            }
+            result.stock = true;
+            break;
+          } else if (text.includes("out-of-stock") || /sin existencias/i.test(text)) {
+            result.stock = false;
+            result.stockQuantity = 0;
+            break;
           }
         }
-      }
 
-      // Extraer stock
-      let stock = false;
-      let stockQuantity = 0;
-
-      // Buscar elemento de stock in-stock
-      const inStockMatch = html.match(
-        /<p[^>]*class=["'][^"']*stock[^"']*in-stock[^"']*["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,
-      )?.[1];
-
-      if (inStockMatch) {
-        const qMatch = inStockMatch.match(/(\d+)/);
-        if (qMatch?.[1]) {
-          stockQuantity = Number.parseInt(qMatch[1], 10);
-          stock = stockQuantity > 0;
-        } else if (/disponible|disponibles/i.test(inStockMatch)) {
-          stock = true;
-          stockQuantity = 1; // Asumimos al menos 1 si dice disponible pero no especifica cantidad
+        // Si hay stock pero no cantidad, asignar 1 simbólico
+        if (result.stock && result.stockQuantity === 0) {
+          result.stockQuantity = 1;
         }
-      } else if (
-        /<p[^>]*class=["'][^"']*stock[^"']*out-of-stock[^"']*["'][^>]*>/i.test(html) ||
-        /Sin existencias/i.test(html)
-      ) {
-        stock = false;
-        stockQuantity = 0;
-      }
 
-      // Validación final: si hay stock pero no hay precio, algo está mal
-      if (stock && price === 0) {
-        this.logger.warn(`Product has stock but no price found: ${url}`);
-      }
+        return result;
+      });
 
       return {
-        price,
-        priceNormal: priceNormal || price,
-        stock,
-        stockQuantity,
-        available: stock && price > 0, // Solo está disponible si hay stock Y precio
+        price: data.price,
+        priceNormal: data.priceNormal || data.price,
+        stock: data.stock,
+        stockQuantity: data.stockQuantity,
+        available: data.stock && data.price > 0,
       };
     } catch (error) {
       this.logger.error(`Error tracking ${url}:`, error);
       return { price: 0, stock: false, available: false };
+    } finally {
+      if (page) await page.close().catch(() => {});
+      if (browser) this.puppeteerPool.release(browser);
     }
   }
 }

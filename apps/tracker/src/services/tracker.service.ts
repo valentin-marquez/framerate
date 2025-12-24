@@ -35,12 +35,12 @@ export class TrackerService {
     this.puppeteerPool = new PuppeteerPool(config.PUPPETEER_POOL_SIZE);
     this.logger = new Logger("TrackerService");
 
-    // Initialize all trackers
+    // inicializar trackers
     this.trackers = [
       new MyShopTracker(this.puppeteerPool),
       new SpDigitalTracker(this.puppeteerPool),
       new PcExpressTracker(),
-      new TectecTracker(),
+      new TectecTracker(this.puppeteerPool),
     ];
   }
 
