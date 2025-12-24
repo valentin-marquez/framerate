@@ -7,9 +7,7 @@ export interface JobResult {
   results: Record<string, number>;
   totalCount: number;
   duration: number;
-  iaDurationMs?: number; // cumulative LLM time spent during the job
   iaCacheHits?: number; // number of times specs were served from cache
-  iaLLMCalls?: number; // number of actual LLM calls made
   error?: string;
 }
 

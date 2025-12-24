@@ -52,9 +52,7 @@ export class ApiStrategy implements JobStrategy {
     const duration = (Date.now() - startTime) / 1000;
     this.logger.info(`[MyShop] Job completed: ${totalProcessed} products in ${duration.toFixed(1)}s`);
 
-    const iaDurationMs = this.pipeline.getIaTimeMs();
     const iaCacheHits = this.pipeline.getIaCacheHits();
-    const iaLLMCalls = this.pipeline.getIaLLMCalls();
 
     return {
       status: "success",
@@ -63,9 +61,7 @@ export class ApiStrategy implements JobStrategy {
       results,
       totalCount: totalProcessed,
       duration,
-      iaDurationMs,
       iaCacheHits,
-      iaLLMCalls,
     };
   }
 }

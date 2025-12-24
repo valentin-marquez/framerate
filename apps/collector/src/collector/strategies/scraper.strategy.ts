@@ -94,10 +94,8 @@ export class ScraperStrategy<T extends string> implements JobStrategy {
     const duration = (Date.now() - startTime) / 1000;
     this.logger.info(`Job completed: ${totalProcessed} products in ${duration.toFixed(1)}s`);
 
-    // Include cumulative LLM time (ms) and counts from the pipeline
-    const iaDurationMs = this.pipeline.getIaTimeMs();
+    // Include IA cache hits from the pipeline (kept)
     const iaCacheHits = this.pipeline.getIaCacheHits();
-    const iaLLMCalls = this.pipeline.getIaLLMCalls();
 
     return {
       status: "success",
@@ -106,9 +104,7 @@ export class ScraperStrategy<T extends string> implements JobStrategy {
       results,
       totalCount: totalProcessed,
       duration,
-      iaDurationMs,
       iaCacheHits,
-      iaLLMCalls,
     };
   }
 }

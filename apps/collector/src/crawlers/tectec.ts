@@ -18,130 +18,141 @@ export class TectecCrawler extends BaseCrawler<Category> {
   name = "Tectec";
   baseUrl = "https://tectec.cl";
 
+  constructor() {
+    super();
+    this.useHeadless = true;
+  }
+
   buildCategoryUrl(path: string): string {
-    // path example: componentes-para-pc/discos-estado-solido
     return `${this.baseUrl}/categoria/${path}/`;
   }
 
   async getAllProductUrlsForCategory(category: Category): Promise<string[]> {
-    const paths = TECTEC_CATEGORIES[category] || [];
-    const all: string[] = [];
+    const paths = TECTEC_CATEGORIES[category] ?? [];
+    const allUrls: string[] = [];
 
-    for (const p of paths) {
-      const url = this.buildCategoryUrl(p);
+    for (const path of paths) {
+      const url = this.buildCategoryUrl(path);
       this.logger.info(`[Tectec] Crawling category ${category} -> ${url}`);
+
       try {
         const urls = await this.getCategoryProductUrls(url);
-        all.push(...urls);
+        allUrls.push(...urls);
       } catch (err) {
         this.logger.error(`[Tectec] Error fetching category ${url}:`, String(err));
       }
     }
 
-    const unique = [...new Set(all)];
-    this.logger.info(`[Tectec] Found ${unique.length} unique product urls for ${category}`);
-    return unique;
+    const uniqueUrls = [...new Set(allUrls)];
+    this.logger.info(`[Tectec] Found ${uniqueUrls.length} unique product urls for ${category}`);
+    return uniqueUrls;
   }
 
   async getCategoryProductUrls(categoryUrl: string): Promise<string[]> {
-    const all: string[] = [];
+    const allUrls: string[] = [];
+    const perPage = 100;
 
-    const perPage = 100; // prefer a high per_page to reduce pagination where supported
-
-    this.logger.info(`[Tectec] Fetching category page (per_page=${perPage}): ${categoryUrl}`);
-    // ensure per_page param is included on the first request
     const urlObj = new URL(categoryUrl);
     urlObj.searchParams.set("per_page", String(perPage));
-    const firstUrl = urlObj.toString();
 
-    const firstHtml = await this.fetchHtml(firstUrl);
+    this.logger.info(`[Tectec] Fetching category page: ${urlObj.toString()}`);
+    const firstHtml = await this.fetchHtml(urlObj.toString());
 
-    // Early exit: no products found notice
     if (/woocommerce-no-products-found|No se han encontrado productos/i.test(firstHtml)) {
       this.logger.info(`[Tectec] No products found for ${categoryUrl}`);
       return [];
     }
 
-    all.push(...(await this.getProductUrls(firstHtml)));
+    const firstPageUrls = await this.getProductUrls(firstHtml);
+    const validUrls = this.filterValidProductUrls(firstPageUrls);
+
+    if (validUrls.length === 0) {
+      this.logger.warn(`[Tectec] No valid product URLs found on first page`);
+      return [];
+    }
+
+    allUrls.push(...validUrls);
 
     const totalPages = this.getTotalPages(firstHtml);
+
     for (let page = 2; page <= totalPages; page++) {
-      // Build page URL using /page/X/ followed by ?per_page=...
       const pageUrl = `${categoryUrl}page/${page}/?per_page=${perPage}`;
-      this.logger.info(`[Tectec] Fetching category page ${page}/${totalPages}: ${pageUrl}`);
+      this.logger.info(`[Tectec] Fetching page ${page}/${totalPages}`);
+
       const html = await this.fetchHtml(pageUrl);
 
-      // If this page reports "no products" stop early
       if (/woocommerce-no-products-found|No se han encontrado productos/i.test(html)) {
-        this.logger.info(`[Tectec] Page ${page} reports no products; stopping pagination`);
+        this.logger.info(`[Tectec] Page ${page} has no products, stopping`);
         break;
       }
 
-      const urls = await this.getProductUrls(html);
-      if (urls.length === 0) {
-        this.logger.warn(`[Tectec] No product urls found on page ${page}; stopping early.`);
+      const pageUrls = await this.getProductUrls(html);
+      const validPageUrls = this.filterValidProductUrls(pageUrls);
+
+      if (validPageUrls.length === 0) {
+        this.logger.warn(`[Tectec] No valid URLs on page ${page}, stopping`);
         break;
       }
-      all.push(...urls);
+
+      allUrls.push(...validPageUrls);
       await this.waitRateLimit();
     }
 
-    return [...new Set(all)];
+    const uniqueUrls = [...new Set(allUrls)];
+    this.logger.info(`[Tectec] Extracted ${uniqueUrls.length} valid product URLs`);
+
+    return uniqueUrls;
+  }
+
+  private filterValidProductUrls(urls: string[]): string[] {
+    return urls.filter((url) => {
+      const isProductUrl = url.includes("/producto/");
+      const isCategoryUrl = url.includes("/categoria/");
+
+      if (isCategoryUrl || !isProductUrl) {
+        this.logger.warn(`[Tectec] Filtered invalid URL: ${url}`);
+        return false;
+      }
+
+      return true;
+    });
   }
 
   async getProductUrls(html: string): Promise<string[]> {
     const urls: string[] = [];
 
-    // Captura enlaces absolutos o relativos que apunten a /producto/
-    const regex = /href=(?:"|')(?:(https?:\/\/[^"']+)|)(?:\/)?(producto\/[a-zA-Z0-9\-_/]+)(?:"|')/gi;
-    let m: RegExpExecArray | null = null;
-    for (;;) {
-      m = regex.exec(html);
-      if (m === null) break;
-      const abs = m[1];
-      const rel = m[2];
-      let link = "";
-      if (abs) link = abs;
-      else link = `${this.baseUrl}/${rel}`;
-      // Normalize ampersands
-      link = link.replace(/&amp;/g, "&");
-      if (link.startsWith("http")) urls.push(link);
+    const relativeRegex = /href=(?:"|')(?:(https?:\/\/[^"']+)|)(?:\/)?(producto\/[a-zA-Z0-9\-_/]+)(?:"|')/gi;
+    for (const match of html.matchAll(relativeRegex)) {
+      const [, absolute, relative] = match;
+      const url = absolute || `${this.baseUrl}/${relative}`;
+      if (url.startsWith("http")) urls.push(url.replace(/&amp;/g, "&"));
     }
 
-    // Fallback: find absolute product urls directly
-    const absRegex = /https?:\/\/tectec\.cl\/producto\/[a-zA-Z0-9\-_/]+/gi;
-    const matches = html.match(absRegex);
-    if (matches) urls.push(...matches);
+    const absoluteRegex = /https?:\/\/tectec\.cl\/producto\/[a-zA-Z0-9\-_/]+/gi;
+    const absoluteMatches = html.match(absoluteRegex);
+    if (absoluteMatches) urls.push(...absoluteMatches);
 
-    // Additional grid selectors fallback: product-image-link and wd-entities-title anchors
-    const imgLinkRe = /<a[^>]*class=["'][^"']*product-image-link[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
-    let im: RegExpExecArray | null = null;
-    for (;;) {
-      im = imgLinkRe.exec(html);
-      if (!im) break;
-      const href = im[1].replace(/&amp;/g, "&");
-      const absolute = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
-      urls.push(absolute);
+    const imageLinkRegex = /<a[^>]*class=["'][^"']*product-image-link[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
+    for (const match of html.matchAll(imageLinkRegex)) {
+      const href = match[1].replace(/&amp;/g, "&");
+      const url = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
+      urls.push(url);
     }
 
-    const titleLinkRe =
+    const titleLinkRegex =
       /<h3[^>]*class=["'][^"']*wd-entities-title[^"']*["'][^>]*>[\s\S]*?<a[^>]*href=["']([^"']+)["'][^>]*>/gi;
-    let tm: RegExpExecArray | null = null;
-    for (;;) {
-      tm = titleLinkRe.exec(html);
-      if (!tm) break;
-      const href = tm[1].replace(/&amp;/g, "&");
-      const absolute = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
-      urls.push(absolute);
+    for (const match of html.matchAll(titleLinkRegex)) {
+      const href = match[1].replace(/&amp;/g, "&");
+      const url = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
+      urls.push(url);
     }
 
-    // Normalize and dedupe
-    const cleaned = urls.map((u) => u.split("#")[0]);
-    return [...new Set(cleaned)];
+    const cleanedUrls = urls.map((url) => url.split("#")[0]);
+    return [...new Set(cleanedUrls)];
   }
 
   async parseProduct(html: string, url: string): Promise<ProductData | null> {
-    const prod: ProductData = {
+    const product: ProductData = {
       url,
       title: "",
       price: null,
@@ -152,237 +163,262 @@ export class TectecCrawler extends BaseCrawler<Category> {
       imageUrl: null,
     };
 
-    // Title: prefer h1 with class product_title (fallback to og:title)
+    product.title = this.extractTitle(html);
+    if (!product.title) {
+      this.logger.warn(`[Tectec] Missing title for ${url}`);
+      return null;
+    }
+
+    const prices = this.extractPrices(html, url);
+    product.price = prices.current;
+    product.originalPrice = prices.original;
+
+    product.imageUrl = this.extractImage(html);
+    const stockInfo = this.extractStock(html);
+    product.stock = stockInfo.inStock;
+    product.stockQuantity = stockInfo.quantity;
+
+    product.mpn = this.extractMpn(html);
+    product.specs = this.extractSpecs(html);
+    product.context = this.extractContext(html);
+
+    if (!product.price) {
+      this.logger.error(`[Tectec] Failed to extract price for ${url}`);
+    }
+
+    return product;
+  }
+
+  private extractTitle(html: string): string {
     const h1Match = html.match(/<h1[^>]*class=["'][^"']*product_title[^"']*["'][^>]*>([\s\S]*?)<\/h1>/i)?.[1];
     if (h1Match) {
-      prod.title = h1Match
+      return h1Match
         .replace(/<[^>]+>/g, " ")
         .replace(/\s+/g, " ")
         .trim();
     }
-    if (!prod.title) {
-      const ogTitle = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["'][^>]*>/i)?.[1];
-      if (ogTitle) prod.title = ogTitle.trim();
+
+    const ogTitle = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["'][^>]*>/i)?.[1];
+    return ogTitle?.trim() ?? "";
+  }
+
+  private extractPrices(html: string, url: string): { current: number | null; original: number | null } {
+    const jsonLdPrices = this.extractPricesFromJsonLd(html);
+    if (jsonLdPrices.current) return jsonLdPrices;
+
+    this.logger.warn(`[Tectec] JSON-LD failed, using HTML fallback for ${url}`);
+    return this.extractPricesFromHtml(html);
+  }
+
+  private extractPricesFromJsonLd(html: string): { current: number | null; original: number | null } {
+    const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i)?.[1];
+    if (!jsonLdMatch) return { current: null, original: null };
+
+    try {
+      const ld = JSON.parse(jsonLdMatch);
+      const items = ld["@graph"] ? ld["@graph"] : Array.isArray(ld) ? ld : [ld];
+      const product = items.find((item: any) => item?.["@type"] === "Product");
+
+      if (!product?.offers) return { current: null, original: null };
+
+      const offers = Array.isArray(product.offers) ? product.offers[0] : product.offers;
+      if (!offers.priceSpecification) return { current: null, original: null };
+
+      const specs = Array.isArray(offers.priceSpecification) ? offers.priceSpecification : [offers.priceSpecification];
+
+      const prices = specs
+        .map((spec: any) => {
+          if (!spec?.price) return null;
+          const cleaned = typeof spec.price === "string" ? spec.price.replace(/[^\d]/g, "") : String(spec.price);
+          return Number(cleaned);
+        })
+        .filter((price: unknown): price is number => typeof price === "number" && !Number.isNaN(price) && price > 0);
+
+      if (prices.length === 0) return { current: null, original: null };
+
+      return {
+        current: Math.min(...prices),
+        original: prices.length > 1 ? Math.max(...prices) : null,
+      };
+    } catch (error) {
+      this.logger.error(`[Tectec] JSON-LD parsing error:`, String(error));
+      return { current: null, original: null };
+    }
+  }
+
+  private extractPricesFromHtml(html: string): { current: number | null; original: number | null } {
+    const priceBlock = html.match(/<p[^>]*class=["'][^"']*price["'][^>]*>([\s\S]*?)<\/p>/i)?.[1];
+    if (!priceBlock) return { current: null, original: null };
+
+    const priceRegex =
+      /<span[^>]*class=["'][^"']*woocommerce-Price-amount[^"']*["'][^>]*>[\s\S]*?<bdi>[\s\S]*?\$\s*([0-9.,]+)[\s\S]*?<\/bdi>[\s\S]*?<\/span>/gi;
+    const prices: number[] = [];
+
+    for (const match of priceBlock.matchAll(priceRegex)) {
+      const priceStr = match[1].replace(/[.,]/g, "");
+      const priceVal = Number(priceStr);
+      if (!Number.isNaN(priceVal) && priceVal > 0) {
+        prices.push(priceVal);
+      }
     }
 
-    // Prices: parse prices inside the cart form table; take min as `price` (transferencia) and max as `originalPrice` if present
-    const formMatch = html.match(/<form[^>]*class=["'][^"']*cart[^"']*["'][\s\S]*?<\/form>/i)?.[0];
-    if (formMatch) {
-      const priceRe = /\$\s*([0-9.,]+)/g;
-      const nums: number[] = [];
-      let pm: RegExpExecArray | null = null;
-      for (;;) {
-        pm = priceRe.exec(formMatch);
-        if (!pm) break;
-        const cleaned = String(pm[1]).replace(/[.,]/g, "");
-        const val = Number.parseInt(cleaned.replace(/[^0-9]/g, ""), 10);
-        if (!Number.isNaN(val)) nums.push(val);
-      }
-      if (nums.length > 0) {
-        const min = Math.min(...nums);
-        const max = Math.max(...nums);
-        prod.price = min;
-        prod.originalPrice = max !== min ? max : null;
-      }
-    }
+    if (prices.length === 0) return { current: null, original: null };
 
-    // Fallback: try JSON-LD offers or text matches for price if not found above
-    if (
-      (prod.price === null || prod.price === undefined) &&
-      /<script[^>]*type=["']application\/ld\+json["'][^>]*>/i.test(html)
-    ) {
-      const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i)?.[1];
-      if (jsonLdMatch) {
-        try {
-          const ld = JSON.parse(jsonLdMatch);
-          const productLd = Array.isArray(ld)
-            ? ld.find(
-                (p: unknown) =>
-                  typeof p === "object" && p !== null && (p as Record<string, unknown>)["@type"] === "Product",
-              ) || ld[0]
-            : ld;
-          const offers = (productLd as unknown as { offers?: unknown })?.offers;
-          if (offers) {
-            let priceVal: unknown;
-            if (Array.isArray(offers)) {
-              priceVal = offers.length > 0 ? (offers[0] as Record<string, unknown>).price : undefined;
-            } else if (typeof offers === "object" && offers !== null) {
-              priceVal = (offers as Record<string, unknown>).price;
-            }
-            if (priceVal && (prod.price === null || prod.price === undefined)) {
-              prod.price = Number.parseInt(String(priceVal).replace(/[^0-9]/g, ""), 10) || null;
-            }
-          }
-        } catch (_e) {
-          // ignore malformed JSON-LD
-        }
-      }
-    }
+    return {
+      current: Math.min(...prices),
+      original: prices.length > 1 ? Math.max(...prices) : null,
+    };
+  }
 
-    // Image: prefer og:image
-    const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i)?.[1];
-    if (ogImage) prod.imageUrl = ogImage;
+  private extractImage(html: string): string | null {
+    return html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i)?.[1] ?? null;
+  }
 
-    // Stock: look for in-stock/out-of-stock with quantity
+  private extractStock(html: string): { inStock: boolean; quantity: number | null } {
     const inStockMatch = html.match(
       /<p[^>]*class=["'][^"']*stock[^"']*in-stock[^"']*["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,
     )?.[1];
+
     if (inStockMatch) {
-      const qMatch = inStockMatch.match(/(\d+)/);
-      if (qMatch?.[1]) {
-        const q = Number.parseInt(qMatch[1], 10);
-        prod.stockQuantity = q;
-        prod.stock = q > 0;
-      } else if (/disponible|disponibles/i.test(inStockMatch)) {
-        prod.stock = true;
+      const quantityMatch = inStockMatch.match(/(\d+)/);
+      if (quantityMatch) {
+        const quantity = Number.parseInt(quantityMatch[1], 10);
+        return { inStock: quantity > 0, quantity };
       }
-    } else if (
-      /<p[^>]*class=["'][^"']*stock[^"']*out-of-stock[^"']*["'][^>]*>/i.test(html) ||
-      /Sin existencias/i.test(html)
-    ) {
-      prod.stock = false;
-      prod.stockQuantity = 0;
+      if (/disponible|disponibles/i.test(inStockMatch)) {
+        return { inStock: true, quantity: 1 };
+      }
     }
 
-    // MPN: look for Part Number, fallback to Model inside the description/spec table
-    const partNumberMatch = html.match(/<td[^>]*>\s*Part\s*Number\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
-    const modelMatch = html.match(/<td[^>]*>\s*Model\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
-    if (partNumberMatch) prod.mpn = partNumberMatch.trim();
-    else if (modelMatch) prod.mpn = modelMatch.trim();
+    const outOfStock =
+      /<p[^>]*class=["'][^"']*stock[^"']*out-of-stock[^"']*["'][^>]*>/i.test(html) || /Sin existencias/i.test(html);
 
-    // Specs: parse the description panel table (robust handling for various table shapes)
+    return { inStock: !outOfStock, quantity: outOfStock ? 0 : null };
+  }
+
+  private extractMpn(html: string): string | null {
+    const partNumber = html.match(/<td[^>]*>\s*Part\s*Number\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
+    const model = html.match(/<td[^>]*>\s*Model\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
+    return partNumber?.trim() ?? model?.trim() ?? null;
+  }
+
+  private extractSpecs(html: string): Record<string, string> {
     const specs: Record<string, string> = {};
-    // Try to find the description block which contains the specs table
-    const descBlockMatch = html.match(
+    const descBlock = html.match(
       /<div[^>]*class=["'][^"']*woocommerce-Tabs-panel[^"']*tab-description[^"']*["'][\s\S]*?<\/div>/i,
     )?.[0];
 
-    const targetHtmlForSpecs = descBlockMatch || html;
+    const targetHtml = descBlock ?? html;
+    const forbiddenTerms = [
+      "transferencia",
+      "tarjeta",
+      "tarjetas",
+      "pago",
+      "precio",
+      "cuota",
+      "cuotas",
+      "subtotal",
+      "total",
+      "envio",
+      "envío",
+      "forma de pago",
+    ];
 
-    // Iterate each <tr> and extract cells more reliably
     const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-    let trm: RegExpExecArray | null = null;
-    for (;;) {
-      trm = trRegex.exec(targetHtmlForSpecs);
-      if (!trm) break;
-      const trHtml = trm[1];
+    for (const trMatch of targetHtml.matchAll(trRegex)) {
+      const trHtml = trMatch[1];
 
-      // Skip rows that clearly belong to payments/cart/controls
       if (
         /(<form|<button|<input|add to cart|payment|tarjeta|transferencia|cuota|cuotas|pago|subtotal|total)/i.test(
           trHtml,
         )
-      )
+      ) {
         continue;
+      }
 
-      // Extract all td/th cell HTMLs
-      const cellRe = /<(td|th)[^>]*>([\s\S]*?)<\/(?:td|th)>/gi;
-      const cells: string[] = [];
-      let cm: RegExpExecArray | null = null;
-      for (;;) {
-        cm = cellRe.exec(trHtml);
-        if (!cm) break;
-        // Clean inner HTML -> plain text
-        const text = cm[2]
+      const cellRegex = /<(td|th)[^>]*>([\s\S]*?)<\/(?:td|th)>/gi;
+      const cells = Array.from(trHtml.matchAll(cellRegex)).map((match) =>
+        match[2]
           .replace(/<script[\s\S]*?<\/script>/gi, "")
           .replace(/<[^>]+>/g, " ")
           .replace(/&amp;/g, "&")
           .replace(/&times;/g, "×")
           .replace(/\s+/g, " ")
-          .trim();
-        cells.push(text);
-      }
+          .trim(),
+      );
 
       if (cells.length < 2) continue;
 
-      // Prefer first cell as key and last cell as value (handles rows with >2 columns)
-      const k = cells[0];
-      const v = cells[cells.length - 1];
+      const key = cells[0];
+      const value = cells[cells.length - 1];
 
-      // Skip obvious non-spec rows
-      const forbidden = [
-        "transferencia",
-        "tarjeta",
-        "tarjetas",
-        "pago",
-        "precio",
-        "cuota",
-        "cuotas",
-        "subtotal",
-        "total",
-        "envio",
-        "envío",
-        "forma de pago",
-      ];
-      const fk = k.toLowerCase();
-      const fv = v.toLowerCase();
-      if (forbidden.some((f) => fk.includes(f) || fv.includes(f))) continue;
+      const isForbidden = forbiddenTerms.some(
+        (term) => key.toLowerCase().includes(term) || value.toLowerCase().includes(term),
+      );
 
-      if (k && v && !specs[k]) specs[k] = v;
+      if (!isForbidden && key && value && !specs[key]) {
+        specs[key] = value;
+      }
     }
-    // dt/dd fallback
+
     const dtRegex = /<dt[^>]*>\s*([^<]+?)\s*<\/dt>\s*<dd[^>]*>\s*([\s\S]*?)\s*<\/dd>/gi;
-    let dm: RegExpExecArray | null = null;
-    for (;;) {
-      dm = dtRegex.exec(html);
-      if (!dm) break;
-      const k = dm[1]?.trim();
-      const v = dm[2]?.replace(/<[^>]+>/g, "").trim();
-      if (k && v && !specs[k]) specs[k] = v;
-    }
-    if (Object.keys(specs).length > 0) prod.specs = specs;
-
-    // Context: include the description HTML and cleaned text for downstream IA
-    if (descBlockMatch) {
-      const htmlSnippet = descBlockMatch;
-      const text = htmlSnippet
-        .replace(/<script[\s\S]*?<\/script>/gi, "")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-      prod.context = { description_html: htmlSnippet.trim(), description_text: text };
+    for (const match of html.matchAll(dtRegex)) {
+      const key = match[1]?.trim();
+      const value = match[2]?.replace(/<[^>]+>/g, "").trim();
+      if (key && value && !specs[key]) {
+        specs[key] = value;
+      }
     }
 
-    // Basic validation
-    if (!prod.title) {
-      this.logger.warn(`[Tectec] Missing title for ${url}`);
-      return null;
-    }
+    return specs;
+  }
 
-    return prod;
+  private extractContext(html: string): { description_html: string; description_text: string } | undefined {
+    const descBlock = html.match(
+      /<div[^>]*class=["'][^"']*woocommerce-Tabs-panel[^"']*tab-description[^"']*["'][\s\S]*?<\/div>/i,
+    )?.[0];
+
+    if (!descBlock) return undefined;
+
+    const text = descBlock
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    return {
+      description_html: descBlock.trim(),
+      description_text: text,
+    };
   }
 
   private getTotalPages(html: string): number {
     const pagesMatch = html.match(/(\d+)\s+páginas?/i)?.[1];
     if (pagesMatch) return Number(pagesMatch);
 
-    // Pagination links
     const liRegex = /<li[^>]*class=["'][^"']*page-item[^"']*["'][^>]*>([\s\S]*?)<\/li>/gi;
     const numberRegex = /(?:<a[^>]*>(\d+)<\/a>|<span[^>]*>(\d+)<\/span>)/i;
     const pages: number[] = [];
-    let m: RegExpExecArray | null = null;
-    for (;;) {
-      m = liRegex.exec(html);
-      if (m === null) break;
-      const content = m[1];
-      const nm = content.match(numberRegex);
-      const num = nm ? Number(nm[1] || nm[2]) : NaN;
-      if (num && !Number.isNaN(num)) pages.push(num);
+
+    for (const match of html.matchAll(liRegex)) {
+      const content = match[1];
+      const numMatch = content.match(numberRegex);
+      const num = numMatch ? Number(numMatch[1] ?? numMatch[2]) : NaN;
+      if (!Number.isNaN(num)) pages.push(num);
     }
+
     if (pages.length > 0) return Math.max(...pages);
 
-    // Try the theme's ul.page-numbers pagination if present
-    const pagesUlMatch = html.match(/<ul[^>]*class=["'][^"']*page-numbers[^"']*["'][\s\S]*?<\/ul>/i)?.[0];
-    if (pagesUlMatch) {
-      const numRe = /<a[^>]*>(\d+)<\/a>|<span[^>]*>(\d+)<\/span>/gi;
+    const pagesUl = html.match(/<ul[^>]*class=["'][^"']*page-numbers[^"']*["'][\s\S]*?<\/ul>/i)?.[0];
+    if (pagesUl) {
+      const numRegex = /<a[^>]*>(\d+)<\/a>|<span[^>]*>(\d+)<\/span>/gi;
       const found: number[] = [];
-      let nm: RegExpExecArray | null = null;
-      for (;;) {
-        nm = numRe.exec(pagesUlMatch);
-        if (!nm) break;
-        const n = Number(nm[1] || nm[2]);
-        if (n && !Number.isNaN(n)) found.push(n);
+
+      for (const match of pagesUl.matchAll(numRegex)) {
+        const n = Number(match[1] ?? match[2]);
+        if (!Number.isNaN(n)) found.push(n);
       }
+
       if (found.length > 0) return Math.max(...found);
     }
 
