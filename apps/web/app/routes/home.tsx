@@ -18,7 +18,7 @@ export async function loader() {
     const [popularProducts, categories, priceDrops] = await Promise.all([
       productsService.getAll({ limit: 50, sort: "popularity" }),
       categoriesService.getAll(),
-      productsService.getDrops(10, 5),
+      productsService.getDrops(10, 1),
     ]);
     return { popularProducts, categories, priceDrops };
   } catch (error) {

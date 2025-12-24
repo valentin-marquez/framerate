@@ -10,7 +10,10 @@ import { PuppeteerPool } from "@/domain/trackers/puppeteer-pool";
 import { SpDigitalTracker } from "@/domain/trackers/sp-digital";
 import { TectecTracker } from "@/domain/trackers/tectec";
 
-type Listing = Pick<Tables<"listings">, "id" | "url" | "price_cash" | "price_normal" | "stock_quantity">;
+type Listing = Pick<
+  Tables<"listings">,
+  "id" | "url" | "price_cash" | "price_normal" | "stock_quantity" | "is_active" | "last_scraped_at"
+>;
 
 export class TrackerService {
   private supabase: SupabaseClient<Database>;
@@ -80,15 +83,25 @@ export class TrackerService {
   }
 
   private async fetchListings(limit: number): Promise<Listing[]> {
+    // Compute cutoff to avoid re-scraping very recently scraped listings
+    const cutoff = new Date(Date.now() - config.LISTING_RESCRAPE_INTERVAL_MS).toISOString();
+
     let query = this.supabase
       .from("listings")
-      .select("id, url, price_cash, price_normal, stock_quantity")
+      .select("id, url, price_cash, price_normal, stock_quantity, is_active, last_scraped_at")
+      // Exclude listings scraped more recently than cutoff (keep nulls)
+      .not("last_scraped_at", "gt", cutoff)
+      // Prioritize inactive listings (is_active = false first), then older last_scraped_at
+      .order("is_active", { ascending: true })
       .order("last_scraped_at", { ascending: true, nullsFirst: true });
 
     if (limit > 0) query = query.limit(limit);
 
     const { data, error } = await query;
     if (error) throw new Error(`Failed to fetch listings: ${error.message}`);
+
+    this.logger.info(`Fetched ${data?.length ?? 0} listings (limit=${limit}, cutoff=${cutoff})`);
+
     return (data || []) as Listing[];
   }
 
@@ -198,13 +211,22 @@ export class TrackerService {
       oldPriceCash !== result.price || (result.priceNormal && oldPriceNormal !== result.priceNormal);
     const hasStockChanged = oldStockQuantity !== (result.stockQuantity || 0);
 
+    // Log tracker result for debugging
+    this.logger.info(`Updating listing ${listing.id} with tracker result`, { result });
+
+    const isActive = !!(
+      result.price &&
+      result.price > 0 &&
+      (result.stock || (result.stockQuantity && result.stockQuantity > 0) || result.available)
+    );
+
     const { error: updateError } = await this.supabase
       .from("listings")
       .update({
         price_cash: result.price,
         price_normal: result.priceNormal || result.price,
         stock_quantity: result.stockQuantity || 0,
-        is_active: !!(result.price && result.price > 0 && result.stock),
+        is_active: isActive,
         last_scraped_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

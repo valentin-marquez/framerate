@@ -91,7 +91,11 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                 >
                   <div className="flex items-center gap-4">
                     {listing.store.logo_url && (
-                      <img src={listing.store.logo_url} alt={listing.store.name} className="h-8 w-20 object-contain" />
+                      <img
+                        src={listing.store.logo_url}
+                        alt={listing.store.name}
+                        className="h-8 w-20 object-contain dark:invert"
+                      />
                     )}
                     <div>
                       <p className="font-medium">{listing.store.name}</p>
