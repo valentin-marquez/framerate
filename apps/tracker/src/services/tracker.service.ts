@@ -100,7 +100,7 @@ export class TrackerService {
 
       const domain = tracker.domain;
       if (!groups.has(domain)) groups.set(domain, []);
-      groups.get(domain)!.push(listing);
+      groups.get(domain)?.push(listing);
     }
     return groups;
   }
