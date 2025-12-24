@@ -83,15 +83,13 @@ export class TrackerService {
   }
 
   private async fetchListings(limit: number): Promise<Listing[]> {
-    // Compute cutoff to avoid re-scraping very recently scraped listings
+    // Calcular el límite para evitar volver a scrapear listados que fueron scrapeados muy recientemente
     const cutoff = new Date(Date.now() - config.LISTING_RESCRAPE_INTERVAL_MS).toISOString();
 
     let query = this.supabase
       .from("listings")
       .select("id, url, price_cash, price_normal, stock_quantity, is_active, last_scraped_at")
-      // Exclude listings scraped more recently than cutoff (keep nulls)
-      .not("last_scraped_at", "gt", cutoff)
-      // Prioritize inactive listings (is_active = false first), then older last_scraped_at
+      .or(`is_active.eq.false,last_scraped_at.is.null,last_scraped_at.lt.${cutoff}`)
       .order("is_active", { ascending: true })
       .order("last_scraped_at", { ascending: true, nullsFirst: true });
 

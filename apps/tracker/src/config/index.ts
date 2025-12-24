@@ -12,13 +12,15 @@ const envSchema = z.object({
   RATE_DELAY_HEAVY_MS: z.coerce.number().int().nonnegative().default(1000),
   RATE_DELAY_MEDIUM_MS: z.coerce.number().int().nonnegative().default(500),
   RATE_DELAY_LIGHT_MS: z.coerce.number().int().nonnegative().default(200),
-  // Minimum age (ms) since last_scraped_at before a listing is eligible for re-scrape.
-  // Listings with null last_scraped_at are always eligible. Default: 24 hours.
+  // Edad mínima (ms) desde last_scraped_at antes de que un anuncio sea elegible para volver a ser scrapeado.
+  // Los anuncios con last_scraped_at en null siempre son elegibles.
+  // Nota: los anuncios con `is_active = false` serán siempre elegibles para re-procesado.
+  // Por defecto: 2 horas.
   LISTING_RESCRAPE_INTERVAL_MS: z.coerce
     .number()
     .int()
     .nonnegative()
-    .default(24 * 60 * 60 * 1000),
+    .default(2 * 60 * 60 * 1000),
   USER_AGENT_STRATEGY: z.enum(["random", "roundrobin"]).default("random"),
   USER_AGENT_LIST: z.string().optional(),
 });

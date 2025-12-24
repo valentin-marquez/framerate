@@ -44,7 +44,7 @@ curl -X POST http://localhost:3000/track/batch
 
 Este comando procesa **todos** los productos pendientes (ordenados por antigüedad de actualización).
 
-Se recomienda ejecutar este comando cada 30 minutos o 1 hora, dependiendo de la cantidad de productos y recursos del servidor.
+Se recomienda ejecutar este comando cada **2 horas**. Nota: los anuncios marcados como `is_active = false` siempre serán elegibles para re-procesado para corregir errores de stock/activación recientes.
 
 ## Instalación y Ejecución Local
 
