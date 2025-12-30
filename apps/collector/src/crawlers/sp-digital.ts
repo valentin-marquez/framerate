@@ -335,7 +335,8 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
    * Verifica si el producto debe ser excluido basado en palabras clave en el título.
    */
   private shouldExcludeProduct(title: string): boolean {
-    const excludedKeywords = ["Controladora", "Adaptador"];
+    // Palabras que identifican productos que NO son relevantes para nuestras categorías (p. ej. adaptadores, soportes, controladoras)
+    const excludedKeywords = ["Controladora", "Adaptador", "Soporte"];
     const lowerTitle = title.toLowerCase();
     return excludedKeywords.some((keyword) => lowerTitle.includes(keyword.toLowerCase()));
   }

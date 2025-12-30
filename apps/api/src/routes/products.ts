@@ -120,7 +120,7 @@ products.get(
       url,
       is_active,
       last_scraped_at,
-      store:stores(name, slug, logo_url)
+      store:stores(name, slug, logo_url, appearance)
     `)
       .eq("product_id", product.id)
       .eq("is_active", true)

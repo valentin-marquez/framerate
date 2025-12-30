@@ -13,7 +13,8 @@
     "@hono-rate-limiter/cloudflare": "^0.2.2",
     "@supabase/supabase-js": "^2.84.0",
     "hono": "^4.10.6",
-    "hono-rate-limiter": "^0.4.2"
+    "hono-rate-limiter": "^0.4.2",
+    "@framerate/core": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251202.0",

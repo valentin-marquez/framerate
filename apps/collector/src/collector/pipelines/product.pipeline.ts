@@ -134,6 +134,14 @@ export class ProductPipeline {
       if (titleUpper.includes(term)) return { valid: false, reason: `Skipping product with term: ${term}` };
     }
 
+    // Excluir productos que son "soportes" mal categorizados como SSD
+    if (category === "ssd") {
+      const titleUpperCase = (product.title ?? "").toUpperCase();
+      if (titleUpperCase.includes("SOPORTE")) {
+        return { valid: false, reason: "Skipping SSD product: contains SOPORTE (likely a mount/stand)" };
+      }
+    }
+
     if (crawlerType !== "pc-express") return { valid: true };
 
     const PC_EXPRESS_VALIDATION_RULES: Partial<
