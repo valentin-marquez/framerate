@@ -17,6 +17,7 @@ import {
   SsdProcessor,
 } from "@/processors";
 import { extractForCategory } from "@/processors/ai/base";
+import { normalizeTitle } from "@/processors/normalizers";
 import type { CrawlerType } from "@/queues";
 
 export interface PipelineContext {
@@ -93,9 +94,7 @@ export class ProductPipeline {
         this.logger.info(
           `IA request: mpn=${mpn} category=${category} contextType=${context == null ? "null" : typeof context} ctxPreview=${ctxPreview}`,
         );
-      } catch (_e) {
-        // ignore preview errors
-      }
+      } catch (_e) {}
 
       const specs = await extractForCategory(
         category,
@@ -118,6 +117,7 @@ export class ProductPipeline {
     crawlerType: CrawlerType,
   ): { valid: boolean; reason?: string } {
     const titleUpper = (product.title ?? "").toUpperCase();
+
     const invalidTerms = [
       "CAJA ABIERTA",
       "DAÑADA",
@@ -128,16 +128,23 @@ export class ProductPipeline {
       "REACONDICIONADO",
       "SEMI NUEVO",
       "SEMINUEVO",
+      "SOPORTE",
+      "CARCASA",
+      "LICENCIA",
+      "THERMAL PAD",
+      "PASTA DISIPADORA",
+      "KIT PARA SOCKET",
+      "KIT DE MONTAJE",
+      "ADAPTADOR",
+      "BASE PARA SILLA",
     ];
 
     for (const term of invalidTerms) {
       if (titleUpper.includes(term)) return { valid: false, reason: `Skipping product with term: ${term}` };
     }
 
-    // Excluir productos que son "soportes" mal categorizados como SSD
     if (category === "ssd") {
-      const titleUpperCase = (product.title ?? "").toUpperCase();
-      if (titleUpperCase.includes("SOPORTE")) {
+      if (titleUpper.includes("SOPORTE")) {
         return { valid: false, reason: "Skipping SSD product: contains SOPORTE (likely a mount/stand)" };
       }
     }
@@ -218,7 +225,6 @@ export class ProductPipeline {
   }
 
   public async process(input: unknown, ctx: PipelineContext): Promise<ProcessingResult> {
-    // 1) Validate + coerce input using Zod
     const parse = ScrapedProductSchema.safeParse(input);
     if (!parse.success) {
       const errorMsg = parse.error.issues
@@ -229,7 +235,6 @@ export class ProductPipeline {
 
     const raw: ScrapedProduct = parse.data;
 
-    // validation
     const validation = this.validateProduct({ title: raw.title }, ctx.category, ctx.crawlerType);
     if (!validation.valid) return { success: false, error: validation.reason };
 
@@ -239,23 +244,34 @@ export class ProductPipeline {
     const brandId = await this.catalogService.resolveBrandId(brandName);
     if (!brandId) return { success: false, error: `Could not resolve brand: ${brandName}` };
 
-    // normalize specs
     const normalizedSpecs = await this.normalizeSpecs(ctx.category, rawSpecs, raw.title ?? "", raw.mpn, raw.context);
 
-    // Validate normalized specs against DB schemas (ProductSpecsSchema union)
     if (normalizedSpecs && typeof normalizedSpecs === "object") {
       const v = ProductSpecsSchema.safeParse(normalizedSpecs);
       if (!v.success) {
-        // Log a warning but continue with the original normalized value
         const issues = v.error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`).join(", ");
         this.logger.warn(`Specs validation failed for category=${ctx.category}: ${issues}`);
       }
     } else {
-      // If normalized specs are not an object, warn
       if (normalizedSpecs != null) this.logger.warn(`Normalized specs for ${ctx.category} are not an object`);
     }
 
-    // process image
+    let seoTitle = normalizeTitle(raw.title ?? "", ctx.category, raw.mpn ?? undefined, brandName);
+
+    if (raw.mpn) {
+      const cleanMpn = raw.mpn.trim();
+      const escapedMpn = cleanMpn.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+      const mpnRegex = new RegExp(escapedMpn, "gi");
+
+      seoTitle = seoTitle.replace(mpnRegex, "").trim();
+      seoTitle = seoTitle
+        .replace(/\s{2,}/g, " ")
+        .replace(/[-–,]+$/, "")
+        .trim();
+
+      seoTitle = `${seoTitle} [${cleanMpn}]`;
+    }
+
     let imageUrl: string | null = raw.imageUrl ?? null;
     if (imageUrl && raw.mpn) {
       try {
@@ -266,13 +282,12 @@ export class ProductPipeline {
       }
     }
 
-    // persist
     const categoryId = await this.catalogService.getCategoryId(ctx.category);
     if (!categoryId) return { success: false, error: `Could not resolve category: ${ctx.category}` };
 
     const { productId, listingId } = await this.catalogService.upsertProductAndListing(
       {
-        title: raw.title,
+        title: seoTitle,
         mpn: raw.mpn ?? null,
         specs: normalizedSpecs as unknown as Json,
         brandId,
@@ -287,7 +302,7 @@ export class ProductPipeline {
         stockQuantity: raw.stockQuantity ?? null,
         storeId: ctx.storeId,
       },
-      { pending: true }, // Mark as pending so Cortex can review and activate once specs are generated
+      { pending: true },
     );
 
     if (!productId || !listingId) return { success: false, error: "Failed to persist product/listing" };
