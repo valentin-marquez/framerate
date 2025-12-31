@@ -46,6 +46,97 @@ const SPEC_PROCESSORS: Record<CategorySlug, { normalize: (s: Record<string, stri
   cpu_cooler: CpuCoolerProcessor,
 };
 
+const GLOBAL_INVALID_TERMS = [
+  "CAJA ABIERTA",
+  "DAÑADA",
+  "OPEN BOX",
+  "SEGUNDA SELECCIÓN",
+  "USADO",
+  "REFURBISHED",
+  "REACONDICIONADO",
+  "SEMI NUEVO",
+  "SEMINUEVO",
+  "LICENCIA",
+  "THERMAL PAD",
+  "PASTA DISIPADORA",
+  "KIT PARA SOCKET",
+  "KIT PARA",
+  "KIT DE MONTAJE",
+  "BASE PARA SILLA",
+];
+
+interface CategoryValidationRule {
+  invalidTerms?: string[];
+  requiredTerms?: string[];
+  excludeIfContains?: string[];
+  customCheck?: (title: string) => { valid: boolean; reason?: string };
+}
+
+const CATEGORY_VALIDATION_RULES: Partial<Record<CategorySlug, CategoryValidationRule>> = {
+  motherboard: {
+    excludeIfContains: ["PROCESADOR"],
+  },
+  cpu: {
+    excludeIfContains: ["PLACA MADRE", "CONTROLADOR", "CONTROL DE LUCES", "ARGB CONTROLLER", "RGB CONTROLLER"],
+  },
+  psu: {
+    excludeIfContains: ["MEMORIA RAM", "CONTROLADOR"],
+  },
+  case: {
+    requiredTerms: ["GABINETE"],
+    invalidTerms: ["CARCASA"],
+  },
+  ssd: {
+    invalidTerms: ["SOPORTE", "ADAPTADOR", "CARCASA"],
+  },
+  hdd: {
+    invalidTerms: ["SOPORTE", "ADAPTADOR", "CARCASA"],
+  },
+  ram: {
+    excludeIfContains: ["SOPORTE", "DISIPADOR SOLO"],
+  },
+  case_fan: {
+    customCheck: (title: string) => {
+      const hasVentilador = title.includes("VENTILADOR") || title.includes("VENTILADORES");
+      const isExcluded =
+        title.includes("SOPORTE") ||
+        title.includes("COOLER CPU") ||
+        title.includes("DISIPADOR") ||
+        title.includes("WATER COOLING") ||
+        title.includes("REFRIGERACION LIQUIDA") ||
+        title.includes("REFRIGERACIÓN LÍQUIDA") ||
+        title.includes("AIO");
+
+      if (!hasVentilador) return { valid: false, reason: "Case fan must contain 'VENTILADOR'" };
+      if (isExcluded) return { valid: false, reason: "Product is excluded (CPU cooler, support, etc.)" };
+      return { valid: true };
+    },
+  },
+  cpu_cooler: {
+    customCheck: (title: string) => {
+      const isLiquidCooling =
+        title.includes("REFRIGERACION LIQUIDA") ||
+        title.includes("REFRIGERACIÓN LÍQUIDA") ||
+        title.includes("REGRIGERACION LIQUIDA") ||
+        title.includes("WATERCOOLING") ||
+        title.includes("WATER COOLING") ||
+        title.includes("AIO");
+
+      const isAirCooler =
+        title.includes("VENTILADOR PARA CPU") ||
+        title.includes("VENTILADOR CPU") ||
+        title.includes("COOLER CPU") ||
+        title.includes("CPU COOLER") ||
+        title.includes("DISIPADOR CPU");
+
+      if (!isLiquidCooling && !isAirCooler) {
+        return { valid: false, reason: "Product is not a CPU cooler" };
+      }
+      return { valid: true };
+    },
+  },
+};
+
 function extractBrandName(specs: Record<string, string> | undefined): string {
   const s = specs ?? ({} as Record<string, string>);
   return s.manufacturer || s.Fabricante || s.marca || s.brand || "Generic";
@@ -53,16 +144,15 @@ function extractBrandName(specs: Record<string, string> | undefined): string {
 
 export class ProductPipeline {
   private logger = new Logger("ProductPipeline");
+  private iaTimeMs = 0;
+  private iaCacheHits = 0;
+  private iaLLMCalls = 0;
 
   constructor(private catalogService: CatalogService) {}
 
   public getCatalogService(): CatalogService {
     return this.catalogService;
   }
-
-  private iaTimeMs = 0;
-  private iaCacheHits = 0;
-  private iaLLMCalls = 0;
 
   public getIaTimeMs(): number {
     return this.iaTimeMs;
@@ -111,114 +201,47 @@ export class ProductPipeline {
     return processor.normalize(rawSpecs, title);
   }
 
-  private validateProduct(
-    product: { title?: string },
-    category: CategorySlug,
-    crawlerType: CrawlerType,
-  ): { valid: boolean; reason?: string } {
-    const titleUpper = (product.title ?? "").toUpperCase();
+  private validateProduct(product: { title?: string }, category: CategorySlug): { valid: boolean; reason?: string } {
+    const title = product.title ?? "";
+    const titleUpper = title.toUpperCase();
 
-    const invalidTerms = [
-      "CAJA ABIERTA",
-      "DAÑADA",
-      "OPEN BOX",
-      "SEGUNDA SELECCIÓN",
-      "USADO",
-      "REFURBISHED",
-      "REACONDICIONADO",
-      "SEMI NUEVO",
-      "SEMINUEVO",
-      "SOPORTE",
-      "CARCASA",
-      "LICENCIA",
-      "THERMAL PAD",
-      "PASTA DISIPADORA",
-      "KIT PARA SOCKET",
-      "KIT DE MONTAJE",
-      "ADAPTADOR",
-      "BASE PARA SILLA",
-    ];
-
-    for (const term of invalidTerms) {
-      if (titleUpper.includes(term)) return { valid: false, reason: `Skipping product with term: ${term}` };
-    }
-
-    if (category === "ssd") {
-      if (titleUpper.includes("SOPORTE")) {
-        return { valid: false, reason: "Skipping SSD product: contains SOPORTE (likely a mount/stand)" };
+    for (const term of GLOBAL_INVALID_TERMS) {
+      if (titleUpper.includes(term)) {
+        return { valid: false, reason: `Contains invalid term: ${term}` };
       }
     }
 
-    if (crawlerType !== "pc-express") return { valid: true };
+    const categoryRule = CATEGORY_VALIDATION_RULES[category];
+    if (!categoryRule) return { valid: true };
 
-    const PC_EXPRESS_VALIDATION_RULES: Partial<
-      Record<CategorySlug, Array<{ check: (title: string) => boolean; message: string }>>
-    > = {
-      motherboard: [
-        {
-          check: (title) => title.includes("PROCESADOR"),
-          message: "Skipping miscategorized product (CPU in motherboard category)",
-        },
-      ],
-      cpu: [
-        {
-          check: (title) => title.includes("PLACA MADRE"),
-          message: "Skipping miscategorized product (motherboard in CPU category)",
-        },
-      ],
-      psu: [
-        {
-          check: (title) => title.includes("MEMORIA"),
-          message: "Skipping miscategorized product (memory in PSU category)",
-        },
-      ],
-      case: [
-        {
-          check: (title) => !title.includes("GABINETE"),
-          message: "Skipping non-case product in case category",
-        },
-      ],
-      case_fan: [
-        {
-          check: (title) => {
-            const hasVentilador = title.includes("VENTILADOR") || title.includes("VENTILADORES");
-            const isExcluded =
-              title.includes("SOPORTE") ||
-              title.includes("COOLER CPU") ||
-              title.includes("DISIPADOR") ||
-              title.includes("WATER COOLING") ||
-              title.includes("REFRIGERACION LIQUIDA") ||
-              title.includes("AIO");
-            return !hasVentilador || isExcluded;
-          },
-          message: "Skipping non-case-fan product",
-        },
-      ],
-      cpu_cooler: [
-        {
-          check: (title) => {
-            const isLiquidCooling =
-              title.includes("REFRIGERACION LIQUIDA") ||
-              title.includes("REGRIGERACION LIQUIDA") ||
-              title.includes("WATERCOOLING") ||
-              title.includes("WATER COOLING");
-            const isAirCooler =
-              title.includes("VENTILADOR PARA CPU") ||
-              title.includes("VENTILADOR CPU") ||
-              title.includes("COOLER CPU") ||
-              title.includes("CPU COOLER");
-            return !isLiquidCooling && !isAirCooler;
-          },
-          message: "Skipping non-cpu-cooler product",
-        },
-      ],
-    };
+    if (categoryRule.invalidTerms) {
+      for (const term of categoryRule.invalidTerms) {
+        if (titleUpper.includes(term)) {
+          return { valid: false, reason: `Category ${category}: contains invalid term '${term}'` };
+        }
+      }
+    }
 
-    const rules = PC_EXPRESS_VALIDATION_RULES[category];
-    if (!rules) return { valid: true };
+    if (categoryRule.requiredTerms) {
+      const hasRequired = categoryRule.requiredTerms.some((term) => titleUpper.includes(term));
+      if (!hasRequired) {
+        return {
+          valid: false,
+          reason: `Category ${category}: missing required terms (${categoryRule.requiredTerms.join(", ")})`,
+        };
+      }
+    }
 
-    for (const rule of rules) {
-      if (rule.check(titleUpper)) return { valid: false, reason: rule.message };
+    if (categoryRule.excludeIfContains) {
+      for (const term of categoryRule.excludeIfContains) {
+        if (titleUpper.includes(term)) {
+          return { valid: false, reason: `Category ${category}: miscategorized product (contains '${term}')` };
+        }
+      }
+    }
+
+    if (categoryRule.customCheck) {
+      return categoryRule.customCheck(titleUpper);
     }
 
     return { valid: true };
@@ -235,8 +258,11 @@ export class ProductPipeline {
 
     const raw: ScrapedProduct = parse.data;
 
-    const validation = this.validateProduct({ title: raw.title }, ctx.category, ctx.crawlerType);
-    if (!validation.valid) return { success: false, error: validation.reason };
+    const validation = this.validateProduct({ title: raw.title }, ctx.category);
+    if (!validation.valid) {
+      this.logger.info(`Product rejected: ${validation.reason}`, { title: raw.title, category: ctx.category });
+      return { success: false, error: validation.reason };
+    }
 
     const rawSpecs = (raw.specs as Record<string, string>) ?? {};
     const brandName = extractBrandName(rawSpecs);
@@ -266,7 +292,7 @@ export class ProductPipeline {
       seoTitle = seoTitle.replace(mpnRegex, "").trim();
       seoTitle = seoTitle
         .replace(/\s{2,}/g, " ")
-        .replace(/[-–,]+$/, "")
+        .replace(/[-–",]+$/, "")
         .trim();
 
       seoTitle = `${seoTitle} [${cleanMpn}]`;
