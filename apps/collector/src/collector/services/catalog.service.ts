@@ -208,6 +208,23 @@ export class CatalogService {
 
       if (!productId) return { productId: null, listingId: null };
 
+      // Check if listing exists to preserve is_active state
+      const { data: existingListing } = await supabase
+        .from("listings")
+        .select("is_active")
+        .eq("store_id", listing.storeId)
+        .eq("external_id", listing.url ?? "")
+        .single();
+
+      let isActive = options?.pending ? false : !!(listing.price != null && listing.price > 0 && listing.stock);
+
+      if (existingListing) {
+        // If listing exists, we ignore the 'pending' flag for is_active calculation
+        // because it has likely been reviewed already.
+        // We update is_active based on the current scrape data.
+        isActive = !!(listing.price != null && listing.price > 0 && listing.stock);
+      }
+
       const insertListing: TablesInsert<"listings"> = {
         store_id: listing.storeId,
         product_id: productId,
@@ -215,11 +232,10 @@ export class CatalogService {
         external_id: listing.url ?? "",
         price_cash: listing.price ?? null,
         price_normal: listing.originalPrice ?? listing.price ?? null,
-        // If caller marks the upsert as pending, force inactive so it won't be public until Cortex
-        // reviews and activates it. Otherwise use the previous heuristic.
-        is_active: options?.pending ? false : !!(listing.price != null && listing.price > 0 && listing.stock),
+        is_active: isActive,
         stock_quantity: listing.stockQuantity ?? null,
         last_scraped_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
       const { data: listingData, error: listingError } = await supabase
