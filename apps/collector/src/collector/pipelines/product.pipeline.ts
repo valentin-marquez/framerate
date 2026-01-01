@@ -73,6 +73,9 @@ interface CategoryValidationRule {
 }
 
 const CATEGORY_VALIDATION_RULES: Partial<Record<CategorySlug, CategoryValidationRule>> = {
+  gpu: {
+    excludeIfContains: ["SOPORTE"],
+  },
   motherboard: {
     excludeIfContains: ["PROCESADOR"],
   },
