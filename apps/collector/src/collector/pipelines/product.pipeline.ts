@@ -80,7 +80,7 @@ const CATEGORY_VALIDATION_RULES: Partial<Record<CategorySlug, CategoryValidation
     excludeIfContains: ["PLACA MADRE", "CONTROLADOR", "CONTROL DE LUCES", "ARGB CONTROLLER", "RGB CONTROLLER"],
   },
   psu: {
-    excludeIfContains: ["MEMORIA RAM", "CONTROLADOR"],
+    excludeIfContains: ["MEMORIA RAM", "CONTROLADOR", "CONTROLADOR DE LUCES"],
   },
   case: {
     requiredTerms: ["GABINETE"],
@@ -113,6 +113,7 @@ const CATEGORY_VALIDATION_RULES: Partial<Record<CategorySlug, CategoryValidation
     },
   },
   cpu_cooler: {
+    excludeIfContains: ["ADAPTADOR"],
     customCheck: (title: string) => {
       const isLiquidCooling =
         title.includes("REFRIGERACION LIQUIDA") ||
