@@ -39,7 +39,25 @@ export interface ProductDrop {
   store_logo_url: string | null;
 }
 
+export interface QuickSearchResult {
+  id: string;
+  name: string;
+  slug: string;
+  brand_name: string;
+  category_name: string;
+  current_price: number;
+  image_url: string | null;
+  rank: number;
+}
+
 export const productsService = {
+  // Búsqueda rápida optimizada para live search / autocomplete
+  quickSearch: (query: string, limit = 10) =>
+    api.get<{ data: QuickSearchResult[] }>(`/v1/products/search/quick`, {
+      params: { q: query, limit: limit.toString() },
+    }),
+
+  // Búsqueda completa para resultados detallados
   search: (query: string, limit = 50, offset = 0) =>
     api.get<Product[]>(`/v1/products/search`, {
       params: { q: query, limit: limit.toString(), offset: offset.toString() },

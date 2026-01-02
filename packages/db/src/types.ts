@@ -417,6 +417,7 @@ export type Database = {
           image_url: string | null;
           mpn: string | null;
           name: string;
+          search_vector: unknown;
           slug: string;
           specs: Json;
           updated_at: string;
@@ -430,6 +431,7 @@ export type Database = {
           image_url?: string | null;
           mpn?: string | null;
           name: string;
+          search_vector?: unknown;
           slug: string;
           specs?: Json;
           updated_at?: string;
@@ -443,6 +445,7 @@ export type Database = {
           image_url?: string | null;
           mpn?: string | null;
           name?: string;
+          search_vector?: unknown;
           slug?: string;
           specs?: Json;
           updated_at?: string;
@@ -851,6 +854,49 @@ export type Database = {
         Returns: string;
       };
       increment_product_view: { Args: { p_slug: string }; Returns: undefined };
+      quick_search_products: {
+        Args: { p_limit?: number; search_term: string };
+        Returns: {
+          brand_name: string;
+          category_name: string;
+          current_price: number;
+          id: string;
+          image_url: string;
+          name: string;
+          rank: number;
+          slug: string;
+        }[];
+      };
+      search_products: {
+        Args: { p_limit?: number; p_offset?: number; search_term: string };
+        Returns: {
+          active_listings_count: number | null;
+          brand_id: string | null;
+          brand_name: string | null;
+          brand_slug: string | null;
+          category_id: string | null;
+          category_name: string | null;
+          category_slug: string | null;
+          created_at: string | null;
+          group_id: string | null;
+          group_name: string | null;
+          id: string | null;
+          image_url: string | null;
+          min_price_cash: number | null;
+          min_price_normal: number | null;
+          mpn: string | null;
+          name: string | null;
+          slug: string | null;
+          specs: Json | null;
+          updated_at: string | null;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "products_with_prices";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
     };
     Enums: {
       compatibility_status: "valid" | "warning" | "incompatible" | "unknown";

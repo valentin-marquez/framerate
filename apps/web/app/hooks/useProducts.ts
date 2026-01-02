@@ -1,9 +1,16 @@
 import { keepPreviousData, type UseQueryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import { type ProductDrop, type ProductFilters, type ProductsResponse, productsService } from "@/services/products";
+import {
+  type ProductDrop,
+  type ProductFilters,
+  type ProductsResponse,
+  productsService,
+  type QuickSearchResult,
+} from "@/services/products";
 
 export const PRODUCTS_QUERY_KEY = ["products"];
 export const PRODUCT_DROPS_QUERY_KEY = ["products", "drops"];
 export const PRODUCT_DETAIL_QUERY_KEY = (slug: string) => ["products", slug];
+export const QUICK_SEARCH_QUERY_KEY = (query: string) => ["products", "quick-search", query];
 
 export function useProducts(filters: ProductFilters = {}, options?: Partial<UseQueryOptions<ProductsResponse>>) {
   return useQuery({
@@ -27,6 +34,18 @@ export function useProduct(slug: string) {
     queryKey: PRODUCT_DETAIL_QUERY_KEY(slug),
     queryFn: () => productsService.getBySlug(slug),
     enabled: !!slug,
+  });
+}
+
+export function useQuickSearch(query: string, limit = 10) {
+  return useQuery({
+    queryKey: QUICK_SEARCH_QUERY_KEY(query),
+    queryFn: async () => {
+      const response = await productsService.quickSearch(query, limit);
+      return response.data;
+    },
+    enabled: query.trim().length >= 2,
+    staleTime: 30000, // 30 segundos
   });
 }
 

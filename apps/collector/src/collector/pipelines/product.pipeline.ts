@@ -289,11 +289,65 @@ export class ProductPipeline {
     const categoryId = await this.catalogService.getCategoryId(ctx.category);
     if (!categoryId) return { success: false, error: `Could not resolve category: ${ctx.category}` };
 
+    // Search for similar products before creating a new one
+    const similarProduct = await this.catalogService.findSimilarProduct(
+      raw.title ?? "",
+      categoryId,
+      brandId,
+      raw.mpn,
+      normalizedSpecs as unknown as Json,
+    );
+
+    // If we found a similar product, use its MPN and merge specs if needed
+    let finalMpn = raw.mpn ?? null;
+    let finalSpecs = normalizedSpecs as unknown as Json;
+
+    if (similarProduct) {
+      this.logger.info(`Found similar product: ${similarProduct.id}, enriching data`, {
+        scrapedMpn: raw.mpn,
+        existingMpn: similarProduct.mpn,
+        hasExistingSpecs: !!similarProduct.specs,
+      });
+
+      // Use existing MPN if we don't have one
+      if (!finalMpn && similarProduct.mpn) {
+        finalMpn = similarProduct.mpn;
+        this.logger.info(`Using MPN from similar product: ${finalMpn}`);
+
+        // Re-normalize with the found MPN if we didn't have one before
+        if (!raw.mpn && finalMpn) {
+          const reNormalizedSpecs = await this.normalizeSpecs(
+            ctx.category,
+            rawSpecs,
+            raw.title ?? "",
+            finalMpn,
+            raw.context,
+          );
+          if (reNormalizedSpecs) {
+            finalSpecs = reNormalizedSpecs as unknown as Json;
+            this.logger.info(`Re-normalized specs with found MPN`);
+          }
+        }
+      }
+
+      // Merge specs: prefer new specs but keep existing ones if missing
+      if (similarProduct.specs && typeof similarProduct.specs === "object") {
+        const existingSpecs = similarProduct.specs as Record<string, unknown>;
+        const newSpecs = (finalSpecs as Record<string, unknown>) || {};
+
+        // Merge: new specs take precedence, but preserve existing if not present
+        finalSpecs = {
+          ...existingSpecs,
+          ...newSpecs,
+        } as unknown as Json;
+      }
+    }
+
     const { productId, listingId } = await this.catalogService.upsertProductAndListing(
       {
         title: seoTitle,
-        mpn: raw.mpn ?? null,
-        specs: normalizedSpecs as unknown as Json,
+        mpn: finalMpn,
+        specs: finalSpecs,
         brandId,
         categoryId,
         imageUrl,

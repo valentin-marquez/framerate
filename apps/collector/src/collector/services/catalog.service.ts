@@ -144,6 +144,128 @@ export class CatalogService {
     return data?.id ?? null;
   }
 
+  /**
+   * Search for similar products in the database using multiple criteria:
+   * 1. Exact MPN match (highest priority)
+   * 2. Title similarity with same category and brand
+   * 3. Key specs match (for products without MPN)
+   *
+   * Returns the product data if found, including its specs and MPN
+   */
+  async findSimilarProduct(
+    title: string,
+    categoryId: string,
+    brandId: string,
+    mpn?: string | null,
+    specs?: Json,
+  ): Promise<{ id: string; mpn: string | null; specs: Json | null } | null> {
+    try {
+      // 1. Try exact MPN match first
+      if (mpn) {
+        const { data } = await supabase.from("products").select("id, mpn, specs").eq("mpn", mpn).single();
+
+        if (data) {
+          this.logger.info(`Found existing product by MPN: ${mpn}`);
+          return data;
+        }
+      }
+
+      // 2. Search by title similarity within same category and brand
+      // Use title keywords to find potential matches
+      const titleKeywords = title
+        .toUpperCase()
+        .replace(/[^A-Z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((word) => word.length > 3) // Filter short words
+        .slice(0, 5); // Take first 5 significant words
+
+      if (titleKeywords.length > 0) {
+        const { data: candidates } = await supabase
+          .from("products")
+          .select("id, name, mpn, specs")
+          .eq("category_id", categoryId)
+          .eq("brand_id", brandId)
+          .limit(50);
+
+        if (candidates && candidates.length > 0) {
+          // Find best match by title similarity
+          let bestMatch: { id: string; mpn: string | null; specs: Json | null } | null = null;
+          let bestScore = 0;
+
+          for (const candidate of candidates) {
+            const candidateName = (candidate.name || "").toUpperCase();
+
+            // Count how many keywords match
+            const matchCount = titleKeywords.filter((keyword) => candidateName.includes(keyword)).length;
+
+            const score = matchCount / titleKeywords.length;
+
+            // Consider it a match if at least 60% of keywords match
+            if (score > bestScore && score >= 0.6) {
+              bestScore = score;
+              bestMatch = {
+                id: candidate.id,
+                mpn: candidate.mpn,
+                specs: candidate.specs,
+              };
+            }
+          }
+
+          if (bestMatch) {
+            this.logger.info(`Found similar product by title match (score: ${bestScore.toFixed(2)}): ${bestMatch.id}`);
+            return bestMatch;
+          }
+        }
+      }
+
+      // 3. If we have specs, try to match by key specifications
+      if (specs && typeof specs === "object" && specs !== null) {
+        const specsObj = specs as Record<string, unknown>;
+
+        // Extract key identifying fields from specs
+        const keyFields = ["model", "modelo", "part_number", "partnumber"];
+        const identifyingValue = keyFields
+          .map((field) => specsObj[field])
+          .find((val) => typeof val === "string" && val.length > 0) as string | undefined;
+
+        if (identifyingValue) {
+          const { data: candidates } = await supabase
+            .from("products")
+            .select("id, mpn, specs")
+            .eq("category_id", categoryId)
+            .eq("brand_id", brandId)
+            .not("specs", "is", null)
+            .limit(50);
+
+          if (candidates && candidates.length > 0) {
+            for (const candidate of candidates) {
+              if (!candidate.specs || typeof candidate.specs !== "object") continue;
+
+              const candidateSpecs = candidate.specs as Record<string, unknown>;
+              const candidateValue = keyFields
+                .map((field) => candidateSpecs[field])
+                .find((val) => typeof val === "string" && val.length > 0) as string | undefined;
+
+              if (candidateValue && candidateValue.toLowerCase() === identifyingValue.toLowerCase()) {
+                this.logger.info(`Found similar product by specs match: ${candidate.id}`);
+                return {
+                  id: candidate.id,
+                  mpn: candidate.mpn,
+                  specs: candidate.specs,
+                };
+              }
+            }
+          }
+        }
+      }
+
+      return null;
+    } catch (err) {
+      this.logger.error("findSimilarProduct failed", (err as Error).message || String(err));
+      return null;
+    }
+  }
+
   async upsertProductAndListing(
     product: {
       title?: string;

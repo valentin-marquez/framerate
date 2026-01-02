@@ -1,12 +1,4 @@
-import {
-  IconCompass,
-  IconCpu,
-  IconLogin,
-  IconLogout,
-  IconSearch,
-  IconSettings,
-  IconUserCircle,
-} from "@tabler/icons-react";
+import { IconCompass, IconCpu, IconLogin, IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Apple } from "@/components/icons/apple";
@@ -30,6 +22,7 @@ import {
 } from "../primitives/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
 import { CreateQuoteDialog } from "../quotes/create-quote-dialog";
+import { SearchTrigger } from "../search/search-dialog";
 
 interface NavbarProps {
   categories: Category[];
@@ -314,10 +307,8 @@ export function Navbar({ categories, blurred }: NavbarProps) {
 
             {/* Search */}
             <Tooltip>
-              <TooltipTrigger>
-                <Button variant={"ghost"} aria-label="Buscar" size={"icon"} className={"rounded-full"}>
-                  <IconSearch className="size-4 text-muted-foreground" />
-                </Button>
+              <TooltipTrigger asChild>
+                <SearchTrigger />
               </TooltipTrigger>
               <TooltipContent side="bottom" className="px-2 py-1">
                 <div className="flex items-center gap-2">

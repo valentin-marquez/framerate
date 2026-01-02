@@ -5,6 +5,28 @@ import { cache } from "@/middleware/cache";
 
 const products = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
+// GET /products/search/quick?q=term (Live Search - optimizado)
+products.get("/search/quick", async (c) => {
+  const supabase = createSupabase(c.env);
+  const query = c.req.query("q");
+  const limit = Number(c.req.query("limit")) || 10;
+
+  if (!query || query.trim().length < 2) {
+    return c.json({ data: [] });
+  }
+
+  const { data, error } = await supabase.rpc("quick_search_products" as any, {
+    search_term: query.trim(),
+    p_limit: limit,
+  });
+
+  if (error) {
+    return c.json({ error: error.message }, 500);
+  }
+
+  return c.json({ data: data || [] });
+});
+
 // GET /products/search?q=term
 products.get("/search", async (c) => {
   const supabase = createSupabase(c.env);
