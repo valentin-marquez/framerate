@@ -117,21 +117,127 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
     return urls;
   }
 
-  // Override fetchHtml to wait for stock selector on product pages
+  // Override fetchHtml to use JSON endpoint for product pages
   public async fetchHtml(url: string, waitForSelector?: string): Promise<string> {
-    // If it looks like a product page (not a category page), wait for stock info
-    // Category pages usually end in / or have /categories/
-    if (!url.includes("/categories/") && !waitForSelector) {
-      // Wait for the stock container or price
-      return super.fetchHtml(url, 'div[class*="product-detail-module--availability"]');
+    // If it looks like a product page (not a category page)
+    if (!url.includes("/categories/")) {
+      // Extract slug from URL
+      // URL format: https://www.spdigital.cl/slug/
+      const match = url.match(/spdigital\.cl\/([^/]+)\/?$/);
+      if (match?.[1]) {
+        const slug = match[1];
+        const jsonUrl = `${this.baseUrl}/page-data/${slug}/page-data.json`;
+        this.logger.info(`Fetching JSON for product: ${jsonUrl}`);
+        // Use super.fetchHtml to leverage Puppeteer/Fetch logic
+        // We don't need waitForSelector for JSON
+        return super.fetchHtml(jsonUrl);
+      }
     }
     return super.fetchHtml(url, waitForSelector);
   }
 
   /**
-   * Analiza el HTML de una página de producto extrayendo datos usando la lógica de Tracker.
+   * Analiza el HTML (o JSON) de una página de producto.
    */
-  async parseProduct(html: string, url: string): Promise<ProductData | null> {
+  async parseProduct(content: string, url: string): Promise<ProductData | null> {
+    // Try to parse as JSON first
+    try {
+      const data = JSON.parse(content);
+      if (data?.result?.pageContext?.content) {
+        return this.parseProductJson(data, url);
+      }
+    } catch (_e) {
+      // Not JSON, fall back to HTML parsing
+    }
+
+    return this.parseProductHtml(content, url);
+  }
+
+  private parseProductJson(data: any, url: string): ProductData | null {
+    try {
+      const content = data.result.pageContext.content;
+      const title = content.name;
+
+      if (this.shouldExcludeProduct(title)) {
+        return null;
+      }
+
+      const metadata = content.metadata || [];
+      
+      // Price
+      let priceCash = 0;
+      let priceNormal = 0;
+      const pricingMeta = metadata.find((m: any) => m.key === "pricing");
+      if (pricingMeta?.value) {
+        try {
+          const pricing = JSON.parse(pricingMeta.value);
+          if (pricing["sp-digital"]) {
+            priceCash = pricing["sp-digital"].cash || 0;
+            priceNormal = pricing["sp-digital"].other || 0;
+          }
+        } catch (e) {
+          this.logger.warn(`Error parsing pricing JSON for ${url}: ${e}`);
+        }
+      }
+
+      // Stock
+      const defaultVariant = content.defaultVariant;
+      const quantityAvailable = defaultVariant?.quantityAvailable || 0;
+      const quantityInStore = defaultVariant?.quantityInStore || 0;
+      const quantityOnline = defaultVariant?.quantityOnline || 0;
+      
+      // Logic: if any stock is available, it's in stock.
+      // Use quantityAvailable as the main stock count.
+      const stockQuantity = quantityAvailable;
+      const hasStock = stockQuantity > 0 || quantityInStore > 0 || quantityOnline > 0;
+
+      // MPN / Brand
+      const mpn = metadata.find((m: any) => m.key === "mpn")?.value || "";
+      const brand = content.attributes?.find((a: any) => a.attribute?.slug === "brand")?.values?.[0]?.name || "";
+
+      // Image
+      const imageUrl = content.media?.[0]?.thumbnailUrl || content.media?.[0]?.url || "";
+
+      // Specs
+      const specs: Record<string, string> = {};
+      if (brand) specs.brand = brand;
+      
+      if (content.attributes) {
+        for (const attr of content.attributes) {
+          const key = attr.attribute?.name;
+          const value = attr.values?.map((v: any) => v.name).join(", ");
+          if (key && value) {
+            specs[key] = value;
+          }
+        }
+      }
+
+      // Context
+      const descriptionHtml = content.description ? JSON.parse(content.description)?.blocks?.map((b: any) => b.data?.text).join("\n") : "";
+      
+      return {
+        url,
+        title,
+        price: priceCash,
+        originalPrice: priceNormal || priceCash,
+        stock: hasStock,
+        stockQuantity,
+        mpn,
+        imageUrl,
+        specs,
+        context: {
+            description_html: descriptionHtml,
+            description_text: descriptionHtml.replace(/<[^>]+>/g, " ").trim()
+        },
+      };
+
+    } catch (error) {
+      this.logger.error(`Error parsing product JSON ${url}:`, String(error));
+      return null;
+    }
+  }
+
+  async parseProductHtml(html: string, url: string): Promise<ProductData | null> {
     try {
       // If we are parsing from a fresh fetch, we might want to ensure we waited for stock.
       // However, parseProduct receives HTML string, so the waiting must happen before calling this.
