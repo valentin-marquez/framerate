@@ -205,7 +205,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
       <nav
         className={cn(
           "sticky top-0 z-40 h-13 w-full transition-all duration-300 ease-in-out overflow-hidden border-b",
-          blurred ? "backdrop-blur-md border-secondary/10" : "border-transparent",
+          blurred ? "backdrop-blur-lg border-secondary/10" : "border-transparent",
         )}
       >
         <div className="flex size-full items-center justify-between px-4 relative z-10">

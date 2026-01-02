@@ -20,11 +20,11 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
   name = "SP Digital";
   baseUrl = "https://www.spdigital.cl";
   protected useHeadless = true;
-  protected concurrency = 4; // 4 páginas concurrentes para SP Digital
+  protected concurrency = 2; // Reducido de 4 a 2 para evitar rate limits
 
   constructor() {
     super();
-    this.requestDelay = 1000; // Reducido de 3000 a 1000
+    this.requestDelay = 2000; // Aumentado de 1000 a 2000
   }
 
   buildCategoryUrl(categorySlug: string, page = 1): string {

@@ -257,7 +257,7 @@ export abstract class BaseCrawler<T = string> {
 
       if (waitForSelector) {
         try {
-          await page.waitForSelector(waitForSelector, { timeout: 5000 });
+          await page.waitForSelector(waitForSelector, { timeout: 15000 });
         } catch (_e) {
           this.logger.warn(`Timeout waiting for selector: ${waitForSelector}`);
         }
