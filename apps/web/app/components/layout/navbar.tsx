@@ -234,10 +234,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
 
             {/* Mobile navigation: show next to logo */}
             <div className="flex items-center gap-1 md:hidden">
-              <Button
-                variant="link"
-                className="p-0 m-0 text-secondary-foreground/65 hover:text-foreground transition-colors"
-              >
+              <Button variant="link" className="p-0 m-0">
                 <Link to="/explorar" className="flex items-center gap-1.5">
                   <IconCompass className="size-4" />
                 </Link>
@@ -270,10 +267,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
 
           {/* Center (desktop only): Navigation items */}
           <div className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-            <Button
-              variant="link"
-              className="p-0 m-0 text-secondary-foreground/65 hover:text-foreground transition-colors"
-            >
+            <Button variant="link" className="p-0 m-0">
               <Link to="/explorar" className="flex items-center gap-1.5">
                 <IconCompass className="size-4" />
                 <span>Explorar</span>
@@ -312,7 +306,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 trigger={
                   <Button
                     variant={"link"}
-                    className={"hidden sm:flex p-0 m-0 text-secondary-foreground/65 outline-offset-4 cursor-pointer"}
+                    className={"hidden sm:flex p-0 m-0 text-secondary-foreground outline-offset-4 cursor-pointer"}
                     size={"sm"}
                   >
                     Crear Cotizacion

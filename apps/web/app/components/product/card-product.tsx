@@ -92,8 +92,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
     <div
       className={cn(
         "group/card relative flex flex-col overflow-hidden rounded-xl h-105 md:h-100",
-        "bg-card/70 border border-card",
-        "hover:border-secondary/30 transition-all duration-300 ease-in-out",
+        "bg-card/70 border border-border",
+        "hover:border-border transition-all duration-300 ease-in-out",
         className,
       )}
     >

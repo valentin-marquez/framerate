@@ -179,7 +179,7 @@ export class TectecCrawler extends BaseCrawler<Category> {
     product.stock = stockInfo.inStock;
     product.stockQuantity = stockInfo.quantity;
 
-    product.mpn = this.extractMpn(html);
+    product.mpn = this.extractMpn(html, url);
     product.specs = this.extractSpecs(html);
     product.context = this.extractContext(html);
 
@@ -297,10 +297,25 @@ export class TectecCrawler extends BaseCrawler<Category> {
     return { inStock: !outOfStock, quantity: outOfStock ? 0 : null };
   }
 
-  private extractMpn(html: string): string | null {
+  private extractMpn(html: string, url: string): string | null {
     const partNumber = html.match(/<td[^>]*>\s*Part\s*Number\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
     const model = html.match(/<td[^>]*>\s*Model\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
-    return partNumber?.trim() ?? model?.trim() ?? null;
+    
+    let mpn = partNumber?.trim() ?? model?.trim() ?? null;
+
+    if (!mpn) {
+      const sku = html.match(/<span[^>]*class=["'][^"']*sku_wrapper[^"']*["'][^>]*>[\s\S]*?<span[^>]*class=["'][^"']*sku[^"']*["'][^>]*>([\s\S]*?)<\/span>[\s\S]*?<\/span>/i)?.[1];
+      if (sku) mpn = sku.trim();
+    }
+
+    if (!mpn) {
+      const match = url.match(/\/producto\/([^/]+)/);
+      if (match?.[1]) {
+        mpn = `TECTEC-${match[1].toUpperCase()}`;
+      }
+    }
+
+    return mpn;
   }
 
   private extractSpecs(html: string): Record<string, string> {

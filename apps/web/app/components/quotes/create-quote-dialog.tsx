@@ -111,10 +111,10 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
           </div>
 
           <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
+            <Button type="button" variant="link" onClick={() => setIsOpen(false)}>
               Cancelar
             </Button>
-            <Button variant={"secondary"} type="submit" disabled={createQuote.isPending}>
+            <Button type="submit" disabled={createQuote.isPending}>
               {createQuote.isPending && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
               Crear Cotización
             </Button>

@@ -190,6 +190,29 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
       }
     }
 
+    // Fallback: Generate MPN from URL if still null
+    if (!product.mpn) {
+      try {
+        const urlObj = new URL(url);
+        const productId = urlObj.searchParams.get("product_id");
+        if (productId) {
+          product.mpn = `PCX-${productId}`;
+        } else {
+          // Try to extract from path if it's a SEO URL
+          const match = url.match(/\/([^/]+)$/);
+          if (match?.[1]) {
+            // Remove query params if any
+            const slug = match[1].split("?")[0];
+            if (slug) {
+              product.mpn = `PCX-${slug.toUpperCase()}`;
+            }
+          }
+        }
+      } catch (_e) {
+        // ignore URL parsing errors
+      }
+    }
+
     product.price = cash;
     product.originalPrice = normal ?? cash;
 
