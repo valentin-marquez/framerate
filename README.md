@@ -125,7 +125,7 @@ Los datos scrapeados pasan por un pipeline de normalización extensivo antes de 
 
 **Normalizadores por Categoría:** GPU, CPU, PSU, Motherboard, Case, RAM, HDD, SSD, Case Fan, CPU Cooler
 
-> **Cache de IA:** Las extracciones de specs por IA se cachean en `cached_specs_extractions` usando MPN como clave.
+> **Cache de IA:** Las extracciones de specs por IA se almacenan en `extraction_jobs`. Los trabajos completados sirven como cache usando MPN como clave.
 
 ### 3.6 Patrón: Incremental Updates
 El scraper no reescribe toda la base de datos en cada ejecución.

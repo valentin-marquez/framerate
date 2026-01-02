@@ -8,7 +8,49 @@ export type Database = {
   };
   public: {
     Tables: {
-      ai_extraction_jobs: {
+      brands: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          slug: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          slug: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+        };
+        Relationships: [];
+      };
+      categories: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          slug: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          slug: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+        };
+        Relationships: [];
+      };
+      extraction_jobs: {
         Row: {
           attempts: number;
           category: string;
@@ -47,72 +89,6 @@ export type Database = {
           result?: Json | null;
           status?: Database["public"]["Enums"]["job_status"];
           updated_at?: string;
-        };
-        Relationships: [];
-      };
-      brands: {
-        Row: {
-          created_at: string;
-          id: string;
-          name: string;
-          slug: string;
-        };
-        Insert: {
-          created_at?: string;
-          id?: string;
-          name: string;
-          slug: string;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          name?: string;
-          slug?: string;
-        };
-        Relationships: [];
-      };
-      cached_specs_extractions: {
-        Row: {
-          created_at: string;
-          id: string;
-          mpn: string;
-          specs: Json;
-          updated_at: string;
-        };
-        Insert: {
-          created_at?: string;
-          id?: string;
-          mpn: string;
-          specs?: Json;
-          updated_at?: string;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          mpn?: string;
-          specs?: Json;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      categories: {
-        Row: {
-          created_at: string;
-          id: string;
-          name: string;
-          slug: string;
-        };
-        Insert: {
-          created_at?: string;
-          id?: string;
-          name: string;
-          slug: string;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          name?: string;
-          slug?: string;
         };
         Relationships: [];
       };
@@ -812,7 +788,7 @@ export type Database = {
         }[];
         SetofOptions: {
           from: "*";
-          to: "ai_extraction_jobs";
+          to: "extraction_jobs";
           isOneToOne: false;
           isSetofReturn: true;
         };

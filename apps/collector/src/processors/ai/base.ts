@@ -22,7 +22,7 @@ export async function scheduleExtraction(category: string, mpn: string, text: st
       `Enqueuing AI job for MPN=${mpn} category=${category} contextType=${rawContext === null ? "null" : typeof rawContext}`,
     );
 
-    const { error } = await supabase.from("ai_extraction_jobs").insert({
+    const { error } = await supabase.from("extraction_jobs").insert({
       mpn,
       category,
       raw_text: text,
@@ -65,17 +65,21 @@ export async function extractForCategory<T = unknown>(
     } catch (_e) {}
 
     const { data: cached, error: cacheError } = await supabase
-      .from("cached_specs_extractions")
-      .select("specs")
+      .from("extraction_jobs")
+      .select("result")
       .eq("mpn", mpn)
+      .eq("status", "completed")
+      .order("created_at", { ascending: false })
+      .limit(1)
       .single();
 
-    if (!cacheError && cached) {
+    if (!cacheError && cached && cached.result) {
       logger.info(`Cache HIT para MPN: ${mpn}`);
       try {
         if (context && typeof context.onCacheHit === "function") context.onCacheHit();
       } catch (_) {}
-      return cached.specs as T;
+      // biome-ignore lint/suspicious/noExplicitAny: result is jsonb
+      return (cached.result as any).specs as T;
     }
 
     try {

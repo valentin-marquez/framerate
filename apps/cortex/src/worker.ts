@@ -23,7 +23,7 @@ export async function processJob(jobRaw: unknown) {
     const maybeId = (jobRaw as any)?.id;
     if (maybeId) {
       await supabase
-        .from("ai_extraction_jobs")
+        .from("extraction_jobs")
         .update({ status: "failed", error_message: `Invalid job shape: ${JSON.stringify(parsed.error.issues)}` })
         .eq("id", maybeId);
     }
@@ -44,7 +44,7 @@ export async function processJob(jobRaw: unknown) {
     if (!resParsed.success) {
       logger.error(`Strategy returned invalid result for job ${job.id}:`, resParsed.error.format());
       await supabase
-        .from("ai_extraction_jobs")
+        .from("extraction_jobs")
         .update({ status: "failed", error_message: `Invalid strategy result` })
         .eq("id", job.id);
       return;
@@ -53,7 +53,7 @@ export async function processJob(jobRaw: unknown) {
     const result: StrategyResult = resParsed.data;
 
     await supabase
-      .from("ai_extraction_jobs")
+      .from("extraction_jobs")
       .update({ status: "completed", result: JSON.stringify(result), updated_at: new Date().toISOString() })
       .eq("id", job.id);
 
@@ -74,9 +74,6 @@ export async function processJob(jobRaw: unknown) {
           if (!parsed.success) {
             logger.warn(`Specs validation failed for mpn=${job.mpn}: ${JSON.stringify(parsed.error.issues)}`);
           } else {
-            // Upsert cache
-            await supabase.from("cached_specs_extractions").upsert({ mpn: job.mpn, specs }, { onConflict: "mpn" });
-
             // If there's an existing product with this MPN, update its specs
             const { data: prod } = await supabase.from("products").select("id").eq("mpn", job.mpn).single();
             if (prod?.id) {
@@ -114,7 +111,7 @@ export async function processJob(jobRaw: unknown) {
       const backoff = config.CORTEX_BACKOFF_BASE_MS * 2 ** attempts;
       logger.info(`Transient error, requeuing job ${job.id} after ${backoff}ms (attempt ${attempts})`);
       await supabase
-        .from("ai_extraction_jobs")
+        .from("extraction_jobs")
         .update({ status: "pending", error_message: String(err), updated_at: new Date().toISOString() })
         .eq("id", job.id);
       await sleep(backoff);
@@ -122,7 +119,7 @@ export async function processJob(jobRaw: unknown) {
     }
 
     await supabase
-      .from("ai_extraction_jobs")
+      .from("extraction_jobs")
       .update({ status: "failed", error_message: String(err), updated_at: new Date().toISOString() })
       // biome-ignore lint/suspicious/noExplicitAny: jobRaw is untyped input
       .eq("id", (job && (job as Job).id) || (jobRaw as any)?.id);
