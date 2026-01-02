@@ -60,7 +60,7 @@ export class SpDigitalTracker extends BaseTracker {
       let priceNormal = 0;
       const metadata = content.metadata || [];
       const pricingMeta = metadata.find((m: any) => m.key === "pricing");
-      
+
       if (pricingMeta?.value) {
         try {
           const pricing = JSON.parse(pricingMeta.value);
@@ -75,8 +75,8 @@ export class SpDigitalTracker extends BaseTracker {
 
       // Fallback if pricing meta is missing or empty
       if (priceCash === 0) {
-         // Try to find price in other metadata or attributes if needed, 
-         // but usually it's in the pricing meta.
+        // Try to find price in other metadata or attributes if needed,
+        // but usually it's in the pricing meta.
       }
       if (priceNormal === 0) priceNormal = priceCash;
 
@@ -99,7 +99,6 @@ export class SpDigitalTracker extends BaseTracker {
         available: hasStock,
         url: url,
       };
-
     } catch (error) {
       this.logger.error(`Error tracking ${url}:`, error);
       return { price: 0, stock: false, available: false };
