@@ -93,7 +93,7 @@ export class MyShopCrawler extends BaseCrawler<Category> {
           for (const item of data.resultado.items) {
             const itemUrl = item.url.startsWith("http") ? item.url : `${this.baseUrl}${item.url}`;
             const isAgotadoLabel = typeof item.label === "string" && item.label.toLowerCase().includes("agotado");
-            const hasStock = (item.stock_total > 0 || item.disponibleInternet) && !isAgotadoLabel;
+            const hasStock = item.stock_total > 0 && !isAgotadoLabel;
             const cleanMpn = item.partno ? item.partno.trim() : "";
 
             products.push({

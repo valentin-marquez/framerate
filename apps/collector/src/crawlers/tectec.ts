@@ -300,11 +300,13 @@ export class TectecCrawler extends BaseCrawler<Category> {
   private extractMpn(html: string, url: string): string | null {
     const partNumber = html.match(/<td[^>]*>\s*Part\s*Number\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
     const model = html.match(/<td[^>]*>\s*Model\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
-    
+
     let mpn = partNumber?.trim() ?? model?.trim() ?? null;
 
     if (!mpn) {
-      const sku = html.match(/<span[^>]*class=["'][^"']*sku_wrapper[^"']*["'][^>]*>[\s\S]*?<span[^>]*class=["'][^"']*sku[^"']*["'][^>]*>([\s\S]*?)<\/span>[\s\S]*?<\/span>/i)?.[1];
+      const sku = html.match(
+        /<span[^>]*class=["'][^"']*sku_wrapper[^"']*["'][^>]*>[\s\S]*?<span[^>]*class=["'][^"']*sku[^"']*["'][^>]*>([\s\S]*?)<\/span>[\s\S]*?<\/span>/i,
+      )?.[1];
       if (sku) mpn = sku.trim();
     }
 

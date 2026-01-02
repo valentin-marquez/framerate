@@ -119,8 +119,8 @@ export class MyShopTracker extends BaseTracker {
         return result;
       });
 
-      const available = data.availableOnline || data.availableStore || data.stockQuantity > 0;
-      const stock = data.stockQuantity > 0 || data.availableOnline;
+      const available = data.stockQuantity > 0;
+      const stock = data.stockQuantity > 0;
 
       return {
         price: data.price,
