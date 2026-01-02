@@ -10,10 +10,9 @@ FROM localhost:5000/framerate-base:latest AS base
 FROM base AS installer
 WORKDIR /app
 COPY --from=pruner /app/out/json/ .
-COPY --from=pruner /app/out/bun.lock ./bun.lock
 
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --no-frozen-lockfile --production --ignore-scripts
+    bun install --production --ignore-scripts
 
 FROM base AS runner
 WORKDIR /app
