@@ -11,7 +11,7 @@ auth.use("*", authMiddleware);
 // Devuelve el perfil del usuario actual
 auth.get("/me", async (c) => {
   const user = c.get("user"); // Obtener el usuario del contexto
-  const supabase = createSupabase(c.env);
+  const supabase = createSupabase(c.env, c.get("token"));
 
   const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
 

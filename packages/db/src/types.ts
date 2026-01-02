@@ -544,6 +544,7 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
+          listing_id: string | null;
           product_id: string;
           quantity: number;
           quote_id: string;
@@ -551,6 +552,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           id?: string;
+          listing_id?: string | null;
           product_id: string;
           quantity?: number;
           quote_id: string;
@@ -558,11 +560,19 @@ export type Database = {
         Update: {
           created_at?: string;
           id?: string;
+          listing_id?: string | null;
           product_id?: string;
           quantity?: number;
           quote_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "quote_items_listing_id_fkey";
+            columns: ["listing_id"];
+            isOneToOne: false;
+            referencedRelation: "listings";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "quote_items_product_id_fkey";
             columns: ["product_id"];
@@ -595,31 +605,43 @@ export type Database = {
       };
       quotes: {
         Row: {
+          compatibility_status: Database["public"]["Enums"]["compatibility_status"] | null;
           created_at: string;
           description: string | null;
+          estimated_wattage: number | null;
           id: string;
           is_public: boolean;
+          last_analyzed_at: string | null;
           name: string;
           updated_at: string;
           user_id: string;
+          validation_errors: Json | null;
         };
         Insert: {
+          compatibility_status?: Database["public"]["Enums"]["compatibility_status"] | null;
           created_at?: string;
           description?: string | null;
+          estimated_wattage?: number | null;
           id?: string;
           is_public?: boolean;
+          last_analyzed_at?: string | null;
           name: string;
           updated_at?: string;
           user_id: string;
+          validation_errors?: Json | null;
         };
         Update: {
+          compatibility_status?: Database["public"]["Enums"]["compatibility_status"] | null;
           created_at?: string;
           description?: string | null;
+          estimated_wattage?: number | null;
           id?: string;
           is_public?: boolean;
+          last_analyzed_at?: string | null;
           name?: string;
           updated_at?: string;
           user_id?: string;
+          validation_errors?: Json | null;
         };
         Relationships: [
           {
@@ -678,6 +700,7 @@ export type Database = {
       };
       stores: {
         Row: {
+          appearance: string;
           created_at: string;
           id: string;
           is_active: boolean;
@@ -687,6 +710,7 @@ export type Database = {
           url: string;
         };
         Insert: {
+          appearance?: string;
           created_at?: string;
           id?: string;
           is_active?: boolean;
@@ -696,6 +720,7 @@ export type Database = {
           url: string;
         };
         Update: {
+          appearance?: string;
           created_at?: string;
           id?: string;
           is_active?: boolean;
@@ -849,6 +874,7 @@ export type Database = {
       increment_product_view: { Args: { p_slug: string }; Returns: undefined };
     };
     Enums: {
+      compatibility_status: "valid" | "warning" | "incompatible" | "unknown";
       job_status: "pending" | "processing" | "completed" | "failed";
     };
     CompositeTypes: {
@@ -969,6 +995,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      compatibility_status: ["valid", "warning", "incompatible", "unknown"],
       job_status: ["pending", "processing", "completed", "failed"],
     },
   },

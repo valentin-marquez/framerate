@@ -101,7 +101,7 @@ quotes.use("/*", authMiddleware);
 quotes.get("/", async (c) => {
   try {
     const user = c.get("user");
-    const supabase = createSupabase(c.env);
+    const supabase = createSupabase(c.env, c.get("token"));
 
     const page = Number(c.req.query("page")) || 1;
     const limit = Number(c.req.query("limit")) || 10;
@@ -186,7 +186,7 @@ quotes.post("/", async (c) => {
       return c.json({ error: "name must be 100 characters or less" }, 400);
     }
 
-    const supabase = createSupabase(c.env);
+    const supabase = createSupabase(c.env, c.get("token"));
 
     const { data: quote, error: quoteError } = await supabase
       .from("quotes")
@@ -221,7 +221,7 @@ quotes.get("/:id", async (c) => {
   try {
     const user = c.get("user");
     const quoteId = c.req.param("id");
-    const supabase = createSupabase(c.env);
+    const supabase = createSupabase(c.env, c.get("token"));
 
     // Obtener la cotización
     const { data: quote, error: quoteError } = await supabase
@@ -251,13 +251,21 @@ quotes.get("/:id", async (c) => {
       return c.json({ error: "Access denied" }, 403);
     }
 
-    // Obtener items con productos completos
+    // Obtener items con productos completos y listing seleccionado
     const { data: items, error: itemsError } = await supabase
       .from("quote_items")
       .select(`
         id,
         quantity,
         created_at,
+        listing_id,
+        listing:listings(
+          id,
+          price_normal,
+          price_cash,
+          url,
+          store:stores(name, logo_url, slug)
+        ),
         product:products(
           id,
           name,
@@ -277,7 +285,7 @@ quotes.get("/:id", async (c) => {
       return c.json({ error: "Failed to fetch quote items" }, 500);
     }
 
-    // Obtener precios actuales de los listings
+    // Obtener precios actuales de los listings (para los que no tienen listing seleccionado)
     const productIds = items?.map((item) => item.product?.id).filter(Boolean) || [];
 
     let productsWithPrices = items?.map((item) => item.product) || [];
@@ -299,14 +307,31 @@ quotes.get("/:id", async (c) => {
 
     // Calcular precio total
     const totalCash = productsWithPrices.reduce((sum, product, index) => {
-      const quantity = items?.[index]?.quantity || 1;
+      const item = items?.[index];
+      const quantity = item?.quantity || 1;
+
+      // Si hay un listing seleccionado, usar su precio
+      if (item?.listing) {
+        // @ts-expect-error - Supabase types might not be fully updated in the workspace
+        return sum + (item.listing.price_cash || 0) * quantity;
+      }
+
+      // Si no, usar el mejor precio global
       const prices = (product as unknown as BuildProduct & { prices?: { cash?: number } })?.prices;
       const price = prices?.cash || 0;
       return sum + price * quantity;
     }, 0);
 
     const totalNormal = productsWithPrices.reduce((sum, product, index) => {
-      const quantity = items?.[index]?.quantity || 1;
+      const item = items?.[index];
+      const quantity = item?.quantity || 1;
+
+      // Si hay un listing seleccionado, usar su precio
+      if (item?.listing) {
+        // @ts-expect-error
+        return sum + (item.listing.price_normal || 0) * quantity;
+      }
+
       const prices = (product as unknown as BuildProduct & { prices?: { normal?: number } })?.prices;
       const price = prices?.normal || 0;
       return sum + price * quantity;
@@ -319,6 +344,8 @@ quotes.get("/:id", async (c) => {
           id: item.id,
           quantity: item.quantity,
           created_at: item.created_at,
+          listing_id: item.listing_id,
+          selected_listing: item.listing,
           product: productsWithPrices[index],
         })) || [],
       totals: {
@@ -348,7 +375,7 @@ quotes.patch("/:id", async (c) => {
       is_public?: boolean;
     }>();
 
-    const supabase = createSupabase(c.env);
+    const supabase = createSupabase(c.env, c.get("token"));
 
     // Verificar ownership
     const { data: existing } = await supabase.from("quotes").select("user_id").eq("id", quoteId).single();
@@ -409,7 +436,7 @@ quotes.delete("/:id", async (c) => {
   try {
     const user = c.get("user");
     const quoteId = c.req.param("id");
-    const supabase = createSupabase(c.env);
+    const supabase = createSupabase(c.env, c.get("token"));
 
     // Verificar ownership
     const { data: existing } = await supabase.from("quotes").select("user_id").eq("id", quoteId).single();
@@ -443,7 +470,7 @@ quotes.get("/:id/analyze", async (c) => {
   try {
     const user = c.get("user");
     const quoteId = c.req.param("id");
-    const supabase = createSupabase(c.env);
+    const supabase = createSupabase(c.env, c.get("token"));
 
     // Verificar acceso
     const { data: quote } = await supabase.from("quotes").select("user_id, is_public").eq("id", quoteId).single();
@@ -529,6 +556,7 @@ quotes.post("/:id/items", async (c) => {
     const body = await c.req.json<{
       product_id: string;
       quantity?: number;
+      listing_id?: string;
     }>();
 
     if (!body.product_id) {
@@ -541,7 +569,7 @@ quotes.post("/:id/items", async (c) => {
       return c.json({ error: "quantity must be between 1 and 99" }, 400);
     }
 
-    const supabase = createSupabase(c.env);
+    const supabase = createSupabase(c.env, c.get("token"));
 
     // Verificar ownership
     const { data: quote } = await supabase.from("quotes").select("user_id").eq("id", quoteId).single();
@@ -567,9 +595,14 @@ quotes.post("/:id/items", async (c) => {
 
     if (existing) {
       // Actualizar cantidad si ya existe
+      const updates: any = { quantity: existing.quantity + quantity };
+      if (body.listing_id !== undefined) {
+        updates.listing_id = body.listing_id;
+      }
+
       const { data: updated, error: updateError } = await supabase
         .from("quote_items")
-        .update({ quantity: existing.quantity + quantity })
+        .update(updates)
         .eq("id", existing.id)
         .select()
         .single();
@@ -589,6 +622,7 @@ quotes.post("/:id/items", async (c) => {
         quote_id: quoteId,
         product_id: body.product_id,
         quantity: quantity,
+        listing_id: body.listing_id || null,
       })
       .select()
       .single();
@@ -620,13 +654,13 @@ quotes.patch("/:id/items/:itemId", async (c) => {
     const user = c.get("user");
     const quoteId = c.req.param("id");
     const itemId = c.req.param("itemId");
-    const body = await c.req.json<{ quantity: number }>();
+    const body = await c.req.json<{ quantity?: number; listing_id?: string | null }>();
 
-    if (!body.quantity || body.quantity < 1 || body.quantity > 99) {
+    if (body.quantity !== undefined && (body.quantity < 1 || body.quantity > 99)) {
       return c.json({ error: "quantity must be between 1 and 99" }, 400);
     }
 
-    const supabase = createSupabase(c.env);
+    const supabase = createSupabase(c.env, c.get("token"));
 
     // Verificar ownership de la cotización
     const { data: quote } = await supabase.from("quotes").select("user_id").eq("id", quoteId).single();
@@ -635,10 +669,18 @@ quotes.patch("/:id/items/:itemId", async (c) => {
       return c.json({ error: "Quote not found or access denied" }, 404);
     }
 
+    const updates: any = {};
+    if (body.quantity !== undefined) updates.quantity = body.quantity;
+    if (body.listing_id !== undefined) updates.listing_id = body.listing_id;
+
+    if (Object.keys(updates).length === 0) {
+      return c.json({ error: "No updates provided" }, 400);
+    }
+
     // Actualizar item
     const { data: item, error: updateError } = await supabase
       .from("quote_items")
-      .update({ quantity: body.quantity })
+      .update(updates)
       .eq("id", itemId)
       .eq("quote_id", quoteId)
       .select()
@@ -665,7 +707,7 @@ quotes.delete("/:id/items/:itemId", async (c) => {
     const user = c.get("user");
     const quoteId = c.req.param("id");
     const itemId = c.req.param("itemId");
-    const supabase = createSupabase(c.env);
+    const supabase = createSupabase(c.env, c.get("token"));
 
     // Verificar ownership
     const { data: quote } = await supabase.from("quotes").select("user_id").eq("id", quoteId).single();

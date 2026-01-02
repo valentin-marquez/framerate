@@ -2,8 +2,11 @@
 
 FROM localhost:5000/framerate-base:latest AS pruner
 WORKDIR /app
+
+ENV TURBO_TELEMETRY_DISABLED=1
+
 COPY . .
-RUN bun x turbo prune --scope=tracker --docker
+RUN bun x turbo@2.7.2 prune --scope=tracker --docker
 
 FROM localhost:5000/framerate-base:latest AS base
 

@@ -2,7 +2,23 @@ import { index, type RouteConfig, route } from "@react-router/dev/routes";
 
 export default [
   index("routes/home.tsx"),
-  route("action/set-theme", "routes/action.set-theme.ts"),
+
+  // Auth
+  route("action/auth", "routes/action.auth.tsx"),
+  route("auth/callback", "routes/auth.callback.tsx"),
+
+  // Info
+  route("privacy", "routes/privacy.tsx"),
+  route("terms", "routes/terms.tsx"),
+
+  // Products & Categories
   route("categorias/:slug", "routes/category.tsx"),
-  route("product/:slug", "routes/product.tsx"),
+  route("producto/:slug", "routes/product.tsx"),
+
+  // Protected routes (opcional - ejemplos)
+  route("profile", "routes/profile.tsx"),
+  // route("favoritos", "routes/favorites.tsx"),
+  // route("alertas", "routes/alerts.tsx"),
+
+  route("cotizacion/:slug", "routes/quote.tsx"),
 ] satisfies RouteConfig;

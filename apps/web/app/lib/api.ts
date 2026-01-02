@@ -1,5 +1,3 @@
-import type { Category } from "~/utils/db-types";
-
 const API_URL = import.meta.env.VITE_API_URL;
 
 if (!API_URL) {
@@ -10,13 +8,14 @@ const BASE_URL = API_URL || "http://localhost:3000";
 
 type FetchOptions = RequestInit & {
   params?: Record<string, string>;
+  token?: string; // Para requests autenticados
 };
 
 export class ApiError extends Error {
   status: number;
-  data: any;
+  data: unknown;
 
-  constructor(status: number, message: string, data?: any) {
+  constructor(status: number, message: string, data?: unknown) {
     super(message);
     this.status = status;
     this.data = data;
@@ -24,7 +23,7 @@ export class ApiError extends Error {
 }
 
 async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-  const { params, ...init } = options;
+  const { params, token, ...init } = options;
 
   const url = new URL(`${BASE_URL}${endpoint}`);
 
@@ -36,30 +35,46 @@ async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise
     });
   }
 
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...init.headers,
+  };
+
+  // Agregar Authorization header si hay token
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const response = await fetch(url.toString(), {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
-    let errorData: { message: string } | Record<string, unknown>;
+    let errorData: { message?: string; error?: string } | Record<string, unknown>;
     try {
       errorData = await response.json();
     } catch {
       errorData = { message: response.statusText };
     }
 
-    throw new ApiError(
-      response.status,
-      typeof errorData.message === "string" ? errorData.message : "An error occurred",
-      errorData,
-    );
+    const errorMessage =
+      typeof errorData.message === "string"
+        ? errorData.message
+        : typeof errorData.error === "string"
+          ? errorData.error
+          : "An error occurred";
+
+    throw new ApiError(response.status, errorMessage, errorData);
   }
 
-  return response.json();
+  // Algunas respuestas DELETE no tienen body
+  const contentType = response.headers.get("content-type");
+  if (contentType?.includes("application/json")) {
+    return response.json();
+  }
+
+  return {} as T;
 }
 
 export const api = {
@@ -88,7 +103,3 @@ export const api = {
 
   delete: <T>(endpoint: string, options?: FetchOptions) => fetcher<T>(endpoint, { ...options, method: "DELETE" }),
 };
-
-export async function getCategories() {
-  return api.get<Category[]>("/v1/categories");
-}

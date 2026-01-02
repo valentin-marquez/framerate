@@ -1,5 +1,5 @@
 "use client";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { motion, type Transition, useMotionValue } from "motion/react";
 import {
   Children,
@@ -160,7 +160,7 @@ function CarouselNavigation({ className, classNameButton, alwaysShow }: Carousel
           }
         }}
       >
-        <ChevronLeft className="stroke-foreground" size={16} />
+        <IconChevronLeft className="stroke-foreground" size={16} />
       </button>
       <button
         type="button"
@@ -178,7 +178,7 @@ function CarouselNavigation({ className, classNameButton, alwaysShow }: Carousel
           }
         }}
       >
-        <ChevronRight className="stroke-foreground" size={16} />
+        <IconChevronRight className="stroke-foreground" size={16} />
       </button>
     </div>
   );

@@ -1,0 +1,26 @@
+{
+  "name": "@framerate/core",
+  "version": "0.1.0",
+  "description": "Core business logic for Framerate.cl",
+  "type": "module",
+  "exports": {
+    "./builder": {
+      "types": "./src/builder/index.ts",
+      "import": "./src/builder/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "biome lint .",
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@framerate/utils": "workspace:*",
+    "@framerate/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@framerate/config": "workspace:*",
+    "@types/bun": "^1.1.13",
+    "typescript": "^5.0.0"
+  }
+}

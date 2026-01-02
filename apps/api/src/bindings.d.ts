@@ -11,4 +11,5 @@ export type Bindings = {
 
 export type Variables = {
   user: User;
+  token: string;
 };

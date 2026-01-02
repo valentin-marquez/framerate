@@ -1,12 +1,12 @@
-import { Eye } from "lucide-react";
+import { IconEye } from "@tabler/icons-react";
 import { Link } from "react-router";
+import { AddToQuote } from "@/components/product/add-to-quote";
 import { cn } from "@/lib/utils";
 import { type ProductDrop, productsService } from "@/services/products";
 import type { Product } from "@/utils/db-types";
-import { AddToQuote } from "./add-to-quote";
-import { AsyncImage } from "./primitives/async-image";
-import { Badge } from "./primitives/badge";
-import { Button } from "./primitives/button";
+import { AsyncImage } from "../primitives/async-image";
+import { Badge } from "../primitives/badge";
+import { Button } from "../primitives/button";
 
 interface CardProductDropProps {
   drop: ProductDrop;
@@ -69,7 +69,7 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
     product_specs,
   } = drop;
 
-  const productLink = `/product/${product_slug}`;
+  const productLink = `/producto/${product_slug}`;
   const specsSummary = getSpecsSummary(category_slug, product_specs);
 
   const handleProductClick = () => {
@@ -194,7 +194,7 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
               asChild
             >
               <Link to={productLink}>
-                <Eye className="h-3.5 w-3.5" />
+                <IconEye className="h-3.5 w-3.5" />
                 Ver producto
               </Link>
             </Button>

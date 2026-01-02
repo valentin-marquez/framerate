@@ -1,12 +1,7 @@
-// En progreso: Implementar la lógica inicial para la ruta de inicio
-// TODO: Completar la funcionalidad de la ruta de inicio
-
-import { CardProduct } from "@/components/card-product";
-import { CardProductDrop } from "@/components/card-product-drop";
-import { HeroSection } from "@/components/hero-section";
-import { Carousel, CarouselContent, CarouselItem, CarouselNavigation } from "@/components/primitives/carousel";
+import { useProductDrops, useProducts } from "@/hooks/useProducts";
 import { categoriesService } from "@/services/categories";
 import { productsService } from "@/services/products";
+import { ProductCard } from "~/components/product/card-product";
 import type { Route } from "./+types/home";
 
 export function meta() {
@@ -16,9 +11,9 @@ export function meta() {
 export async function loader() {
   try {
     const [popularProducts, categories, priceDrops] = await Promise.all([
-      productsService.getAll({ limit: 50, sort: "popularity" }),
+      productsService.getAll({ limit: 400, sort: "popularity" }),
       categoriesService.getAll(),
-      productsService.getDrops(10, 16),
+      productsService.getDrops(24, 2), // 12 productos con mínimo 5% descuento
     ]);
     return { popularProducts, categories, priceDrops };
   } catch (error) {
@@ -35,59 +30,80 @@ export async function loader() {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { popularProducts, priceDrops } = loaderData;
+  const { popularProducts: initialPopular, priceDrops: initialDrops } = loaderData;
+
+  const { data: popularProducts } = useProducts({ limit: 400, sort: "popularity" }, { initialData: initialPopular });
+
+  const { data: priceDrops } = useProductDrops(24, 2, { initialData: initialDrops });
+
+  // Fallback to initial data if hook returns undefined (shouldn't happen with initialData)
+  const products = popularProducts ?? initialPopular;
+  const drops = priceDrops ?? initialDrops;
 
   return (
-    <div className="flex flex-col">
-      <HeroSection />
+    <div className="flex flex-col min-h-screen gap-16 md:gap-24 pb-20">
+      {/* Popular Products Section */}
+      <section className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-bold font-sans text-primary">Productos populares</h2>
+            <p className="text-sm text-muted-foreground mt-1">Los productos más vistos por la comunidad</p>
+          </div>
+          {products.meta.total > products.data.length && (
+            <a
+              href="/productos"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              Ver todos →
+            </a>
+          )}
+        </div>
 
-      <div className="container mx-auto p-4 space-y-12">
-        {priceDrops.length > 0 && (
-          <section>
-            <Carousel disableDrag>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold tracking-tight">Bajadas de Precio</h2>
-                  <span className="inline-flex items-center rounded-full border border-transparent bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                    Ofertas
-                  </span>
-                </div>
-                <CarouselNavigation className="static w-auto translate-y-0 gap-2" alwaysShow />
-              </div>
-              <div className="relative w-full">
-                <CarouselContent className="-ml-4">
-                  {priceDrops.map((drop) => (
-                    <CarouselItem
-                      key={`${drop.product_id}-${drop.store_name}`}
-                      className="basis-1/2 md:basis-1/3 lg:basis-1/5 pl-4"
-                    >
-                      <CardProductDrop drop={drop} />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </div>
-            </Carousel>
-          </section>
+        {products.data.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5  gap-4">
+            {products.data.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-20">
+            <p className="text-muted-foreground">No hay productos disponibles</p>
+          </div>
         )}
+      </section>
 
-        <section>
-          <Carousel disableDrag>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold tracking-tight">Lo más visto</h2>
-              <CarouselNavigation className="static w-auto translate-y-0 gap-2" alwaysShow />
+      {/* Price Drops Section */}
+      {drops.length > 0 && (
+        <section className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl font-bold font-sans text-primary">Ofertas recientes</h2>
+              <p className="text-sm text-muted-foreground mt-1">Productos con bajadas de precio</p>
             </div>
-            <div className="relative w-full">
-              <CarouselContent className="-ml-4">
-                {popularProducts.data.slice(0, 10).map((product) => (
-                  <CarouselItem key={product.id} className="basis-1/2 md:basis-1/3 lg:basis-1/5 pl-4">
-                    <CardProduct product={product} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </div>
-          </Carousel>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5  gap-4">
+            {drops.map((drop) => {
+              // Convertir drop a formato Product para ProductCard
+              const product = {
+                id: drop.product_id,
+                name: drop.product_name,
+                slug: drop.product_slug,
+                image_url: drop.product_image_url,
+                brand: null,
+                category: { name: "", slug: drop.category_slug },
+                specs: drop.product_specs,
+                prices: {
+                  cash: drop.current_price,
+                  normal: drop.previous_price,
+                },
+                popularity_score: 0,
+              };
+              return <ProductCard key={drop.product_id} product={product} />;
+            })}
+          </div>
         </section>
-      </div>
+      )}
     </div>
   );
 }

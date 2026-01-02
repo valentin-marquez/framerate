@@ -31,6 +31,7 @@ export const authMiddleware = createMiddleware<{
 
   // Adjunta el usuario al contexto si es necesario, o simplemente continúa
   c.set("user", user);
+  c.set("token", token);
 
   await next();
 });

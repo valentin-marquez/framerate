@@ -16,7 +16,7 @@
     "db:pull": "supabase db pull",
     "db:link": "bun src/scripts/db-link.ts",
     "group-variants": "bun run src/scripts/group-variants.ts",
-    "test": "vitest"
+    "test": "bun test"
   },
   "dependencies": {
     "@framerate/utils": "workspace:*",
@@ -26,7 +26,6 @@
   },
   "devDependencies": {
     "supabase": "^2.67.2",
-    "typescript": "^5.0.0",
-    "vitest": "^1.0.0"
+    "typescript": "^5.0.0"
   }
 }

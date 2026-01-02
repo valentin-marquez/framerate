@@ -12,6 +12,7 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
+    "@framerate/config": "workspace:*",
     "typescript": "^5.0.0"
   }
 }

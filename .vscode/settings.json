@@ -25,11 +25,5 @@
   },
   "[css]": {
     "editor.defaultFormatter": "bradlc.vscode-tailwindcss"
-  },
-  "biome.lsp.bin": {
-    "linux-x64": "adjusted/path/to/biome",
-    "linux-arm64-musl": "/path/to/biome",
-    "darwin-arm64": "/path/to/biome",
-    "win32-x64": "node_modules\\@biomejs\\cli-win32-x64\\biome.exe"
   }
 }
