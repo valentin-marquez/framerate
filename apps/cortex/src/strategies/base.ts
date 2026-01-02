@@ -51,7 +51,7 @@ export abstract class BaseExtractor<T> {
 
       // Reconstruye el texto con la información aplanada
       return text.replace(/Specs:.*$/s, `\n\nExtracted Information:\n${flatInfo.join("\n")}`);
-    } catch (e) {
+    } catch (_e) {
       // Si falla el parsing, devuelve el texto original
       return text;
     }

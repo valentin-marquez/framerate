@@ -6,14 +6,7 @@
  * múltiples reglas de validación sobre un conjunto de componentes.
  */
 
-import type {
-  BuildAnalysis,
-  BuildComponentsMap,
-  BuildRule,
-  CompatibilityStatus,
-  ValidationIssue,
-  ValidationSeverity,
-} from "@framerate/db";
+import type { BuildAnalysis, BuildComponentsMap, BuildRule, CompatibilityStatus, ValidationIssue } from "@framerate/db";
 
 /**
  * Motor principal de análisis de compatibilidad.

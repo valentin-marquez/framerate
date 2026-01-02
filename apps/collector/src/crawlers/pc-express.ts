@@ -179,8 +179,8 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
           const json = JSON.parse(script);
           // biome-ignore lint/suspicious/noExplicitAny: JSON-LD
           const p = Array.isArray(json) ? json.find((x: any) => x["@type"] === "Product") : json;
-          if (p && p.offers) {
-            const price = p.offers.price || (p.offers[0] && p.offers[0].price);
+          if (p?.offers) {
+            const price = p.offers.price || p.offers[0]?.price;
             if (price && cash === null) cash = Number(price);
             if (p.sku && !product.mpn) product.mpn = p.sku;
           }

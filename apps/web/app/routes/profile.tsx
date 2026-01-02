@@ -3,7 +3,6 @@ import { isRouteErrorResponse, Link, redirect, useRouteError } from "react-route
 import { Button } from "~/components/primitives/button";
 import { Separator } from "~/components/primitives/separator";
 import { CreateQuoteDialog } from "~/components/quotes/create-quote-dialog";
-import { useUser } from "~/hooks/useAuth";
 import { getAuthUser, requireAuth } from "~/lib/auth.server";
 import { profilesService } from "~/services/profiles";
 import { quotesService } from "~/services/quotes";

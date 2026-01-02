@@ -8,7 +8,7 @@ maintenanceRoute.post("/group-variants", async (c) => {
   try {
     const result = await maintenanceService.groupVariants();
     return c.json(result);
-  } catch (error) {
+  } catch (_error) {
     return c.json({ error: "Failed to group variants" }, 500);
   }
 });

@@ -98,7 +98,7 @@ export class TectecTracker extends BaseTracker {
             }
 
             break;
-          } catch (e) {}
+          } catch (_e) {}
         }
 
         // Extraer stock quantity del HTML

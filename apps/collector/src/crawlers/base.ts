@@ -23,7 +23,7 @@ interface PagePool {
   availablePages: Page[];
 }
 
-export abstract class BaseCrawler<T = string> {
+export abstract class BaseCrawler<_T = string> {
   abstract name: string;
   abstract baseUrl: string;
 

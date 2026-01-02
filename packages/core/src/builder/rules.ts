@@ -5,7 +5,7 @@
  * Cada regla es independiente y puede ser habilitada/deshabilitada según necesidad.
  */
 
-import type { BuildComponentsMap, BuildRule, ValidationCode, ValidationIssue } from "@framerate/db";
+import type { BuildComponentsMap, BuildRule, ValidationIssue } from "@framerate/db";
 
 /**
  * Normaliza un valor de socket para comparación.

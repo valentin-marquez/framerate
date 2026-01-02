@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "biome": "biome check --write .",
+    "biome": "biome check --write --unsafe",
     "biome:check": "biome check .",
     "biome:format": "biome format --write .",
     "biome:format:check": "biome format .",
