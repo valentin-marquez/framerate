@@ -163,7 +163,7 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       }
 
       const metadata = content.metadata || [];
-      
+
       // Price
       let priceCash = 0;
       let priceNormal = 0;
@@ -185,7 +185,7 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       const quantityAvailable = defaultVariant?.quantityAvailable || 0;
       const quantityInStore = defaultVariant?.quantityInStore || 0;
       const quantityOnline = defaultVariant?.quantityOnline || 0;
-      
+
       // Logic: if any stock is available, it's in stock.
       // Use quantityAvailable as the main stock count.
       const stockQuantity = quantityAvailable;
@@ -201,7 +201,7 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       // Specs
       const specs: Record<string, string> = {};
       if (brand) specs.brand = brand;
-      
+
       if (content.attributes) {
         for (const attr of content.attributes) {
           const key = attr.attribute?.name;
@@ -213,8 +213,12 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       }
 
       // Context
-      const descriptionHtml = content.description ? JSON.parse(content.description)?.blocks?.map((b: any) => b.data?.text).join("\n") : "";
-      
+      const descriptionHtml = content.description
+        ? JSON.parse(content.description)
+            ?.blocks?.map((b: any) => b.data?.text)
+            .join("\n")
+        : "";
+
       return {
         url,
         title,
@@ -226,11 +230,10 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
         imageUrl,
         specs,
         context: {
-            description_html: descriptionHtml,
-            description_text: descriptionHtml.replace(/<[^>]+>/g, " ").trim()
+          description_html: descriptionHtml,
+          description_text: descriptionHtml.replace(/<[^>]+>/g, " ").trim(),
         },
       };
-
     } catch (error) {
       this.logger.error(`Error parsing product JSON ${url}:`, String(error));
       return null;
