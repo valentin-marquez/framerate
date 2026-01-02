@@ -12,7 +12,7 @@ WORKDIR /app
 COPY --from=pruner /app/out/json/ .
 
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --production --ignore-scripts
+    bun install --production --ignore-scripts --no-frozen-lockfile
 
 FROM base AS runner
 WORKDIR /app

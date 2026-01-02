@@ -15,7 +15,7 @@
     "@framerate/utils": "workspace:*",
     "@supabase/supabase-js": "^2.86.2",
     "cheerio": "^1.1.2",
-    "elysia": "latest",
+    "elysia": "1.4.19",
     "p-limit": "^7.2.0",
     "puppeteer": "^24.32.0",
     "puppeteer-extra": "^3.3.6",
