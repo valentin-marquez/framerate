@@ -10,11 +10,12 @@ import { useAuthSync } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
 import { getAuthUser } from "@/lib/auth.server";
 import { queryClient } from "@/lib/query-client";
-import { categoriesService } from "@/services/categories";
+import { profilesService } from "@/services/profiles";
 import { useAuthStore } from "@/store/auth";
 import type { Route } from "./+types/root";
 import { Button } from "./components/primitives/button";
 import { ThemeProvider } from "./components/theme/theme-provider";
+import { categoriesService } from "./services/categories";
 
 export const links: Route.LinksFunction = () => [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }];
 
@@ -25,8 +26,22 @@ export function meta(_: Route.MetaArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   // Eliminado themeSessionResolver ya que el tema ahora es puramente cliente
-  const { user, headers: authHeaders } = await getAuthUser(request);
+  const { user, supabase, headers: authHeaders } = await getAuthUser(request);
   const categories = await categoriesService.getAll();
+
+  let profile = null;
+  if (user) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      try {
+        profile = await profilesService.getMe(session.access_token);
+      } catch (e) {
+        console.error("Failed to fetch profile", e);
+      }
+    }
+  }
 
   const env = {
     SUPABASE_URL: process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "",
@@ -37,6 +52,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     {
       env,
       user,
+      profile,
       categories,
     },
     {
@@ -81,8 +97,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { env, user, categories: initialCategories } = loaderData;
-  const { setUser, setSupabase } = useAuthStore();
+  const { env, user, profile, categories: initialCategories } = loaderData;
+  const { setUser, setProfile, setSupabase } = useAuthStore();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
 
@@ -94,12 +110,15 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 
   // Sync store immediately to avoid race conditions with queries
-  const { supabase: currentSupabase, user: currentUser } = useAuthStore.getState();
+  const { supabase: currentSupabase, user: currentUser, profile: currentProfile } = useAuthStore.getState();
   if (currentSupabase !== supabase) {
     setSupabase(supabase);
   }
   if (currentUser?.id !== user?.id) {
     setUser(user);
+  }
+  if (currentProfile?.id !== profile?.id) {
+    setProfile(profile);
   }
 
   useAuthSync(supabase);

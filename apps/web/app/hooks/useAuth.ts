@@ -11,6 +11,10 @@ export function useUser() {
   return useAuthStore((state) => state.user);
 }
 
+export function useProfile() {
+  return useAuthStore((state) => state.profile);
+}
+
 export function useSupabase() {
   return useAuthStore((state) => state.supabase);
 }

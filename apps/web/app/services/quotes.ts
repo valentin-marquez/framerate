@@ -90,6 +90,16 @@ export interface AnalyzeBuildRequest {
   productIds: string[];
 }
 
+export interface UserProfileQuotesResponse extends QuotesListResponse {
+  user: {
+    id: string;
+    username: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    created_at: string;
+  };
+}
+
 /**
  * Service para interactuar con el sistema de cotizaciones.
  */
@@ -105,6 +115,15 @@ export const quotesService = {
    */
   getAll: (page = 1, limit = 10, token?: string) =>
     api.get<QuotesListResponse>("/v1/quotes", {
+      params: { page: page.toString(), limit: limit.toString() },
+      token,
+    }),
+
+  /**
+   * Obtiene las cotizaciones de un usuario específico por username.
+   */
+  getByUsername: (username: string, page = 1, limit = 10, token?: string) =>
+    api.get<UserProfileQuotesResponse>(`/v1/quotes/user/${username}`, {
       params: { page: page.toString(), limit: limit.toString() },
       token,
     }),

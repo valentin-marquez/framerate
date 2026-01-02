@@ -48,7 +48,6 @@ function DropdownMenuContent({
           )}
           {...props}
         >
-          {/* Arrow/Chevron */}
           <div
             className={cn(
               "absolute w-3 h-3 rotate-45 bg-popover border border-foreground/5 z-50 pointer-events-none",
@@ -115,8 +114,8 @@ function DropdownMenuItem({
         // Estilos base - transparente por defecto con texto apagado
         "bg-transparent text-muted-foreground",
         // Estilos en hover/focus - fondo secondary y texto normal
-        "hover:bg-secondary/20 hover:text-secondary-foreground/65",
-        "focus:bg-secondary/20 focus:text-secondary-foreground/65",
+        "hover:bg-secondary hover:text-secondary-foreground",
+        "focus:bg-secondary focus:text-secondary-foreground",
         // Variante destructive
         "data-[variant=destructive]:text-destructive",
         "data-[variant=destructive]:hover:bg-destructive/10 data-[variant=destructive]:focus:bg-destructive/10",

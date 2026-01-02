@@ -111,7 +111,6 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
         className,
       )}
     >
-      {/* Image Container */}
       <Link
         to={productLink}
         className="nested-p-2half relative aspect-video overflow-hidden p-2.5"
@@ -170,7 +169,6 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
           ))}
         </div>
 
-        {/* Footer: Price & Actions */}
         <div className="mt-auto pt-3 border-t border-border/50">
           <div className="mb-3 grid grid-cols-2 gap-2">
             <div className="flex flex-col">

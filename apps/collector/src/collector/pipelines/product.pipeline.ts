@@ -1,6 +1,7 @@
 import type { Json } from "@framerate/db";
 import { ProductSpecsSchema } from "@framerate/db";
 import { type ScrapedProduct, ScrapedProductSchema } from "@/collector/domain/schemas";
+import type { BrandService } from "@/collector/services/brand.service";
 import type { CatalogService, CategorySlug } from "@/collector/services/catalog.service";
 import { Logger } from "@/lib/logger";
 import { uploadProductImage } from "@/lib/storage";
@@ -116,18 +117,16 @@ const CATEGORY_VALIDATION_RULES: Partial<Record<CategorySlug, CategoryValidation
   },
 };
 
-function extractBrandName(specs: Record<string, string> | undefined): string {
-  const s = specs ?? ({} as Record<string, string>);
-  return s.manufacturer || s.Fabricante || s.marca || s.brand || "Generic";
-}
-
 export class ProductPipeline {
   private logger = new Logger("ProductPipeline");
   private iaTimeMs = 0;
   private iaCacheHits = 0;
   private iaLLMCalls = 0;
 
-  constructor(private catalogService: CatalogService) {}
+  constructor(
+    private catalogService: CatalogService,
+    private brandService: BrandService,
+  ) {}
 
   public getCatalogService(): CatalogService {
     return this.catalogService;
@@ -244,7 +243,7 @@ export class ProductPipeline {
     }
 
     const rawSpecs = (raw.specs as Record<string, string>) ?? {};
-    const brandName = extractBrandName(rawSpecs);
+    const brandName = await this.brandService.extractBrand(raw.title ?? "", rawSpecs);
 
     const brandId = await this.catalogService.resolveBrandId(brandName);
     if (!brandId) return { success: false, error: `Could not resolve brand: ${brandName}` };

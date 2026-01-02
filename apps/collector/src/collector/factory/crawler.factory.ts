@@ -1,4 +1,5 @@
 import { ProductPipeline } from "@/collector/pipelines/product.pipeline";
+import { BrandService } from "@/collector/services/brand.service";
 import { CatalogService } from "@/collector/services/catalog.service";
 import { ApiStrategy } from "@/collector/strategies/api.strategy";
 import type { JobStrategy } from "@/collector/strategies/base.strategy";
@@ -21,7 +22,8 @@ type CrawlerMeta = { CATEGORIES?: Record<Category, unknown>; slug?: string };
  */
 export function createStrategy(crawlerType: string): JobStrategy {
   const catalog = new CatalogService();
-  const pipeline = new ProductPipeline(catalog);
+  const brandService = new BrandService();
+  const pipeline = new ProductPipeline(catalog, brandService);
 
   switch (crawlerType) {
     case "pc-express": {

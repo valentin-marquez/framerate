@@ -59,7 +59,7 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger>
         {trigger || (
-          <Button variant="secondary" className="gap-2">
+          <Button variant="default" className="gap-2">
             <IconPlus className="h-4 w-4" />
             Crear Cotización
           </Button>

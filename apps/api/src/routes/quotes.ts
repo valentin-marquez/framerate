@@ -90,6 +90,100 @@ quotes.post("/analyze", async (c) => {
   }
 });
 
+/**
+ * GET /v1/quotes/user/:username
+ *
+ * Obtiene las cotizaciones de un usuario específico.
+ * Si el usuario solicitante es el mismo, devuelve todas.
+ * Si es otro usuario o anónimo, solo devuelve las públicas.
+ */
+quotes.get("/user/:username", async (c) => {
+  try {
+    const username = c.req.param("username");
+    const page = Number(c.req.query("page")) || 1;
+    const limit = Number(c.req.query("limit")) || 10;
+    const offset = (page - 1) * limit;
+
+    // Extract token from header
+    const authHeader = c.req.header("Authorization");
+    const token = authHeader ? authHeader.replace("Bearer ", "") : undefined;
+
+    // Create supabase client with token if available
+    const supabase = createSupabase(c.env, token);
+
+    // 1. Obtener ID del usuario por username
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, avatar_url, created_at")
+      .eq("username", username)
+      .single();
+
+    if (profileError || !profile) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
+    // 2. Determinar si el solicitante es el dueño
+    let isOwner = false;
+    if (token) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user && user.id === profile.id) {
+        isOwner = true;
+      }
+    }
+
+    // 3. Construir query de cotizaciones
+    let query = supabase
+      .from("quotes")
+      .select(
+        `
+        id,
+        name,
+        description,
+        is_public,
+        compatibility_status,
+        estimated_wattage,
+        validation_errors,
+        last_analyzed_at,
+        created_at,
+        updated_at,
+        quote_items(count)
+      `,
+        { count: "exact" },
+      )
+      .eq("user_id", profile.id)
+      .order("updated_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    // Si no es el dueño, filtrar solo públicas
+    if (!isOwner) {
+      query = query.eq("is_public", true);
+    }
+
+    const { data: quotesData, count, error: quotesError } = await query;
+
+    if (quotesError) {
+      console.error("Error fetching user quotes:", quotesError);
+      return c.json({ error: "Failed to fetch quotes" }, 500);
+    }
+
+    return c.json({
+      user: profile,
+      data: quotesData || [],
+      meta: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: count ? Math.ceil(count / limit) : 0,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user profile quotes:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
 quotes.use("/*", authMiddleware);
 
 /**

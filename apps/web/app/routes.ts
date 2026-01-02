@@ -16,7 +16,8 @@ export default [
   route("producto/:slug", "routes/product.tsx"),
 
   // Protected routes (opcional - ejemplos)
-  route("profile", "routes/profile.tsx"),
+  route("profile", "routes/profile.tsx", { id: "profile-me" }),
+  route("u/:username", "routes/profile.tsx", { id: "profile-user" }),
   // route("favoritos", "routes/favorites.tsx"),
   // route("alertas", "routes/alerts.tsx"),
 

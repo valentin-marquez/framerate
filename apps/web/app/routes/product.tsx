@@ -12,15 +12,17 @@ import {
   IconShare,
 } from "@tabler/icons-react";
 import { Link } from "react-router";
+import { AsyncImage } from "@/components/primitives/async-image";
 import { Badge } from "@/components/primitives/badge";
 import { Button } from "@/components/primitives/button";
+import { Card, CardContent } from "@/components/primitives/card";
 import { Separator } from "@/components/primitives/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/primitives/tooltip";
 import { AddToQuote } from "@/components/product/add-to-quote";
 import { productsService } from "@/services/products";
 import { getCategoryConfig } from "@/utils/categories";
 import type { Route } from "./+types/product";
 
-// Helpers de formato
 const formatCLP = (amount: number) =>
   new Intl.NumberFormat("es-CL", {
     style: "currency",
@@ -30,7 +32,6 @@ const formatCLP = (amount: number) =>
 
 const formatSpecKey = (key: string) => key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-// === SEO & METADATA ===
 export function meta({ data }: Route.MetaArgs) {
   if (!data) return [{ title: "Producto no encontrado | Framerate" }];
 
@@ -41,8 +42,6 @@ export function meta({ data }: Route.MetaArgs) {
   return [
     { title: `${data.name} | Mejor Precio en Chile - Framerate` },
     { name: "description", content: description },
-
-    // Open Graph / Facebook
     { property: "og:type", content: "product" },
     { property: "og:title", content: data.name },
     { property: "og:description", content: description },
@@ -51,8 +50,6 @@ export function meta({ data }: Route.MetaArgs) {
     { property: "product:price:amount", content: String(bestPrice) },
     { property: "product:price:currency", content: "CLP" },
     { property: "product:category", content: categoryConfig.label },
-
-    // Twitter
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: data.name },
     { name: "twitter:description", content: description },
@@ -65,6 +62,11 @@ export async function loader({ params }: Route.LoaderArgs) {
     const product = await productsService.getBySlug(params.slug);
     // Trackeo de vista en background (fire and forget)
     productsService.trackView(params.slug).catch(() => {});
+
+    if (!product || product.prices?.cash === 0 || product.prices?.cash == null) {
+      throw new Response("Producto no encontrado", { status: 404 });
+    }
+
     return product;
   } catch (_error) {
     throw new Response("Producto no encontrado", { status: 404 });
@@ -82,7 +84,6 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
   // Ordenar variantes por precio
   const sortedVariants = product.variants?.sort((a, b) => (a.prices?.cash || 0) - (b.prices?.cash || 0)) || [];
 
-  // === JSON-LD STRUCTURED DATA FOR GOOGLE ===
   const structuredData = {
     "@context": "https://schema.org/",
     "@type": "Product",
@@ -105,12 +106,9 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      {/* Script JSON-LD para SEO */}
       <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
 
       <div className="min-h-screen bg-background pb-24 md:pb-12">
-        {/* === BREADCRUMBS MEJORADO === */}
-        {/* Añadido 'container mx-auto pt-4' para separar del navbar */}
         <div className="container mx-auto px-4 pt-6 pb-2">
           <nav
             aria-label="Breadcrumb"
@@ -141,9 +139,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
 
         <div className="container mx-auto px-4 py-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <div className="grid gap-8 lg:grid-cols-12 items-start">
-            {/* === COLUMNA IZQUIERDA: IMAGEN === */}
             <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-24">
-              {/* Contenedor de Imagen Mejorado */}
               <div className="rounded-container border border-border bg-card p-1 shadow-sm relative overflow-hidden group">
                 <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                   <Badge
@@ -154,27 +150,35 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                   </Badge>
                 </div>
 
-                {/* Área de imagen con fondo blanco suave para mejorar contraste en modo oscuro */}
                 <div className="relative aspect-square md:aspect-4/3 bg-white rounded-inherit flex items-center justify-center p-6 lg:p-10 overflow-hidden">
-                  <img
+                  <AsyncImage
                     src={product.image_url || "/placeholder.png"}
                     alt={product.name || "Imagen de producto"}
                     className="max-h-full max-w-full w-auto h-auto object-contain transition-transform duration-500 group-hover:scale-105 filter"
-                    loading="eager"
                   />
                 </div>
               </div>
 
-              {/* Quick Actions (Desktop) */}
               <div className="hidden lg:grid grid-cols-4 gap-2">
-                <Button variant="outline" className="col-span-1" size="icon" title="Historial de precios">
-                  <IconHistory className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" className="col-span-1" size="icon" title="Crear alerta">
-                  <IconBell className="h-4 w-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button variant="outline" className="col-span-1" size="icon">
+                      <IconHistory className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Historial de precios</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button variant="outline" className="col-span-1" size="icon">
+                      <IconBell className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Crear alerta</TooltipContent>
+                </Tooltip>
+
                 <div className="col-span-2">
-                  {/* Aquí integramos AddToQuote pasándole una clase para que ocupe ancho */}
                   <div className="w-full">
                     <AddToQuote product={product} className="w-full h-10" />
                   </div>
@@ -182,9 +186,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
 
-            {/* === COLUMNA DERECHA: DATOS === */}
             <div className="lg:col-span-7 flex flex-col gap-6">
-              {/* Header */}
               <div>
                 <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground leading-tight">
                   {product.name}
@@ -202,42 +204,41 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                 </div>
               </div>
 
-              {/* MEJOR PRECIO HERO */}
-              <div className="rounded-container bg-muted/30 border border-border p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-                {/* Decoration background */}
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl" />
+              <Card className="bg-muted/30 border border-border p-0 relative overflow-hidden">
+                <CardContent className="p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                  <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl -z-10" />
 
-                <div className="text-center md:text-left z-10">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
-                    Mejor oferta actual
-                  </p>
-                  <div className="flex items-baseline gap-2 justify-center md:justify-start">
-                    <span className="font-display text-5xl font-bold text-primary tracking-tighter">
-                      {formatCLP(bestPrice)}
-                    </span>
+                  <div className="text-center md:text-left z-10">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+                      Mejor oferta actual
+                    </p>
+                    <div className="flex items-baseline gap-2 justify-center md:justify-start">
+                      <span className="font-display text-5xl font-bold text-primary tracking-tighter">
+                        {formatCLP(bestPrice)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2 flex items-center justify-center md:justify-start gap-1.5">
+                      <IconCash className="h-4 w-4 text-emerald-500" />
+                      Precio efectivo / transferencia
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2 flex items-center justify-center md:justify-start gap-1.5">
-                    <IconCash className="h-4 w-4 text-emerald-500" />
-                    Precio efectivo / transferencia
-                  </p>
-                </div>
 
-                <div className="flex flex-col gap-3 w-full md:w-auto z-10">
-                  <Button size="lg" className="w-full md:w-48 shadow-lg shadow-primary/20 text-base h-12">
-                    <a href={sortedListings[0]?.url} target="_blank" rel="noopener noreferrer">
-                      Ir a la tienda <IconExternalLink className="ml-2 h-4 w-4" />
-                    </a>
-                  </Button>
-                  <div className="flex items-center justify-center gap-2 md:hidden">
-                    <AddToQuote product={product} />
-                    <Button variant="outline" size="icon" className="h-10 w-10">
-                      <IconShare className="h-4 w-4" />
+                  <div className="flex flex-col gap-3 w-full md:w-auto z-10">
+                    <Button size="lg" className="w-full md:w-48 shadow-lg shadow-primary/20 text-base h-12">
+                      <a href={sortedListings[0]?.url} target="_blank" rel="noopener noreferrer">
+                        Ir a la tienda <IconExternalLink className="ml-2 h-4 w-4" />
+                      </a>
                     </Button>
+                    <div className="flex items-center justify-center gap-2 md:hidden">
+                      <AddToQuote product={product} />
+                      <Button variant="outline" size="icon" className="h-10 w-10">
+                        <IconShare className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              {/* === SECCIÓN DE VARIANTES === */}
               {sortedVariants.length > 0 && (
                 <section className="space-y-3">
                   <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -247,34 +248,35 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {sortedVariants.map((variant) => (
-                      <Link
-                        key={variant.slug}
-                        to={`/producto/${variant.slug}`}
-                        className="group flex items-center gap-3 p-2.5 rounded-container border border-border bg-card hover:border-primary/50 hover:bg-muted/30 transition-all duration-200"
-                      >
-                        <div className="h-10 w-10 shrink-0 rounded bg-white border border-border p-1 flex items-center justify-center">
-                          {variant.image_url ? (
-                            <img src={variant.image_url} alt="" className="max-h-full max-w-full object-contain" />
-                          ) : (
-                            <IconCpu className="h-5 w-5 text-muted-foreground" />
-                          )}
-                        </div>
+                      <Link key={variant.slug} to={`/producto/${variant.slug}`} className="group block">
+                        <Card className="flex items-center gap-3 p-2.5 border border-border bg-card hover:border-primary/50 hover:bg-muted/30 transition-all duration-200">
+                          <div className="h-10 w-10 shrink-0 rounded bg-white border border-border p-1 flex items-center justify-center">
+                            {variant.image_url ? (
+                              <AsyncImage
+                                src={variant.image_url}
+                                alt=""
+                                className="max-h-full max-w-full object-contain"
+                              />
+                            ) : (
+                              <IconCpu className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
 
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-medium truncate text-foreground group-hover:text-primary transition-colors">
-                            {variant.name}
-                          </span>
-                          <span className="text-sm font-display font-bold text-muted-foreground">
-                            {formatCLP(variant.prices?.cash || 0)}
-                          </span>
-                        </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs font-medium truncate text-foreground group-hover:text-primary transition-colors">
+                              {variant.name}
+                            </span>
+                            <span className="text-sm font-display font-bold text-muted-foreground">
+                              {formatCLP(variant.prices?.cash || 0)}
+                            </span>
+                          </div>
+                        </Card>
                       </Link>
                     ))}
                   </div>
                 </section>
               )}
 
-              {/* TABLA DE TIENDAS */}
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between px-1">
                   <h2 className="text-lg font-display font-semibold flex items-center gap-2">
@@ -283,8 +285,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                   </h2>
                 </div>
 
-                <div className="rounded-container border border-border bg-card overflow-hidden shadow-sm">
-                  {/* Header Tabla Desktop */}
+                <Card className="border border-border bg-card overflow-hidden shadow-sm">
                   <div className="hidden md:grid grid-cols-12 gap-4 border-b border-border bg-muted/40 p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     <div className="col-span-5 pl-2">Tienda</div>
                     <div className="col-span-3 text-right pr-4">Efectivo</div>
@@ -292,14 +293,12 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                     <div className="col-span-2 text-center">Acción</div>
                   </div>
 
-                  {/* Rows */}
                   <div className="divide-y divide-border">
                     {sortedListings.map((listing, idx) => (
                       <div
                         key={`${listing.store.slug}-${idx}`}
                         className="group relative md:grid md:grid-cols-12 md:gap-4 flex flex-col p-4 md:p-0 md:h-18 items-center hover:bg-muted/30 transition-colors"
                       >
-                        {/* Store Info */}
                         <div className="w-full md:col-span-5 md:pl-4 flex items-center gap-3 mb-3 md:mb-0">
                           <div
                             className={cn(
@@ -308,7 +307,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                             )}
                           >
                             {listing.store.logo_url ? (
-                              <img
+                              <AsyncImage
                                 src={listing.store.logo_url}
                                 alt={listing.store.name}
                                 className="max-h-full max-w-full object-contain"
@@ -333,22 +332,20 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                           </div>
                         </div>
 
-                        {/* Precios */}
                         <div className="w-full md:col-span-3 flex md:block justify-between items-center md:text-right md:pr-4 md:self-center">
                           <span className="md:hidden text-xs text-muted-foreground font-medium">Precio Efectivo</span>
                           <span className="font-display font-bold text-lg text-foreground group-hover:text-primary transition-colors">
-                            {formatCLP(listing.price_cash)}
+                            {formatCLP(listing.price_cash || 0) || "N/A"}
                           </span>
                         </div>
 
                         <div className="w-full md:col-span-2 flex md:block justify-between items-center md:text-right md:pr-4 md:self-center">
                           <span className="md:hidden text-xs text-muted-foreground">Precio Normal</span>
                           <span className="font-medium text-sm text-muted-foreground">
-                            {formatCLP(listing.price_normal)}
+                            {formatCLP(listing.price_normal || 0) || "N/A"}
                           </span>
                         </div>
 
-                        {/* Botón */}
                         <div className="w-full md:col-span-2 md:flex md:justify-center md:items-center mt-3 md:mt-0">
                           <Button
                             size="sm"
@@ -363,12 +360,11 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                       </div>
                     ))}
                   </div>
-                </div>
+                </Card>
               </div>
 
               <Separator className="my-2" />
 
-              {/* SPECS */}
               {product.specs && (
                 <section className="space-y-4">
                   <h2 className="text-xl font-display font-semibold">Especificaciones</h2>
@@ -400,7 +396,6 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
 
-        {/* STICKY MOBILE BAR */}
         <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-lg border-t border-border lg:hidden z-50 flex items-center gap-3 safe-area-bottom">
           <div className="shrink-0">
             <AddToQuote product={product} />
@@ -420,7 +415,6 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// Helper simple para clases condicionales si no lo tienes importado
 function cn(...classes: (string | undefined | null | boolean)[]) {
   return classes.filter(Boolean).join(" ");
 }

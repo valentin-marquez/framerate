@@ -14,7 +14,7 @@ import { Discord } from "@/components/icons/discord";
 import { Facebook } from "@/components/icons/facebook";
 import { Google } from "@/components/icons/google";
 import { Logo } from "@/components/layout/logo";
-import { useSupabase, useUser } from "~/hooks/useAuth";
+import { useProfile, useUser } from "~/hooks/useAuth";
 import { cn } from "~/lib/utils";
 import type { Category } from "~/services/categories";
 import { getCategoryConfig } from "~/utils/categories";
@@ -92,7 +92,7 @@ function getGreetingMessage(timeOfDay: TimeOfDay): string {
 
 export function Navbar({ categories, blurred }: NavbarProps) {
   const user = useUser();
-  const supabase = useSupabase();
+  const profile = useProfile();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("afternoon");
   const [currentPath, setCurrentPath] = useState<string>("/");
@@ -189,7 +189,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
 
   return (
     <>
-      {/* Dynamic Gradient Background */}
       <div
         aria-hidden="true"
         className={cn(
@@ -201,7 +200,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
         }}
       />
 
-      {/* Navbar */}
       <nav
         className={cn(
           "sticky top-0 z-40 h-13 w-full transition-all duration-300 ease-in-out overflow-hidden border-b",
@@ -211,7 +209,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
         <div className="flex size-full items-center justify-between px-4 relative z-10">
           {/* Left section: Logo + Nav items (mobile: together, desktop: logo only) */}
           <div className="flex items-center gap-3">
-            {/* Logo with Greeting Tooltip */}
             <Tooltip open={showGreeting}>
               <TooltipTrigger>
                 <Link
@@ -306,7 +303,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 trigger={
                   <Button
                     variant={"link"}
-                    className={"hidden sm:flex p-0 m-0 text-secondary-foreground outline-offset-4 cursor-pointer"}
+                    className={"hidden sm:flex p-0 m-0 outline-offset-4 cursor-pointer"}
                     size={"sm"}
                   >
                     Crear Cotizacion
@@ -325,7 +322,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
               <TooltipContent side="bottom" className="px-2 py-1">
                 <div className="flex items-center gap-2">
                   <span>Buscador</span>
-                  <kbd className="rounded-4xl bg-muted text-xs">Ctrl+K</kbd>
+                  <kbd className="rounded-4xl text-xs">Ctrl+K</kbd>
                 </div>
               </TooltipContent>
             </Tooltip>
@@ -337,10 +334,10 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   aria-label="Usuario"
                   className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "rounded-full p-0")}
                 >
-                  {user.user_metadata?.avatar_url ? (
+                  {profile?.avatar_url || user.user_metadata?.avatar_url ? (
                     <img
-                      src={user.user_metadata.avatar_url}
-                      alt={user.user_metadata.name ?? user.email ?? "avatar"}
+                      src={profile?.avatar_url || user.user_metadata?.avatar_url}
+                      alt={profile?.full_name || user.user_metadata?.name || user.email || "avatar"}
                       className="size-6 rounded-full object-cover"
                     />
                   ) : (
@@ -351,10 +348,10 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 <DropdownMenuContent align="end" className="w-69 mt-2 text-base rounded-xl">
                   {/* User Info Section */}
                   <div className="flex items-center gap-3 px-3 py-3">
-                    {user.user_metadata?.avatar_url ? (
+                    {profile?.avatar_url || user.user_metadata?.avatar_url ? (
                       <img
-                        src={user.user_metadata.avatar_url}
-                        alt={user.user_metadata.name ?? user.email ?? "avatar"}
+                        src={profile?.avatar_url || user.user_metadata?.avatar_url}
+                        alt={profile?.full_name || user.user_metadata?.name || user.email || "avatar"}
                         className="size-12 rounded-full object-cover shrink-0"
                       />
                     ) : (
@@ -364,7 +361,11 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     )}
                     <div className="flex flex-col min-w-0 flex-1">
                       <p className="text-base font-medium truncate">
-                        {user.user_metadata?.full_name ?? user.user_metadata?.name ?? "Usuario"}
+                        {profile?.full_name ||
+                          profile?.username ||
+                          user.user_metadata?.full_name ||
+                          user.user_metadata?.name ||
+                          "Usuario"}
                       </p>
                       {user.email && <p className="text-sm text-muted-foreground truncate">{user.email}</p>}
                     </div>
@@ -374,7 +375,10 @@ export function Navbar({ categories, blurred }: NavbarProps) {
 
                   <DropdownMenuGroup>
                     <DropdownMenuItem>
-                      <Link to="/profile" className="flex items-center gap-2.5 w-full">
+                      <Link
+                        to={profile?.username ? `/u/${profile.username}` : "/profile"}
+                        className="flex items-center gap-2.5 w-full"
+                      >
                         <IconUserCircle className="size-5" />
                         <span>Perfil</span>
                       </Link>
@@ -427,7 +431,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   <DropdownMenuSeparator />
 
                   <DropdownMenuGroup>
-                    {/* Discord */}
                     <form method="post" action="/action/auth" className="w-full">
                       <input type="hidden" name="action" value="login" />
                       <input type="hidden" name="provider" value="discord" />
@@ -440,7 +443,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       </DropdownMenuItem>
                     </form>
 
-                    {/* Google */}
                     <form method="post" action="/action/auth" className="w-full">
                       <input type="hidden" name="action" value="login" />
                       <input type="hidden" name="provider" value="google" />
@@ -453,7 +455,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       </DropdownMenuItem>
                     </form>
 
-                    {/* Apple */}
                     <form method="post" action="/action/auth" className="w-full">
                       <input type="hidden" name="action" value="login" />
                       <input type="hidden" name="provider" value="apple" />
@@ -466,7 +467,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       </DropdownMenuItem>
                     </form>
 
-                    {/* Facebook */}
                     <form method="post" action="/action/auth" className="w-full">
                       <input type="hidden" name="action" value="login" />
                       <input type="hidden" name="provider" value="facebook" />
