@@ -1,3 +1,4 @@
+import * as cheerio from "cheerio";
 import type { Category, CategoryMap } from "@/constants/categories";
 import { BaseCrawler, type ProductData } from "./base";
 
@@ -113,6 +114,7 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
   }
 
   async parseProduct(html: string, url: string): Promise<ProductData | null> {
+    const $ = cheerio.load(html);
     const product: ProductData = {
       url,
       title: "",
@@ -124,175 +126,66 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
       imageUrl: null,
     };
 
-    let priceCashStr = "";
-    let priceNormalStr = "";
-    let stockCount = 0;
-    let mpnRaw = "";
-    let brandRaw = "";
-    let titleCaptured = false;
-
-    const rewriter = new HTMLRewriter();
-
-    // Título - capturar solo el primer h1 para evitar duplicados
-    rewriter.on("h1.rm-product-page__title", {
-      element() {
-        if (product.title.trim()) {
-          titleCaptured = true;
-        }
-      },
-      text(text) {
-        if (!titleCaptured) {
-          product.title += text.text;
-        }
-      },
-    });
+    // Título
+    product.title = $("h1.rm-product-page__title").first().text().trim();
 
     // Marca
-    rewriter.on(".rm-product__brand span a", {
-      text(text) {
-        brandRaw += text.text;
-      },
-    });
-
-    // MPN
-    rewriter.on(".rm-product__mpn", {
-      text(text) {
-        mpnRaw += text.text;
-      },
-    });
-
-    // Precio Efectivo
-    rewriter.on(".rm-product__price--cash h3", {
-      text(text) {
-        priceCashStr += text.text;
-      },
-    });
-
-    // Precio Normal
-    rewriter.on(".rm-product__price--normal h3", {
-      text(text) {
-        priceNormalStr += text.text;
-      },
-    });
-
-    // Stock
-    rewriter.on("span[id^='stock-sucursal-']", {
-      text(text) {
-        const content = text.text.trim();
-        if (!content) return;
-        // Match "+20 unidades" or "20 unidades" or "20"
-        const match = content.match(/\+?(\d+)/);
-        if (match?.[1]) {
-          stockCount += Number.parseInt(match[1], 10);
-        } else if (/sin stock/i.test(content)) {
-          // explicit no stock -> no-op
-        }
-      },
-    });
-
-    // Imagen
-    rewriter.on(".thumbnails img", {
-      element(el) {
-        const src = el.getAttribute("src");
-        if (src && !product.imageUrl) {
-          product.imageUrl = src;
-        }
-      },
-    });
-
-    // Also fallback to og:image if no thumbnail found
-    rewriter.transform(html);
-
-    if (!product.imageUrl) {
-      const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-      if (ogMatch?.[1]) product.imageUrl = ogMatch[1];
-    }
-
-    // Note: we call transform earlier when handling image fallback
-
-    // Post-procesamiento
-
-    // Título: Eliminar "P/N ..."
-    product.title = product.title.replace(/P\/N.*$/i, "").trim();
-
-    // Marca
-    if (brandRaw) {
-      if (!product.specs) product.specs = {};
-      (product.specs as Record<string, string>).manufacturer = brandRaw.trim();
-    } else {
-      // Fallback: try parsing the 'Marca' field in the codes block
-      const matchBrand = html.match(
-        /<p[^>]*>\s*<span[^>]*>\s*Marca\s*<\/span>\s*:\s*(?:<span[^>]*>\s*<a[^>]*>([^<]+)<\/a>\s*<\/span>|([^<]+))\s*<\/p>/i,
-      );
-      const brandVal = matchBrand?.[1] || matchBrand?.[2];
-      if (brandVal) {
-        if (!product.specs) product.specs = {};
-        (product.specs as Record<string, string>).manufacturer = brandVal.trim();
+    let brandRaw = $(".rm-product__brand span a").text().trim();
+    if (!brandRaw) {
+      // Fallback
+      const brandLink = $('p:contains("Marca")').find("a");
+      if (brandLink.length > 0) brandRaw = brandLink.text().trim();
+      else {
+        const brandText = $('p:contains("Marca")').text();
+        const match = brandText.match(/Marca\s*:\s*(.+)/i);
+        if (match) brandRaw = match[1].trim();
       }
     }
 
-    // MPN: try raw selector first and fallback to the 'codes' block in the page
-    const mpnMatch = (() => {
-      const m = mpnRaw.replace(/Manufacturer Part Number:/i, "").trim();
-      if (m) return m;
-      const matchHtml = html.match(/<p[^>]*>\s*<span[^>]*>\s*MPN\s*<\/span>\s*:\s*([^<]*)<\/p>/i);
-      if (matchHtml?.[1]) return matchHtml[1].trim();
-      return null;
-    })();
-
-    if (!mpnMatch) {
-      this.logger.warn(`MPN not found or empty for product: ${url}. Continuing without MPN.`);
-      product.mpn = null;
-    } else {
-      product.mpn = mpnMatch;
+    // MPN
+    let mpnRaw = $(".rm-product__mpn").text().trim();
+    if (!mpnRaw) {
+      const mpnText = $('p:contains("MPN")').text();
+      const match = mpnText.match(/MPN\s*:\s*(.+)/i);
+      if (match) mpnRaw = match[1].trim();
     }
+    product.mpn = mpnRaw.replace(/Manufacturer Part Number:|MPN:/i, "").trim() || null;
 
-    // Precios: try parsed selectors, fallback to price blocks and JSON-LD
+    // Precios
+    const priceCashStr = $(".rm-product__price--cash h3").text().trim();
+    const priceNormalStr = $(".rm-product__price--normal h3").text().trim();
+
     let cash = this.parsePrice(priceCashStr);
     let normal = this.parsePrice(priceNormalStr);
 
-    // Parse price blocks if missing
+    // Fallback prices
     if (cash === null || normal === null) {
-      const priceBlockRegex =
-        /<div[^>]*class=["'][^"']*rm-product-page__price[^"']*["'][^>]*>[\s\S]*?<h3[^>]*class=["']?([^"'>]*)["']?[^>]*>([^<]+)<\/h3>/gi;
-      let m: RegExpExecArray | null = null;
-      for (;;) {
-        m = priceBlockRegex.exec(html);
-        if (m === null) break;
-        const classes = (m[1] || "").toLowerCase();
-        const text = m[2] || "";
-        const parsed = this.parsePrice(text);
-        if (classes.includes("text-primary") && cash === null) cash = parsed;
-        else if (!classes.includes("text-primary") && normal === null) normal = parsed;
-      }
+      $(".rm-product-page__price").each((_, el) => {
+        const h3 = $(el).find("h3");
+        const price = this.parsePrice(h3.text());
+        if (h3.hasClass("text-primary")) {
+          if (cash === null) cash = price;
+        } else {
+          if (normal === null) normal = price;
+        }
+      });
     }
 
-    // JSON-LD fallback
-    if ((cash === null || normal === null) && /<script[^>]*type=["']application\/ld\+json["'][^>]*>/i.test(html)) {
-      const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i);
-      if (jsonLdMatch?.[1]) {
+    // JSON-LD Fallback
+    if (cash === null || normal === null) {
+      const script = $('script[type="application/ld+json"]').html();
+      if (script) {
         try {
-          const ld = JSON.parse(jsonLdMatch[1]);
-          const productLd = Array.isArray(ld)
-            ? ld.find(
-                (p: unknown) =>
-                  typeof p === "object" && p !== null && (p as Record<string, unknown>)["@type"] === "Product",
-              ) || ld[0]
-            : ld;
-          const offers = (productLd as unknown as { offers?: unknown })?.offers;
-          if (offers) {
-            let priceVal: unknown;
-            if (Array.isArray(offers)) {
-              priceVal = offers.length > 0 ? (offers[0] as Record<string, unknown>).price : undefined;
-            } else if (typeof offers === "object" && offers !== null) {
-              priceVal = (offers as Record<string, unknown>).price;
-            }
-            if (priceVal && cash === null) cash = Number.parseInt(String(priceVal), 10) || null;
-            const sku = (productLd as unknown as Record<string, unknown>).sku;
-            if (sku && !product.mpn) product.mpn = String(sku);
+          const json = JSON.parse(script);
+          // biome-ignore lint/suspicious/noExplicitAny: JSON-LD
+          const p = Array.isArray(json) ? json.find((x: any) => x["@type"] === "Product") : json;
+          if (p && p.offers) {
+            const price = p.offers.price || (p.offers[0] && p.offers[0].price);
+            if (price && cash === null) cash = Number(price);
+            if (p.sku && !product.mpn) product.mpn = p.sku;
           }
         } catch (_e) {
-          // ignore malformed JSON-LD
+          // ignore
         }
       }
     }
@@ -300,92 +193,74 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
     product.price = cash;
     product.originalPrice = normal ?? cash;
 
-    // Stock: consider counts and add-to-cart button as indicator
-    const hasAddToCart = /id=["']button-cart["']|add-to-cart-btn/.test(html);
+    // Stock
+    let stockCount = 0;
+    $('span[id^="stock-sucursal-"]').each((_, el) => {
+      const text = $(el).text().trim();
+      const match = text.match(/\+?(\d+)/);
+      if (match) stockCount += Number(match[1]);
+    });
+
+    const hasAddToCart = $("#button-cart, .add-to-cart-btn").length > 0;
     product.stock = stockCount > 0 || hasAddToCart;
     product.stockQuantity = stockCount > 0 ? stockCount : null;
 
-    // Extraer especificaciones técnicas si están disponibles (tabla o dt/dd)
-    const techSpecs = this.extractTechnicalSpecs(html);
-    if (Object.keys(techSpecs).length > 0) {
-      product.specs = {
-        ...(product.specs as Record<string, string>),
-        ...techSpecs,
+    // Imagen
+    product.imageUrl =
+      $(".thumbnails img").first().attr("src") || $('meta[property="og:image"]').attr("content") || null;
+
+    // Specs
+    if (brandRaw) {
+      product.specs = { manufacturer: brandRaw };
+    }
+
+    const techSpecs = this.extractTechnicalSpecs($);
+    product.specs = { ...product.specs, ...techSpecs };
+
+    // Context
+    let descBlock = $(".product-description__content");
+    if (descBlock.length === 0) {
+      descBlock = $("#product-description");
+    }
+
+    if (descBlock.length > 0) {
+      product.context = {
+        description_html: descBlock.html() || "",
+        description_text: descBlock.text().replace(/\s+/g, " ").trim(),
       };
     }
 
-    // Extraer descripción / contexto (HTML y texto limpio) para IA
-    const descHtmlMatch = html.match(/<div[^>]*class=["']product-description__content["'][^>]*>([\s\S]*?)<\/div>/i);
-    if (descHtmlMatch?.[1]) {
-      const descHtml = descHtmlMatch[1].trim();
-      const descText = descHtml
-        .replace(/<script[\s\S]*?<\/script>/gi, "")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-      product.context = { description_html: descHtml, description_text: descText };
-    } else {
-      const secMatch = html.match(/<div[^>]*id=["']product-description["'][^>]*>([\s\S]*?)<\/div>/i);
-      if (secMatch?.[1]) {
-        const secHtml = secMatch[1].trim();
-        const secText = secHtml
-          .replace(/<script[\s\S]*?<\/script>/gi, "")
-          .replace(/<[^>]+>/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
-        product.context = { description_html: secHtml, description_text: secText };
-      }
-    }
+    // Clean title
+    product.title = product.title.replace(/P\/N.*$/i, "").trim();
 
-    // Basic validation: require title and an image (try og:image fallback earlier)
-    if (!product.title) {
-      this.logger.warn(`Failed to parse product: ${url} missing title`);
-      return null;
-    }
-    if (!product.imageUrl) {
-      this.logger.warn(`Failed to parse product: ${url} missing image`);
+    if (!product.title || !product.imageUrl) {
+      this.logger.warn(`Failed to parse product: ${url} missing title or image`);
       return null;
     }
 
     return product;
   }
 
-  private extractTechnicalSpecs(html: string): Record<string, string> {
+  private extractTechnicalSpecs($: cheerio.CheerioAPI): Record<string, string> {
     const specs: Record<string, string> = {};
 
-    // 1) Table rows pattern with <span>Key</span> / <span>Value</span>
-    const rowRegex =
-      /<tr[^>]*>[\s\S]*?<td[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/td>[\s\S]*?<td[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/td>[\s\S]*?<\/tr>/gi;
-    let match: RegExpExecArray | null = null;
-    for (;;) {
-      match = rowRegex.exec(html);
-      if (match === null) break;
-      const key = match[1]?.trim();
-      const value = match[2]?.trim();
+    // 1. Table rows
+    $("tr").each((_, tr) => {
+      const tds = $(tr).find("td");
+      if (tds.length >= 2) {
+        const key = $(tds[0]).text().trim();
+        const value = $(tds[1]).text().trim();
+        if (key && value) specs[key] = value;
+      }
+    });
+
+    // 2. dt/dd
+    $("dt").each((_, dt) => {
+      const key = $(dt).text().trim();
+      const value = $(dt).next("dd").text().trim();
       if (key && value) specs[key] = value;
-    }
+    });
 
-    // 2) dt / dd pairs fallback
-    const dtRegex = /<dt[^>]*>\s*([^<]+?)\s*<\/dt>\s*<dd[^>]*>\s*([\s\S]*?)\s*<\/dd>/gi;
-    for (;;) {
-      match = dtRegex.exec(html);
-      if (match === null) break;
-      const key = match[1]?.trim();
-      const value = match[2]?.replace(/<[^>]+>/g, "").trim();
-      if (key && value && !specs[key]) specs[key] = value;
-    }
-
-    // 3) Simple table row fallback (td,td)
-    const simpleRowRegex = /<tr[^>]*>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>\s*<\/tr>/gi;
-    for (;;) {
-      match = simpleRowRegex.exec(html);
-      if (match === null) break;
-      const key = match[1]?.trim();
-      const value = match[2]?.trim();
-      if (key && value && !specs[key]) specs[key] = value;
-    }
-
-    this.logger.info(`Extracted ${Object.keys(specs).length} specs from product`);
     return specs;
   }
 

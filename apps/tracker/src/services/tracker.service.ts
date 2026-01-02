@@ -218,12 +218,16 @@ export class TrackerService {
       (result.stock || (result.stockQuantity && result.stockQuantity > 0) || result.available)
     );
 
+    // If stock is explicitly false, ensure stock_quantity is 0.
+    // If stock is true but quantity is unknown, leave it as null (don't force 0).
+    const finalStockQuantity = result.stockQuantity ?? (result.stock === false ? 0 : null);
+
     const { error: updateError } = await this.supabase
       .from("listings")
       .update({
         price_cash: result.price,
         price_normal: result.priceNormal || result.price,
-        stock_quantity: result.stockQuantity || 0,
+        stock_quantity: finalStockQuantity,
         is_active: isActive,
         last_scraped_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

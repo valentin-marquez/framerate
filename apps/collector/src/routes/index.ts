@@ -1,3 +1,4 @@
+import maintenanceRoute from "./v1/maintenance.route";
 import myshopRoute from "./v1/myshop.route";
 import pcExpressRoute from "./v1/pc-express.route";
 import spDigitalRoute from "./v1/sp-digital.route";
@@ -21,5 +22,9 @@ export const routes = [
   {
     path: `/${API_VERSION}/tectec`,
     route: tectecRoute,
+  },
+  {
+    path: `/${API_VERSION}/maintenance`,
+    route: maintenanceRoute,
   },
 ];

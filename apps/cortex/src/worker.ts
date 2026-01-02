@@ -82,12 +82,21 @@ export async function processJob(jobRaw: unknown) {
             if (prod?.id) {
               await supabase.from("products").update({ specs }).eq("id", prod.id);
 
-              // Activate any listings for this product that are currently inactive/pending
-              await supabase
+              const { data: listings } = await supabase
                 .from("listings")
-                .update({ is_active: true })
+                .select("id, price_cash, stock_quantity")
                 .eq("product_id", prod.id)
                 .eq("is_active", false);
+
+              if (listings && listings.length > 0) {
+                const toActivate = listings
+                  .filter((l) => (l.price_cash ?? 0) > 0 && l.stock_quantity !== 0)
+                  .map((l) => l.id);
+
+                if (toActivate.length > 0) {
+                  await supabase.from("listings").update({ is_active: true }).in("id", toActivate);
+                }
+              }
             }
           }
         } catch (err) {

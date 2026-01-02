@@ -1,11 +1,1 @@
-export { CaseProcessor } from "./case";
-export { CaseFanProcessor } from "./case-fan";
-export { CpuProcessor } from "./cpu";
-export { CpuCoolerProcessor } from "./cpu-cooler";
-export { GpuProcessor } from "./gpu";
-export { HddProcessor } from "./hdd";
-export { MotherboardProcessor } from "./motherboard";
 export { normalizeTitle, TitleNormalizer } from "./normalizers";
-export { PsuProcessor } from "./psu";
-export { RamProcessor } from "./ram";
-export { SsdProcessor } from "./ssd";

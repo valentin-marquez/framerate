@@ -225,6 +225,10 @@ export class CatalogService {
         isActive = !!(listing.price != null && listing.price > 0 && listing.stock);
       }
 
+      // If stock is explicitly false, ensure stock_quantity is 0 to indicate out-of-stock
+      // This helps other services (like Cortex) know the stock status even if is_active is false
+      const finalStockQuantity = listing.stockQuantity ?? (listing.stock === false || listing.stock === 0 ? 0 : null);
+
       const insertListing: TablesInsert<"listings"> = {
         store_id: listing.storeId,
         product_id: productId,
@@ -233,7 +237,7 @@ export class CatalogService {
         price_cash: listing.price ?? null,
         price_normal: listing.originalPrice ?? listing.price ?? null,
         is_active: isActive,
-        stock_quantity: listing.stockQuantity ?? null,
+        stock_quantity: finalStockQuantity,
         last_scraped_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };

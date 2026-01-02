@@ -14,7 +14,7 @@ export class CaseStrategy extends BaseExtractor<CaseSpecs> {
     category?: string;
     context?: Record<string, unknown> | undefined;
   }) {
-    const specs = await this.extractWithRetry(`Title: ${job.raw_text ?? ""}`, job.context);
+    const specs = await this.extractWithRetry(`${job.raw_text ?? ""}`, job.context);
     return {
       extracted: true,
       processed_at: new Date().toISOString(),

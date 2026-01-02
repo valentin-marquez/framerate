@@ -15,7 +15,9 @@ REGLAS CRÍTICAS:
 - Si ves patrones como "Memory":"Memory Size" o "Brand":"Series", la información útil puede estar en cualquiera de los dos lados.
 - Extrae TODOS los datos técnicos que puedas identificar, incluso si están en lugares inesperados.
 - Normaliza las unidades (ej: "16GB" -> "16 GB", "600W" -> "600W").
-- Para campos que NO encuentres, usa null o "Desconocido" según el esquema.`;
+- IMPORTANTE: Revisa minuciosamente el "CONTEXTO ADICIONAL" (descripciones, HTML, tablas extra). A menudo la información más valiosa está ahí y no en el bloque principal.
+- Si un campo no está explícito pero se puede inferir con certeza del contexto (ej: "RTX 4090" implica memoria "GDDR6X"), hazlo.
+- Evita "Desconocido" o null a menos que sea absolutamente imposible encontrar o inferir el dato. Esfuérzate por completar todos los campos.`;
 
 export abstract class BaseExtractor<T> {
   protected logger = logger0;
@@ -70,7 +72,7 @@ export abstract class BaseExtractor<T> {
       ${contextSection}
 
       TAREA:
-      1. Analiza TODO el texto y extrae las especificaciones técnicas reales.
+      1. Analiza TODO el texto, incluyendo el CONTEXTO ADICIONAL, para extraer las especificaciones técnicas reales.
       2. IGNORA la estructura del JSON corrupto - busca los valores técnicos reales (ej: "2600 MHz", "192-Bit", "GDDR6").
       3. Tu respuesta debe ser JSON válido que cumpla EXACTAMENTE con este esquema:
 
@@ -78,7 +80,7 @@ export abstract class BaseExtractor<T> {
       ${schemaString}
       ${errorSection}
 
-      IMPORTANTE: Extrae TODA la información técnica que encuentres, no te limites a los campos obvios.
+      IMPORTANTE: Extrae TODA la información técnica que encuentres. Si falta en el texto principal, BÚSCALA en el contexto adicional.
     `;
 
     const completion = await this.callLLM({

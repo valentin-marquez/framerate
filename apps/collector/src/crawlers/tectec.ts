@@ -1,3 +1,4 @@
+import * as cheerio from "cheerio";
 import type { Category, CategoryMap } from "@/constants/categories";
 import { BaseCrawler, type ProductData } from "./base";
 
@@ -304,11 +305,8 @@ export class TectecCrawler extends BaseCrawler<Category> {
 
   private extractSpecs(html: string): Record<string, string> {
     const specs: Record<string, string> = {};
-    const descBlock = html.match(
-      /<div[^>]*class=["'][^"']*woocommerce-Tabs-panel[^"']*tab-description[^"']*["'][\s\S]*?<\/div>/i,
-    )?.[0];
+    const $ = cheerio.load(html);
 
-    const targetHtml = descBlock ?? html;
     const forbiddenTerms = [
       "transferencia",
       "tarjeta",
@@ -322,36 +320,11 @@ export class TectecCrawler extends BaseCrawler<Category> {
       "envio",
       "envío",
       "forma de pago",
+      "add to cart",
+      "payment",
     ];
 
-    const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-    for (const trMatch of targetHtml.matchAll(trRegex)) {
-      const trHtml = trMatch[1];
-
-      if (
-        /(<form|<button|<input|add to cart|payment|tarjeta|transferencia|cuota|cuotas|pago|subtotal|total)/i.test(
-          trHtml,
-        )
-      ) {
-        continue;
-      }
-
-      const cellRegex = /<(td|th)[^>]*>([\s\S]*?)<\/(?:td|th)>/gi;
-      const cells = Array.from(trHtml.matchAll(cellRegex)).map((match) =>
-        match[2]
-          .replace(/<script[\s\S]*?<\/script>/gi, "")
-          .replace(/<[^>]+>/g, " ")
-          .replace(/&amp;/g, "&")
-          .replace(/&times;/g, "×")
-          .replace(/\s+/g, " ")
-          .trim(),
-      );
-
-      if (cells.length < 2) continue;
-
-      const key = cells[0];
-      const value = cells[cells.length - 1];
-
+    const processRow = (key: string, value: string) => {
       const isForbidden = forbiddenTerms.some(
         (term) => key.toLowerCase().includes(term) || value.toLowerCase().includes(term),
       );
@@ -359,35 +332,58 @@ export class TectecCrawler extends BaseCrawler<Category> {
       if (!isForbidden && key && value && !specs[key]) {
         specs[key] = value;
       }
-    }
+    };
 
-    const dtRegex = /<dt[^>]*>\s*([^<]+?)\s*<\/dt>\s*<dd[^>]*>\s*([\s\S]*?)\s*<\/dd>/gi;
-    for (const match of html.matchAll(dtRegex)) {
-      const key = match[1]?.trim();
-      const value = match[2]?.replace(/<[^>]+>/g, "").trim();
+    // 1. Buscar en tab-description y tab-additional_information
+    const selectors = [
+      "#tab-description",
+      ".woocommerce-Tabs-panel--description",
+      "#tab-additional_information",
+      ".woocommerce-Tabs-panel--additional_information",
+    ];
+
+    selectors.forEach((selector) => {
+      $(selector)
+        .find("tr")
+        .each((_, tr) => {
+          const cells = $(tr).find("td, th");
+          if (cells.length >= 2) {
+            const key = $(cells[0]).text().trim();
+            const value = $(cells[cells.length - 1])
+              .text()
+              .trim();
+            processRow(key, value);
+          }
+        });
+    });
+
+    // 2. Buscar listas de definición (dt/dd) en toda la página
+    $("dt").each((_, dt) => {
+      const key = $(dt).text().trim();
+      const dd = $(dt).next("dd");
+      const value = dd.text().trim();
       if (key && value && !specs[key]) {
         specs[key] = value;
       }
-    }
+    });
 
     return specs;
   }
 
   private extractContext(html: string): { description_html: string; description_text: string } | undefined {
-    const descBlock = html.match(
-      /<div[^>]*class=["'][^"']*woocommerce-Tabs-panel[^"']*tab-description[^"']*["'][\s\S]*?<\/div>/i,
-    )?.[0];
+    const $ = cheerio.load(html);
+    let descBlock = $("#tab-description");
+    if (descBlock.length === 0) {
+      descBlock = $(".woocommerce-Tabs-panel--description");
+    }
 
-    if (!descBlock) return undefined;
+    if (descBlock.length === 0) return undefined;
 
-    const text = descBlock
-      .replace(/<script[\s\S]*?<\/script>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+    const htmlContent = descBlock.html() || "";
+    const text = descBlock.text().replace(/\s+/g, " ").trim();
 
     return {
-      description_html: descBlock.trim(),
+      description_html: htmlContent,
       description_text: text,
     };
   }

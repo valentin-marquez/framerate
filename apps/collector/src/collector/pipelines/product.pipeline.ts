@@ -4,18 +4,6 @@ import { type ScrapedProduct, ScrapedProductSchema } from "@/collector/domain/sc
 import type { CatalogService, CategorySlug } from "@/collector/services/catalog.service";
 import { Logger } from "@/lib/logger";
 import { uploadProductImage } from "@/lib/storage";
-import {
-  CaseFanProcessor,
-  CaseProcessor,
-  CpuCoolerProcessor,
-  CpuProcessor,
-  GpuProcessor,
-  HddProcessor,
-  MotherboardProcessor,
-  PsuProcessor,
-  RamProcessor,
-  SsdProcessor,
-} from "@/processors";
 import { extractForCategory } from "@/processors/ai/base";
 import { normalizeTitle } from "@/processors/normalizers";
 import type { CrawlerType } from "@/queues";
@@ -32,19 +20,6 @@ export interface ProcessingResult {
   listingId?: string | null;
   error?: string;
 }
-
-const SPEC_PROCESSORS: Record<CategorySlug, { normalize: (s: Record<string, string>, t?: string) => unknown }> = {
-  gpu: GpuProcessor,
-  cpu: CpuProcessor,
-  psu: PsuProcessor,
-  motherboard: MotherboardProcessor,
-  case: CaseProcessor,
-  ram: RamProcessor,
-  hdd: HddProcessor,
-  ssd: SsdProcessor,
-  case_fan: CaseFanProcessor,
-  cpu_cooler: CpuCoolerProcessor,
-};
 
 const GLOBAL_INVALID_TERMS = [
   "CAJA ABIERTA",
@@ -199,10 +174,10 @@ export class ProductPipeline {
       if (specs) return specs;
     }
 
-    const processor = SPEC_PROCESSORS[category];
-    if (!processor) return rawSpecs;
-
-    return processor.normalize(rawSpecs, title);
+    // Fallback: if no MPN or AI extraction skipped/failed, return raw specs
+    // Since we removed traditional processors, we just return what we have.
+    // This might mean specs are not normalized until AI processes them later (if MPN is found later).
+    return rawSpecs;
   }
 
   private validateProduct(product: { title?: string }, category: CategorySlug): { valid: boolean; reason?: string } {

@@ -274,12 +274,18 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
         specs.brand = result.brand;
       }
 
-      // Extraer descripción/contexto para IA — usar JSON-LD si está disponible
+      // Extraer descripción/contexto para IA — usar HTML del contenedor de detalles si existe, sino JSON-LD
       let descriptionContext: { description_html: string; description_text: string } | undefined;
-      if (jsonLdDescription) {
-        const html = jsonLdDescription.trim();
+
+      const detailsContainer = $('div[class*="product-detail-module--detailsContainer"]');
+      if (detailsContainer.length > 0) {
+        const htmlContent = detailsContainer.html() || "";
+        const txt = detailsContainer.text().replace(/\s+/g, " ").trim();
+        descriptionContext = { description_html: htmlContent, description_text: txt };
+      } else if (jsonLdDescription) {
+        const htmlContent = jsonLdDescription.trim();
         const txt = jsonLdDescription.replace(/\s+/g, " ").trim();
-        descriptionContext = { description_html: html, description_text: txt };
+        descriptionContext = { description_html: htmlContent, description_text: txt };
       }
 
       if (this.shouldExcludeProduct(result.title)) {
@@ -287,6 +293,11 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       }
 
       // Final check on stock
+      // Logic from Tracker: if available in JSON-LD but quantity not found, assume at least 1
+      if (result.available && result.stockQuantity === 0) {
+        result.stockQuantity = 1;
+      }
+
       const hasStock = result.available && result.stockQuantity > 0;
 
       return {
@@ -308,12 +319,13 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
   }
 
   /**
-   * Extrae especificaciones de la tabla Fractal-SpecTable.
+   * Extrae especificaciones de la tabla Fractal-SpecTable y listas.
    */
   private extractSpecsFromTable(html: string): Record<string, string> {
     const specs: Record<string, string> = {};
+    const $ = cheerio.load(html);
 
-    // Buscar todas las filas de la tabla de especificaciones
+    // 1. Tabla Fractal-SpecTable (tr > td > span)
     // Patrón: <td><span>Key</span></td><td><span>Value</span></td>
     const rowRegex =
       /<tr[^>]*>[\s\S]*?<td[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/td>[\s\S]*?<td[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/td>[\s\S]*?<\/tr>/gi;
@@ -327,6 +339,20 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       }
       match = rowRegex.exec(html);
     }
+
+    // 2. Listas (ul > li > strong: key - value)
+    // Ejemplo: <li><strong>Dimensiones:</strong> 120 mm x 120 mm x 28 mm</li>
+    $("ul li").each((_, li) => {
+      const strong = $(li).find("strong");
+      if (strong.length > 0) {
+        const key = strong.text().replace(":", "").trim();
+        // Obtener texto después del strong
+        const value = $(li).contents().not(strong).text().trim();
+        if (key && value) {
+          specs[key] = value;
+        }
+      }
+    });
 
     return specs;
   }
