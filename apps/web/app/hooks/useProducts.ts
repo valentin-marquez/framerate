@@ -1,11 +1,5 @@
 import { keepPreviousData, type UseQueryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import {
-  type ProductDrop,
-  type ProductFilters,
-  type ProductsResponse,
-  productsService,
-  type QuickSearchResult,
-} from "@/services/products";
+import { type ProductDrop, type ProductFilters, type ProductsResponse, productsService } from "@/services/products";
 
 export const PRODUCTS_QUERY_KEY = ["products"];
 export const PRODUCT_DROPS_QUERY_KEY = ["products", "drops"];
