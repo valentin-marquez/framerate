@@ -27,6 +27,7 @@ function ButtonGroup({
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: this is a div for styling purposes
     <div
       role="group"
       data-slot="button-group"

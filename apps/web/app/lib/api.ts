@@ -1,10 +1,10 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
 if (!API_URL) {
-  console.warn("VITE_API_URL is not defined, defaulting to http://localhost:3000");
+  console.warn("VITE_API_URL is not defined, defaulting to http://127.0.0.1:8787");
 }
 
-const BASE_URL = API_URL || "http://localhost:3000";
+const BASE_URL = API_URL || "http://127.0.0.1:8787";
 
 type FetchOptions = RequestInit & {
   params?: Record<string, string>;
@@ -35,14 +35,14 @@ async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise
     });
   }
 
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...init.headers,
-  };
+  const headers = new Headers(init.headers);
 
-  // Agregar Authorization header si hay token
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   if (token) {
-    headers.Authorization = `Bearer ${token}`;
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   const response = await fetch(url.toString(), {
