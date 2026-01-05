@@ -125,7 +125,28 @@ class OpenDBService {
         return mpnMatch;
       }
 
-      // 2. Search by Similarity (Name)
+      // 2. Search by Similarity (MPN)
+      let bestMpnMatch: any = null;
+      let maxMpnSimilarity = 0;
+
+      for (const item of items) {
+        const partNumbers = item.metadata?.part_numbers;
+        if (Array.isArray(partNumbers)) {
+          for (const pn of partNumbers) {
+            const similarity = calculateSimilarity(query, pn);
+            if (similarity > maxMpnSimilarity) {
+              maxMpnSimilarity = similarity;
+              bestMpnMatch = item;
+            }
+          }
+        }
+      }
+
+      if (maxMpnSimilarity >= 0.8) {
+        return bestMpnMatch;
+      }
+
+      // 3. Search by Similarity (Name)
       let bestMatch: any = null;
       let maxSimilarity = 0;
 
