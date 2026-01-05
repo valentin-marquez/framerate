@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@framerate/db": "workspace:*",
+    "@framerate/opendb": "workspace:*",
     "@framerate/utils": "workspace:*",
     "@supabase/supabase-js": "^2.87.1",
     "dedent": "^1.7.1",

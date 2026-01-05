@@ -11,6 +11,7 @@ import type {
   PsuSchema,
   RamSchema,
   SsdSchema,
+  StorageSchema,
 } from "./specs.schemas";
 
 export type GpuSpecs = z.infer<typeof GpuSchema>;
@@ -19,6 +20,7 @@ export type PsuSpecs = z.infer<typeof PsuSchema>;
 export type MotherboardSpecs = z.infer<typeof MotherboardSchema>;
 export type CaseSpecs = z.infer<typeof CaseSchema>;
 export type RamSpecs = z.infer<typeof RamSchema>;
+export type StorageSpecs = z.infer<typeof StorageSchema>;
 export type HddSpecs = z.infer<typeof HddSchema>;
 export type SsdSpecs = z.infer<typeof SsdSchema>;
 export type CaseFanSpecs = z.infer<typeof CaseFanSchema>;

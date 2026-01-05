@@ -1,17 +1,11 @@
 {
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "framerate",
   "compatibility_date": "2026-01-05",
-  "main": "build/server/index.js",
-  "site": {
-    "bucket": "build/client"
-  },
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./build/server/index.js",
   "vars": {
     "SUPABASE_URL": "",
     "SUPABASE_ANON_KEY": ""
-  },
-  "build": {
-    "command": "bun run build",
-    "cwd": ".",
-    "watch_dir": "build"
   }
 }

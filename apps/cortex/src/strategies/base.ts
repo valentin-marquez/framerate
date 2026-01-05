@@ -1,6 +1,7 @@
 import dedent from "dedent";
 import type { ZodType } from "zod";
 import { z } from "zod";
+import { openDB } from "../lib/opendb";
 import { searchWeb } from "../lib/search";
 import { callLLM } from "../llm-client";
 import logger0 from "../logger";
@@ -117,11 +118,23 @@ export abstract class BaseExtractor<T> {
     context?: Record<string, unknown> | undefined,
     retries = 2,
     searchQuery?: string,
+    category?: string,
+    mpn?: string,
   ): Promise<T> {
     let lastError = "";
     let currentText = text;
 
-    // If text is empty and we have a search query, search immediately
+    // 1. Try OpenDB first if we have category and MPN/Query
+    if (category && (mpn || searchQuery)) {
+      const query = mpn || searchQuery?.replace(" specs", "") || "";
+      const openDBResult = openDB.findProduct(category, query);
+      if (openDBResult) {
+        this.logger.info(`Found product in OpenDB: ${query}`);
+        currentText = `OpenDB Data:\n${JSON.stringify(openDBResult, null, 2)}\n\n${currentText}`;
+      }
+    }
+
+    // 2. If text is empty and we have a search query, search immediately (fallback to web)
     if (!currentText.trim() && searchQuery) {
       const searchResults = await searchWeb(searchQuery);
       if (searchResults) {
