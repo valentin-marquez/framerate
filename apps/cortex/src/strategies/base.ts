@@ -1,6 +1,6 @@
 import dedent from "dedent";
 import type { ZodType } from "zod";
-import { z } from "zod";
+import * as z from "zod";
 import { openDB } from "../lib/opendb";
 import { searchWeb } from "../lib/search";
 import { callLLM } from "../llm-client";
