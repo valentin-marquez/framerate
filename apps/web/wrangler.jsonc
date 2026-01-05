@@ -1,12 +1,14 @@
 {
-  "name": "framerate-web",
+  "name": "framerate",
   "compatibility_date": "2026-01-05",
   "main": "build/server/index.js",
   "site": {
-    "bucket": "build/client",
-    "entry-point": "workers-site"
+    "bucket": "build/client"
   },
-  "usage_model": "unbound",
+  "vars": {
+    "SUPABASE_URL": "",
+    "SUPABASE_ANON_KEY": ""
+  },
   "build": {
     "command": "bun run build",
     "cwd": ".",
