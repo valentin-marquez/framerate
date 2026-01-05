@@ -1,0 +1,15 @@
+{
+  "name": "framerate-web",
+  "compatibility_date": "2026-01-05",
+  "main": "build/server/index.js",
+  "site": {
+    "bucket": "build/client",
+    "entry-point": "workers-site"
+  },
+  "usage_model": "unbound",
+  "build": {
+    "command": "bun run build",
+    "cwd": ".",
+    "watch_dir": "build"
+  }
+}
