@@ -53,42 +53,51 @@ export type Database = {
       extraction_jobs: {
         Row: {
           attempts: number;
+          brand: string | null;
           category: string;
           context: Json | null;
           created_at: string;
           error_message: string | null;
           id: string;
           mpn: string;
+          normalized_title: string | null;
           raw_text: string;
           result: Json | null;
           status: Database["public"]["Enums"]["job_status"];
           updated_at: string;
+          url: string | null;
         };
         Insert: {
           attempts?: number;
+          brand?: string | null;
           category: string;
           context?: Json | null;
           created_at?: string;
           error_message?: string | null;
           id?: string;
           mpn: string;
+          normalized_title?: string | null;
           raw_text: string;
           result?: Json | null;
           status?: Database["public"]["Enums"]["job_status"];
           updated_at?: string;
+          url?: string | null;
         };
         Update: {
           attempts?: number;
+          brand?: string | null;
           category?: string;
           context?: Json | null;
           created_at?: string;
           error_message?: string | null;
           id?: string;
           mpn?: string;
+          normalized_title?: string | null;
           raw_text?: string;
           result?: Json | null;
           status?: Database["public"]["Enums"]["job_status"];
           updated_at?: string;
+          url?: string | null;
         };
         Relationships: [];
       };
@@ -798,16 +807,19 @@ export type Database = {
         Args: { limit_count: number };
         Returns: {
           attempts: number;
+          brand: string | null;
           category: string;
           context: Json | null;
           created_at: string;
           error_message: string | null;
           id: string;
           mpn: string;
+          normalized_title: string | null;
           raw_text: string;
           result: Json | null;
           status: Database["public"]["Enums"]["job_status"];
           updated_at: string;
+          url: string | null;
         }[];
         SetofOptions: {
           from: "*";
