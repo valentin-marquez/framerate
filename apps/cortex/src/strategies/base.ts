@@ -124,13 +124,30 @@ export abstract class BaseExtractor<T> {
     let lastError = "";
     let currentText = text;
 
-    // 1. Try OpenDB first if we have category and MPN/Query
-    if (category && (mpn || searchQuery)) {
-      const query = mpn || searchQuery?.replace(" specs", "") || "";
-      const openDBResult = openDB.findProduct(category, query);
-      if (openDBResult) {
-        this.logger.info(`Found product in OpenDB: ${query}`);
-        currentText = `OpenDB Data:\n${JSON.stringify(openDBResult, null, 2)}\n\n${currentText}`;
+    // 1. Try OpenDB first if we have category and a valid indentifier
+    if (category) {
+      // Prioritize normalized_title (from extraction_jobs) if context has it
+      // The worker passes 'job' properties including new fields
+      const jobContext = context as Record<string, any>;
+
+      // Determine the best query: MPN > NormalizedMPN > Normalized Title (SEO) > Search Query
+      let bestQuery = mpn;
+
+      // We look for normalized_title in context if available (it might be passed down from job)
+      if (!bestQuery && jobContext?.normalized_title) {
+        bestQuery = jobContext.normalized_title as string;
+      }
+
+      if (!bestQuery && searchQuery) {
+        bestQuery = searchQuery.replace(" specs", "");
+      }
+
+      if (bestQuery) {
+        const openDBResult = openDB.findProduct(category, bestQuery);
+        if (openDBResult) {
+          this.logger.info(`Found product in OpenDB: ${bestQuery}`);
+          currentText = `OpenDB Data:\n${JSON.stringify(openDBResult, null, 2)}\n\n${currentText}`;
+        }
       }
     }
 

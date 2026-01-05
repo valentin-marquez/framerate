@@ -150,6 +150,7 @@ export class ProductPipeline {
     title: string,
     mpn?: string | null,
     context?: unknown,
+    options?: { normalizedTitle?: string; brand?: string; url?: string },
   ) {
     if (mpn) {
       try {
@@ -169,6 +170,7 @@ export class ProductPipeline {
         mpn,
         `Title: ${title}\nSpecs: ${JSON.stringify(rawSpecs)}`,
         context,
+        options,
       );
       if (specs) return specs;
     }
@@ -245,21 +247,7 @@ export class ProductPipeline {
     const rawSpecs = (raw.specs as Record<string, string>) ?? {};
     const brandName = await this.brandService.extractBrand(raw.title ?? "", rawSpecs);
 
-    const brandId = await this.catalogService.resolveBrandId(brandName);
-    if (!brandId) return { success: false, error: `Could not resolve brand: ${brandName}` };
-
-    const normalizedSpecs = await this.normalizeSpecs(ctx.category, rawSpecs, raw.title ?? "", raw.mpn, raw.context);
-
-    if (normalizedSpecs && typeof normalizedSpecs === "object") {
-      const v = ProductSpecsSchema.safeParse(normalizedSpecs);
-      if (!v.success) {
-        const issues = v.error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`).join(", ");
-        this.logger.warn(`Specs validation failed for category=${ctx.category}: ${issues}`);
-      }
-    } else {
-      if (normalizedSpecs != null) this.logger.warn(`Normalized specs for ${ctx.category} are not an object`);
-    }
-
+    // Calculate SEO Title early so we can pass it (or a variant) to context
     let seoTitle = normalizeTitle(raw.title ?? "", ctx.category, raw.mpn ?? undefined, brandName);
 
     if (raw.mpn) {
@@ -274,6 +262,25 @@ export class ProductPipeline {
         .trim();
 
       seoTitle = `${seoTitle} [${cleanMpn}]`;
+    }
+
+    const brandId = await this.catalogService.resolveBrandId(brandName);
+    if (!brandId) return { success: false, error: `Could not resolve brand: ${brandName}` };
+
+    const normalizedSpecs = await this.normalizeSpecs(ctx.category, rawSpecs, raw.title ?? "", raw.mpn, raw.context, {
+      normalizedTitle: seoTitle,
+      brand: brandName,
+      url: raw.url,
+    });
+
+    if (normalizedSpecs && typeof normalizedSpecs === "object") {
+      const v = ProductSpecsSchema.safeParse(normalizedSpecs);
+      if (!v.success) {
+        const issues = v.error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`).join(", ");
+        this.logger.warn(`Specs validation failed for category=${ctx.category}: ${issues}`);
+      }
+    } else {
+      if (normalizedSpecs != null) this.logger.warn(`Normalized specs for ${ctx.category} are not an object`);
     }
 
     let imageUrl: string | null = raw.imageUrl ?? null;

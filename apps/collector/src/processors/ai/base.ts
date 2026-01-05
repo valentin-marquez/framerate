@@ -6,8 +6,19 @@ import { supabase } from "@/lib/supabase";
  * - No LLM calls here; Collector only checks cache and enqueues jobs for Cortex to process.
  */
 
-// biome-ignore lint/suspicious/noExplicitAny: Context can be anything
-export async function scheduleExtraction(category: string, mpn: string, text: string, context?: any): Promise<void> {
+export interface ExtractionOptions {
+  normalizedTitle?: string;
+  brand?: string;
+  url?: string;
+}
+
+export async function scheduleExtraction(
+  category: string,
+  mpn: string,
+  text: string,
+  context?: any,
+  options?: ExtractionOptions,
+): Promise<void> {
   const logger = new Logger("IAExtractor");
   if (!mpn) {
     logger.warn("No MPN provided, skipping job enqueue.");
@@ -27,6 +38,9 @@ export async function scheduleExtraction(category: string, mpn: string, text: st
       category,
       raw_text: text,
       context: rawContext,
+      normalized_title: options?.normalizedTitle,
+      brand: options?.brand,
+      url: options?.url,
     });
 
     if (error) {
@@ -44,6 +58,7 @@ export async function extractForCategory<T = unknown>(
   mpn: string,
   text: string,
   context?: any,
+  options?: ExtractionOptions,
 ): Promise<T | null> {
   const logger = new Logger("IAExtractor");
   if (!mpn) {
@@ -86,7 +101,7 @@ export async function extractForCategory<T = unknown>(
       if (context && typeof context.onLlmCall === "function") context.onLlmCall();
     } catch (_) {}
 
-    await scheduleExtraction(category, mpn, text, context);
+    await scheduleExtraction(category, mpn, text, context, options);
     return null;
   } catch (error) {
     logger.error(`Error en el proceso de encolado para MPN ${mpn}:`, String(error));

@@ -5,6 +5,9 @@ export const JobSchema = z.object({
   mpn: z.string().min(1),
   category: z.string().min(1),
   raw_text: z.string().optional().nullable(),
+  normalized_title: z.string().optional().nullable(),
+  brand: z.string().optional().nullable(),
+  url: z.string().optional().nullable(),
   context: z.any().optional().nullable(),
   attempts: z.number().int().nonnegative().optional(),
 });

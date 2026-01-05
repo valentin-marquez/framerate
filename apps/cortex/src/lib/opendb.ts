@@ -125,6 +125,42 @@ class OpenDBService {
         return mpnMatch;
       }
 
+      // 1.5. Search by Contains MPN (Normalized)
+      // Some OpenDB entries have the model name mixed with the MPN or have different spacing
+      if (lowerQuery.length > 3) {
+        // Standard contains check
+        const mpnContainsMatch = items.find((item) => {
+          const partNumbers = item.metadata?.part_numbers;
+          if (Array.isArray(partNumbers)) {
+            return partNumbers.some((pn: string) => pn.toLowerCase().includes(lowerQuery));
+          }
+          return false;
+        });
+
+        if (mpnContainsMatch) {
+          return mpnContainsMatch;
+        }
+
+        // Normalized check (remove non-alphanumeric chars)
+        const normalizedQuery = lowerQuery.replace(/[^a-z0-9]/g, "");
+        if (normalizedQuery.length > 3) {
+          const mpnNormalizedMatch = items.find((item) => {
+            const partNumbers = item.metadata?.part_numbers;
+            if (Array.isArray(partNumbers)) {
+              return partNumbers.some((pn: string) => {
+                const normalizedPn = pn.toLowerCase().replace(/[^a-z0-9]/g, "");
+                return normalizedPn.includes(normalizedQuery);
+              });
+            }
+            return false;
+          });
+
+          if (mpnNormalizedMatch) {
+            return mpnNormalizedMatch;
+          }
+        }
+      }
+
       // 2. Search by Similarity (MPN)
       let bestMpnMatch: any = null;
       let maxMpnSimilarity = 0;

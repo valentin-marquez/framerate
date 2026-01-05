@@ -10,15 +10,20 @@ export class GpuStrategy extends BaseExtractor<GpuSpecs> {
 
   async process(job: {
     raw_text?: string | null;
+    normalized_title?: string | null;
     mpn?: string;
     category?: string;
     context?: Record<string, unknown> | undefined;
   }) {
-    const title = job.context?.title as string | undefined;
+    // Add normalized_title to context so extractWithRetry can find it
+    const enhancedContext = { ...job.context, normalized_title: job.normalized_title };
+
+    const title = job.normalized_title || (job.context?.title as string | undefined);
     const searchQuery = title ? `${title} specs` : job.mpn ? `${job.mpn} specs` : undefined;
+
     const specs = await this.extractWithRetry(
       `${job.raw_text ?? ""}`,
-      job.context,
+      enhancedContext,
       2,
       searchQuery,
       job.category,
