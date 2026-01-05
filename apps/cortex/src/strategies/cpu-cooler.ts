@@ -14,7 +14,9 @@ export class CpuCoolerStrategy extends BaseExtractor<CpuCoolerSpecs> {
     category?: string;
     context?: Record<string, unknown> | undefined;
   }) {
-    const specs = await this.extractWithRetry(`${job.raw_text ?? ""}`, job.context);
+    const title = job.context?.title as string | undefined;
+    const searchQuery = title ? `${title} specs` : job.mpn ? `${job.mpn} specs` : undefined;
+    const specs = await this.extractWithRetry(`${job.raw_text ?? ""}`, job.context, 2, searchQuery);
     return {
       extracted: true,
       processed_at: new Date().toISOString(),

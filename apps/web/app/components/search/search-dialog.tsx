@@ -140,7 +140,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
             onValueChange={setSearchQuery}
             className="pr-10"
           />
-          {/* Indicador de carga inline */}
+
           <div
             className={cn(
               "absolute right-3 top-1/2 -translate-y-1/2 transition-all duration-200",
@@ -222,7 +222,6 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                       opacity: 0,
                     }}
                   >
-                    {/* Imagen del producto */}
                     <div className="relative size-16 shrink-0 rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/40 transition-all duration-200 group-hover:ring-primary/40">
                       {product.image_url ? (
                         <AsyncImage
@@ -236,16 +235,13 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                         </div>
                       )}
                     </div>
-
-                    {/* Información del producto */}
+                    ¿
                     <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden">
                       <span className="text-sm font-medium line-clamp-2 leading-snug transition-colors duration-150">
                         {product.name}
                       </span>
                       <span className="text-xs text-muted-foreground line-clamp-1">{product.brand_name}</span>
                     </div>
-
-                    {/* Precio */}
                     <div className="flex flex-col items-end gap-0.5 shrink-0">
                       <span className="text-base font-semibold tabular-nums transition-colors duration-150">
                         {formatCLP(product.current_price)}

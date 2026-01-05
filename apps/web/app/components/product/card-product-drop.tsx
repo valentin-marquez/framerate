@@ -124,7 +124,6 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
         />
       </Link>
 
-      {/* Content */}
       <div className="nested-p-4 flex flex-1 flex-col p-4 pt-2">
         <div className="flex mb-2 items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
@@ -147,7 +146,6 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
           </Badge>
         </div>
 
-        {/* Title */}
         <h3
           className="mb-2 line-clamp-2 text-sm font-bold tracking-tight leading-tight min-h-[2.5em] group-hover:text-primary transition-colors"
           title={product_name}
@@ -157,7 +155,6 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
           </Link>
         </h3>
 
-        {/* Specs Summary */}
         <div className="mb-4 flex flex-wrap gap-1.5">
           {specsSummary.slice(0, 3).map((spec, i) => (
             <span
@@ -189,7 +186,6 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
             <Button
               size={"lg"}
               className="flex-1 inline-flex rounded-inherit items-center justify-center gap-2 bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-all hover:bg-primary/90"
-              asChild
             >
               <Link to={productLink}>
                 <IconEye className="h-3.5 w-3.5" />

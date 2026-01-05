@@ -36,13 +36,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   const { data: priceDrops } = useProductDrops(24, 2, { initialData: initialDrops });
 
-  // Fallback to initial data if hook returns undefined (shouldn't happen with initialData)
+  // Fallback a los datos iniciales si el hook devuelve undefined (no debería ocurrir con initialData)
   const products = popularProducts ?? initialPopular;
   const drops = priceDrops ?? initialDrops;
 
   return (
     <div className="flex flex-col min-h-screen gap-16 md:gap-24 pb-20">
-      {/* Popular Products Section */}
       <section className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -72,7 +71,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         )}
       </section>
 
-      {/* Price Drops Section */}
       {drops.length > 0 && (
         <section className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">

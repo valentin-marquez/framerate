@@ -26,9 +26,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.remove("light", "dark");
       if (theme === "system") {
         const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        root.classList.add(isDark ? "dark" : "light");
+        root.classList.toggle("dark", isDark);
       } else {
-        root.classList.add(theme);
+        root.classList.toggle("dark", theme === "dark");
       }
     };
 

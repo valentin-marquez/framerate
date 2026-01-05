@@ -14,7 +14,7 @@ app.use(
   "*",
   cors({
     origin: ["https://framerate.cl", "http://localhost:5173"],
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,

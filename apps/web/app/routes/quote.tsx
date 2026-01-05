@@ -1,30 +1,25 @@
-import {
-  IconAlertTriangle,
-  IconBolt,
-  IconCheck,
-  IconChevronDown,
-  IconClipboard,
-  IconDownload,
-  IconFileTypeCsv,
-  IconFileTypePdf,
-  IconRefresh,
-  IconTrash,
-} from "@tabler/icons-react";
-import { useRevalidator } from "react-router";
-import { Button } from "~/components/primitives/button";
-import { Dialog, DialogContent, DialogTrigger } from "~/components/primitives/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/primitives/dropdown-menu";
+import type { ValidationIssue } from "@framerate/db";
+import { pdf } from "@react-pdf/renderer";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useRevalidator } from "react-router";
+import { toast } from "sonner";
+import { QuoteActions } from "~/components/quotes/quote-actions";
+import { QuoteHeader } from "~/components/quotes/quote-header";
+import { QuoteItemsList } from "~/components/quotes/quote-items-list";
+import { QuotePDF } from "~/components/quotes/quote-pdf";
+import { QuoteValidationStatus } from "~/components/quotes/quote-validation-status";
 import { useUser } from "~/hooks/useAuth";
-import { useQuoteRemoveItem } from "~/hooks/useQuotes";
+import {
+  useAnalyzeBuild,
+  useDeleteQuote,
+  useQuoteAddItem,
+  useQuoteRemoveItem,
+  useQuoteUpdateItem,
+} from "~/hooks/useQuotes";
 import { requireAuth } from "~/lib/auth.server";
-import { quotesService } from "~/services/quotes";
-import { getCategoryConfig } from "~/utils/categories";
-import { formatCLP } from "~/utils/format";
+import { quotesService, type VirtualQuoteItem } from "~/services/quotes";
+import { copyToClipboard, exportToExcel } from "~/utils/quote-export";
+import { QUOTE_SLOTS } from "~/utils/slots";
 import type { Route } from "./+types/quote";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -55,282 +50,275 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   const user = useUser();
   const quote = loaderData.quote;
   const revalidator = useRevalidator();
+  const navigate = useNavigate();
   const removeItem = useQuoteRemoveItem();
+  const updateItem = useQuoteUpdateItem();
+  const addItem = useQuoteAddItem();
+  const deleteQuote = useDeleteQuote();
+  const analyzeBuild = useAnalyzeBuild();
 
-  const handleRemoveItem = (itemId: string) => {
-    removeItem.mutate(
-      { quoteId: quote.id, itemId },
-      {
-        onSuccess: () => {
-          revalidator.revalidate();
-        },
+  const [analysis, setAnalysis] = useState<{
+    status: "valid" | "warning" | "incompatible" | "unknown";
+    issues: ValidationIssue[];
+    estimatedWattage: number | null;
+  } | null>(null);
+
+  // Initialize with quote data
+  useEffect(() => {
+    if (quote) {
+      setAnalysis({
+        status: quote.compatibility_status,
+        estimatedWattage: quote.estimated_wattage,
+        issues: quote.validation_errors || [],
+      });
+    }
+  }, [quote]);
+
+  const handleDeleteQuote = () => {
+    deleteQuote.mutate(quote.id, {
+      onSuccess: () => {
+        toast.success("Cotización eliminada correctamente");
+        navigate("/profile");
       },
-    );
+      onError: () => {
+        toast.error("Error al eliminar la cotización");
+      },
+    });
   };
 
-  console.log(quote.items[0]);
+  const handleCheckCompatibility = () => {
+    const productIds = activeItems.map((item) => item.product?.id).filter((id): id is string => !!id);
 
-  // Calculate total if not provided in totals object
-  const totalNormal =
-    quote.totals?.normal || quote.items.reduce((acc: number, item: any) => acc + (item.product.prices?.normal || 0), 0);
-  const totalCash =
-    quote.totals?.cash || quote.items.reduce((acc: number, item: any) => acc + (item.product.prices?.cash || 0), 0);
+    analyzeBuild.mutate(productIds, {
+      onSuccess: (data) => {
+        console.log("--- DEBUG FRONTEND ANALYSIS ---");
+        console.log("Analysis Data:", data);
+        setAnalysis({
+          status: data.status,
+          issues: data.issues,
+          estimatedWattage: data.estimatedWattage,
+        });
+        toast.success("Compatibilidad verificada");
+      },
+      onError: (error) => {
+        console.error("--- DEBUG FRONTEND ANALYSIS ERROR ---", error);
+        toast.error("Error al verificar compatibilidad");
+      },
+    });
+  };
 
-  const compatibilityStatus = quote.compatibility_status || "unknown";
-  const estimatedWattage = quote.estimated_wattage;
+  const handleExportExcel = () => {
+    const itemsToExport = activeItems.map((item) => ({ ...item, quantity: 1 }));
+    exportToExcel(quote, itemsToExport);
+  };
 
-  const getCompatibilityBadge = (status: string) => {
-    switch (status) {
-      case "valid":
-        return (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium border border-green-500/20">
-            <IconCheck size={16} />
-            <span>Compatible</span>
-          </div>
+  const handleExportPDF = async () => {
+    const itemsToExport = activeItems.map((item) => ({ ...item, quantity: 1 }));
+    const blob = await pdf(<QuotePDF quote={quote} items={itemsToExport} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${quote.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCopyClipboard = async () => {
+    const itemsToExport = activeItems.map((item) => ({ ...item, quantity: 1 }));
+    await copyToClipboard(quote, itemsToExport);
+  };
+
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  const flattenedItems = useMemo<VirtualQuoteItem[]>(() => {
+    return quote.items.flatMap((item): VirtualQuoteItem[] => {
+      if (item.quantity > 1) {
+        return Array.from({ length: item.quantity }).map((_, index) => ({
+          ...item,
+          virtualId: `${item.id}-${index}`,
+          isVirtual: true,
+          originalItem: item,
+          indexInGroup: index,
+        }));
+      }
+      return [{ ...item, virtualId: item.id, isVirtual: false }];
+    });
+  }, [quote.items]);
+
+  // Initialize selection state for exclusive slots
+  useEffect(() => {
+    const newSelection = { ...selectedVariants };
+    let hasChanges = false;
+
+    QUOTE_SLOTS.filter((s) => s.type === "exclusive").forEach((slot) => {
+      const slotItems = flattenedItems.filter((item) =>
+        slot.accepts.includes((item.category?.slug || item.product?.category?.slug) as any),
+      );
+      if (slotItems.length > 0) {
+        const currentSelection = newSelection[slot.id];
+        // Check if current selection is valid (exists in current items)
+        const isValid = slotItems.some((i) => (i.originalItem?.id || i.id) === currentSelection);
+
+        if (!currentSelection || !isValid) {
+          // Default to first option
+          newSelection[slot.id] = slotItems[0].originalItem?.id || slotItems[0].id;
+          hasChanges = true;
+        }
+      }
+    });
+
+    if (hasChanges) {
+      setSelectedVariants(newSelection);
+    }
+  }, [flattenedItems, selectedVariants]);
+
+  const activeItems = useMemo(() => {
+    return flattenedItems.filter((item) => {
+      const slot = QUOTE_SLOTS.find((s) =>
+        s.accepts.includes((item.category?.slug || item.product?.category?.slug) as any),
+      );
+      if (!slot) return true; // "Other" items are always active
+      if (slot.type === "additive") return true;
+
+      // Exclusive
+      const selectedId = selectedVariants[slot.id];
+      // If no selection yet (initial render), show first
+      if (!selectedId) {
+        // Fallback logic matches useEffect but for render safety
+        const slotItems = flattenedItems.filter((i) =>
+          slot.accepts.includes((i.category?.slug || i.product?.category?.slug) as any),
         );
-      case "warning":
-        return (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-sm font-medium border border-yellow-500/20">
-            <IconAlertTriangle size={16} />
-            <span>Advertencia</span>
-          </div>
-        );
-      case "incompatible":
-        return (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-medium border border-red-500/20">
-            <IconAlertTriangle size={16} />
-            <span>Incompatible</span>
-          </div>
-        );
-      default:
-        return (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-muted-foreground text-sm font-medium border border-border/40">
-            <IconRefresh size={16} />
-            <span>Sin verificar</span>
-          </div>
-        );
+        if (
+          slotItems.length > 0 &&
+          (item.originalItem?.id || item.id) === (slotItems[0].originalItem?.id || slotItems[0].id)
+        ) {
+          return true;
+        }
+        return false;
+      }
+      return (item.originalItem?.id || item.id) === selectedId;
+    });
+  }, [flattenedItems, selectedVariants]);
+
+  useEffect(() => {
+    console.log("--- DEBUG QUOTE ---");
+    console.log("Quote:", quote);
+    console.log("Flattened Items:", flattenedItems);
+    console.log("Selected Variants:", selectedVariants);
+    console.log("Active Items:", activeItems);
+  }, [quote, flattenedItems, selectedVariants, activeItems]);
+
+  const handleRemove = (item: VirtualQuoteItem) => {
+    if (item.isVirtual && item.originalItem) {
+      const newQuantity = item.originalItem.quantity - 1;
+      updateItem.mutate(
+        {
+          quoteId: quote.id,
+          itemId: item.originalItem.id,
+          data: { quantity: newQuantity },
+        },
+        { onSuccess: () => revalidator.revalidate() },
+      );
+    } else {
+      removeItem.mutate({ quoteId: quote.id, itemId: item.id }, { onSuccess: () => revalidator.revalidate() });
     }
   };
 
+  const handleChangeStore = (item: VirtualQuoteItem, listingId: string | null) => {
+    console.log("Changing store:", { itemId: item.id, listingId });
+    if (item.isVirtual && item.originalItem) {
+      const newQuantity = item.originalItem.quantity - 1;
+      updateItem.mutate(
+        {
+          quoteId: quote.id,
+          itemId: item.originalItem.id,
+          data: { quantity: newQuantity },
+        },
+        {
+          onSuccess: () => {
+            addItem.mutate(
+              {
+                quoteId: quote.id,
+                data: {
+                  product_id: item.product.id || "",
+                  quantity: 1,
+                  listing_id: listingId || undefined,
+                },
+              },
+              { onSuccess: () => revalidator.revalidate() },
+            );
+          },
+        },
+      );
+    } else {
+      updateItem.mutate(
+        {
+          quoteId: quote.id,
+          itemId: item.id,
+          data: { listing_id: listingId },
+        },
+        {
+          onSuccess: () => revalidator.revalidate(),
+          onError: (error) => {
+            console.error("Failed to update item store:", error);
+          },
+        },
+      );
+    }
+  };
+
+  const totalNormal = activeItems.reduce((acc, item) => {
+    if (!item.product) return acc;
+    const price = item.selected_listing ? item.selected_listing.price_normal : item.product.prices?.normal || 0;
+    return acc + (price || 0);
+  }, 0);
+
+  const totalCash = activeItems.reduce((acc, item) => {
+    if (!item.product) return acc;
+    const price = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
+    return acc + (price || 0);
+  }, 0);
+
+  const compatibilityStatus = analysis?.status || "unknown";
+  const estimatedWattage = analysis?.estimatedWattage;
+  const validationErrors = analysis?.issues || [];
+  const isOwner = user?.id === quote.user_id;
+
   return (
     <div className="min-h-screen w-full bg-background p-4 md:p-8 flex justify-center">
-      <div className="w-full max-w-5xl space-y-8">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">{quote.name}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">Creado por</span>
-                <span className="font-medium text-foreground">
-                  {user?.user_metadata?.name ? user.user_metadata.name.slice(0, -2) : "Usuario"}
-                </span>
-              </div>
-              <span className="text-border/40">|</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm">Actualizado</span>
-                <span className="font-medium text-foreground">
-                  {new Date(quote.updated_at).toLocaleDateString("es-CL")}
-                </span>
-              </div>
-            </div>
-          </div>
+      <div className="w-full max-w-6xl space-y-8">
+        <QuoteHeader
+          quoteName={quote.name}
+          userName={user?.user_metadata?.name}
+          updatedAt={quote.updated_at}
+          compatibilityStatus={compatibilityStatus}
+          estimatedWattage={estimatedWattage || 0}
+        />
 
-          <div className="flex items-center gap-3">
-            {getCompatibilityBadge(compatibilityStatus)}
-            {estimatedWattage && (
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-medium border border-blue-500/20">
-                <IconBolt size={16} />
-                <span>{estimatedWattage}W est.</span>
-              </div>
-            )}
-          </div>
-        </div>
+        <QuoteValidationStatus status={compatibilityStatus} issues={validationErrors} />
 
-        {/* Content Card */}
-        <div className="bg-card rounded-3xl border border-border/40 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-border/40 bg-secondary/5 flex justify-between items-center">
-            <h2 className="text-xl font-semibold tracking-tight">Componentes</h2>
-            <span className="text-sm text-muted-foreground">{quote.items.length} items</span>
-          </div>
+        <QuoteItemsList
+          flattenedItems={flattenedItems}
+          activeItems={activeItems}
+          totalNormal={totalNormal}
+          totalCash={totalCash}
+          onRemove={handleRemove}
+          onChangeStore={handleChangeStore}
+          isOwner={isOwner}
+          selectedVariants={selectedVariants}
+          onSelectVariant={(slotId, itemId) => setSelectedVariants((prev) => ({ ...prev, [slotId]: itemId }))}
+        />
 
-          <div className="divide-y divide-border/40">
-            {quote.items.length > 0 ? (
-              quote.items.map((item: any) => {
-                const product = item.product;
-                const selectedListing = item.selected_listing;
-
-                // Determine prices based on selection or best available
-                const price = selectedListing ? selectedListing.price_normal || 0 : product.prices?.normal || 0;
-
-                const cashPrice = selectedListing ? selectedListing.price_cash || 0 : product.prices?.cash || 0;
-
-                return (
-                  <div
-                    key={item.id}
-                    className="group flex flex-col sm:flex-row sm:items-center gap-4 p-4 hover:bg-secondary/30 transition-colors duration-200"
-                  >
-                    {/* Image */}
-                    <div className="h-16 w-16 shrink-0 rounded-lg bg-card p-1 border border-border/40 overflow-hidden flex items-center justify-center">
-                      {product.image_url ? (
-                        <img src={product.image_url} alt={product.name} className="h-full w-full object-contain" />
-                      ) : (
-                        <div className="h-full w-full bg-secondary/50" />
-                      )}
-                    </div>
-
-                    {/* Details */}
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                          {getCategoryConfig(product.category?.slug)?.label || "Componente"}
-                        </span>
-                        {product.brand?.name && (
-                          <span className="text-xs text-muted-foreground">{product.brand.name}</span>
-                        )}
-                      </div>
-                      <h3 className="font-medium text-foreground truncate pr-4">{product.name}</h3>
-
-                      {/* Specs Summary */}
-                      {product.specs && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          {Object.entries(product.specs)
-                            .slice(0, 3)
-                            .map(([key, val]) => `${key}: ${val}`)
-                            .join(" • ")}
-                        </p>
-                      )}
-
-                      {/* Selected Store Info */}
-                      {selectedListing && (
-                        <div className="flex items-center gap-1.5 mt-1">
-                          {selectedListing.store?.logo_url && (
-                            <img
-                              src={selectedListing.store.logo_url}
-                              alt={selectedListing.store.name}
-                              className="h-4 w-4 object-contain rounded-sm"
-                            />
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            Vendido por{" "}
-                            <span className="font-medium text-foreground">{selectedListing.store?.name}</span>
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Price */}
-                    <div className="flex flex-col items-end gap-0.5 shrink-0">
-                      <span className="font-mono text-lg font-medium text-foreground">{formatCLP(price)}</span>
-                      {cashPrice > 0 && cashPrice !== price && (
-                        <span className="text-xs text-muted-foreground">Efectivo: {formatCLP(cashPrice)}</span>
-                      )}
-                      {!selectedListing && (
-                        <span className="text-[10px] text-green-600 dark:text-green-400 font-medium">Mejor precio</span>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center pl-2">
-                      <Dialog>
-                        <DialogTrigger>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleRemoveItem(item.id)}
-                            disabled={removeItem.isPending}
-                            title="Eliminar producto"
-                          >
-                            <IconTrash size={18} />
-                          </Button>
-                        </DialogTrigger>
-
-                        <DialogContent>
-                          <div className="p-6 space-y-4">
-                            <h3 className="text-lg font-semibold text-foreground">Producto eliminado</h3>
-                            <p className="text-sm text-muted-foreground">
-                              El producto <span className="font-medium text-foreground">{product.name}</span> ha sido
-                              eliminado de la cotización.
-                            </p>
-                            <Button
-                              onClick={() => {
-                                revalidator.revalidate();
-                              }}
-                            >
-                              Cerrar
-                            </Button>
-                            <Button></Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="p-12 text-center flex flex-col items-center gap-3 text-muted-foreground">
-                <div className="h-12 w-12 rounded-full bg-secondary/50 flex items-center justify-center">
-                  <IconAlertTriangle className="opacity-50" />
-                </div>
-                <p>Esta cotización está vacía.</p>
-                <Button variant="outline" size="sm">
-                  Agregar componentes
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Footer / Total */}
-          <div className="bg-secondary/10 p-6 border-t border-border/40">
-            <div className="flex flex-col gap-4">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Total Normal</span>
-                <span className="text-xl font-semibold text-foreground">{formatCLP(totalNormal)}</span>
-              </div>
-              {totalCash > 0 && totalCash !== totalNormal && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground font-medium">Total Efectivo</span>
-                  <span className="text-2xl font-bold tracking-tight text-green-600 dark:text-green-400">
-                    {formatCLP(totalCash)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-end">
-          <Button variant="secondary" className="gap-2">
-            <IconRefresh size={18} />
-            Chequear Compatibilidad
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Button className="gap-2">
-                <IconDownload size={18} />
-                Guardar como
-                <IconChevronDown size={16} className="opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <IconFileTypePdf size={16} />
-                <span>PDF</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconFileTypeCsv size={16} />
-                <span>CSV / Excel</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconClipboard size={16} />
-                <span>Copiar al portapapeles</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <QuoteActions
+          onDelete={handleDeleteQuote}
+          onExportPDF={handleExportPDF}
+          onExportExcel={handleExportExcel}
+          onCopyClipboard={handleCopyClipboard}
+          onCheckCompatibility={handleCheckCompatibility}
+          isDeleting={deleteQuote.isPending}
+          isCheckingCompatibility={analyzeBuild.isPending}
+        />
       </div>
     </div>
   );

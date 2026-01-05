@@ -221,7 +221,7 @@ function DialogContent({ children, className, container }: DialogContentProps) {
           onAnimationComplete={onAnimationComplete}
           className={cn(
             "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-border bg-background p-6 shadow-lg",
-            "backdrop:bg-black/50 backdrop:backdrop-blur-sm",
+            "backdrop:bg-black/50 backdrop:opacity-50",
             "open:flex open:flex-col",
             className,
           )}
@@ -254,7 +254,10 @@ function DialogTitle({ children, className }: DialogTitleProps) {
   if (!context) throw new Error("DialogTitle must be used within Dialog");
 
   return (
-    <h2 id={context.ids.title} className={cn("text-lg font-semibold leading-none tracking-tight", className)}>
+    <h2
+      id={context.ids.title}
+      className={cn("text-lg font-semibold leading-none tracking-tight text-card-foreground", className)}
+    >
       {children}
     </h2>
   );

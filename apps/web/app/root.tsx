@@ -14,18 +14,17 @@ import { profilesService } from "@/services/profiles";
 import { useAuthStore } from "@/store/auth";
 import type { Route } from "./+types/root";
 import { Button } from "./components/primitives/button";
+import { Toaster } from "./components/primitives/sonner";
 import { ThemeProvider } from "./components/theme/theme-provider";
 import { categoriesService } from "./services/categories";
 
 export const links: Route.LinksFunction = () => [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }];
 
-// Corregido lint/correctness/noEmptyPattern eliminando las llaves vacías
 export function meta(_: Route.MetaArgs) {
   return [{ title: "Framerate" }, { name: "description", content: "Hardware price comparison tool." }];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  // Eliminado themeSessionResolver ya que el tema ahora es puramente cliente
   const { user, supabase, headers: authHeaders } = await getAuthUser(request);
   const categories = await categoriesService.getAll();
 
@@ -75,8 +74,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('theme') || 'system';
-                  var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  var theme = localStorage.getItem('theme');
+                  var isDark = false;
+                  if (theme === 'dark') {
+                    isDark = true;
+                  } else if ((!theme || theme === 'system') && window.matchMedia) {
+                    isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  }
                   document.documentElement.classList.toggle('dark', isDark);
                 } catch (e) {}
               })();
@@ -87,7 +91,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            {children}
+            <Toaster position="bottom-center" />
+          </ThemeProvider>
         </QueryClientProvider>
         <ScrollRestoration />
         <Scripts />
@@ -109,7 +116,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
     [env.SUPABASE_URL, env.SUPABASE_ANON_KEY],
   );
 
-  // Sync store immediately to avoid race conditions with queries
   const { supabase: currentSupabase, user: currentUser, profile: currentProfile } = useAuthStore.getState();
   if (currentSupabase !== supabase) {
     setSupabase(supabase);

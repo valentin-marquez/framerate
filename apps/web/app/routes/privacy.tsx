@@ -24,7 +24,6 @@ export default function Privacy() {
       </header>
 
       <div className="grid gap-8">
-        {/* Card: Resumen */}
         <div className="rounded-md border border-border bg-card p-8 transition-all ">
           <section className="space-y-6">
             <div className="flex items-center gap-3">
@@ -62,7 +61,6 @@ export default function Privacy() {
           </section>
         </div>
 
-        {/* Detalles técnicos */}
         <section className="px-4 space-y-8">
           <div>
             <h2 className="text-xl font-semibold mb-3">Procesamiento de Datos</h2>

@@ -2,6 +2,7 @@ import { IconCheck, IconLoader2, IconPlus, IconReceipt, IconX } from "@tabler/ic
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 import { useQuoteAddItem, useQuotes } from "@/hooks/useQuotes";
 import { cn } from "@/lib/utils";
 import { useQuoteInteractionStore } from "@/store/quote-interaction";
@@ -61,6 +62,9 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
       {
         onSuccess: () => {
           setIsOpen(false);
+          toast.success(
+            `Producto agregado a la cotización ${quotes?.data.find((q) => q.id === selectedQuoteId)?.name || ""}`,
+          );
           // TODO: Show toast
         },
       },

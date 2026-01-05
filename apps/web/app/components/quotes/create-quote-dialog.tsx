@@ -42,11 +42,14 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
         setIsOpen(false);
         setFormData({ name: "", description: "", is_public: false });
 
-        if (onSuccess) {
-          onSuccess(newQuote.id);
-        } else {
-          navigate(`/cotizacion/${newQuote.id}`);
-        }
+        // Delay de 600ms para permitir ver la animación de agregado en la lista
+        setTimeout(() => {
+          if (onSuccess) {
+            onSuccess(newQuote.id);
+          } else {
+            navigate(`/cotizacion/${newQuote.id}`);
+          }
+        }, 600);
       },
       onError: (err) => {
         console.error("Error creating quote:", err);

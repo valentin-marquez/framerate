@@ -92,7 +92,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   const [showGreeting, setShowGreeting] = useState(false);
   const [greetingMessage, setGreetingMessage] = useState("");
 
-  // Gradient fade state
   const [visibleGradient, setVisibleGradient] = useState<string>("transparent");
   const [gradientVisible, setGradientVisible] = useState<boolean>(false);
   const GRADIENT_FADE_MS = 700;
@@ -113,7 +112,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Animate gradient
   useEffect(() => {
     const target = GRADIENTS[timeOfDay] ?? "transparent";
     let fadeOutTimer: number | undefined;
@@ -148,7 +146,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
     setCurrentPath(window.location.pathname + window.location.search);
   }, []);
 
-  // Show greeting after DOM is loaded
+  // mostrar mensaje despues de que la pagina haya cargado completamente
   useEffect(() => {
     const SHOW_DELAY = 500;
     const VISIBLE_MS = 12000;
@@ -200,7 +198,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
         )}
       >
         <div className="flex size-full items-center justify-between px-4 relative z-10">
-          {/* Left section: Logo + Nav items (mobile: together, desktop: logo only) */}
           <div className="flex items-center gap-3">
             <Tooltip open={showGreeting}>
               <TooltipTrigger>
@@ -209,6 +206,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   className="flex items-center gap-0 group focus:outline-none"
                   onMouseEnter={() => setIsLogoHovered(true)}
                   onMouseLeave={() => setIsLogoHovered(false)}
+                  prefetch="intent"
                 >
                   <Logo
                     className="size-4 md:size-6 text-muted-foreground group-hover:text-foreground group-focus:text-foreground transition-colors duration-300 group-hover:duration-200 ease-in-out delay-200 group-hover:delay-75"
@@ -222,10 +220,9 @@ export function Navbar({ categories, blurred }: NavbarProps) {
               </TooltipContent>
             </Tooltip>
 
-            {/* Mobile navigation: show next to logo */}
             <div className="flex items-center gap-1 md:hidden">
               <Button variant="link" className="p-0 m-0">
-                <Link to="/explorar" className="flex items-center gap-1.5">
+                <Link to="/explorar" className="flex items-center gap-1.5" prefetch="intent">
                   <IconCompass className="size-4" />
                 </Link>
               </Button>
@@ -241,7 +238,12 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       const categoryConfig = getCategoryConfig(c.slug);
                       return (
                         <DropdownMenuItem key={c.id}>
-                          <Link to={`/categoria/${categoryConfig.urlSlug}`} viewTransition className="cursor-pointer">
+                          <Link
+                            to={`/categoria/${categoryConfig.urlSlug}`}
+                            viewTransition
+                            className="cursor-pointer"
+                            prefetch="intent"
+                          >
                             {categoryConfig.label}
                           </Link>
                         </DropdownMenuItem>
@@ -255,10 +257,9 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             </div>
           </div>
 
-          {/* Center (desktop only): Navigation items */}
           <div className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
             <Button variant="link" className="p-0 m-0">
-              <Link to="/explorar" className="flex items-center gap-1.5">
+              <Link to="/explorar" className="flex items-center gap-1.5" prefetch="intent">
                 <IconCompass className="size-4" />
                 <span>Explorar</span>
               </Link>
@@ -276,7 +277,12 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     const categoryConfig = getCategoryConfig(c.slug);
                     return (
                       <DropdownMenuItem key={c.id}>
-                        <Link to={`/categoria/${categoryConfig.urlSlug}`} viewTransition className="cursor-pointer">
+                        <Link
+                          to={`/categoria/${categoryConfig.urlSlug}`}
+                          viewTransition
+                          className="cursor-pointer"
+                          prefetch="intent"
+                        >
                           {categoryConfig.label}
                         </Link>
                       </DropdownMenuItem>
@@ -289,7 +295,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             </DropdownMenu>
           </div>
 
-          {/* Right section: Actions */}
           <div className="flex items-center gap-2">
             {user ? (
               <CreateQuoteDialog
@@ -305,9 +310,8 @@ export function Navbar({ categories, blurred }: NavbarProps) {
               />
             ) : null}
 
-            {/* Search */}
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <SearchTrigger />
               </TooltipTrigger>
               <TooltipContent side="bottom" className="px-2 py-1">
@@ -318,7 +322,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
               </TooltipContent>
             </Tooltip>
 
-            {/* User area */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger
@@ -337,30 +340,37 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end" className="w-69 mt-2 text-base rounded-xl">
-                  {/* User Info Section */}
-                  <div className="flex items-center gap-3 px-3 py-3">
-                    {profile?.avatar_url || user.user_metadata?.avatar_url ? (
-                      <img
-                        src={profile?.avatar_url || user.user_metadata?.avatar_url}
-                        alt={profile?.full_name || user.user_metadata?.name || user.email || "avatar"}
-                        className="size-12 rounded-full object-cover shrink-0"
-                      />
-                    ) : (
-                      <div className="size-12 rounded-full bg-muted flex items-center justify-center shrink-0">
-                        <IconUserCircle className="size-7 text-muted-foreground" />
+                  <DropdownMenuItem className="cursor-default select-none p-0">
+                    <Link
+                      to={profile?.username ? `/u/${profile.username}` : "/profile"}
+                      className="block"
+                      prefetch="intent"
+                    >
+                      <div className="flex items-center gap-3 px-3 py-3">
+                        {profile?.avatar_url || user.user_metadata?.avatar_url ? (
+                          <img
+                            src={profile?.avatar_url || user.user_metadata?.avatar_url}
+                            alt={profile?.full_name || user.user_metadata?.name || user.email || "avatar"}
+                            className="size-12 rounded-full object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className="size-12 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <IconUserCircle className="size-7 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <p className="text-base font-medium truncate">
+                            {profile?.full_name ||
+                              profile?.username ||
+                              user.user_metadata?.full_name ||
+                              user.user_metadata?.name ||
+                              "Usuario"}
+                          </p>
+                          {user.email && <p className="text-sm text-muted-foreground truncate">{user.email}</p>}
+                        </div>
                       </div>
-                    )}
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <p className="text-base font-medium truncate">
-                        {profile?.full_name ||
-                          profile?.username ||
-                          user.user_metadata?.full_name ||
-                          user.user_metadata?.name ||
-                          "Usuario"}
-                      </p>
-                      {user.email && <p className="text-sm text-muted-foreground truncate">{user.email}</p>}
-                    </div>
-                  </div>
+                    </Link>
+                  </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
 
@@ -369,13 +379,14 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       <Link
                         to={profile?.username ? `/u/${profile.username}` : "/profile"}
                         className="flex items-center gap-2.5 w-full"
+                        prefetch="intent"
                       >
                         <IconUserCircle className="size-5" />
                         <span>Perfil</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Link to="/settings" className="flex items-center gap-2.5 w-full">
+                      <Link to="/settings" className="flex items-center gap-2.5 w-full" prefetch="intent">
                         <IconSettings className="size-5" />
                         <span>Ajustes</span>
                       </Link>
@@ -409,7 +420,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   Entrar
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent align="end" className="w-64 mt-2">
+                <DropdownMenuContent align="end" className="w-64 mt-2 bg-card ">
                   <DropdownMenuGroup>
                     <DropdownMenuLabel className={"text-primary"}>Entrar</DropdownMenuLabel>
                   </DropdownMenuGroup>
@@ -476,11 +487,11 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   <div className="px-3 py-2">
                     <p className="text-xs text-muted-foreground">
                       Al continuar, aceptas nuestros{" "}
-                      <Link to="/terms" className="underline hover:text-foreground">
+                      <Link to="/terms" className="underline hover:text-foreground" prefetch="intent">
                         Términos
                       </Link>{" "}
                       y{" "}
-                      <Link to="/privacy" className="underline hover:text-foreground">
+                      <Link to="/privacy" className="underline hover:text-foreground" prefetch="intent">
                         Privacidad
                       </Link>
                     </p>

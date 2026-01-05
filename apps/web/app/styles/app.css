@@ -25,6 +25,7 @@
     --accent: oklch(0.9516 0.0017 247.84);
     --accent-foreground: oklch(0.3278 0.0045 247.96);
     --destructive: oklch(0.6119 0.2261 25.77);
+    --destructive-foreground: oklch(82.559% 0.05205 18.163);
     --border: oklch(0.9536 0.0021 197.12);
     --input: oklch(0.9536 0.0021 197.12);
     --ring: oklch(0.708 0 0);
@@ -42,33 +43,62 @@
     --sidebar-accent-foreground: oklch(0.3278 0.0045 247.96);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+    --success: oklch(0.7014 0.2115 141.59);
+    --success-foreground: oklch(0.9787 0.0017 247.84);
+    --warn: oklch(79.5% 0.184 86.047);
 
+    
+    /* Animation variables */
+    --bounce-transition-fn: cubic-bezier(.54,1.12,.38,1.11);
 }
 
 .dark {
-    --background: oklch(0.12 0 0);
-    --foreground: oklch(0.98 0 0);
+    --background: oklch(0.1944 0.0051 248.09);
+    --foreground: oklch(0.985 0 0);
 
-    --card: oklch(0.16 0 0);
-    --card-foreground: oklch(0.98 0 0);
+    --card: oklch(0.2337 0.0049 248.04);
+    --card-foreground: oklch(0.985 0 0);
 
-    --popover: oklch(0.16 0 0 / 0.8);
-    --popover-foreground: oklch(0.98 0 0);
+    --popover: oklch(0.2337 0.0049 248.04);
+    --popover-foreground: oklch(0.985 0 0);
 
-    --primary: oklch(0.98 0 0);
-    --primary-foreground: oklch(0.12 0 0);
+    --primary: oklch(0.985 0 0);
+    --primary-foreground: oklch(0.145 0 0);
 
-    --secondary: oklch(0.22 0 0);
-    --secondary-foreground: oklch(0.98 0 0);
+    --secondary: oklch(0.27 0.005 248);
+    --secondary-foreground: oklch(0.985 0 0);
 
-    --muted: oklch(0.22 0 0);
-    --muted-foreground: oklch(0.65 0 0);
+    --muted: oklch(0.27 0.005 248);
+    --muted-foreground: oklch(0.70 0 0);
 
-    --accent: oklch(0.22 0 0);
-    --accent-foreground: oklch(0.98 0 0);
+    --accent: oklch(0.27 0.005 248);
+    --accent-foreground: oklch(0.985 0 0);
 
-    --border: oklch(0.25 0 0);
-    --input: oklch(0.25 0 0);
+    --destructive: oklch(0.6119 0.2261 25.77);
+    --destructive-foreground: oklch(82.559% 0.05205 18.163);
+
+    --border: oklch(0.27 0.005 248);
+    --input: oklch(0.27 0.005 248);
+    --ring: oklch(0.985 0 0);
+
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.424 0.199 265.638);
+    --chart-3: oklch(0.809 0.105 251.813);
+    --chart-4: oklch(0.623 0.214 259.815);
+    --chart-5: oklch(0.546 0.245 262.881);
+
+    --sidebar: oklch(0.2337 0.0049 248.04);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.985 0 0);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+    --sidebar-accent: oklch(0.27 0.005 248);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(0.27 0.005 248);
+    --sidebar-ring: oklch(0.985 0 0);
+
+    --success: oklch(0.7014 0.2115 141.59);
+    --success-foreground: oklch(0.9787 0.0017 247.84);
+    --warn: oklch(79.5% 0.184 86.047);
 }
 
 @theme inline {
@@ -81,6 +111,9 @@
     --color-sidebar-primary: var(--sidebar-primary);
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar: var(--sidebar);
+    --color-success-foreground: var(--success-foreground);
+    --color-success: var(--success);
+    --color-warn: var(--warn);
     --color-chart-5: var(--chart-5);
     --color-chart-4: var(--chart-4);
     --color-chart-3: var(--chart-3);
@@ -121,6 +154,8 @@
     --bounce-transition: all var(--transition-duration) var(--bounce-transition-fn);
     --fast-transition: all var(--fast-transition-duration) var(--transition-fn);
     --slow-transition: all var(--slow-transition-duration) var(--transition-fn);
+
+    
 
 }
 
@@ -168,3 +203,33 @@
     opacity: 0.7;
   }
 }
+
+/* Animación para nuevas cotizaciones */
+@keyframes slideInFromTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  60% {
+    transform: translateY(5px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(var(--primary) / 0);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px oklch(var(--primary) / 0.3);
+  }
+} 
+
+
+.quote-item-glow {
+  animation: glow-pulse 1.5s ease-in-out both;
+  will-change: transform, opacity;
+} 

@@ -12,14 +12,18 @@ export default [
   route("terms", "routes/terms.tsx"),
 
   // Products & Categories
-  route("categorias/:slug", "routes/category.tsx"),
+  route("categoria/:slug", "routes/category.tsx"),
   route("producto/:slug", "routes/product.tsx"),
 
-  // Protected routes (opcional - ejemplos)
+  // rutas protegidas (opcionales)
   route("profile", "routes/profile.tsx", { id: "profile-me" }),
   route("u/:username", "routes/profile.tsx", { id: "profile-user" }),
-  // route("favoritos", "routes/favorites.tsx"),
-  // route("alertas", "routes/alerts.tsx"),
-
   route("cotizacion/:slug", "routes/quote.tsx"),
+
+  // rutas privadas (requerir inicio de sesión)
+  route("settings", "routes/settings/layout.tsx", [
+    index("routes/settings/account.tsx", { id: "settings-index" }),
+    route("account", "routes/settings/account.tsx", { id: "settings-account" }),
+    route("preferences", "routes/settings/preferences.tsx"),
+  ]),
 ] satisfies RouteConfig;

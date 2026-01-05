@@ -137,6 +137,7 @@ products.get(
     const { data: listings, error: listingsError } = await supabase
       .from("listings")
       .select(`
+      id,
       price_cash,
       price_normal,
       url,

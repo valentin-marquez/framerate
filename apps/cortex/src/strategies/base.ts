@@ -1,7 +1,7 @@
 import dedent from "dedent";
 import type { ZodType } from "zod";
 import { z } from "zod";
-
+import { searchWeb } from "../lib/search";
 import { callLLM } from "../llm-client";
 import logger0 from "../logger";
 
@@ -116,12 +116,22 @@ export abstract class BaseExtractor<T> {
     text: string,
     context?: Record<string, unknown> | undefined,
     retries = 2,
+    searchQuery?: string,
   ): Promise<T> {
     let lastError = "";
+    let currentText = text;
+
+    // If text is empty and we have a search query, search immediately
+    if (!currentText.trim() && searchQuery) {
+      const searchResults = await searchWeb(searchQuery);
+      if (searchResults) {
+        currentText = `Search Results for "${searchQuery}":\n\n${searchResults}`;
+      }
+    }
 
     for (let i = 0; i <= retries; i++) {
       try {
-        const specs = await this.extractWithLLM(text, context, lastError);
+        const specs = await this.extractWithLLM(currentText, context, lastError);
         const validated = this.getZodSchema().parse(specs);
 
         // Log de éxito con datos extraídos
@@ -137,6 +147,16 @@ export abstract class BaseExtractor<T> {
           this.logger.warn(`Attempt ${i + 1}/${retries + 1} failed validation. Retrying...`, {
             error: error.message,
           });
+
+          // If validation failed and we haven't searched yet, try searching now
+          if (i === 0 && searchQuery && !currentText.includes("Search Results")) {
+            this.logger.info(`First attempt failed, trying search for: ${searchQuery}`);
+            const searchResults = await searchWeb(searchQuery);
+            if (searchResults) {
+              currentText = `Search Results for "${searchQuery}":\n\n${searchResults}\n\n${currentText}`;
+              // We continue to next iteration with updated text
+            }
+          }
         } else {
           this.logger.error(`Non-validation error on attempt ${i + 1}`, { error });
           throw error;

@@ -114,7 +114,7 @@ function DropdownMenuItem({
         // Estilos base - transparente por defecto con texto apagado
         "bg-transparent text-muted-foreground",
         // Estilos en hover/focus - fondo secondary y texto normal
-        "hover:bg-secondary hover:text-secondary-foreground",
+        "hover:bg-secondary hover:text-primary-foreground",
         "focus:bg-secondary focus:text-secondary-foreground",
         // Variante destructive
         "data-[variant=destructive]:text-destructive",

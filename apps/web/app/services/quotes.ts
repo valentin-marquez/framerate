@@ -30,6 +30,7 @@ export interface QuoteItem {
     id: string;
     price_normal: number | null;
     price_cash: number | null;
+    stock_quantity?: number;
     url: string;
     store: {
       name: string;
@@ -43,6 +44,13 @@ export interface QuoteItem {
       normal: number | null;
     };
   };
+}
+
+export interface VirtualQuoteItem extends QuoteItem {
+  virtualId: string;
+  isVirtual: boolean;
+  originalItem?: QuoteItem;
+  indexInGroup?: number;
 }
 
 export interface QuoteDetail extends Quote {

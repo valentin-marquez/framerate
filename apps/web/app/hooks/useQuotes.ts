@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type AddItemRequest,
   type CreateQuoteRequest,
+  type QuotesListResponse,
   quotesService,
   type UpdateItemRequest,
   type UpdateQuoteRequest,
@@ -47,7 +48,50 @@ export function useCreateQuote() {
       const token = await getToken();
       return quotesService.create(data, token);
     },
+    onMutate: async (newQuote) => {
+      // Cancelar queries en progreso para evitar sobrescribir la actualización optimista
+      await queryClient.cancelQueries({ queryKey: QUOTES_QUERY_KEY });
+
+      // Snapshot del estado previo
+      const previousQuotes = queryClient.getQueryData(QUOTES_QUERY_KEY);
+
+      // Actualización optimista: agregar la nueva cotización al cache
+      queryClient.setQueriesData<QuotesListResponse>({ queryKey: QUOTES_QUERY_KEY }, (old) => {
+        if (!old) return old;
+
+        const optimisticQuote = {
+          id: `temp-${Date.now()}`,
+          name: newQuote.name,
+          description: newQuote.description || null,
+          is_public: newQuote.is_public || false,
+          compatibility_status: "unknown" as const,
+          estimated_wattage: null,
+          last_analyzed_at: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          quote_items: [{ count: 0 }],
+        };
+
+        return {
+          ...old,
+          data: [optimisticQuote, ...old.data],
+          meta: {
+            ...old.meta,
+            total: old.meta.total + 1,
+          },
+        };
+      });
+
+      return { previousQuotes };
+    },
+    onError: (_err, _newQuote, context) => {
+      // Revertir al estado previo en caso de error
+      if (context?.previousQuotes) {
+        queryClient.setQueryData(QUOTES_QUERY_KEY, context.previousQuotes);
+      }
+    },
     onSuccess: () => {
+      // Invalidar para obtener los datos reales del servidor
       queryClient.invalidateQueries({ queryKey: QUOTES_QUERY_KEY });
     },
   });

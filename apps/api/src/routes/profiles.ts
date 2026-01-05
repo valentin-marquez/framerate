@@ -86,7 +86,7 @@ profiles.patch("/me", async (c) => {
     if (body.username !== undefined) {
       const username = body.username.trim();
       if (username.length < 3) {
-        return c.json({ error: "Username must be at least 3 characters" }, 400);
+        return c.json({ error: "El nombre de usuario debe tener al menos 3 caracteres" }, 400);
       }
       // Check uniqueness if changed
       if (username !== user.user_metadata?.username) {

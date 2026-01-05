@@ -80,8 +80,15 @@ quotes.post("/analyze", async (c) => {
     // Mapear productos a categorías para el análisis
     const componentsMap = mapProductsToComponents(products as unknown as BuildProduct[]);
 
+    console.log("--- DEBUG STATELESS ANALYSIS ---");
+    console.log("Product IDs:", body.productIds);
+    console.log("Components Map Keys:", Object.keys(componentsMap));
+
     // Ejecutar análisis
     const analysis = compatibilityEngine.run(componentsMap);
+
+    console.log("Analysis Result:", JSON.stringify(analysis, null, 2));
+    console.log("----------------------");
 
     return c.json(analysis);
   } catch (error) {
@@ -298,6 +305,38 @@ quotes.post("/", async (c) => {
       return c.json({ error: "Failed to create quote" }, 500);
     }
 
+    // Insert placeholders for standard components
+    const placeholderSlugs = [
+      "motherboard",
+      "case",
+      "gpu",
+      "ssd",
+      "psu",
+      "cpu",
+      "cpu_cooler",
+      "hdd",
+      "case_fan",
+      "ram",
+    ];
+
+    const { data: categories } = await supabase.from("categories").select("id, slug").in("slug", placeholderSlugs);
+
+    if (categories && categories.length > 0) {
+      const placeholders = categories.map((cat) => ({
+        quote_id: quote.id,
+        category_id: cat.id,
+        product_id: null,
+        quantity: 1,
+      }));
+
+      const { error: placeholdersError } = await supabase.from("quote_items").insert(placeholders);
+
+      if (placeholdersError) {
+        console.error("Error creating placeholders:", placeholdersError);
+        // Don't fail the request, just log it
+      }
+    }
+
     return c.json(quote, 201);
   } catch (error) {
     console.error("Error creating quote:", error);
@@ -353,11 +392,14 @@ quotes.get("/:id", async (c) => {
         quantity,
         created_at,
         listing_id,
+        category_id,
+        category:categories(name, slug),
         listing:listings(
           id,
           price_normal,
           price_cash,
           url,
+          stock_quantity,
           store:stores(name, logo_url, slug)
         ),
         product:products(
@@ -384,6 +426,37 @@ quotes.get("/:id", async (c) => {
 
     let productsWithPrices = items?.map((item) => item.product) || [];
 
+    // Fetch best listings for products in the quote that don't have a specific listing selected
+    const itemsWithoutListing = items?.filter((i) => !i.listing_id) || [];
+    const productIdsToFetch = [...new Set(itemsWithoutListing.map((i) => i.product?.id).filter(Boolean))];
+
+    const bestListingsMap: Record<string, any> = {};
+    if (productIdsToFetch.length > 0) {
+      const { data: allListings } = await supabase
+        .from("listings")
+        .select(`
+                id,
+                product_id,
+                price_cash,
+                price_normal,
+                url,
+                stock_quantity,
+                store:stores(name, logo_url, slug)
+            `)
+        .in("product_id", productIdsToFetch)
+        .eq("is_active", true)
+        .order("price_cash", { ascending: true });
+
+      if (allListings) {
+        // Group by product_id and take the first (cheapest because of order)
+        for (const listing of allListings) {
+          if (!bestListingsMap[listing.product_id]) {
+            bestListingsMap[listing.product_id] = listing;
+          }
+        }
+      }
+    }
+
     if (productIds.length > 0) {
       const { data: pricesData } = await supabase.from("api_products").select("id, prices").in("id", productIds);
 
@@ -406,7 +479,6 @@ quotes.get("/:id", async (c) => {
 
       // Si hay un listing seleccionado, usar su precio
       if (item?.listing) {
-        // @ts-expect-error - Supabase types might not be fully updated in the workspace
         return sum + (item.listing.price_cash || 0) * quantity;
       }
 
@@ -422,7 +494,6 @@ quotes.get("/:id", async (c) => {
 
       // Si hay un listing seleccionado, usar su precio
       if (item?.listing) {
-        // @ts-expect-error
         return sum + (item.listing.price_normal || 0) * quantity;
       }
 
@@ -434,14 +505,22 @@ quotes.get("/:id", async (c) => {
     return c.json({
       ...quote,
       items:
-        items?.map((item, index) => ({
-          id: item.id,
-          quantity: item.quantity,
-          created_at: item.created_at,
-          listing_id: item.listing_id,
-          selected_listing: item.listing,
-          product: productsWithPrices[index],
-        })) || [],
+        items?.map((item, index) => {
+          let selectedListing = item.listing;
+          if (!selectedListing && item.product?.id && bestListingsMap[item.product.id]) {
+            selectedListing = bestListingsMap[item.product.id];
+          }
+
+          return {
+            id: item.id,
+            quantity: item.quantity,
+            created_at: item.created_at,
+            listing_id: item.listing_id,
+            selected_listing: selectedListing,
+            product: productsWithPrices[index],
+            category: item.category,
+          };
+        }) || [],
       totals: {
         cash: totalCash,
         normal: totalNormal,
@@ -609,8 +688,16 @@ quotes.get("/:id/analyze", async (c) => {
     const products = quoteItems.map((item) => item.product).filter(Boolean) as unknown as BuildProduct[];
     const componentsMap = mapProductsToComponents(products);
 
+    console.log("--- DEBUG ANALYSIS ---");
+    console.log("Quote ID:", quoteId);
+    console.log("Components Map Keys:", Object.keys(componentsMap));
+    console.log("Components Map:", JSON.stringify(componentsMap, null, 2));
+
     // Ejecutar análisis
     const analysis = compatibilityEngine.run(componentsMap);
+
+    console.log("Analysis Result:", JSON.stringify(analysis, null, 2));
+    console.log("----------------------");
 
     // Actualizar cache en la BD (solo si es el dueño)
     if (quote.user_id === user.id) {
@@ -679,20 +766,25 @@ quotes.post("/:id/items", async (c) => {
       return c.json({ error: "Product not found" }, 404);
     }
 
-    // Verificar si ya existe el producto en la cotización
-    const { data: existing } = await supabase
+    // Verificar si ya existe el producto en la cotización con el MISMO listing_id
+    let query = supabase
       .from("quote_items")
       .select("id, quantity")
       .eq("quote_id", quoteId)
-      .eq("product_id", body.product_id)
-      .single();
+      .eq("product_id", body.product_id);
+
+    if (body.listing_id) {
+      query = query.eq("listing_id", body.listing_id);
+    } else {
+      query = query.is("listing_id", null);
+    }
+
+    const { data: existing } = await query.maybeSingle();
 
     if (existing) {
       // Actualizar cantidad si ya existe
       const updates: any = { quantity: existing.quantity + quantity };
-      if (body.listing_id !== undefined) {
-        updates.listing_id = body.listing_id;
-      }
+      // No need to update listing_id as it matches
 
       const { data: updated, error: updateError } = await supabase
         .from("quote_items")

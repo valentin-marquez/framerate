@@ -100,8 +100,8 @@ export type Database = {
           id: string;
           is_active: boolean;
           last_scraped_at: string | null;
-          price_cash: number | null;
-          price_normal: number | null;
+          price_cash: number;
+          price_normal: number;
           product_id: string;
           stock_quantity: number | null;
           store_id: string;
@@ -115,8 +115,8 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           last_scraped_at?: string | null;
-          price_cash?: number | null;
-          price_normal?: number | null;
+          price_cash?: number;
+          price_normal?: number;
           product_id: string;
           stock_quantity?: number | null;
           store_id: string;
@@ -130,8 +130,8 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           last_scraped_at?: string | null;
-          price_cash?: number | null;
-          price_normal?: number | null;
+          price_cash?: number;
+          price_normal?: number;
           product_id?: string;
           stock_quantity?: number | null;
           store_id?: string;
@@ -524,30 +524,47 @@ export type Database = {
       };
       quote_items: {
         Row: {
+          category_id: string | null;
           created_at: string;
           id: string;
           listing_id: string | null;
-          product_id: string;
+          product_id: string | null;
           quantity: number;
           quote_id: string;
         };
         Insert: {
+          category_id?: string | null;
           created_at?: string;
           id?: string;
           listing_id?: string | null;
-          product_id: string;
+          product_id?: string | null;
           quantity?: number;
           quote_id: string;
         };
         Update: {
+          category_id?: string | null;
           created_at?: string;
           id?: string;
           listing_id?: string | null;
-          product_id?: string;
+          product_id?: string | null;
           quantity?: number;
           quote_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "quote_items_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quote_items_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "products_with_prices";
+            referencedColumns: ["category_id"];
+          },
           {
             foreignKeyName: "quote_items_listing_id_fkey";
             columns: ["listing_id"];
