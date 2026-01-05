@@ -1,16 +1,16 @@
 {
-    "name": "@framerate/opendb",
-    "version": "0.0.0",
-    "main": "./src/index.ts",
-    "types": "./src/index.ts",
-    "scripts": {
-        "check-types": "tsc --noEmit"
-    },
-    "dependencies": {
-        "zod": "^3.22.4"
-    },
-    "devDependencies": {
-        "@framerate/config": "workspace:*",
-        "typescript": "^5.0.0"
-    }
+  "name": "@framerate/opendb",
+  "version": "0.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@framerate/config": "workspace:*",
+    "typescript": "^5.0.0"
+  }
 }
