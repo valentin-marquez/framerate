@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { data, isRouteErrorResponse, Link, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { Logo } from "@/components/layout/logo";
 import { Navbar } from "@/components/layout/navbar";
+import { useNonce } from "@/hooks/use-nonce";
 import { useAuthSync } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
 import { getAuthUser } from "@/lib/auth.server";
@@ -61,6 +62,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const nonce = useNonce();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -69,6 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
 
         <script
+          nonce={nonce}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: Script necesario para evitar el flash de color antes de la hidratación
           dangerouslySetInnerHTML={{
             __html: `
@@ -96,8 +100,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Toaster position="bottom-center" />
           </ThemeProvider>
         </QueryClientProvider>
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );

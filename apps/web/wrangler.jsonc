@@ -3,7 +3,7 @@
   "name": "framerate",
   "compatibility_date": "2026-01-05",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "./build/server/index.js",
+  "main": "./workers/app.ts",
   "vars": {
     "SUPABASE_URL": "",
     "SUPABASE_ANON_KEY": ""
