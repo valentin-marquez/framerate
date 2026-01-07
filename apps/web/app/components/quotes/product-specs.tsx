@@ -1,15 +1,3 @@
-import type {
-  CaseFanSpecs,
-  CaseSpecs,
-  CpuCoolerSpecs,
-  CpuSpecs,
-  GpuSpecs,
-  HddSpecs,
-  MotherboardSpecs,
-  PsuSpecs,
-  RamSpecs,
-  SsdSpecs,
-} from "@framerate/db";
 import type { Product } from "~/utils/db-types";
 
 export function ProductSpecs({ product }: { product: Product }) {

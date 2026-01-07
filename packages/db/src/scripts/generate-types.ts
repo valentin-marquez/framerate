@@ -10,7 +10,7 @@ if (!projectId) {
 }
 
 try {
-  await $`supabase gen types typescript --project-id ${projectId} --schema public > src/types.ts`;
+  await $`bun x supabase gen types typescript --project-id ${projectId} --schema public > src/types.ts`;
   logger.info("Tipos generados exitosamente en src/types.ts");
 
   // Formatear el archivo generado con Biome usando --write para aplicar los cambios

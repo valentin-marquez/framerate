@@ -1,5 +1,4 @@
 import { IconBolt, IconCalendar, IconUser } from "@tabler/icons-react";
-import { cn } from "~/lib/utils";
 import { CompatibilityBadge } from "./compatibility-badge";
 
 interface QuoteHeaderProps {

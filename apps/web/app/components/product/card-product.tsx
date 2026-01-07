@@ -1,4 +1,3 @@
-import type { PsuSpecs } from "@framerate/db";
 import { IconEye } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { Badge } from "~/components/primitives/badge";

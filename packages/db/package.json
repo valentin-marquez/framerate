@@ -10,10 +10,10 @@
   },
   "scripts": {
     "generate:types": "bun src/scripts/generate-types.ts",
-    "migration:new": "supabase migration new",
-    "db:reset": "supabase db reset",
-    "db:push": "supabase db push",
-    "db:pull": "supabase db pull",
+    "migration:new": "bun x supabase migration new",
+    "db:reset": "bun x supabase db reset",
+    "db:push": "bun x supabase db push",
+    "db:pull": "bun x supabase db pull",
     "db:link": "bun src/scripts/db-link.ts",
     "group-variants": "bun run src/scripts/group-variants.ts",
     "test": "bun test"
@@ -25,7 +25,6 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "supabase": "^2.67.2",
     "typescript": "^5.0.0"
   }
 }
