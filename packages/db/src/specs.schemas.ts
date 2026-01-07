@@ -10,6 +10,7 @@ export const GpuSchema = z.object({
   manufacturer: nullableString, // e.g. ASUS, MSI (Board partner)
   chipset_manufacturer: z.enum(["NVIDIA", "AMD", "Intel"]).nullable().optional(),
   chipset: nullableString, // e.g. GeForce RTX 4090
+  architecture: nullableString, // e.g. Ada Lovelace, RDNA 3
   memory_gb: nullableNumber,
   memory_type: nullableString, // e.g. GDDR6X
   core_base_clock_mhz: nullableNumber,

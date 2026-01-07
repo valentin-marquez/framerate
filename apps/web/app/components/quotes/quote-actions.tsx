@@ -51,6 +51,11 @@ export function QuoteActions({
     setIsDeleteDialogOpen(false);
   };
 
+  const handleCheckCompatibilityClick = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    onCheckCompatibility();
+  };
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-end">
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -79,7 +84,12 @@ export function QuoteActions({
         </DialogContent>
       </Dialog>
 
-      <Button variant="secondary" className="gap-2" onClick={onCheckCompatibility} disabled={isCheckingCompatibility}>
+      <Button
+        variant="secondary"
+        className="gap-2 min-w-60"
+        onClick={handleCheckCompatibilityClick}
+        disabled={isCheckingCompatibility}
+      >
         <IconRefresh size={18} className={isCheckingCompatibility ? "animate-spin" : ""} />
         {isCheckingCompatibility ? "Verificando..." : "Chequear Compatibilidad"}
       </Button>

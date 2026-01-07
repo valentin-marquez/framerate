@@ -21,7 +21,7 @@ export function QuoteTotals({ totalNormal, totalCash, hasOutOfStockItems }: Quot
       <div className="flex flex-col gap-4 md:flex-row md:justify-end md:gap-12">
         <div className="flex justify-between items-center md:flex-col md:items-end gap-1">
           <span className="text-muted-foreground text-sm">Total Normal</span>
-          <span className="text-xl font-medium text-muted-foreground line-through decoration-border/60">
+          <span className="text-xl font-medium text-muted-foreground line-through decoration-muted-foreground">
             {formatCLP(totalNormal)}
           </span>
         </div>

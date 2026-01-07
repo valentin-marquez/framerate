@@ -16,43 +16,46 @@ interface CardProductDropProps {
 function getSpecsSummary(categorySlug: string, specs: any): string[] {
   if (!categorySlug || !specs) return [];
 
-  const s = specs as Record<string, string | undefined | null>;
-  let summary: (string | undefined | null)[] = [];
+  const s = specs as any;
+  let summary: (string | undefined | null | number)[] = [];
 
   switch (categorySlug) {
-    case "gpu":
-      summary = [s.gpu_model, s.memory];
+    case "tarjetas-de-video":
+      summary = [s.chipset || s.gpu_model, s.memory_gb ? `${s.memory_gb}GB` : s.memory];
       break;
-    case "cpu":
-      summary = [s.cores_threads, s.frequency];
+    case "procesadores":
+      summary = [
+        s.cores?.total ? `${s.cores.total} Cores` : s.cores_threads,
+        s.clocks?.boost_ghz ? `${s.clocks.boost_ghz}GHz` : s.frequency,
+      ];
       break;
-    case "ram":
-      summary = [s.capacity, s.type, s.speed];
+    case "memorias-ram":
+      summary = [s.total_capacity_gb ? `${s.total_capacity_gb}GB` : s.capacity, s.type];
       break;
     case "ssd":
-      summary = [s.capacity, s.format, s.bus];
+      summary = [s.capacity_gb ? `${s.capacity_gb}GB` : s.capacity, s.form_factor || s.format];
       break;
-    case "hdd":
-      summary = [s.capacity, s.rpm];
+    case "discos-duros":
+      summary = [s.capacity_gb ? `${s.capacity_gb}GB` : s.capacity, s.rpm ? `${s.rpm} RPM` : null];
       break;
-    case "motherboard":
+    case "placas-madre":
       summary = [s.socket, s.chipset, s.form_factor];
       break;
-    case "psu":
-      summary = [s.wattage, s.certification];
+    case "fuentes-de-poder":
+      summary = [s.wattage ? `${s.wattage}W` : null, s.efficiency_rating || s.certification];
       break;
-    case "case":
-      summary = [s.side_panel, s.max_motherboard_size];
+    case "gabinetes":
+      summary = [s.form_factor, s.side_panel];
       break;
-    case "cpu-cooler":
-      summary = [s.type, s.fan_size || s.height];
+    case "coolers-cpu":
+      summary = [s.type, s.radiator_size_mm ? `${s.radiator_size_mm}mm` : s.fan_size_mm ? `${s.fan_size_mm}mm` : null];
       break;
-    case "case-fan":
-      summary = [s.size, s.rpm, s.illumination];
+    case "ventiladores":
+      summary = [s.size_mm ? `${s.size_mm}mm` : s.size, s.rgb ? "RGB" : null];
       break;
   }
 
-  return summary.filter((item): item is string => !!item && item !== "Desconocido");
+  return summary.filter((item): item is string => !!item && item !== "Desconocido").map(String);
 }
 
 export function CardProductDrop({ drop, className }: CardProductDropProps) {
@@ -176,7 +179,7 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
             </div>
             <div className="flex flex-col items-end border-l border-border/50 pl-2">
               <span className="text-[10px] text-muted-foreground font-medium uppercase">Antes</span>
-              <span className="text-sm font-semibold text-muted-foreground leading-none mt-1 line-through">
+              <span className="text-sm font-semibold text-muted-foreground leading-none mt-1 line-through decoration-muted-foreground">
                 {formattedPreviousPrice}
               </span>
             </div>

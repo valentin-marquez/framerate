@@ -1,6 +1,6 @@
 import type { ValidationIssue } from "@framerate/db";
 import { pdf } from "@react-pdf/renderer";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { QuoteActions } from "~/components/quotes/quote-actions";
@@ -8,6 +8,7 @@ import { QuoteHeader } from "~/components/quotes/quote-header";
 import { QuoteItemsList } from "~/components/quotes/quote-items-list";
 import { QuotePDF } from "~/components/quotes/quote-pdf";
 import { QuoteValidationStatus } from "~/components/quotes/quote-validation-status";
+import { SearchDialog } from "~/components/search/search-dialog";
 import { useUser } from "~/hooks/useAuth";
 import {
   useAnalyzeBuild,
@@ -57,6 +58,20 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   const deleteQuote = useDeleteQuote();
   const analyzeBuild = useAnalyzeBuild();
 
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Optimistic UI for toasts
+  const [lastQuote, setLastQuote] = useState(quote);
+  const activeToastId = useRef<string | number | null>(null);
+
+  useEffect(() => {
+    if (activeToastId.current && quote !== lastQuote) {
+      toast.success("Producto eliminado", { id: activeToastId.current });
+      activeToastId.current = null;
+    }
+    setLastQuote(quote);
+  }, [quote, lastQuote]);
+
   const [analysis, setAnalysis] = useState<{
     status: "valid" | "warning" | "incompatible" | "unknown";
     issues: ValidationIssue[];
@@ -84,6 +99,25 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
         toast.error("Error al eliminar la cotización");
       },
     });
+  };
+
+  const handleAddProduct = (product: { id: string }) => {
+    addItem.mutate(
+      {
+        quoteId: quote.id,
+        data: { product_id: product.id, quantity: 1 },
+      },
+      {
+        onSuccess: () => {
+          setIsSearchOpen(false);
+          toast.success("Producto agregado");
+          revalidator.revalidate();
+        },
+        onError: () => {
+          toast.error("Error al agregar producto");
+        },
+      },
+    );
   };
 
   const handleCheckCompatibility = () => {
@@ -210,6 +244,9 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   }, [quote, flattenedItems, selectedVariants, activeItems]);
 
   const handleRemove = (item: VirtualQuoteItem) => {
+    const toastId = toast.loading("Eliminando producto...");
+    activeToastId.current = toastId;
+
     if (item.isVirtual && item.originalItem) {
       const newQuantity = item.originalItem.quantity - 1;
       updateItem.mutate(
@@ -218,10 +255,29 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           itemId: item.originalItem.id,
           data: { quantity: newQuantity },
         },
-        { onSuccess: () => revalidator.revalidate() },
+        {
+          onSuccess: () => {
+            revalidator.revalidate();
+          },
+          onError: () => {
+            toast.error("Error al eliminar producto", { id: toastId });
+            activeToastId.current = null;
+          },
+        },
       );
     } else {
-      removeItem.mutate({ quoteId: quote.id, itemId: item.id }, { onSuccess: () => revalidator.revalidate() });
+      removeItem.mutate(
+        { quoteId: quote.id, itemId: item.id },
+        {
+          onSuccess: () => {
+            revalidator.revalidate();
+          },
+          onError: () => {
+            toast.error("Error al eliminar producto", { id: toastId });
+            activeToastId.current = null;
+          },
+        },
+      );
     }
   };
 
@@ -308,6 +364,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           isOwner={isOwner}
           selectedVariants={selectedVariants}
           onSelectVariant={(slotId, itemId) => setSelectedVariants((prev) => ({ ...prev, [slotId]: itemId }))}
+          onAdd={() => setIsSearchOpen(true)}
         />
 
         <QuoteActions
@@ -320,6 +377,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           isCheckingCompatibility={analyzeBuild.isPending}
         />
       </div>
+      <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} onSelectProduct={handleAddProduct} />
     </div>
   );
 }

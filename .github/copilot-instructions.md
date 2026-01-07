@@ -8,7 +8,7 @@ These instructions apply to the entire workspace and should be followed for all 
 ## 2. Runtime & Package Manager
 - **Runtime**: **Bun** is the exclusive runtime. Do NOT use Node.js.
 - **Package Manager**: **Bun** is used for dependency management.
-  - Always use `bun install`, `bun add`, `bun run`, etc.
+  - Always use `bun install`, `bun add`, `bun run`, `bunx biome` etc.
   - Do not suggest `npm`, `yarn`, or `pnpm` commands.
 
 ## 3. Code Quality & Formatting

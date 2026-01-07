@@ -1,10 +1,15 @@
 import { IconDeviceLaptop, IconMoon, IconSun } from "@tabler/icons-react";
 import { motion } from "motion/react";
-import { cn } from "@/lib/utils";
-import { useTheme } from "./theme-provider";
+import { useFetcher } from "react-router";
+import { useRequestInfo } from "~/hooks/use-request-info";
+import { useOptimisticThemeMode } from "~/lib/client";
+import { cn } from "~/lib/utils";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const fetcher = useFetcher({ key: "theme-fetcher" });
+  const requestInfo = useRequestInfo();
+  const optimisticMode = useOptimisticThemeMode();
+  const theme = optimisticMode ?? requestInfo.userPrefs.theme ?? "system";
 
   const options = [
     { id: "light", icon: IconSun, color: "text-yellow-400", label: "Light" },
@@ -22,7 +27,7 @@ export function ThemeToggle() {
             "relative flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground cursor-pointer focus-visible:outline-none",
             theme === id && "text-foreground",
           )}
-          onClick={() => setTheme(id)}
+          onClick={() => fetcher.submit({ theme: id }, { method: "post", action: "/theme-switcher" })}
           aria-label={label}
         >
           {theme === id && (

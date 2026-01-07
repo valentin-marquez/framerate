@@ -17,39 +17,60 @@ function getSpecsSummary(product: Product): string[] {
   const { category, specs } = product;
   if (!category || !specs) return [];
 
-  const s = specs as Record<string, string | undefined | null>;
-  let summary: (string | undefined | null)[] = [];
+  const s = specs as any;
+  let summary: (string | undefined | null | number)[] = [];
 
   switch (category.slug) {
-    case "gpu":
-      summary = [s.gpu_model, s.memory, s.memory_type];
+    case "tarjetas-de-video":
+      summary = [s.chipset || s.gpu_model, s.memory_gb ? `${s.memory_gb}GB` : s.memory, s.memory_type];
       break;
-    case "cpu":
-      summary = [s.cores_threads, s.frequency, s.socket];
+    case "procesadores":
+      summary = [
+        s.cores?.total ? `${s.cores.total} Cores` : s.cores_threads,
+        s.clocks?.boost_ghz ? `${s.clocks.boost_ghz}GHz` : s.frequency,
+        s.socket,
+      ];
       break;
-    case "ram":
-      summary = [s.capacity, s.type, s.speed];
+    case "memorias-ram":
+      summary = [
+        s.total_capacity_gb ? `${s.total_capacity_gb}GB` : s.capacity,
+        s.type,
+        s.speed_mt_s ? `${s.speed_mt_s}MHz` : s.speed,
+      ];
       break;
     case "ssd":
-      summary = [s.capacity, s.format, s.bus];
+      summary = [s.capacity_gb ? `${s.capacity_gb}GB` : s.capacity, s.form_factor || s.format, s.interface || s.bus];
       break;
-    case "hdd":
-      summary = [s.capacity, s.rpm, s.cache];
+    case "discos-duros":
+      summary = [
+        s.capacity_gb ? `${s.capacity_gb}GB` : s.capacity,
+        s.rpm ? `${s.rpm} RPM` : null,
+        s.cache_mb ? `${s.cache_mb}MB` : s.cache,
+      ];
       break;
-    case "motherboard":
+    case "placas-madre":
       summary = [s.socket, s.chipset, s.form_factor];
       break;
-    case "psu":
-      summary = [s.wattage, s.certification, s.modular];
+    case "fuentes-de-poder":
+      summary = [s.wattage ? `${s.wattage}W` : null, s.efficiency_rating || s.certification, s.modular];
       break;
-    case "case":
-      summary = [s.form_factor, s.side_panel, s.max_motherboard_size];
+    case "gabinetes":
+      summary = [s.form_factor, s.side_panel];
       break;
-    case "cpu-cooler":
-      summary = [s.type, s.fan_size || s.height, s.tdp];
+    case "coolers-cpu":
+      summary = [
+        s.type,
+        s.radiator_size_mm
+          ? `${s.radiator_size_mm}mm`
+          : s.fan_size_mm
+            ? `${s.fan_size_mm}mm`
+            : s.height_mm
+              ? `${s.height_mm}mm`
+              : null,
+      ];
       break;
-    case "case-fan":
-      summary = [s.size, s.rpm, s.illumination];
+    case "ventiladores":
+      summary = [s.size_mm ? `${s.size_mm}mm` : s.size, s.rpm?.max ? `${s.rpm.max} RPM` : null, s.rgb ? "RGB" : null];
       break;
     default: {
       const genericKeys = ["capacity", "type", "size", "model"];
@@ -58,7 +79,7 @@ function getSpecsSummary(product: Product): string[] {
     }
   }
 
-  return summary.filter((item): item is string => !!item && item !== "Desconocido");
+  return summary.filter((item): item is string => !!item && item !== "Desconocido").map(String);
 }
 
 function formatViews(views: number): string {
@@ -79,8 +100,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const hasViews = product.popularity_score && product.popularity_score > 0;
 
   // Lógica PSU
-  const isPsu = product.category?.name;
-  const psuCertification = isPsu ? (product.specs as PsuSpecs)?.certification : null;
+  const isPsu = product.category?.slug === "fuentes-de-poder";
+  const psuSpecs = product.specs as any;
+  const psuCertification = isPsu ? psuSpecs?.efficiency_rating || psuSpecs?.certification : null;
 
   const handleProductClick = () => {
     if (product.slug) {
@@ -170,7 +192,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               <div className="flex items-baseline gap-1.5">
                 <span className="text-base font-semibold text-primary">${currentPrice.toLocaleString("es-CL")}</span>
                 {discount > 0 && normalPrice && (
-                  <span className="text-xs text-muted-foreground line-through">
+                  <span className="text-xs text-muted-foreground line-through decoration-muted-foreground">
                     ${normalPrice.toLocaleString("es-CL")}
                   </span>
                 )}

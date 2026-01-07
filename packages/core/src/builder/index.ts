@@ -29,6 +29,7 @@ export type {
 export { CompatibilityEngine } from "./engine";
 export {
   ALL_RULES,
+  CompletenessRule,
   CoolerClearanceRule,
   GpuClearanceRule,
   MemoryTypeRule,

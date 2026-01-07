@@ -13,7 +13,7 @@ app.use("*", secureHeaders());
 app.use(
   "*",
   cors({
-    origin: ["https://framerate.cl", "http://localhost:5173"],
+    origin: ["https://framerate.cl", "http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Length"],

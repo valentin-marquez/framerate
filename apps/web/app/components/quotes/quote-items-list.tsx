@@ -15,6 +15,7 @@ interface QuoteItemsListProps {
   isOwner: boolean;
   selectedVariants: Record<string, string>;
   onSelectVariant: (slotId: string, itemId: string) => void;
+  onAdd?: (slotId: string) => void;
 }
 
 export function QuoteItemsList({
@@ -27,6 +28,7 @@ export function QuoteItemsList({
   isOwner,
   selectedVariants,
   onSelectVariant,
+  onAdd,
 }: QuoteItemsListProps) {
   // Identify items that don't fit into standard slots
   const handledCategories = new Set(QUOTE_SLOTS.flatMap((s) => s.accepts));
@@ -43,9 +45,10 @@ export function QuoteItemsList({
 
       <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-secondary/10 text-xs font-medium text-muted-foreground border-b border-border/40">
         <div className="col-span-5">Producto</div>
-        <div className="col-span-3">Tienda</div>
+        <div className="col-span-2">Tienda</div>
         <div className="col-span-2 text-right">Precio Normal</div>
         <div className="col-span-2 text-right">Precio Efectivo</div>
+        <div className="col-span-1"></div>
       </div>
 
       <div className="divide-y divide-border/40">
@@ -62,6 +65,7 @@ export function QuoteItemsList({
               onSelect={(itemId) => onSelectVariant(slot.id, itemId)}
               onRemove={onRemove}
               onChangeStore={onChangeStore}
+              onAdd={onAdd ? () => onAdd(slot.id) : undefined}
               isOwner={isOwner}
             />
           );

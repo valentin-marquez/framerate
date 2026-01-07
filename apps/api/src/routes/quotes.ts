@@ -77,8 +77,19 @@ quotes.post("/analyze", async (c) => {
       return c.json({ error: "No products found with provided IDs" }, 404);
     }
 
+    // Calcular cantidades basadas en la frecuencia de IDs en el request
+    const productCounts: Record<string, number> = {};
+    for (const id of body.productIds) {
+      productCounts[id] = (productCounts[id] || 0) + 1;
+    }
+
+    const productsWithQuantity = products.map((p) => ({
+      ...p,
+      quantity: productCounts[p.id] || 1,
+    }));
+
     // Mapear productos a categorías para el análisis
-    const componentsMap = mapProductsToComponents(products as unknown as BuildProduct[]);
+    const componentsMap = mapProductsToComponents(productsWithQuantity as unknown as BuildProduct[]);
 
     console.log("--- DEBUG STATELESS ANALYSIS ---");
     console.log("Product IDs:", body.productIds);
@@ -307,16 +318,16 @@ quotes.post("/", async (c) => {
 
     // Insert placeholders for standard components
     const placeholderSlugs = [
-      "motherboard",
-      "case",
-      "gpu",
+      "placas-madre",
+      "gabinetes",
+      "tarjetas-de-video",
       "ssd",
-      "psu",
-      "cpu",
-      "cpu_cooler",
-      "hdd",
-      "case_fan",
-      "ram",
+      "fuentes-de-poder",
+      "procesadores",
+      "coolers-cpu",
+      "discos-duros",
+      "ventiladores",
+      "memorias-ram",
     ];
 
     const { data: categories } = await supabase.from("categories").select("id, slug").in("slug", placeholderSlugs);
@@ -684,8 +695,17 @@ quotes.get("/:id/analyze", async (c) => {
       });
     }
 
-    // Mapear a BuildComponentsMap
-    const products = quoteItems.map((item) => item.product).filter(Boolean) as unknown as BuildProduct[];
+    // Mapear a BuildComponentsMap conservando cantidades
+    const products = quoteItems
+      .map((item) => {
+        if (!item.product) return null;
+        return {
+          ...item.product,
+          quantity: item.quantity,
+        };
+      })
+      .filter(Boolean) as unknown as (BuildProduct & { quantity?: number })[];
+
     const componentsMap = mapProductsToComponents(products);
 
     console.log("--- DEBUG ANALYSIS ---");
@@ -922,16 +942,16 @@ quotes.delete("/:id/items/:itemId", async (c) => {
  */
 function mapCategorySlugToComponent(slug: string): BuildComponentCategory | null {
   const mapping: Record<string, BuildComponentCategory> = {
-    cpu: "cpu",
-    gpu: "gpu",
-    motherboard: "motherboard",
-    ram: "ram",
-    psu: "psu",
-    case: "case",
-    "cpu-cooler": "cpu-cooler",
+    procesadores: "cpu",
+    "tarjetas-de-video": "gpu",
+    "placas-madre": "motherboard",
+    "memorias-ram": "ram",
+    "fuentes-de-poder": "psu",
+    gabinetes: "case",
+    "coolers-cpu": "cpu-cooler",
     ssd: "ssd",
-    hdd: "hdd",
-    "case-fan": "case-fan",
+    "discos-duros": "hdd",
+    ventiladores: "case-fan",
   };
 
   return mapping[slug] || null;
@@ -940,7 +960,7 @@ function mapCategorySlugToComponent(slug: string): BuildComponentCategory | null
 /**
  * Mapea una lista de productos a un BuildComponentsMap.
  */
-function mapProductsToComponents(products: BuildProduct[]): BuildComponentsMap {
+function mapProductsToComponents(products: (BuildProduct & { quantity?: number })[]): BuildComponentsMap {
   const componentsMap: BuildComponentsMap = {};
 
   for (const product of products) {
@@ -949,7 +969,19 @@ function mapProductsToComponents(products: BuildProduct[]): BuildComponentsMap {
 
     const componentCategory = mapCategorySlugToComponent(categorySlug);
     if (componentCategory) {
-      componentsMap[componentCategory] = product;
+      const existing = componentsMap[componentCategory];
+      const quantity = product.quantity || 1;
+
+      if (existing) {
+        // If component already exists for this category, just add to its quantity
+        // ignoring which specific product is stored (first one wins for compatibility checks)
+        existing.quantity = (existing.quantity || 1) + quantity;
+      } else {
+        componentsMap[componentCategory] = {
+          ...product,
+          quantity,
+        };
+      }
     }
   }
 

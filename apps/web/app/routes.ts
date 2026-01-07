@@ -26,4 +26,6 @@ export default [
     route("account", "routes/settings/account.tsx", { id: "settings-account" }),
     route("preferences", "routes/settings/preferences.tsx"),
   ]),
+
+  route("theme-switcher", "components/theme/theme-switcher.ts"),
 ] satisfies RouteConfig;

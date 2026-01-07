@@ -186,7 +186,7 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
           {itemsToRender.map((item: any, index: number) => {
             if (!item.product) {
               return (
-                <View style={styles.tableRow} key={item.id || index}>
+                <View style={styles.tableRow} key={item.virtualId || item.id || index}>
                   <View style={styles.tableCol}>
                     <View style={{ margin: 5 }}>
                       <Text style={{ ...styles.productName, color: "#9CA3AF" }}>
@@ -211,7 +211,7 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
             const priceCash = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
 
             return (
-              <View style={styles.tableRow} key={item.id || index}>
+              <View style={styles.tableRow} key={item.virtualId || item.id || index}>
                 <View style={styles.tableCol}>
                   <View style={{ margin: 5 }}>
                     <Text style={styles.productName}>{item.product.name}</Text>

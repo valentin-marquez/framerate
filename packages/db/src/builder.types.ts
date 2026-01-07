@@ -6,6 +6,7 @@
  * compatibilidad de componentes en tiempo real.
  */
 
+import type { ProductSpecs } from "./specs.types";
 import type { Tables } from "./types";
 
 /**
@@ -76,6 +77,16 @@ export interface ValidationIssue {
 }
 
 /**
+ * Estimación de rendimiento del build (Gaming Score)
+ */
+export interface PerformanceEstimation {
+  cpuScore: number;
+  gpuScore: number;
+  totalScore: number;
+  tier: string;
+}
+
+/**
  * Resultado del análisis de compatibilidad de un build
  */
 export interface BuildAnalysis {
@@ -84,6 +95,9 @@ export interface BuildAnalysis {
 
   /** Consumo estimado de energía en Watts */
   estimatedWattage: number;
+
+  /** Estimación de rendimiento (heurística) */
+  performance?: PerformanceEstimation;
 
   /** Lista de problemas encontrados */
   issues: ValidationIssue[];
@@ -110,9 +124,11 @@ export type BuildComponentCategory =
 /**
  * Producto con sus specs completas (usado en el análisis)
  */
-export type BuildProduct = Tables<"products"> & {
+export type BuildProduct = Omit<Tables<"products">, "specs"> & {
+  specs: ProductSpecs;
   category: { slug: string; name: string };
   brand: { name: string };
+  quantity?: number;
 };
 
 /**

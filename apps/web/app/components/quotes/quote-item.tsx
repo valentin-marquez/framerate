@@ -133,7 +133,7 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
             {isOutOfStock ? "Sin stock" : "No disponible"}
           </span>
         ) : (
-          <div className="col-span-1 md:col-span-3 flex items-center gap-3">
+          <div className="col-span-1 md:col-span-2 flex items-center gap-3">
             <div className="flex items-center gap-2 min-w-0">
               {selectedListing?.store?.logo_url ? (
                 selectedListing.url ? (
@@ -169,7 +169,7 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`text-sm font-medium truncate hover:text-primary flex items-center gap-1 ${
-                        isOutOfStock ? "text-muted-foreground line-through" : ""
+                        isOutOfStock ? "text-muted-foreground line-through decoration-muted-foreground" : ""
                       }`}
                     >
                       {selectedListing.store.name}
@@ -177,7 +177,7 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
                     </a>
                   ) : (
                     <span
-                      className={`text-sm font-medium truncate ${isOutOfStock ? "text-muted-foreground line-through" : ""}`}
+                      className={`text-sm font-medium truncate ${isOutOfStock ? "text-muted-foreground line-through decoration-muted-foreground" : ""}`}
                     >
                       {selectedListing?.store?.name || "Mejor precio"}
                     </span>
@@ -195,7 +195,7 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
 
         <div className="col-span-1 md:col-span-2 flex md:flex-col justify-between md:justify-center md:items-end gap-1">
           <span className="md:hidden text-sm text-muted-foreground">Normal:</span>
-          <span className="text-sm text-muted-foreground line-through decoration-border/60">
+          <span className="text-sm text-muted-foreground line-through decoration-muted-foreground">
             {formatCLP(priceNormal)}
           </span>
         </div>
@@ -203,19 +203,6 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
         <div className="col-span-1 md:col-span-2 flex md:flex-col justify-between md:justify-center md:items-end gap-1 relative">
           <span className="md:hidden text-sm font-medium">Efectivo:</span>
           <span className="font-mono text-lg font-medium text-foreground">{formatCLP(priceCash)}</span>
-
-          {isOwner && (
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden md:block">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={() => onRemove(item)}
-              >
-                <IconTrash size={16} />
-              </Button>
-            </div>
-          )}
 
           {isOwner && (
             <div className="md:hidden mt-2 flex justify-end w-full">
@@ -228,6 +215,20 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
                 <IconTrash size={16} className="mr-2" /> Eliminar
               </Button>
             </div>
+          )}
+        </div>
+
+        <div className="hidden md:flex col-span-1 justify-end items-center">
+          {isOwner && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => onRemove(item)}
+              title="Eliminar producto"
+            >
+              <IconTrash size={16} />
+            </Button>
           )}
         </div>
       </div>

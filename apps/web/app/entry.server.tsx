@@ -19,8 +19,19 @@ export default async function handleRequest(
   const contentSecurityPolicy = buildContentSecurityPolicy({
     baseUri: ["'self'"],
     objectSrc: ["'none'"],
-    connectSrc: ["'self'", isDevelopment ? "ws:" : ""],
-    scriptSrc: ["'self'", `'nonce-${nonce}'`, isDevelopment ? "'unsafe-inline'" : ""],
+    connectSrc: [
+      "'self'",
+      "data:",
+      isDevelopment ? "ws:" : "",
+      import.meta.env.VITE_API_URL ?? (isDevelopment ? "http://127.0.0.1:8787" : "https://api.framerate.cl"),
+    ],
+    scriptSrc: [
+      "'self'",
+      "'wasm-unsafe-eval'",
+      "'unsafe-eval'",
+      `'nonce-${nonce}'`,
+      isDevelopment ? "'unsafe-inline'" : "",
+    ],
     workerSrc: ["'self'", isDevelopment ? "blob:" : ""],
     scriptSrcAttr: [`'nonce-${nonce}'`],
     imgSrc: ["'self'", "data:", "blob:", "https:"],

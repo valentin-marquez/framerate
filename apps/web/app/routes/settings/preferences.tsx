@@ -1,9 +1,11 @@
 import { IconCheck, IconDeviceLaptop, IconMoon, IconSun } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useFetcher } from "react-router";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/primitives/select";
 import { Separator } from "~/components/primitives/separator";
-import { useTheme } from "~/components/theme/theme-provider";
+import { useRequestInfo } from "~/hooks/use-request-info";
 import { requireAuth } from "~/lib/auth.server";
+import { useOptimisticThemeMode } from "~/lib/client";
 import { cn } from "~/lib/utils";
 import type { Route } from "./+types/preferences";
 
@@ -13,7 +15,14 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function PreferencesSettings() {
-  const { theme, setTheme } = useTheme();
+  const fetcher = useFetcher({ key: "theme-fetcher" });
+  const requestInfo = useRequestInfo();
+  const optimisticMode = useOptimisticThemeMode();
+  const theme = optimisticMode ?? requestInfo.userPrefs.theme ?? "system";
+
+  const setTheme = (t: string) => {
+    fetcher.submit({ theme: t }, { method: "post", action: "/theme-switcher" });
+  };
 
   return (
     <div className="space-y-8">

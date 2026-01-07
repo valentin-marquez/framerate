@@ -43,7 +43,7 @@ export class CatalogService {
     const { data: existing, error: selError } = await supabase
       .from("categories")
       .select("id")
-      .eq("slug", config.slug)
+      .eq("code", config.slug)
       .single();
 
     if (selError) this.logger.error("getCategoryId: select error", selError.message || String(selError));
@@ -53,6 +53,7 @@ export class CatalogService {
     const insert: TablesInsert<"categories"> = {
       name: config.name,
       slug: config.slug,
+      code: config.slug,
     };
 
     const { data: created, error } = await supabase.from("categories").insert(insert).select("id").single();
@@ -60,7 +61,7 @@ export class CatalogService {
     if (error) {
       const code = (error as { code?: unknown }).code as string | undefined;
       if (code === "23505") {
-        const { data: retryExisting } = await supabase.from("categories").select("id").eq("slug", config.slug).single();
+        const { data: retryExisting } = await supabase.from("categories").select("id").eq("code", config.slug).single();
         if (retryExisting) return retryExisting.id;
       }
 

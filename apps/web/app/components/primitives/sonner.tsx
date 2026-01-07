@@ -1,7 +1,7 @@
 import { IconAlertOctagon, IconAlertTriangle, IconCircleCheck, IconInfoCircle, IconLoader } from "@tabler/icons-react";
 import { motion } from "motion/react";
-import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
+import { useTheme } from "~/lib/client";
 
 const SuccessIcon = () => {
   return (
@@ -28,7 +28,7 @@ const LoadingIcon = () => {
 };
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  const theme = useTheme();
 
   return (
     <Sonner

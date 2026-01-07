@@ -16,8 +16,10 @@ import { useAuthStore } from "@/store/auth";
 import type { Route } from "./+types/root";
 import { Button } from "./components/primitives/button";
 import { Toaster } from "./components/primitives/sonner";
-import { ThemeProvider } from "./components/theme/theme-provider";
+import { getHints, useTheme } from "./lib/client";
 import { categoriesService } from "./services/categories";
+import { getClientEnv } from "./services/env.server";
+import { getTheme } from "./services/theme.server";
 
 export const links: Route.LinksFunction = () => [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }];
 
@@ -26,6 +28,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  const clientEnv = getClientEnv();
   const { user, supabase, headers: authHeaders } = await getAuthUser(request);
   const categories = await categoriesService.getAll();
 
@@ -54,6 +57,11 @@ export async function loader({ request }: Route.LoaderArgs) {
       user,
       profile,
       categories,
+      requestInfo: {
+        clientEnv,
+        hints: getHints(request),
+        userPrefs: { theme: getTheme(request) },
+      },
     },
     {
       headers: authHeaders,
@@ -95,10 +103,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            {children}
-            <Toaster position="bottom-center" />
-          </ThemeProvider>
+          {children}
+          <Toaster position="bottom-center" />
         </QueryClientProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
@@ -110,10 +116,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App({ loaderData }: Route.ComponentProps) {
   const { env, user, profile, categories: initialCategories } = loaderData;
   const { setUser, setProfile, setSupabase } = useAuthStore();
+  const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
 
   const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(theme);
+    }
+  }, [theme]);
 
   const supabase = useMemo(
     () => createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY),

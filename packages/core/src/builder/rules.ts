@@ -5,7 +5,175 @@
  * Cada regla es independiente y puede ser habilitada/deshabilitada según necesidad.
  */
 
-import type { BuildComponentsMap, BuildRule, ValidationIssue } from "@framerate/db";
+import type {
+  BuildComponentsMap,
+  BuildRule,
+  CaseSpecs,
+  CpuCoolerSpecs,
+  CpuSpecs,
+  GpuSpecs,
+  MotherboardSpecs,
+  PsuSpecs,
+  RamSpecs,
+  ValidationIssue,
+} from "@framerate/db";
+import { calculateEstimatedWattage } from "./engine";
+
+/**
+ * Regla 0: Completitud del Build
+ *
+ * Valida que el build tenga todos los componentes necesarios para funcionar.
+ * Diferencia entre componentes críticos (error) y recomendados (warning).
+ */
+export const CompletenessRule: BuildRule = {
+  name: "Completeness",
+
+  validate(parts: BuildComponentsMap): ValidationIssue[] {
+    const issues: ValidationIssue[] = [];
+
+    // 1. Componentes Críticos (Impiden boot/funcionamiento básico)
+    if (!parts.cpu) {
+      issues.push({
+        code: "MISSING_COMPONENT",
+        severity: "error",
+        message: "Falta Procesador (CPU)",
+        details: "El cerebro del computador es obligatorio.",
+      });
+    }
+
+    if (!parts.motherboard) {
+      issues.push({
+        code: "MISSING_COMPONENT",
+        severity: "error",
+        message: "Falta Placa Madre",
+        details: "Es necesaria para conectar todos los componentes.",
+      });
+    }
+
+    if (!parts.ram) {
+      issues.push({
+        code: "MISSING_COMPONENT",
+        severity: "error",
+        message: "Falta Memoria RAM",
+        details: "El sistema no puede arrancar sin memoria.",
+      });
+    }
+
+    if (!parts.psu) {
+      issues.push({
+        code: "MISSING_COMPONENT",
+        severity: "error",
+        message: "Falta Fuente de Poder",
+        details: "Energía necesaria para todos los componentes.",
+      });
+    }
+
+    // Storage: Al menos uno (SSD o HDD)
+    if (!parts.ssd && !parts.hdd) {
+      issues.push({
+        code: "MISSING_COMPONENT",
+        severity: "error",
+        message: "Falta Almacenamiento",
+        details: "Necesitas al menos un SSD o Disco Duro para instalar el sistema operativo.",
+      });
+    }
+
+    // 2. Validación de Video (GPU vs iGPU)
+    if (!parts.gpu && parts.cpu) {
+      const cpuSpecs = parts.cpu.specs as CpuSpecs;
+      const hasIGPU = !!cpuSpecs.integrated_graphics;
+
+      if (!hasIGPU) {
+        issues.push({
+          code: "MISSING_VIDEO_OUTPUT",
+          severity: "error",
+          message: "Falta salida de video",
+          details: "El procesador seleccionado no tiene gráficos integrados. Necesitas una tarjeta de video dedicada.",
+          componentA: parts.cpu.name,
+        });
+      } else {
+        issues.push({
+          code: "USING_INTEGRATED_GRAPHICS",
+          severity: "info",
+          message: "Usando gráficos integrados",
+          details: `Se utilizarán los gráficos ${cpuSpecs.integrated_graphics} del procesador.`,
+          componentA: parts.cpu.name,
+        });
+      }
+    }
+
+    // 3. Validación de Refrigeración (Cooler Stock vs Dedicado)
+    if (!parts["cpu-cooler"] && parts.cpu) {
+      const cpuSpecs = parts.cpu.specs as CpuSpecs;
+      const includesCooler = cpuSpecs.includes_cooler;
+
+      if (includesCooler === false) {
+        issues.push({
+          code: "MISSING_CPU_COOLER",
+          severity: "error",
+          message: "Falta Cooler de CPU",
+          details:
+            "Este procesador no incluye disipador de fábrica si seleccionas la version 'Tray' o 'WOF'. Necesitas comprar uno aparte.",
+          componentA: parts.cpu.name,
+        });
+      } else if (includesCooler === true) {
+        issues.push({
+          code: "USING_STOCK_COOLER",
+          severity: "info",
+          message: "Usando cooler de stock",
+          details: "Se utilizará el disipador incluido con el procesador.",
+          componentA: parts.cpu.name,
+        });
+      } else {
+        // Unknown
+        issues.push({
+          code: "UNKNOWN_COOLING",
+          severity: "warning",
+          message: "Verificar refrigeración",
+          details: "No estamos seguros si este CPU incluye cooler. Te recomendamos agregar uno para asegurar.",
+          componentA: parts.cpu.name,
+        });
+      }
+    }
+
+    // 4. Componentes Importantes pero no bloqueantes
+    if (!parts.case) {
+      issues.push({
+        code: "MISSING_CASE",
+        severity: "warning",
+        message: "Falta Gabinete",
+        details: "No tienes donde montar los componentes. Recomendado para proteger tu inversión.",
+      });
+    } else {
+      // Validar Flujo de Aire (Ventiladores incluidos vs extra)
+      const caseSpecs = parts.case.specs as CaseSpecs;
+      const includedFans = caseSpecs.included_fans || 0;
+      const extraFans = parts["case-fan"] ? parts["case-fan"].quantity || 1 : 0;
+      const totalFans = includedFans + extraFans;
+
+      if (totalFans === 0) {
+        issues.push({
+          code: "NO_CASE_FANS",
+          severity: "warning",
+          message: "Gabinete sin ventiladores",
+          details:
+            "Este gabinete no incluye ventiladores y no has agregado ninguno extra. Recomendamos mejorar el flujo de aire.",
+          componentA: parts.case.name,
+        });
+      } else if (includedFans > 0 && extraFans === 0) {
+        issues.push({
+          code: "USING_INCLUDED_FANS",
+          severity: "info",
+          message: "Ventiladores incluidos",
+          details: `El gabinete incluye ${includedFans} ventilador(es).`,
+          componentA: parts.case.name,
+        });
+      }
+    }
+
+    return issues;
+  },
+};
 
 /**
  * Normaliza un valor de socket para comparación.
@@ -13,18 +181,6 @@ import type { BuildComponentsMap, BuildRule, ValidationIssue } from "@framerate/
  */
 function normalizeSocket(socket: string): string {
   return socket.toLowerCase().replace(/[\s-]/g, "");
-}
-
-/**
- * Parsea un valor de potencia a número.
- * Soporta: "120W", "120 watts", 120
- */
-function parseWatts(value: string | number | undefined): number {
-  if (!value) return 0;
-  if (typeof value === "number") return value;
-
-  const match = value.toString().match(/(\d+)/);
-  return match ? Number.parseInt(match[1], 10) : 0;
 }
 
 /**
@@ -45,12 +201,12 @@ export const SocketCompatibilityRule: BuildRule = {
       return [];
     }
 
-    // Extraer sockets de specs
-    const cpuSpecs = cpu.specs as Record<string, unknown>;
-    const moboSpecs = mobo.specs as Record<string, unknown>;
+    // Cast seguro porque conocemos la categoría
+    const cpuSpecs = cpu.specs as CpuSpecs;
+    const moboSpecs = mobo.specs as MotherboardSpecs;
 
-    const cpuSocket = cpuSpecs?.socket as string | undefined;
-    const moboSocket = moboSpecs?.socket as string | undefined;
+    const cpuSocket = cpuSpecs.socket;
+    const moboSocket = moboSpecs.socket;
 
     // Si no tenemos información de socket, advertir
     if (!cpuSocket || !moboSocket) {
@@ -98,35 +254,18 @@ export const WattageRule: BuildRule = {
 
   validate(parts: BuildComponentsMap): ValidationIssue[] {
     const psu = parts.psu;
-    const gpu = parts.gpu;
-    const cpu = parts.cpu;
 
-    // Si no hay PSU, no validamos (puede que aún no lo hayan seleccionado)
+    // Si no hay PSU, no validamos
     if (!psu) {
       return [];
     }
 
-    // Calcular consumo estimado del sistema
-    let totalTdp = 0;
-
-    // CPU TDP
-    if (cpu?.specs) {
-      const cpuSpecs = cpu.specs as Record<string, unknown>;
-      totalTdp += parseWatts(cpuSpecs.tdp as string | number);
-    }
-
-    // GPU TDP (generalmente el mayor consumidor)
-    if (gpu?.specs) {
-      const gpuSpecs = gpu.specs as Record<string, unknown>;
-      totalTdp += parseWatts(gpuSpecs.tdp as string | number);
-    }
-
-    // Estimación base para otros componentes (RAM, storage, fans, etc.)
-    totalTdp += 50;
+    // Calcular consumo estimado del sistema usando el motor centralizado
+    const totalTdp = calculateEstimatedWattage(parts);
 
     // Obtener capacidad de la PSU
-    const psuSpecs = psu.specs as Record<string, unknown>;
-    const psuWatts = parseWatts((psuSpecs?.power_output || psuSpecs?.watts || psuSpecs?.wattage) as string | number);
+    const psuSpecs = psu.specs as PsuSpecs;
+    const psuWatts = psuSpecs.wattage;
 
     // Si no tenemos datos de la PSU, advertir
     if (!psuWatts) {
@@ -191,11 +330,11 @@ export const MemoryTypeRule: BuildRule = {
     }
 
     // Extraer especificaciones
-    const ramSpecs = ram.specs as Record<string, unknown>;
-    const moboSpecs = mobo.specs as Record<string, unknown>;
+    const ramSpecs = ram.specs as RamSpecs;
+    const moboSpecs = mobo.specs as MotherboardSpecs;
 
-    const ramType = ramSpecs?.memory_type || ramSpecs?.type;
-    const moboMemoryType = moboSpecs?.memory_type || moboSpecs?.memory_support;
+    const ramType = ramSpecs.type;
+    const moboMemoryType = moboSpecs.memory?.type;
 
     // Si no tenemos información, advertir
     if (!ramType || !moboMemoryType) {
@@ -221,7 +360,7 @@ export const MemoryTypeRule: BuildRule = {
         {
           code: "MEMORY_TYPE_MISMATCH",
           severity: "error",
-          message: `Tipo de RAM incompatible: ${ramType} no es compatible con ${moboMemoryType}`,
+          message: `Tipo de RAM incompatible: ${ramType} no es compatible con el soporte de la placa (${moboMemoryType})`,
           details: "La RAM no encajará físicamente en esta motherboard.",
           componentA: ram.name,
           componentB: mobo.name,
@@ -252,11 +391,11 @@ export const GpuClearanceRule: BuildRule = {
       return [];
     }
 
-    const gpuSpecs = gpu.specs as Record<string, unknown>;
-    const caseSpecs = pcCase.specs as Record<string, unknown>;
+    const gpuSpecs = gpu.specs as GpuSpecs;
+    const caseSpecs = pcCase.specs as CaseSpecs;
 
-    const gpuLength = parseWatts(gpuSpecs?.length as string | number);
-    const maxGpuLength = parseWatts(caseSpecs?.max_gpu_length as string | number);
+    const gpuLength = gpuSpecs.length_mm;
+    const maxGpuLength = caseSpecs.max_gpu_length_mm;
 
     if (!gpuLength || !maxGpuLength) {
       return [];
@@ -295,11 +434,11 @@ export const CoolerClearanceRule: BuildRule = {
       return [];
     }
 
-    const coolerSpecs = cooler.specs as Record<string, unknown>;
-    const caseSpecs = pcCase.specs as Record<string, unknown>;
+    const coolerSpecs = cooler.specs as CpuCoolerSpecs;
+    const caseSpecs = pcCase.specs as CaseSpecs;
 
-    const coolerHeight = parseWatts(coolerSpecs?.height as string | number);
-    const maxCoolerHeight = parseWatts(caseSpecs?.max_cooler_height as string | number);
+    const coolerHeight = coolerSpecs.height_mm;
+    const maxCoolerHeight = caseSpecs.max_cpu_cooler_height_mm;
 
     if (!coolerHeight || !maxCoolerHeight) {
       return [];
@@ -327,6 +466,7 @@ export const CoolerClearanceRule: BuildRule = {
  * Puedes importar este array para inicializar el motor con todas las reglas.
  */
 export const ALL_RULES: BuildRule[] = [
+  CompletenessRule,
   SocketCompatibilityRule,
   WattageRule,
   MemoryTypeRule,

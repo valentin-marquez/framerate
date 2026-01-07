@@ -19,71 +19,102 @@ export function ProductSpecs({ product }: { product: Product }) {
   const items: string[] = [];
 
   switch (category) {
-    case "cpu": {
-      const specs = product.specs as CpuSpecs;
-      if (specs.cores_threads) items.push(specs.cores_threads);
-      if (specs.frequency) items.push(specs.frequency);
+    case "procesadores": {
+      const specs = product.specs as any;
+      if (specs.cores?.total) items.push(`${specs.cores.total} Cores`);
+      else if (specs.cores_threads) items.push(specs.cores_threads);
+
+      if (specs.clocks?.boost_ghz) items.push(`${specs.clocks.boost_ghz} GHz`);
+      else if (specs.frequency) items.push(specs.frequency);
+
       if (specs.socket) items.push(specs.socket);
       break;
     }
-    case "gpu": {
-      const specs = product.specs as GpuSpecs;
-      if (specs.memory) items.push(specs.memory);
-      if (specs.bus) items.push(specs.bus);
+    case "tarjetas-de-video": {
+      const specs = product.specs as any;
+      if (specs.memory_gb) items.push(`${specs.memory_gb}GB`);
+      else if (specs.memory) items.push(specs.memory);
+
+      if (specs.memory_type) items.push(specs.memory_type);
       break;
     }
-    case "motherboard": {
-      const specs = product.specs as MotherboardSpecs;
+    case "placas-madre": {
+      const specs = product.specs as any;
       if (specs.socket) items.push(specs.socket);
       if (specs.chipset) items.push(specs.chipset);
       if (specs.form_factor) items.push(specs.form_factor);
       break;
     }
-    case "ram": {
-      const specs = product.specs as RamSpecs;
-      if (specs.capacity) items.push(specs.capacity);
+    case "memorias-ram": {
+      const specs = product.specs as any;
+      if (specs.total_capacity_gb) items.push(`${specs.total_capacity_gb}GB`);
+      else if (specs.capacity) items.push(specs.capacity);
+
       if (specs.type) items.push(specs.type);
-      if (specs.speed) items.push(specs.speed);
-      if (specs.latency_cl) items.push(specs.latency_cl);
+
+      if (specs.speed_mt_s) items.push(`${specs.speed_mt_s} MT/s`);
+      else if (specs.speed) items.push(specs.speed);
+
+      if (specs.cas_latency) items.push(`CL${specs.cas_latency}`);
+      else if (specs.latency_cl) items.push(specs.latency_cl);
       break;
     }
-    case "psu": {
-      const specs = product.specs as PsuSpecs;
-      if (specs.wattage) items.push(specs.wattage);
-      if (specs.certification) items.push(specs.certification);
+    case "fuentes-de-poder": {
+      const specs = product.specs as any;
+      if (specs.wattage) items.push(`${specs.wattage}W`);
+      if (specs.efficiency_rating) items.push(specs.efficiency_rating);
+      else if (specs.certification) items.push(specs.certification);
+
       if (specs.modular) items.push(specs.modular);
       break;
     }
-    case "case": {
-      const specs = product.specs as CaseSpecs;
-      if (specs.max_motherboard_size) items.push(specs.max_motherboard_size);
+    case "gabinetes": {
+      const specs = product.specs as any;
+      if (specs.form_factor) items.push(specs.form_factor);
+      else if (specs.max_motherboard_size) items.push(specs.max_motherboard_size);
+
       if (specs.side_panel) items.push(specs.side_panel);
       break;
     }
     case "ssd": {
-      const specs = product.specs as SsdSpecs;
-      if (specs.capacity) items.push(specs.capacity);
-      if (specs.format) items.push(specs.format);
-      if (specs.bus) items.push(specs.bus);
+      const specs = product.specs as any;
+      if (specs.capacity_gb) items.push(`${specs.capacity_gb}GB`);
+      else if (specs.capacity) items.push(specs.capacity);
+
+      if (specs.form_factor) items.push(specs.form_factor);
+      else if (specs.format) items.push(specs.format);
+
+      if (specs.interface) items.push(specs.interface);
+      else if (specs.bus) items.push(specs.bus);
       break;
     }
-    case "hdd": {
-      const specs = product.specs as HddSpecs;
-      if (specs.capacity) items.push(specs.capacity);
-      if (specs.rpm) items.push(specs.rpm);
+    case "discos-duros": {
+      const specs = product.specs as any;
+      if (specs.capacity_gb) items.push(`${specs.capacity_gb}GB`);
+      else if (specs.capacity) items.push(specs.capacity);
+
+      if (specs.rpm) items.push(`${specs.rpm} RPM`);
       break;
     }
-    case "cpu-cooler": {
-      const specs = product.specs as CpuCoolerSpecs;
+    case "coolers-cpu": {
+      const specs = product.specs as any;
       if (specs.type) items.push(specs.type);
-      if (specs.height) items.push(`H: ${specs.height}`);
+      if (specs.radiator_size_mm) items.push(`Radiador ${specs.radiator_size_mm}mm`);
+      else if (specs.fan_size_mm) items.push(`Fan ${specs.fan_size_mm}mm`);
+      else if (specs.height_mm) items.push(`H: ${specs.height_mm}mm`);
+      else if (specs.height) items.push(`H: ${specs.height}`);
       break;
     }
-    case "case-fan": {
-      const specs = product.specs as CaseFanSpecs;
-      if (specs.size) items.push(specs.size);
-      if (specs.rpm) items.push(specs.rpm);
-      if (specs.illumination && specs.illumination !== "No") items.push(specs.illumination);
+    case "ventiladores": {
+      const specs = product.specs as any;
+      if (specs.size_mm) items.push(`${specs.size_mm}mm`);
+      else if (specs.size) items.push(specs.size);
+
+      if (specs.rpm?.max) items.push(`${specs.rpm.max} RPM`);
+      else if (specs.rpm && typeof specs.rpm !== "object") items.push(specs.rpm);
+
+      if (specs.rgb) items.push("RGB");
+      else if (specs.illumination && specs.illumination !== "No") items.push(specs.illumination);
       break;
     }
   }

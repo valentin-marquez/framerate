@@ -17,11 +17,13 @@ import { useCategories } from "~/hooks/useCategories";
 import { useQuickSearch } from "~/hooks/useProducts";
 import { cn } from "~/lib/utils";
 import type { Category } from "~/services/categories";
+import type { QuickSearchResult } from "~/services/products";
 import { formatCLP } from "~/utils/format";
 
 interface SearchDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onSelectProduct?: (product: QuickSearchResult) => void;
 }
 
 // Hook personalizado para debounce
@@ -41,7 +43,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
+export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDialogProps) {
   const navigate = useNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,12 +95,16 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   }, [isOpen, handleSetIsOpen]);
 
   const handleSelectProduct = useCallback(
-    (productSlug: string) => {
-      handleSetIsOpen(false);
-      navigate(`/producto/${productSlug}`);
-      setSearchQuery("");
+    (product: QuickSearchResult) => {
+      if (onSelectProduct) {
+        onSelectProduct(product);
+      } else {
+        handleSetIsOpen(false);
+        navigate(`/producto/${product.slug}`);
+        setSearchQuery("");
+      }
     },
-    [navigate, handleSetIsOpen],
+    [navigate, handleSetIsOpen, onSelectProduct],
   );
 
   const handleSelectCategory = useCallback(
@@ -214,7 +220,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                 {products.map((product, index) => (
                   <CommandItem
                     key={product.id}
-                    onSelect={() => handleSelectProduct(product.slug)}
+                    onSelect={() => handleSelectProduct(product)}
                     className="cursor-pointer transition-all duration-150 hover:scale-[1.01] hover:bg-accent/50 py-3 px-3 gap-3"
                     style={{
                       animationDelay: `${index * 30}ms`,
@@ -235,7 +241,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                         </div>
                       )}
                     </div>
-                    ¿
+
                     <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden">
                       <span className="text-sm font-medium line-clamp-2 leading-snug transition-colors duration-150">
                         {product.name}

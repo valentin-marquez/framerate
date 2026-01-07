@@ -14,10 +14,20 @@ interface QuoteSlotProps {
   onSelect?: (itemId: string) => void;
   onRemove: (item: VirtualQuoteItem) => void;
   onChangeStore: (item: VirtualQuoteItem, listingId: string | null) => void;
+  onAdd?: () => void;
   isOwner: boolean;
 }
 
-export function QuoteSlot({ slot, items, selectedItemId, onSelect, onRemove, onChangeStore, isOwner }: QuoteSlotProps) {
+export function QuoteSlot({
+  slot,
+  items,
+  selectedItemId,
+  onSelect,
+  onRemove,
+  onChangeStore,
+  onAdd,
+  isOwner,
+}: QuoteSlotProps) {
   const navigate = useNavigate();
 
   // Agrupar elementos por su id original de quote_item (para distinguir entre diferentes productos/entradas)
@@ -48,8 +58,12 @@ export function QuoteSlot({ slot, items, selectedItemId, onSelect, onRemove, onC
   }, [slot.type, items, selectedItemId, options, optionKeys]);
 
   const handleAdd = () => {
-    const category = slot.accepts[0];
-    navigate(`/categoria/${category}`);
+    if (onAdd) {
+      onAdd();
+    } else {
+      const category = slot.accepts[0];
+      navigate(`/categoria/${category}`);
+    }
   };
 
   if (items.length === 0) {

@@ -1,14 +1,14 @@
 export const CATEGORY_CONFIG: Record<string, { label: string; urlSlug: string }> = {
-  motherboard: { label: "Placas Madre", urlSlug: "placas-madre" },
-  case: { label: "Gabinetes", urlSlug: "gabinetes" },
-  gpu: { label: "Tarjetas de Video", urlSlug: "tarjetas-de-video" },
+  "placas-madre": { label: "Placas Madre", urlSlug: "placas-madre" },
+  gabinetes: { label: "Gabinetes", urlSlug: "gabinetes" },
+  "tarjetas-de-video": { label: "Tarjetas de Video", urlSlug: "tarjetas-de-video" },
   ssd: { label: "SSD", urlSlug: "ssd" },
-  psu: { label: "Fuentes de Poder", urlSlug: "fuentes-de-poder" },
-  cpu: { label: "Procesadores", urlSlug: "procesadores" },
-  cpu_cooler: { label: "Coolers CPU", urlSlug: "coolers-cpu" },
-  hdd: { label: "Discos Duros", urlSlug: "discos-duros" },
-  case_fan: { label: "Ventiladores", urlSlug: "ventiladores" },
-  ram: { label: "Memorias RAM", urlSlug: "memorias-ram" },
+  "fuentes-de-poder": { label: "Fuentes de Poder", urlSlug: "fuentes-de-poder" },
+  procesadores: { label: "Procesadores", urlSlug: "procesadores" },
+  "coolers-cpu": { label: "Coolers CPU", urlSlug: "coolers-cpu" },
+  "discos-duros": { label: "Discos Duros", urlSlug: "discos-duros" },
+  ventiladores: { label: "Ventiladores", urlSlug: "ventiladores" },
+  "memorias-ram": { label: "Memorias RAM", urlSlug: "memorias-ram" },
 };
 
 export function getCategoryConfig(apiSlug: string) {

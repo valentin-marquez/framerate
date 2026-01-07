@@ -204,7 +204,7 @@ export function StoreSelector({
                               >
                                 {formatCLP(listing.price_cash)}
                               </div>
-                              <div className="text-xs text-muted-foreground line-through opacity-60">
+                              <div className="text-xs text-muted-foreground line-through decoration-muted-foreground opacity-60">
                                 {formatCLP(listing.price_normal)}
                               </div>
                             </div>
