@@ -410,7 +410,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   aria-label="Entrar"
                   className={cn(
                     buttonVariants({
-                      variant: "secondary",
+                      variant: "default",
                       size: "sm",
                     }),
                     "md:px-6 md:h-8",
