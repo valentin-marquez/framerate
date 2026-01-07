@@ -16,4 +16,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["virtual:react-router/server-build"],
   },
+  ssr: {
+    external: ["virtual:react-router/server-build"],
+  },
 });
