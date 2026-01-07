@@ -6,7 +6,17 @@ import devtoolsJson from "vite-plugin-devtools-json";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [cloudflare(), tailwindcss(), reactRouter(), tsconfigPaths(), devtoolsJson()],
+  plugins: [
+    cloudflare({
+      viteEnvironment: {
+        name: "ssr",
+      },
+    }),
+    tailwindcss(),
+    reactRouter(),
+    tsconfigPaths(),
+    devtoolsJson(),
+  ],
   server: {
     open: true,
   },
