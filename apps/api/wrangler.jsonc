@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "workers_dev": false,
   "preview_urls": true,
+  "keep_vars": true,
   "compatibility_date": "2026-01-05",
   "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
   // Variables de entorno no sensibles
