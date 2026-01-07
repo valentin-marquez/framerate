@@ -13,4 +13,7 @@ export default defineConfig({
   build: {
     minify: true,
   },
+  optimizeDeps: {
+    exclude: ["virtual:react-router/server-build"],
+  },
 });
