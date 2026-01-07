@@ -23,7 +23,7 @@ export default async function handleRequest(
       "'self'",
       "data:",
       isDevelopment ? "ws:" : "",
-      (import.meta.env.VITE_API_URL || (isDevelopment ? "http://127.0.0.1:8787" : "https://api.framerate.cl")).trim(),
+      import.meta.env.VITE_API_URL ?? (isDevelopment ? "http://127.0.0.1:8787" : ""),
     ],
     scriptSrc: [
       "'self'",

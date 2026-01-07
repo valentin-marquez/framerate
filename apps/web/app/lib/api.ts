@@ -1,5 +1,4 @@
-const API_URL =
-  typeof import.meta.env.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL.trim() : import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 if (!API_URL) {
   console.warn("VITE_API_URL is not defined, defaulting to http://127.0.0.1:8787");
