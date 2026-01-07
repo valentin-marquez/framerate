@@ -30,7 +30,13 @@ export function meta(_: Route.MetaArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   const clientEnv = getClientEnv();
   const { user, supabase, headers: authHeaders } = await getAuthUser(request);
-  const categories = await categoriesService.getAll();
+
+  let categories: Awaited<ReturnType<typeof categoriesService.getAll>> = [];
+  try {
+    categories = await categoriesService.getAll();
+  } catch (error) {
+    console.error("Failed to fetch categories in root loader:", error);
+  }
 
   let profile = null;
   if (user) {

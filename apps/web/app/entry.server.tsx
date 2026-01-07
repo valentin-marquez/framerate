@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import crypto from "node:crypto";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
@@ -23,7 +24,7 @@ export default async function handleRequest(
       "'self'",
       "data:",
       isDevelopment ? "ws:" : "",
-      import.meta.env.VITE_API_URL ?? (isDevelopment ? "http://127.0.0.1:8787" : ""),
+      import.meta.env.VITE_API_URL ?? env.VITE_API_URL ?? (isDevelopment ? "http://127.0.0.1:8787" : ""),
     ],
     scriptSrc: [
       "'self'",

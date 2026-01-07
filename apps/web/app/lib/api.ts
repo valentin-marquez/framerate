@@ -2,6 +2,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 if (!API_URL) {
   console.warn("VITE_API_URL is not defined, defaulting to http://127.0.0.1:8787");
+} else {
+  console.log("Using API_URL:", API_URL);
 }
 
 const BASE_URL = API_URL || "http://127.0.0.1:8787";
