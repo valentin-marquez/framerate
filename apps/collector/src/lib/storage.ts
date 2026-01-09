@@ -23,7 +23,8 @@ export interface ImageUploadResult {
 }
 
 export async function checkProductImageExists(mpn: string): Promise<string | null> {
-  const extensions = ["webp", "png", "jpeg", "jpg"] as const;
+  // Only check for AVIF, effectively ignoring legacy formats to force upgrade/re-upload as AVIF
+  const extensions = ["avif"] as const;
 
   for (const ext of extensions) {
     const filePath = getProductImagePath(mpn, ext);
@@ -138,51 +139,47 @@ export async function uploadProductImage(
   }
 
   const maxSize = FileSizeLimits[StorageBuckets.PRODUCT_IMAGES];
+  // Always convert to AVIF
   let finalData: ArrayBuffer | Buffer = imageData.data;
-  let finalMimeType = imageData.mimeType;
-  let finalExtension = imageData.extension;
+  const finalMimeType = "image/avif";
+  const finalExtension = "avif";
 
-  if (imageData.data.byteLength > maxSize) {
-    logger.info(`Image for MPN ${mpn} exceeds ${maxSize} bytes (${imageData.data.byteLength}), compressing...`);
+  try {
+    let compressed = await sharp(Buffer.from(imageData.data)).avif({ quality: 80 }).toBuffer();
 
-    try {
-      const compressed = await sharp(Buffer.from(imageData.data)).webp({ quality: 80 }).toBuffer();
+    if (compressed.byteLength > maxSize) {
+      logger.info(`AVIF image for MPN ${mpn} exceeds ${maxSize} bytes (${compressed.byteLength}), resizing...`);
 
-      if (compressed.byteLength > maxSize) {
-        const moreCompressed = await sharp(Buffer.from(imageData.data))
-          .resize({ width: 1200, withoutEnlargement: true })
-          .webp({ quality: 70 })
+      const resized = await sharp(Buffer.from(imageData.data))
+        .resize({ width: 1200, withoutEnlargement: true })
+        .avif({ quality: 70 })
+        .toBuffer();
+
+      if (resized.byteLength > maxSize) {
+        const aggressive = await sharp(Buffer.from(imageData.data))
+          .resize({ width: 800, withoutEnlargement: true })
+          .avif({ quality: 60 })
           .toBuffer();
-
-        if (moreCompressed.byteLength > maxSize) {
-          const aggressiveCompressed = await sharp(Buffer.from(imageData.data))
-            .resize({ width: 800, withoutEnlargement: true })
-            .webp({ quality: 60 })
-            .toBuffer();
-
-          finalData = aggressiveCompressed;
-        } else {
-          finalData = moreCompressed;
-        }
+        compressed = aggressive;
       } else {
-        finalData = compressed;
+        compressed = resized;
       }
-
-      finalMimeType = "image/webp";
-      finalExtension = "webp";
-
-      logger.info(`Compressed image for MPN ${mpn}: ${imageData.data.byteLength} -> ${finalData.byteLength} bytes`);
-    } catch (compressError) {
-      logger.error(`Failed to compress image for MPN ${mpn}:`, String(compressError));
-      return {
-        success: false,
-        url: null,
-        error: `Failed to compress image: ${String(compressError)}`,
-      };
     }
+
+    finalData = compressed;
+    logger.info(
+      `Converted/Compressed image for MPN ${mpn} to AVIF: ${imageData.data.byteLength} -> ${finalData.byteLength} bytes`,
+    );
+  } catch (compressError) {
+    logger.error(`Failed to convert image to AVIF for MPN ${mpn}:`, String(compressError));
+    return {
+      success: false,
+      url: null,
+      error: `Failed to convert image: ${String(compressError)}`,
+    };
   }
 
-  const filePath = getProductImagePath(sanitizedMpn, finalExtension as "png" | "jpeg" | "webp");
+  const filePath = getProductImagePath(sanitizedMpn, "avif");
 
   const { error: uploadError } = await supabase.storage
     .from(StorageBuckets.PRODUCT_IMAGES)

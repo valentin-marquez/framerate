@@ -16,10 +16,11 @@ export const routes = [
     path: `/${API_VERSION}/categories`,
     route: categories,
   },
-  {
-    path: `/${API_VERSION}/images`,
-    route: images,
-  },
+  // images route is mounted manually in index.ts to bypass global middleware
+  // {
+  //   path: `/${API_VERSION}/images`,
+  //   route: images,
+  // },
   {
     path: `/${API_VERSION}/products`,
     route: products,

@@ -135,12 +135,12 @@ export abstract class BaseExtractor<T> {
       // Strategy:
       // A. Try searching by explicitly provided MPN
       let openDBResult: any = null;
-      let usedMethod = "";
+      let _usedMethod = "";
 
       if (mpn) {
         openDBResult = openDB.findProduct(category, mpn);
         if (openDBResult) {
-          usedMethod = "MPN";
+          _usedMethod = "MPN";
           this.logger.info(`Found product in OpenDB by MPN: ${mpn}`);
           // If found by MPN, we trust the input MPN is correct (or close enough)
           // We can optionally check if openDBResult.metadata.part_numbers contains a better one
@@ -155,7 +155,7 @@ export abstract class BaseExtractor<T> {
         if (titleQuery) {
           openDBResult = openDB.findProduct(category, titleQuery);
           if (openDBResult) {
-            usedMethod = "Title";
+            _usedMethod = "Title";
             this.logger.info(`Found product in OpenDB by Title: ${titleQuery}`);
 
             // If found by Title, we likely found a BETTER MPN.

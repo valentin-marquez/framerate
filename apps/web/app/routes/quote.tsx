@@ -12,13 +12,13 @@ import { SearchDialog } from "~/components/search/search-dialog";
 import { useTranslation } from "~/hooks/use-translation";
 import { useUser } from "~/hooks/useAuth";
 import {
-  useAnalyzeBuild,
+  useAnalyzeQuote,
   useDeleteQuote,
   useQuoteAddItem,
   useQuoteRemoveItem,
   useQuoteUpdateItem,
 } from "~/hooks/useQuotes";
-import { requireAuth } from "~/lib/auth.server";
+import { getAuthUser } from "~/lib/auth.server";
 import { quotesService, type VirtualQuoteItem } from "~/services/quotes";
 import { copyToClipboard, exportToExcel } from "~/utils/quote-export";
 import { QUOTE_SLOTS } from "~/utils/slots";
@@ -44,20 +44,12 @@ export function meta({ data }: Route.MetaArgs) {
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   try {
-    const { user, supabase } = await requireAuth(request);
-
-    if (user.id === undefined) {
-      throw new Response("Unauthorized", { status: 401 });
-    }
+    const { supabase } = await getAuthUser(request);
 
     const {
       data: { session },
     } = await supabase.auth.getSession();
     const token = session?.access_token;
-
-    if (!token) {
-      throw new Response("Unauthorized", { status: 401 });
-    }
 
     const quote = await quotesService.getById(params.slug, token);
     return { quote };
@@ -75,7 +67,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   const updateItem = useQuoteUpdateItem();
   const addItem = useQuoteAddItem();
   const deleteQuote = useDeleteQuote();
-  const analyzeBuild = useAnalyzeBuild();
+  const analyzeQuote = useAnalyzeQuote();
   const { t } = useTranslation();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -141,9 +133,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   };
 
   const handleCheckCompatibility = () => {
-    const productIds = activeItems.map((item) => item.product?.id).filter((id): id is string => !!id);
-
-    analyzeBuild.mutate(productIds, {
+    analyzeQuote.mutate(quote.id, {
       onSuccess: (data) => {
         console.log("--- DEBUG FRONTEND ANALYSIS ---");
         console.log("Analysis Data:", data);
@@ -152,6 +142,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           issues: data.issues,
           estimatedWattage: data.estimatedWattage,
         });
+        revalidator.revalidate();
         toast.success(t("compatibility_checked"));
       },
       onError: (error) => {
@@ -378,20 +369,24 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           isOwner={isOwner}
           selectedVariants={selectedVariants}
           onSelectVariant={(slotId, itemId) => setSelectedVariants((prev) => ({ ...prev, [slotId]: itemId }))}
-          onAdd={() => setIsSearchOpen(true)}
+          onAdd={isOwner ? () => setIsSearchOpen(true) : undefined}
         />
 
-        <QuoteActions
-          onDelete={handleDeleteQuote}
-          onExportPDF={handleExportPDF}
-          onExportExcel={handleExportExcel}
-          onCopyClipboard={handleCopyClipboard}
-          onCheckCompatibility={handleCheckCompatibility}
-          isDeleting={deleteQuote.isPending}
-          isCheckingCompatibility={analyzeBuild.isPending}
-        />
+        {isOwner && (
+          <QuoteActions
+            onDelete={handleDeleteQuote}
+            onExportPDF={handleExportPDF}
+            onExportExcel={handleExportExcel}
+            onCopyClipboard={handleCopyClipboard}
+            onCheckCompatibility={handleCheckCompatibility}
+            isDeleting={deleteQuote.isPending}
+            isCheckingCompatibility={analyzeQuote.isPending}
+          />
+        )}
       </div>
-      <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} onSelectProduct={handleAddProduct} />
+      {isOwner && (
+        <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} onSelectProduct={handleAddProduct} />
+      )}
     </div>
   );
 }

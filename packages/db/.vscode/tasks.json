@@ -1,10 +1,10 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "migration:new",
-			"type": "shell",
-			"command": "bun run migration:new add_lang_to_profiles"
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "migration:new",
+      "type": "shell",
+      "command": "bun run migration:new add_lang_to_profiles"
+    }
+  ]
 }

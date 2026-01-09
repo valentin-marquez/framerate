@@ -170,8 +170,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                   <AsyncImage
                     src={product.image_url || "/placeholder.png"}
                     alt={product.name || "Imagen de producto"}
-                    // @ts-expect-error - priority prop
-                    priority={true}
+                    priority
                     className="max-h-full max-w-full w-auto h-auto object-contain transition-transform duration-500 group-hover:scale-105 filter"
                   />
                 </div>

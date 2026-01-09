@@ -5,26 +5,40 @@
  * Este módulo expone una ruta para servir imágenes directamente desde el almacenamiento de Supabase,
  * construyendo la URL de acceso público a partir de la ruta solicitada por el usuario.
  *
- * Sí, es una cochinada: estamos haciendo proxy de archivos estáticos a través de la API, lo cual no es óptimo
- * ni recomendable para producción (por temas de performance, escalabilidad y costos).
+ * Esta implementación actúa como CDN proxy aprovechando el cache de Cloudflare Workers
+ * para mejorar significativamente el rendimiento (LCP) de la aplicación.
  *
  * @reason
- * Sin embargo, esta solución es necesaria para poder controlar los encabezados de caché y CORS,
- * y para poder servir imágenes de buckets públicos sin exponer directamente la URL de Supabase al cliente.
- * Además, permite centralizar la lógica de acceso y autenticación si en el futuro se requiere proteger ciertos recursos.
+ * - Control de headers de caché y CORS
+ * - Caché en edge de Cloudflare (Cache API)
+ * - No exponer directamente la URL de Supabase al cliente
+ * - URLs más cortas y portables para el frontend
  */
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 
 const images = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
+// Tiempo de caché: 1 año para imágenes inmutables
+const CACHE_TTL = 31536000;
+
+// Allowed image extensions for security
+const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "avif", "gif", "svg"]);
+
 images.get("/*", async (c) => {
   // Handle /v1/images/bucket/file.jpg or /images/bucket/file.jpg
   const parts = c.req.path.split("/images/");
   const path = parts.length > 1 ? parts[1] : null;
 
-  if (!path) {
+  // Security: Validate path
+  if (!path || path.includes("..") || path.startsWith("/")) {
     return c.text("Invalid image path", 400);
+  }
+
+  // Security: Validate file extension
+  const extension = path.split(".").pop()?.toLowerCase();
+  if (!extension || !ALLOWED_EXTENSIONS.has(extension)) {
+    return c.text("Invalid file type", 400);
   }
 
   const supabaseUrl = c.env.SUPABASE_URL || Bun.env.SUPABASE_URL;
@@ -34,26 +48,68 @@ images.get("/*", async (c) => {
     return c.text("Internal Server Error", 500);
   }
 
-  // Construye la URL pública al archivo en Supabase Storage usando la ruta solicitada.
+  // Try Cloudflare Cache first
+  // @ts-expect-error - caches.default is Cloudflare Workers specific
+  const cache = caches.default as Cache;
+  const cacheKey = new Request(c.req.url, c.req.raw);
 
+  try {
+    const cachedResponse = await cache.match(cacheKey);
+    if (cachedResponse) {
+      const headers = new Headers(cachedResponse.headers);
+      headers.set("X-Cache", "HIT");
+      return new Response(cachedResponse.body, {
+        status: cachedResponse.status,
+        headers,
+      });
+    }
+  } catch {
+    // Cache miss or error, continue to fetch
+  }
+
+  // Construye la URL pública al archivo en Supabase Storage
   const storageUrl = `${supabaseUrl}/storage/v1/object/public/${path}`;
 
   try {
-    const response = await fetch(storageUrl);
+    // Fetch with Cloudflare caching hints
+    const response = await fetch(storageUrl, {
+      cf: {
+        cacheTtl: CACHE_TTL,
+        cacheEverything: true,
+      },
+    });
 
     if (!response.ok) {
       return c.text("Image not found", 404);
     }
 
-    const newHeaders = new Headers(response.headers);
-    // Configurar encabezados de caché y CORS adecuados para las imágenes
-    newHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
-    newHeaders.set("Access-Control-Allow-Origin", "*");
+    // Determine content type
+    const contentType = response.headers.get("Content-Type") || `image/${extension}`;
 
-    return new Response(response.body, {
+    // Build optimized headers
+    const newHeaders = new Headers();
+    newHeaders.set("Content-Type", contentType);
+    newHeaders.set("Cache-Control", `public, max-age=${CACHE_TTL}, immutable`);
+    newHeaders.set("CDN-Cache-Control", `public, max-age=${CACHE_TTL}`);
+    newHeaders.set("X-Cache", "MISS");
+    newHeaders.set("Access-Control-Allow-Origin", "*");
+    newHeaders.set("Access-Control-Allow-Methods", "GET, OPTIONS, HEAD");
+    newHeaders.set("Access-Control-Allow-Headers", "Content-Type");
+    newHeaders.set("Cross-Origin-Resource-Policy", "cross-origin");
+    newHeaders.set("Timing-Allow-Origin", "*");
+
+    // Clone response for caching
+    const responseBody = await response.arrayBuffer();
+
+    const cachedResponse = new Response(responseBody, {
       status: response.status,
       headers: newHeaders,
     });
+
+    // Store in Cloudflare Cache (non-blocking)
+    c.executionCtx.waitUntil(cache.put(cacheKey, cachedResponse.clone()));
+
+    return cachedResponse;
   } catch (error) {
     console.error("Error fetching image:", error);
     return c.text("Internal Server Error", 500);

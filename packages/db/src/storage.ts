@@ -21,7 +21,7 @@ export type StorageBucket = (typeof StorageBuckets)[keyof typeof StorageBuckets]
  */
 export const AllowedMimeTypes = {
   [StorageBuckets.STORE_LOGOS]: ["image/png", "image/jpeg", "image/webp", "image/svg+xml"],
-  [StorageBuckets.PRODUCT_IMAGES]: ["image/png", "image/jpeg", "image/webp"],
+  [StorageBuckets.PRODUCT_IMAGES]: ["image/png", "image/jpeg", "image/webp", "image/avif"],
 } as const;
 
 /**
@@ -57,14 +57,14 @@ export function getStoreLogoPath(
  * que el mismo producto de diferentes tiendas comparta una imagen.
  *
  * @param mpn - El Número de Parte del Fabricante
- * @param extension - Extensión del archivo (por defecto: "webp")
+ * @param extension - Extensión del archivo (por defecto: "avif")
  * @returns La ruta del archivo para almacenamiento
  *
  * @example
- * getProductImagePath("RTX4090-GAMING-X-TRIO") // "RTX4090-GAMING-X-TRIO.webp"
+ * getProductImagePath("RTX4090-GAMING-X-TRIO") // "RTX4090-GAMING-X-TRIO.avif"
  * getProductImagePath("ROG-STRIX-RTX4080", "png") // "ROG-STRIX-RTX4080.png"
  */
-export function getProductImagePath(mpn: string, extension: "png" | "jpeg" | "jpg" | "webp" = "webp"): string {
+export function getProductImagePath(mpn: string, extension: "png" | "jpeg" | "jpg" | "webp" | "avif" = "avif"): string {
   // Sanitizar MPN: eliminar caracteres especiales que podrían causar problemas en URLs
   const sanitizedMpn = mpn
     .trim()
@@ -118,13 +118,13 @@ export function getStoreLogoUrl(
  *
  * @param supabaseUrl - La URL del proyecto Supabase
  * @param mpn - El Número de Parte del Fabricante
- * @param extension - Extensión del archivo (por defecto: "webp")
+ * @param extension - Extensión del archivo (por defecto: "avif")
  * @returns La URL pública para la imagen del producto
  */
 export function getProductImageUrl(
   supabaseUrl: string,
   mpn: string,
-  extension: "png" | "jpeg" | "jpg" | "webp" = "webp",
+  extension: "png" | "jpeg" | "jpg" | "webp" | "avif" = "avif",
 ): string {
   const filePath = getProductImagePath(mpn, extension);
   return getStoragePublicUrl(supabaseUrl, StorageBuckets.PRODUCT_IMAGES, filePath);

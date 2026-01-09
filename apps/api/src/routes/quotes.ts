@@ -202,6 +202,319 @@ quotes.get("/user/:username", async (c) => {
   }
 });
 
+/**
+ * GET /v1/quotes/:id
+ *
+ * Obtiene una cotización específica con todos sus items y productos.
+ * Solo el dueño o cotizaciones públicas pueden ser accedidas.
+ */
+quotes.get("/:id", async (c) => {
+  try {
+    const quoteId = c.req.param("id");
+
+    // Extract token from header manually as middleware is not yet applied
+    const authHeader = c.req.header("Authorization");
+    const token = authHeader ? authHeader.replace("Bearer ", "") : undefined;
+    const supabase = createSupabase(c.env, token);
+
+    let userId: string | undefined;
+    if (token) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      userId = user?.id;
+    }
+
+    // Obtener la cotización
+    const { data: quote, error: quoteError } = await supabase
+      .from("quotes")
+      .select(`
+        id,
+        name,
+        description,
+        is_public,
+        compatibility_status,
+        estimated_wattage,
+        validation_errors,
+        last_analyzed_at,
+        created_at,
+        updated_at,
+        user_id
+      `)
+      .eq("id", quoteId)
+      .single();
+
+    if (quoteError || !quote) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    // Verificar permisos (dueño o pública)
+    const isOwner = userId === quote.user_id;
+
+    if (!isOwner && !quote.is_public) {
+      return c.json({ error: "Access denied" }, 403);
+    }
+
+    // Obtener items con productos completos y listing seleccionado
+    const { data: items, error: itemsError } = await supabase
+      .from("quote_items")
+      .select(`
+        id,
+        quantity,
+        created_at,
+        listing_id,
+        category_id,
+        category:categories(name, slug),
+        listing:listings(
+          id,
+          price_normal,
+          price_cash,
+          url,
+          stock_quantity,
+          store:stores(name, logo_url, slug)
+        ),
+        product:products(
+          id,
+          name,
+          slug,
+          mpn,
+          image_url,
+          specs,
+          brand:brands(name, slug),
+          category:categories(name, slug)
+        )
+      `)
+      .eq("quote_id", quoteId)
+      .order("created_at", { ascending: true });
+
+    if (itemsError) {
+      console.error("Error fetching quote items:", itemsError);
+      return c.json({ error: "Failed to fetch quote items" }, 500);
+    }
+
+    // Obtener precios actuales de los listings (para los que no tienen listing seleccionado)
+    const productIds = items?.map((item) => item.product?.id).filter(Boolean) || [];
+
+    let productsWithPrices = items?.map((item) => item.product) || [];
+
+    // Fetch best listings for products in the quote that don't have a specific listing selected
+    const itemsWithoutListing = items?.filter((i) => !i.listing_id) || [];
+    const productIdsToFetch = [...new Set(itemsWithoutListing.map((i) => i.product?.id).filter(Boolean))];
+
+    const bestListingsMap: Record<string, any> = {};
+    if (productIdsToFetch.length > 0) {
+      const { data: allListings } = await supabase
+        .from("listings")
+        .select(`
+                id,
+                product_id,
+                price_cash,
+                price_normal,
+                url,
+                stock_quantity,
+                store:stores(name, logo_url, slug)
+            `)
+        .in("product_id", productIdsToFetch)
+        .eq("is_active", true)
+        .order("price_cash", { ascending: true });
+
+      if (allListings) {
+        // Group by product_id and take the first (cheapest because of order)
+        for (const listing of allListings) {
+          if (!bestListingsMap[listing.product_id]) {
+            bestListingsMap[listing.product_id] = listing;
+          }
+        }
+      }
+    }
+
+    if (productIds.length > 0) {
+      const { data: pricesData } = await supabase.from("api_products").select("id, prices").in("id", productIds);
+
+      if (pricesData) {
+        productsWithPrices =
+          items?.map((item) => {
+            const priceInfo = pricesData.find((p) => p.id === item.product?.id);
+            return {
+              ...item.product,
+              prices: priceInfo?.prices || { cash: null, normal: null },
+            };
+          }) || [];
+      }
+    }
+
+    // Calcular precio total
+    const totalCash = productsWithPrices.reduce((sum, product, index) => {
+      const item = items?.[index];
+      const quantity = item?.quantity || 1;
+
+      // Si hay un listing seleccionado, usar su precio
+      if (item?.listing) {
+        return sum + (item.listing.price_cash || 0) * quantity;
+      }
+
+      // Si no, usar el mejor precio global
+      const prices = (product as unknown as BuildProduct & { prices?: { cash?: number } })?.prices;
+      const price = prices?.cash || 0;
+      return sum + price * quantity;
+    }, 0);
+
+    const totalNormal = productsWithPrices.reduce((sum, product, index) => {
+      const item = items?.[index];
+      const quantity = item?.quantity || 1;
+
+      // Si hay un listing seleccionado, usar su precio
+      if (item?.listing) {
+        return sum + (item.listing.price_normal || 0) * quantity;
+      }
+
+      const prices = (product as unknown as BuildProduct & { prices?: { normal?: number } })?.prices;
+      const price = prices?.normal || 0;
+      return sum + price * quantity;
+    }, 0);
+
+    return c.json({
+      ...quote,
+      items:
+        items?.map((item, index) => {
+          let selectedListing = item.listing;
+          if (!selectedListing && item.product?.id && bestListingsMap[item.product.id]) {
+            selectedListing = bestListingsMap[item.product.id];
+          }
+
+          return {
+            id: item.id,
+            quantity: item.quantity,
+            created_at: item.created_at,
+            listing_id: item.listing_id,
+            selected_listing: selectedListing,
+            product: productsWithPrices[index],
+            category: item.category,
+          };
+        }) || [],
+      totals: {
+        cash: totalCash,
+        normal: totalNormal,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching quote:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+/**
+ * GET /v1/quotes/:id/analyze
+ *
+ * Analiza una cotización existente guardada en la base de datos.
+ * Actualiza el cache de compatibilidad en la BD.
+ */
+quotes.get("/:id/analyze", async (c) => {
+  try {
+    const quoteId = c.req.param("id");
+
+    // Extract token from header
+    const authHeader = c.req.header("Authorization");
+    const token = authHeader ? authHeader.replace("Bearer ", "") : undefined;
+    const supabase = createSupabase(c.env, token);
+
+    let userId: string | undefined;
+    if (token) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      userId = user?.id;
+    }
+
+    // Verificar acceso
+    const { data: quote } = await supabase.from("quotes").select("user_id, is_public").eq("id", quoteId).single();
+
+    if (!quote) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    const isOwner = userId === quote.user_id;
+
+    if (!isOwner && !quote.is_public) {
+      return c.json({ error: "Access denied" }, 403);
+    }
+
+    // Obtener items de la cotización
+    const { data: quoteItems, error: itemsError } = await supabase
+      .from("quote_items")
+      .select(`
+        quantity,
+        product:products(
+          id,
+          name,
+          slug,
+          mpn,
+          image_url,
+          specs,
+          category:categories(slug, name),
+          brand:brands(name)
+        )
+      `)
+      .eq("quote_id", quoteId);
+
+    if (itemsError) {
+      console.error("Error fetching quote items:", itemsError);
+      return c.json({ error: "Failed to fetch quote items" }, 500);
+    }
+
+    if (!quoteItems || quoteItems.length === 0) {
+      return c.json({
+        status: "valid",
+        estimatedWattage: 0,
+        issues: [],
+        analyzedAt: new Date().toISOString(),
+      });
+    }
+
+    // Mapear a BuildComponentsMap conservando cantidades
+    const products = quoteItems
+      .map((item) => {
+        if (!item.product) return null;
+        return {
+          ...item.product,
+          quantity: item.quantity,
+        };
+      })
+      .filter(Boolean) as unknown as (BuildProduct & { quantity?: number })[];
+
+    const componentsMap = mapProductsToComponents(products);
+
+    console.log("--- DEBUG ANALYSIS ---");
+    console.log("Quote ID:", quoteId);
+    console.log("Components Map Keys:", Object.keys(componentsMap));
+    console.log("Components Map:", JSON.stringify(componentsMap, null, 2));
+
+    // Ejecutar análisis
+    const analysis = compatibilityEngine.run(componentsMap);
+
+    console.log("Analysis Result:", JSON.stringify(analysis, null, 2));
+    console.log("----------------------");
+
+    // Actualizar cache en la BD (solo si es el dueño)
+    if (isOwner) {
+      await supabase
+        .from("quotes")
+        .update({
+          compatibility_status: analysis.status,
+          estimated_wattage: analysis.estimatedWattage,
+          validation_errors: analysis.issues as unknown as Json,
+          last_analyzed_at: analysis.analyzedAt,
+        })
+        .eq("id", quoteId);
+    }
+
+    return c.json(analysis);
+  } catch (error) {
+    console.error("Error analyzing quote:", error);
+    return c.json({ error: "Internal server error during analysis" }, 500);
+  }
+});
+
 quotes.use("/*", authMiddleware);
 
 /**
@@ -356,194 +669,6 @@ quotes.post("/", async (c) => {
 });
 
 /**
- * GET /v1/quotes/:id
- *
- * Obtiene una cotización específica con todos sus items y productos.
- * Solo el dueño o cotizaciones públicas pueden ser accedidas.
- */
-quotes.get("/:id", async (c) => {
-  try {
-    const user = c.get("user");
-    const quoteId = c.req.param("id");
-    const supabase = createSupabase(c.env, c.get("token"));
-
-    // Obtener la cotización
-    const { data: quote, error: quoteError } = await supabase
-      .from("quotes")
-      .select(`
-        id,
-        name,
-        description,
-        is_public,
-        compatibility_status,
-        estimated_wattage,
-        validation_errors,
-        last_analyzed_at,
-        created_at,
-        updated_at,
-        user_id
-      `)
-      .eq("id", quoteId)
-      .single();
-
-    if (quoteError || !quote) {
-      return c.json({ error: "Quote not found" }, 404);
-    }
-
-    // Verificar permisos (dueño o pública)
-    if (quote.user_id !== user.id && !quote.is_public) {
-      return c.json({ error: "Access denied" }, 403);
-    }
-
-    // Obtener items con productos completos y listing seleccionado
-    const { data: items, error: itemsError } = await supabase
-      .from("quote_items")
-      .select(`
-        id,
-        quantity,
-        created_at,
-        listing_id,
-        category_id,
-        category:categories(name, slug),
-        listing:listings(
-          id,
-          price_normal,
-          price_cash,
-          url,
-          stock_quantity,
-          store:stores(name, logo_url, slug)
-        ),
-        product:products(
-          id,
-          name,
-          slug,
-          mpn,
-          image_url,
-          specs,
-          brand:brands(name, slug),
-          category:categories(name, slug)
-        )
-      `)
-      .eq("quote_id", quoteId)
-      .order("created_at", { ascending: true });
-
-    if (itemsError) {
-      console.error("Error fetching quote items:", itemsError);
-      return c.json({ error: "Failed to fetch quote items" }, 500);
-    }
-
-    // Obtener precios actuales de los listings (para los que no tienen listing seleccionado)
-    const productIds = items?.map((item) => item.product?.id).filter(Boolean) || [];
-
-    let productsWithPrices = items?.map((item) => item.product) || [];
-
-    // Fetch best listings for products in the quote that don't have a specific listing selected
-    const itemsWithoutListing = items?.filter((i) => !i.listing_id) || [];
-    const productIdsToFetch = [...new Set(itemsWithoutListing.map((i) => i.product?.id).filter(Boolean))];
-
-    const bestListingsMap: Record<string, any> = {};
-    if (productIdsToFetch.length > 0) {
-      const { data: allListings } = await supabase
-        .from("listings")
-        .select(`
-                id,
-                product_id,
-                price_cash,
-                price_normal,
-                url,
-                stock_quantity,
-                store:stores(name, logo_url, slug)
-            `)
-        .in("product_id", productIdsToFetch)
-        .eq("is_active", true)
-        .order("price_cash", { ascending: true });
-
-      if (allListings) {
-        // Group by product_id and take the first (cheapest because of order)
-        for (const listing of allListings) {
-          if (!bestListingsMap[listing.product_id]) {
-            bestListingsMap[listing.product_id] = listing;
-          }
-        }
-      }
-    }
-
-    if (productIds.length > 0) {
-      const { data: pricesData } = await supabase.from("api_products").select("id, prices").in("id", productIds);
-
-      if (pricesData) {
-        productsWithPrices =
-          items?.map((item) => {
-            const priceInfo = pricesData.find((p) => p.id === item.product?.id);
-            return {
-              ...item.product,
-              prices: priceInfo?.prices || { cash: null, normal: null },
-            };
-          }) || [];
-      }
-    }
-
-    // Calcular precio total
-    const totalCash = productsWithPrices.reduce((sum, product, index) => {
-      const item = items?.[index];
-      const quantity = item?.quantity || 1;
-
-      // Si hay un listing seleccionado, usar su precio
-      if (item?.listing) {
-        return sum + (item.listing.price_cash || 0) * quantity;
-      }
-
-      // Si no, usar el mejor precio global
-      const prices = (product as unknown as BuildProduct & { prices?: { cash?: number } })?.prices;
-      const price = prices?.cash || 0;
-      return sum + price * quantity;
-    }, 0);
-
-    const totalNormal = productsWithPrices.reduce((sum, product, index) => {
-      const item = items?.[index];
-      const quantity = item?.quantity || 1;
-
-      // Si hay un listing seleccionado, usar su precio
-      if (item?.listing) {
-        return sum + (item.listing.price_normal || 0) * quantity;
-      }
-
-      const prices = (product as unknown as BuildProduct & { prices?: { normal?: number } })?.prices;
-      const price = prices?.normal || 0;
-      return sum + price * quantity;
-    }, 0);
-
-    return c.json({
-      ...quote,
-      items:
-        items?.map((item, index) => {
-          let selectedListing = item.listing;
-          if (!selectedListing && item.product?.id && bestListingsMap[item.product.id]) {
-            selectedListing = bestListingsMap[item.product.id];
-          }
-
-          return {
-            id: item.id,
-            quantity: item.quantity,
-            created_at: item.created_at,
-            listing_id: item.listing_id,
-            selected_listing: selectedListing,
-            product: productsWithPrices[index],
-            category: item.category,
-          };
-        }) || [],
-      totals: {
-        cash: totalCash,
-        normal: totalNormal,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching quote:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-/**
  * PATCH /v1/quotes/:id
  *
  * Actualiza información de una cotización.
@@ -641,101 +766,6 @@ quotes.delete("/:id", async (c) => {
   } catch (error) {
     console.error("Error deleting quote:", error);
     return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-/**
- * GET /v1/quotes/:id/analyze
- *
- * Analiza una cotización existente guardada en la base de datos.
- * Actualiza el cache de compatibilidad en la BD.
- */
-quotes.get("/:id/analyze", async (c) => {
-  try {
-    const user = c.get("user");
-    const quoteId = c.req.param("id");
-    const supabase = createSupabase(c.env, c.get("token"));
-
-    // Verificar acceso
-    const { data: quote } = await supabase.from("quotes").select("user_id, is_public").eq("id", quoteId).single();
-
-    if (!quote || (quote.user_id !== user.id && !quote.is_public)) {
-      return c.json({ error: "Quote not found or access denied" }, 404);
-    }
-
-    // Obtener items de la cotización
-    const { data: quoteItems, error: itemsError } = await supabase
-      .from("quote_items")
-      .select(`
-        quantity,
-        product:products(
-          id,
-          name,
-          slug,
-          mpn,
-          image_url,
-          specs,
-          category:categories(slug, name),
-          brand:brands(name)
-        )
-      `)
-      .eq("quote_id", quoteId);
-
-    if (itemsError) {
-      console.error("Error fetching quote items:", itemsError);
-      return c.json({ error: "Failed to fetch quote items" }, 500);
-    }
-
-    if (!quoteItems || quoteItems.length === 0) {
-      return c.json({
-        status: "valid",
-        estimatedWattage: 0,
-        issues: [],
-        analyzedAt: new Date().toISOString(),
-      });
-    }
-
-    // Mapear a BuildComponentsMap conservando cantidades
-    const products = quoteItems
-      .map((item) => {
-        if (!item.product) return null;
-        return {
-          ...item.product,
-          quantity: item.quantity,
-        };
-      })
-      .filter(Boolean) as unknown as (BuildProduct & { quantity?: number })[];
-
-    const componentsMap = mapProductsToComponents(products);
-
-    console.log("--- DEBUG ANALYSIS ---");
-    console.log("Quote ID:", quoteId);
-    console.log("Components Map Keys:", Object.keys(componentsMap));
-    console.log("Components Map:", JSON.stringify(componentsMap, null, 2));
-
-    // Ejecutar análisis
-    const analysis = compatibilityEngine.run(componentsMap);
-
-    console.log("Analysis Result:", JSON.stringify(analysis, null, 2));
-    console.log("----------------------");
-
-    // Actualizar cache en la BD (solo si es el dueño)
-    if (quote.user_id === user.id) {
-      await supabase
-        .from("quotes")
-        .update({
-          compatibility_status: analysis.status,
-          estimated_wattage: analysis.estimatedWattage,
-          validation_errors: analysis.issues as unknown as Json,
-          last_analyzed_at: analysis.analyzedAt,
-        })
-        .eq("id", quoteId);
-    }
-
-    return c.json(analysis);
-  } catch (error) {
-    console.error("Error analyzing quote:", error);
-    return c.json({ error: "Internal server error during analysis" }, 500);
   }
 });
 

@@ -16,12 +16,14 @@
     "db:pull": "bun x supabase db pull",
     "db:link": "bun src/scripts/db-link.ts",
     "group-variants": "bun run src/scripts/group-variants.ts",
+    "convert-images": "bun src/scripts/convert-images-to-avif.ts",
     "test": "bun test"
   },
   "dependencies": {
     "@framerate/utils": "workspace:*",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.87.1",
+    "sharp": "^0.34.5",
     "zod": "^4.2.1"
   },
   "devDependencies": {

@@ -1,8 +1,10 @@
 import { useProductDrops, useProducts } from "@/hooks/useProducts";
 import { categoriesService } from "@/services/categories";
 import { productsService } from "@/services/products";
-import { ProductCard } from "~/components/product/card-product";
-import { useTranslation } from "~/hooks/use-translation";
+import { CategoriesGrid } from "~/components/home/categories-grid";
+import { HeroSection } from "~/components/home/hero-section";
+import { PopularProducts } from "~/components/home/popular-products";
+import { PriceDropsCarousel } from "~/components/home/price-drops-carousel";
 import type { Route } from "./+types/home";
 
 export function meta() {
@@ -27,7 +29,7 @@ export function meta() {
     { property: "og:type", content: "website" },
     { property: "og:site_name", content: "Framerate.cl" },
     { property: "og:locale", content: "es_CL" },
-    { property: "og:image", content: "/og-image.png" }, // Asegúrate de tener esta imagen
+    { property: "og:image", content: "/og-image.png" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: "Framerate - Comparador de Hardware Chile" },
     { name: "twitter:description", content: "Encuentra los mejores precios para tu próximo PC Gamer." },
@@ -35,12 +37,27 @@ export function meta() {
   ];
 }
 
+function generateJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Framerate",
+    url: "https://framerate.cl",
+    description: "El mejor comparador de precios de hardware en Chile",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://framerate.cl/buscar?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
 export async function loader() {
   try {
     const [popularProducts, categories, priceDrops] = await Promise.all([
-      productsService.getAll({ limit: 400, sort: "popularity" }),
+      productsService.getAll({ limit: 50, sort: "popularity" }),
       categoriesService.getAll(),
-      productsService.getDrops(24, 2), // 12 productos con mínimo 5% descuento
+      productsService.getDrops(12, 5),
     ]);
     return { popularProducts, categories, priceDrops };
   } catch (error) {
@@ -57,79 +74,41 @@ export async function loader() {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { popularProducts: initialPopular, priceDrops: initialDrops } = loaderData;
-  const { t } = useTranslation();
+  const { popularProducts: initialPopular, categories: initialCategories, priceDrops: initialDrops } = loaderData;
 
-  const { data: popularProducts } = useProducts({ limit: 400, sort: "popularity" }, { initialData: initialPopular });
+  const { data: popularProducts } = useProducts({ limit: 50, sort: "popularity" }, { initialData: initialPopular });
 
-  const { data: priceDrops } = useProductDrops(24, 2, { initialData: initialDrops });
+  const { data: priceDrops } = useProductDrops(12, 5, { initialData: initialDrops });
 
-  // Fallback a los datos iniciales si el hook devuelve undefined (no debería ocurrir con initialData)
   const products = popularProducts ?? initialPopular;
   const drops = priceDrops ?? initialDrops;
+  const categories = initialCategories ?? [];
 
   return (
-    <div className="flex flex-col min-h-screen gap-16 md:gap-24 pb-20">
-      <section className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold font-sans text-primary">{t("popular_products")}</h2>
-            <p className="text-sm text-muted-foreground mt-1">{t("popular_products_desc")}</p>
-          </div>
-          {products.meta.total > products.data.length && (
-            <a
-              href="/productos"
-              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-            >
-              {t("view_all")} →
-            </a>
-          )}
+    <>
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD injection
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(generateJsonLd()) }}
+      />
+
+      <div className="flex flex-col min-h-screen">
+        {/* Hero Section */}
+        <HeroSection totalProducts={products.meta.total} totalCategories={categories.length} />
+
+        {/* Main Content */}
+        <div className="flex flex-col gap-16 md:gap-24 pb-20">
+          {/* Price Drops Carousel */}
+          <PriceDropsCarousel drops={drops} />
+
+          {/* Categories Grid */}
+          <CategoriesGrid categories={categories} />
+
+          {/* Popular Products */}
+          <PopularProducts products={products.data} totalProducts={products.meta.total} />
         </div>
-
-        {products.data.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5  gap-4">
-            {products.data.map((product, index) => (
-              <ProductCard key={product.id} product={product} priority={index < 10} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex items-center justify-center py-20">
-            <p className="text-muted-foreground">{t("no_products")}</p>
-          </div>
-        )}
-      </section>
-
-      {drops.length > 0 && (
-        <section className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-3xl font-bold font-sans text-primary">{t("recent_offers")}</h2>
-              <p className="text-sm text-muted-foreground mt-1">{t("recent_offers_desc")}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5  gap-4">
-            {drops.map((drop) => {
-              // Convertir drop a formato Product para ProductCard
-              const product: any = {
-                id: drop.product_id,
-                name: drop.product_name,
-                slug: drop.product_slug,
-                image_url: drop.product_image_url,
-                brand: null,
-                category: { name: "", slug: drop.category_slug },
-                specs: drop.product_specs,
-                prices: {
-                  cash: drop.current_price,
-                  normal: drop.previous_price,
-                },
-                popularity_score: 0,
-              };
-              return <ProductCard key={drop.product_id} product={product} />;
-            })}
-          </div>
-        </section>
-      )}
-    </div>
+      </div>
+    </>
   );
 }

@@ -9,6 +9,16 @@ export const loader = ({ request }: LoaderFunctionArgs) => {
 User-agent: *
 Allow: /
 
+# Block API and admin routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /action/
+Disallow: /auth/
+
+# Block internal routes
+Disallow: /_actions/
+Disallow: /_data/
+
 Sitemap: ${protocol}//${host}/sitemap.xml
 `.trim();
 
@@ -16,6 +26,7 @@ Sitemap: ${protocol}//${host}/sitemap.xml
     status: 200,
     headers: {
       "Content-Type": "text/plain",
+      "Cache-Control": "public, max-age=3600",
     },
   });
 };

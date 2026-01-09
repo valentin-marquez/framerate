@@ -9,6 +9,12 @@ import { routes } from "@/routes";
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 const logger = new Logger("API");
 
+// Mount images route BEFORE global middleware to avoid secureHeaders/CORS conflicts
+// Images handle their own CORS and Cache headers extensively
+import images from "@/routes/images";
+
+app.route("/v1/images", images);
+
 app.use("*", secureHeaders());
 app.use(
   "*",

@@ -125,6 +125,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
       <Link
         to={`/producto/${product.slug}`}
         onClick={handleProductClick}
+        aria-label={`Ver detalles de ${product.name}`}
         className="relative w-full overflow-hidden bg-card block h-48 sm:h-56 md:h-60"
       >
         {product.image_url ? (
@@ -132,10 +133,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
             src={product.image_url}
             alt={product.name || "Imagen del producto"}
             className="h-full w-full object-cover"
-            loading={priority ? "eager" : "lazy"}
-            decoding="async"
-            // @ts-expect-error - fetchPriority is standard but react types might not have it yet
-            fetchPriority={priority ? "high" : "auto"}
+            priority={priority}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
