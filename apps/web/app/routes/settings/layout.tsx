@@ -1,38 +1,44 @@
 import { IconSettings, IconUser } from "@tabler/icons-react";
 import { NavLink, Outlet, useLocation } from "react-router";
 import { Separator } from "~/components/primitives/separator";
+import { useTranslation } from "~/hooks/use-translation";
 import { requireAuth } from "~/lib/auth.server";
 import { cn } from "~/lib/utils";
 import type { Route } from "./+types/layout";
+
+export function meta() {
+  return [{ title: "Ajustes - Framerate" }, { name: "robots", content: "noindex, nofollow" }];
+}
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuth(request);
   return null;
 }
 
-const sidebarItems = [
-  {
-    title: "Cuenta",
-    href: "/settings/account",
-    icon: IconUser,
-  },
-  {
-    title: "Preferencias",
-    href: "/settings/preferences",
-    icon: IconSettings,
-  },
-];
-
 export default function SettingsLayout() {
   const location = useLocation();
   const isDefaultRoute = location.pathname === "/settings";
+  const { t } = useTranslation();
+
+  const sidebarItems = [
+    {
+      title: t("account"),
+      href: "/settings/account",
+      icon: IconUser,
+    },
+    {
+      title: t("preferences"),
+      href: "/settings/preferences",
+      icon: IconSettings,
+    },
+  ];
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8 max-w-5xl">
       <div className="flex flex-col md:flex-row gap-6 md:gap-8">
         <aside className="w-full md:w-64 shrink-0 space-y-6 md:space-y-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4 md:mb-6">Ajustes</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4 md:mb-6">{t("settings")}</h1>
             <nav className="flex flex-row md:flex-col gap-2 md:gap-0 md:space-y-1 overflow-x-auto pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
               {sidebarItems.map((item, index) => {
                 const isDefaultActive = isDefaultRoute && index === 0;

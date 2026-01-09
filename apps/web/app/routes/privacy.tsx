@@ -2,9 +2,20 @@ import { IconDatabase, IconGlobe, IconShield } from "@tabler/icons-react";
 import { Button } from "~/components/primitives/button";
 
 export function meta() {
+  const title = "Política de Privacidad - Framerate";
+  const description =
+    "Entiende cómo Framerate.cl protege tus datos, nuestra política de cookies y el uso responsable de la información.";
+
   return [
-    { title: "Privacidad - Framerate" },
-    { name: "description", content: "Cómo protegemos tus datos en Framerate.cl" },
+    { title },
+    { name: "description", content: description },
+    { property: "og:site_name", content: "Framerate.cl" },
+    { property: "og:locale", content: "es_CL" },
+    { property: "og:type", content: "website" },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:image", content: "/og-image.png" },
+    { name: "twitter:card", content: "summary" },
   ];
 }
 

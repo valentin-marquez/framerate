@@ -161,7 +161,42 @@ export class CatalogService {
     specs?: Json,
   ): Promise<{ id: string; mpn: string | null; specs: Json | null } | null> {
     try {
-      // 1. Try exact MPN match first
+      // 1. PRIORITY: Search by normalized name first (most reliable)
+      // Title is formatted as "Name [MPN]" so we extract the name part
+      const nameMatch = title.match(/^(.*?) \[.*\]$/);
+      if (nameMatch) {
+        const baseName = nameMatch[1].trim();
+        const escapedName = baseName.replace(/[%_]/g, "\\$&");
+
+        const { data: nameDuplicates } = await supabase
+          .from("products")
+          .select("id, mpn, specs, name")
+          .ilike("name", `${escapedName} [%]`)
+          .eq("category_id", categoryId)
+          .eq("brand_id", brandId)
+          .limit(5);
+
+        if (nameDuplicates && nameDuplicates.length > 0) {
+          // If we find matches, prefer the one with the longest/most specific MPN
+          // This assumes more specific MPNs are more likely to be correct
+          const bestMatch = nameDuplicates.reduce((best, current) => {
+            const bestMpnLen = best.mpn?.length ?? 0;
+            const currentMpnLen = current.mpn?.length ?? 0;
+            return currentMpnLen > bestMpnLen ? current : best;
+          });
+
+          if (mpn && mpn !== bestMatch.mpn) {
+            this.logger.warn(
+              `MPN mismatch detected! Scraped MPN: "${mpn}", Using existing correct MPN: "${bestMatch.mpn}" for product: "${baseName}"`,
+            );
+          }
+
+          this.logger.info(`Found similar product by normalized name: ${bestMatch.id}`);
+          return bestMatch;
+        }
+      }
+
+      // 2. Fallback: Try exact MPN match (only if name search found nothing)
       if (mpn) {
         const { data } = await supabase.from("products").select("id, mpn, specs").eq("mpn", mpn).single();
 

@@ -1,6 +1,7 @@
 import { IconAlertTriangle, IconBuildingStore, IconExternalLink, IconPlus, IconTrash } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
+import { AsyncImage } from "~/components/primitives/async-image";
 import { Button } from "~/components/primitives/button";
 import type { VirtualQuoteItem } from "~/services/quotes";
 import { getCategoryConfig } from "~/utils/categories";
@@ -95,7 +96,7 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
         <div className="col-span-1 md:col-span-5 flex items-center gap-4">
           <div className="h-14 w-14 shrink-0 rounded-lg bg-card p-1 border border-border/40 overflow-hidden flex items-center justify-center relative">
             {product.image_url ? (
-              <img
+              <AsyncImage
                 src={product.image_url}
                 alt={product.name || "Product Image"}
                 className={`h-full w-full object-contain ${isOutOfStock || isUnavailable ? "opacity-50 grayscale" : ""}`}
@@ -143,14 +144,14 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
                     rel="noopener noreferrer"
                     className="hover:opacity-80 transition-opacity"
                   >
-                    <img
+                    <AsyncImage
                       src={selectedListing.store.logo_url}
                       alt={selectedListing.store.name}
                       className={`h-5 w-5 object-contain rounded-sm ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
                     />
                   </a>
                 ) : (
-                  <img
+                  <AsyncImage
                     src={selectedListing.store.logo_url}
                     alt={selectedListing.store.name}
                     className={`h-5 w-5 object-contain rounded-sm ${isOutOfStock ? "opacity-50 grayscale" : ""}`}

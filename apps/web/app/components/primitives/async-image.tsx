@@ -59,6 +59,8 @@ export function AsyncImage({ src, alt, className, fallback, errorFallback, ...pr
           ref={imgRef}
           src={src}
           alt={alt}
+          loading="lazy"
+          decoding="async"
           className={cn(
             className,
             "transition-opacity duration-500",

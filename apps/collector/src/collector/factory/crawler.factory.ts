@@ -5,6 +5,7 @@ import { ApiStrategy } from "@/collector/strategies/api.strategy";
 import type { JobStrategy } from "@/collector/strategies/base.strategy";
 import { ScraperStrategy } from "@/collector/strategies/scraper.strategy";
 import type { Category } from "@/constants/categories";
+import { CENTRAL_GAMER_CATEGORIES, CentralGamerCrawler } from "@/crawlers/central-gamer";
 import { MYSHOP_CATEGORIES, MyShopCrawler } from "@/crawlers/myshop";
 import { PC_EXPRESS_CATEGORIES, PcExpressCrawler } from "@/crawlers/pc-express";
 import { SP_DIGITAL_CATEGORIES, SpDigitalCrawler } from "@/crawlers/sp-digital";
@@ -48,6 +49,12 @@ export function createStrategy(crawlerType: string): JobStrategy {
       const c = new TectecCrawler();
       (c as unknown as CrawlerMeta).CATEGORIES = TECTEC_CATEGORIES;
       (c as unknown as CrawlerMeta).slug = "tectec";
+      return new ScraperStrategy<Category>(c, pipeline);
+    }
+    case "central-gamer": {
+      const c = new CentralGamerCrawler();
+      (c as unknown as CrawlerMeta).CATEGORIES = CENTRAL_GAMER_CATEGORIES;
+      (c as unknown as CrawlerMeta).slug = "central-gamer";
       return new ScraperStrategy<Category>(c, pipeline);
     }
     default:

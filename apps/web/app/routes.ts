@@ -28,4 +28,5 @@ export default [
   ]),
 
   route("theme-switcher", "components/theme/theme-switcher.ts"),
+  route("robots.txt", "routes/robots.ts"),
 ] satisfies RouteConfig;

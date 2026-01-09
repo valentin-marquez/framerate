@@ -13,6 +13,7 @@ import {
 import { Input } from "~/components/primitives/input";
 import { Label } from "~/components/primitives/label";
 import { Textarea } from "~/components/primitives/textarea";
+import { useTranslation } from "~/hooks/use-translation";
 import { useCreateQuote } from "~/hooks/useQuotes";
 import { Switch } from "../primitives/switch";
 
@@ -26,6 +27,7 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const createQuote = useCreateQuote();
+  const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -53,7 +55,7 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
       },
       onError: (err) => {
         console.error("Error creating quote:", err);
-        setError(err instanceof Error ? err.message : "Error al crear la cotización");
+        setError(err instanceof Error ? err.message : t("create_quote_error"));
       },
     });
   };
@@ -64,14 +66,14 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
         {trigger || (
           <Button variant="default" className="gap-2">
             <IconPlus className="h-4 w-4" />
-            Crear Cotización
+            {t("create_quote")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-106.25 bg-card">
         <DialogHeader>
-          <DialogTitle>Crear nueva cotización</DialogTitle>
-          <DialogDescription>Dale un nombre a tu proyecto para empezar a agregar componentes.</DialogDescription>
+          <DialogTitle>{t("create_new_quote_title")}</DialogTitle>
+          <DialogDescription>{t("create_quote_desc")}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
@@ -79,26 +81,26 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
 
           <div className="grid gap-2">
             <Label htmlFor="name" className="text-card-foreground/65">
-              Nombre
+              {t("name")}
             </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Ej: PC Gamer 2026"
+              placeholder={t("quote_name_placeholder")}
               required
             />
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="description" className="text-card-foreground/65">
-              Descripción (Opcional)
+              {t("description_optional")}
             </Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Para qué usarás este PC..."
+              placeholder={t("quote_description_placeholder")}
             />
           </div>
 
@@ -109,17 +111,17 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
               onCheckedChange={(checked) => setFormData({ ...formData, is_public: checked })}
             />
             <Label htmlFor="is_public" className="cursor-pointer text-card-foreground/65">
-              Cotizacion pública
+              {t("public_quote")}
             </Label>
           </div>
 
           <div className="flex justify-end gap-2 mt-4">
             <Button type="button" variant="link" onClick={() => setIsOpen(false)}>
-              Cancelar
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={createQuote.isPending}>
               {createQuote.isPending && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Crear Cotización
+              {t("create_quote")}
             </Button>
           </div>
         </form>

@@ -63,18 +63,19 @@ const CATEGORY_VALIDATION_RULES: Partial<Record<CategorySlug, CategoryValidation
   },
   case: {
     requiredTerms: ["GABINETE"],
-    invalidTerms: ["CARCASA"],
+    invalidTerms: ["CARCASA", "PLATAFORMA GIRATORIA"],
   },
   ssd: {
-    invalidTerms: ["SOPORTE", "ADAPTADOR", "CARCASA"],
+    invalidTerms: ["SOPORTE", "ADAPTADOR", "CARCASA", "MICROSD", "PENDRIVE"],
   },
   hdd: {
-    invalidTerms: ["SOPORTE", "ADAPTADOR", "CARCASA"],
+    invalidTerms: ["SOPORTE", "ADAPTADOR", "CARCASA", "MICROSD", "PENDRIVE"],
   },
   ram: {
     excludeIfContains: ["SOPORTE", "DISIPADOR SOLO"],
   },
   case_fan: {
+    excludeIfContains: ["PASTA TERMICA", "PASTA TÉRMICA", "HUB"],
     customCheck: (title: string) => {
       const hasVentilador = title.includes("VENTILADOR") || title.includes("VENTILADORES");
       const isExcluded =
@@ -92,7 +93,7 @@ const CATEGORY_VALIDATION_RULES: Partial<Record<CategorySlug, CategoryValidation
     },
   },
   cpu_cooler: {
-    excludeIfContains: ["ADAPTADOR"],
+    excludeIfContains: ["ADAPTADOR", "PASTA TERMICA", "PASTA TÉRMICA", "HUB"],
     customCheck: (title: string) => {
       const isLiquidCooling =
         title.includes("REFRIGERACION LIQUIDA") ||

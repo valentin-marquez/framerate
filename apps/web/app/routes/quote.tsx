@@ -9,6 +9,7 @@ import { QuoteItemsList } from "~/components/quotes/quote-items-list";
 import { QuotePDF } from "~/components/quotes/quote-pdf";
 import { QuoteValidationStatus } from "~/components/quotes/quote-validation-status";
 import { SearchDialog } from "~/components/search/search-dialog";
+import { useTranslation } from "~/hooks/use-translation";
 import { useUser } from "~/hooks/useAuth";
 import {
   useAnalyzeBuild,
@@ -22,6 +23,24 @@ import { quotesService, type VirtualQuoteItem } from "~/services/quotes";
 import { copyToClipboard, exportToExcel } from "~/utils/quote-export";
 import { QUOTE_SLOTS } from "~/utils/slots";
 import type { Route } from "./+types/quote";
+
+export function meta({ data }: Route.MetaArgs) {
+  if (!data || !data.quote) return [{ title: "Cotización no encontrada | Framerate" }];
+  const { quote } = data;
+  return [
+    { title: `${quote.name} - Cotización PC Gamer | Framerate` },
+    {
+      name: "description",
+      // TODO: Considerar agregar el nombre del usuario si la API lo retorna en el futuro
+      content: `Cotización de PC "${quote.name}" con ${quote.items.length} componentes. Potencia estimada: ${quote.estimated_wattage}W. Verifica compatibilidad y cotiza en tiendas chilenas con Framerate.`,
+    },
+    { property: "og:title", content: `${quote.name} - Cotización PC` },
+    { property: "og:description", content: `Configuración de PC personalizada. Revisa los componentes y precios.` },
+    { property: "og:type", content: "article" },
+    { property: "og:locale", content: "es_CL" },
+    { name: "robots", content: "noindex, nofollow" }, // Por ahora no indexamos cotizaciones privadas hasta que la lógica de public/private esté 100% definida abierta
+  ];
+}
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   try {
@@ -57,6 +76,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   const addItem = useQuoteAddItem();
   const deleteQuote = useDeleteQuote();
   const analyzeBuild = useAnalyzeBuild();
+  const { t } = useTranslation();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -66,11 +86,11 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
 
   useEffect(() => {
     if (activeToastId.current && quote !== lastQuote) {
-      toast.success("Producto eliminado", { id: activeToastId.current });
+      toast.success(t("product_removed"), { id: activeToastId.current });
       activeToastId.current = null;
     }
     setLastQuote(quote);
-  }, [quote, lastQuote]);
+  }, [quote, lastQuote, t]);
 
   const [analysis, setAnalysis] = useState<{
     status: "valid" | "warning" | "incompatible" | "unknown";
@@ -92,11 +112,11 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   const handleDeleteQuote = () => {
     deleteQuote.mutate(quote.id, {
       onSuccess: () => {
-        toast.success("Cotización eliminada correctamente");
+        toast.success(t("quote_deleted"));
         navigate("/profile");
       },
       onError: () => {
-        toast.error("Error al eliminar la cotización");
+        toast.error(t("quote_delete_error"));
       },
     });
   };
@@ -110,11 +130,11 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
       {
         onSuccess: () => {
           setIsSearchOpen(false);
-          toast.success("Producto agregado");
+          toast.success(t("product_added_short"));
           revalidator.revalidate();
         },
         onError: () => {
-          toast.error("Error al agregar producto");
+          toast.error(t("product_add_error"));
         },
       },
     );
@@ -132,11 +152,11 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           issues: data.issues,
           estimatedWattage: data.estimatedWattage,
         });
-        toast.success("Compatibilidad verificada");
+        toast.success(t("compatibility_checked"));
       },
       onError: (error) => {
         console.error("--- DEBUG FRONTEND ANALYSIS ERROR ---", error);
-        toast.error("Error al verificar compatibilidad");
+        toast.error(t("compatibility_check_error"));
       },
     });
   };
@@ -186,9 +206,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     let hasChanges = false;
 
     QUOTE_SLOTS.filter((s) => s.type === "exclusive").forEach((slot) => {
-      const slotItems = flattenedItems.filter((item) =>
-        slot.accepts.includes((item.category?.slug || item.product?.category?.slug) as any),
-      );
+      const slotItems = flattenedItems.filter((item) => slot.accepts.includes(item.product?.category?.slug as any));
       if (slotItems.length > 0) {
         const currentSelection = newSelection[slot.id];
         // Check if current selection is valid (exists in current items)
@@ -209,9 +227,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
 
   const activeItems = useMemo(() => {
     return flattenedItems.filter((item) => {
-      const slot = QUOTE_SLOTS.find((s) =>
-        s.accepts.includes((item.category?.slug || item.product?.category?.slug) as any),
-      );
+      const slot = QUOTE_SLOTS.find((s) => s.accepts.includes(item.product?.category?.slug as any));
       if (!slot) return true; // "Other" items are always active
       if (slot.type === "additive") return true;
 
@@ -220,9 +236,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
       // If no selection yet (initial render), show first
       if (!selectedId) {
         // Fallback logic matches useEffect but for render safety
-        const slotItems = flattenedItems.filter((i) =>
-          slot.accepts.includes((i.category?.slug || i.product?.category?.slug) as any),
-        );
+        const slotItems = flattenedItems.filter((i) => slot.accepts.includes(i.product?.category?.slug as any));
         if (
           slotItems.length > 0 &&
           (item.originalItem?.id || item.id) === (slotItems[0].originalItem?.id || slotItems[0].id)
@@ -244,7 +258,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   }, [quote, flattenedItems, selectedVariants, activeItems]);
 
   const handleRemove = (item: VirtualQuoteItem) => {
-    const toastId = toast.loading("Eliminando producto...");
+    const toastId = toast.loading(t("removing_product"));
     activeToastId.current = toastId;
 
     if (item.isVirtual && item.originalItem) {
@@ -260,7 +274,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
             revalidator.revalidate();
           },
           onError: () => {
-            toast.error("Error al eliminar producto", { id: toastId });
+            toast.error(t("remove_product_error"), { id: toastId });
             activeToastId.current = null;
           },
         },
@@ -273,7 +287,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
             revalidator.revalidate();
           },
           onError: () => {
-            toast.error("Error al eliminar producto", { id: toastId });
+            toast.error(t("remove_product_error"), { id: toastId });
             activeToastId.current = null;
           },
         },

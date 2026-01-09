@@ -2,6 +2,7 @@ import { IconBuildingStore, IconChevronDown, IconRefresh, IconX } from "@tabler/
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { AsyncImage } from "~/components/primitives/async-image";
 import { Button } from "~/components/primitives/button";
 import { cn } from "~/lib/utils";
 import { productsService } from "~/services/products";
@@ -172,10 +173,13 @@ export function StoreSelector({
                                 )}
                               >
                                 {listing.store?.logo_url ? (
-                                  <img
+                                  <AsyncImage
                                     src={listing.store.logo_url}
                                     alt={listing.store.name}
                                     className="h-full w-full object-contain"
+                                    fallback={
+                                      <IconBuildingStore size={20} className="text-muted-foreground opacity-50" />
+                                    }
                                   />
                                 ) : (
                                   <IconBuildingStore size={20} className="text-muted-foreground" />

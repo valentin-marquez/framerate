@@ -1,5 +1,6 @@
 import { IconEye } from "@tabler/icons-react";
 import { Link } from "react-router";
+import { AsyncImage } from "~/components/primitives/async-image";
 import { Badge } from "~/components/primitives/badge";
 import { AddToQuote } from "~/components/product/add-to-quote";
 import { cn } from "~/lib/utils";
@@ -10,12 +11,14 @@ import { PsuBadge } from "./psu-badge";
 interface ProductCardProps {
   product: Product;
   className?: string;
+  priority?: boolean;
 }
 
 function getSpecsSummary(product: Product): string[] {
   const { category, specs } = product;
   if (!category || !specs) return [];
 
+  // biome-ignore lint/suspicious/noExplicitAny: complex specs type
   const s = specs as any;
   let summary: (string | undefined | null | number)[] = [];
 
@@ -87,7 +90,7 @@ function formatViews(views: number): string {
   return views.toString();
 }
 
-export function ProductCard({ product, className }: ProductCardProps) {
+export function ProductCard({ product, className, priority = false }: ProductCardProps) {
   const currentPrice = product.prices?.cash || product.prices?.normal;
   const normalPrice = product.prices?.normal;
   const discount =
@@ -100,6 +103,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
   // Lógica PSU
   const isPsu = product.category?.slug === "fuentes-de-poder";
+  // biome-ignore lint/suspicious/noExplicitAny: complex specs type
   const psuSpecs = product.specs as any;
   const psuCertification = isPsu ? psuSpecs?.efficiency_rating || psuSpecs?.certification : null;
 
@@ -124,11 +128,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
         className="relative w-full overflow-hidden bg-card block h-48 sm:h-56 md:h-60"
       >
         {product.image_url ? (
-          <img
+          <AsyncImage
             src={product.image_url}
             alt={product.name || "Imagen del producto"}
             className="h-full w-full object-cover"
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            // @ts-expect-error - fetchPriority is standard but react types might not have it yet
+            fetchPriority={priority ? "high" : "auto"}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">

@@ -120,34 +120,62 @@ export abstract class BaseExtractor<T> {
     searchQuery?: string,
     category?: string,
     mpn?: string,
-  ): Promise<T> {
+  ): Promise<{ specs: T; foundMpn?: string }> {
     let lastError = "";
     let currentText = text;
+    let foundMpn: string | undefined;
 
     // 1. Try OpenDB first if we have category and a valid indentifier
     if (category) {
       // Prioritize normalized_title (from extraction_jobs) if context has it
       // The worker passes 'job' properties including new fields
       const jobContext = context as Record<string, any>;
+      const normalizedTitle = jobContext?.normalized_title as string | undefined;
 
-      // Determine the best query: MPN > NormalizedMPN > Normalized Title (SEO) > Search Query
-      let bestQuery = mpn;
+      // Strategy:
+      // A. Try searching by explicitly provided MPN
+      let openDBResult: any = null;
+      let usedMethod = "";
 
-      // We look for normalized_title in context if available (it might be passed down from job)
-      if (!bestQuery && jobContext?.normalized_title) {
-        bestQuery = jobContext.normalized_title as string;
-      }
-
-      if (!bestQuery && searchQuery) {
-        bestQuery = searchQuery.replace(" specs", "");
-      }
-
-      if (bestQuery) {
-        const openDBResult = openDB.findProduct(category, bestQuery);
+      if (mpn) {
+        openDBResult = openDB.findProduct(category, mpn);
         if (openDBResult) {
-          this.logger.info(`Found product in OpenDB: ${bestQuery}`);
-          currentText = `OpenDB Data:\n${JSON.stringify(openDBResult, null, 2)}\n\n${currentText}`;
+          usedMethod = "MPN";
+          this.logger.info(`Found product in OpenDB by MPN: ${mpn}`);
+          // If found by MPN, we trust the input MPN is correct (or close enough)
+          // We can optionally check if openDBResult.metadata.part_numbers contains a better one
         }
+      }
+
+      // B. If MPN search failed, try searching by Title (Normalized Title or Search Query)
+      if (!openDBResult) {
+        // Prefer normalized title from job, then search query (stripped of " specs")
+        const titleQuery = normalizedTitle || searchQuery?.replace(" specs", "");
+
+        if (titleQuery) {
+          openDBResult = openDB.findProduct(category, titleQuery);
+          if (openDBResult) {
+            usedMethod = "Title";
+            this.logger.info(`Found product in OpenDB by Title: ${titleQuery}`);
+
+            // If found by Title, we likely found a BETTER MPN.
+            // Extract the first part number as the candidate
+            const pns = openDBResult.metadata?.part_numbers;
+            if (Array.isArray(pns) && pns.length > 0) {
+              // Try to pick the shortest/cleanest one, or just the first?
+              // The user example shows part_numbers: ["RTX 3050...", "RTX 3050...", "GeForce..."]
+              // Some look like descriptions. We prefer one that looks like a code?
+              // For now, let's take the first one, or maybe check if one of them matches the input MPN partially?
+              // Actually, simply returning the first one is a good start, or letting the system decide.
+              // Let's return the first one for now.
+              foundMpn = pns[0];
+            }
+          }
+        }
+      }
+
+      if (openDBResult) {
+        currentText = `OpenDB Data:\n${JSON.stringify(openDBResult, null, 2)}\n\n${currentText}`;
       }
     }
 
@@ -169,7 +197,7 @@ export abstract class BaseExtractor<T> {
           extractedFields: Object.keys(validated as object).length,
         });
 
-        return validated;
+        return { specs: validated, foundMpn };
       } catch (error: unknown) {
         if (error instanceof z.ZodError) {
           const formattedError = JSON.stringify(error.format(), null, 2);

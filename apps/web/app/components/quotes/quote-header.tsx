@@ -1,4 +1,5 @@
 import { IconBolt, IconCalendar, IconUser } from "@tabler/icons-react";
+import { useTranslation } from "~/hooks/use-translation";
 import { CompatibilityBadge } from "./compatibility-badge";
 
 interface QuoteHeaderProps {
@@ -16,6 +17,8 @@ export function QuoteHeader({
   compatibilityStatus,
   estimatedWattage,
 }: QuoteHeaderProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between animate-in fade-in slide-in-from-top-2 duration-500">
       <div className="space-y-3">
@@ -28,12 +31,7 @@ export function QuoteHeader({
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-secondary-foreground group-hover:scale-105 transition-transform border border-border/50">
               <IconUser size={14} />
             </div>
-            <span>
-              Por{" "}
-              <span className="text-foreground/90 group-hover:text-foreground transition-colors">
-                {userName ? userName.slice(0, -2) : "Usuario"}
-              </span>
-            </span>
+            <span>{t("by", { name: userName ? userName.slice(0, -2) : t("user") })}</span>
           </div>
 
           <div className="flex items-center gap-2 group cursor-default">
@@ -41,14 +39,13 @@ export function QuoteHeader({
               <IconCalendar size={14} />
             </div>
             <span>
-              Actualizado el{" "}
-              <span className="text-foreground/90">
-                {new Date(updatedAt).toLocaleDateString("es-CL", {
+              {t("updated_on", {
+                date: new Date(updatedAt).toLocaleDateString("es-CL", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
-                })}
-              </span>
+                }),
+              })}
             </span>
           </div>
         </div>
@@ -60,7 +57,7 @@ export function QuoteHeader({
         {estimatedWattage ? (
           <div
             className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-muted-foreground text-sm font-medium border border-border/40"
-            title="Consumo Estimado"
+            title={t("estimated_wattage")}
           >
             <IconBolt size={16} stroke={2} className="fill-blue-500/20" />
             <span className="font-semibold tabular-nums tracking-tight">{estimatedWattage}W</span>

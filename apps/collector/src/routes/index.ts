@@ -1,3 +1,4 @@
+import centralGamerRoute from "./v1/central-gamer.route";
 import maintenanceRoute from "./v1/maintenance.route";
 import myshopRoute from "./v1/myshop.route";
 import pcExpressRoute from "./v1/pc-express.route";
@@ -22,6 +23,10 @@ export const routes = [
   {
     path: `/${API_VERSION}/tectec`,
     route: tectecRoute,
+  },
+  {
+    path: `/${API_VERSION}/central-gamer`,
+    route: centralGamerRoute,
   },
   {
     path: `/${API_VERSION}/maintenance`,

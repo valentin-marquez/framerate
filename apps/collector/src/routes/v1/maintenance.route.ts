@@ -13,4 +13,13 @@ maintenanceRoute.post("/group-variants", async (c) => {
   }
 });
 
+maintenanceRoute.post("/consolidate-duplicates", async (c) => {
+  try {
+    const result = await maintenanceService.consolidateDuplicates();
+    return c.json(result);
+  } catch (_error) {
+    return c.json({ error: "Failed to consolidate duplicates" }, 500);
+  }
+});
+
 export default maintenanceRoute;

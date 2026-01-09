@@ -74,15 +74,83 @@ export async function processJob(jobRaw: unknown) {
           if (!parsed.success) {
             logger.warn(`Specs validation failed for mpn=${job.mpn}: ${JSON.stringify(parsed.error.issues)}`);
           } else {
-            // If there's an existing product with this MPN, update its specs
-            const { data: prod } = await supabase.from("products").select("id").eq("mpn", job.mpn).single();
-            if (prod?.id) {
-              await supabase.from("products").update({ specs }).eq("id", prod.id);
+            // Handle product update with potential MPN correction
+            const foundMpn = (result as any)?.mpn;
+            let targetMpn = foundMpn && foundMpn !== job.mpn ? foundMpn : job.mpn;
+
+            const { data: originalProd } = await supabase
+              .from("products")
+              .select("id, name, mpn, category_id, brand_id")
+              .eq("mpn", job.mpn)
+              .single();
+
+            if (originalProd?.id) {
+              let targetProductId = originalProd.id;
+
+              // Always check for duplicates by name, even if we found MPN from LLM
+              if (originalProd.name) {
+                const nameMatch = originalProd.name.match(/^(.*?) \[.*\]$/);
+                if (nameMatch) {
+                  const baseName = nameMatch[1].trim();
+                  const escapedName = baseName.replace(/[%_]/g, "\\$&");
+                  const { data: duplicates } = await supabase
+                    .from("products")
+                    .select("id, mpn, name")
+                    .ilike("name", `${escapedName} [%]`)
+                    .eq("category_id", originalProd.category_id)
+                    .eq("brand_id", originalProd.brand_id)
+                    .neq("id", originalProd.id)
+                    .limit(5);
+
+                  if (duplicates && duplicates.length > 0) {
+                    // Find the "best" MPN (longest, most specific)
+                    const bestDuplicate = duplicates.reduce((best, current) => {
+                      const bestMpnLen = best.mpn?.length ?? 0;
+                      const currentMpnLen = current.mpn?.length ?? 0;
+                      return currentMpnLen > bestMpnLen ? current : best;
+                    });
+
+                    if (bestDuplicate.mpn && bestDuplicate.mpn !== job.mpn) {
+                      logger.info(
+                        `Found duplicate by name "${baseName}". Merging ${job.mpn} -> ${bestDuplicate.mpn} (product: ${bestDuplicate.id})`,
+                      );
+                      targetMpn = bestDuplicate.mpn;
+                    }
+                  }
+                }
+              }
+
+              if (targetMpn !== job.mpn) {
+                logger.info(`Correcting product MPN from ${job.mpn} to ${targetMpn}`);
+                const { data: existingTarget } = await supabase
+                  .from("products")
+                  .select("id")
+                  .eq("mpn", targetMpn)
+                  .single();
+
+                if (existingTarget) {
+                  // Merge: Target MPN already exists. Move listings and delete original.
+                  logger.info(`Product merge: ${originalProd.id} -> ${existingTarget.id}`);
+                  await supabase
+                    .from("listings")
+                    .update({ product_id: existingTarget.id })
+                    .eq("product_id", originalProd.id);
+                  // Optionally log deletion or archive? For now, hard delete to avoid duplication.
+                  await supabase.from("products").delete().eq("id", originalProd.id);
+                  targetProductId = existingTarget.id;
+                } else {
+                  // Rename: valid update
+                  await supabase.from("products").update({ mpn: targetMpn }).eq("id", originalProd.id);
+                }
+              }
+
+              // Update specs on the final target product
+              await supabase.from("products").update({ specs }).eq("id", targetProductId);
 
               const { data: listings } = await supabase
                 .from("listings")
                 .select("id, price_cash, stock_quantity")
-                .eq("product_id", prod.id)
+                .eq("product_id", targetProductId)
                 .eq("is_active", false);
 
               if (listings && listings.length > 0) {

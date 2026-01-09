@@ -7,6 +7,7 @@ import { useQuoteAddItem, useQuotes } from "@/hooks/useQuotes";
 import { cn } from "@/lib/utils";
 import { useQuoteInteractionStore } from "@/store/quote-interaction";
 import type { Product } from "@/utils/db-types";
+import { useTranslation } from "~/hooks/use-translation";
 import { Button } from "../primitives/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
 import { CreateQuoteDialog } from "../quotes/create-quote-dialog";
@@ -21,6 +22,7 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
   const [mounted, setMounted] = useState(false);
   const { lastSelectedQuoteId, setLastSelectedQuoteId } = useQuoteInteractionStore();
   const [selectedQuoteId, setSelectedQuoteId] = useState<string>(lastSelectedQuoteId || "");
+  const { t } = useTranslation();
 
   // Fetch more quotes for the dropdown to ensure we see most of them
   const { data: quotes, isLoading: isLoadingQuotes } = useQuotes(1, 50);
@@ -51,6 +53,10 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
 
     setLastSelectedQuoteId(selectedQuoteId);
 
+    const quoteName = quotes?.data.find((q) => q.id === selectedQuoteId)?.name || "";
+
+    if (!product.id) return;
+
     addItem.mutate(
       {
         quoteId: selectedQuoteId,
@@ -62,9 +68,7 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
       {
         onSuccess: () => {
           setIsOpen(false);
-          toast.success(
-            `Producto agregado a la cotización ${quotes?.data.find((q) => q.id === selectedQuoteId)?.name || ""}`,
-          );
+          toast.success(t("product_added", { name: quoteName }));
           // TODO: Show toast
         },
       },
@@ -81,15 +85,15 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
               size={className?.includes("w-full") ? "default" : "icon"}
               className={cn(className?.includes("w-full") ? "w-full gap-2" : "", "transition-all")}
               onClick={() => setIsOpen(true)}
-              aria-label="Agregar a cotización"
+              aria-label={t("add_to_quote")}
               type="button"
             >
               <IconReceipt className="h-4 w-4" />
-              {className?.includes("w-full") && <span className="text-xs font-medium">Agregar a cotización</span>}
+              {className?.includes("w-full") && <span className="text-xs font-medium">{t("add_to_quote")}</span>}
             </Button>
           </TooltipTrigger>
 
-          <TooltipContent side="top">Agregar a cotización</TooltipContent>
+          <TooltipContent side="top">{t("add_to_quote")}</TooltipContent>
         </Tooltip>
       </div>
 
@@ -114,7 +118,7 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
-                    <span className="text-sm font-medium text-foreground">Agregar a cotización</span>
+                    <span className="text-sm font-medium text-foreground">{t("add_to_quote")}</span>
                     <button
                       type="button"
                       className={cn(
@@ -138,7 +142,7 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
                           htmlFor={`quote-select-${product.id}`}
                           className="text-sm font-medium text-muted-foreground"
                         >
-                          Seleccionar cotización
+                          {t("select_quote")}
                         </label>
                         <select
                           id={`quote-select-${product.id}`}
@@ -149,7 +153,7 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
                             setLastSelectedQuoteId(e.target.value);
                           }}
                         >
-                          <option value="">Seleccionar...</option>
+                          <option value="">{t("select_option")}</option>
                           {quotes.data.map((quote) => (
                             <option key={quote.id} value={quote.id}>
                               {quote.name}
@@ -159,11 +163,11 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
                       </div>
                     ) : (
                       <div className="text-center py-2">
-                        <p className="text-sm text-muted-foreground mb-3">No tienes cotizaciones creadas</p>
+                        <p className="text-sm text-muted-foreground mb-3">{t("no_quotes")}</p>
                         <CreateQuoteDialog
                           trigger={
                             <Button variant="outline" size="sm" className="w-full">
-                              <IconPlus className="mr-2 h-4 w-4" /> Crear nueva
+                              <IconPlus className="mr-2 h-4 w-4" /> {t("create_new")}
                             </Button>
                           }
                           onSuccess={(id) => {
@@ -181,7 +185,7 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
                         ) : (
                           <IconCheck className="mr-2 h-4 w-4" />
                         )}
-                        Confirmar
+                        {t("confirm")}
                       </Button>
                     )}
                   </div>

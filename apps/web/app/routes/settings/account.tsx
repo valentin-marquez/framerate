@@ -8,6 +8,7 @@ import { Input } from "~/components/primitives/input";
 import { InputGroup, InputGroupInput } from "~/components/primitives/input-group";
 import { Label } from "~/components/primitives/label";
 import { Separator } from "~/components/primitives/separator";
+import { useTranslation } from "~/hooks/use-translation";
 import { ApiError } from "~/lib/api";
 import { requireAuth } from "~/lib/auth.server";
 import { profilesService } from "~/services/profiles";
@@ -67,19 +68,20 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
   const isSubmitting = navigation.state === "submitting";
   const toastIdRef = useRef<string | number | null>(null);
   const setProfile = useAuthStore((state) => state.setProfile);
+  const { t } = useTranslation();
 
   // Mostrar toast de loading cuando se está enviando
   useEffect(() => {
     if (isSubmitting && !toastIdRef.current) {
-      toastIdRef.current = toast.loading("Guardando cambios...");
+      toastIdRef.current = toast.loading(t("saving_changes_toast"));
     }
-  }, [isSubmitting]);
+  }, [isSubmitting, t]);
 
   // Actualizar toast a success/error cuando se recibe la respuesta
   useEffect(() => {
     if (toastIdRef.current && !isSubmitting) {
       if (actionData?.success) {
-        toast.success("Perfil actualizado correctamente", {
+        toast.success(t("profile_updated_toast"), {
           id: toastIdRef.current,
         });
 
@@ -87,19 +89,22 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
         setProfile(actionData.profile || profile);
         toastIdRef.current = null;
       } else if (actionData?.error) {
-        toast.error(actionData.error, {
-          id: toastIdRef.current,
-        });
+        toast.error(
+          actionData.error === "Error al actualizar el perfil" ? t("profile_update_error_toast") : actionData.error,
+          {
+            id: toastIdRef.current,
+          },
+        );
         toastIdRef.current = null;
       }
     }
-  }, [actionData, isSubmitting, profile, setProfile]);
+  }, [actionData, isSubmitting, profile, setProfile, t]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-medium">Tu perfil</h2>
-        <p className="text-sm text-muted-foreground">Elige cómo apareces como anfitrión o invitado.</p>
+        <h2 className="text-lg font-medium">{t("your_profile")}</h2>
+        <p className="text-sm text-muted-foreground">{t("profile_desc")}</p>
       </div>
 
       <Separator />
@@ -108,18 +113,18 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
         <div className="flex flex-col md:flex-row-reverse gap-8">
           <div className="flex-1 space-y-4 w-full">
             <div className="grid gap-2">
-              <Label htmlFor="fullName">Nombre completo</Label>
+              <Label htmlFor="fullName">{t("full_name")}</Label>
               <Input
                 id="fullName"
                 name="fullName"
                 defaultValue={profile.full_name || ""}
-                placeholder="Tu nombre"
+                placeholder={t("full_name_placeholder")}
                 className="h-10"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="username">Nombre de usuario</Label>
+              <Label htmlFor="username">{t("username")}</Label>
               <ButtonGroup className="w-full">
                 <ButtonGroupText>
                   <Label htmlFor="username">@</Label>
@@ -136,14 +141,8 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
             </div>
 
             <div className="grid gap-2 opacity-50 pointer-events-none">
-              <Label htmlFor="bio">Biografía (Próximamente)</Label>
-              <Input
-                id="bio"
-                name="bio"
-                placeholder="Comparte un poco sobre tu experiencia e intereses."
-                disabled
-                className="h-10"
-              />
+              <Label htmlFor="bio">{t("bio_coming_soon")}</Label>
+              <Input id="bio" name="bio" placeholder={t("bio_placeholder")} disabled className="h-10" />
             </div>
           </div>
         </div>
@@ -151,25 +150,25 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
         <div className="flex items-center gap-4">
           <Button type="submit" disabled={isSubmitting} size="lg" className="w-full sm:w-auto">
             {isSubmitting && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? "Guardando..." : "Guardar cambios"}
+            {isSubmitting ? t("saving") : t("save_changes")}
           </Button>
         </div>
       </Form>
 
       <div className="space-y-4 pt-6">
         <div>
-          <h3 className="text-lg font-medium">Correos</h3>
-          <p className="text-sm text-muted-foreground">Gestiona tus direcciones de correo electrónico.</p>
+          <h3 className="text-lg font-medium">{t("emails")}</h3>
+          <p className="text-sm text-muted-foreground">{t("emails_desc")}</p>
         </div>
         <Separator />
 
         <div className="p-4 rounded-lg border bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <p className="font-medium">Email principal</p>
-            <p className="text-sm text-muted-foreground">Gestionado por el proveedor de autenticación</p>
+            <p className="font-medium">{t("primary_email")}</p>
+            <p className="text-sm text-muted-foreground">{t("managed_by_provider")}</p>
           </div>
           <Button variant="outline" disabled size="lg" className="w-full sm:w-auto hover:cursor-not-allowed!">
-            Gestionar
+            {t("manage")}
           </Button>
         </div>
       </div>

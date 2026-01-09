@@ -2,9 +2,19 @@ import { IconAlertTriangleFilled, IconCode, IconShoppingBag } from "@tabler/icon
 import { Separator } from "~/components/primitives/separator";
 
 export function meta() {
+  const title = "Términos de Servicio - Framerate";
+  const description = "Condiciones de uso, exención de responsabilidad y licencias de código abierto de Framerate.cl.";
+
   return [
-    { title: "Términos - Framerate" },
-    { name: "description", content: "Condiciones de uso de la plataforma Framerate.cl" },
+    { title },
+    { name: "description", content: description },
+    { property: "og:site_name", content: "Framerate.cl" },
+    { property: "og:locale", content: "es_CL" },
+    { property: "og:type", content: "website" },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:image", content: "/og-image.png" },
+    { name: "twitter:card", content: "summary" },
   ];
 }
 

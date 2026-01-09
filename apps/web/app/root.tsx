@@ -24,7 +24,17 @@ import { getTheme } from "./services/theme.server";
 export const links: Route.LinksFunction = () => [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }];
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "Framerate" }, { name: "description", content: "Hardware price comparison tool." }];
+  return [
+    { title: "Framerate - Comparador de Precios de Hardware en Chile" },
+    {
+      name: "description",
+      content:
+        "Cotiza y compra hardware al mejor precio en Chile. Armar tu PC Gamer nunca fue tan fácil. Framerate compara precios de las mejores tiendas de tecnología.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:site_name", content: "Framerate.cl" },
+    { property: "og:locale", content: "es_CL" },
+  ];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -57,6 +67,17 @@ export async function loader({ request }: Route.LoaderArgs) {
     SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY ?? "",
   };
 
+  const headers = new Headers(authHeaders);
+
+  if (!user) {
+    // Cache for 1 minutes in browser, 5 minutes in CDN (if no cookie present mostly)
+    // We add Vary: Cookie so that authenticated users don't get cached generic pages
+    headers.set("Cache-Control", "public, max-age=60, s-maxage=300");
+    headers.append("Vary", "Cookie");
+  } else {
+    headers.set("Cache-Control", "private, max-age=0, no-cache");
+  }
+
   return data(
     {
       env,
@@ -70,7 +91,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       },
     },
     {
-      headers: authHeaders,
+      headers,
     },
   );
 }
@@ -79,11 +100,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useNonce();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
         <script
           nonce={nonce}
@@ -187,7 +211,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
           </div>
           <div className="flex items-center gap-2 ">
             <Button variant="ghost" size="icon">
-              <a href="https://github.com/valentin-marquez/framerate/" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://github.com/valentin-marquez/framerate/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub Repository"
+              >
                 <IconBrandGithub className=" text-secondary-foreground" />
               </a>
             </Button>

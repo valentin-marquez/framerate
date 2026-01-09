@@ -4,6 +4,86 @@ import { supabase } from "@/lib/supabase";
 const logger = new Logger("MaintenanceService");
 
 export class MaintenanceService {
+  async consolidateDuplicates() {
+    logger.info("Iniciando consolidación de productos duplicados por nombre...");
+
+    // 1. Buscar todos los productos agrupados por brand_id y category_id
+    const { data: products, error } = await supabase
+      .from("products")
+      .select("id, name, mpn, brand_id, category_id")
+      .order("created_at", { ascending: true }); // Los más antiguos primero (más confiables)
+
+    if (error || !products) {
+      logger.error("Error al obtener productos:", error);
+      throw error;
+    }
+
+    logger.info(`Analizando ${products.length} productos para consolidación...`);
+
+    // 2. Agrupar por nombre base (sin MPN)
+    const productsByBaseName = new Map<string, typeof products>();
+
+    for (const product of products) {
+      const nameMatch = product.name.match(/^(.*?) \[.*\]$/);
+      if (!nameMatch) continue;
+
+      const baseName = nameMatch[1].trim().toUpperCase();
+      const key = `${product.brand_id}:${product.category_id}:${baseName}`;
+
+      if (!productsByBaseName.has(key)) {
+        productsByBaseName.set(key, []);
+      }
+      productsByBaseName.get(key)?.push(product);
+    }
+
+    let mergedCount = 0;
+
+    // 3. Para cada grupo, consolidar bajo el MPN más confiable
+    for (const [_key, group] of productsByBaseName.entries()) {
+      if (group.length <= 1) continue;
+
+      // Seleccionar el "mejor" producto (el más antiguo con MPN más específico)
+      const sortedGroup = group.sort((a, b) => {
+        const aMpnLen = a.mpn?.length ?? 0;
+        const bMpnLen = b.mpn?.length ?? 0;
+        return bMpnLen - aMpnLen; // Priorizar MPNs más largos/específicos
+      });
+
+      const targetProduct = sortedGroup[0];
+      const duplicates = sortedGroup.slice(1);
+
+      logger.info(
+        `Consolidando ${duplicates.length} duplicados bajo producto ${targetProduct.id} (MPN: ${targetProduct.mpn})`,
+      );
+
+      // 4. Mover todos los listings a el producto target
+      for (const duplicate of duplicates) {
+        const { error: moveError } = await supabase
+          .from("listings")
+          .update({ product_id: targetProduct.id })
+          .eq("product_id", duplicate.id);
+
+        if (moveError) {
+          logger.error(`Error moviendo listings de ${duplicate.id}:`, moveError);
+          continue;
+        }
+
+        // 5. Eliminar el producto duplicado
+        const { error: deleteError } = await supabase.from("products").delete().eq("id", duplicate.id);
+
+        if (deleteError) {
+          logger.error(`Error eliminando producto duplicado ${duplicate.id}:`, deleteError);
+        } else {
+          logger.info(`Producto duplicado eliminado: ${duplicate.id} (MPN: ${duplicate.mpn})`);
+          mergedCount++;
+        }
+      }
+    }
+
+    logger.info(`Consolidación completada. ${mergedCount} productos duplicados eliminados.`);
+    return { message: "Duplicates consolidated successfully", count: mergedCount };
+  }
+
   async groupVariants() {
     logger.info("Iniciando agrupación de variantes...");
 

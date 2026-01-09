@@ -21,7 +21,7 @@ export class GpuStrategy extends BaseExtractor<GpuSpecs> {
     const title = job.normalized_title || (job.context?.title as string | undefined);
     const searchQuery = title ? `${title} specs` : job.mpn ? `${job.mpn} specs` : undefined;
 
-    const specs = await this.extractWithRetry(
+    const { specs, foundMpn } = await this.extractWithRetry(
       `${job.raw_text ?? ""}`,
       enhancedContext,
       2,
@@ -32,7 +32,7 @@ export class GpuStrategy extends BaseExtractor<GpuSpecs> {
     return {
       extracted: true,
       processed_at: new Date().toISOString(),
-      mpn: job.mpn,
+      mpn: foundMpn || job.mpn,
       category: job.category,
       specs,
     };

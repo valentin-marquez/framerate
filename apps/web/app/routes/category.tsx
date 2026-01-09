@@ -3,6 +3,22 @@ import { productsService } from "~/services/products";
 import { getApiSlugFromUrl, getCategoryConfig } from "../utils/categories";
 import type { Route } from "./+types/category";
 
+export function meta({ data }: Route.MetaArgs) {
+  if (!data) return [{ title: "Categoría no encontrada | Framerate" }];
+  const { config } = data;
+  return [
+    { title: `${config.label} - Precios y Ofertas en Chile | Framerate` },
+    {
+      name: "description",
+      content: `Catálogo de ${config.label} con los precios más bajos de tiendas chilenas. Compara especificaciones, stock y ofertas de ${config.label} en Framerate.`,
+    },
+    { property: "og:title", content: `${config.label} - Precios en Chile` },
+    { property: "og:description", content: `Encuentra las mejores ofertas de ${config.label} en Chile.` },
+    { property: "og:type", content: "website" },
+    { property: "og:locale", content: "es_CL" },
+  ];
+}
+
 export async function loader({ params, request }: Route.LoaderArgs) {
   const { slug } = params;
   const apiSlug = getApiSlugFromUrl(slug);

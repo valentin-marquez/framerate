@@ -1,5 +1,6 @@
 import { IconAlertCircle, IconCalendarFilled, IconChevronRight, IconCpu } from "@tabler/icons-react";
 import { isRouteErrorResponse, Link, redirect, useRouteError } from "react-router";
+import { AsyncImage } from "~/components/primitives/async-image";
 import { Button } from "~/components/primitives/button";
 import { Separator } from "~/components/primitives/separator";
 import { CreateQuoteDialog } from "~/components/quotes/create-quote-dialog";
@@ -9,6 +10,28 @@ import { profilesService } from "~/services/profiles";
 import { quotesService } from "~/services/quotes";
 import { getGradient } from "~/utils/gradients";
 import type { Route } from "./+types/profile";
+
+export function meta({ data }: Route.MetaArgs) {
+  if (!data || !data.profileUser) {
+    return [{ title: "Perfil no encontrado - Framerate" }];
+  }
+  const { profileUser } = data;
+  const displayName = profileUser.full_name || profileUser.username || "Usuario";
+  const title = `Perfil de ${displayName} - Framerate`;
+  const description = `Mira las cotizaciones y configuraciones de PC de ${displayName} en Framerate.cl.`;
+
+  return [
+    { title },
+    { name: "description", content: description },
+    { property: "og:site_name", content: "Framerate.cl" },
+    { property: "og:locale", content: "es_CL" },
+    { property: "og:type", content: "profile" },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:image", content: profileUser.avatar_url || "/og-image.png" },
+    { name: "twitter:card", content: "summary" },
+  ];
+}
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { username } = params;
@@ -83,9 +106,18 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-12">
         <div className="flex items-center gap-6">
-          <div className="h-24 w-24 rounded-full bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center text-3xl font-bold text-primary border border-primary/10 overflow-hidden">
+          <div className="h-24 w-24 rounded-full bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center text-3xl font-bold text-primary border border-primary/10 overflow-hidden relative">
             {profileUser.avatar_url ? (
-              <img src={profileUser.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+              <AsyncImage
+                src={profileUser.avatar_url}
+                alt="Profile"
+                className="h-full w-full object-cover"
+                fallback={
+                  <div className="h-full w-full flex items-center justify-center bg-muted animate-pulse">
+                    <span>{displayName[0].toUpperCase()}</span>
+                  </div>
+                }
+              />
             ) : (
               <span>{displayName[0].toUpperCase()}</span>
             )}

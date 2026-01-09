@@ -75,6 +75,7 @@ profiles.patch("/me", async (c) => {
       username?: string;
       full_name?: string;
       avatar_url?: string;
+      lang?: string;
     }>();
 
     const supabase = createSupabase(c.env, c.get("token"));
@@ -82,6 +83,14 @@ profiles.patch("/me", async (c) => {
     const updates: any = {
       updated_at: new Date().toISOString(),
     };
+
+    if (body.lang !== undefined) {
+      if (["es", "en", "arn"].includes(body.lang)) {
+        updates.lang = body.lang;
+      } else {
+        return c.json({ error: "Invalid language" }, 400);
+      }
+    }
 
     if (body.username !== undefined) {
       const username = body.username.trim();

@@ -5,6 +5,7 @@ export interface Profile {
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  lang: "es" | "en" | "arn" | null;
   created_at: string;
   updated_at: string;
 }
@@ -13,6 +14,7 @@ export interface UpdateProfileRequest {
   username?: string;
   full_name?: string;
   avatar_url?: string;
+  lang?: "es" | "en" | "arn";
 }
 
 export const profilesService = {

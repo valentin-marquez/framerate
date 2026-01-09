@@ -4,6 +4,7 @@ import { useFetcher } from "react-router";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/primitives/select";
 import { Separator } from "~/components/primitives/separator";
 import { useRequestInfo } from "~/hooks/use-request-info";
+import { useTranslation } from "~/hooks/use-translation";
 import { requireAuth } from "~/lib/auth.server";
 import { useOptimisticThemeMode } from "~/lib/client";
 import { cn } from "~/lib/utils";
@@ -19,6 +20,7 @@ export default function PreferencesSettings() {
   const requestInfo = useRequestInfo();
   const optimisticMode = useOptimisticThemeMode();
   const theme = optimisticMode ?? requestInfo.userPrefs.theme ?? "system";
+  const { t, lang, setLanguage } = useTranslation();
 
   const setTheme = (t: string) => {
     fetcher.submit({ theme: t }, { method: "post", action: "/theme-switcher" });
@@ -27,8 +29,8 @@ export default function PreferencesSettings() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-lg font-medium">Preferencias</h2>
-        <p className="text-sm text-muted-foreground">Personaliza tu experiencia en la aplicación.</p>
+        <h2 className="text-lg font-medium">{t("preferences")}</h2>
+        <p className="text-sm text-muted-foreground">{t("preferences_desc")}</p>
       </div>
 
       <Separator />
@@ -36,12 +38,12 @@ export default function PreferencesSettings() {
       <div className="space-y-8">
         <div className="space-y-4">
           <div>
-            <h3 className="font-medium">Visualización</h3>
-            <p className="text-sm text-muted-foreground">Elige tu interfaz preferida.</p>
+            <h3 className="font-medium">{t("visualization")}</h3>
+            <p className="text-sm text-muted-foreground">{t("choose_theme")}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <ThemeCard id="system" label="Sistema" active={theme === "system"} onClick={() => setTheme("system")}>
+            <ThemeCard id="system" label={t("system")} active={theme === "system"} onClick={() => setTheme("system")}>
               <div
                 className="h-full w-full flex items-center justify-center relative overflow-hidden"
                 style={{
@@ -58,7 +60,7 @@ export default function PreferencesSettings() {
               </div>
             </ThemeCard>
 
-            <ThemeCard id="light" label="Claro" active={theme === "light"} onClick={() => setTheme("light")}>
+            <ThemeCard id="light" label={t("light")} active={theme === "light"} onClick={() => setTheme("light")}>
               <div
                 className="h-full w-full relative overflow-hidden"
                 style={{ background: "linear-gradient(135deg, #FFB74D 0%, #FFD54F 100%)" }}
@@ -90,7 +92,7 @@ export default function PreferencesSettings() {
               </div>
             </ThemeCard>
 
-            <ThemeCard id="dark" label="Oscuro" active={theme === "dark"} onClick={() => setTheme("dark")}>
+            <ThemeCard id="dark" label={t("dark")} active={theme === "dark"} onClick={() => setTheme("dark")}>
               <div
                 className="dark h-full w-full relative overflow-hidden"
                 style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #4c1d95 100%)" }}
@@ -128,19 +130,19 @@ export default function PreferencesSettings() {
 
         <div className="space-y-4">
           <div>
-            <h3 className="font-medium">Idioma</h3>
-            <p className="text-sm text-muted-foreground">Selecciona el idioma de la interfaz.</p>
+            <h3 className="font-medium">{t("language")}</h3>
+            <p className="text-sm text-muted-foreground">{t("select_language")}</p>
           </div>
 
           <div className="w-full sm:max-w-md">
-            <Select defaultValue="Español (Chile)">
+            <Select value={lang} onValueChange={(v) => setLanguage(v as any)}>
               <SelectTrigger className="h-10 w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Español">Español (Chile)</SelectItem>
-                <SelectItem value="English">English (US)</SelectItem>
-                <SelectItem value="Mapudungun">Mapudungun</SelectItem>
+                <SelectItem value="es">Español</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="arn">Mapudungun</SelectItem>
               </SelectContent>
             </Select>
           </div>

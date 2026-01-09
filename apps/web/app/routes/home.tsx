@@ -2,10 +2,37 @@ import { useProductDrops, useProducts } from "@/hooks/useProducts";
 import { categoriesService } from "@/services/categories";
 import { productsService } from "@/services/products";
 import { ProductCard } from "~/components/product/card-product";
+import { useTranslation } from "~/hooks/use-translation";
 import type { Route } from "./+types/home";
 
 export function meta() {
-  return [{ title: "Framerate" }, { name: "description", content: "Hardware price comparison" }];
+  return [
+    { title: "Framerate - Comparador de Precios y Cotizaciones de Hardware en Chile" },
+    {
+      name: "description",
+      content:
+        "Encuentra los precios más bajos para armar tu PC Gamer en Chile. Compara GPUs, CPUs y componentes en tiempo real de las principales tiendas (SpDigital, PCFactory, etc.).",
+    },
+    {
+      name: "keywords",
+      content:
+        "hardware chile, pc gamer chile, cotizador pc, tarjeta de video precio, armar pc chile, comparación precios hardware",
+    },
+    { property: "og:title", content: "Framerate - El mejor comparador de precios de hardware en Chile" },
+    {
+      property: "og:description",
+      content:
+        "Ahorra dinero armando tu PC. Compara precios, verifica stock y crea cotizaciones inteligentes con Framerate.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:site_name", content: "Framerate.cl" },
+    { property: "og:locale", content: "es_CL" },
+    { property: "og:image", content: "/og-image.png" }, // Asegúrate de tener esta imagen
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Framerate - Comparador de Hardware Chile" },
+    { name: "twitter:description", content: "Encuentra los mejores precios para tu próximo PC Gamer." },
+    { name: "twitter:image", content: "/og-image.png" },
+  ];
 }
 
 export async function loader() {
@@ -31,6 +58,7 @@ export async function loader() {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { popularProducts: initialPopular, priceDrops: initialDrops } = loaderData;
+  const { t } = useTranslation();
 
   const { data: popularProducts } = useProducts({ limit: 400, sort: "popularity" }, { initialData: initialPopular });
 
@@ -45,28 +73,28 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <section className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-bold font-sans text-primary">Productos populares</h2>
-            <p className="text-sm text-muted-foreground mt-1">Los productos más vistos por la comunidad</p>
+            <h2 className="text-3xl font-bold font-sans text-primary">{t("popular_products")}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t("popular_products_desc")}</p>
           </div>
           {products.meta.total > products.data.length && (
             <a
               href="/productos"
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
-              Ver todos →
+              {t("view_all")} →
             </a>
           )}
         </div>
 
         {products.data.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5  gap-4">
-            {products.data.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {products.data.map((product, index) => (
+              <ProductCard key={product.id} product={product} priority={index < 10} />
             ))}
           </div>
         ) : (
           <div className="flex items-center justify-center py-20">
-            <p className="text-muted-foreground">No hay productos disponibles</p>
+            <p className="text-muted-foreground">{t("no_products")}</p>
           </div>
         )}
       </section>
@@ -75,15 +103,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <section className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl font-bold font-sans text-primary">Ofertas recientes</h2>
-              <p className="text-sm text-muted-foreground mt-1">Productos con bajadas de precio</p>
+              <h2 className="text-3xl font-bold font-sans text-primary">{t("recent_offers")}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t("recent_offers_desc")}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5  gap-4">
             {drops.map((drop) => {
               // Convertir drop a formato Product para ProductCard
-              const product = {
+              const product: any = {
                 id: drop.product_id,
                 name: drop.product_name,
                 slug: drop.product_slug,

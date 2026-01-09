@@ -4,6 +4,7 @@ import { Logger } from "@framerate/utils";
 import pLimit from "p-limit";
 import { config } from "@/config";
 import type { BaseTracker, TrackerResult } from "@/domain/trackers/base";
+import { CentralGamerTracker } from "@/domain/trackers/central-gamer";
 import { MyShopTracker } from "@/domain/trackers/myshop";
 import { PcExpressTracker } from "@/domain/trackers/pc-express";
 import { PuppeteerPool } from "@/domain/trackers/puppeteer-pool";
@@ -41,6 +42,7 @@ export class TrackerService {
       new SpDigitalTracker(this.puppeteerPool),
       new PcExpressTracker(),
       new TectecTracker(this.puppeteerPool),
+      new CentralGamerTracker(this.puppeteerPool),
     ];
   }
 

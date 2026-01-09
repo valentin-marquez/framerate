@@ -6,10 +6,12 @@ import { Discord } from "@/components/icons/discord";
 import { Facebook } from "@/components/icons/facebook";
 import { Google } from "@/components/icons/google";
 import { Logo } from "@/components/layout/logo";
+import { useTranslation } from "~/hooks/use-translation";
 import { useProfile, useUser } from "~/hooks/useAuth";
 import { cn } from "~/lib/utils";
 import type { Category } from "~/services/categories";
 import { getCategoryConfig } from "~/utils/categories";
+import { AsyncImage } from "../primitives/async-image";
 import { Button, buttonVariants } from "../primitives/button";
 import {
   DropdownMenu,
@@ -38,37 +40,6 @@ const GRADIENTS: Record<TimeOfDay, string> = {
   night: "linear-gradient(rgba(63, 81, 181, 0.2) 0%, rgba(48, 63, 159, 0.1) 50%, rgba(26, 35, 126, 0) 100%)",
 };
 
-const GREETING_MESSAGES: Record<TimeOfDay, string[]> = {
-  morning: [
-    "¿Café o pasta térmica para desayunar?",
-    "Los precios bajaron más rápido que tú de la cama",
-    "Buen día, hoy sí sale ese procesador",
-    "Menos lag y más café para empezar",
-    "El que madruga, encuentra stock",
-  ],
-  afternoon: [
-    "Mirar hardware también cuenta como trabajar",
-    "Tu jefe no está mirando, busca esa GPU",
-    "¿Otro ventilador? Nunca es suficiente",
-    "El hambre pasa, los FPS son para siempre",
-    "Solo una pieza más y juro que termino el build",
-  ],
-  evening: [
-    "Prende el RGB que ya oscureció",
-    "¿Tu PC brilla más que tu futuro? El mío sí",
-    "Hora de los FPS altos y los precios bajos",
-    "No es un gasto, es una inversión en felicidad",
-    "Configurando el setup para ganar hoy",
-  ],
-  night: [
-    "La luz del monitor cuenta como vitamina D",
-    "Dormir es para gente con PCs lentas",
-    "Tu cuenta bancaria dice no, pero tu build dice sí",
-    "Un ojo en el código y otro en esa oferta",
-    "Mañana ese precio será historia, cómpralo ya",
-  ],
-};
-
 function getTimeOfDay(): TimeOfDay {
   const hour = new Date().getHours();
 
@@ -78,14 +49,11 @@ function getTimeOfDay(): TimeOfDay {
   return "night";
 }
 
-function getGreetingMessage(timeOfDay: TimeOfDay): string {
-  const messages = GREETING_MESSAGES[timeOfDay];
-  return messages[Math.floor(Math.random() * messages.length)];
-}
-
 export function Navbar({ categories, blurred }: NavbarProps) {
   const user = useUser();
   const profile = useProfile();
+  const { t } = useTranslation();
+
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("afternoon");
   const [currentPath, setCurrentPath] = useState<string>("/");
@@ -101,16 +69,20 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   useEffect(() => {
     const currentTimeOfDay = getTimeOfDay();
     setTimeOfDay(currentTimeOfDay);
-    setGreetingMessage(getGreetingMessage(currentTimeOfDay));
+
+    // Initial greeting
+    const randomIndex = Math.floor(Math.random() * 5) + 1;
+    setGreetingMessage(t(`greeting_${currentTimeOfDay}_${randomIndex}`));
 
     const interval = setInterval(() => {
       const newTimeOfDay = getTimeOfDay();
       setTimeOfDay(newTimeOfDay);
-      setGreetingMessage(getGreetingMessage(newTimeOfDay));
+      const newRandomIndex = Math.floor(Math.random() * 5) + 1;
+      setGreetingMessage(t(`greeting_${newTimeOfDay}_${newRandomIndex}`));
     }, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const target = GRADIENTS[timeOfDay] ?? "transparent";
@@ -250,7 +222,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       );
                     })
                   ) : (
-                    <DropdownMenuItem disabled>No hay categorías disponibles</DropdownMenuItem>
+                    <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -261,14 +233,14 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             <Button variant="link" className="p-0 m-0">
               <Link to="/explorar" className="flex items-center gap-1.5" prefetch="intent">
                 <IconCompass className="size-4" />
-                <span>Explorar</span>
+                <span>{t("explore")}</span>
               </Link>
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger className={cn(buttonVariants({ variant: "link" }))}>
                 <IconCpu className="size-4" />
-                <span>Hardware</span>
+                <span>{t("hardware")}</span>
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="center" className="w-56 mt-2">
@@ -289,7 +261,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     );
                   })
                 ) : (
-                  <DropdownMenuItem disabled>No hay categorías disponibles</DropdownMenuItem>
+                  <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -304,7 +276,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     className={"hidden sm:flex p-0 m-0 outline-offset-4 cursor-pointer"}
                     size={"sm"}
                   >
-                    Crear Cotizacion
+                    {t("create_quote")}
                   </Button>
                 }
               />
@@ -316,7 +288,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
               </TooltipTrigger>
               <TooltipContent side="bottom" className="px-2 py-1">
                 <div className="flex items-center gap-2">
-                  <span>Buscador</span>
+                  <span>{t("search")}</span>
                   <kbd className="rounded-4xl text-xs">Ctrl+K</kbd>
                 </div>
               </TooltipContent>
@@ -325,11 +297,11 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  aria-label="Usuario"
+                  aria-label={t("user")}
                   className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "rounded-full p-0")}
                 >
                   {profile?.avatar_url || user.user_metadata?.avatar_url ? (
-                    <img
+                    <AsyncImage
                       src={profile?.avatar_url || user.user_metadata?.avatar_url}
                       alt={profile?.full_name || user.user_metadata?.name || user.email || "avatar"}
                       className="size-6 rounded-full object-cover"
@@ -348,7 +320,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     >
                       <div className="flex items-center gap-3 px-3 py-3">
                         {profile?.avatar_url || user.user_metadata?.avatar_url ? (
-                          <img
+                          <AsyncImage
                             src={profile?.avatar_url || user.user_metadata?.avatar_url}
                             alt={profile?.full_name || user.user_metadata?.name || user.email || "avatar"}
                             className="size-12 rounded-full object-cover shrink-0"
@@ -364,7 +336,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                               profile?.username ||
                               user.user_metadata?.full_name ||
                               user.user_metadata?.name ||
-                              "Usuario"}
+                              t("user")}
                           </p>
                           {user.email && <p className="text-sm text-muted-foreground truncate">{user.email}</p>}
                         </div>
@@ -382,13 +354,13 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                         prefetch="intent"
                       >
                         <IconUserCircle className="size-5" />
-                        <span>Perfil</span>
+                        <span>{t("profile")}</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                       <Link to="/settings" className="flex items-center gap-2.5 w-full" prefetch="intent">
                         <IconSettings className="size-5" />
-                        <span>Ajustes</span>
+                        <span>{t("settings")}</span>
                       </Link>
                     </DropdownMenuItem>
 
@@ -397,7 +369,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       <DropdownMenuItem className={"cursor-pointer"}>
                         <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
                           <IconLogout className="size-5" />
-                          <span>Cerrar sesión</span>
+                          <span>{t("logout")}</span>
                         </button>
                       </DropdownMenuItem>
                     </form>
@@ -407,7 +379,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  aria-label="Entrar"
+                  aria-label={t("login")}
                   className={cn(
                     buttonVariants({
                       variant: "default",
@@ -417,17 +389,15 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   )}
                 >
                   <IconLogin className="size-4 mr-2" />
-                  Entrar
+                  {t("login")}
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end" className="w-64 mt-2 bg-card ">
                   <DropdownMenuGroup>
-                    <DropdownMenuLabel className={"text-primary"}>Entrar</DropdownMenuLabel>
+                    <DropdownMenuLabel className={"text-primary"}>{t("login")}</DropdownMenuLabel>
                   </DropdownMenuGroup>
                   <div className="px-3 pb-2">
-                    <p className="text-xs text-muted-foreground">
-                      Elige un proveedor para crear tu cuenta o iniciar sesión
-                    </p>
+                    <p className="text-xs text-muted-foreground">{t("login_desc")}</p>
                   </div>
 
                   <DropdownMenuSeparator />
@@ -440,7 +410,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       <DropdownMenuItem className={"cursor-pointer"}>
                         <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
                           <Discord className="size-4" />
-                          <span>Continuar con Discord</span>
+                          <span>{t("continue_with", { provider: "Discord" })}</span>
                         </button>
                       </DropdownMenuItem>
                     </form>
@@ -452,7 +422,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       <DropdownMenuItem className={"cursor-pointer"}>
                         <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
                           <Google className="size-4" />
-                          <span>Continuar con Google</span>
+                          <span>{t("continue_with", { provider: "Google" })}</span>
                         </button>
                       </DropdownMenuItem>
                     </form>
@@ -464,7 +434,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       <DropdownMenuItem className={"cursor-pointer"}>
                         <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
                           <Apple className="size-4 invert dark:invert-0" />
-                          <span>Continuar con Apple</span>
+                          <span>{t("continue_with", { provider: "Apple" })}</span>
                         </button>
                       </DropdownMenuItem>
                     </form>
@@ -476,7 +446,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       <DropdownMenuItem className={"cursor-pointer"}>
                         <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
                           <Facebook className="size-4" />
-                          <span>Continuar con Facebook</span>
+                          <span>{t("continue_with", { provider: "Facebook" })}</span>
                         </button>
                       </DropdownMenuItem>
                     </form>
@@ -488,11 +458,11 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     <p className="text-xs text-muted-foreground">
                       Al continuar, aceptas nuestros{" "}
                       <Link to="/terms" className="underline hover:text-foreground" prefetch="intent">
-                        Términos
+                        {t("terms")}
                       </Link>{" "}
                       y{" "}
                       <Link to="/privacy" className="underline hover:text-foreground" prefetch="intent">
-                        Privacidad
+                        {t("privacy")}
                       </Link>
                     </p>
                   </div>

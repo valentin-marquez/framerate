@@ -1,4 +1,5 @@
 import { IconDots } from "@tabler/icons-react";
+import { useTranslation } from "~/hooks/use-translation";
 import type { VirtualQuoteItem } from "~/services/quotes";
 import { QUOTE_SLOTS } from "~/utils/slots";
 import { QuoteItem } from "./quote-item";
@@ -30,32 +31,29 @@ export function QuoteItemsList({
   onSelectVariant,
   onAdd,
 }: QuoteItemsListProps) {
+  const { t } = useTranslation();
   // Identify items that don't fit into standard slots
   const handledCategories = new Set(QUOTE_SLOTS.flatMap((s) => s.accepts));
-  const otherItems = flattenedItems.filter(
-    (item) => !handledCategories.has((item.category?.slug || item.product?.category?.slug) as any),
-  );
+  const otherItems = flattenedItems.filter((item) => !handledCategories.has(item.product?.category?.slug as any));
 
   return (
     <div className="bg-card rounded-3xl border border-border/40 shadow-sm overflow-hidden">
       <div className="p-6 border-b border-border/40 bg-secondary/5 flex justify-between items-center">
-        <h2 className="text-xl font-semibold tracking-tight">Componentes</h2>
-        <span className="text-sm text-muted-foreground">{activeItems.length} activos</span>
+        <h2 className="text-xl font-semibold tracking-tight">{t("components")}</h2>
+        <span className="text-sm text-muted-foreground">{t("active_items_count", { count: activeItems.length })}</span>
       </div>
 
       <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-secondary/10 text-xs font-medium text-muted-foreground border-b border-border/40">
-        <div className="col-span-5">Producto</div>
-        <div className="col-span-2">Tienda</div>
-        <div className="col-span-2 text-right">Precio Normal</div>
-        <div className="col-span-2 text-right">Precio Efectivo</div>
+        <div className="col-span-5">{t("product")}</div>
+        <div className="col-span-2">{t("store")}</div>
+        <div className="col-span-2 text-right">{t("price_normal")}</div>
+        <div className="col-span-2 text-right">{t("price_cash")}</div>
         <div className="col-span-1"></div>
       </div>
 
       <div className="divide-y divide-border/40">
         {QUOTE_SLOTS.map((slot) => {
-          const slotItems = flattenedItems.filter((item) =>
-            slot.accepts.includes((item.category?.slug || item.product?.category?.slug) as any),
-          );
+          const slotItems = flattenedItems.filter((item) => slot.accepts.includes(item.product?.category?.slug as any));
           return (
             <QuoteSlot
               key={slot.id}
@@ -75,7 +73,7 @@ export function QuoteItemsList({
           <>
             <div className="px-6 py-2 bg-secondary/5 border-b border-border/40 flex items-center gap-2">
               <IconDots size={16} className="text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Otros</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("others")}</span>
             </div>
             {otherItems.map((item) => (
               <QuoteItem
