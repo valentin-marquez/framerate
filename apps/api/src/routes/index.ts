@@ -1,6 +1,5 @@
 import auth from "@/routes/auth";
 import categories from "@/routes/categories";
-import images from "@/routes/images";
 import products from "@/routes/products";
 import profiles from "@/routes/profiles";
 import quotes from "@/routes/quotes";

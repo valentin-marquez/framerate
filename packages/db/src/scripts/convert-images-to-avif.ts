@@ -110,9 +110,9 @@ async function main() {
         let newFilePath = originalFilePath;
         const lastDotIndex = newFilePath.lastIndexOf(".");
         if (lastDotIndex !== -1) {
-          newFilePath = newFilePath.substring(0, lastDotIndex) + ".avif";
+          newFilePath = `${newFilePath.substring(0, lastDotIndex)}.avif`;
         } else {
-          newFilePath = newFilePath + ".avif";
+          newFilePath = `${newFilePath}.avif`;
         }
 
         // 5. Upload AVIF image

@@ -142,7 +142,7 @@ export async function uploadProductImage(
   // Always convert to AVIF
   let finalData: ArrayBuffer | Buffer = imageData.data;
   const finalMimeType = "image/avif";
-  const finalExtension = "avif";
+  const _finalExtension = "avif";
 
   try {
     let compressed = await sharp(Buffer.from(imageData.data)).avif({ quality: 80 }).toBuffer();
