@@ -1,16 +1,17 @@
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
-import { cache } from "@/middleware/cache";
+import { CACHE_TTL, Cache } from "@/middleware/cache";
 
 const products = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // GET /products/search/quick?q=term (Live Search - optimizado)
 products.get(
   "/search/quick",
-  cache({
-    cacheName: "quick-search",
-    cacheControl: "max-age=60",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.QUICK_SEARCH,
+    name: "quick-search",
   }),
   async (c) => {
     const supabase = createSupabase(c.env);
@@ -37,9 +38,10 @@ products.get(
 // GET /products/search?q=term
 products.get(
   "/search",
-  cache({
-    cacheName: "product-search",
-    cacheControl: "max-age=120",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.SEARCH,
+    name: "product-search",
   }),
   async (c) => {
     const supabase = createSupabase(c.env);
@@ -68,9 +70,10 @@ products.get(
 // GET /products/drops
 products.get(
   "/drops",
-  cache({
-    cacheName: "product-drops",
-    cacheControl: "max-age=300", // 5 minutes
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.SHORT,
+    name: "product-drops",
   }),
   async (c) => {
     const supabase = createSupabase(c.env);
@@ -110,9 +113,10 @@ products.post("/:slug/view", async (c) => {
 // GET /products/:slug
 products.get(
   "/:slug",
-  cache({
-    cacheName: "product-detail",
-    cacheControl: "max-age=3600",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.LONG,
+    name: "product-detail",
   }),
   async (c) => {
     const supabase = createSupabase(c.env);
@@ -179,9 +183,10 @@ products.get(
 // GET /products
 products.get(
   "/",
-  cache({
-    cacheName: "products-list",
-    cacheControl: "max-age=300",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.SHORT,
+    name: "product-list",
   }),
   async (c) => {
     const supabase = createSupabase(c.env);

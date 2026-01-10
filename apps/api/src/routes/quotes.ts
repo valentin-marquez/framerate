@@ -17,6 +17,7 @@ import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware } from "@/middleware/auth";
+import { CACHE_TTL, Cache, invalidateCache } from "@/middleware/cache";
 
 const quotes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -115,47 +116,54 @@ quotes.post("/analyze", async (c) => {
  * Si el usuario solicitante es el mismo, devuelve todas.
  * Si es otro usuario o anónimo, solo devuelve las públicas.
  */
-quotes.get("/user/:username", async (c) => {
-  try {
-    const username = c.req.param("username");
-    const page = Number(c.req.query("page")) || 1;
-    const limit = Number(c.req.query("limit")) || 10;
-    const offset = (page - 1) * limit;
+quotes.get(
+  "/user/:username",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.SHORT,
+    name: "public-profile-quotes",
+  }),
+  async (c) => {
+    try {
+      const username = c.req.param("username");
+      const page = Number(c.req.query("page")) || 1;
+      const limit = Number(c.req.query("limit")) || 10;
+      const offset = (page - 1) * limit;
 
-    // Extract token from header
-    const authHeader = c.req.header("Authorization");
-    const token = authHeader ? authHeader.replace("Bearer ", "") : undefined;
+      // Extract token from header
+      const authHeader = c.req.header("Authorization");
+      const token = authHeader ? authHeader.replace("Bearer ", "") : undefined;
 
-    // Create supabase client with token if available
-    const supabase = createSupabase(c.env, token);
+      // Create supabase client with token if available
+      const supabase = createSupabase(c.env, token);
 
-    // 1. Obtener ID del usuario por username
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, username, full_name, avatar_url, created_at")
-      .eq("username", username)
-      .single();
+      // 1. Obtener ID del usuario por username
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url, created_at")
+        .eq("username", username)
+        .single();
 
-    if (profileError || !profile) {
-      return c.json({ error: "User not found" }, 404);
-    }
-
-    // 2. Determinar si el solicitante es el dueño
-    let isOwner = false;
-    if (token) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user && user.id === profile.id) {
-        isOwner = true;
+      if (profileError || !profile) {
+        return c.json({ error: "User not found" }, 404);
       }
-    }
 
-    // 3. Construir query de cotizaciones
-    let query = supabase
-      .from("quotes")
-      .select(
-        `
+      // 2. Determinar si el solicitante es el dueño
+      let isOwner = false;
+      if (token) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user && user.id === profile.id) {
+          isOwner = true;
+        }
+      }
+
+      // 3. Construir query de cotizaciones
+      let query = supabase
+        .from("quotes")
+        .select(
+          `
         id,
         name,
         description,
@@ -168,39 +176,40 @@ quotes.get("/user/:username", async (c) => {
         updated_at,
         quote_items(count)
       `,
-        { count: "exact" },
-      )
-      .eq("user_id", profile.id)
-      .order("updated_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+          { count: "exact" },
+        )
+        .eq("user_id", profile.id)
+        .order("updated_at", { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    // Si no es el dueño, filtrar solo públicas
-    if (!isOwner) {
-      query = query.eq("is_public", true);
+      // Si no es el dueño, filtrar solo públicas
+      if (!isOwner) {
+        query = query.eq("is_public", true);
+      }
+
+      const { data: quotesData, count, error: quotesError } = await query;
+
+      if (quotesError) {
+        console.error("Error fetching user quotes:", quotesError);
+        return c.json({ error: "Failed to fetch quotes" }, 500);
+      }
+
+      return c.json({
+        user: profile,
+        data: quotesData || [],
+        meta: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: count ? Math.ceil(count / limit) : 0,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching user profile quotes:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-
-    const { data: quotesData, count, error: quotesError } = await query;
-
-    if (quotesError) {
-      console.error("Error fetching user quotes:", quotesError);
-      return c.json({ error: "Failed to fetch quotes" }, 500);
-    }
-
-    return c.json({
-      user: profile,
-      data: quotesData || [],
-      meta: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: count ? Math.ceil(count / limit) : 0,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching user profile quotes:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
+  },
+);
 
 /**
  * GET /v1/quotes/:id
@@ -523,19 +532,26 @@ quotes.use("/*", authMiddleware);
  * Lista todas las cotizaciones del usuario autenticado.
  * Soporta paginación y filtros.
  */
-quotes.get("/", async (c) => {
-  try {
-    const user = c.get("user");
-    const supabase = createSupabase(c.env, c.get("token"));
+quotes.get(
+  "/",
+  Cache({
+    mode: "private",
+    ttl: CACHE_TTL.SHORT,
+    name: "user-quotes-list",
+  }),
+  async (c) => {
+    try {
+      const user = c.get("user");
+      const supabase = createSupabase(c.env, c.get("token"));
 
-    const page = Number(c.req.query("page")) || 1;
-    const limit = Number(c.req.query("limit")) || 10;
-    const offset = (page - 1) * limit;
+      const page = Number(c.req.query("page")) || 1;
+      const limit = Number(c.req.query("limit")) || 10;
+      const offset = (page - 1) * limit;
 
-    // Obtener cotizaciones con conteo de items
-    const { data: quotesData, error: quotesError } = await supabase
-      .from("quotes")
-      .select(`
+      // Obtener cotizaciones con conteo de items
+      const { data: quotesData, error: quotesError } = await supabase
+        .from("quotes")
+        .select(`
         id,
         name,
         description,
@@ -548,39 +564,40 @@ quotes.get("/", async (c) => {
         updated_at,
         quote_items(count)
       `)
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    if (quotesError) {
-      console.error("Error fetching quotes:", quotesError);
-      return c.json({ error: "Failed to fetch quotes" }, 500);
+      if (quotesError) {
+        console.error("Error fetching quotes:", quotesError);
+        return c.json({ error: "Failed to fetch quotes" }, 500);
+      }
+
+      // Obtener total para paginación
+      const { count, error: countError } = await supabase
+        .from("quotes")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      if (countError) {
+        console.error("Error counting quotes:", countError);
+      }
+
+      return c.json({
+        data: quotesData || [],
+        meta: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: count ? Math.ceil(count / limit) : 0,
+        },
+      });
+    } catch (error) {
+      console.error("Error listing quotes:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-
-    // Obtener total para paginación
-    const { count, error: countError } = await supabase
-      .from("quotes")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id);
-
-    if (countError) {
-      console.error("Error counting quotes:", countError);
-    }
-
-    return c.json({
-      data: quotesData || [],
-      meta: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: count ? Math.ceil(count / limit) : 0,
-      },
-    });
-  } catch (error) {
-    console.error("Error listing quotes:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
+  },
+);
 
 /**
  * POST /v1/quotes
@@ -661,6 +678,8 @@ quotes.post("/", async (c) => {
       }
     }
 
+    await invalidateCache(c, "/v1/quotes");
+
     return c.json(quote, 201);
   } catch (error) {
     console.error("Error creating quote:", error);
@@ -728,6 +747,16 @@ quotes.patch("/:id", async (c) => {
       return c.json({ error: "Failed to update quote" }, 500);
     }
 
+    await invalidateCache(c, "/v1/quotes");
+    await invalidateCache(c, `/v1/quotes/${quoteId}`);
+
+    if (quote.is_public) {
+      const { data: profile } = await supabase.from("profiles").select("username").eq("id", quote.user_id).single();
+
+      const username = profile?.username;
+      if (username) await invalidateCache(c, `/v1/quotes/user/${username}`);
+    }
+
     return c.json(quote);
   } catch (error) {
     console.error("Error updating quote:", error);
@@ -761,6 +790,9 @@ quotes.delete("/:id", async (c) => {
       console.error("Error deleting quote:", deleteError);
       return c.json({ error: "Failed to delete quote" }, 500);
     }
+
+    await invalidateCache(c, "/v1/quotes");
+    await invalidateCache(c, `/v1/quotes/${quoteId}`);
 
     return c.json({ success: true, message: "Quote deleted successfully" });
   } catch (error) {
@@ -867,6 +899,8 @@ quotes.post("/:id/items", async (c) => {
       console.error("Error creating quote item:", itemError);
       return c.json({ error: "Failed to add item to quote" }, 500);
     }
+
+    await invalidateCache(c, `/v1/quotes/${quoteId}`);
 
     return c.json(item, 201);
   } catch (error) {

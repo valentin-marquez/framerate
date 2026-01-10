@@ -11,11 +11,11 @@ type RateLimiterType = "strict" | "moderate" | "lenient" | "search";
  *
  * @example
  * ```typescript
- * app.use("/v1/products/*", rateLimitMiddleware("lenient"));
- * app.use("/v1/quotes/analyze", rateLimitMiddleware("strict"));
+ * app.use("/v1/products/*", Limit("lenient"));
+ * app.use("/v1/quotes/analyze", Limit("strict"));
  * ```
  */
-export const rateLimitMiddleware = (type: RateLimiterType) => {
+export const Limit = (type: RateLimiterType) => {
   return createMiddleware<{ Bindings: Bindings; Variables: Variables }>(async (c, next) => {
     const limiterMap = {
       strict: c.env.STRICT_RATE_LIMITER,

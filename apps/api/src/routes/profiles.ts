@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware } from "@/middleware/auth";
+import { CACHE_TTL, Cache } from "@/middleware/cache";
 
 const profiles = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -13,7 +14,7 @@ profiles.use("/me", authMiddleware);
  *
  * Obtiene el perfil del usuario autenticado.
  */
-profiles.get("/me", async (c) => {
+profiles.get("/me", Cache({ mode: "private", ttl: CACHE_TTL.SHORT, name: "profiles-me" }), async (c) => {
   try {
     const user = c.get("user");
     const supabase = createSupabase(c.env, c.get("token"));

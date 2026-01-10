@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import type { Bindings, Variables } from "@/bindings";
-import { rateLimitMiddleware } from "@/middleware/rate-limit";
+import { Limit } from "@/middleware/rate-limit";
 import { routes } from "@/routes";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -35,22 +35,22 @@ app.use("*", async (c, next) => {
   logger.http(`${c.req.method} ${c.req.path} - ${c.res.status} - ${ms}ms`);
 });
 
-app.use("/v1/products/search/*", rateLimitMiddleware("search"));
+app.use("/v1/products/search/*", Limit("search"));
 
 // Endpoints computacionalmente costosos (10 req/60s)
-app.use("/v1/quotes/analyze", rateLimitMiddleware("strict"));
-app.use("/v1/quotes/*/analyze", rateLimitMiddleware("strict"));
+app.use("/v1/quotes/analyze", Limit("strict"));
+app.use("/v1/quotes/*/analyze", Limit("strict"));
 
 // Tracking y escritura (30 req/60s)
-app.use("/v1/products/*/view", rateLimitMiddleware("moderate"));
-app.use("/v1/quotes", rateLimitMiddleware("moderate"));
-app.use("/v1/profiles/me", rateLimitMiddleware("moderate"));
+app.use("/v1/products/*/view", Limit("moderate"));
+app.use("/v1/quotes", Limit("moderate"));
+app.use("/v1/profiles/me", Limit("moderate"));
 
 // Lectura pública (100 req/60s)
-app.use("/v1/products/*", rateLimitMiddleware("lenient"));
-app.use("/v1/categories/*", rateLimitMiddleware("lenient"));
-app.use("/v1/profiles/*", rateLimitMiddleware("lenient"));
-app.use("/v1/auth/*", rateLimitMiddleware("lenient"));
+app.use("/v1/products/*", Limit("lenient"));
+app.use("/v1/categories/*", Limit("lenient"));
+app.use("/v1/profiles/*", Limit("lenient"));
+app.use("/v1/auth/*", Limit("lenient"));
 
 app.get("/", (c) => {
   return c.json({
