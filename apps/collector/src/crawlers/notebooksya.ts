@@ -17,7 +17,6 @@ export const NOTEBOOKSYA_CATEGORIES: CategoryMap<string[]> = {
   cpu: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=procesadores"],
   gpu: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=tarjeta-de-video"],
   case: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=gabinetes"],
-  // Not available in this store
   cpu_cooler: [],
   case_fan: [],
 };
@@ -44,12 +43,10 @@ export class NotebooksYaCrawler extends BaseCrawler<Category> {
       this.logger.info(`Crawling category ${category} from ${startUrl}`);
 
       while (hasNextPage) {
-        // Build the paginated URL
         let pageUrl: string;
         if (page === 1) {
           pageUrl = startUrl;
         } else {
-          // Pagination pattern: insert /page/N/ before query params
           const urlObj = new URL(startUrl);
           const basePath = urlObj.pathname.replace(/\/$/, "");
           urlObj.pathname = `${basePath}/page/${page}/`;
@@ -60,14 +57,12 @@ export class NotebooksYaCrawler extends BaseCrawler<Category> {
           this.logger.info(`Fetching page ${page}: ${pageUrl}`);
           const html = await this.fetchHtml(pageUrl, "ul.products");
 
-          // Check for 404 page
           if (
             html.includes("That page can't be found") ||
-            html.includes("page-title") ||
-            html.includes("error-404") ||
-            !html.includes("products")
+            html.includes("error-404 not-found") ||
+            html.includes("Error 404")
           ) {
-            this.logger.info(`Page ${page} not found or content end. Stopping.`);
+            this.logger.info(`Page ${page} not found. Stopping.`);
             hasNextPage = false;
             break;
           }
@@ -96,7 +91,6 @@ export class NotebooksYaCrawler extends BaseCrawler<Category> {
       }
     }
 
-    // Deduplicate
     return [...new Set(urls)];
   }
 
@@ -117,51 +111,52 @@ export class NotebooksYaCrawler extends BaseCrawler<Category> {
   async parseProduct(html: string, url: string): Promise<ProductData | null> {
     const $ = cheerio.load(html);
 
-    // Title
     const title = $("h1.product_title.entry-title").text().trim();
     if (!title) {
       this.logger.warn(`Missing title for ${url}`);
       return null;
     }
 
-    // Prices
-    // Cash price (inside <ins>)
-    let price: number | null = null;
-    const cashPriceText = $("ins .woocommerce-Price-amount bdi").first().text().replace(/[^\d]/g, "");
-    if (cashPriceText) {
-      price = Number.parseInt(cashPriceText, 10);
+    // --- NUEVA LÓGICA DE EXTRACCIÓN DE PRECIOS ---
+    let price: number | null = null; // Efectivo / Transferencia
+    let originalPrice: number | null = null; // Normal / Webpay
+
+    // 1. Intentar capturar precio de transferencia (wds-first)
+    const transferText = $(".wds-first .woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
+    if (transferText) {
+      price = Number.parseInt(transferText, 10);
     }
 
-    // Normal price (outside ins, in wds-price or from wds-second)
-    let originalPrice: number | null = null;
-    const normalPriceText = $("p.wds-price .woocommerce-Price-amount bdi").text().replace(/[^\d]/g, "");
-    if (normalPriceText) {
-      originalPrice = Number.parseInt(normalPriceText, 10);
+    // 2. Intentar capturar precio Webpay (wds-second)
+    const webpayText = $(".wds-second .woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
+    if (webpayText) {
+      originalPrice = Number.parseInt(webpayText, 10);
     }
 
-    // Fallback: look for wds-second for webpay price
-    if (!originalPrice) {
-      const webpayPriceText = $(".wds-second .wds-price .woocommerce-Price-amount bdi").text().replace(/[^\d]/g, "");
-      if (webpayPriceText) {
-        originalPrice = Number.parseInt(webpayPriceText, 10);
+    // 3. Fallbacks si los contenedores específicos no existen (WooCommerce estándar)
+    if (!price && !originalPrice) {
+      const insPrice = $("ins .woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
+      const delPrice = $("del .woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
+
+      if (insPrice) price = Number.parseInt(insPrice, 10);
+      if (delPrice) originalPrice = Number.parseInt(delPrice, 10);
+
+      // Si solo hay un precio común
+      if (!price) {
+        const singlePrice = $(".woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
+        if (singlePrice) price = Number.parseInt(singlePrice, 10);
       }
     }
 
-    // If no cash price found, try from wds-first (transferencia)
-    if (!price) {
-      const transferPriceText = $(".wds-first .wds-price .woocommerce-Price-amount bdi").text().replace(/[^\d]/g, "");
-      if (transferPriceText) {
-        price = Number.parseInt(transferPriceText, 10);
-      }
-    }
-
-    // Ensure price/originalPrice are properly ordered
+    // Normalizar: originalPrice siempre debe ser el mayor o igual al cash price
     if (!originalPrice && price) originalPrice = price;
     if (price && originalPrice && price > originalPrice) {
       const temp = price;
       price = originalPrice;
       originalPrice = temp;
     }
+
+    // --- FIN LÓGICA PRECIOS ---
 
     // Stock
     let stock = false;
@@ -177,28 +172,22 @@ export class NotebooksYaCrawler extends BaseCrawler<Category> {
       }
     }
 
-    const outOfStock = $("p.stock.out-of-stock");
-    if (outOfStock.length > 0) {
+    if ($("p.stock.out-of-stock").length > 0) {
       stock = false;
       stockQuantity = 0;
     }
 
-    // Image
     const imageUrl =
       $("img.wp-post-image").attr("src") ||
       $('meta[property="og:image"]').attr("content") ||
       $(".woocommerce-product-gallery__image img").attr("src");
 
-    // MPN / SKU
     const mpn = $("span.sku").text().trim() || null;
 
-    // Description / context
     const descriptionText = $("#tab-description").text().trim();
     const descriptionHtml = $("#tab-description").html() || "";
 
-    // Extract manufacturer from title
     const manufacturer = this.extractManufacturer(title, mpn || "");
-
     const specs: Record<string, string> = {};
     if (manufacturer) specs.manufacturer = manufacturer;
 

@@ -20,9 +20,8 @@ export const CENTRALE_CATEGORIES: CategoryMap<string[]> = {
     "https://centrale.cl/categoria-producto/computadores/componentes-de-pc/refrigeracion-para-pc/?wpf_filter_tipo=ventilador",
   ],
   case: ["https://centrale.cl/categoria-producto/computadores/componentes-de-pc/gabinetes-para-pc/"],
-  // Not available/mapped for this store
-  gpu: [],
-  motherboard: [],
+  gpu: ["https://centrale.cl/categoria-producto/computadores/componentes-de-pc/tarjetas-graficas-para-pc/"],
+  motherboard: ["https://centrale.cl/categoria-producto/computadores/componentes-de-pc/placas-madres-para-pc/"],
 };
 
 export class CentraleCrawler extends BaseCrawler<Category> {
@@ -63,11 +62,11 @@ export class CentraleCrawler extends BaseCrawler<Category> {
           this.logger.info(`Fetching page ${page}: ${pageUrl}`);
           const html = await this.fetchHtml(pageUrl, ".products");
 
-          // Check for 404 page
+          // Check for 404 page - be more specific to avoid false positives
           if (
             html.includes("Oops! That page can't be found") ||
-            html.includes("page-title") ||
-            html.includes("error-404")
+            html.includes("error-404 not-found") ||
+            html.includes("Error 404")
           ) {
             this.logger.info(`Page ${page} not found or content end. Stopping.`);
             hasNextPage = false;
@@ -106,8 +105,8 @@ export class CentraleCrawler extends BaseCrawler<Category> {
     const $ = cheerio.load(html);
     const urls: string[] = [];
 
-    // Products are in div.product-small
-    $("div.product-small").each((_, el) => {
+    // Products are in div.product-small.col to avoid selecting inner .product-small.box
+    $("div.product-small.col").each((_, el) => {
       const link = $(el).find("a.woocommerce-LoopProduct-link, .box-image a").first().attr("href");
       if (link) {
         urls.push(link);

@@ -237,7 +237,7 @@ export class CatalogService {
             const score = matchCount / titleKeywords.length;
 
             // Consider it a match if at least 60% of keywords match
-            if (score > bestScore && score >= 0.6) {
+            if (score > bestScore && score >= 0.9) {
               bestScore = score;
               bestMatch = {
                 id: candidate.id,
@@ -408,7 +408,10 @@ export class CatalogService {
 
       if (listingError) {
         const msg = (listingError as { message?: unknown }).message as string | undefined;
-        this.logger.error("Failed to upsert listing", msg ?? String(listingError));
+        this.logger.error("Failed to upsert listing", {
+          message: msg ?? String(listingError),
+          insertListing,
+        });
         return { productId, listingId: null };
       }
 

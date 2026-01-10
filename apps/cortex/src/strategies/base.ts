@@ -6,6 +6,7 @@ import { searchWeb } from "../lib/search";
 import { callLLM } from "../llm-client";
 import logger0 from "../logger";
 
+const MAX_PROMPT_CHARS = 400_000;
 export const SYSTEM_PROMPT = `Eres un experto en hardware y componentes de PC. 
 Tu trabajo es extraer especificaciones técnicas de texto sin estructura y convertirlas a un JSON estricto.
 
@@ -60,17 +61,19 @@ export abstract class BaseExtractor<T> {
 
   protected async extractWithLLM(text: string, context?: Record<string, unknown>, lastError?: string): Promise<T> {
     const schemaString = this.getJsonSchema();
-    const processedText = this.preprocessText(text);
+    let processedText = this.preprocessText(text);
 
-    const contextSection = context ? `\nCONTEXTO ADICIONAL:\n${JSON.stringify(context, null, 2)}` : "";
+    // Prepare context and error sections
+    let contextStr = context ? JSON.stringify(context, null, 2) : "";
+    let contextSection = context ? `\nCONTEXTO ADICIONAL:\n${contextStr}` : "";
     const errorSection = lastError
       ? `\n⚠️ ERROR EN INTENTO ANTERIOR:\n${lastError}\n\nCorrige el JSON para que sea válido según el esquema.`
       : "";
 
-    const prompt = dedent`
+    const buildPrompt = (procText: string, ctxSection: string) => dedent`
       TEXTO DE ENTRADA (puede contener JSON malformado):
-      ${processedText}
-      ${contextSection}
+      ${procText}
+      ${ctxSection}
 
       TAREA:
       1. Analiza TODO el texto, incluyendo el CONTEXTO ADICIONAL, para extraer las especificaciones técnicas reales.
@@ -83,6 +86,49 @@ export abstract class BaseExtractor<T> {
 
       IMPORTANTE: Extrae TODA la información técnica que encuentres. Si falta en el texto principal, BÚSCALA en el contexto adicional.
     `;
+
+    let prompt = buildPrompt(processedText, contextSection);
+
+    // Truncate prompt if it exceeds MAX_PROMPT_CHARS. Prefer truncating context first, then processedText.
+    if (prompt.length > MAX_PROMPT_CHARS) {
+      this.logger.warn("Prompt exceeds MAX_PROMPT_CHARS, truncating context/processedText", {
+        promptLength: prompt.length,
+        max: MAX_PROMPT_CHARS,
+      });
+
+      // 1) Try truncating context
+      if (contextStr) {
+        const overflow = prompt.length - MAX_PROMPT_CHARS;
+        const allowedContextLen = Math.max(0, contextStr.length - overflow - 100); // leave some buffer
+        if (allowedContextLen < contextStr.length) {
+          contextStr = `${contextStr.slice(0, allowedContextLen)}\n... (truncated)`;
+          contextSection = `\nCONTEXTO ADICIONAL:\n${contextStr}`;
+          prompt = buildPrompt(processedText, contextSection);
+        }
+      }
+
+      // 2) If still too big, truncate processedText (keep head and tail)
+      if (prompt.length > MAX_PROMPT_CHARS) {
+        const overflow = prompt.length - MAX_PROMPT_CHARS;
+        // we try to keep as much as possible: keep head and tail
+        const keep = Math.max(0, processedText.length - overflow - 200);
+        if (keep <= 0) {
+          // fallback: keep the last chunk
+          processedText = processedText.slice(-Math.max(0, MAX_PROMPT_CHARS - 200));
+        } else {
+          const half = Math.floor(keep / 2);
+          processedText = `${processedText.slice(0, half)}\n... (truncated) ...\n${processedText.slice(processedText.length - half)}`;
+        }
+        prompt = buildPrompt(processedText, contextSection);
+      }
+
+      // Final check
+      if (prompt.length > MAX_PROMPT_CHARS) {
+        throw new Error(`Prompt exceeds MAX_PROMPT_CHARS (${MAX_PROMPT_CHARS}) even after truncation`);
+      }
+
+      this.logger.info("Prompt truncated", { finalLength: prompt.length });
+    }
 
     const completion = await this.callLLM({
       messages: [
