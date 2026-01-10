@@ -12,6 +12,7 @@ export default [
   route("terms", "routes/terms.tsx"),
 
   // Products & Categories
+  route("explorar", "routes/explore.tsx"),
   route("categoria/:slug", "routes/category.tsx"),
   route("producto/:slug", "routes/product.tsx"),
 

@@ -5,7 +5,9 @@ import pLimit from "p-limit";
 import { config } from "@/config";
 import type { BaseTracker, TrackerResult } from "@/domain/trackers/base";
 import { CentralGamerTracker } from "@/domain/trackers/central-gamer";
+import { CentraleTracker } from "@/domain/trackers/centrale";
 import { MyShopTracker } from "@/domain/trackers/myshop";
+import { NotebooksYaTracker } from "@/domain/trackers/notebooksya";
 import { PcExpressTracker } from "@/domain/trackers/pc-express";
 import { PuppeteerPool } from "@/domain/trackers/puppeteer-pool";
 import { SpDigitalTracker } from "@/domain/trackers/sp-digital";
@@ -43,6 +45,8 @@ export class TrackerService {
       new PcExpressTracker(),
       new TectecTracker(this.puppeteerPool),
       new CentralGamerTracker(this.puppeteerPool),
+      new NotebooksYaTracker(this.puppeteerPool),
+      new CentraleTracker(this.puppeteerPool),
     ];
   }
 
@@ -173,7 +177,11 @@ export class TrackerService {
     if (tracker instanceof SpDigitalTracker || tracker instanceof MyShopTracker) {
       return this.heavyLimit;
     }
-    if (tracker instanceof PcExpressTracker) {
+    if (
+      tracker instanceof PcExpressTracker ||
+      tracker instanceof NotebooksYaTracker ||
+      tracker instanceof CentraleTracker
+    ) {
       return this.mediumLimit;
     }
     return this.lightLimit;
@@ -183,7 +191,11 @@ export class TrackerService {
     if (tracker instanceof SpDigitalTracker || tracker instanceof MyShopTracker) {
       return config.RATE_DELAY_HEAVY_MS;
     }
-    if (tracker instanceof PcExpressTracker) {
+    if (
+      tracker instanceof PcExpressTracker ||
+      tracker instanceof NotebooksYaTracker ||
+      tracker instanceof CentraleTracker
+    ) {
       return config.RATE_DELAY_MEDIUM_MS;
     }
     return config.RATE_DELAY_LIGHT_MS;

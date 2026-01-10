@@ -6,7 +6,9 @@ import type { JobStrategy } from "@/collector/strategies/base.strategy";
 import { ScraperStrategy } from "@/collector/strategies/scraper.strategy";
 import type { Category } from "@/constants/categories";
 import { CENTRAL_GAMER_CATEGORIES, CentralGamerCrawler } from "@/crawlers/central-gamer";
+import { CENTRALE_CATEGORIES, CentraleCrawler } from "@/crawlers/centrale";
 import { MYSHOP_CATEGORIES, MyShopCrawler } from "@/crawlers/myshop";
+import { NOTEBOOKSYA_CATEGORIES, NotebooksYaCrawler } from "@/crawlers/notebooksya";
 import { PC_EXPRESS_CATEGORIES, PcExpressCrawler } from "@/crawlers/pc-express";
 import { SP_DIGITAL_CATEGORIES, SpDigitalCrawler } from "@/crawlers/sp-digital";
 import { TECTEC_CATEGORIES, TectecCrawler } from "@/crawlers/tectec";
@@ -55,6 +57,18 @@ export function createStrategy(crawlerType: string): JobStrategy {
       const c = new CentralGamerCrawler();
       (c as unknown as CrawlerMeta).CATEGORIES = CENTRAL_GAMER_CATEGORIES;
       (c as unknown as CrawlerMeta).slug = "central-gamer";
+      return new ScraperStrategy<Category>(c, pipeline);
+    }
+    case "notebooksya": {
+      const c = new NotebooksYaCrawler();
+      (c as unknown as CrawlerMeta).CATEGORIES = NOTEBOOKSYA_CATEGORIES;
+      (c as unknown as CrawlerMeta).slug = "notebooksya";
+      return new ScraperStrategy<Category>(c, pipeline);
+    }
+    case "centrale": {
+      const c = new CentraleCrawler();
+      (c as unknown as CrawlerMeta).CATEGORIES = CENTRALE_CATEGORIES;
+      (c as unknown as CrawlerMeta).slug = "centrale";
       return new ScraperStrategy<Category>(c, pipeline);
     }
     default:

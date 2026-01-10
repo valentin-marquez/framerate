@@ -13,8 +13,14 @@ export interface CategoryFilter {
   unit?: string;
 }
 
+export interface CategoryWithCount extends Category {
+  product_count?: number;
+}
+
 export const categoriesService = {
   getAll: () => api.get<Category[]>("/v1/categories"),
 
-  getFilters: (slug: string) => api.get<CategoryFilter[]>(`/v1/categories/${slug}/filters`),
+  getFilters: (slug: string) => api.get<Record<string, string[]>>(`/v1/categories/${slug}/filters`),
+
+  getWithCounts: () => api.get<CategoryWithCount[]>("/v1/categories?with_counts=true"),
 };

@@ -1,6 +1,8 @@
 import centralGamerRoute from "./v1/central-gamer.route";
+import centraleRoute from "./v1/centrale.route";
 import maintenanceRoute from "./v1/maintenance.route";
 import myshopRoute from "./v1/myshop.route";
+import notebooksyaRoute from "./v1/notebooksya.route";
 import pcExpressRoute from "./v1/pc-express.route";
 import spDigitalRoute from "./v1/sp-digital.route";
 import tectecRoute from "./v1/tectec.route";
@@ -27,6 +29,14 @@ export const routes = [
   {
     path: `/${API_VERSION}/central-gamer`,
     route: centralGamerRoute,
+  },
+  {
+    path: `/${API_VERSION}/notebooksya`,
+    route: notebooksyaRoute,
+  },
+  {
+    path: `/${API_VERSION}/centrale`,
+    route: centraleRoute,
   },
   {
     path: `/${API_VERSION}/maintenance`,

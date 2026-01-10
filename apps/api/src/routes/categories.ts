@@ -28,6 +28,78 @@ categories.get(
   },
 );
 
+// GET /categories/:slug/price-range
+categories.get(
+  "/:slug/price-range",
+  cache({
+    cacheName: "category-price-range",
+    cacheControl: "max-age=3600",
+  }),
+  async (c) => {
+    const supabase = createSupabase(c.env);
+    const slug = c.req.param("slug");
+
+    const { data, error } = await supabase
+      .from("api_products")
+      .select("prices")
+      .eq("category_slug", slug)
+      .not("prices", "is", null);
+
+    if (error) {
+      return c.json({ error: error.message }, 500);
+    }
+
+    if (!data || data.length === 0) {
+      return c.json({ min: 0, max: 0 });
+    }
+
+    // biome-ignore lint/suspicious/noExplicitAny: complex prices type
+    const prices = data.map((p: any) => p.prices?.cash || p.prices?.normal || 0).filter((p: number) => p > 0);
+
+    return c.json({
+      min: Math.min(...prices),
+      max: Math.max(...prices),
+    });
+  },
+);
+
+// GET /categories/:slug/brands
+categories.get(
+  "/:slug/brands",
+  cache({
+    cacheName: "category-brands",
+    cacheControl: "max-age=3600",
+  }),
+  async (c) => {
+    const supabase = createSupabase(c.env);
+    const slug = c.req.param("slug");
+
+    const { data, error } = await supabase.from("api_products").select("brand").eq("category_slug", slug);
+
+    if (error) {
+      return c.json({ error: error.message }, 500);
+    }
+
+    // Extract unique brands with counts
+    const brandCounts: Record<string, { name: string; slug: string; count: number }> = {};
+
+    for (const product of data || []) {
+      // biome-ignore lint/suspicious/noExplicitAny: complex brand type
+      const brand = product.brand as any;
+      if (brand?.slug) {
+        if (!brandCounts[brand.slug]) {
+          brandCounts[brand.slug] = { name: brand.name, slug: brand.slug, count: 0 };
+        }
+        brandCounts[brand.slug].count++;
+      }
+    }
+
+    const brands = Object.values(brandCounts).sort((a, b) => b.count - a.count);
+
+    return c.json(brands);
+  },
+);
+
 // GET /categories
 categories.get(
   "/",
@@ -37,6 +109,39 @@ categories.get(
   }),
   async (c) => {
     const supabase = createSupabase(c.env);
+    const withCounts = c.req.query("with_counts") === "true";
+
+    if (withCounts) {
+      // Get categories with product counts
+      const { data: categories, error: catError } = await supabase.from("categories").select("*").order("name");
+
+      if (catError) {
+        return c.json({ error: catError.message }, 500);
+      }
+
+      // Get product counts per category
+      const { data: products, error: prodError } = await supabase.from("api_products").select("category_slug");
+
+      if (prodError) {
+        return c.json({ error: prodError.message }, 500);
+      }
+
+      // Count products per category
+      const counts: Record<string, number> = {};
+      for (const product of products || []) {
+        const slug = product.category_slug;
+        if (slug) {
+          counts[slug] = (counts[slug] || 0) + 1;
+        }
+      }
+
+      const result = categories?.map((cat) => ({
+        ...cat,
+        product_count: counts[cat.slug] || 0,
+      }));
+
+      return c.json(result);
+    }
 
     const { data, error } = await supabase.from("categories").select("*").order("name");
 
