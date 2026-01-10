@@ -56,8 +56,6 @@ graph TD
 |----------|-------------|-------------------|
 | `SUPABASE_URL` | URL del proyecto Supabase | - |
 | `SUPABASE_PUBLISHABLE_KEY` | Clave pública de Supabase | - |
-| `RATE_LIMIT_WINDOW_MS` | Ventana de tiempo para rate limiting (ms) | `900000` (15 min) |
-| `RATE_LIMIT_MAX_REQUESTS` | Máximo de requests por ventana por IP | `100` |
 
 ### Instalación
 

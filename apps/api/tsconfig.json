@@ -8,7 +8,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["@cloudflare/workers-types", "bun"]
+    "types": ["bun"]
   },
   "exclude": ["node_modules"]
 }

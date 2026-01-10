@@ -1,12 +1,12 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
 import type { User } from "@supabase/supabase-js";
 
 export type Bindings = {
   SUPABASE_URL: string;
   SUPABASE_PUBLISHABLE_KEY: string;
-  RATE_LIMIT_KV: KVNamespace;
-  RATE_LIMIT_WINDOW_MS: string;
-  RATE_LIMIT_MAX_REQUESTS: string;
+  STRICT_RATE_LIMITER: RateLimit;
+  MODERATE_RATE_LIMITER: RateLimit;
+  LENIENT_RATE_LIMITER: RateLimit;
+  SEARCH_RATE_LIMITER: RateLimit;
 };
 
 export type Variables = {

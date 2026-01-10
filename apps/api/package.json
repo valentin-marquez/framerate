@@ -8,16 +8,15 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@framerate/core": "workspace:*",
     "@framerate/db": "workspace:*",
     "@framerate/utils": "workspace:*",
     "@hono-rate-limiter/cloudflare": "^0.2.2",
     "@supabase/supabase-js": "^2.84.0",
     "hono": "^4.10.6",
-    "hono-rate-limiter": "^0.4.2",
-    "@framerate/core": "workspace:*"
+    "hono-rate-limiter": "^0.5.3"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20251202.0",
     "@types/bun": "latest",
     "wrangler": "^4.51.0"
   }
