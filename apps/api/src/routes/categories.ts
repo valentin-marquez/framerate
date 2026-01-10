@@ -1,16 +1,17 @@
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
-import { cache } from "@/middleware/cache";
+import { CACHE_TTL, Cache } from "@/middleware/cache";
 
 const categories = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // GET /categories/:slug/filters
 categories.get(
   "/:slug/filters",
-  cache({
-    cacheName: "category-filters",
-    cacheControl: "max-age=3600",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.MEDIUM,
+    name: "category-filters",
   }),
   async (c) => {
     const supabase = createSupabase(c.env);
@@ -31,9 +32,10 @@ categories.get(
 // GET /categories/:slug/price-range
 categories.get(
   "/:slug/price-range",
-  cache({
-    cacheName: "category-price-range",
-    cacheControl: "max-age=3600",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.MEDIUM,
+    name: "category-price-range",
   }),
   async (c) => {
     const supabase = createSupabase(c.env);
@@ -66,9 +68,10 @@ categories.get(
 // GET /categories/:slug/brands
 categories.get(
   "/:slug/brands",
-  cache({
-    cacheName: "category-brands",
-    cacheControl: "max-age=3600",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.MEDIUM,
+    name: "category-brands",
   }),
   async (c) => {
     const supabase = createSupabase(c.env);
@@ -103,9 +106,10 @@ categories.get(
 // GET /categories
 categories.get(
   "/",
-  cache({
-    cacheName: "categories-list",
-    cacheControl: "max-age=3600",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.MEDIUM,
+    name: "categories-list",
   }),
   async (c) => {
     const supabase = createSupabase(c.env);
