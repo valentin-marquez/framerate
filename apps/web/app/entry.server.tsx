@@ -4,9 +4,9 @@ import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 import type { EntryContext, HandleErrorFunction } from "react-router";
 import { isRouteErrorResponse, ServerRouter } from "react-router";
-import { NonceProvider } from "./hooks/use-nonce";
-import { buildContentSecurityPolicy } from "./lib/csp";
-import { isDevelopment } from "./services/env.server";
+import { NonceProvider } from "./shared/hooks/use-nonce";
+import { buildContentSecurityPolicy } from "./shared/lib/csp";
+import { isDevelopment } from "./shared/services/env.server";
 
 export default async function handleRequest(
   request: Request,
@@ -17,6 +17,13 @@ export default async function handleRequest(
   let shellRendered = false;
   const userAgent = request.headers.get("user-agent");
   const nonce = crypto.randomBytes(16).toString("hex");
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? env.VITE_SUPABASE_URL ?? "";
+  const oauthProviders = [
+    "https://discord.com",
+    "https://accounts.google.com",
+    "https://appleid.apple.com",
+    "https://www.facebook.com",
+  ];
   const contentSecurityPolicy = buildContentSecurityPolicy({
     baseUri: ["'self'"],
     objectSrc: ["'none'"],
@@ -44,7 +51,8 @@ export default async function handleRequest(
     ],
     fontSrc: ["'self'", "https://fonts.gstatic.com"],
     frameSrc: ["'self'"],
-    formAction: ["'self'"],
+    // Form actions hop through Supabase Auth and OAuth providers during login.
+    formAction: ["'self'", supabaseUrl, ...oauthProviders],
   });
 
   const body = await renderToReadableStream(

@@ -1,33 +1,37 @@
 import { index, type RouteConfig, route } from "@react-router/dev/routes";
 
 export default [
-  index("routes/home.tsx"),
+  index("features/home/pages/home-page.tsx"),
 
   // Auth
-  route("action/auth", "routes/action.auth.tsx"),
-  route("auth/callback", "routes/auth.callback.tsx"),
+  route("action/auth", "features/auth/pages/auth-action.tsx"),
+  route("auth/callback", "features/auth/pages/auth-callback.tsx"),
 
   // Info
-  route("privacy", "routes/privacy.tsx"),
-  route("terms", "routes/terms.tsx"),
+  route("privacy", "features/legal/pages/privacy-page.tsx"),
+  route("terms", "features/legal/pages/terms-page.tsx"),
 
   // Products & Categories
-  route("explorar", "routes/explore.tsx"),
-  route("categoria/:slug", "routes/category.tsx"),
-  route("producto/:slug", "routes/product.tsx"),
+  route("explorar", "features/explore/pages/explore-page.tsx"),
+  route("categoria/:slug", "features/category/pages/category-page.tsx"),
+  route("producto/:slug", "features/product/pages/product-details.tsx"),
 
   // rutas protegidas (opcionales)
-  route("profile", "routes/profile.tsx", { id: "profile-me" }),
-  route("u/:username", "routes/profile.tsx", { id: "profile-user" }),
-  route("cotizacion/:slug", "routes/quote.tsx"),
+  route("profile", "features/profile/pages/profile-page.tsx", { id: "profile-me" }),
+  route("u/:username", "features/profile/pages/profile-page.tsx", { id: "profile-user" }),
+  route("cotizacion/:slug", "features/quote/pages/quote-details.tsx"),
 
   // rutas privadas (requerir inicio de sesión)
-  route("settings", "routes/settings/layout.tsx", [
-    index("routes/settings/account.tsx", { id: "settings-index" }),
-    route("account", "routes/settings/account.tsx", { id: "settings-account" }),
-    route("preferences", "routes/settings/preferences.tsx"),
+  route("settings", "features/settings/pages/layout.tsx", [
+    index("features/settings/pages/account.tsx", { id: "settings-index" }),
+    route("account", "features/settings/pages/account.tsx", { id: "settings-account" }),
+    route("preferences", "features/settings/pages/preferences.tsx"),
   ]),
 
-  route("theme-switcher", "components/theme/theme-switcher.ts"),
+  // Admin
+  route("admin/gatekeeper", "features/gatekeeper/pages/review-dashboard.tsx"),
+
+  route("theme-switcher", "shared/components/theme/theme-switcher.ts"),
+  route("lang-switcher", "shared/components/lang/lang-switcher.ts"),
   route("robots.txt", "routes/robots.ts"),
 ] satisfies RouteConfig;

@@ -1,25 +1,28 @@
-import "@/styles/app.css";
+import "~/shared/styles/app.css";
 import { createBrowserClient } from "@supabase/ssr";
 import { IconBrandGithub } from "@tabler/icons-react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { data, isRouteErrorResponse, Link, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
-import { Logo } from "@/components/layout/logo";
-import { Navbar } from "@/components/layout/navbar";
-import { useNonce } from "@/hooks/use-nonce";
-import { useAuthSync } from "@/hooks/useAuth";
-import { useCategories } from "@/hooks/useCategories";
-import { getAuthUser } from "@/lib/auth.server";
-import { queryClient } from "@/lib/query-client";
-import { profilesService } from "@/services/profiles";
-import { useAuthStore } from "@/store/auth";
+import { useAuthSync } from "~/features/auth/hooks/useAuth";
+import { getAuthUser } from "~/features/auth/services/auth.server";
+import { useAuthStore } from "~/features/auth/store/auth";
+import { useCategories } from "~/features/category/hooks/useCategories";
+import { categoriesService } from "~/features/category/services/categories";
+import { profilesService } from "~/features/profile/services/profiles";
+import { Logo } from "~/shared/components/layout/logo";
+import { Navbar } from "~/shared/components/layout/navbar";
+import { Button } from "~/shared/components/primitives/button";
+import { Toaster } from "~/shared/components/primitives/sonner";
+import { useNonce } from "~/shared/hooks/use-nonce";
+import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
+import { getHints, useTheme } from "~/shared/lib/client";
+import { queryClient } from "~/shared/lib/query-client";
+import type { Lang } from "~/shared/lib/translations";
+import { getClientEnv } from "~/shared/services/env.server";
+import { getCookieLang, resolveLang, setLangCookie } from "~/shared/services/lang.server";
+import { getTheme } from "~/shared/services/theme.server";
 import type { Route } from "./+types/root";
-import { Button } from "./components/primitives/button";
-import { Toaster } from "./components/primitives/sonner";
-import { getHints, useTheme } from "./lib/client";
-import { categoriesService } from "./services/categories";
-import { getClientEnv } from "./services/env.server";
-import { getTheme } from "./services/theme.server";
 
 export const links: Route.LinksFunction = () => [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }];
 
@@ -78,6 +81,15 @@ export async function loader({ request }: Route.LoaderArgs) {
     headers.set("Cache-Control", "private, max-age=0, no-cache");
   }
 
+  // Cookie wins (explicit per-device choice). Profile is fallback for first
+  // visit on a new device. If we fall back to profile, persist the cookie so
+  // future SSR is consistent and we don't depend on profile lookup.
+  const profileLang = (profile?.lang as Lang | null | undefined) ?? null;
+  const lang: Lang = resolveLang(request, profileLang);
+  if (!getCookieLang(request)) {
+    headers.append("Set-Cookie", setLangCookie(lang));
+  }
+
   return data(
     {
       env,
@@ -87,7 +99,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       requestInfo: {
         clientEnv,
         hints: getHints(request),
-        userPrefs: { theme: getTheme(request) },
+        userPrefs: { theme: getTheme(request), lang },
       },
     },
     {
@@ -98,9 +110,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useNonce();
+  const requestInfo = useOptionalRequestInfo();
+  const lang = requestInfo?.userPrefs.lang ?? "es";
 
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -169,16 +183,17 @@ export default function App({ loaderData }: Route.ComponentProps) {
     [env.SUPABASE_URL, env.SUPABASE_ANON_KEY],
   );
 
-  const { supabase: currentSupabase, user: currentUser, profile: currentProfile } = useAuthStore.getState();
-  if (currentSupabase !== supabase) {
+  useEffect(() => {
     setSupabase(supabase);
-  }
-  if (currentUser?.id !== user?.id) {
+  }, [supabase, setSupabase]);
+
+  useEffect(() => {
     setUser(user);
-  }
-  if (currentProfile?.id !== profile?.id) {
+  }, [user, setUser]);
+
+  useEffect(() => {
     setProfile(profile);
-  }
+  }, [profile, setProfile]);
 
   useAuthSync(supabase);
 
@@ -201,7 +216,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <footer className="container mx-auto border-t border-border/60 py-4 md:py-0 max-w-4xl">
         <div className="flex flex-col items-center justify-between gap-4 md:h-20 md:flex-row px-4">
           <div className="flex items-center ">
-            <Logo className="w-6 h-6 text-muted-foreground mr-4" />
+            <Logo className="size-6 text-muted-foreground mr-4" />
             <Button variant="link">
               <Link to="/terms">Términos</Link>
             </Button>
