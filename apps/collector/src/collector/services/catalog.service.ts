@@ -19,6 +19,16 @@ export interface UpsertResult {
   listingId: string | null;
 }
 
+/**
+ * Clave de comparación de MPN: uppercase + sólo alfanumérico.
+ * Distintas tiendas escriben el mismo MPN con espacios, guiones o casing distintos
+ * (e.g., "B850M D3HP" / "B850M-D3HP" / "b850m d3hp"). Para deduplicar productos del mismo
+ * fabricante hay que comparar por esta forma normalizada.
+ */
+export function normalizeMpnKey(mpn: string | null | undefined): string {
+  return (mpn ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
 export class CatalogService {
   private logger = new Logger("CatalogService");
   private brandCache = new Map<string, string>();
@@ -140,9 +150,26 @@ export class CatalogService {
     return data.id;
   }
 
-  async findExistingProductByMpn(mpn: string): Promise<string | null> {
-    const { data } = await supabase.from("products").select("id").eq("mpn", mpn).single();
-    return data?.id ?? null;
+  /**
+   * Busca un producto existente por MPN, comparando ambos lados normalizados
+   * (uppercase + sólo alfanumérico) para tolerar variaciones de espacios/guiones/casing.
+   *
+   * Acotamos por `categoryId` (mismo MPN puede existir en categorías distintas en errores
+   * de captura). Trae los candidatos de la categoría y filtra en JS — cada categoría tiene
+   * ~cientos de filas, así que el costo es despreciable y evita una RPC custom.
+   */
+  async findExistingProductByMpn(mpn: string, categoryId?: string): Promise<string | null> {
+    const key = normalizeMpnKey(mpn);
+    if (!key) return null;
+
+    let query = supabase.from("products").select("id, mpn").not("mpn", "is", null);
+    if (categoryId) query = query.eq("category_id", categoryId);
+
+    const { data } = await query.limit(2000);
+    if (!data) return null;
+
+    const match = data.find((row) => normalizeMpnKey(row.mpn) === key);
+    return match?.id ?? null;
   }
 
   /**
@@ -161,13 +188,44 @@ export class CatalogService {
     specs?: Json,
   ): Promise<{ id: string; mpn: string | null; specs: Json | null } | null> {
     try {
-      // 1. PRIORITY: Search by normalized name first (most reliable)
-      // Title is formatted as "Name [MPN]" so we extract the name part
+      // 1. PRIORITY: MPN normalizado (= UNIQUE INDEX en DB).
+      //    Tolera "B850M D3HP" vs "B850M-D3HP" / "b850m d3hp".
+      if (mpn) {
+        const key = normalizeMpnKey(mpn);
+        if (key) {
+          const { data: candidates } = await supabase
+            .from("products")
+            .select("id, mpn, specs")
+            .eq("category_id", categoryId)
+            .not("mpn", "is", null)
+            .limit(2000);
+
+          const match = candidates?.find((row) => normalizeMpnKey(row.mpn) === key);
+          if (match) {
+            this.logger.info(`Found existing product by normalized MPN: ${mpn} → ${match.mpn}`);
+            return match;
+          }
+        }
+      }
+
+      // 2. Fallback: match por título normalizado SOLO si tenemos un baseName lo bastante
+      //    específico (>= 3 caracteres significativos además del brand+form factor) Y los
+      //    MPNs no son claramente diferentes. Antes esto matcheaba "Gigabyte [%]" con
+      //    cualquier mobo Gigabyte y producía 193 listings con MPN incorrecto.
       const nameMatch = title.match(/^(.*?) \[.*\]$/);
       if (nameMatch) {
         const baseName = nameMatch[1].trim();
-        const escapedName = baseName.replace(/[%_]/g, "\\$&");
+        // Heurística: rechazar baseNames demasiado genéricos (sólo brand, ≤2 palabras útiles).
+        const significantWords = baseName
+          .replace(/\b(micro|mini|atx|matx|itx|gaming)\b/gi, "")
+          .split(/\s+/)
+          .filter((w) => w.length > 2);
+        if (significantWords.length < 2) {
+          this.logger.info(`Skipping title-based match for too-generic baseName: "${baseName}"`);
+          return null;
+        }
 
+        const escapedName = baseName.replace(/[%_]/g, "\\$&");
         const { data: nameDuplicates } = await supabase
           .from("products")
           .select("id, mpn, specs, name")
@@ -177,32 +235,25 @@ export class CatalogService {
           .limit(5);
 
         if (nameDuplicates && nameDuplicates.length > 0) {
-          // If we find matches, prefer the one with the longest/most specific MPN
-          // This assumes more specific MPNs are more likely to be correct
-          const bestMatch = nameDuplicates.reduce((best, current) => {
-            const bestMpnLen = best.mpn?.length ?? 0;
-            const currentMpnLen = current.mpn?.length ?? 0;
-            return currentMpnLen > bestMpnLen ? current : best;
+          // Si la consulta trae MPN, exigir que el MPN normalizado coincida.
+          // Esto bloquea fusiones erróneas tipo "B850 GAMING PLUS WIFI" vs "B860 TOMAHAWK WIFI"
+          // que sólo comparten brand+form factor en el título.
+          const scrapedKey = mpn ? normalizeMpnKey(mpn) : "";
+          const compatible = nameDuplicates.find((d) => {
+            if (!scrapedKey) return true;
+            const existingKey = normalizeMpnKey(d.mpn);
+            return !existingKey || existingKey === scrapedKey;
           });
 
-          if (mpn && mpn !== bestMatch.mpn) {
+          if (!compatible) {
             this.logger.warn(
-              `MPN mismatch detected! Scraped MPN: "${mpn}", Using existing correct MPN: "${bestMatch.mpn}" for product: "${baseName}"`,
+              `Name match found for "${baseName}" but MPNs incompatible (scraped="${mpn}", candidates=[${nameDuplicates.map((d) => d.mpn).join(", ")}]). Skipping.`,
             );
+            return null;
           }
 
-          this.logger.info(`Found similar product by normalized name: ${bestMatch.id}`);
-          return bestMatch;
-        }
-      }
-
-      // 2. Fallback: Try exact MPN match (only if name search found nothing)
-      if (mpn) {
-        const { data } = await supabase.from("products").select("id, mpn, specs").eq("mpn", mpn).single();
-
-        if (data) {
-          this.logger.info(`Found existing product by MPN: ${mpn}`);
-          return data;
+          this.logger.info(`Found similar product by normalized name: ${compatible.id}`);
+          return compatible;
         }
       }
 
@@ -224,19 +275,14 @@ export class CatalogService {
           .limit(50);
 
         if (candidates && candidates.length > 0) {
-          // Find best match by title similarity
+          const scrapedKey = mpn ? normalizeMpnKey(mpn) : "";
           let bestMatch: { id: string; mpn: string | null; specs: Json | null } | null = null;
           let bestScore = 0;
 
           for (const candidate of candidates) {
             const candidateName = (candidate.name || "").toUpperCase();
-
-            // Count how many keywords match
             const matchCount = titleKeywords.filter((keyword) => candidateName.includes(keyword)).length;
-
             const score = matchCount / titleKeywords.length;
-
-            // Consider it a match if at least 60% of keywords match
             if (score > bestScore && score >= 0.9) {
               bestScore = score;
               bestMatch = {
@@ -248,8 +294,25 @@ export class CatalogService {
           }
 
           if (bestMatch) {
-            this.logger.info(`Found similar product by title match (score: ${bestScore.toFixed(2)}): ${bestMatch.id}`);
-            return bestMatch;
+            // Safeguard: si el candidato tiene MPN y nosotros también, exigir que sus
+            // formas normalizadas coincidan. Sin esto, productos como
+            // "Gigabyte B550M K" y "Gigabyte H610M K V2" se mergean por sus keywords
+            // ("Gigabyte"/marca y forma común).
+            if (scrapedKey && bestMatch.mpn) {
+              const matchKey = normalizeMpnKey(bestMatch.mpn);
+              if (matchKey && matchKey !== scrapedKey) {
+                this.logger.warn(
+                  `Title match (score=${bestScore.toFixed(2)}) rejected — MPN incompatible: scraped="${mpn}" vs existing="${bestMatch.mpn}"`,
+                );
+                bestMatch = null;
+              }
+            }
+            if (bestMatch) {
+              this.logger.info(
+                `Found similar product by title match (score: ${bestScore.toFixed(2)}): ${bestMatch.id}`,
+              );
+              return bestMatch;
+            }
           }
         }
       }
@@ -326,30 +389,46 @@ export class CatalogService {
     try {
       const normalizedTitle = product.title ?? `${product.mpn ?? "product"}`;
 
-      // If product has mpn try to find existing
+      // If product has mpn try to find existing (within same category, normalized comparison)
       let productId: string | null = null;
       if (product.mpn) {
-        productId = await this.findExistingProductByMpn(product.mpn);
+        productId = await this.findExistingProductByMpn(product.mpn, product.categoryId);
       }
 
       if (!productId) {
+        // El schema de prod ahora requiere `products.mpn NOT NULL`; rechazamos
+        // explícitamente productos sin MPN (antes el insert fallaba a nivel DB).
+        if (!product.mpn) {
+          this.logger.warn(`Skipping product without MPN: ${normalizedTitle}`);
+          return { productId: null, listingId: null };
+        }
         const insert: TablesInsert<"products"> = {
           name: normalizedTitle,
           slug: `${normalizedTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`,
-          mpn: product.mpn ?? null,
+          mpn: product.mpn,
           category_id: product.categoryId,
           brand_id: product.brandId,
           image_url: product.imageUrl ?? null,
-          specs: product.specs ?? null,
+          specs: (product.specs as Json | null) ?? ({} as Json),
         };
 
         const { data, error } = await supabase.from("products").insert(insert).select("id").single();
         if (error) {
           const msg = (error as { message?: unknown }).message as string | undefined;
-          this.logger.error("Failed to create product", msg ?? String(error));
-          return { productId: null, listingId: null };
+          // 23505 = unique_violation (`products_norm_mpn_per_category_idx`).
+          // Race entre dos crawlers insertando el mismo MPN normalizado: re-buscamos.
+          const code = (error as { code?: string }).code;
+          if (code === "23505" && product.mpn) {
+            this.logger.info(`Race condition on MPN insert: ${product.mpn}, refetching canonical`);
+            productId = await this.findExistingProductByMpn(product.mpn, product.categoryId);
+          }
+          if (!productId) {
+            this.logger.error("Failed to create product", msg ?? String(error));
+            return { productId: null, listingId: null };
+          }
+        } else {
+          productId = data?.id ?? null;
         }
-        productId = data?.id ?? null;
       } else {
         // update specs if present
         if (product.specs) {

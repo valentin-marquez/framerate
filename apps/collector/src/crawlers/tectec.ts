@@ -1,440 +1,284 @@
-import * as cheerio from "cheerio";
 import type { Category, CategoryMap } from "@/constants/categories";
 import { BaseCrawler, type ProductData } from "./base";
 
-export const TECTEC_CATEGORIES: CategoryMap<string[]> = {
-  gpu: ["componentes-para-pc/tarjetas-de-video"],
-  cpu: ["componentes-para-pc/procesadores"],
-  psu: ["componentes-para-pc/fuentes-de-poder"],
-  motherboard: ["componentes-para-pc/placas-madres"],
-  case: ["componentes-para-pc"],
-  ram: ["componentes-para-pc/memoria-ram"],
-  hdd: ["componentes-para-pc/discos-duro"],
-  ssd: ["componentes-para-pc/discos-estado-solido"],
+/**
+ * Mapeo de categorías Framerate a slugs de la WC Store API.
+ * TecTec no vende gabinetes ni ventiladores en categorías dedicadas, así que `case` y `case_fan`
+ * quedan vacíos (antes `case` apuntaba al parent `componentes-para-pc` y scrapeaba TODO).
+ */
+export const TECTEC_API_SLUGS: CategoryMap<string[]> = {
+  gpu: ["tarjetas-de-video"],
+  cpu: ["procesadores"],
+  motherboard: ["placas-madres"],
+  ram: ["memoria-ram"],
+  psu: ["fuentes-de-poder"],
+  ssd: ["discos-estado-solido"],
+  hdd: ["discos-duro"],
+  cpu_cooler: ["refrigeracion-cpu"],
+  case: [],
   case_fan: [],
-  cpu_cooler: ["componentes-para-pc/refrigeracion-cpu"],
 };
+
+// Alias retro-compatible para imports externos que aún esperen TECTEC_CATEGORIES.
+export const TECTEC_CATEGORIES = TECTEC_API_SLUGS;
+
+interface WcStoreProduct {
+  id: number;
+  name: string;
+  slug: string;
+  permalink: string;
+  sku?: string;
+  short_description?: string;
+  description?: string;
+  prices?: { price?: string; regular_price?: string; sale_price?: string };
+  is_in_stock?: boolean;
+  stock_availability?: { text?: string; class?: string };
+  low_stock_remaining?: number | null;
+  images?: { src: string }[];
+  brands?: { name: string; slug: string }[];
+  // biome-ignore lint/suspicious/noExplicitAny: shape varies
+  attributes?: any[];
+}
 
 export class TectecCrawler extends BaseCrawler<Category> {
   name = "Tectec";
   baseUrl = "https://tectec.cl";
 
-  constructor() {
-    super();
-    this.useHeadless = true;
-  }
-
-  buildCategoryUrl(path: string): string {
-    return `${this.baseUrl}/categoria/${path}/`;
-  }
+  // WC Store API público + Bun fetch directo (sin Cloudflare). Sin Puppeteer.
+  protected useHeadless = false;
+  protected concurrency = 4;
+  private apiCache = new Map<string, WcStoreProduct>();
 
   async getAllProductUrlsForCategory(category: Category): Promise<string[]> {
-    const paths = TECTEC_CATEGORIES[category] ?? [];
-    const allUrls: string[] = [];
-
-    for (const path of paths) {
-      const url = this.buildCategoryUrl(path);
-      this.logger.info(`[Tectec] Crawling category ${category} -> ${url}`);
-
-      try {
-        const urls = await this.getCategoryProductUrls(url);
-        allUrls.push(...urls);
-      } catch (err) {
-        this.logger.error(`[Tectec] Error fetching category ${url}:`, String(err));
-      }
+    const slugs = TECTEC_API_SLUGS[category];
+    if (!slugs || slugs.length === 0) {
+      this.logger.warn(`No category slugs configured for: ${category}`);
+      return [];
     }
 
-    const uniqueUrls = [...new Set(allUrls)];
-    this.logger.info(`[Tectec] Found ${uniqueUrls.length} unique product urls for ${category}`);
-    return uniqueUrls;
+    const urls = new Set<string>();
+    for (const slug of slugs) {
+      const products = await this.fetchProductsByCategory(slug);
+      this.logger.info(`Category "${slug}" returned ${products.length} products from API`);
+      for (const p of products) {
+        if (!p.permalink || !p.name) continue;
+        urls.add(p.permalink);
+        this.apiCache.set(p.permalink, p);
+      }
+    }
+    return [...urls];
   }
 
-  async getCategoryProductUrls(categoryUrl: string): Promise<string[]> {
-    const allUrls: string[] = [];
+  /** Recorre WC Store API paginando hasta agotar (header `x-wp-totalpages`). */
+  private async fetchProductsByCategory(categorySlug: string): Promise<WcStoreProduct[]> {
+    const all: WcStoreProduct[] = [];
     const perPage = 100;
-
-    const urlObj = new URL(categoryUrl);
-    urlObj.searchParams.set("per_page", String(perPage));
-
-    this.logger.info(`[Tectec] Fetching category page: ${urlObj.toString()}`);
-    const firstHtml = await this.fetchHtml(urlObj.toString());
-
-    if (/woocommerce-no-products-found|No se han encontrado productos/i.test(firstHtml)) {
-      this.logger.info(`[Tectec] No products found for ${categoryUrl}`);
-      return [];
-    }
-
-    const firstPageUrls = await this.getProductUrls(firstHtml);
-    const validUrls = this.filterValidProductUrls(firstPageUrls);
-
-    if (validUrls.length === 0) {
-      this.logger.warn(`[Tectec] No valid product URLs found on first page`);
-      return [];
-    }
-
-    allUrls.push(...validUrls);
-
-    const totalPages = this.getTotalPages(firstHtml);
-
-    for (let page = 2; page <= totalPages; page++) {
-      const pageUrl = `${categoryUrl}page/${page}/?per_page=${perPage}`;
-      this.logger.info(`[Tectec] Fetching page ${page}/${totalPages}`);
-
-      const html = await this.fetchHtml(pageUrl);
-
-      if (/woocommerce-no-products-found|No se han encontrado productos/i.test(html)) {
-        this.logger.info(`[Tectec] Page ${page} has no products, stopping`);
+    let page = 1;
+    while (page <= 50) {
+      const url = `${this.baseUrl}/wp-json/wc/store/v1/products?category=${categorySlug}&per_page=${perPage}&page=${page}`;
+      try {
+        await this.waitRateLimit();
+        this.logger.info(`Fetching API page ${page} of "${categorySlug}"`);
+        const res = await fetch(url, { headers: { "User-Agent": this.userAgents[0], Accept: "application/json" } });
+        if (!res.ok) {
+          this.logger.warn(`API ${url} returned ${res.status}`);
+          break;
+        }
+        const items = (await res.json()) as WcStoreProduct[];
+        if (!Array.isArray(items) || items.length === 0) break;
+        all.push(...items);
+        const totalPages = Number(res.headers.get("x-wp-totalpages") || "1");
+        if (page >= totalPages) break;
+        page++;
+      } catch (err) {
+        this.logger.error(`Error fetching API ${url}: ${String(err)}`);
         break;
       }
-
-      const pageUrls = await this.getProductUrls(html);
-      const validPageUrls = this.filterValidProductUrls(pageUrls);
-
-      if (validPageUrls.length === 0) {
-        this.logger.warn(`[Tectec] No valid URLs on page ${page}, stopping`);
-        break;
-      }
-
-      allUrls.push(...validPageUrls);
-      await this.waitRateLimit();
     }
-
-    const uniqueUrls = [...new Set(allUrls)];
-    this.logger.info(`[Tectec] Extracted ${uniqueUrls.length} valid product URLs`);
-
-    return uniqueUrls;
+    return all;
   }
 
-  private filterValidProductUrls(urls: string[]): string[] {
-    return urls.filter((url) => {
-      const isProductUrl = url.includes("/producto/");
-      const isCategoryUrl = url.includes("/categoria/");
-
-      if (isCategoryUrl || !isProductUrl) {
-        this.logger.warn(`[Tectec] Filtered invalid URL: ${url}`);
-        return false;
-      }
-
-      return true;
-    });
+  /** Override fetchHtml: devolvemos JSON con la API data por URL. */
+  public async fetchHtml(url: string, _waitForSelector?: string): Promise<string> {
+    await this.waitRateLimit();
+    let api = this.apiCache.get(url) ?? null;
+    if (!api) {
+      const slug = url.match(/\/producto\/([^/]+)\/?/)?.[1];
+      if (slug) api = await this.fetchProductBySlug(slug);
+    }
+    if (!api) throw new Error(`No API data for ${url}`);
+    return JSON.stringify({ api });
   }
 
-  async getProductUrls(html: string): Promise<string[]> {
-    const urls: string[] = [];
-
-    const relativeRegex = /href=(?:"|')(?:(https?:\/\/[^"']+)|)(?:\/)?(producto\/[a-zA-Z0-9\-_/]+)(?:"|')/gi;
-    for (const match of html.matchAll(relativeRegex)) {
-      const [, absolute, relative] = match;
-      const url = absolute || `${this.baseUrl}/${relative}`;
-      if (url.startsWith("http")) urls.push(url.replace(/&amp;/g, "&"));
+  private async fetchProductBySlug(slug: string): Promise<WcStoreProduct | null> {
+    try {
+      const res = await fetch(`${this.baseUrl}/wp-json/wc/store/v1/products?slug=${slug}`, {
+        headers: { "User-Agent": this.userAgents[0], Accept: "application/json" },
+      });
+      if (!res.ok) return null;
+      const arr = (await res.json()) as WcStoreProduct[];
+      return arr?.[0] ?? null;
+    } catch {
+      return null;
     }
-
-    const absoluteRegex = /https?:\/\/tectec\.cl\/producto\/[a-zA-Z0-9\-_/]+/gi;
-    const absoluteMatches = html.match(absoluteRegex);
-    if (absoluteMatches) urls.push(...absoluteMatches);
-
-    const imageLinkRegex = /<a[^>]*class=["'][^"']*product-image-link[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
-    for (const match of html.matchAll(imageLinkRegex)) {
-      const href = match[1].replace(/&amp;/g, "&");
-      const url = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
-      urls.push(url);
-    }
-
-    const titleLinkRegex =
-      /<h3[^>]*class=["'][^"']*wd-entities-title[^"']*["'][^>]*>[\s\S]*?<a[^>]*href=["']([^"']+)["'][^>]*>/gi;
-    for (const match of html.matchAll(titleLinkRegex)) {
-      const href = match[1].replace(/&amp;/g, "&");
-      const url = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
-      urls.push(url);
-    }
-
-    const cleanedUrls = urls.map((url) => url.split("#")[0]);
-    return [...new Set(cleanedUrls)];
   }
 
-  async parseProduct(html: string, url: string): Promise<ProductData | null> {
-    const product: ProductData = {
-      url,
-      title: "",
-      price: null,
-      originalPrice: null,
-      stock: false,
-      specs: {},
-      mpn: null,
-      imageUrl: null,
-    };
-
-    product.title = this.extractTitle(html);
-    if (!product.title) {
-      this.logger.warn(`[Tectec] Missing title for ${url}`);
+  async parseProduct(content: string, url: string): Promise<ProductData | null> {
+    let api: WcStoreProduct | null = null;
+    try {
+      api = JSON.parse(content)?.api ?? null;
+    } catch {
+      // ignore — flujo principal pasa JSON
+    }
+    if (!api) {
+      const slug = url.match(/\/producto\/([^/]+)\/?/)?.[1];
+      if (slug) api = await this.fetchProductBySlug(slug);
+    }
+    if (!api) {
+      this.logger.warn(`No API data for ${url}`);
       return null;
     }
 
-    const prices = this.extractPrices(html, url);
-    product.price = prices.current;
-    product.originalPrice = prices.original;
-
-    product.imageUrl = this.extractImage(html);
-    const stockInfo = this.extractStock(html);
-    product.stock = stockInfo.inStock;
-    product.stockQuantity = stockInfo.quantity;
-
-    product.mpn = this.extractMpn(html, url);
-    product.specs = this.extractSpecs(html);
-    product.context = this.extractContext(html);
-
-    if (!product.price) {
-      this.logger.error(`[Tectec] Failed to extract price for ${url}`);
+    const title = api.name?.trim();
+    if (!title) {
+      this.logger.warn(`Missing title for ${url}`);
+      return null;
     }
 
-    return product;
-  }
+    // Precios: API entrega cash y card por separado.
+    const cash = this.parseMoney(api.prices?.price);
+    const regular = this.parseMoney(api.prices?.regular_price);
+    const price = cash;
+    const originalPrice = regular ?? cash;
 
-  private extractTitle(html: string): string {
-    const h1Match = html.match(/<h1[^>]*class=["'][^"']*product_title[^"']*["'][^>]*>([\s\S]*?)<\/h1>/i)?.[1];
-    if (h1Match) {
-      return h1Match
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+    // Stock: stock_availability.text puede contener HTML ("<span>1 disponibles</span>")
+    let stock = false;
+    let stockQuantity: number | null = null;
+    const stockText = this.stripHtml(api.stock_availability?.text ?? "");
+    const stockClass = api.stock_availability?.class ?? "";
+    if (api.is_in_stock || /\bin-stock\b/.test(stockClass)) {
+      stock = true;
+      const m = stockText.match(/(\d+)/);
+      if (m) stockQuantity = Number.parseInt(m[1], 10);
+      else if (api.low_stock_remaining != null) stockQuantity = api.low_stock_remaining;
+    } else if (/\bout-of-stock\b/.test(stockClass)) {
+      stock = false;
+      stockQuantity = 0;
     }
 
-    const ogTitle = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["'][^>]*>/i)?.[1];
-    return ogTitle?.trim() ?? "";
-  }
+    const imageUrl = api.images?.[0]?.src ?? null;
 
-  private extractPrices(html: string, url: string): { current: number | null; original: number | null } {
-    const jsonLdPrices = this.extractPricesFromJsonLd(html);
-    if (jsonLdPrices.current) return jsonLdPrices;
-
-    this.logger.warn(`[Tectec] JSON-LD failed, using HTML fallback for ${url}`);
-    return this.extractPricesFromHtml(html);
-  }
-
-  private extractPricesFromJsonLd(html: string): { current: number | null; original: number | null } {
-    const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i)?.[1];
-    if (!jsonLdMatch) return { current: null, original: null };
-
-    try {
-      const ld = JSON.parse(jsonLdMatch);
-      const items = ld["@graph"] ? ld["@graph"] : Array.isArray(ld) ? ld : [ld];
-      const product = items.find((item: any) => item?.["@type"] === "Product");
-
-      if (!product?.offers) return { current: null, original: null };
-
-      const offers = Array.isArray(product.offers) ? product.offers[0] : product.offers;
-      if (!offers.priceSpecification) return { current: null, original: null };
-
-      const specs = Array.isArray(offers.priceSpecification) ? offers.priceSpecification : [offers.priceSpecification];
-
-      const prices = specs
-        .map((spec: any) => {
-          if (!spec?.price) return null;
-          const cleaned = typeof spec.price === "string" ? spec.price.replace(/[^\d]/g, "") : String(spec.price);
-          return Number(cleaned);
-        })
-        .filter((price: unknown): price is number => typeof price === "number" && !Number.isNaN(price) && price > 0);
-
-      if (prices.length === 0) return { current: null, original: null };
-
-      return {
-        current: Math.min(...prices),
-        original: prices.length > 1 ? Math.max(...prices) : null,
-      };
-    } catch (error) {
-      this.logger.error(`[Tectec] JSON-LD parsing error:`, String(error));
-      return { current: null, original: null };
-    }
-  }
-
-  private extractPricesFromHtml(html: string): { current: number | null; original: number | null } {
-    const priceBlock = html.match(/<p[^>]*class=["'][^"']*price["'][^>]*>([\s\S]*?)<\/p>/i)?.[1];
-    if (!priceBlock) return { current: null, original: null };
-
-    const priceRegex =
-      /<span[^>]*class=["'][^"']*woocommerce-Price-amount[^"']*["'][^>]*>[\s\S]*?<bdi>[\s\S]*?\$\s*([0-9.,]+)[\s\S]*?<\/bdi>[\s\S]*?<\/span>/gi;
-    const prices: number[] = [];
-
-    for (const match of priceBlock.matchAll(priceRegex)) {
-      const priceStr = match[1].replace(/[.,]/g, "");
-      const priceVal = Number(priceStr);
-      if (!Number.isNaN(priceVal) && priceVal > 0) {
-        prices.push(priceVal);
-      }
-    }
-
-    if (prices.length === 0) return { current: null, original: null };
-
-    return {
-      current: Math.min(...prices),
-      original: prices.length > 1 ? Math.max(...prices) : null,
-    };
-  }
-
-  private extractImage(html: string): string | null {
-    return html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i)?.[1] ?? null;
-  }
-
-  private extractStock(html: string): { inStock: boolean; quantity: number | null } {
-    const inStockMatch = html.match(
-      /<p[^>]*class=["'][^"']*stock[^"']*in-stock[^"']*["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,
-    )?.[1];
-
-    if (inStockMatch) {
-      const quantityMatch = inStockMatch.match(/(\d+)/);
-      if (quantityMatch) {
-        const quantity = Number.parseInt(quantityMatch[1], 10);
-        return { inStock: quantity > 0, quantity };
-      }
-      if (/disponible|disponibles/i.test(inStockMatch)) {
-        return { inStock: true, quantity: 1 };
-      }
-    }
-
-    const outOfStock =
-      /<p[^>]*class=["'][^"']*stock[^"']*out-of-stock[^"']*["'][^>]*>/i.test(html) || /Sin existencias/i.test(html);
-
-    return { inStock: !outOfStock, quantity: outOfStock ? 0 : null };
-  }
-
-  private extractMpn(html: string, url: string): string | null {
-    const partNumber = html.match(/<td[^>]*>\s*Part\s*Number\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
-    const model = html.match(/<td[^>]*>\s*Model\s*<\/td>\s*<td[^>]*>\s*([^<]+?)\s*<\/td>/i)?.[1];
-
-    let mpn = partNumber?.trim() ?? model?.trim() ?? null;
-
+    // MPN: SKU del producto. Si no hay, fallback a slug-based.
+    let mpn: string | null = api.sku?.trim() || null;
     if (!mpn) {
-      const sku = html.match(
-        /<span[^>]*class=["'][^"']*sku_wrapper[^"']*["'][^>]*>[\s\S]*?<span[^>]*class=["'][^"']*sku[^"']*["'][^>]*>([\s\S]*?)<\/span>[\s\S]*?<\/span>/i,
-      )?.[1];
-      if (sku) mpn = sku.trim();
+      const slug = url.match(/\/producto\/([^/]+)/)?.[1];
+      if (slug) mpn = `TECTEC-${slug.toUpperCase()}`;
     }
 
-    if (!mpn) {
-      const match = url.match(/\/producto\/([^/]+)/);
-      if (match?.[1]) {
-        mpn = `TECTEC-${match[1].toUpperCase()}`;
-      }
-    }
+    // Descripción
+    const descriptionHtml = api.description ?? api.short_description ?? "";
+    const descriptionText = descriptionHtml ? this.stripHtml(descriptionHtml) : "";
 
-    return mpn;
-  }
-
-  private extractSpecs(html: string): Record<string, string> {
+    // Marca: brands[] suele estar vacío; intentamos atributo `pa_marca` si existe; sino del título.
+    const manufacturer =
+      api.brands?.[0]?.name?.trim() ||
+      this.extractBrandFromAttributes(api.attributes) ||
+      this.extractManufacturer(title) ||
+      "";
     const specs: Record<string, string> = {};
-    const $ = cheerio.load(html);
-
-    const forbiddenTerms = [
-      "transferencia",
-      "tarjeta",
-      "tarjetas",
-      "pago",
-      "precio",
-      "cuota",
-      "cuotas",
-      "subtotal",
-      "total",
-      "envio",
-      "envío",
-      "forma de pago",
-      "add to cart",
-      "payment",
-    ];
-
-    const processRow = (key: string, value: string) => {
-      const isForbidden = forbiddenTerms.some(
-        (term) => key.toLowerCase().includes(term) || value.toLowerCase().includes(term),
-      );
-
-      if (!isForbidden && key && value && !specs[key]) {
-        specs[key] = value;
-      }
-    };
-
-    // 1. Buscar en tab-description y tab-additional_information
-    const selectors = [
-      "#tab-description",
-      ".woocommerce-Tabs-panel--description",
-      "#tab-additional_information",
-      ".woocommerce-Tabs-panel--additional_information",
-    ];
-
-    selectors.forEach((selector) => {
-      $(selector)
-        .find("tr")
-        .each((_, tr) => {
-          const cells = $(tr).find("td, th");
-          if (cells.length >= 2) {
-            const key = $(cells[0]).text().trim();
-            const value = $(cells[cells.length - 1])
-              .text()
-              .trim();
-            processRow(key, value);
-          }
-        });
-    });
-
-    // 2. Buscar listas de definición (dt/dd) en toda la página
-    $("dt").each((_, dt) => {
-      const key = $(dt).text().trim();
-      const dd = $(dt).next("dd");
-      const value = dd.text().trim();
-      if (key && value && !specs[key]) {
-        specs[key] = value;
-      }
-    });
-
-    return specs;
-  }
-
-  private extractContext(html: string): { description_html: string; description_text: string } | undefined {
-    const $ = cheerio.load(html);
-    let descBlock = $("#tab-description");
-    if (descBlock.length === 0) {
-      descBlock = $(".woocommerce-Tabs-panel--description");
-    }
-
-    if (descBlock.length === 0) return undefined;
-
-    const htmlContent = descBlock.html() || "";
-    const text = descBlock.text().replace(/\s+/g, " ").trim();
+    if (manufacturer) specs.manufacturer = manufacturer;
 
     return {
-      description_html: htmlContent,
-      description_text: text,
+      url,
+      title,
+      price,
+      originalPrice,
+      stock,
+      stockQuantity,
+      mpn,
+      imageUrl,
+      specs,
+      context: { description_text: descriptionText, description_html: descriptionHtml },
     };
   }
 
-  private getTotalPages(html: string): number {
-    const pagesMatch = html.match(/(\d+)\s+páginas?/i)?.[1];
-    if (pagesMatch) return Number(pagesMatch);
+  // biome-ignore lint/suspicious/noExplicitAny: shape varies
+  private extractBrandFromAttributes(attrs: any[] | undefined): string | undefined {
+    if (!Array.isArray(attrs)) return undefined;
+    const brandAttr = attrs.find((a) => /pa_marca|pa_brand/i.test(a?.taxonomy ?? ""));
+    return brandAttr?.terms?.[0]?.name?.trim() || undefined;
+  }
 
-    const liRegex = /<li[^>]*class=["'][^"']*page-item[^"']*["'][^>]*>([\s\S]*?)<\/li>/gi;
-    const numberRegex = /(?:<a[^>]*>(\d+)<\/a>|<span[^>]*>(\d+)<\/span>)/i;
-    const pages: number[] = [];
-
-    for (const match of html.matchAll(liRegex)) {
-      const content = match[1];
-      const numMatch = content.match(numberRegex);
-      const num = numMatch ? Number(numMatch[1] ?? numMatch[2]) : NaN;
-      if (!Number.isNaN(num)) pages.push(num);
+  private extractManufacturer(title: string): string | undefined {
+    const brands = [
+      "Asus",
+      "MSI",
+      "Gigabyte",
+      "ASRock",
+      "Kingston",
+      "Corsair",
+      "Adata",
+      "Western Digital",
+      "WD",
+      "Seagate",
+      "Intel",
+      "AMD",
+      "Nvidia",
+      "Zotac",
+      "PNY",
+      "Galax",
+      "Deepcool",
+      "Cooler Master",
+      "EVGA",
+      "Seasonic",
+      "Thermaltake",
+      "Samsung",
+      "Crucial",
+      "XPG",
+      "G.Skill",
+      "Team",
+      "Patriot",
+      "HP",
+      "HPE",
+      "Dell",
+      "Lenovo",
+      "Sapphire",
+      "PowerColor",
+      "XFX",
+      "Inno3D",
+      "Palit",
+    ];
+    const lowerTitle = title.toLowerCase();
+    for (const brand of brands) {
+      if (lowerTitle.includes(brand.toLowerCase())) return brand;
     }
+    return undefined;
+  }
 
-    if (pages.length > 0) return Math.max(...pages);
+  private parseMoney(s: string | undefined | null): number | null {
+    if (!s) return null;
+    const cleaned = String(s).replace(/[^\d]/g, "");
+    if (!cleaned) return null;
+    const n = Number.parseInt(cleaned, 10);
+    return Number.isNaN(n) ? null : n;
+  }
 
-    const pagesUl = html.match(/<ul[^>]*class=["'][^"']*page-numbers[^"']*["'][\s\S]*?<\/ul>/i)?.[0];
-    if (pagesUl) {
-      const numRegex = /<a[^>]*>(\d+)<\/a>|<span[^>]*>(\d+)<\/span>/gi;
-      const found: number[] = [];
+  private stripHtml(s: string): string {
+    return s
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
 
-      for (const match of pagesUl.matchAll(numRegex)) {
-        const n = Number(match[1] ?? match[2]);
-        if (!Number.isNaN(n)) found.push(n);
-      }
-
-      if (found.length > 0) return Math.max(...found);
-    }
-
-    return 1;
+  /**
+   * Compatibilidad: extrae URLs desde HTML de una página de categoría
+   * (sólo si alguien llama directamente con HTML; el flujo principal usa la API).
+   */
+  async getProductUrls(html: string): Promise<string[]> {
+    const urls = new Set<string>();
+    const re = /https?:\/\/tectec\.cl\/producto\/[a-zA-Z0-9\-_/]+/gi;
+    const matches = html.match(re);
+    if (matches) for (const u of matches) urls.add(u.split("#")[0]);
+    return [...urls];
   }
 }

@@ -16,88 +16,88 @@ export const CENTRAL_GAMER_CATEGORIES: CategoryMap<string[]> = {
   case_fan: ["https://centralgamer.cl/componentes-pc/refrigeracion-pc/"],
 };
 
+/**
+ * Mapeo de categorías internas a slugs de la WC Store API.
+ * El listado HTML está bajo /componentes-pc/<slug>/ pero la API expone los slugs sin prefijo.
+ */
+const CENTRAL_GAMER_API_SLUGS: CategoryMap<string[]> = {
+  gpu: ["tarjetas-de-video"],
+  cpu: ["procesadores"],
+  motherboard: ["placas-madre"],
+  ram: ["memorias-ram"],
+  psu: ["fuentes-de-poder"],
+  case: ["gabinetes-gamer"],
+  ssd: ["almacenamiento"],
+  hdd: ["almacenamiento"],
+  cpu_cooler: ["refrigeracion-pc"],
+  case_fan: ["refrigeracion-pc"],
+};
+
+interface WcStoreProduct {
+  id: number;
+  name: string;
+  slug: string;
+  permalink: string;
+  sku?: string;
+}
+
 export class CentralGamerCrawler extends BaseCrawler<Category> {
   name = "CentralGamer";
   baseUrl = "https://centralgamer.cl";
 
-  protected useHeadless = true;
+  // El sitio expone WooCommerce Store API público (`/wp-json/wc/store/v1/...`) y devuelve
+  // todo el detalle por categoría sin necesidad de JS. parseProduct sigue leyendo HTML
+  // porque el precio efectivo (transferencia, -5%) sólo está en el HTML server-rendered
+  // (`.precio-info-raw`), no en la API.
+  protected useHeadless = false;
+  protected concurrency = 4;
 
   async getAllProductUrlsForCategory(category: Category): Promise<string[]> {
-    const urls: string[] = [];
-    const categoryUrls = CENTRAL_GAMER_CATEGORIES[category];
-
-    if (!categoryUrls || categoryUrls.length === 0) {
-      this.logger.warn(`No URLs configured for category: ${category}`);
+    const slugs = CENTRAL_GAMER_API_SLUGS[category];
+    if (!slugs || slugs.length === 0) {
+      this.logger.warn(`No category slugs configured for: ${category}`);
       return [];
     }
 
-    for (const startUrl of categoryUrls) {
-      let page = 1;
-      let hasNextPage = true;
-
-      this.logger.info(`Crawling category ${category} from ${startUrl}`);
-
-      while (hasNextPage) {
-        const pageUrl = page === 1 ? startUrl : `${startUrl}page/${page}/`;
-
-        try {
-          this.logger.info(`Fetching page ${page}: ${pageUrl}`);
-          // BaseCrawler's fetchHtml handles 404 by throwing? Or returning string?
-          // fetchWithFetch throws on !response.ok
-          const html = await this.fetchHtml(pageUrl);
-
-          if (html.includes("Página no encontrada") || html.includes("error-404-sub-title")) {
-            this.logger.info(`Page ${page} not found or content end. Stopping.`);
-            hasNextPage = false;
-            break;
-          }
-
-          const pageUrls = this.extractUrlsFromList(html, category);
-
-          if (pageUrls.length === 0) {
-            this.logger.info(`No products found on page ${page}. Stopping.`);
-            hasNextPage = false;
-            break;
-          }
-
-          urls.push(...pageUrls);
-          page++;
-
-          // Small delay between pages to be nice
-          await this.waitRateLimit();
-        } catch (error) {
-          const errString = String(error);
-          if (errString.includes("404")) {
-            this.logger.info(`Page ${page} returned 404. Stopping category.`);
-          } else {
-            this.logger.error(`Error fetching page ${page} of ${category}:`, errString);
-          }
-          hasNextPage = false;
-        }
+    const urls = new Set<string>();
+    for (const slug of slugs) {
+      const products = await this.fetchProductsByCategory(slug);
+      this.logger.info(`Category "${slug}" returned ${products.length} products from API`);
+      for (const p of products) {
+        if (!p.permalink || !p.name) continue;
+        if (this.shouldInclude(p.name, category)) urls.add(p.permalink);
       }
     }
-
-    // Deduplicate
-    return [...new Set(urls)];
+    return [...urls];
   }
 
-  private extractUrlsFromList(html: string, category: Category): string[] {
-    const $ = cheerio.load(html);
-    const urls: string[] = [];
-
-    $(".product-wrapper").each((_, el) => {
-      const link = $(el).find("a.woocommerce-loop-product__link").attr("href");
-      const title = $(el).find(".woocommerce-loop-product__title").text().trim();
-
-      if (!link || !title) return;
-
-      // Filtering based on category to avoid irrelevant items in mixed categories
-      if (this.shouldInclude(title, category)) {
-        urls.push(link);
+  /** Recorre la WC Store API para obtener todos los productos de una categoría (con paginación). */
+  private async fetchProductsByCategory(categorySlug: string): Promise<WcStoreProduct[]> {
+    const all: WcStoreProduct[] = [];
+    const perPage = 100;
+    let page = 1;
+    while (page <= 50) {
+      const url = `${this.baseUrl}/wp-json/wc/store/v1/products?category=${categorySlug}&per_page=${perPage}&page=${page}`;
+      try {
+        await this.waitRateLimit();
+        this.logger.info(`Fetching API page ${page} of "${categorySlug}"`);
+        const res = await fetch(url, { headers: { "User-Agent": this.userAgents[0], Accept: "application/json" } });
+        if (!res.ok) {
+          this.logger.warn(`API ${url} returned ${res.status}`);
+          break;
+        }
+        const items = (await res.json()) as WcStoreProduct[];
+        if (!Array.isArray(items) || items.length === 0) break;
+        all.push(...items);
+        const totalPages = Number(res.headers.get("x-wp-totalpages") || "1");
+        if (page >= totalPages) break;
+        page++;
+      } catch (err) {
+        this.logger.error(`Error fetching API ${url}: ${String(err)}`);
+        break;
       }
-    });
-
-    return urls;
+    }
+    return all;
   }
 
   private shouldInclude(title: string, category: Category): boolean {
@@ -342,9 +342,17 @@ export class CentralGamerCrawler extends BaseCrawler<Category> {
     return undefined;
   }
 
+  /**
+   * Compatibilidad: extrae URLs de productos desde el HTML de una página de categoría.
+   * El flujo principal usa la API; esto sólo se invoca si alguien pasa HTML directamente.
+   */
   async getProductUrls(html: string): Promise<string[]> {
-    // This is effectively handled inside getAllProductUrlsForCategory for this crawler
-    // But if needed for single page check:
-    return this.extractUrlsFromList(html, "gpu"); // Category doesn't matter much if we just want URLs on page
+    const $ = cheerio.load(html);
+    const urls = new Set<string>();
+    $(".product-wrapper a.woocommerce-loop-product__link").each((_, a) => {
+      const href = $(a).attr("href");
+      if (href) urls.add(href);
+    });
+    return [...urls];
   }
 }

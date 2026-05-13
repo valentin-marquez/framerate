@@ -129,94 +129,44 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
     // Título
     product.title = $("h1.rm-product-page__title").first().text().trim();
 
-    // Marca
-    let brandRaw = $(".rm-product__brand span a").text().trim();
-    if (!brandRaw) {
-      // Fallback
-      const brandLink = $('p:contains("Marca")').find("a");
-      if (brandLink.length > 0) brandRaw = brandLink.text().trim();
-      else {
-        const brandText = $('p:contains("Marca")').text();
-        const match = brandText.match(/Marca\s*:\s*(.+)/i);
-        if (match) brandRaw = match[1].trim();
-      }
-    }
+    // Brand / MPN / Código se agrupan en .rm-product-page__codes
+    // Estructura: <p><span class="fw-medium">Etiqueta</span>: valor</p>
+    const codes = this.extractCodes($);
+    const brandRaw = codes.marca ?? "";
+    let mpnRaw = codes.mpn ?? "";
 
-    // MPN
-    let mpnRaw = $(".rm-product__mpn").text().trim();
-    if (!mpnRaw) {
-      const mpnText = $('p:contains("MPN")').text();
-      const match = mpnText.match(/MPN\s*:\s*(.+)/i);
-      if (match) mpnRaw = match[1].trim();
-    }
-    product.mpn = mpnRaw.replace(/Manufacturer Part Number:|MPN:/i, "").trim() || null;
-
-    // Precios
-    const priceCashStr = $(".rm-product__price--cash h3").text().trim();
-    const priceNormalStr = $(".rm-product__price--normal h3").text().trim();
-
-    let cash = this.parsePrice(priceCashStr);
-    let normal = this.parsePrice(priceNormalStr);
-
-    // Fallback prices
-    if (cash === null || normal === null) {
-      $(".rm-product-page__price").each((_, el) => {
-        const h3 = $(el).find("h3");
-        const price = this.parsePrice(h3.text());
-        if (h3.hasClass("text-primary")) {
-          if (cash === null) cash = price;
-        } else {
-          if (normal === null) normal = price;
-        }
-      });
-    }
-
-    // JSON-LD Fallback
-    if (cash === null || normal === null) {
-      const script = $('script[type="application/ld+json"]').html();
-      if (script) {
+    // OpenCart productId: data-product-id en #product-description, o ?product_id= en la URL
+    const productId =
+      $("#product-description").attr("data-product-id") ||
+      (() => {
         try {
-          const json = JSON.parse(script);
-          // biome-ignore lint/suspicious/noExplicitAny: JSON-LD
-          const p = Array.isArray(json) ? json.find((x: any) => x["@type"] === "Product") : json;
-          if (p?.offers) {
-            const price = p.offers.price || p.offers[0]?.price;
-            if (price && cash === null) cash = Number(price);
-            if (p.sku && !product.mpn) product.mpn = p.sku;
-          }
-        } catch (_e) {
-          // ignore
+          return new URL(url).searchParams.get("product_id");
+        } catch {
+          return null;
         }
-      }
-    }
+      })();
 
-    // Fallback: Generate MPN from URL if still null
-    if (!product.mpn) {
-      try {
-        const urlObj = new URL(url);
-        const productId = urlObj.searchParams.get("product_id");
-        if (productId) {
-          product.mpn = `PCX-${productId}`;
-        } else {
-          // Try to extract from path if it's a SEO URL
-          const match = url.match(/\/([^/]+)$/);
-          if (match?.[1]) {
-            // Remove query params if any
-            const slug = match[1].split("?")[0];
-            if (slug) {
-              product.mpn = `PCX-${slug.toUpperCase()}`;
-            }
-          }
-        }
-      } catch (_e) {
-        // ignore URL parsing errors
+    // Fallback de MPN: usar productId si no se encontró
+    if (!mpnRaw && productId) mpnRaw = `PCX-${productId}`;
+    product.mpn = mpnRaw || null;
+
+    // Precios: 2 contenedores .rm-product-page__price (cash con h3.text-primary, normal sin)
+    let cash: number | null = null;
+    let normal: number | null = null;
+    $(".rm-product-page__prices .rm-product-page__price h3").each((_, el) => {
+      const h3 = $(el);
+      const price = this.parsePrice(h3.text());
+      if (h3.hasClass("text-primary")) {
+        if (cash === null) cash = price;
+      } else if (normal === null) {
+        normal = price;
       }
-    }
+    });
 
     product.price = cash;
     product.originalPrice = normal ?? cash;
 
-    // Stock
+    // Stock por sucursal: span#stock-sucursal-N con texto "X unidades" o "Sin stock"
     let stockCount = 0;
     $('span[id^="stock-sucursal-"]').each((_, el) => {
       const text = $(el).text().trim();
@@ -228,24 +178,22 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
     product.stock = stockCount > 0 || hasAddToCart;
     product.stockQuantity = stockCount > 0 ? stockCount : null;
 
-    // Imagen
+    // Imagen: preferir el <a> padre (full-size) sobre el thumbnail
     product.imageUrl =
-      $(".thumbnails img").first().attr("src") || $('meta[property="og:image"]').attr("content") || null;
+      $(".thumbnails a").first().attr("href") ||
+      $(".thumbnails img").first().attr("src") ||
+      $('meta[property="og:image"]').attr("content") ||
+      null;
 
     // Specs
-    if (brandRaw) {
-      product.specs = { manufacturer: brandRaw };
-    }
-
+    if (brandRaw) product.specs = { manufacturer: brandRaw };
     const techSpecs = this.extractTechnicalSpecs($);
     product.specs = { ...product.specs, ...techSpecs };
 
     // Context
-    let descBlock = $(".product-description__content");
-    if (descBlock.length === 0) {
-      descBlock = $("#product-description");
-    }
-
+    const descBlock = $(".product-description__content").length
+      ? $(".product-description__content")
+      : $("#product-description");
     if (descBlock.length > 0) {
       product.context = {
         description_html: descBlock.html() || "",
@@ -253,7 +201,7 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
       };
     }
 
-    // Clean title
+    // Limpiar P/N del título
     product.title = product.title.replace(/P\/N.*$/i, "").trim();
 
     if (!product.title || !product.imageUrl) {
@@ -262,6 +210,28 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
     }
 
     return product;
+  }
+
+  /**
+   * Extrae el bloque de códigos (Marca / MPN / Código) de la cabecera del producto.
+   * Estructura: <div class="rm-product-page__codes"><p><span class="fw-medium">Marca</span>: <a>VALOR</a></p>...</div>
+   */
+  private extractCodes($: cheerio.CheerioAPI): { marca?: string; mpn?: string; codigo?: string } {
+    const out: { marca?: string; mpn?: string; codigo?: string } = {};
+    $(".rm-product-page__codes p").each((_, el) => {
+      const $p = $(el);
+      const label = $p.find("span.fw-medium").first().text().trim().toLowerCase();
+      // Valor = texto del <p> sin la etiqueta inicial
+      const value = $p
+        .text()
+        .replace(/^\s*[^:]+:\s*/, "")
+        .trim();
+      if (!value) return;
+      if (label === "marca") out.marca = value;
+      else if (label === "mpn") out.mpn = value;
+      else if (label === "código" || label === "codigo") out.codigo = value;
+    });
+    return out;
   }
 
   private extractTechnicalSpecs($: cheerio.CheerioAPI): Record<string, string> {

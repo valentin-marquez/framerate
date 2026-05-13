@@ -1,5 +1,6 @@
 import type { GpuSpecs } from "@framerate/db";
 import type { Browser, Page } from "puppeteer";
+import { config } from "@/config";
 import { Logger } from "@/lib/logger";
 
 export interface ProductData {
@@ -14,6 +15,25 @@ export interface ProductData {
   specs?: GpuSpecs | Record<string, string>;
   // Optional arbitrary context (HTML/text) useful for AI extraction
   context?: unknown;
+  // Raw hydration data for debugging/validation
+  hydrationData?: unknown;
+}
+
+// Helper types for Next.js extraction
+export interface NextData {
+  props: {
+    // biome-ignore lint/suspicious/noExplicitAny: datos de Next.js sin tipo estricto
+    pageProps: any;
+    __N_SSP?: boolean;
+  };
+  page: string;
+  // biome-ignore lint/suspicious/noExplicitAny: query params sin tipo estricto
+  query: any;
+  buildId: string;
+  isFallback: boolean;
+  gsp: boolean;
+  // biome-ignore lint/suspicious/noExplicitAny: script loader dinámico
+  scriptLoader: any[];
 }
 
 // Pool de páginas para concurrencia
@@ -50,12 +70,47 @@ export abstract class BaseCrawler<_T = string> {
    */
   protected async getBrowser(): Promise<Browser> {
     if (!BaseCrawler.browserInstance) {
+      // Proxy Configuration
+      const proxyUrl =
+        config.PROXY_URL ||
+        (config.PROXY_LIST.length > 0
+          ? config.PROXY_LIST[Math.floor(Math.random() * config.PROXY_LIST.length)]
+          : undefined);
+      const args = [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-first-run",
+        "--no-zygote",
+        "--disable-extensions",
+        "--disable-background-networking",
+        "--disable-sync",
+        "--disable-translate",
+        "--metrics-recording-only",
+        "--mute-audio",
+        "--no-default-browser-check",
+        "--safebrowsing-disable-auto-update",
+      ];
+
+      // Prepare Proxy Args
+      if (proxyUrl) {
+        try {
+          const url = new URL(proxyUrl);
+          args.push(`--proxy-server=${url.protocol}//${url.host}`);
+          this.logger.info(`Using proxy: ${url.host}`);
+        } catch (_e) {
+          this.logger.warn(`Invalid Proxy URL: ${proxyUrl}`);
+        }
+      }
+
       // Prefer puppeteer-extra + stealth plugin to reduce detection. Fall back to plain puppeteer if not available.
       try {
         // Dynamically import and handle default interop
         const puppeteerExtraModule: unknown = await import("puppeteer-extra");
         const stealthModule: unknown = await import("puppeteer-extra-plugin-stealth");
         // Cast to any only where necessary for runtime calls
+        // biome-ignore lint/suspicious/noExplicitAny: interop de módulo ESM/CJS en runtime
         const puppeteerExtra =
           (puppeteerExtraModule as unknown as any)?.default || (puppeteerExtraModule as unknown as any);
         // biome-ignore lint/suspicious/noExplicitAny: runtime plugin interop
@@ -66,23 +121,8 @@ export abstract class BaseCrawler<_T = string> {
 
         // biome-ignore lint/suspicious/noExplicitAny: launching puppeteer-extra
         BaseCrawler.browserInstance = await (puppeteerExtra as any).launch({
-          headless: true,
-          args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-gpu",
-            "--no-first-run",
-            "--no-zygote",
-            "--disable-extensions",
-            "--disable-background-networking",
-            "--disable-sync",
-            "--disable-translate",
-            "--metrics-recording-only",
-            "--mute-audio",
-            "--no-default-browser-check",
-            "--safebrowsing-disable-auto-update",
-          ],
+          headless: config.HEADLESS,
+          args,
         });
 
         this.logger.info("Browser instance created using puppeteer-extra + stealth plugin");
@@ -91,23 +131,8 @@ export abstract class BaseCrawler<_T = string> {
         this.logger.warn("puppeteer-extra or stealth plugin not available, falling back to puppeteer: ", String(err));
         const puppeteer = await import("puppeteer");
         BaseCrawler.browserInstance = await puppeteer.launch({
-          headless: true,
-          args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-gpu",
-            "--no-first-run",
-            "--no-zygote",
-            "--disable-extensions",
-            "--disable-background-networking",
-            "--disable-sync",
-            "--disable-translate",
-            "--metrics-recording-only",
-            "--mute-audio",
-            "--no-default-browser-check",
-            "--safebrowsing-disable-auto-update",
-          ],
+          headless: config.HEADLESS,
+          args,
         });
         this.logger.info("Browser instance created using puppeteer");
       }
@@ -159,8 +184,20 @@ export abstract class BaseCrawler<_T = string> {
     }
 
     // Si no hemos alcanzado el límite, crear una nueva
-    if (BaseCrawler.pagePool.pages.length < this.concurrency) {
+    if (BaseCrawler.pagePool.pages.length < (config.CONCURRENCY || this.concurrency)) {
       const page = await browser.newPage();
+
+      // Setup Proxy Auth if needed
+      const proxyUrl = config.PROXY_URL || (config.PROXY_LIST.length > 0 ? config.PROXY_LIST[0] : undefined);
+      if (proxyUrl) {
+        try {
+          const url = new URL(proxyUrl);
+          if (url.username && url.password) {
+            await page.authenticate({ username: url.username, password: url.password });
+          }
+        } catch {}
+      }
+
       await page.setUserAgent(this.getUserAgent());
       // Optimizaciones de página
       await page.setRequestInterception(true);
@@ -185,7 +222,19 @@ export abstract class BaseCrawler<_T = string> {
     if (page) return page;
 
     // Fallback: crear nueva página
-    return browser.newPage();
+    const newPage = await browser.newPage();
+    // Setup Proxy Auth if needed (Fallback case)
+    const proxyUrl = config.PROXY_URL || (config.PROXY_LIST.length > 0 ? config.PROXY_LIST[0] : undefined);
+    if (proxyUrl) {
+      try {
+        const url = new URL(proxyUrl);
+        if (url.username && url.password) {
+          await newPage.authenticate({ username: url.username, password: url.password });
+        }
+      } catch {}
+    }
+    await newPage.setUserAgent(this.getUserAgent());
+    return newPage;
   }
 
   /**
@@ -263,7 +312,22 @@ export abstract class BaseCrawler<_T = string> {
         }
       }
 
-      const content = await page.content();
+      // --- Extraction Injection ---
+      const nextData = await this.extractNextData(page);
+      const rscData = await this.extractRscPayload(page);
+
+      let content = await page.content();
+
+      // Inject extra data if found (cleaner than modifying 8 files signatures)
+      if (nextData || rscData) {
+        const injection = JSON.stringify({ nextData, rscData });
+        // Append safely before body close or at end
+        content = content.replace(
+          "</body>",
+          `<script id="__FRAMERATE_HYDRATION__" type="application/json">${injection}</script></body>`,
+        );
+      }
+
       this.releasePage(page);
       return content;
     } catch (error) {
@@ -320,4 +384,53 @@ export abstract class BaseCrawler<_T = string> {
 
   abstract parseProduct(html: string, url: string): Promise<ProductData | null>;
   abstract getProductUrls(html: string): Promise<string[]>;
+
+  // --- Hydration Extraction Methods ---
+
+  /**
+   * Extracts the __NEXT_DATA__ JSON object from the page.
+   * Useful for Next.js sites using Pages Router (Next 12/13/14).
+   */
+  protected async extractNextData(page: Page): Promise<NextData | null> {
+    try {
+      return await page.evaluate(() => {
+        const script = document.getElementById("__NEXT_DATA__");
+        if (!script) return null;
+        try {
+          return JSON.parse(script.innerHTML);
+        } catch (_e) {
+          return null;
+        }
+      });
+    } catch (error) {
+      this.logger.warn(`Error extracting __NEXT_DATA__: ${error}`);
+      return null;
+    }
+  }
+
+  /**
+   * Extracts and parses the React Server Components (RSC) payload from self.__next_f.
+   * Useful for Next.js sites using App Router (Next 13/14+).
+   */
+  // biome-ignore lint/suspicious/noExplicitAny: payload RSC sin esquema definido
+  protected async extractRscPayload(page: Page): Promise<any[] | null> {
+    try {
+      return await page.evaluate(() => {
+        // @ts-expect-error
+        if (!window.__next_f) return null;
+
+        // __next_f is an array of pushes: [ [chunkId, chunkData], ... ]
+        // chunkData is stringified format: "1:..." matching content
+        // We need to aggregate and parse this specific format.
+        // This is complex because it's a stream format, not pure JSON.
+        // For a simple rigorous extraction, we just return the raw pushes
+        // and let the Node.js side parse it to avoid browser context complexity.
+        // @ts-expect-error
+        return window.__next_f;
+      });
+    } catch (error) {
+      this.logger.warn(`Error extracting RSC payload: ${error}`);
+      return null;
+    }
+  }
 }

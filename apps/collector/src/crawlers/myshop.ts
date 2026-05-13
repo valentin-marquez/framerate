@@ -54,47 +54,49 @@ export const MYSHOP_CATEGORIES: CategoryMap<string[]> = {
 };
 
 export class MyShopCrawler extends BaseCrawler<Category> {
-  async getAllProductUrlsForCategory(category: Category): Promise<string[]> {
-    const products = await this.crawlCategory(category);
-    return products.map((p) => p.url);
-  }
   name = "MyShop";
   baseUrl = "https://www.myshop.cl";
   apiUrl = "https://www.myshop.cl/servicio/producto";
 
+  async getAllProductUrlsForCategory(category: Category): Promise<string[]> {
+    const products = await this.crawlCategory(category);
+    return products.map((p) => p.url);
+  }
+
   async crawlCategory(category: Category): Promise<ProductData[]> {
     const familyIds = MYSHOP_CATEGORIES[category];
-
     if (!familyIds) {
-      this.logger.warn(`[MyShop] No family IDs configuration for category: ${category}`);
+      this.logger.warn(`No family IDs configuration for category: ${category}`);
       return [];
     }
 
     const products: ProductData[] = [];
 
     for (const familyId of familyIds) {
+      this.logger.info(`Crawling category ${category} (Family ID: ${familyId})`);
+
+      // La API entrega `productos.count` (total) y siempre 12 ítems/página, así calculamos
+      // por adelantado el número de páginas para no fetchear una vacía al final.
+      let totalPages: number | null = null;
       let page = 1;
-      let hasMorePages = true;
 
-      this.logger.info(`[MyShop] Crawling category ${category} (Family ID: ${familyId})`);
-
-      while (hasMorePages) {
+      while (true) {
         try {
-          this.logger.info(`[MyShop] Fetching API Familia ${familyId} - Página ${page}`);
-
           const data = await this.fetchApiPage(familyId, page);
+          const items = data?.resultado?.items ?? [];
+          if (items.length === 0) break;
 
-          if (!data || !data.resultado || !data.resultado.items || data.resultado.items.length === 0) {
-            this.logger.info(`[MyShop] No items found for family ${familyId} on page ${page}. Stopping.`);
-            hasMorePages = false;
-            continue;
+          if (totalPages === null) {
+            const total = data?.resultado?.productos?.count ?? 0;
+            const perPage = items.length || 12;
+            totalPages = total > 0 ? Math.ceil(total / perPage) : 1;
+            this.logger.info(`Family ${familyId}: ${total} products in ${totalPages} pages`);
           }
 
-          for (const item of data.resultado.items) {
+          for (const item of items) {
             const itemUrl = item.url.startsWith("http") ? item.url : `${this.baseUrl}${item.url}`;
             const isAgotadoLabel = typeof item.label === "string" && item.label.toLowerCase().includes("agotado");
             const hasStock = item.stock_total > 0 && !isAgotadoLabel;
-            const cleanMpn = item.partno ? item.partno.trim() : "";
 
             products.push({
               url: itemUrl,
@@ -103,7 +105,7 @@ export class MyShopCrawler extends BaseCrawler<Category> {
               originalPrice: item.precio_tarjeta > item.precio ? item.precio_tarjeta : item.precio_normal,
               stock: hasStock,
               stockQuantity: item.stock_total,
-              mpn: cleanMpn,
+              mpn: item.partno?.trim() || null,
               imageUrl: item.foto,
               specs: {
                 manufacturer: item.marca,
@@ -111,31 +113,22 @@ export class MyShopCrawler extends BaseCrawler<Category> {
               },
               context: {
                 description_text: item.texto || "",
-                meta: {
-                  familia: item.familia,
-                  marca: item.marca,
-                  garantia: item.garantia,
-                },
+                meta: { familia: item.familia, marca: item.marca, garantia: item.garantia },
               },
             });
           }
 
-          if (data.resultado.paginacion_show === true) {
-            page++;
-            await this.waitRateLimit();
-          } else {
-            this.logger.info(`[MyShop] No more pages for family ${familyId} (paginacion_show: false)`);
-            hasMorePages = false;
-          }
+          if (page >= totalPages) break;
+          page++;
+          await this.waitRateLimit();
         } catch (error) {
-          this.logger.error(`[MyShop] Error crawling family ${familyId} page ${page}:`, String(error));
-
-          hasMorePages = false;
+          this.logger.error(`Error crawling family ${familyId} page ${page}: ${String(error)}`);
+          break;
         }
       }
     }
 
-    this.logger.info(`[MyShop] Total products found for ${category}: ${products.length}`);
+    this.logger.info(`Total products found for ${category}: ${products.length}`);
     return products;
   }
 
@@ -164,7 +157,7 @@ export class MyShopCrawler extends BaseCrawler<Category> {
     });
 
     if (!response.ok) {
-      throw new Error(`[MyShop] API Status: ${response.status} ${response.statusText}`);
+      throw new Error(`API status: ${response.status} ${response.statusText}`);
     }
 
     return (await response.json()) as MyShopApiResponse;

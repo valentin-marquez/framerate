@@ -5,6 +5,7 @@ import type { BrandService } from "@/collector/services/brand.service";
 import type { CatalogService, CategorySlug } from "@/collector/services/catalog.service";
 import { Logger } from "@/lib/logger";
 import { uploadProductImage } from "@/lib/storage";
+import { supabase } from "@/lib/supabase";
 import { extractForCategory } from "@/processors/ai/base";
 import { normalizeTitle } from "@/processors/normalizers";
 import type { CrawlerType } from "@/queues";
@@ -176,10 +177,8 @@ export class ProductPipeline {
       if (specs) return specs;
     }
 
-    // Fallback: if no MPN or AI extraction skipped/failed, return raw specs
-    // Since we removed traditional processors, we just return what we have.
-    // This might mean specs are not normalized until AI processes them later (if MPN is found later).
-    return rawSpecs;
+    // Fallback: if no MPN or AI extraction skipped/failed, return null to avoid dirty data.
+    return null;
   }
 
   private validateProduct(product: { title?: string }, category: CategorySlug): { valid: boolean; reason?: string } {
@@ -245,24 +244,42 @@ export class ProductPipeline {
       return { success: false, error: validation.reason };
     }
 
+    // [NEW] Ingest into Raw Feed (Phase 1/3: Parallel Ingestion)
+    try {
+      await supabase.from("raw_feed").insert({
+        source: ctx.crawlerType,
+        external_id: raw.url, // URL as unique ID for now
+        payload: raw as unknown as Json,
+        processing_status: "NEW",
+        ingested_at: new Date().toISOString(),
+      });
+      this.logger.info(`Ingested into raw_feed: ${raw.title}`);
+    } catch (err) {
+      this.logger.error("Failed to insert into raw_feed", (err as Error).message);
+      // Don't fail the whole pipeline for now, just log
+    }
+
     const rawSpecs = (raw.specs as Record<string, string>) ?? {};
     const brandName = await this.brandService.extractBrand(raw.title ?? "", rawSpecs);
 
-    // Calculate SEO Title early so we can pass it (or a variant) to context
-    let seoTitle = normalizeTitle(raw.title ?? "", ctx.category, raw.mpn ?? undefined, brandName);
+    // Título SEO normalizado por categoría. Antes se eliminaba el MPN del cuerpo y se
+    // re-añadía al final entre corchetes; eso destrozaba títulos donde el MPN ES el modelo
+    // (placas madre, GPUs sin sufijo) y reducía el título a "Marca [MPN]" — generando
+    // colisiones masivas en `findSimilarProduct` (e.g., todos los Gigabyte mergeados juntos).
+    // Ahora dejamos el título normalizado tal cual, y sólo agregamos `[MPN]` si el MPN no
+    // aparece ya en él (con normalización agnóstica a punctuation/casing).
+    let seoTitle = normalizeTitle(raw.title ?? "", ctx.category, raw.mpn ?? undefined, brandName)
+      .replace(/\s{2,}/g, " ")
+      .replace(/[-–",]+$/, "")
+      .trim();
 
     if (raw.mpn) {
       const cleanMpn = raw.mpn.trim();
-      const escapedMpn = cleanMpn.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
-      const mpnRegex = new RegExp(escapedMpn, "gi");
-
-      seoTitle = seoTitle.replace(mpnRegex, "").trim();
-      seoTitle = seoTitle
-        .replace(/\s{2,}/g, " ")
-        .replace(/[-–",]+$/, "")
-        .trim();
-
-      seoTitle = `${seoTitle} [${cleanMpn}]`;
+      const titleKey = seoTitle.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const mpnKey = cleanMpn.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (mpnKey && !titleKey.includes(mpnKey)) {
+        seoTitle = `${seoTitle} [${cleanMpn}]`;
+      }
     }
 
     const brandId = await this.catalogService.resolveBrandId(brandName);

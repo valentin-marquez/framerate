@@ -1,5 +1,7 @@
+import { OpenDBProductSchema } from "@framerate/opendb";
 import * as cheerio from "cheerio";
-import type { Category, CategoryMap } from "@/constants/categories";
+import type { Page } from "puppeteer";
+import type { CategoryMap } from "@/constants/categories";
 import { BaseCrawler, type ProductData } from "./base";
 
 // Mapeo de categorías a slugs de URL en SP Digital
@@ -16,15 +18,95 @@ export const SP_DIGITAL_CATEGORIES: CategoryMap<string[]> = {
   cpu_cooler: ["componentes-refrigeracion-y-ventilacion-disipador-cpu"],
 };
 
-export class SpDigitalCrawler extends BaseCrawler<Category> {
+export class SpDigitalCrawler extends BaseCrawler<string> {
   name = "SP Digital";
   baseUrl = "https://www.spdigital.cl";
-  protected useHeadless = true;
-  protected concurrency = 2; // Reducido de 4 a 2 para evitar rate limits
+  // SP Digital sirve todo via Gatsby page-data.json, pero está detrás de Cloudflare WAF que
+  // bloquea fetches server-side. Estrategia: una página warm-up de Puppeteer (con stealth)
+  // sirve cookies CF y desde ahí ejecutamos fetches en el contexto del browser.
+  protected useHeadless = false; // No usamos el flow Puppeteer estándar de BaseCrawler
+  protected concurrency = 4;
+  private warmupPage: Page | null = null;
 
   constructor() {
     super();
-    this.requestDelay = 2000; // Aumentado de 1000 a 2000
+    this.requestDelay = 1000;
+  }
+
+  /** Abre (una sola vez) una página de Puppeteer y la navega a la home para obtener cookies CF. */
+  private async getWarmupPage(): Promise<Page> {
+    if (this.warmupPage && !this.warmupPage.isClosed()) return this.warmupPage;
+    const browser = await this.getBrowser();
+    const page = await browser.newPage();
+    await page.setUserAgent(this.userAgents[0]);
+    this.logger.info("Warming up SP Digital session (CF cookies)...");
+    await page.goto(this.baseUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
+    this.warmupPage = page;
+    return page;
+  }
+
+  /** Ejecuta fetch en el contexto del browser para reutilizar cookies CF. */
+  private async fetchJsonViaBrowser<T = unknown>(url: string, referer: string): Promise<T | null> {
+    const page = await this.getWarmupPage();
+    return (await page.evaluate(
+      async (u, ref) => {
+        try {
+          const r = await fetch(u, {
+            headers: { Referer: ref, Accept: "application/json,*/*" },
+          });
+          if (!r.ok) return null;
+          return (await r.json()) as unknown;
+        } catch {
+          return null;
+        }
+      },
+      url,
+      referer,
+    )) as T | null;
+  }
+
+  /**
+   * Ejecuta múltiples fetches en paralelo dentro de UN solo `page.evaluate`.
+   * El browser hace multiplexing HTTP nativo: 1 IPC en vez de N, y los fetches corren
+   * concurrentemente en el contexto que ya tiene cookies CF. Mucho más rápido que
+   * llamar `fetchJsonViaBrowser` en loop (que serializa por el rate limit global).
+   */
+  private async fetchJsonBatchViaBrowser(
+    jobs: Array<{ url: string; referer: string }>,
+    parallelism = 6,
+  ): Promise<Map<string, string | null>> {
+    if (jobs.length === 0) return new Map();
+    const page = await this.getWarmupPage();
+    const out = await page.evaluate(
+      async (items, p) => {
+        const results: Record<string, string | null> = {};
+        // Procesa en chunks de `p` para evitar saturar la red del browser/CF.
+        for (let i = 0; i < items.length; i += p) {
+          const chunk = items.slice(i, i + p);
+          await Promise.all(
+            chunk.map(async (j) => {
+              try {
+                const r = await fetch(j.url, {
+                  headers: { Referer: j.referer, Accept: "application/json,*/*" },
+                });
+                results[j.url] = r.ok ? await r.text() : null;
+              } catch {
+                results[j.url] = null;
+              }
+            }),
+          );
+        }
+        return results;
+      },
+      jobs,
+      parallelism,
+    );
+    return new Map(Object.entries(out));
+  }
+
+  public async closeBrowser(): Promise<void> {
+    this.warmupPage = null;
+    await super.closeBrowser();
   }
 
   buildCategoryUrl(categorySlug: string, page = 1): string {
@@ -34,11 +116,22 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
     return `${this.baseUrl}/categories/${categorySlug}/${page}/`;
   }
 
-  async getAllProductUrlsForCategory(category: Category): Promise<string[]> {
-    const categorySlugs = SP_DIGITAL_CATEGORIES[category];
+  /** URL del page-data.json de Gatsby para una página de categoría. */
+  private buildCategoryDataUrl(categorySlug: string, page = 1): string {
+    const segment = page === 1 ? "" : `${page}/`;
+    return `${this.baseUrl}/page-data/categories/${categorySlug}/${segment}page-data.json`;
+  }
+
+  /** URL del page-data.json de Gatsby para un producto. */
+  private buildProductDataUrl(slug: string): string {
+    return `${this.baseUrl}/page-data/${slug}/page-data.json`;
+  }
+
+  async getAllProductUrlsForCategory(category: string): Promise<string[]> {
+    const categorySlugs = SP_DIGITAL_CATEGORIES[category as keyof typeof SP_DIGITAL_CATEGORIES];
     const allUrls: string[] = [];
 
-    if (categorySlugs.length === 0) {
+    if (!categorySlugs || categorySlugs.length === 0) {
       this.logger.warn(`Category "${category}" has no configured slugs yet`);
       return [];
     }
@@ -47,116 +140,228 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
 
     for (const slug of categorySlugs) {
       this.logger.info(`Scraping category slug: ${slug}`);
-
-      // Obtener URLs con paginación
       const urls = await this.getAllProductUrlsWithPagination(slug);
       allUrls.push(...urls);
     }
 
     const uniqueUrls = [...new Set(allUrls)];
     this.logger.info(`Total unique product URLs for "${category}": ${uniqueUrls.length}`);
-
     return uniqueUrls;
   }
 
+  /**
+   * Recorre todas las páginas de la categoría leyendo Gatsby page-data.json.
+   * Cada página entrega items con slug + datos completos. defaultTotalPages dicta el límite.
+   */
   async getAllProductUrlsWithPagination(categorySlug: string): Promise<string[]> {
-    const allUrls: string[] = [];
-    let page = 1;
-    let hasMorePages = true;
+    const allSlugs: string[] = [];
+    const refererPage1 = this.buildCategoryUrl(categorySlug, 1);
 
-    while (hasMorePages) {
-      const categoryUrl = this.buildCategoryUrl(categorySlug, page);
-      this.logger.info(`Fetching page ${page}: ${categoryUrl}`);
+    // Página 1: descubre defaultTotalPages
+    const firstUrl = this.buildCategoryDataUrl(categorySlug, 1);
+    const first = await this.fetchCategoryData(firstUrl, refererPage1);
+    if (!first) return [];
 
-      // Wait for product cards to ensure the list is loaded
-      const html = await this.fetchHtml(categoryUrl, ".Fractal-ProductCard--image");
-      const urls = await this.getProductUrls(html);
+    const totalPages = first.totalPages || 1;
+    const totalProducts = first.totalProducts || first.items.length;
+    this.logger.info(`Category "${categorySlug}": ${totalProducts} products in ${totalPages} pages`);
 
-      if (urls.length === 0) {
-        this.logger.info(`No products found on page ${page}, stopping pagination`);
-        hasMorePages = false;
-      } else {
-        allUrls.push(...urls);
-        this.logger.info(`Found ${urls.length} products on page ${page}`);
-        page++;
+    for (const it of first.items) {
+      if (it.slug) allSlugs.push(it.slug);
+    }
 
-        if (page > 50) {
-          this.logger.warn("Reached page limit (50), stopping pagination");
-          hasMorePages = false;
-        }
+    for (let p = 2; p <= totalPages && p <= 50; p++) {
+      const pageUrl = this.buildCategoryDataUrl(categorySlug, p);
+      const referer = this.buildCategoryUrl(categorySlug, p);
+      const data = await this.fetchCategoryData(pageUrl, referer);
+      if (!data || data.items.length === 0) break;
+      for (const it of data.items) {
+        if (it.slug) allSlugs.push(it.slug);
       }
     }
 
-    return allUrls;
+    return allSlugs.map((s) => `${this.baseUrl}/${s}/`);
   }
 
+  /** Fetch + parseo seguro del page-data.json de una categoría (vía browser context). */
+  private async fetchCategoryData(
+    url: string,
+    referer: string,
+    // biome-ignore lint/suspicious/noExplicitAny: respuesta JSON de SP Digital sin esquema
+  ): Promise<{ items: any[]; totalPages: number; totalProducts: number } | null> {
+    await this.waitRateLimit();
+    // biome-ignore lint/suspicious/noExplicitAny: pageContext sin tipo definido
+    const json = await this.fetchJsonViaBrowser<{ result?: { pageContext?: any } }>(url, referer);
+    if (!json) {
+      this.logger.warn(`Category JSON ${url} fetch failed`);
+      return null;
+    }
+    const ctx = json?.result?.pageContext;
+    const items = ctx?.content?.items;
+    if (!Array.isArray(items)) {
+      this.logger.warn(`Category JSON ${url} has no items array`);
+      return null;
+    }
+    return {
+      items,
+      totalPages: ctx?.defaultTotalPages || 1,
+      totalProducts: ctx?.defaultTotalProducts || items.length,
+    };
+  }
+
+  /**
+   * Compatibilidad: extrae URLs desde el HTML de una página de categoría
+   * (solo se usa si alguien llama directamente con HTML; el flujo principal usa JSON).
+   */
   async getProductUrls(html: string): Promise<string[]> {
-    const urls: string[] = [];
-    const productCardRegex = /<a\s+href="(\/[^"]+\/)"\s+class="Fractal-ProductCard--image"/g;
-    let match = productCardRegex.exec(html);
-
-    while (match !== null) {
-      const productPath = match[1];
-      const fullUrl = `${this.baseUrl}${productPath}`;
-      urls.push(fullUrl);
-      match = productCardRegex.exec(html);
+    const urls = new Set<string>();
+    const re = /<a\s+href="(\/[^"]+\/)"\s+class="Fractal-ProductCard--image"/g;
+    let m: RegExpExecArray | null = re.exec(html);
+    while (m !== null) {
+      urls.add(`${this.baseUrl}${m[1]}`);
+      m = re.exec(html);
     }
-
-    const titleLinkRegex =
-      /<div class="Fractal-ProductCard--productDescriptionTextContainer">[\s\S]*?<a\s+href="(\/[^"]+\/)"/g;
-    match = titleLinkRegex.exec(html);
-    while (match !== null) {
-      const productPath = match[1];
-      const fullUrl = `${this.baseUrl}${productPath}`;
-      if (!urls.includes(fullUrl)) {
-        urls.push(fullUrl);
-      }
-      match = titleLinkRegex.exec(html);
-    }
-
-    return urls;
+    return [...urls];
   }
 
-  // Override fetchHtml to use JSON endpoint for product pages
+  // Override fetchHtml: para productos, devolvemos el page-data.json directamente (vía browser context).
   public async fetchHtml(url: string, waitForSelector?: string): Promise<string> {
-    // If it looks like a product page (not a category page)
     if (!url.includes("/categories/")) {
-      // Extract slug from URL
-      // URL format: https://www.spdigital.cl/slug/
       const match = url.match(/spdigital\.cl\/([^/]+)\/?$/);
       if (match?.[1]) {
         const slug = match[1];
-        const jsonUrl = `${this.baseUrl}/page-data/${slug}/page-data.json`;
+        const jsonUrl = this.buildProductDataUrl(slug);
         this.logger.info(`Fetching JSON for product: ${jsonUrl}`);
-        // Use super.fetchHtml to leverage Puppeteer/Fetch logic
-        // We don't need waitForSelector for JSON
-        return super.fetchHtml(jsonUrl);
+        await this.waitRateLimit();
+        const json = await this.fetchJsonViaBrowser<unknown>(jsonUrl, `${this.baseUrl}/${slug}/`);
+        if (!json) throw new Error(`Failed to fetch product JSON ${jsonUrl}`);
+        return JSON.stringify(json);
       }
     }
     return super.fetchHtml(url, waitForSelector);
   }
 
   /**
+   * Override del batch fetch: agrupa todos los URLs de productos en una sola llamada
+   * `page.evaluate` con `Promise.all`. Evita el `waitRateLimit` global por item y la
+   * serialización de IPC. Para URLs no-producto (categorías, etc.), cae al flow base.
+   */
+  public async fetchHtmlBatch(urls: string[]): Promise<Map<string, string>> {
+    const results = new Map<string, string>();
+    const productJobs: Array<{ originalUrl: string; jsonUrl: string; referer: string }> = [];
+    const otherUrls: string[] = [];
+
+    for (const url of urls) {
+      const m = !url.includes("/categories/") && url.match(/spdigital\.cl\/([^/]+)\/?$/);
+      if (m?.[1]) {
+        const slug = m[1];
+        productJobs.push({
+          originalUrl: url,
+          jsonUrl: this.buildProductDataUrl(slug),
+          referer: `${this.baseUrl}/${slug}/`,
+        });
+      } else {
+        otherUrls.push(url);
+      }
+    }
+
+    if (productJobs.length > 0) {
+      this.logger.info(`Batch fetching ${productJobs.length} product JSONs (parallelism=${this.concurrency * 2})`);
+      const start = Date.now();
+      const batchSize = 40; // Dispara hasta 40 a la vez por evaluate; el browser multiplexa.
+      for (let i = 0; i < productJobs.length; i += batchSize) {
+        const slice = productJobs.slice(i, i + batchSize);
+        const fetched = await this.fetchJsonBatchViaBrowser(
+          slice.map((j) => ({ url: j.jsonUrl, referer: j.referer })),
+          this.concurrency * 2,
+        );
+        for (const job of slice) {
+          const json = fetched.get(job.jsonUrl);
+          if (json) results.set(job.originalUrl, json);
+        }
+      }
+      this.logger.info(`Batch fetched ${results.size}/${productJobs.length} product JSONs in ${Date.now() - start}ms`);
+    }
+
+    // URLs no-producto: dejamos que BaseCrawler.fetchHtmlBatch las procese.
+    if (otherUrls.length > 0) {
+      const fallback = await super.fetchHtmlBatch(otherUrls);
+      for (const [url, html] of fallback) results.set(url, html);
+    }
+
+    return results;
+  }
+
+  /**
    * Analiza el HTML (o JSON) de una página de producto.
    */
   async parseProduct(content: string, url: string): Promise<ProductData | null> {
-    // Try to parse as JSON first
-    try {
-      const data = JSON.parse(content);
-      if (data?.result?.pageContext?.content) {
-        return this.parseProductJson(data, url);
+    let result: ProductData | null = null;
+
+    // 1. Try to parse from Framerate Injected Hydration (Puppeteer)
+    const $ = cheerio.load(content);
+    const hydrationScript = $("#__FRAMERATE_HYDRATION__").html();
+
+    if (hydrationScript) {
+      try {
+        const { nextData } = JSON.parse(hydrationScript);
+        if (nextData?.props?.pageProps?.product) {
+          result = this.parseProductJson(
+            { result: { pageContext: { content: nextData.props.pageProps.product } } },
+            url,
+          );
+        }
+      } catch (e) {
+        this.logger.warn(`Error parsing hydration script for ${url}: ${e}`);
       }
-    } catch (_e) {
-      // Not JSON, fall back to HTML parsing
     }
 
-    return this.parseProductHtml(content, url);
+    // 2. Try to parse as JSON (Direct JSON endpoint fetch strategy)
+    if (!result) {
+      try {
+        const data = JSON.parse(content);
+        if (data?.result?.pageContext?.content) {
+          result = this.parseProductJson(data, url);
+        }
+      } catch (_e) {
+        // Not JSON
+      }
+    }
+
+    // 3. Fallback to DOM Scraping
+    if (!result) {
+      result = await this.parseProductHtml(content, url);
+    }
+
+    // Validate with OpenDB Schema if we have a result
+    if (result) {
+      const validation = OpenDBProductSchema.safeParse({
+        ...result,
+        currency: "CLP",
+        stock_level: result.stockQuantity || 0,
+        availability: result.stock ? "InStock" : "OutOfStock",
+        specifications: result.specs || {},
+        url: result.url,
+        sku: result.mpn || result.url,
+      });
+
+      if (!validation.success) {
+        this.logger.warn(`Validation Failed for ${url}: ${validation.error.issues.map((i) => i.message).join(", ")}`);
+      }
+    }
+
+    return result;
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: JSON de producto sin esquema estricto
   private parseProductJson(data: any, url: string): ProductData | null {
     try {
-      const content = data.result.pageContext.content;
+      // Support both page-data.json structure and internal props structure
+      // data can be the full response object OR just the product object depending on source
+      const content = data.result?.pageContext?.content || data;
       const title = content.name;
+
+      if (!title) return null;
 
       if (this.shouldExcludeProduct(title)) {
         return null;
@@ -167,6 +372,7 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       // Price
       let priceCash = 0;
       let priceNormal = 0;
+      // biome-ignore lint/suspicious/noExplicitAny: metadata sin tipo
       const pricingMeta = metadata.find((m: any) => m.key === "pricing");
       if (pricingMeta?.value) {
         try {
@@ -192,7 +398,9 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       const hasStock = stockQuantity > 0 || quantityInStore > 0 || quantityOnline > 0;
 
       // MPN / Brand
+      // biome-ignore lint/suspicious/noExplicitAny: metadata sin tipo
       const mpn = metadata.find((m: any) => m.key === "mpn")?.value || "";
+      // biome-ignore lint/suspicious/noExplicitAny: atributos sin tipo
       const brand = content.attributes?.find((a: any) => a.attribute?.slug === "brand")?.values?.[0]?.name || "";
 
       // Image
@@ -205,6 +413,7 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       if (content.attributes) {
         for (const attr of content.attributes) {
           const key = attr.attribute?.name;
+          // biome-ignore lint/suspicious/noExplicitAny: valores de atributo sin tipo
           const value = attr.values?.map((v: any) => v.name).join(", ");
           if (key && value) {
             specs[key] = value;
@@ -242,21 +451,6 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
 
   async parseProductHtml(html: string, url: string): Promise<ProductData | null> {
     try {
-      // If we are parsing from a fresh fetch, we might want to ensure we waited for stock.
-      // However, parseProduct receives HTML string, so the waiting must happen before calling this.
-      // In BaseCrawler.fetchHtmlBatch, we don't pass a selector.
-      // We should probably override fetchHtmlBatch or just rely on the fact that we are using Puppeteer
-      // and hopefully the stock is there.
-      // But to be safe, let's re-fetch if we suspect missing data? No, that's inefficient.
-      // The best place to wait is in the fetch phase.
-
-      // Since we can't easily change how fetchHtmlBatch calls fetchHtml for each URL without changing BaseCrawler significantly,
-      // and we already modified BaseCrawler to accept waitForSelector, we should use it.
-      // But parseProduct is called AFTER fetch.
-
-      // Wait! BaseCrawler.fetchHtmlBatch calls this.fetchHtml(url).
-      // We can override fetchHtml in SpDigitalCrawler to always pass the selector!
-
       const $ = cheerio.load(html);
       const result = {
         priceCash: 0,
@@ -402,7 +596,6 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
       }
 
       // Final check on stock
-      // Logic from Tracker: if available in JSON-LD but quantity not found, assume at least 1
       if (result.available && result.stockQuantity === 0) {
         result.stockQuantity = 1;
       }
@@ -435,7 +628,6 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
     const $ = cheerio.load(html);
 
     // 1. Tabla Fractal-SpecTable (tr > td > span)
-    // Patrón: <td><span>Key</span></td><td><span>Value</span></td>
     const rowRegex =
       /<tr[^>]*>[\s\S]*?<td[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/td>[\s\S]*?<td[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>[\s\S]*?<\/td>[\s\S]*?<\/tr>/gi;
 
@@ -450,12 +642,10 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
     }
 
     // 2. Listas (ul > li > strong: key - value)
-    // Ejemplo: <li><strong>Dimensiones:</strong> 120 mm x 120 mm x 28 mm</li>
     $("ul li").each((_, li) => {
       const strong = $(li).find("strong");
       if (strong.length > 0) {
         const key = strong.text().replace(":", "").trim();
-        // Obtener texto después del strong
         const value = $(li).contents().not(strong).text().trim();
         if (key && value) {
           specs[key] = value;
@@ -470,7 +660,6 @@ export class SpDigitalCrawler extends BaseCrawler<Category> {
    * Verifica si el producto debe ser excluido basado en palabras clave en el título.
    */
   private shouldExcludeProduct(title: string): boolean {
-    // Palabras que identifican productos que NO son relevantes para nuestras categorías (p. ej. adaptadores, soportes, controladoras)
     const excludedKeywords = ["Controladora", "Adaptador", "Soporte"];
     const lowerTitle = title.toLowerCase();
     return excludedKeywords.some((keyword) => lowerTitle.includes(keyword.toLowerCase()));

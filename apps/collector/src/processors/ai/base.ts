@@ -16,6 +16,7 @@ export async function scheduleExtraction(
   category: string,
   mpn: string,
   text: string,
+  // biome-ignore lint/suspicious/noExplicitAny: contexto de extracción libre por categoría
   context?: any,
   options?: ExtractionOptions,
 ): Promise<void> {
@@ -57,6 +58,7 @@ export async function extractForCategory<T = unknown>(
   category: string,
   mpn: string,
   text: string,
+  // biome-ignore lint/suspicious/noExplicitAny: contexto de extracción libre por categoría
   context?: any,
   options?: ExtractionOptions,
 ): Promise<T | null> {

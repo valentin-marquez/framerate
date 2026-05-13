@@ -2,192 +2,241 @@ import * as cheerio from "cheerio";
 import type { Category, CategoryMap } from "@/constants/categories";
 import { BaseCrawler, type ProductData } from "./base";
 
+/**
+ * Mapeo de categorías Framerate a (categoría WC + atributo + valor) para WC Store API.
+ * NotebooksYa agrupa los componentes en `partes-y-piezas-ya` (con attr `pa_producto-partes-y-piezas`)
+ * y los discos en `almacenamiento-ya` (con attr `pa_producto-almacenamiento`).
+ */
+type CategoryConfig = { wcCategory: string; attribute?: string; attributeValue?: string };
+
+const NOTEBOOKSYA_API_CONFIG: Record<Category, CategoryConfig[]> = {
+  gpu: [
+    { wcCategory: "partes-y-piezas-ya", attribute: "pa_producto-partes-y-piezas", attributeValue: "tarjeta-de-video" },
+  ],
+  cpu: [{ wcCategory: "partes-y-piezas-ya", attribute: "pa_producto-partes-y-piezas", attributeValue: "procesadores" }],
+  motherboard: [
+    { wcCategory: "partes-y-piezas-ya", attribute: "pa_producto-partes-y-piezas", attributeValue: "placa-madre" },
+  ],
+  ram: [
+    {
+      wcCategory: "partes-y-piezas-ya",
+      attribute: "pa_producto-partes-y-piezas",
+      attributeValue: "memoria-ram-para-pc",
+    },
+  ],
+  psu: [
+    { wcCategory: "partes-y-piezas-ya", attribute: "pa_producto-partes-y-piezas", attributeValue: "fuente-de-poder" },
+  ],
+  case: [{ wcCategory: "partes-y-piezas-ya", attribute: "pa_producto-partes-y-piezas", attributeValue: "gabinetes" }],
+  ssd: [
+    {
+      wcCategory: "almacenamiento-ya",
+      attribute: "pa_producto-almacenamiento",
+      attributeValue: "unidad-de-estado-solido",
+    },
+  ],
+  hdd: [
+    { wcCategory: "almacenamiento-ya", attribute: "pa_producto-almacenamiento", attributeValue: "disco-duro-interno" },
+  ],
+  cpu_cooler: [],
+  case_fan: [],
+};
+
+// Compat: mantenemos el mapa de URLs para cualquier import externo que aún lo espere.
 export const NOTEBOOKSYA_CATEGORIES: CategoryMap<string[]> = {
+  gpu: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=tarjeta-de-video"],
+  cpu: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=procesadores"],
+  motherboard: [
+    "https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=placa-madre",
+  ],
+  ram: [
+    "https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=memoria-ram-para-pc",
+  ],
+  psu: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=fuente-de-poder"],
+  case: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=gabinetes"],
   ssd: [
     "https://notebooksya.cl/product-category/almacenamiento-ya/?filter_producto-almacenamiento=unidad-de-estado-solido",
   ],
   hdd: ["https://notebooksya.cl/product-category/almacenamiento-ya/?filter_producto-almacenamiento=disco-duro-interno"],
-  psu: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=fuente-de-poder"],
-  ram: [
-    "https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=memoria-ram-para-pc",
-  ],
-  motherboard: [
-    "https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=placa-madre",
-  ],
-  cpu: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=procesadores"],
-  gpu: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=tarjeta-de-video"],
-  case: ["https://notebooksya.cl/product-category/partes-y-piezas-ya/?filter_producto-partes-y-piezas=gabinetes"],
   cpu_cooler: [],
   case_fan: [],
 };
+
+interface WcStoreProduct {
+  id: number;
+  name: string;
+  slug: string;
+  permalink: string;
+  sku?: string;
+  short_description?: string;
+  description?: string;
+  prices?: { price?: string; regular_price?: string; sale_price?: string };
+  is_in_stock?: boolean;
+  stock_availability?: { text?: string; class?: string };
+  low_stock_remaining?: number | null;
+  images?: { src: string }[];
+  brands?: { name: string; slug: string }[];
+  // biome-ignore lint/suspicious/noExplicitAny: shape varies
+  attributes?: any[];
+}
 
 export class NotebooksYaCrawler extends BaseCrawler<Category> {
   name = "NotebooksYa";
   baseUrl = "https://notebooksya.cl";
 
-  protected useHeadless = true;
+  // El sitio es WooCommerce y expone WC Store API público. Bun fetch directo funciona
+  // (sin Cloudflare), así que no necesitamos Puppeteer para nada.
+  protected useHeadless = false;
+  protected concurrency = 4;
+  private apiCache = new Map<string, WcStoreProduct>();
 
   async getAllProductUrlsForCategory(category: Category): Promise<string[]> {
-    const urls: string[] = [];
-    const categoryUrls = NOTEBOOKSYA_CATEGORIES[category];
-
-    if (!categoryUrls || categoryUrls.length === 0) {
-      this.logger.warn(`No URLs configured for category: ${category}`);
+    const configs = NOTEBOOKSYA_API_CONFIG[category] ?? [];
+    if (configs.length === 0) {
+      this.logger.warn(`No API config for category: ${category}`);
       return [];
     }
 
-    for (const startUrl of categoryUrls) {
-      let page = 1;
-      let hasNextPage = true;
-
-      this.logger.info(`Crawling category ${category} from ${startUrl}`);
-
-      while (hasNextPage) {
-        let pageUrl: string;
-        if (page === 1) {
-          pageUrl = startUrl;
-        } else {
-          const urlObj = new URL(startUrl);
-          const basePath = urlObj.pathname.replace(/\/$/, "");
-          urlObj.pathname = `${basePath}/page/${page}/`;
-          pageUrl = urlObj.toString();
-        }
-
-        try {
-          this.logger.info(`Fetching page ${page}: ${pageUrl}`);
-          const html = await this.fetchHtml(pageUrl, "ul.products");
-
-          if (
-            html.includes("That page can't be found") ||
-            html.includes("error-404 not-found") ||
-            html.includes("Error 404")
-          ) {
-            this.logger.info(`Page ${page} not found. Stopping.`);
-            hasNextPage = false;
-            break;
-          }
-
-          const pageUrls = this.extractUrlsFromList(html, category);
-
-          if (pageUrls.length === 0) {
-            this.logger.info(`No products found on page ${page}. Stopping.`);
-            hasNextPage = false;
-            break;
-          }
-
-          urls.push(...pageUrls);
-          page++;
-
-          await this.waitRateLimit();
-        } catch (error) {
-          const errString = String(error);
-          if (errString.includes("404")) {
-            this.logger.info(`Page ${page} returned 404. Stopping category.`);
-          } else {
-            this.logger.error(`Error fetching page ${page} of ${category}:`, errString);
-          }
-          hasNextPage = false;
-        }
+    const urls = new Set<string>();
+    for (const cfg of configs) {
+      const products = await this.fetchProducts(cfg);
+      this.logger.info(`Category ${category} (${cfg.attributeValue ?? cfg.wcCategory}) → ${products.length} products`);
+      for (const p of products) {
+        if (!p.permalink || !p.name) continue;
+        urls.add(p.permalink);
+        this.apiCache.set(p.permalink, p);
       }
     }
-
-    return [...new Set(urls)];
+    return [...urls];
   }
 
-  private extractUrlsFromList(html: string, _category: Category): string[] {
-    const $ = cheerio.load(html);
-    const urls: string[] = [];
-
-    $("ul.products li.product").each((_, el) => {
-      const link = $(el).find("a.woocommerce-LoopProduct-link").attr("href");
-      if (link) {
-        urls.push(link);
+  /** Recorre WC Store API con paginación, filtrado por categoría + atributo si aplica. */
+  private async fetchProducts(cfg: CategoryConfig): Promise<WcStoreProduct[]> {
+    const all: WcStoreProduct[] = [];
+    const perPage = 100;
+    let page = 1;
+    while (page <= 50) {
+      const url = this.buildApiUrl(cfg, page, perPage);
+      try {
+        await this.waitRateLimit();
+        this.logger.info(`Fetching API page ${page} of ${cfg.attributeValue ?? cfg.wcCategory}`);
+        const res = await fetch(url, { headers: { "User-Agent": this.userAgents[0], Accept: "application/json" } });
+        if (!res.ok) {
+          this.logger.warn(`API ${url} returned ${res.status}`);
+          break;
+        }
+        const items = (await res.json()) as WcStoreProduct[];
+        if (!Array.isArray(items) || items.length === 0) break;
+        all.push(...items);
+        const totalPages = Number(res.headers.get("x-wp-totalpages") || "1");
+        if (page >= totalPages) break;
+        page++;
+      } catch (err) {
+        this.logger.error(`Error fetching API ${url}: ${String(err)}`);
+        break;
       }
-    });
-
-    return urls;
+    }
+    return all;
   }
 
-  async parseProduct(html: string, url: string): Promise<ProductData | null> {
-    const $ = cheerio.load(html);
+  private buildApiUrl(cfg: CategoryConfig, page: number, perPage: number): string {
+    const params = new URLSearchParams();
+    params.set("category", cfg.wcCategory);
+    params.set("per_page", String(perPage));
+    params.set("page", String(page));
+    if (cfg.attribute && cfg.attributeValue) {
+      params.append("attributes[0][attribute]", cfg.attribute);
+      params.append("attributes[0][slug]", cfg.attributeValue);
+    }
+    return `${this.baseUrl}/wp-json/wc/store/v1/products?${params.toString()}`;
+  }
 
-    const title = $("h1.product_title.entry-title").text().trim();
+  /** Override fetchHtml: devolvemos JSON con la API data por URL (sin necesidad de HTML). */
+  public async fetchHtml(url: string, _waitForSelector?: string): Promise<string> {
+    await this.waitRateLimit();
+    let api = this.apiCache.get(url) ?? null;
+    if (!api) {
+      const slug = url.match(/\/producto\/([^/]+)\/?/)?.[1];
+      if (slug) api = await this.fetchProductBySlug(slug);
+    }
+    if (!api) throw new Error(`No API data for ${url}`);
+    return JSON.stringify({ api });
+  }
+
+  private async fetchProductBySlug(slug: string): Promise<WcStoreProduct | null> {
+    try {
+      const res = await fetch(`${this.baseUrl}/wp-json/wc/store/v1/products?slug=${slug}`, {
+        headers: { "User-Agent": this.userAgents[0], Accept: "application/json" },
+      });
+      if (!res.ok) return null;
+      const arr = (await res.json()) as WcStoreProduct[];
+      return arr?.[0] ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  async parseProduct(content: string, url: string): Promise<ProductData | null> {
+    let api: WcStoreProduct | null = null;
+    try {
+      api = JSON.parse(content)?.api ?? null;
+    } catch {
+      // Si nos llega HTML por compatibilidad, intentamos por slug.
+    }
+    if (!api) {
+      const slug = url.match(/\/producto\/([^/]+)\/?/)?.[1];
+      if (slug) api = await this.fetchProductBySlug(slug);
+    }
+    if (!api) {
+      this.logger.warn(`No API data for ${url}`);
+      return null;
+    }
+
+    const title = api.name?.trim();
     if (!title) {
       this.logger.warn(`Missing title for ${url}`);
       return null;
     }
 
-    // --- NUEVA LÓGICA DE EXTRACCIÓN DE PRECIOS ---
-    let price: number | null = null; // Efectivo / Transferencia
-    let originalPrice: number | null = null; // Normal / Webpay
-
-    // 1. Intentar capturar precio de transferencia (wds-first)
-    const transferText = $(".wds-first .woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
-    if (transferText) {
-      price = Number.parseInt(transferText, 10);
-    }
-
-    // 2. Intentar capturar precio Webpay (wds-second)
-    const webpayText = $(".wds-second .woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
-    if (webpayText) {
-      originalPrice = Number.parseInt(webpayText, 10);
-    }
-
-    // 3. Fallbacks si los contenedores específicos no existen (WooCommerce estándar)
-    if (!price && !originalPrice) {
-      const insPrice = $("ins .woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
-      const delPrice = $("del .woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
-
-      if (insPrice) price = Number.parseInt(insPrice, 10);
-      if (delPrice) originalPrice = Number.parseInt(delPrice, 10);
-
-      // Si solo hay un precio común
-      if (!price) {
-        const singlePrice = $(".woocommerce-Price-amount").first().text().replace(/[^\d]/g, "");
-        if (singlePrice) price = Number.parseInt(singlePrice, 10);
-      }
-    }
-
-    // Normalizar: originalPrice siempre debe ser el mayor o igual al cash price
-    if (!originalPrice && price) originalPrice = price;
-    if (price && originalPrice && price > originalPrice) {
-      const temp = price;
-      price = originalPrice;
-      originalPrice = temp;
-    }
-
-    // --- FIN LÓGICA PRECIOS ---
+    // Precios: API entrega cash y card por separado
+    //   prices.price       = precio efectivo (= sale_price si on_sale, sino regular_price)
+    //   prices.regular_price = precio normal (tarjeta/sin descuento)
+    const cash = this.parseMoney(api.prices?.price);
+    const regular = this.parseMoney(api.prices?.regular_price);
+    const price = cash;
+    const originalPrice = regular ?? cash;
 
     // Stock
     let stock = false;
     let stockQuantity: number | null = null;
-
-    const stockElement = $("p.stock.in-stock");
-    if (stockElement.length > 0) {
+    const stockText = api.stock_availability?.text ?? "";
+    const stockClass = api.stock_availability?.class ?? "";
+    if (api.is_in_stock || stockClass === "in-stock") {
       stock = true;
-      const stockText = stockElement.text();
-      const match = stockText.match(/(\d+)/);
-      if (match) {
-        stockQuantity = Number.parseInt(match[1], 10);
-      }
-    }
-
-    if ($("p.stock.out-of-stock").length > 0) {
+      const m = stockText.match(/(\d+)/);
+      if (m) stockQuantity = Number.parseInt(m[1], 10);
+      else if (api.low_stock_remaining != null) stockQuantity = api.low_stock_remaining;
+    } else if (stockClass === "out-of-stock") {
       stock = false;
       stockQuantity = 0;
     }
 
-    const imageUrl =
-      $("img.wp-post-image").attr("src") ||
-      $('meta[property="og:image"]').attr("content") ||
-      $(".woocommerce-product-gallery__image img").attr("src");
+    // Imagen
+    const imageUrl = api.images?.[0]?.src ?? null;
 
-    const mpn = $("span.sku").text().trim() || null;
+    // MPN: SKU del producto (NotebooksYa usa MPN-style SKUs como "DUAL-RX9060XT-16G")
+    const mpn = api.sku?.trim() || null;
 
-    const descriptionText = $("#tab-description").text().trim();
-    const descriptionHtml = $("#tab-description").html() || "";
+    // Descripción
+    const descriptionHtml = api.description ?? api.short_description ?? "";
+    const descriptionText = descriptionHtml ? this.stripHtml(descriptionHtml) : "";
 
-    const manufacturer = this.extractManufacturer(title, mpn || "");
+    // Marca: brands[] suele estar vacío; intentamos atributo `pa_marca-*` y luego del título.
+    const manufacturer =
+      api.brands?.[0]?.name?.trim() ||
+      this.extractBrandFromAttributes(api.attributes) ||
+      this.extractManufacturer(title) ||
+      "";
     const specs: Record<string, string> = {};
     if (manufacturer) specs.manufacturer = manufacturer;
 
@@ -199,16 +248,20 @@ export class NotebooksYaCrawler extends BaseCrawler<Category> {
       stock,
       stockQuantity,
       mpn,
-      imageUrl: imageUrl || null,
+      imageUrl,
       specs,
-      context: {
-        description_text: descriptionText,
-        description_html: descriptionHtml,
-      },
+      context: { description_text: descriptionText, description_html: descriptionHtml },
     };
   }
 
-  private extractManufacturer(title: string, _sku: string): string | undefined {
+  // biome-ignore lint/suspicious/noExplicitAny: shape varies
+  private extractBrandFromAttributes(attrs: any[] | undefined): string | undefined {
+    if (!Array.isArray(attrs)) return undefined;
+    const brandAttr = attrs.find((a) => /pa_marca/i.test(a?.taxonomy ?? ""));
+    return brandAttr?.terms?.[0]?.name?.trim() || undefined;
+  }
+
+  private extractManufacturer(title: string): string | undefined {
     const brands = [
       "Asus",
       "MSI",
@@ -249,7 +302,29 @@ export class NotebooksYaCrawler extends BaseCrawler<Category> {
     return undefined;
   }
 
+  private parseMoney(s: string | undefined | null): number | null {
+    if (!s) return null;
+    const cleaned = String(s).replace(/[^\d]/g, "");
+    if (!cleaned) return null;
+    const n = Number.parseInt(cleaned, 10);
+    return Number.isNaN(n) ? null : n;
+  }
+
+  private stripHtml(s: string): string {
+    return s
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  /** Compatibilidad: extrae URLs desde HTML (sólo si alguien lo invoca; el flujo principal usa la API). */
   async getProductUrls(html: string): Promise<string[]> {
-    return this.extractUrlsFromList(html, "gpu");
+    const $ = cheerio.load(html);
+    const urls = new Set<string>();
+    $("ul.products li.product a.woocommerce-LoopProduct-link").each((_, a) => {
+      const href = $(a).attr("href");
+      if (href) urls.add(href);
+    });
+    return [...urls];
   }
 }
