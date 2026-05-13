@@ -140,7 +140,7 @@ quotes.get(
       // 1. Obtener ID del usuario por username
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("id, username, full_name, avatar_url, created_at")
+        .select("id, username, full_name, avatar_url, bio, created_at")
         .eq("username", username)
         .single();
 
@@ -310,6 +310,7 @@ quotes.get("/:id", async (c) => {
     const itemsWithoutListing = items?.filter((i) => !i.listing_id) || [];
     const productIdsToFetch = [...new Set(itemsWithoutListing.map((i) => i.product?.id).filter(Boolean))];
 
+    // biome-ignore lint/suspicious/noExplicitAny: tipo dinámico
     const bestListingsMap: Record<string, any> = {};
     if (productIdsToFetch.length > 0) {
       const { data: allListings } = await supabase
@@ -532,26 +533,19 @@ quotes.use("/*", authMiddleware);
  * Lista todas las cotizaciones del usuario autenticado.
  * Soporta paginación y filtros.
  */
-quotes.get(
-  "/",
-  Cache({
-    mode: "private",
-    ttl: CACHE_TTL.SHORT,
-    name: "user-quotes-list",
-  }),
-  async (c) => {
-    try {
-      const user = c.get("user");
-      const supabase = createSupabase(c.env, c.get("token"));
+quotes.get("/", async (c) => {
+  try {
+    const user = c.get("user");
+    const supabase = createSupabase(c.env, c.get("token"));
 
-      const page = Number(c.req.query("page")) || 1;
-      const limit = Number(c.req.query("limit")) || 10;
-      const offset = (page - 1) * limit;
+    const page = Number(c.req.query("page")) || 1;
+    const limit = Number(c.req.query("limit")) || 10;
+    const offset = (page - 1) * limit;
 
-      // Obtener cotizaciones con conteo de items
-      const { data: quotesData, error: quotesError } = await supabase
-        .from("quotes")
-        .select(`
+    // Obtener cotizaciones con conteo de items
+    const { data: quotesData, error: quotesError } = await supabase
+      .from("quotes")
+      .select(`
         id,
         name,
         description,
@@ -564,40 +558,39 @@ quotes.get(
         updated_at,
         quote_items(count)
       `)
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-        .range(offset, offset + limit - 1);
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-      if (quotesError) {
-        console.error("Error fetching quotes:", quotesError);
-        return c.json({ error: "Failed to fetch quotes" }, 500);
-      }
-
-      // Obtener total para paginación
-      const { count, error: countError } = await supabase
-        .from("quotes")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
-
-      if (countError) {
-        console.error("Error counting quotes:", countError);
-      }
-
-      return c.json({
-        data: quotesData || [],
-        meta: {
-          page,
-          limit,
-          total: count || 0,
-          totalPages: count ? Math.ceil(count / limit) : 0,
-        },
-      });
-    } catch (error) {
-      console.error("Error listing quotes:", error);
-      return c.json({ error: "Internal server error" }, 500);
+    if (quotesError) {
+      console.error("Error fetching quotes:", quotesError);
+      return c.json({ error: "Failed to fetch quotes" }, 500);
     }
-  },
-);
+
+    // Obtener total para paginación
+    const { count, error: countError } = await supabase
+      .from("quotes")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    if (countError) {
+      console.error("Error counting quotes:", countError);
+    }
+
+    return c.json({
+      data: quotesData || [],
+      meta: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: count ? Math.ceil(count / limit) : 0,
+      },
+    });
+  } catch (error) {
+    console.error("Error listing quotes:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
 
 /**
  * POST /v1/quotes
@@ -645,40 +638,6 @@ quotes.post("/", async (c) => {
       console.error("Error creating quote:", quoteError);
       return c.json({ error: "Failed to create quote" }, 500);
     }
-
-    // Insert placeholders for standard components
-    const placeholderSlugs = [
-      "placas-madre",
-      "gabinetes",
-      "tarjetas-de-video",
-      "ssd",
-      "fuentes-de-poder",
-      "procesadores",
-      "coolers-cpu",
-      "discos-duros",
-      "ventiladores",
-      "memorias-ram",
-    ];
-
-    const { data: categories } = await supabase.from("categories").select("id, slug").in("slug", placeholderSlugs);
-
-    if (categories && categories.length > 0) {
-      const placeholders = categories.map((cat) => ({
-        quote_id: quote.id,
-        category_id: cat.id,
-        product_id: null,
-        quantity: 1,
-      }));
-
-      const { error: placeholdersError } = await supabase.from("quote_items").insert(placeholders);
-
-      if (placeholdersError) {
-        console.error("Error creating placeholders:", placeholdersError);
-        // Don't fail the request, just log it
-      }
-    }
-
-    await invalidateCache(c, "/v1/quotes");
 
     return c.json(quote, 201);
   } catch (error) {
@@ -747,14 +706,14 @@ quotes.patch("/:id", async (c) => {
       return c.json({ error: "Failed to update quote" }, 500);
     }
 
-    await invalidateCache(c, "/v1/quotes");
-    await invalidateCache(c, `/v1/quotes/${quoteId}`);
-
     if (quote.is_public) {
       const { data: profile } = await supabase.from("profiles").select("username").eq("id", quote.user_id).single();
 
       const username = profile?.username;
-      if (username) await invalidateCache(c, `/v1/quotes/user/${username}`);
+      if (username) {
+        // Public profile listing is cached page-by-page; only the default first page is worth purging.
+        await invalidateCache(c, `/v1/quotes/user/${username}?page=1&limit=10`, { name: "public-profile-quotes" });
+      }
     }
 
     return c.json(quote);
@@ -790,9 +749,6 @@ quotes.delete("/:id", async (c) => {
       console.error("Error deleting quote:", deleteError);
       return c.json({ error: "Failed to delete quote" }, 500);
     }
-
-    await invalidateCache(c, "/v1/quotes");
-    await invalidateCache(c, `/v1/quotes/${quoteId}`);
 
     return c.json({ success: true, message: "Quote deleted successfully" });
   } catch (error) {
@@ -865,6 +821,7 @@ quotes.post("/:id/items", async (c) => {
 
     if (existing) {
       // Actualizar cantidad si ya existe
+      // biome-ignore lint/suspicious/noExplicitAny: actualización parcial
       const updates: any = { quantity: existing.quantity + quantity };
       // No need to update listing_id as it matches
 
@@ -899,8 +856,6 @@ quotes.post("/:id/items", async (c) => {
       console.error("Error creating quote item:", itemError);
       return c.json({ error: "Failed to add item to quote" }, 500);
     }
-
-    await invalidateCache(c, `/v1/quotes/${quoteId}`);
 
     return c.json(item, 201);
   } catch (error) {
@@ -939,6 +894,7 @@ quotes.patch("/:id/items/:itemId", async (c) => {
       return c.json({ error: "Quote not found or access denied" }, 404);
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: actualización parcial
     const updates: any = {};
     if (body.quantity !== undefined) updates.quantity = body.quantity;
     if (body.listing_id !== undefined) updates.listing_id = body.listing_id;

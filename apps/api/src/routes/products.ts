@@ -22,6 +22,7 @@ products.get(
       return c.json({ data: [] });
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: Supabase RPC sin tipos generados
     const { data, error } = await supabase.rpc("quick_search_products" as any, {
       search_term: query.trim(),
       p_limit: limit,
@@ -53,6 +54,7 @@ products.get(
       return c.json({ error: 'Query parameter "q" is required' }, 400);
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: Supabase RPC sin tipos generados
     const { data, error } = await supabase.rpc("search_products" as any, {
       search_term: query,
       p_limit: limit,
@@ -91,6 +93,95 @@ products.get(
     }
 
     return c.json(data);
+  },
+);
+
+// GET /products/:slug/price-history?days=30
+// Devuelve los puntos de price_history de los listings del producto, agrupados por tienda.
+products.get(
+  "/:slug/price-history",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.SHORT,
+    name: "product-price-history",
+  }),
+  async (c) => {
+    const supabase = createSupabase(c.env);
+    const slug = c.req.param("slug");
+    const days = Math.min(Math.max(Number(c.req.query("days")) || 30, 1), 365);
+
+    const { data: product, error: productError } = await supabase
+      .from("api_products")
+      .select("id")
+      .eq("slug", slug)
+      .single();
+
+    if (productError || !product?.id) {
+      return c.json({ error: "Product not found" }, 404);
+    }
+
+    const { data: listings, error: listingsError } = await supabase
+      .from("listings")
+      .select("id, store:stores(slug, name, logo_url)")
+      .eq("product_id", product.id);
+
+    if (listingsError || !listings?.length) {
+      return c.json({ days, series: [] });
+    }
+
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const listingIds = listings.map((l) => l.id);
+
+    const { data: points, error: pointsError } = await supabase
+      .from("price_history")
+      .select("listing_id, price_cash, price_normal, recorded_at")
+      .in("listing_id", listingIds)
+      .gte("recorded_at", since)
+      .order("recorded_at", { ascending: true });
+
+    if (pointsError) {
+      return c.json({ error: pointsError.message }, 500);
+    }
+
+    // Agrupar por tienda. Un mismo store puede tener varios listings históricos
+    // (por re-listado), así que mergeamos por store_slug y ordenamos.
+    const byStore = new Map<
+      string,
+      {
+        store_slug: string;
+        store_name: string;
+        store_logo_url: string | null;
+        points: { recorded_at: string; price_cash: number; price_normal: number }[];
+      }
+    >();
+
+    const listingToStore = new Map(listings.map((l) => [l.id, l.store]));
+
+    for (const point of points || []) {
+      const store = listingToStore.get(point.listing_id);
+      if (!store) continue;
+      const key = store.slug;
+      let bucket = byStore.get(key);
+      if (!bucket) {
+        bucket = {
+          store_slug: store.slug,
+          store_name: store.name,
+          store_logo_url: store.logo_url,
+          points: [],
+        };
+        byStore.set(key, bucket);
+      }
+      bucket.points.push({
+        recorded_at: point.recorded_at,
+        price_cash: point.price_cash,
+        price_normal: point.price_normal,
+      });
+    }
+
+    return c.json({
+      days,
+      series: Array.from(byStore.values()),
+    });
   },
 );
 
@@ -204,18 +295,15 @@ products.get(
 
     // Construcción del objeto de filtros para especificaciones
     // Soporta:
-    // ?specs[socket]=AM5  -> Coincidencia exacta
-    // ?specs[speed][min]=3200 -> Rango mínim
-    // ?specs[speed][max]=6000 -> Rango máximo
+    // ?specs[socket]=AM5            -> Coincidencia exacta
+    // ?specs[socket]=AM5&specs[socket]=AM4 -> Multi-select (array)
+    // ?specs[speed][min]=3200       -> Rango mínimo
+    // ?specs[speed][max]=6000       -> Rango máximo
     // biome-ignore lint/suspicious/noExplicitAny: Objeto de filtro complejo
     const specsFilters: Record<string, any> = {};
     const queries = c.req.queries(); // Devuelve un objeto Record<string, string[]>
 
     for (const [key, values] of Object.entries(queries)) {
-      // Coincide con specs[key] o specs[key][sub]
-      // Por ahora, solo tomamos el primer valor ya que el RPC espera valores/objetos únicos
-      const value = values[0];
-
       if (key.startsWith("specs[")) {
         // Analiza claves como "specs[speed][min]" o "specs[socket]"
         const matches = key.match(/specs\[(.*?)\](?:\[(.*?)\])?/);
@@ -224,10 +312,12 @@ products.get(
           const subKey = matches[2];
 
           if (subKey) {
+            // Range filter: specs[speed][min] / specs[speed][max]
             if (!specsFilters[specKey]) specsFilters[specKey] = {};
-            specsFilters[specKey][subKey] = value;
+            specsFilters[specKey][subKey] = values[0];
           } else {
-            specsFilters[specKey] = value;
+            // Select/boolean filter: pass array if multiple values, string if single
+            specsFilters[specKey] = values.length === 1 ? values[0] : values;
           }
         }
       }

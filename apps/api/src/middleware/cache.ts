@@ -100,21 +100,32 @@ export const Cache = ({ mode, ttl, name, wait = false }: CacheOptions) => {
 
 /**
  * Utilidad para invalidar caché manualmente después de mutaciones.
- * @example await invalidateCache(c, "/v1/quotes");
+ *
+ * Debe apuntar al mismo namespace que usó el middleware `Cache` (parámetro `name`).
+ * Para cachés `private`, pasar `userId` para reconstruir la key por-usuario.
+ *
+ * Cloudflare Cache API requiere coincidencia exacta de URL — incluye query params
+ * relevantes en `pathOrUrl`.
+ *
+ * @example await invalidateCache(c, "/v1/quotes/user/foo", { name: "public-profile-quotes" });
  */
-export const invalidateCache = async (c: Context<{ Bindings: Bindings; Variables: Variables }>, pathOrUrl: string) => {
+export const invalidateCache = async (
+  c: Context<{ Bindings: Bindings; Variables: Variables }>,
+  pathOrUrl: string,
+  options: { name: string; userId?: string },
+) => {
   if (typeof caches === "undefined") {
     logger.warn("Caching is not supported in this environment.");
     return;
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: Acceso global a caches
-  const cache = (caches as any).default;
+  // biome-ignore lint/suspicious/noExplicitAny: caches.open no está tipado en Workers
+  const cache = await (caches as any).open(options.name);
 
   const url = pathOrUrl.startsWith("http") ? pathOrUrl : new URL(pathOrUrl, c.req.url).toString();
+  const key = options.userId ? `${url}:${options.userId}` : url;
 
-  logger.info(`Invalidating cache for URL: ${url}`);
+  logger.info(`Invalidating cache "${options.name}" key: ${key}`);
 
-  // Ejecución asíncrona (non-blocking) para no demorar la respuesta al cliente
-  c.executionCtx.waitUntil(cache.delete(url));
+  c.executionCtx.waitUntil(cache.delete(key));
 };

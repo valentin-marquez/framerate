@@ -3,6 +3,7 @@ import categories from "@/routes/categories";
 import products from "@/routes/products";
 import profiles from "@/routes/profiles";
 import quotes from "@/routes/quotes";
+import translationFeedback from "@/routes/translation-feedback";
 
 const API_VERSION = "v1";
 
@@ -31,5 +32,9 @@ export const routes = [
   {
     path: `/${API_VERSION}/quotes`,
     route: quotes,
+  },
+  {
+    path: `/${API_VERSION}/translation-feedback`,
+    route: translationFeedback,
   },
 ];

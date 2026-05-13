@@ -16,10 +16,20 @@ import images from "@/routes/images";
 app.route("/v1/images", images);
 
 app.use("*", secureHeaders());
+// Origins permitidos: producción + cualquier dev server local (incluyendo IPs de LAN
+// 192.168.x.x / 10.x.x.x para testing en otros dispositivos de la red).
+const ALLOWED_ORIGINS = ["https://framerate.cl"];
+const LAN_DEV_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):(5173|3000|4173|8787)$/;
+
 app.use(
   "*",
   cors({
-    origin: ["https://framerate.cl", "http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
+    origin: (origin) => {
+      if (!origin) return null;
+      if (ALLOWED_ORIGINS.includes(origin)) return origin;
+      if (LAN_DEV_ORIGIN.test(origin)) return origin;
+      return null;
+    },
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Length"],
@@ -45,6 +55,7 @@ app.use("/v1/quotes/*/analyze", Limit("strict"));
 app.use("/v1/products/*/view", Limit("moderate"));
 app.use("/v1/quotes", Limit("moderate"));
 app.use("/v1/profiles/me", Limit("moderate"));
+app.use("/v1/translation-feedback", Limit("strict"));
 
 // Lectura pública (100 req/60s)
 app.use("/v1/products/*", Limit("lenient"));

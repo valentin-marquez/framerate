@@ -77,10 +77,12 @@ profiles.patch("/me", async (c) => {
       full_name?: string;
       avatar_url?: string;
       lang?: string;
+      bio?: string | null;
     }>();
 
     const supabase = createSupabase(c.env, c.get("token"));
 
+    // biome-ignore lint/suspicious/noExplicitAny: tipo dinámico de actualización parcial
     const updates: any = {
       updated_at: new Date().toISOString(),
     };
@@ -124,6 +126,18 @@ profiles.patch("/me", async (c) => {
       updates.avatar_url = body.avatar_url;
     }
 
+    if (body.bio !== undefined) {
+      if (body.bio === null || body.bio === "") {
+        updates.bio = null;
+      } else {
+        const bio = body.bio.trim();
+        if (bio.length > 280) {
+          return c.json({ error: "Bio must be 280 characters or fewer" }, 400);
+        }
+        updates.bio = bio.length === 0 ? null : bio;
+      }
+    }
+
     const { data: profile, error } = await supabase
       .from("profiles")
       .update(updates)
@@ -155,7 +169,7 @@ profiles.get("/:username", async (c) => {
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("id, username, full_name, avatar_url, created_at")
+      .select("id, username, full_name, avatar_url, bio, created_at")
       .eq("username", username)
       .single();
 
