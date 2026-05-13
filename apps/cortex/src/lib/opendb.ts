@@ -85,6 +85,7 @@ class OpenDBService {
     return undefined;
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: datos opendb sin tipo
   findProduct(category: string, query: string): any | null {
     if (!this.initialized) {
       logger.warn("OpenDB not initialized, skipping search.");
@@ -125,43 +126,35 @@ class OpenDBService {
         return mpnMatch;
       }
 
-      // 1.5. Search by Contains MPN (Normalized)
-      // Some OpenDB entries have the model name mixed with the MPN or have different spacing
-      if (lowerQuery.length > 3) {
-        // Standard contains check
-        const mpnContainsMatch = items.find((item) => {
+      // 1.5. Search by Normalized prefix on MPN (alphanumeric only).
+      // Tolera variaciones de espacios/guiones ("B850M D3HP" ↔ "B850M-D3HP"). NO acepta
+      // un substring arbitrario (eso producía falsos positivos: query "B850" matcheaba
+      // cualquier mobo con "B850" en cualquier parte). Sólo aceptamos prefix matches
+      // bidireccionales: el query es prefijo del PN o el PN es prefijo del query.
+      const normalizedQuery = lowerQuery.replace(/[^a-z0-9]/g, "");
+      if (normalizedQuery.length > 4) {
+        const mpnPrefixMatch = items.find((item) => {
           const partNumbers = item.metadata?.part_numbers;
-          if (Array.isArray(partNumbers)) {
-            return partNumbers.some((pn: string) => pn.toLowerCase().includes(lowerQuery));
-          }
-          return false;
+          if (!Array.isArray(partNumbers)) return false;
+          return partNumbers.some((pn: string) => {
+            const normalizedPn = pn.toLowerCase().replace(/[^a-z0-9]/g, "");
+            if (normalizedPn.length < 4) return false;
+            return (
+              normalizedPn === normalizedQuery ||
+              normalizedPn.startsWith(normalizedQuery) ||
+              normalizedQuery.startsWith(normalizedPn)
+            );
+          });
         });
 
-        if (mpnContainsMatch) {
-          return mpnContainsMatch;
-        }
-
-        // Normalized check (remove non-alphanumeric chars)
-        const normalizedQuery = lowerQuery.replace(/[^a-z0-9]/g, "");
-        if (normalizedQuery.length > 3) {
-          const mpnNormalizedMatch = items.find((item) => {
-            const partNumbers = item.metadata?.part_numbers;
-            if (Array.isArray(partNumbers)) {
-              return partNumbers.some((pn: string) => {
-                const normalizedPn = pn.toLowerCase().replace(/[^a-z0-9]/g, "");
-                return normalizedPn.includes(normalizedQuery);
-              });
-            }
-            return false;
-          });
-
-          if (mpnNormalizedMatch) {
-            return mpnNormalizedMatch;
-          }
+        if (mpnPrefixMatch) {
+          return mpnPrefixMatch;
         }
       }
 
-      // 2. Search by Similarity (MPN)
+      // 2. Search by Similarity (MPN). Bigram similarity >= 0.95 AND a prefix relation
+      // between the normalized forms — bigram alone matches B650/B850 too easily.
+      // biome-ignore lint/suspicious/noExplicitAny: datos opendb sin tipo
       let bestMpnMatch: any = null;
       let maxMpnSimilarity = 0;
 
@@ -178,11 +171,22 @@ class OpenDBService {
         }
       }
 
-      if (maxMpnSimilarity >= 0.8) {
-        return bestMpnMatch;
+      if (bestMpnMatch && maxMpnSimilarity >= 0.95) {
+        // Extra guard: require normalized-prefix compatibility against at least one PN.
+        const partNumbers: string[] = bestMpnMatch.metadata?.part_numbers ?? [];
+        const compatible = partNumbers.some((pn: string) => {
+          const nPn = pn.toLowerCase().replace(/[^a-z0-9]/g, "");
+          if (nPn.length < 4 || normalizedQuery.length < 4) return false;
+          return nPn === normalizedQuery || nPn.startsWith(normalizedQuery) || normalizedQuery.startsWith(nPn);
+        });
+        if (compatible) {
+          return bestMpnMatch;
+        }
       }
 
-      // 3. Search by Similarity (Name)
+      // 3. Search by Similarity (Name). Threshold 0.85 — antes 0.7 daba false-positives
+      // entre productos cercanos (e.g., "Asus Prime B650" vs "Asus Prime B850").
+      // biome-ignore lint/suspicious/noExplicitAny: datos opendb sin tipo
       let bestMatch: any = null;
       let maxSimilarity = 0;
 
@@ -196,7 +200,7 @@ class OpenDBService {
         }
       }
 
-      if (maxSimilarity >= 0.7) {
+      if (maxSimilarity >= 0.85) {
         return bestMatch;
       }
 

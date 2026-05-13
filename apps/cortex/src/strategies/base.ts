@@ -175,11 +175,13 @@ export abstract class BaseExtractor<T> {
     if (category) {
       // Prioritize normalized_title (from extraction_jobs) if context has it
       // The worker passes 'job' properties including new fields
+      // biome-ignore lint/suspicious/noExplicitAny: resultado LLM sin tipo
       const jobContext = context as Record<string, any>;
       const normalizedTitle = jobContext?.normalized_title as string | undefined;
 
       // Strategy:
       // A. Try searching by explicitly provided MPN
+      // biome-ignore lint/suspicious/noExplicitAny: resultado LLM sin tipo
       let openDBResult: any = null;
       let _usedMethod = "";
 

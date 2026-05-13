@@ -1,0 +1,21 @@
+{
+  "name": "janitor",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun src/index.ts",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@framerate/db": "workspace:*",
+    "@framerate/opendb": "workspace:*",
+    "@framerate/utils": "workspace:*",
+    "@supabase/supabase-js": "^2.95.3",
+    "simple-git": "^3.22.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
