@@ -427,7 +427,7 @@ export type Database = {
           group_id: string | null;
           id: string;
           image_url: string | null;
-          mpn: string | null;
+          mpn: string;
           name: string;
           search_vector: unknown;
           slug: string;
@@ -441,7 +441,7 @@ export type Database = {
           group_id?: string | null;
           id?: string;
           image_url?: string | null;
-          mpn?: string | null;
+          mpn: string;
           name: string;
           search_vector?: unknown;
           slug: string;
@@ -455,7 +455,7 @@ export type Database = {
           group_id?: string | null;
           id?: string;
           image_url?: string | null;
-          mpn?: string | null;
+          mpn?: string;
           name?: string;
           search_vector?: unknown;
           slug?: string;
@@ -506,6 +506,45 @@ export type Database = {
             referencedColumns: ["group_id"];
           },
         ];
+      };
+      products_canonical: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          git_blob_hash: string | null;
+          git_commit_hash: string | null;
+          id: string;
+          is_deleted: boolean;
+          last_synced_at: string | null;
+          specifications: Json;
+          sync_metadata: Json | null;
+          updated_at: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          git_blob_hash?: string | null;
+          git_commit_hash?: string | null;
+          id: string;
+          is_deleted?: boolean;
+          last_synced_at?: string | null;
+          specifications?: Json;
+          sync_metadata?: Json | null;
+          updated_at?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          git_blob_hash?: string | null;
+          git_commit_hash?: string | null;
+          id?: string;
+          is_deleted?: boolean;
+          last_synced_at?: string | null;
+          specifications?: Json;
+          sync_metadata?: Json | null;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       profiles: {
         Row: {
@@ -667,6 +706,59 @@ export type Database = {
           },
         ];
       };
+      raw_feed: {
+        Row: {
+          created_at: string;
+          error_message: string | null;
+          external_id: string | null;
+          id: string;
+          ingested_at: string;
+          match_candidate_id: string | null;
+          match_score: number | null;
+          payload: Json;
+          processing_status: Database["public"]["Enums"]["feed_processing_status"];
+          source: string;
+          synced_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          error_message?: string | null;
+          external_id?: string | null;
+          id?: string;
+          ingested_at?: string;
+          match_candidate_id?: string | null;
+          match_score?: number | null;
+          payload: Json;
+          processing_status?: Database["public"]["Enums"]["feed_processing_status"];
+          source: string;
+          synced_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          error_message?: string | null;
+          external_id?: string | null;
+          id?: string;
+          ingested_at?: string;
+          match_candidate_id?: string | null;
+          match_score?: number | null;
+          payload?: Json;
+          processing_status?: Database["public"]["Enums"]["feed_processing_status"];
+          source?: string;
+          synced_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fk_raw_feed_candidate";
+            columns: ["match_candidate_id"];
+            isOneToOne: false;
+            referencedRelation: "products_canonical";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       store_reviews: {
         Row: {
           comment: string | null;
@@ -808,6 +900,7 @@ export type Database = {
       };
     };
     Functions: {
+      enqueue_review_item: { Args: { p_raw_feed_id: string }; Returns: number };
       extract_numeric_value: { Args: { input_text: string }; Returns: number };
       fetch_pending_jobs: {
         Args: { limit_count: number };
@@ -864,6 +957,20 @@ export type Database = {
         }[];
       };
       get_category_filters: { Args: { p_category_slug: string }; Returns: Json };
+      get_next_review_item: {
+        Args: never;
+        Returns: {
+          candidate_data: Json;
+          candidate_id: string;
+          enqueued_at: string;
+          match_reasons: Json;
+          match_score: number;
+          msg_id: number;
+          raw_feed_id: string;
+          read_ct: number;
+          scraped_data: Json;
+        }[];
+      };
       get_price_drops: {
         Args: {
           limit_count?: number;
@@ -902,6 +1009,10 @@ export type Database = {
           slug: string;
         }[];
       };
+      resolve_review_item: {
+        Args: { p_decision: string; p_msg_id: number; p_raw_feed_id: string };
+        Returns: undefined;
+      };
       search_products: {
         Args: { p_limit?: number; p_offset?: number; search_term: string };
         Returns: {
@@ -935,6 +1046,7 @@ export type Database = {
     };
     Enums: {
       compatibility_status: "valid" | "warning" | "incompatible" | "unknown";
+      feed_processing_status: "NEW" | "PROCESSING" | "MATCHED" | "FAILED";
       job_status: "pending" | "processing" | "completed" | "failed";
     };
     CompositeTypes: {
@@ -1056,6 +1168,7 @@ export const Constants = {
   public: {
     Enums: {
       compatibility_status: ["valid", "warning", "incompatible", "unknown"],
+      feed_processing_status: ["NEW", "PROCESSING", "MATCHED", "FAILED"],
       job_status: ["pending", "processing", "completed", "failed"],
     },
   },
