@@ -44,6 +44,7 @@ export class OpenDBClient {
     return readdirSync(dbPath).filter((item) => !item.startsWith("."));
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: tipo genérico con fallback necesario para la API pública
   public getItems<T = any>(category: string): T[] {
     const categoryPath = join(this.config.localPath, "open-db", category);
     if (!existsSync(categoryPath)) {

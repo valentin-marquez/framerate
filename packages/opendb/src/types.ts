@@ -1,3 +1,5 @@
+export * from "./schema";
+
 export interface OpenDBConfig {
   repoUrl: string;
   localPath: string;
