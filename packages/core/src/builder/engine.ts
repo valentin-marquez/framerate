@@ -10,6 +10,7 @@ import type {
   BuildAnalysis,
   BuildComponentsMap,
   BuildRule,
+  CaseSpecs,
   CompatibilityStatus,
   CpuSpecs,
   GpuSpecs,
@@ -143,13 +144,13 @@ export class CompatibilityEngine {
     // 1. Calcular CPU Score
     let cpuScore = 0;
     if (cpu?.specs) {
-      const specs = cpu.specs as any;
+      const specs = cpu.specs as CpuSpecs;
       const microArch = specs.microarchitecture || "Zen 2"; // Default fallback
       const factor = CPU_GEN_FACTORS[microArch] || 1.0;
 
-      const cores = specs.cores?.total ?? specs.cores ?? 4;
-      const threads = specs.cores?.threads ?? specs.threads ?? cores;
-      const boost = specs.clocks?.boost_ghz ?? specs.boost_clock_ghz ?? 3.5;
+      const cores = specs.cores?.total ?? 4;
+      const threads = specs.cores?.threads ?? cores;
+      const boost = specs.clocks?.boost_ghz ?? 3.5;
 
       cpuScore = Math.round((cores * 0.7 + threads * 0.3) * boost * factor * 110);
     }
@@ -157,13 +158,13 @@ export class CompatibilityEngine {
     // 2. Calcular GPU Score
     let gpuScore = 0;
     if (gpu?.specs) {
-      const specs = gpu.specs as any;
+      const specs = gpu.specs as GpuSpecs;
       const arch = specs.architecture || "Pascal"; // Default fallback
       const factor = GPU_ARCH_FACTORS[arch] || 1.2;
 
-      const vram = specs.memory_gb ?? specs.vram_gb ?? 4;
-      const bus = specs.memory_bus_bit ?? specs.memory_bus_bits ?? 128; // Default 128 bit
-      const clockMhz = specs.core_boost_clock_mhz ?? specs.core_boost_mhz ?? 1500;
+      const vram = specs.memory_gb ?? 4;
+      const bus = specs.memory_bus_bit ?? 128; // Default 128 bit
+      const clockMhz = specs.core_boost_clock_mhz ?? 1500;
       const clock = clockMhz / 1000; // GHz
 
       gpuScore = Math.round(vram * (bus / 64) * clock * factor * 65);
@@ -335,7 +336,7 @@ export function calculateEstimatedWattage(components: BuildComponentsMap): numbe
   // Si el gabinete incluye ventiladores, sumar su consumo
   const pcCase = components.case;
   if (pcCase?.specs && "included_fans" in pcCase.specs) {
-    const includedFans = (pcCase.specs as any).included_fans || 0;
+    const includedFans = (pcCase.specs as CaseSpecs).included_fans || 0;
     if (includedFans > 0) {
       total += 5 * includedFans;
     }

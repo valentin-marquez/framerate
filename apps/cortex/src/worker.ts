@@ -19,8 +19,10 @@ export async function processJob(jobRaw: unknown) {
   const parsed = JobSchema.safeParse(jobRaw);
   if (!parsed.success) {
     logger.error("Invalid job received, cannot process:", parsed.error.format());
-    // biome-ignore lint/suspicious/noExplicitAny: jobRaw is untyped input
-    const maybeId = (jobRaw as any)?.id;
+    const maybeId =
+      typeof jobRaw === "object" && jobRaw !== null && "id" in jobRaw && typeof jobRaw.id === "string"
+        ? jobRaw.id
+        : null;
     if (maybeId) {
       await supabase
         .from("extraction_jobs")

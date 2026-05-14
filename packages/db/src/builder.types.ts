@@ -122,14 +122,22 @@ export type BuildComponentCategory =
   | "case-fan";
 
 /**
- * Producto con sus specs completas (usado en el análisis)
+ * Producto con sus specs completas (usado en el análisis).
+ *
+ * Sólo incluye campos efectivamente consumidos por `CompatibilityEngine`
+ * (specs, name) y por el mapeo a categorías (category, brand). Mantenemos
+ * `id/slug/mpn/image_url` opcionales para reporting; otros campos de la
+ * tabla `products` (brand_id, created_at, etc.) no son necesarios y obligaban
+ * a callers a hacer `as unknown as BuildProduct` cuando los SELECT no los
+ * traían.
  */
-export type BuildProduct = Omit<Tables<"products">, "specs"> & {
-  specs: ProductSpecs;
-  category: { slug: string; name: string };
-  brand: { name: string };
-  quantity?: number;
-};
+export type BuildProduct = Pick<Tables<"products">, "name"> &
+  Partial<Pick<Tables<"products">, "id" | "slug" | "mpn" | "image_url">> & {
+    specs: ProductSpecs;
+    category: { slug: string; name: string };
+    brand: { name: string };
+    quantity?: number;
+  };
 
 /**
  * Mapa de componentes por categoría

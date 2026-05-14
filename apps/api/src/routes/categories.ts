@@ -25,9 +25,11 @@ categories.get(
       return c.json({ error: error.message }, 500);
     }
 
-    // `data` aquí es el output de un RPC sin tipos generados — devolverlo directo
-    // hace que Hono intente inferir un tipo enorme y dispara TS2589.
-    return c.json(data as unknown);
+    // `data: Json | null` desde RPC; `c.json(data)` directo dispara TS2589 porque
+    // Hono trata de expandir el union recursivo de Json. Serializamos manualmente.
+    return new Response(JSON.stringify(data), {
+      headers: { "Content-Type": "application/json" },
+    });
   },
 );
 

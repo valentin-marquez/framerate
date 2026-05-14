@@ -119,8 +119,7 @@ export const invalidateCache = async (
     return;
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: caches.open no está tipado en Workers
-  const cache = await (caches as any).open(options.name);
+  const cache = await caches.open(options.name);
 
   const url = pathOrUrl.startsWith("http") ? pathOrUrl : new URL(pathOrUrl, c.req.url).toString();
   const key = options.userId ? `${url}:${options.userId}` : url;

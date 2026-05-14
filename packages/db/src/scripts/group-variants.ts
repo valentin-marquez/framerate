@@ -108,8 +108,16 @@ function getCommonPrefix(s1: string, s2: string): string {
   return s1.slice(0, i);
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Tipos dinámicos de productos
-async function linkProducts(p1: any, p2: any) {
+type GroupableProduct = {
+  id: string;
+  name: string;
+  mpn: string | null;
+  brand_id: string;
+  category_id: string;
+  group_id: string | null;
+};
+
+async function linkProducts(p1: GroupableProduct, p2: GroupableProduct) {
   // Si ambos tienen grupos diferentes, ¿fusionarlos? (Complejo)
   // Si uno tiene grupo, agregar el otro a él.
   // Si ninguno, crear grupo.

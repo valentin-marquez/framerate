@@ -1,5 +1,5 @@
 import type { Json } from "@framerate/db";
-import { ProductSpecsSchema } from "@framerate/db";
+import { ProductSpecsSchema, toJson } from "@framerate/db";
 import { type ScrapedProduct, ScrapedProductSchema } from "@/collector/domain/schemas";
 import type { BrandService } from "@/collector/services/brand.service";
 import type { CatalogService, CategorySlug } from "@/collector/services/catalog.service";
@@ -249,7 +249,7 @@ export class ProductPipeline {
       await supabase.from("raw_feed").insert({
         source: ctx.crawlerType,
         external_id: raw.url, // URL as unique ID for now
-        payload: raw as unknown as Json,
+        payload: toJson(raw),
         processing_status: "NEW",
         ingested_at: new Date().toISOString(),
       });
@@ -320,12 +320,12 @@ export class ProductPipeline {
       categoryId,
       brandId,
       raw.mpn,
-      normalizedSpecs as unknown as Json,
+      toJson(normalizedSpecs),
     );
 
     // If we found a similar product, use its MPN and merge specs if needed
     let finalMpn = raw.mpn ?? null;
-    let finalSpecs = normalizedSpecs as unknown as Json;
+    let finalSpecs = toJson(normalizedSpecs);
 
     if (similarProduct) {
       this.logger.info(`Found similar product: ${similarProduct.id}, enriching data`, {
@@ -349,7 +349,7 @@ export class ProductPipeline {
             raw.context,
           );
           if (reNormalizedSpecs) {
-            finalSpecs = reNormalizedSpecs as unknown as Json;
+            finalSpecs = toJson(reNormalizedSpecs);
             this.logger.info(`Re-normalized specs with found MPN`);
           }
         }
@@ -361,10 +361,10 @@ export class ProductPipeline {
         const newSpecs = (finalSpecs as Record<string, unknown>) || {};
 
         // Merge: new specs take precedence, but preserve existing if not present
-        finalSpecs = {
+        finalSpecs = toJson({
           ...existingSpecs,
           ...newSpecs,
-        } as unknown as Json;
+        });
       }
     }
 

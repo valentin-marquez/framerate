@@ -123,11 +123,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       category ? categoriesService.getPriceRange(category).catch(() => null) : Promise.resolve(null),
     ]);
 
-    // productsResponse is { data, meta } from the API
-    const { data: products, meta } = productsResponse as unknown as {
-      data: typeof productsResponse extends { data: infer D } ? D : never;
-      meta: { page: number; limit: number; total: number; totalPages: number };
-    };
+    const { data: products, meta } = productsResponse;
 
     return {
       products: products || [],

@@ -88,13 +88,13 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
   private async fetchJsonViaBrowser<T = unknown>(url: string, referer: string): Promise<T | null> {
     const page = await this.getWarmupPage();
     return (await page.evaluate(
-      async (u, ref) => {
+      async (u, ref): Promise<unknown> => {
         try {
           const r = await fetch(u, {
             headers: { Referer: ref, Accept: "application/json,*/*" },
           });
           if (!r.ok) return null;
-          return (await r.json()) as unknown;
+          return await r.json();
         } catch {
           return null;
         }

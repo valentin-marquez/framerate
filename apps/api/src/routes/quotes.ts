@@ -6,12 +6,13 @@
  */
 
 import { ALL_RULES, CompatibilityEngine } from "@framerate/core/builder";
-import type {
-  AnalyzeBuildRequest,
-  BuildComponentCategory,
-  BuildComponentsMap,
-  BuildProduct,
-  Json,
+import {
+  type AnalyzeBuildRequest,
+  type BuildComponentCategory,
+  type BuildComponentsMap,
+  type BuildProduct,
+  type ProductSpecs,
+  toJson,
 } from "@framerate/db";
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
@@ -84,13 +85,27 @@ quotes.post("/analyze", async (c) => {
       productCounts[id] = (productCounts[id] || 0) + 1;
     }
 
-    const productsWithQuantity = products.map((p) => ({
-      ...p,
-      quantity: productCounts[p.id] || 1,
-    }));
+    // Filtramos productos sin category/brand (no podemos analizar compatibilidad sin ellos)
+    // y armamos el shape BuildProduct con specs tipados.
+    const buildProducts: BuildProduct[] = products
+      .filter(
+        (p): p is typeof p & { category: NonNullable<typeof p.category>; brand: NonNullable<typeof p.brand> } =>
+          p.category != null && p.brand != null,
+      )
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        mpn: p.mpn,
+        image_url: p.image_url,
+        specs: (p.specs ?? {}) as ProductSpecs,
+        category: p.category,
+        brand: p.brand,
+        quantity: productCounts[p.id] || 1,
+      }));
 
     // Mapear productos a categorías para el análisis
-    const componentsMap = mapProductsToComponents(productsWithQuantity as unknown as BuildProduct[]);
+    const componentsMap = mapProductsToComponents(buildProducts);
 
     console.log("--- DEBUG STATELESS ANALYSIS ---");
     console.log("Product IDs:", body.productIds);
@@ -304,14 +319,28 @@ quotes.get("/:id", async (c) => {
     // Obtener precios actuales de los listings (para los que no tienen listing seleccionado)
     const productIds = items?.map((item) => item.product?.id).filter(Boolean) || [];
 
-    let productsWithPrices = items?.map((item) => item.product) || [];
+    type ItemProduct = NonNullable<NonNullable<typeof items>[number]["product"]>;
+    type ProductWithPrices = ItemProduct & { prices: { cash: number | null; normal: number | null } };
+
+    let productsWithPrices: (ProductWithPrices | null)[] =
+      items?.map((item) =>
+        item.product ? { ...item.product, prices: { cash: null, normal: null } as ProductWithPrices["prices"] } : null,
+      ) || [];
 
     // Fetch best listings for products in the quote that don't have a specific listing selected
     const itemsWithoutListing = items?.filter((i) => !i.listing_id) || [];
     const productIdsToFetch = [...new Set(itemsWithoutListing.map((i) => i.product?.id).filter(Boolean))];
 
-    // biome-ignore lint/suspicious/noExplicitAny: tipo dinámico
-    const bestListingsMap: Record<string, any> = {};
+    type BestListing = {
+      id: string;
+      product_id: string;
+      price_cash: number;
+      price_normal: number;
+      url: string;
+      stock_quantity: number | null;
+      store: { name: string; logo_url: string | null; slug: string };
+    };
+    const bestListingsMap: Record<string, BestListing> = {};
     if (productIdsToFetch.length > 0) {
       const { data: allListings } = await supabase
         .from("listings")
@@ -332,7 +361,7 @@ quotes.get("/:id", async (c) => {
         // Group by product_id and take the first (cheapest because of order)
         for (const listing of allListings) {
           if (!bestListingsMap[listing.product_id]) {
-            bestListingsMap[listing.product_id] = listing;
+            bestListingsMap[listing.product_id] = listing as BestListing;
           }
         }
       }
@@ -344,11 +373,10 @@ quotes.get("/:id", async (c) => {
       if (pricesData) {
         productsWithPrices =
           items?.map((item) => {
+            if (!item.product) return null;
             const priceInfo = pricesData.find((p) => p.id === item.product?.id);
-            return {
-              ...item.product,
-              prices: priceInfo?.prices || { cash: null, normal: null },
-            };
+            const prices = (priceInfo?.prices ?? { cash: null, normal: null }) as ProductWithPrices["prices"];
+            return { ...item.product, prices };
           }) || [];
       }
     }
@@ -364,8 +392,7 @@ quotes.get("/:id", async (c) => {
       }
 
       // Si no, usar el mejor precio global
-      const prices = (product as unknown as BuildProduct & { prices?: { cash?: number } })?.prices;
-      const price = prices?.cash || 0;
+      const price = product?.prices.cash ?? 0;
       return sum + price * quantity;
     }, 0);
 
@@ -378,8 +405,7 @@ quotes.get("/:id", async (c) => {
         return sum + (item.listing.price_normal || 0) * quantity;
       }
 
-      const prices = (product as unknown as BuildProduct & { prices?: { normal?: number } })?.prices;
-      const price = prices?.normal || 0;
+      const price = product?.prices.normal ?? 0;
       return sum + price * quantity;
     }, 0);
 
@@ -482,15 +508,22 @@ quotes.get("/:id/analyze", async (c) => {
     }
 
     // Mapear a BuildComponentsMap conservando cantidades
-    const products = quoteItems
-      .map((item) => {
-        if (!item.product) return null;
+    const products: BuildProduct[] = quoteItems
+      .map((item): BuildProduct | null => {
+        if (!item.product?.category || !item.product?.brand) return null;
         return {
-          ...item.product,
+          id: item.product.id,
+          name: item.product.name,
+          slug: item.product.slug,
+          mpn: item.product.mpn,
+          image_url: item.product.image_url,
+          specs: (item.product.specs ?? {}) as ProductSpecs,
+          category: item.product.category,
+          brand: item.product.brand,
           quantity: item.quantity,
         };
       })
-      .filter(Boolean) as unknown as (BuildProduct & { quantity?: number })[];
+      .filter((p): p is BuildProduct => p !== null);
 
     const componentsMap = mapProductsToComponents(products);
 
@@ -512,7 +545,7 @@ quotes.get("/:id/analyze", async (c) => {
         .update({
           compatibility_status: analysis.status,
           estimated_wattage: analysis.estimatedWattage,
-          validation_errors: analysis.issues as unknown as Json,
+          validation_errors: toJson(analysis.issues),
           last_analyzed_at: analysis.analyzedAt,
         })
         .eq("id", quoteId);

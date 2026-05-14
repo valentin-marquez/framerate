@@ -107,21 +107,15 @@ export abstract class BaseCrawler<TCategory extends string = string> {
 
       // Prefer puppeteer-extra + stealth plugin to reduce detection. Fall back to plain puppeteer if not available.
       try {
-        // Dynamically import and handle default interop
-        const puppeteerExtraModule: unknown = await import("puppeteer-extra");
-        const stealthModule: unknown = await import("puppeteer-extra-plugin-stealth");
-        // Cast to any only where necessary for runtime calls
-        // biome-ignore lint/suspicious/noExplicitAny: interop de módulo ESM/CJS en runtime
-        const puppeteerExtra =
-          (puppeteerExtraModule as unknown as any)?.default || (puppeteerExtraModule as unknown as any);
-        // biome-ignore lint/suspicious/noExplicitAny: runtime plugin interop
-        const stealthPlugin = (stealthModule as unknown as any)?.default || (stealthModule as unknown as any);
+        // Dynamic import para tolerar entornos donde el paquete no esté instalado.
+        // ESM/CJS interop: bun nos devuelve { default: ... } incluso para el build CJS.
+        const puppeteerExtraModule = await import("puppeteer-extra");
+        const stealthModule = await import("puppeteer-extra-plugin-stealth");
+        const puppeteerExtra = puppeteerExtraModule.default;
+        const stealthPlugin = stealthModule.default;
 
-        // biome-ignore lint/suspicious/noExplicitAny: using plugin API at runtime
-        (puppeteerExtra as any).use((stealthPlugin as any)());
-
-        // biome-ignore lint/suspicious/noExplicitAny: launching puppeteer-extra
-        BaseCrawler.browserInstance = await (puppeteerExtra as any).launch({
+        puppeteerExtra.use(stealthPlugin());
+        BaseCrawler.browserInstance = await puppeteerExtra.launch({
           headless: config.HEADLESS,
           args,
         });

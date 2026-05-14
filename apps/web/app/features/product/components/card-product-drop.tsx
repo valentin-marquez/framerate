@@ -19,7 +19,6 @@ import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Badge } from "~/shared/components/primitives/badge";
 import { Button } from "~/shared/components/primitives/button";
 import { cn } from "~/shared/lib/utils";
-import type { Product } from "~/shared/utils/db-types";
 import { getImageUrl } from "~/shared/utils/images";
 
 const clpDropFormatter = new Intl.NumberFormat("es-CL", {
@@ -122,21 +121,6 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
   const formattedCurrentPrice = clpDropFormatter.format(current_price);
   const formattedPreviousPrice = clpDropFormatter.format(previous_price);
 
-  // Construct a minimal product object for AddToQuote
-  const productForQuote: Product = {
-    id: product_id,
-    name: product_name,
-    slug: product_slug,
-    image_url: product_image_url,
-    prices: { cash: current_price, normal: current_price },
-    brand: { name: "Genérico", slug: "generico" },
-    category: { slug: category_slug, name: category_slug },
-    specs: product_specs,
-    popularity_score: 0,
-    created_at: "",
-    mpn: null,
-    group_id: null,
-  } as unknown as Product;
 
   return (
     <div
@@ -226,7 +210,7 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
                 Ver producto
               </Link>
             </Button>
-            <AddToQuote product={productForQuote} />
+            <AddToQuote product={{ id: product_id }} />
           </div>
         </div>
       </div>

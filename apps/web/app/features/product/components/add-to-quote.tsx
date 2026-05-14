@@ -15,7 +15,8 @@ import { cn } from "~/shared/lib/utils";
 import type { Product } from "~/shared/utils/db-types";
 
 interface AddToQuoteProps {
-  product: Product;
+  /** Sólo necesitamos el `id` para enviar al endpoint de items. */
+  product: Pick<Product, "id">;
   className?: string;
 }
 
