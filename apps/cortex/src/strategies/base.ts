@@ -1,29 +1,60 @@
 import dedent from "dedent";
 import * as z from "zod";
 import { type OpenDBItem, openDB } from "../lib/opendb";
+import { mapOpenDBToSpecs } from "../lib/opendb-mappers";
 import { searchWeb } from "../lib/search";
 import { callLLM } from "../llm-client";
 import logger0 from "../logger";
 
 const MAX_PROMPT_CHARS = 400_000;
-export const SYSTEM_PROMPT = `Eres un experto en hardware y componentes de PC. 
-Tu trabajo es extraer especificaciones técnicas de texto sin estructura y convertirlas a un JSON estricto.
 
-REGLAS CRÍTICAS:
+export type FieldMapping = {
+  sources: readonly string[];
+  note?: string;
+};
+
+/** Convierte un record de field mappings a un string de hints para el LLM. */
+export function fieldMappingsToHints(mappings: Record<string, FieldMapping>): string {
+  return Object.entries(mappings)
+    .map(([target, { sources, note }]) => {
+      const quoted = sources.map((s) => `"${s}"`).join(", ");
+      return `${quoted} → ${target}${note ? ` (${note})` : ""}`;
+    })
+    .join("\n");
+}
+export const SYSTEM_PROMPT = `Eres un experto en hardware y componentes de PC.
+Tu trabajo es extraer especificaciones técnicas de texto y convertirlas a un JSON estricto.
+
+REGLAS:
 - Responde SOLO con el objeto JSON válido según el esquema.
-- El texto de entrada puede tener JSON malformado donde las claves y valores están invertidos o mezclados.
-- Busca la información técnica real independientemente de cómo esté estructurado el JSON corrupto.
-- Si ves patrones como "Memory":"Memory Size" o "Brand":"Series", la información útil puede estar en cualquiera de los dos lados.
-- Extrae TODOS los datos técnicos que puedas identificar, incluso si están en lugares inesperados.
-- Normaliza las unidades (ej: "16GB" -> "16 GB", "600W" -> "600W").
-- IMPORTANTE: Revisa minuciosamente el "CONTEXTO ADICIONAL" (descripciones, HTML, tablas extra). A menudo la información más valiosa está ahí y no en el bloque principal.
-- Si un campo no está explícito pero se puede inferir con certeza del contexto (ej: "RTX 4090" implica memoria "GDDR6X"), hazlo.
-- Evita "Desconocido" o null a menos que sea absolutamente imposible encontrar o inferir el dato. Esfuérzate por completar todos los campos.`;
+- Si hay una sección "OpenDB Data", úsala como FUENTE PRINCIPAL (es data curada y confiable). Complementa con el resto del texto solo si OpenDB no cubre algún campo.
+- Extrae TODOS los datos técnicos que puedas identificar de cualquier fuente en el texto.
+- Si el texto contiene JSON malformado (claves/valores invertidos), busca los valores técnicos reales ignorando la estructura rota.
+- Normaliza unidades (ej: "16GB" → "16 GB", "600W" → "600W").
+- Revisa el "CONTEXTO ADICIONAL" — a menudo contiene información valiosa no presente en el bloque principal.
+- Si un campo se puede inferir con certeza (ej: "RTX 4090" → "GDDR6X"), hazlo.
+- Usa null solo cuando sea imposible encontrar o inferir el dato.`;
 
 export abstract class BaseExtractor<T> {
   protected logger = logger0;
 
   protected abstract getZodSchema(): z.ZodTypeAny;
+
+  /**
+   * Override en strategies para proveer hints de mapeo de campos.
+   * Ayuda al LLM a conectar nombres de Icecat/retail con los campos del schema.
+   */
+  protected getFieldMappingHints(): string {
+    return "";
+  }
+
+  /**
+   * Override en strategies para enriquecer specs con campos que el LLM suele ignorar.
+   * Se ejecuta después del LLM y antes de la validación Zod — es determinístico.
+   */
+  protected enrichSpecs(specs: Record<string, unknown>, _rawText: string): Record<string, unknown> {
+    return specs;
+  }
 
   protected getJsonSchema() {
     const schema = this.getZodSchema();
@@ -69,10 +100,16 @@ export abstract class BaseExtractor<T> {
       ? `\n⚠️ ERROR EN INTENTO ANTERIOR:\n${lastError}\n\nCorrige el JSON para que sea válido según el esquema.`
       : "";
 
+    const fieldHints = this.getFieldMappingHints();
+    const hintsSection = fieldHints
+      ? `\nMAPEO DE CAMPOS (usa estos nombres del texto → campo del schema):\n${fieldHints}`
+      : "";
+
     const buildPrompt = (procText: string, ctxSection: string) => dedent`
       TEXTO DE ENTRADA (puede contener JSON malformado):
       ${procText}
       ${ctxSection}
+      ${hintsSection}
 
       TAREA:
       1. Analiza TODO el texto, incluyendo el CONTEXTO ADICIONAL, para extraer las especificaciones técnicas reales.
@@ -168,51 +205,55 @@ export abstract class BaseExtractor<T> {
     let lastError = "";
     let currentText = text;
     let foundMpn: string | undefined;
+    let openDBResult: OpenDBItem | null = null;
+    let matchedByMpn = false;
 
-    // 1. Try OpenDB first if we have category and a valid indentifier
+    // 1. Try OpenDB first if we have category and a valid identifier
     if (category) {
-      // Prioritize normalized_title (from extraction_jobs) if context has it
-      // The worker passes 'job' properties including new fields
       const normalizedTitle = context?.normalized_title as string | undefined;
 
-      // Strategy:
       // A. Try searching by explicitly provided MPN
-      let openDBResult: OpenDBItem | null = null;
-      let _usedMethod = "";
-
       if (mpn) {
         openDBResult = openDB.findProduct(category, mpn);
         if (openDBResult) {
-          _usedMethod = "MPN";
+          matchedByMpn = true;
           this.logger.info(`Found product in OpenDB by MPN: ${mpn}`);
-          // If found by MPN, we trust the input MPN is correct (or close enough)
-          // We can optionally check if openDBResult.metadata.part_numbers contains a better one
         }
       }
 
-      // B. If MPN search failed, try searching by Title (Normalized Title or Search Query)
+      // B. If MPN search failed, try searching by Title
       if (!openDBResult) {
-        // Prefer normalized title from job, then search query (stripped of " specs")
         const titleQuery = normalizedTitle || searchQuery?.replace(" specs", "");
 
         if (titleQuery) {
           openDBResult = openDB.findProduct(category, titleQuery);
           if (openDBResult) {
-            _usedMethod = "Title";
             this.logger.info(`Found product in OpenDB by Title: ${titleQuery}`);
-
-            // If found by Title, we likely found a BETTER MPN.
-            // Extract the first part number as the candidate
             const pns = openDBResult.metadata?.part_numbers;
             if (Array.isArray(pns) && pns.length > 0) {
-              // Try to pick the shortest/cleanest one, or just the first?
-              // The user example shows part_numbers: ["RTX 3050...", "RTX 3050...", "GeForce..."]
-              // Some look like descriptions. We prefer one that looks like a code?
-              // For now, let's take the first one, or maybe check if one of them matches the input MPN partially?
-              // Actually, simply returning the first one is a good start, or letting the system decide.
-              // Let's return the first one for now.
               foundMpn = pns[0];
             }
+          }
+        }
+      }
+
+      // 1.5. If OpenDB matched by MPN, try direct mapping (skip LLM entirely)
+      if (openDBResult && matchedByMpn && category) {
+        const mapped = mapOpenDBToSpecs(category, openDBResult);
+        if (mapped) {
+          try {
+            const validated = this.getZodSchema().parse(mapped) as T;
+            this.logger.info("OpenDB direct mapping successful — LLM skipped", {
+              mpn,
+              extractedFields: Object.keys(validated as object).length,
+            });
+            return { specs: validated, foundMpn };
+          } catch (error: unknown) {
+            // Mapping didn't pass Zod validation, fall through to LLM
+            this.logger.info("OpenDB direct mapping failed validation, falling back to LLM", {
+              mpn,
+              error: error instanceof z.ZodError ? error.message : String(error),
+            });
           }
         }
       }
@@ -233,9 +274,9 @@ export abstract class BaseExtractor<T> {
     for (let i = 0; i <= retries; i++) {
       try {
         const specs = await this.extractWithLLM(currentText, context, lastError);
-        const validated = this.getZodSchema().parse(specs) as T;
+        const enriched = this.enrichSpecs(specs as Record<string, unknown>, text);
+        const validated = this.getZodSchema().parse(enriched) as T;
 
-        // Log de éxito con datos extraídos
         this.logger.info(`Extraction successful on attempt ${i + 1}`, {
           extractedFields: Object.keys(validated as object).length,
         });
@@ -255,7 +296,6 @@ export abstract class BaseExtractor<T> {
             const searchResults = await searchWeb(searchQuery);
             if (searchResults) {
               currentText = `Search Results for "${searchQuery}":\n\n${searchResults}\n\n${currentText}`;
-              // We continue to next iteration with updated text
             }
           }
         } else {

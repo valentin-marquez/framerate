@@ -9,7 +9,7 @@ const envSchema = z.object({
   CORTEX_MAX_ATTEMPTS: z.coerce.number().int().nonnegative().default(3),
   CORTEX_BACKOFF_BASE_MS: z.coerce.number().int().nonnegative().default(2000),
   DEEPSEEK_API_KEY: z.string().min(1),
-  AI_MODEL: z.string().optional().default("deepseek-chat"),
+  AI_MODEL: z.string().optional().default("deepseek-v4-flash"),
 });
 
 export const config = envSchema.parse(process.env);
