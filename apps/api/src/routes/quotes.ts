@@ -821,8 +821,7 @@ quotes.post("/:id/items", async (c) => {
 
     if (existing) {
       // Actualizar cantidad si ya existe
-      // biome-ignore lint/suspicious/noExplicitAny: actualización parcial
-      const updates: any = { quantity: existing.quantity + quantity };
+      const updates: { quantity: number } = { quantity: existing.quantity + quantity };
       // No need to update listing_id as it matches
 
       const { data: updated, error: updateError } = await supabase
@@ -894,8 +893,7 @@ quotes.patch("/:id/items/:itemId", async (c) => {
       return c.json({ error: "Quote not found or access denied" }, 404);
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: actualización parcial
-    const updates: any = {};
+    const updates: { quantity?: number; listing_id?: string | null } = {};
     if (body.quantity !== undefined) updates.quantity = body.quantity;
     if (body.listing_id !== undefined) updates.listing_id = body.listing_id;
 

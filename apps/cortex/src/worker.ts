@@ -62,12 +62,9 @@ export async function processJob(jobRaw: unknown) {
     // Post-processing: if the strategy returned specs, cache them and activate product/listings
     try {
       // Only attempt to write cache/update product if we have specs
-      // biome-ignore lint/suspicious/noExplicitAny: result can contain arbitrary keys from strategies
-      const specs = (result as any)?.specs;
-      // biome-ignore lint/suspicious/noExplicitAny: access pass-through fields
-      const price = (result as any)?.price ?? (job as any)?.price;
-      // biome-ignore lint/suspicious/noExplicitAny: access pass-through fields
-      const stock = (result as any)?.stock_level ?? (job as any)?.stock_level;
+      const specs = result.specs;
+      const price = result.price ?? job.price;
+      const stock = result.stock_level ?? job.stock_level;
 
       if (specs) {
         // Validate specs against product schemas before applying
@@ -83,8 +80,7 @@ export async function processJob(jobRaw: unknown) {
             // Sólo aceptamos un foundMpn distinto si normalizado es compatible (idéntico o
             // uno es prefijo del otro). Si OpenDB devuelve un MPN claramente distinto
             // (e.g., scraped "90MB1IS0-M0EAY0" → opendb "MB063ASU23"), no lo aplicamos.
-            // biome-ignore lint/suspicious/noExplicitAny: resultado sin tipo genérico
-            const foundMpn = (result as any)?.mpn as string | undefined;
+            const foundMpn = result.mpn;
             const normalize = (m: string | null | undefined) => (m ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
             const jobKey = normalize(job.mpn);
             const foundKey = normalize(foundMpn);
@@ -204,8 +200,8 @@ export async function processJob(jobRaw: unknown) {
               // Update Listing Price/Stock/Activity
               // If we have a URL, we can identify the specific listing efficiently
               if (job.url) {
-                const updateData: any = { last_updated: new Date().toISOString() };
-                if (price !== undefined) updateData.price_cash = price;
+                const updateData: { last_updated: string; price_cash?: number; stock_quantity?: number | null; is_active?: boolean } = { last_updated: new Date().toISOString() };
+                if (price !== undefined && price !== null) updateData.price_cash = price;
                 if (stock !== undefined) updateData.stock_quantity = stock;
                 // If we have valid price/stock, ensure it is active
                 if ((price && price > 0) || (stock && stock > 0)) {
@@ -241,10 +237,10 @@ export async function processJob(jobRaw: unknown) {
       logger.error(`Unexpected post-processing error for job ${job.id}:`, err);
     }
   } catch (err) {
-    logger.error(`Job ${(job && (job as Job).id) || "<unknown>"} failed:`, err);
-    const attempts = (job && (job as Job).attempts) ?? 0;
+    logger.error(`Job ${job.id} failed:`, err);
+    const attempts = job.attempts ?? 0;
 
-    if (isTransientError(err) && attempts < config.CORTEX_MAX_ATTEMPTS && job) {
+    if (isTransientError(err) && attempts < config.CORTEX_MAX_ATTEMPTS) {
       const backoff = config.CORTEX_BACKOFF_BASE_MS * 2 ** attempts;
       logger.info(`Transient error, requeuing job ${job.id} after ${backoff}ms (attempt ${attempts})`);
       await supabase
@@ -258,7 +254,6 @@ export async function processJob(jobRaw: unknown) {
     await supabase
       .from("extraction_jobs")
       .update({ status: "failed", error_message: String(err), updated_at: new Date().toISOString() })
-      // biome-ignore lint/suspicious/noExplicitAny: jobRaw is untyped input
-      .eq("id", (job && (job as Job).id) || (jobRaw as any)?.id);
+      .eq("id", job.id);
   }
 }
