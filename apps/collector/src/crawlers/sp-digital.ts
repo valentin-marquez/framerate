@@ -252,7 +252,7 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
     const otherUrls: string[] = [];
 
     for (const url of urls) {
-      const m = !url.includes("/categories/") && url.match(/spdigital\.cl\/([^/]+)\/?$/);
+      const m = url.includes("/categories/") ? null : url.match(/spdigital\.cl\/([^/]+)\/?$/);
       if (m?.[1]) {
         const slug = m[1];
         productJobs.push({
