@@ -37,6 +37,21 @@ export async function scheduleExtraction(
   const rawContext = context ?? null;
 
   try {
+    // Dedup: no encolar si ya existe un job pendiente/procesando para este MPN+categoría
+    const { data: existing } = await supabase
+      .from("extraction_jobs")
+      .select("id")
+      .eq("mpn", mpn)
+      .eq("category", category)
+      .in("status", ["pending", "processing"])
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      logger.info(`Job already exists for MPN=${mpn} category=${category}, skipping enqueue.`);
+      return;
+    }
+
     logger.info(
       `Enqueuing AI job for MPN=${mpn} category=${category} contextType=${rawContext === null ? "null" : typeof rawContext}`,
     );

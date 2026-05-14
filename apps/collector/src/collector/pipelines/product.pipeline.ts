@@ -1,4 +1,3 @@
-import type { Json } from "@framerate/db";
 import { ProductSpecsSchema, toJson } from "@framerate/db";
 import { type ScrapedProduct, ScrapedProductSchema } from "@/collector/domain/schemas";
 import type { BrandService } from "@/collector/services/brand.service";
@@ -368,6 +367,8 @@ export class ProductPipeline {
       }
     }
 
+    // Solo marcar como pending si es un producto completamente nuevo (sin match en BD).
+    // Si ya existe (similarProduct), el producto ya fue validado — activar según precio/stock.
     const { productId, listingId } = await this.catalogService.upsertProductAndListing(
       {
         title: seoTitle,
@@ -385,7 +386,7 @@ export class ProductPipeline {
         stockQuantity: raw.stockQuantity ?? null,
         storeId: ctx.storeId,
       },
-      { pending: true },
+      { pending: !similarProduct },
     );
 
     if (!productId || !listingId) return { success: false, error: "Failed to persist product/listing" };

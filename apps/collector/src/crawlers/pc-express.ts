@@ -185,20 +185,42 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
       $('meta[property="og:image"]').attr("content") ||
       null;
 
-    // Specs
+    // Specs: filtrar dimensiones de embalaje que no son specs técnicos del producto
     if (brandRaw) product.specs = { manufacturer: brandRaw };
     const techSpecs = this.extractTechnicalSpecs($);
+    const packagingKeys = ["ancho", "alto", "largo", "peso", "profundidad"];
+    for (const key of Object.keys(techSpecs)) {
+      if (packagingKeys.includes(key.toLowerCase())) {
+        delete techSpecs[key];
+      }
+    }
     product.specs = { ...product.specs, ...techSpecs };
 
-    // Context
-    const descBlock = $(".product-description__content").length
-      ? $(".product-description__content")
-      : $("#product-description");
-    if (descBlock.length > 0) {
-      product.context = {
-        description_html: descBlock.html() || "",
-        description_text: descBlock.text().replace(/\s+/g, " ").trim(),
-      };
+    // Context: la descripción se carga vía JS (Vue component) y no está en el HTML estático.
+    // Llamamos directamente al endpoint AJAX que usa el frontend.
+    if (productId) {
+      try {
+        const descUrl = `${this.baseUrl}/index.php?route=product/product/description&product_id=${productId}`;
+        const descRes = await fetch(descUrl);
+        if (descRes.ok) {
+          const descJson = (await descRes.json()) as { success?: boolean; description?: string };
+          if (descJson.success && descJson.description) {
+            const desc$ = cheerio.load(descJson.description);
+            product.context = {
+              description_html: descJson.description,
+              description_text: desc$.text().replace(/\s+/g, " ").trim(),
+            };
+
+            // Extraer specs técnicos de la tabla en la descripción
+            const descSpecs = this.extractTechnicalSpecs(desc$);
+            if (Object.keys(descSpecs).length > 0) {
+              product.specs = { ...product.specs, ...descSpecs };
+            }
+          }
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to fetch description for product ${productId}: ${(err as Error).message}`);
+      }
     }
 
     // Limpiar P/N del título
