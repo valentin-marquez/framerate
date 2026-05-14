@@ -147,6 +147,7 @@ export class MaintenanceService {
   private areVariants(mpn1: string, mpn2: string): boolean {
     if (mpn1 === mpn2) return false;
 
+    // Estrategia 1: Prefijo común (variantes de color/empaque: -BLK, -WHT, -RED)
     const commonPrefix = this.getCommonPrefix(mpn1, mpn2);
     const maxLen = Math.max(mpn1.length, mpn2.length);
 
@@ -158,6 +159,21 @@ export class MaintenanceService {
         return true;
       }
     }
+
+    // Estrategia 2: Variantes de capacidad (storage/RAM: 500G vs 1000G, 8GB vs 16GB, 1TB vs 2TB)
+    const capacityPattern = /\d+(?:GB?|TB?)/g;
+    if (capacityPattern.test(mpn1)) {
+      capacityPattern.lastIndex = 0;
+      if (capacityPattern.test(mpn2)) {
+        const norm1 = mpn1.replace(/\d+(?:GB?|TB?)/g, "");
+        const norm2 = mpn2.replace(/\d+(?:GB?|TB?)/g, "");
+
+        if (norm1.length > 3 && norm1 === norm2) {
+          return true;
+        }
+      }
+    }
+
     return false;
   }
 
