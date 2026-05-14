@@ -1,11 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5";
-  };
   public: {
     Tables: {
       brands: {
@@ -427,7 +422,7 @@ export type Database = {
           group_id: string | null;
           id: string;
           image_url: string | null;
-          mpn: string;
+          mpn: string | null;
           name: string;
           search_vector: unknown;
           slug: string;
@@ -441,7 +436,7 @@ export type Database = {
           group_id?: string | null;
           id?: string;
           image_url?: string | null;
-          mpn: string;
+          mpn?: string | null;
           name: string;
           search_vector?: unknown;
           slug: string;
@@ -455,7 +450,7 @@ export type Database = {
           group_id?: string | null;
           id?: string;
           image_url?: string | null;
-          mpn?: string;
+          mpn?: string | null;
           name?: string;
           search_vector?: unknown;
           slug?: string;
@@ -549,6 +544,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null;
+          bio: string | null;
           created_at: string;
           full_name: string | null;
           id: string;
@@ -558,6 +554,7 @@ export type Database = {
         };
         Insert: {
           avatar_url?: string | null;
+          bio?: string | null;
           created_at?: string;
           full_name?: string | null;
           id: string;
@@ -567,6 +564,7 @@ export type Database = {
         };
         Update: {
           avatar_url?: string | null;
+          bio?: string | null;
           created_at?: string;
           full_name?: string | null;
           id?: string;
@@ -837,6 +835,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      translation_feedback: {
+        Row: {
+          comment: string | null;
+          context_url: string | null;
+          created_at: string;
+          current_text: string;
+          id: string;
+          lang: string;
+          suggested_text: string;
+          translation_key: string;
+          user_agent: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          comment?: string | null;
+          context_url?: string | null;
+          created_at?: string;
+          current_text: string;
+          id?: string;
+          lang: string;
+          suggested_text: string;
+          translation_key: string;
+          user_agent?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          comment?: string | null;
+          context_url?: string | null;
+          created_at?: string;
+          current_text?: string;
+          id?: string;
+          lang?: string;
+          suggested_text?: string;
+          translation_key?: string;
+          user_agent?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       api_products: {
@@ -902,6 +939,7 @@ export type Database = {
     Functions: {
       enqueue_review_item: { Args: { p_raw_feed_id: string }; Returns: number };
       extract_numeric_value: { Args: { input_text: string }; Returns: number };
+      f_norm_mpn: { Args: { mpn: string }; Returns: string };
       fetch_pending_jobs: {
         Args: { limit_count: number };
         Returns: {

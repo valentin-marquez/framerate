@@ -4,9 +4,9 @@ export type * from "./builder.types";
 export { ValidationCode } from "./builder.types";
 // Supabase client helpers
 export { type ClientConfig, client } from "./client";
-export { type ServerConfig, server } from "./server";
 // helper para convertir valores JSON-serializables al tipo `Json` de Supabase
 export { toJson } from "./json";
+export { type ServerConfig, server } from "./server";
 export * from "./specs";
 // utilidades de almacenamiento y caché
 export * from "./storage";

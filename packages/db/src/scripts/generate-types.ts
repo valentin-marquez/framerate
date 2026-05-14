@@ -3,14 +3,16 @@ import { $ } from "bun";
 
 const logger = new Logger("generate-types");
 const projectId = process.env.SUPABASE_PROJECT_REF;
-
-if (!projectId) {
-  logger.error("Error: La variable de entorno SUPABASE_PROJECT_REF no está definida.");
-  process.exit(1);
-}
+const isLocal = projectId === "local" || !projectId;
 
 try {
-  await $`bun x supabase gen types typescript --project-id ${projectId} --schema public > src/types.ts`;
+  if (isLocal) {
+    logger.info("Generando tipos desde Supabase local...");
+    await $`bun x supabase gen types typescript --local --schema public > src/types.ts`;
+  } else {
+    logger.info(`Generando tipos desde proyecto remoto: ${projectId}...`);
+    await $`bun x supabase gen types typescript --project-id ${projectId} --schema public > src/types.ts`;
+  }
   logger.info("Tipos generados exitosamente en src/types.ts");
 
   // Formatear el archivo generado con Biome usando --write para aplicar los cambios
