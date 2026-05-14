@@ -121,7 +121,6 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
   const formattedCurrentPrice = clpDropFormatter.format(current_price);
   const formattedPreviousPrice = clpDropFormatter.format(previous_price);
 
-
   return (
     <div
       className={cn(
