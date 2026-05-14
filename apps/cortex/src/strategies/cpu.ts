@@ -1,11 +1,10 @@
 import type { CpuSpecs } from "@framerate/db";
 import { CpuSchema } from "@framerate/db";
-import type { ZodType } from "zod";
 import { BaseExtractor } from "@/strategies/base";
 
 export class CpuStrategy extends BaseExtractor<CpuSpecs> {
   protected getZodSchema() {
-    return CpuSchema as unknown as ZodType<CpuSpecs>;
+    return CpuSchema;
   }
 
   async process(job: {

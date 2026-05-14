@@ -13,9 +13,6 @@ import { PC_EXPRESS_CATEGORIES, PcExpressCrawler } from "@/crawlers/pc-express";
 import { SP_DIGITAL_CATEGORIES, SpDigitalCrawler } from "@/crawlers/sp-digital";
 import { TECTEC_CATEGORIES, TectecCrawler } from "@/crawlers/tectec";
 
-// Tipo auxiliar para adjuntar metadatos ligeros a los crawlers sin usar `any`
-type CrawlerMeta = { CATEGORIES?: Record<Category, unknown>; slug?: string };
-
 /**
  * Función de fábrica para crear una instancia de JobStrategy basada en el tipo de crawler.
  *
@@ -31,44 +28,44 @@ export function createStrategy(crawlerType: string): JobStrategy {
   switch (crawlerType) {
     case "pc-express": {
       const c = new PcExpressCrawler();
-      (c as unknown as CrawlerMeta).CATEGORIES = PC_EXPRESS_CATEGORIES;
-      (c as unknown as CrawlerMeta).slug = "pc-express";
+      c.CATEGORIES = PC_EXPRESS_CATEGORIES;
+      c.slug = "pc-express";
       return new ScraperStrategy<Category>(c, pipeline);
     }
     case "sp-digital": {
       const c = new SpDigitalCrawler();
-      (c as unknown as CrawlerMeta).CATEGORIES = SP_DIGITAL_CATEGORIES;
-      (c as unknown as CrawlerMeta).slug = "sp-digital";
+      c.CATEGORIES = SP_DIGITAL_CATEGORIES;
+      c.slug = "sp-digital";
       return new ScraperStrategy<Category>(c, pipeline);
     }
     case "myshop": {
       const c = new MyShopCrawler();
-      (c as unknown as CrawlerMeta).CATEGORIES = MYSHOP_CATEGORIES;
-      (c as unknown as CrawlerMeta).slug = "myshop";
+      c.CATEGORIES = MYSHOP_CATEGORIES;
+      c.slug = "myshop";
       return new ApiStrategy(c, pipeline);
     }
     case "tectec": {
       const c = new TectecCrawler();
-      (c as unknown as CrawlerMeta).CATEGORIES = TECTEC_CATEGORIES;
-      (c as unknown as CrawlerMeta).slug = "tectec";
+      c.CATEGORIES = TECTEC_CATEGORIES;
+      c.slug = "tectec";
       return new ScraperStrategy<Category>(c, pipeline);
     }
     case "central-gamer": {
       const c = new CentralGamerCrawler();
-      (c as unknown as CrawlerMeta).CATEGORIES = CENTRAL_GAMER_CATEGORIES;
-      (c as unknown as CrawlerMeta).slug = "central-gamer";
+      c.CATEGORIES = CENTRAL_GAMER_CATEGORIES;
+      c.slug = "central-gamer";
       return new ScraperStrategy<Category>(c, pipeline);
     }
     case "notebooksya": {
       const c = new NotebooksYaCrawler();
-      (c as unknown as CrawlerMeta).CATEGORIES = NOTEBOOKSYA_CATEGORIES;
-      (c as unknown as CrawlerMeta).slug = "notebooksya";
+      c.CATEGORIES = NOTEBOOKSYA_CATEGORIES;
+      c.slug = "notebooksya";
       return new ScraperStrategy<Category>(c, pipeline);
     }
     case "centrale": {
       const c = new CentraleCrawler();
-      (c as unknown as CrawlerMeta).CATEGORIES = CENTRALE_CATEGORIES;
-      (c as unknown as CrawlerMeta).slug = "centrale";
+      c.CATEGORIES = CENTRALE_CATEGORIES;
+      c.slug = "centrale";
       return new ScraperStrategy<Category>(c, pipeline);
     }
     default:

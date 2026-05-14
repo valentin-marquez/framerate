@@ -25,6 +25,8 @@ categories.get(
       return c.json({ error: error.message }, 500);
     }
 
+    // `data` aquí es el output de un RPC sin tipos generados — devolverlo directo
+    // hace que Hono intente inferir un tipo enorme y dispara TS2589.
     return c.json(data as unknown);
   },
 );
@@ -55,8 +57,12 @@ categories.get(
       return c.json({ min: 0, max: 0 });
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: complex prices type
-    const prices = data.map((p: any) => p.prices?.cash || p.prices?.normal || 0).filter((p: number) => p > 0);
+    const prices = data
+      .map((p) => {
+        const priceObj = (p.prices ?? {}) as { cash?: number; normal?: number };
+        return priceObj.cash || priceObj.normal || 0;
+      })
+      .filter((p) => p > 0);
 
     return c.json({
       min: Math.min(...prices),
@@ -87,11 +93,10 @@ categories.get(
     const brandCounts: Record<string, { name: string; slug: string; count: number }> = {};
 
     for (const product of data || []) {
-      // biome-ignore lint/suspicious/noExplicitAny: complex brand type
-      const brand = product.brand as any;
+      const brand = (product.brand ?? null) as { name?: string; slug?: string } | null;
       if (brand?.slug) {
         if (!brandCounts[brand.slug]) {
-          brandCounts[brand.slug] = { name: brand.name, slug: brand.slug, count: 0 };
+          brandCounts[brand.slug] = { name: brand.name ?? brand.slug, slug: brand.slug, count: 0 };
         }
         brandCounts[brand.slug].count++;
       }

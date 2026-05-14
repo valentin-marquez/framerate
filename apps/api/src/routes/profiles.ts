@@ -82,8 +82,14 @@ profiles.patch("/me", async (c) => {
 
     const supabase = createSupabase(c.env, c.get("token"));
 
-    // biome-ignore lint/suspicious/noExplicitAny: tipo dinámico de actualización parcial
-    const updates: any = {
+    const updates: {
+      updated_at: string;
+      lang?: string;
+      username?: string;
+      full_name?: string;
+      avatar_url?: string;
+      bio?: string | null;
+    } = {
       updated_at: new Date().toISOString(),
     };
 

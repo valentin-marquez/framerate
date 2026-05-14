@@ -1,11 +1,10 @@
 import type { CaseFanSpecs } from "@framerate/db";
 import { CaseFanSchema } from "@framerate/db";
-import type { ZodType } from "zod";
 import { BaseExtractor } from "@/strategies/base";
 
 export class CaseFanStrategy extends BaseExtractor<CaseFanSpecs> {
   protected getZodSchema() {
-    return CaseFanSchema as unknown as ZodType<CaseFanSpecs>;
+    return CaseFanSchema;
   }
 
   async process(job: {

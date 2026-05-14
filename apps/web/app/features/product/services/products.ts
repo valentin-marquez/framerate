@@ -1,3 +1,4 @@
+import type { ProductSpecs } from "@framerate/db";
 import { api } from "~/shared/lib/api";
 import type { Product, ProductDetail } from "~/shared/utils/db-types";
 
@@ -31,7 +32,7 @@ export interface ProductDrop {
   product_slug: string;
   product_image_url: string | null;
   category_slug: string;
-  product_specs: Record<string, any>;
+  product_specs: ProductSpecs;
   current_price: number;
   previous_price: number;
   discount_percentage: number;

@@ -54,17 +54,18 @@ export class TectecTracker extends BaseTracker {
             const json = JSON.parse(jsonText);
 
             // Buscar en @graph si existe
-            let items: any[] = [];
+            type JsonLdItem = Record<string, unknown> & { "@type"?: string };
+            let items: JsonLdItem[] = [];
             if (json["@graph"] && Array.isArray(json["@graph"])) {
-              items = json["@graph"];
+              items = json["@graph"] as JsonLdItem[];
             } else if (Array.isArray(json)) {
-              items = json;
+              items = json as JsonLdItem[];
             } else {
-              items = [json];
+              items = [json as JsonLdItem];
             }
 
             // Buscar el Product
-            const product = items.find((item: any) => item?.["@type"] === "Product");
+            const product = items.find((item) => item?.["@type"] === "Product");
             if (!product?.offers) continue;
 
             const offers = Array.isArray(product.offers) ? product.offers[0] : product.offers;

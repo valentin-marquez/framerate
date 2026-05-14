@@ -1,3 +1,15 @@
+import type {
+  CaseFanSpecs,
+  CaseSpecs,
+  CpuCoolerSpecs,
+  CpuSpecs,
+  GpuSpecs,
+  HddSpecs,
+  MotherboardSpecs,
+  PsuSpecs,
+  RamSpecs,
+  SsdSpecs,
+} from "@framerate/db";
 import { IconEye } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
@@ -23,48 +35,63 @@ function getSpecsSummary(product: Product): string[] {
   const { category, specs } = product;
   if (!category || !specs) return [];
 
-  // biome-ignore lint/suspicious/noExplicitAny: complex specs type
-  const s = specs as any;
   let summary: (string | undefined | null | number)[] = [];
 
   switch (category.slug) {
-    case "tarjetas-de-video":
-      summary = [s.chipset || s.gpu_model, s.memory_gb ? `${s.memory_gb}GB` : s.memory, s.memory_type];
+    case "tarjetas-de-video": {
+      const s = specs as GpuSpecs;
+      summary = [s.chipset, s.memory_gb ? `${s.memory_gb}GB` : null, s.memory_type];
       break;
-    case "procesadores":
+    }
+    case "procesadores": {
+      const s = specs as CpuSpecs;
       summary = [
-        s.cores?.total ? `${s.cores.total} Cores` : s.cores_threads,
-        s.clocks?.boost_ghz ? `${s.clocks.boost_ghz}GHz` : s.frequency,
+        s.cores?.total ? `${s.cores.total} Cores` : null,
+        s.clocks?.boost_ghz ? `${s.clocks.boost_ghz}GHz` : null,
         s.socket,
       ];
       break;
-    case "memorias-ram":
+    }
+    case "memorias-ram": {
+      const s = specs as RamSpecs;
       summary = [
-        s.total_capacity_gb ? `${s.total_capacity_gb}GB` : s.capacity,
+        s.total_capacity_gb ? `${s.total_capacity_gb}GB` : null,
         s.type,
-        s.speed_mt_s ? `${s.speed_mt_s}MHz` : s.speed,
+        s.speed_mt_s ? `${s.speed_mt_s}MHz` : null,
       ];
       break;
-    case "ssd":
-      summary = [s.capacity_gb ? `${s.capacity_gb}GB` : s.capacity, s.form_factor || s.format, s.interface || s.bus];
+    }
+    case "ssd": {
+      const s = specs as SsdSpecs;
+      summary = [s.capacity_gb ? `${s.capacity_gb}GB` : null, s.form_factor, s.interface];
       break;
-    case "discos-duros":
+    }
+    case "discos-duros": {
+      const s = specs as HddSpecs;
       summary = [
-        s.capacity_gb ? `${s.capacity_gb}GB` : s.capacity,
+        s.capacity_gb ? `${s.capacity_gb}GB` : null,
         s.rpm ? `${s.rpm} RPM` : null,
-        s.cache_mb ? `${s.cache_mb}MB` : s.cache,
+        s.cache_mb ? `${s.cache_mb}MB` : null,
       ];
       break;
-    case "placas-madre":
+    }
+    case "placas-madre": {
+      const s = specs as MotherboardSpecs;
       summary = [s.socket, s.chipset, s.form_factor];
       break;
-    case "fuentes-de-poder":
-      summary = [s.wattage ? `${s.wattage}W` : null, s.efficiency_rating || s.certification, s.modular];
+    }
+    case "fuentes-de-poder": {
+      const s = specs as PsuSpecs;
+      summary = [s.wattage ? `${s.wattage}W` : null, s.efficiency_rating, s.modular];
       break;
-    case "gabinetes":
+    }
+    case "gabinetes": {
+      const s = specs as CaseSpecs;
       summary = [s.form_factor, s.side_panel];
       break;
-    case "coolers-cpu":
+    }
+    case "coolers-cpu": {
+      const s = specs as CpuCoolerSpecs;
       summary = [
         s.type,
         s.radiator_size_mm
@@ -76,12 +103,10 @@ function getSpecsSummary(product: Product): string[] {
               : null,
       ];
       break;
-    case "ventiladores":
-      summary = [s.size_mm ? `${s.size_mm}mm` : s.size, s.rpm?.max ? `${s.rpm.max} RPM` : null, s.rgb ? "RGB" : null];
-      break;
-    default: {
-      const genericKeys = ["capacity", "type", "size", "model"];
-      summary = genericKeys.flatMap((key) => (s[key] ? [s[key]] : []));
+    }
+    case "ventiladores": {
+      const s = specs as CaseFanSpecs;
+      summary = [s.size_mm ? `${s.size_mm}mm` : null, s.rpm?.max ? `${s.rpm.max} RPM` : null, s.rgb ? "RGB" : null];
       break;
     }
   }
@@ -109,9 +134,8 @@ export function ProductCard({ product, className, priority = false }: ProductCar
 
   // Lógica PSU
   const isPsu = product.category?.slug === "fuentes-de-poder";
-  // biome-ignore lint/suspicious/noExplicitAny: complex specs type
-  const psuSpecs = product.specs as any;
-  const psuCertification = isPsu ? psuSpecs?.efficiency_rating || psuSpecs?.certification : null;
+  const psuSpecs = isPsu ? (product.specs as PsuSpecs | null) : null;
+  const psuCertification = psuSpecs?.efficiency_rating ?? null;
 
   const handleProductClick = () => {
     if (product.slug) {

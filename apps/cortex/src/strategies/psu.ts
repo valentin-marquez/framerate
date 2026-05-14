@@ -1,11 +1,10 @@
 import type { PsuSpecs } from "@framerate/db";
 import { PsuSchema } from "@framerate/db";
-import type { ZodType } from "zod";
 import { BaseExtractor } from "@/strategies/base";
 
 export class PsuStrategy extends BaseExtractor<PsuSpecs> {
   protected getZodSchema() {
-    return PsuSchema as unknown as ZodType<PsuSpecs>;
+    return PsuSchema;
   }
 
   async process(job: {

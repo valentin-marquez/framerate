@@ -1,11 +1,10 @@
 import type { CaseSpecs } from "@framerate/db";
 import { CaseSchema } from "@framerate/db";
-import type { ZodType } from "zod";
 import { BaseExtractor } from "@/strategies/base";
 
 export class CaseStrategy extends BaseExtractor<CaseSpecs> {
   protected getZodSchema() {
-    return CaseSchema as unknown as ZodType<CaseSpecs>;
+    return CaseSchema;
   }
 
   async process(job: {

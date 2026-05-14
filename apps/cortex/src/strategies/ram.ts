@@ -1,11 +1,10 @@
 import type { RamSpecs } from "@framerate/db";
 import { RamSchema } from "@framerate/db";
-import type { ZodType } from "zod";
 import { BaseExtractor } from "@/strategies/base";
 
 export class RamStrategy extends BaseExtractor<RamSpecs> {
   protected getZodSchema() {
-    return RamSchema as unknown as ZodType<RamSpecs>;
+    return RamSchema;
   }
 
   async process(job: {

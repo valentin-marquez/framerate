@@ -1,11 +1,10 @@
 import type { HddSpecs } from "@framerate/db";
 import { HddSchema } from "@framerate/db";
-import type { ZodType } from "zod";
 import { BaseExtractor } from "@/strategies/base";
 
 export class HddStrategy extends BaseExtractor<HddSpecs> {
   protected getZodSchema() {
-    return HddSchema as unknown as ZodType<HddSpecs>;
+    return HddSchema;
   }
 
   async process(job: {

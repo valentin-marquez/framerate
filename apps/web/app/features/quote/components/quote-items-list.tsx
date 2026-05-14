@@ -34,7 +34,7 @@ export function QuoteItemsList({
   const { t } = useTranslation();
   // Identify items that don't fit into standard slots
   const handledCategories = new Set(QUOTE_SLOTS.flatMap((s) => s.accepts));
-  const otherItems = flattenedItems.filter((item) => !handledCategories.has(item.product?.category?.slug as any));
+  const otherItems = flattenedItems.filter((item) => !handledCategories.has(item.product?.category?.slug ?? ""));
 
   return (
     <div className="bg-card rounded-3xl border border-border/40 shadow-sm overflow-hidden">
@@ -53,7 +53,7 @@ export function QuoteItemsList({
 
       <div className="divide-y divide-border/40">
         {QUOTE_SLOTS.map((slot) => {
-          const slotItems = flattenedItems.filter((item) => slot.accepts.includes(item.product?.category?.slug as any));
+          const slotItems = flattenedItems.filter((item) => slot.accepts.includes(item.product?.category?.slug ?? ""));
           return (
             <QuoteSlot
               key={slot.id}

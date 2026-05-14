@@ -4,6 +4,45 @@ import type { Page } from "puppeteer";
 import type { CategoryMap } from "@/constants/categories";
 import { BaseCrawler, type ProductData } from "./base";
 
+// Tipos para la estructura JSON que devuelve SP Digital (Gatsby pageContext)
+interface SPDigitalMetadata {
+  key?: string;
+  value?: string;
+}
+interface SPDigitalAttribute {
+  attribute?: { name?: string; slug?: string };
+  values?: Array<{ name?: string }>;
+}
+interface SPDigitalMedia {
+  url?: string;
+  thumbnailUrl?: string;
+}
+interface SPDigitalVariant {
+  quantityAvailable?: number;
+  quantityInStore?: number;
+  quantityOnline?: number;
+}
+interface SPDigitalContent {
+  name?: string;
+  slug?: string;
+  metadata?: SPDigitalMetadata[];
+  attributes?: SPDigitalAttribute[];
+  media?: SPDigitalMedia[];
+  defaultVariant?: SPDigitalVariant;
+  description?: string;
+}
+interface SPDigitalListItem {
+  slug?: string;
+}
+interface SPDigitalPageContext {
+  content?: SPDigitalContent & { items?: SPDigitalListItem[] };
+  defaultTotalPages?: number;
+  defaultTotalProducts?: number;
+}
+interface SPDigitalProductJson {
+  result?: { pageContext?: SPDigitalPageContext };
+}
+
 // Mapeo de categorías a slugs de URL en SP Digital
 export const SP_DIGITAL_CATEGORIES: CategoryMap<string[]> = {
   gpu: ["componentes-tarjeta-de-video"],
@@ -187,11 +226,9 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
   private async fetchCategoryData(
     url: string,
     referer: string,
-    // biome-ignore lint/suspicious/noExplicitAny: respuesta JSON de SP Digital sin esquema
-  ): Promise<{ items: any[]; totalPages: number; totalProducts: number } | null> {
+  ): Promise<{ items: SPDigitalListItem[]; totalPages: number; totalProducts: number } | null> {
     await this.waitRateLimit();
-    // biome-ignore lint/suspicious/noExplicitAny: pageContext sin tipo definido
-    const json = await this.fetchJsonViaBrowser<{ result?: { pageContext?: any } }>(url, referer);
+    const json = await this.fetchJsonViaBrowser<SPDigitalProductJson>(url, referer);
     if (!json) {
       this.logger.warn(`Category JSON ${url} fetch failed`);
       return null;
@@ -353,12 +390,12 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
     return result;
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: JSON de producto sin esquema estricto
-  private parseProductJson(data: any, url: string): ProductData | null {
+  private parseProductJson(data: SPDigitalProductJson | SPDigitalContent, url: string): ProductData | null {
     try {
       // Support both page-data.json structure and internal props structure
       // data can be the full response object OR just the product object depending on source
-      const content = data.result?.pageContext?.content || data;
+      const content: SPDigitalContent =
+        ("result" in data && data.result?.pageContext?.content) || (data as SPDigitalContent);
       const title = content.name;
 
       if (!title) return null;
@@ -372,8 +409,7 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
       // Price
       let priceCash = 0;
       let priceNormal = 0;
-      // biome-ignore lint/suspicious/noExplicitAny: metadata sin tipo
-      const pricingMeta = metadata.find((m: any) => m.key === "pricing");
+      const pricingMeta = metadata.find((m) => m.key === "pricing");
       if (pricingMeta?.value) {
         try {
           const pricing = JSON.parse(pricingMeta.value);
@@ -398,10 +434,8 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
       const hasStock = stockQuantity > 0 || quantityInStore > 0 || quantityOnline > 0;
 
       // MPN / Brand
-      // biome-ignore lint/suspicious/noExplicitAny: metadata sin tipo
-      const mpn = metadata.find((m: any) => m.key === "mpn")?.value || "";
-      // biome-ignore lint/suspicious/noExplicitAny: atributos sin tipo
-      const brand = content.attributes?.find((a: any) => a.attribute?.slug === "brand")?.values?.[0]?.name || "";
+      const mpn = metadata.find((m) => m.key === "mpn")?.value || "";
+      const brand = content.attributes?.find((a) => a.attribute?.slug === "brand")?.values?.[0]?.name || "";
 
       // Image
       const imageUrl = content.media?.[0]?.thumbnailUrl || content.media?.[0]?.url || "";
@@ -413,8 +447,7 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
       if (content.attributes) {
         for (const attr of content.attributes) {
           const key = attr.attribute?.name;
-          // biome-ignore lint/suspicious/noExplicitAny: valores de atributo sin tipo
-          const value = attr.values?.map((v: any) => v.name).join(", ");
+          const value = attr.values?.map((v) => v.name).join(", ");
           if (key && value) {
             specs[key] = value;
           }
@@ -422,11 +455,10 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
       }
 
       // Context
-      const descriptionHtml = content.description
-        ? JSON.parse(content.description)
-            ?.blocks?.map((b: any) => b.data?.text)
-            .join("\n")
-        : "";
+      const descriptionBlocks = content.description
+        ? ((JSON.parse(content.description) as { blocks?: Array<{ data?: { text?: string } }> })?.blocks ?? [])
+        : [];
+      const descriptionHtml = descriptionBlocks.map((b) => b.data?.text ?? "").join("\n");
 
       return {
         url,
@@ -466,13 +498,21 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
       // 1. Availability from JSON-LD
       let jsonLdDescription: string | undefined;
       const scripts = $('script[type="application/ld+json"]');
+      type JsonLdProduct = Record<string, unknown> & {
+        "@type"?: string;
+        name?: string;
+        image?: string | string[];
+        mpn?: string;
+        brand?: string | { name?: string };
+        description?: string;
+        offers?: { availability?: string };
+      };
       scripts.each((_, script) => {
         try {
           const content = $(script).html() || "[]";
           const json = JSON.parse(content);
-          const products = Array.isArray(json) ? json : [json];
-          // biome-ignore lint/suspicious/noExplicitAny: JSON-LD structure is dynamic
-          const product = products.find((p: any) => p["@type"] === "Product");
+          const products: JsonLdProduct[] = Array.isArray(json) ? json : [json];
+          const product = products.find((p) => p["@type"] === "Product");
 
           if (product) {
             if (product.offers) {
@@ -484,7 +524,7 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
             }
             if (product.mpn) result.mpn = product.mpn;
             if (product.brand) {
-              result.brand = typeof product.brand === "object" ? product.brand.name : product.brand;
+              result.brand = typeof product.brand === "object" ? (product.brand.name ?? "") : product.brand;
             }
             if (product.description) {
               // Keep the raw description from JSON-LD (could contain newlines/formatting)

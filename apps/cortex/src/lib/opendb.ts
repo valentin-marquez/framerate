@@ -2,6 +2,16 @@ import path from "node:path";
 import { OpenDBClient } from "@framerate/opendb";
 import logger from "@/logger";
 
+export interface OpenDBItem {
+  type?: string;
+  metadata?: {
+    name?: string;
+    part_numbers?: string[];
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 // Map internal categories to OpenDB categories
 const CATEGORY_MAP: Record<string, string> = {
   gpu: "GPU",
@@ -85,8 +95,7 @@ class OpenDBService {
     return undefined;
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: datos opendb sin tipo
-  findProduct(category: string, query: string): any | null {
+  findProduct(category: string, query: string): OpenDBItem | null {
     if (!this.initialized) {
       logger.warn("OpenDB not initialized, skipping search.");
       return null;
@@ -154,8 +163,7 @@ class OpenDBService {
 
       // 2. Search by Similarity (MPN). Bigram similarity >= 0.95 AND a prefix relation
       // between the normalized forms — bigram alone matches B650/B850 too easily.
-      // biome-ignore lint/suspicious/noExplicitAny: datos opendb sin tipo
-      let bestMpnMatch: any = null;
+      let bestMpnMatch: OpenDBItem | null = null;
       let maxMpnSimilarity = 0;
 
       for (const item of items) {
@@ -186,8 +194,7 @@ class OpenDBService {
 
       // 3. Search by Similarity (Name). Threshold 0.85 — antes 0.7 daba false-positives
       // entre productos cercanos (e.g., "Asus Prime B650" vs "Asus Prime B850").
-      // biome-ignore lint/suspicious/noExplicitAny: datos opendb sin tipo
-      let bestMatch: any = null;
+      let bestMatch: OpenDBItem | null = null;
       let maxSimilarity = 0;
 
       for (const item of items) {

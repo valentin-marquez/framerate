@@ -44,6 +44,10 @@ export interface QuoteItem {
       normal: number | null;
     };
   };
+  category?: {
+    name: string;
+    slug: string;
+  } | null;
 }
 
 export interface VirtualQuoteItem extends QuoteItem {

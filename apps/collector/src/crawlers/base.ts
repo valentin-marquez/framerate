@@ -22,18 +22,15 @@ export interface ProductData {
 // Helper types for Next.js extraction
 export interface NextData {
   props: {
-    // biome-ignore lint/suspicious/noExplicitAny: datos de Next.js sin tipo estricto
-    pageProps: any;
+    pageProps: Record<string, unknown>;
     __N_SSP?: boolean;
   };
   page: string;
-  // biome-ignore lint/suspicious/noExplicitAny: query params sin tipo estricto
-  query: any;
+  query: Record<string, string | string[]>;
   buildId: string;
   isFallback: boolean;
   gsp: boolean;
-  // biome-ignore lint/suspicious/noExplicitAny: script loader dinámico
-  scriptLoader: any[];
+  scriptLoader: unknown[];
 }
 
 // Pool de páginas para concurrencia
@@ -43,9 +40,13 @@ interface PagePool {
   availablePages: Page[];
 }
 
-export abstract class BaseCrawler<_T = string> {
+export abstract class BaseCrawler<TCategory extends string = string> {
   abstract name: string;
   abstract baseUrl: string;
+  /** Mapa de categorías internas → slugs/ids específicos del crawler. Asignado por la factory. */
+  public CATEGORIES?: Record<TCategory, unknown>;
+  /** Slug único del crawler (e.g. "pc-express"). Asignado por la factory. */
+  public slug?: string;
 
   protected logger: Logger;
   protected requestDelay = 1000; // Reducido de 2000 a 1000

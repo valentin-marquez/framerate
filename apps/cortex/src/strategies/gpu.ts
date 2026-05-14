@@ -1,11 +1,10 @@
 import type { GpuSpecs } from "@framerate/db";
 import { GpuSchema } from "@framerate/db";
-import type { ZodType } from "zod";
 import { BaseExtractor } from "@/strategies/base";
 
 export class GpuStrategy extends BaseExtractor<GpuSpecs> {
   protected getZodSchema() {
-    return GpuSchema as unknown as ZodType<GpuSpecs>;
+    return GpuSchema;
   }
 
   async process(job: {

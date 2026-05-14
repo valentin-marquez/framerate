@@ -16,27 +16,25 @@ export class ApiStrategy implements JobStrategy {
   async execute(job: CollectorJobData): Promise<JobResult> {
     const startTime = Date.now();
 
-    const meta = this.crawler as unknown as { CATEGORIES?: Record<string, unknown>; slug?: string };
     const categoriesToProcess: string[] =
-      job.category === "all" || !job.category
-        ? (Object.keys(meta.CATEGORIES ?? {}) as string[])
-        : [job.category as string];
+      job.category === "all" || !job.category ? Object.keys(this.crawler.CATEGORIES ?? {}) : [job.category];
 
     const results: Record<string, number> = {};
     let totalProcessed = 0;
 
-    const storeId = await this.pipeline.getCatalogService().getStoreId(meta.slug ?? "");
-    if (!storeId) throw new Error(`Store '${meta.slug ?? ""}' not found`);
+    const crawlerSlug = this.crawler.slug ?? "";
+    const storeId = await this.pipeline.getCatalogService().getStoreId(crawlerSlug);
+    if (!storeId) throw new Error(`Store '${crawlerSlug}' not found`);
 
     for (const category of categoriesToProcess) {
       this.logger.info(`[MyShop] Processing ${category}`);
-      const products = await this.crawler.crawlCategory(category as unknown as CategorySlug);
+      const products = await this.crawler.crawlCategory(category as CategorySlug);
       this.logger.info(`[MyShop] Found ${products.length} products for ${category}`);
 
       let processed = 0;
       for (const raw of products) {
         const ctx: PipelineContext = {
-          category: category as unknown as CategorySlug,
+          category: category as CategorySlug,
           storeId,
           crawlerType: job.crawler,
         };

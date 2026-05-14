@@ -1,5 +1,9 @@
+import type { Tables, TablesInsert } from "@framerate/db";
 import { supabase } from "@/db";
 import logger from "@/logger";
+
+type RawFeedRow = Tables<"raw_feed">;
+type ProductInsert = TablesInsert<"products">;
 
 const POLL_INTERVAL = 10000; // 10 seconds
 const BATCH_SIZE = 50;
@@ -44,13 +48,18 @@ export async function processBatch() {
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: specs sin tipo
-async function syncItem(item: any) {
+async function syncItem(item: RawFeedRow) {
   if (!item.match_candidate_id) {
     throw new Error("Item is MATCHED but has no match_candidate_id");
   }
 
-  const payload = item.payload || {};
+  const payload = (item.payload ?? {}) as {
+    url?: string;
+    price?: number;
+    originalPrice?: number;
+    stock?: boolean | number;
+    stockQuantity?: number;
+  };
   // Extract listing details
   // Payload usually follows ScrapedProductSchema: { url, price, stock, ... }
 
@@ -89,35 +98,53 @@ async function syncItem(item: any) {
       throw new Error(`Canonical product ${candidateId} not found (data integrity error)`);
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: specs sin tipo
-    const specs = canonical.specifications as any;
-    const name = specs?.name || specs?.model || `Product ${candidateId}`;
+    const specs = (canonical.specifications ?? {}) as Record<string, unknown>;
+    const specName = typeof specs.name === "string" ? specs.name : undefined;
+    const specModel = typeof specs.model === "string" ? specs.model : undefined;
+    const specMpn = typeof specs.mpn === "string" ? specs.mpn : undefined;
+    const specPartNumber = typeof specs.part_number === "string" ? specs.part_number : undefined;
+
+    const name: string = specName ?? specModel ?? `Product ${candidateId}`;
     const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
 
     // Insert into products with the SAME ID as canonical to unify them
-    // TODO: resolve brand_id and category_id properly before this path is production-ready
-    // biome-ignore lint/suspicious/noExplicitAny: incomplete hydration path — brand_id/category_id pending resolution
-    const { error: createError } = await supabase.from("products").insert({
+    // TODO: brand_id is required by schema; this hydration path is incomplete and
+    // will fail at the DB level until brand_id/category_id resolution is implemented.
+    const productInsert: ProductInsert = {
       id: candidateId,
-      name: name,
-      slug: slug,
-      mpn: specs?.mpn || specs?.part_number || null,
+      name,
+      slug,
+      mpn: specMpn ?? specPartNumber ?? "",
       category_id: store.id,
-    } as any);
+      brand_id: "",
+    };
+    const { error: createError } = await supabase.from("products").insert(productInsert);
 
     if (createError) {
       throw new Error(`Failed to hydrate product: ${createError.message}`);
     }
   }
 
-  const listingData = {
+  const url = item.external_id ?? payload.url;
+  if (!url) {
+    throw new Error(`raw_feed ${item.id} has no url to derive listing from`);
+  }
+
+  const priceCash = payload.price ?? 0;
+  const priceNormal = payload.originalPrice ?? payload.price ?? 0;
+  const stockIsBoolean = typeof payload.stock === "boolean";
+  const stockIsActive = stockIsBoolean
+    ? payload.stock !== false
+    : typeof payload.stock === "number" && payload.stock > 0;
+
+  const listingData: TablesInsert<"listings"> = {
     store_id: store.id,
     product_id: candidateId,
-    url: item.external_id || payload.url,
-    external_id: item.external_id || payload.url,
-    price_cash: payload.price,
-    price_normal: payload.originalPrice || payload.price,
-    is_active: payload.stock !== false && payload.stock > 0,
+    url,
+    external_id: url,
+    price_cash: priceCash,
+    price_normal: priceNormal,
+    is_active: stockIsActive,
     stock_quantity: typeof payload.stockQuantity === "number" ? payload.stockQuantity : null,
     last_scraped_at: item.ingested_at || new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -135,11 +162,11 @@ async function syncItem(item: any) {
   }
 
   // 4. Insert Price History
-  if (listingData.price_cash && listingData.price_cash > 0) {
+  if (priceCash > 0) {
     await supabase.from("price_history").insert({
       listing_id: listing.id,
-      price_cash: listingData.price_cash,
-      price_normal: listingData.price_normal,
+      price_cash: priceCash,
+      price_normal: priceNormal,
       recorded_at: new Date().toISOString(),
     });
   }

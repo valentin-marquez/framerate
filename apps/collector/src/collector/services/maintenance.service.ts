@@ -169,8 +169,24 @@ export class MaintenanceService {
     return s1.slice(0, i);
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: Tipos dinámicos de productos
-  private async linkProducts(p1: any, p2: any) {
+  private async linkProducts(
+    p1: {
+      id: string;
+      name: string;
+      mpn: string | null;
+      brand_id: string;
+      group_id: string | null;
+      category_id: string;
+    },
+    p2: {
+      id: string;
+      name: string;
+      mpn: string | null;
+      brand_id: string;
+      group_id: string | null;
+      category_id: string;
+    },
+  ) {
     let groupId = p1.group_id || p2.group_id;
 
     if (p1.group_id && p2.group_id && p1.group_id !== p2.group_id) {

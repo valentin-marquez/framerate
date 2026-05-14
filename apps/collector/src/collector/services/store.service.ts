@@ -23,9 +23,7 @@ export class StoreService {
         return null;
       }
 
-      // `data` shape is { is_active: boolean }
-      // biome-ignore lint/suspicious/noExplicitAny: shape de RPC sin tipo generado
-      return Boolean((data as any).is_active);
+      return Boolean(data.is_active);
     } catch (err: unknown) {
       this.logger.error("Failed to check store active status", String(err));
       throw err;

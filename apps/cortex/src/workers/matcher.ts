@@ -1,6 +1,9 @@
+import type { Tables } from "@framerate/db";
 import { supabase } from "@/db";
 import { matcherService } from "@/lib/matcher"; // Ensure this matches path
 import logger from "@/logger";
+
+type RawFeedRow = Tables<"raw_feed">;
 
 const POLL_INTERVAL = 5000; // 5 seconds
 const BATCH_SIZE = 10;
@@ -58,12 +61,14 @@ async function processBatch() {
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: specs sin tipo
-async function processItem(item: any) {
+async function processItem(item: RawFeedRow) {
   // Construct search query from payload
-  const payload = item.payload || {};
+  const payload = (item.payload ?? {}) as Record<string, unknown>;
   // Use title, or specific fields if available
-  const query = payload.title || `${payload.manufacturer || ""} ${payload.model || ""}`;
+  const title = (payload.title as string | undefined) ?? "";
+  const manufacturer = (payload.manufacturer as string | undefined) ?? "";
+  const model = (payload.model as string | undefined) ?? "";
+  const query = title || `${manufacturer} ${model}`.trim();
 
   if (!query || query.trim().length === 0) {
     throw new Error("Empty query derived from payload");
@@ -136,9 +141,7 @@ async function processItem(item: any) {
 
 async function enqueueForReview(rawFeedId: string) {
   logger.info(`Enqueuing ${rawFeedId} for review...`);
-  // Cast rpc name to any because types might lag behind
-  // biome-ignore lint/suspicious/noExplicitAny: specs sin tipo
-  const { error } = await supabase.rpc("enqueue_review_item" as any, {
+  const { error } = await supabase.rpc("enqueue_review_item", {
     p_raw_feed_id: rawFeedId,
   });
   if (error) {

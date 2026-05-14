@@ -1,7 +1,6 @@
 import dedent from "dedent";
-import type { ZodType } from "zod";
 import * as z from "zod";
-import { openDB } from "../lib/opendb";
+import { type OpenDBItem, openDB } from "../lib/opendb";
 import { searchWeb } from "../lib/search";
 import { callLLM } from "../llm-client";
 import logger0 from "../logger";
@@ -24,11 +23,11 @@ REGLAS CRÍTICAS:
 export abstract class BaseExtractor<T> {
   protected logger = logger0;
 
-  protected abstract getZodSchema(): z.ZodType<T>;
+  protected abstract getZodSchema(): z.ZodTypeAny;
 
   protected getJsonSchema() {
     const schema = this.getZodSchema();
-    const jsonSchema = z.toJSONSchema(schema as unknown as ZodType<T>, { target: "draft-2020-12" });
+    const jsonSchema = z.toJSONSchema(schema, { target: "draft-2020-12" });
     return JSON.stringify(jsonSchema, null, 2);
   }
 
@@ -150,10 +149,9 @@ export abstract class BaseExtractor<T> {
 
     // Manejo de envoltorios que algunos modelos añaden
     if (parsed && typeof parsed === "object") {
-      const obj = parsed as Record<string, unknown>;
-      const maybe = obj as { SpecsSchema?: unknown; target?: unknown };
-      if (maybe.SpecsSchema) parsed = maybe.SpecsSchema as unknown;
-      else if (maybe.target) parsed = maybe.target as unknown;
+      const maybe = parsed as { SpecsSchema?: unknown; target?: unknown };
+      if (maybe.SpecsSchema) parsed = maybe.SpecsSchema;
+      else if (maybe.target) parsed = maybe.target;
     }
 
     return parsed as T;
@@ -175,14 +173,11 @@ export abstract class BaseExtractor<T> {
     if (category) {
       // Prioritize normalized_title (from extraction_jobs) if context has it
       // The worker passes 'job' properties including new fields
-      // biome-ignore lint/suspicious/noExplicitAny: resultado LLM sin tipo
-      const jobContext = context as Record<string, any>;
-      const normalizedTitle = jobContext?.normalized_title as string | undefined;
+      const normalizedTitle = context?.normalized_title as string | undefined;
 
       // Strategy:
       // A. Try searching by explicitly provided MPN
-      // biome-ignore lint/suspicious/noExplicitAny: resultado LLM sin tipo
-      let openDBResult: any = null;
+      let openDBResult: OpenDBItem | null = null;
       let _usedMethod = "";
 
       if (mpn) {
@@ -238,7 +233,7 @@ export abstract class BaseExtractor<T> {
     for (let i = 0; i <= retries; i++) {
       try {
         const specs = await this.extractWithLLM(currentText, context, lastError);
-        const validated = this.getZodSchema().parse(specs);
+        const validated = this.getZodSchema().parse(specs) as T;
 
         // Log de éxito con datos extraídos
         this.logger.info(`Extraction successful on attempt ${i + 1}`, {

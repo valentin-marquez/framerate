@@ -9,10 +9,8 @@ export class ScraperStrategy<T extends string> implements JobStrategy {
   private logger = new Logger("ScraperStrategy");
 
   constructor(
-    private crawler: BaseCrawler & {
+    private crawler: BaseCrawler<T> & {
       getAllProductUrlsForCategory: (cat: T) => Promise<string[]>;
-      CATEGORIES?: Record<T, unknown>;
-      slug?: string;
     },
     private pipeline: ProductPipeline,
     private batchSize = 4,
@@ -21,11 +19,10 @@ export class ScraperStrategy<T extends string> implements JobStrategy {
   async execute(job: CollectorJobData): Promise<JobResult> {
     const startTime = Date.now();
 
-    const meta = this.crawler as unknown as { CATEGORIES?: Record<T, unknown>; slug?: string };
     const categoriesToProcess: T[] =
       job.category === "all" || !job.category
-        ? (Object.keys(meta.CATEGORIES ?? {}) as T[])
-        : ([job.category as unknown as T] as T[]);
+        ? (Object.keys(this.crawler.CATEGORIES ?? {}) as T[])
+        : [job.category as T];
 
     const results: Record<string, number> = {};
     let totalProcessed = 0;
@@ -40,9 +37,10 @@ export class ScraperStrategy<T extends string> implements JobStrategy {
         continue;
       }
 
-      const storeId = await this.pipeline.getCatalogService().getStoreId(meta.slug ?? "");
+      const crawlerSlug = this.crawler.slug ?? "";
+      const storeId = await this.pipeline.getCatalogService().getStoreId(crawlerSlug);
       if (!storeId) {
-        this.logger.error(`Store '${meta.slug ?? ""}' not found`);
+        this.logger.error(`Store '${crawlerSlug}' not found`);
         results[category] = 0;
         continue;
       }
@@ -66,7 +64,7 @@ export class ScraperStrategy<T extends string> implements JobStrategy {
             if (!product) return false;
 
             const ctx: PipelineContext = {
-              category: category as unknown as CategorySlug,
+              category: category as CategorySlug,
               storeId,
               crawlerType: job.crawler,
             };

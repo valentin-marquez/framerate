@@ -1,11 +1,10 @@
 import type { MotherboardSpecs } from "@framerate/db";
 import { MotherboardSchema } from "@framerate/db";
-import type { ZodType } from "zod";
 import { BaseExtractor } from "@/strategies/base";
 
 export class MotherboardStrategy extends BaseExtractor<MotherboardSpecs> {
   protected getZodSchema() {
-    return MotherboardSchema as unknown as ZodType<MotherboardSpecs>;
+    return MotherboardSchema;
   }
 
   async process(job: {

@@ -102,8 +102,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
       .join(" ");
   };
 
-  // biome-ignore lint/suspicious/noExplicitAny: Dynamic specs rendering
-  const renderSpecValue = (value: any): React.ReactNode => {
+  const renderSpecValue = (value: unknown): React.ReactNode => {
     if (value === null || value === undefined) return null;
     if (typeof value === "boolean") return value ? t("yes") : t("no");
     if (Array.isArray(value)) {

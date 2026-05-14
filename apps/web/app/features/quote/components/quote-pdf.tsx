@@ -1,4 +1,5 @@
 import { Document, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import type { QuoteDetail, QuoteItem } from "~/features/quote/services/quotes";
 
 // Register a font that supports special characters if needed,
 // but standard fonts usually work for basic Spanish.
@@ -137,23 +138,23 @@ const clpPdfFormatter = new Intl.NumberFormat("es-CL", {
 const formatCurrency = (amount: number) => clpPdfFormatter.format(amount);
 
 interface QuotePDFProps {
-  quote: any;
-  items?: any[];
+  quote: QuoteDetail;
+  items?: QuoteItem[];
 }
 
 export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
   const itemsToRender = items || quote.items;
 
-  const totalNormal = itemsToRender.reduce((acc: number, item: any) => {
+  const totalNormal = itemsToRender.reduce((acc, item) => {
     if (!item.product) return acc;
     const price = item.selected_listing ? item.selected_listing.price_normal : item.product.prices?.normal || 0;
-    return acc + price * item.quantity;
+    return acc + (price ?? 0) * item.quantity;
   }, 0);
 
-  const totalCash = itemsToRender.reduce((acc: number, item: any) => {
+  const totalCash = itemsToRender.reduce((acc, item) => {
     if (!item.product) return acc;
     const price = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
-    return acc + price * item.quantity;
+    return acc + (price ?? 0) * item.quantity;
   }, 0);
 
   return (
@@ -183,10 +184,10 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
             </View>
           </View>
 
-          {itemsToRender.map((item: any, index: number) => {
+          {itemsToRender.map((item, index) => {
             if (!item.product) {
               return (
-                <View style={styles.tableRow} key={item.virtualId || item.id || index}>
+                <View style={styles.tableRow} key={item.id || index}>
                   <View style={styles.tableCol}>
                     <View style={{ margin: 5 }}>
                       <Text style={{ ...styles.productName, color: "#9CA3AF" }}>
@@ -211,7 +212,7 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
             const priceCash = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
 
             return (
-              <View style={styles.tableRow} key={item.virtualId || item.id || index}>
+              <View style={styles.tableRow} key={item.id || index}>
                 <View style={styles.tableCol}>
                   <View style={{ margin: 5 }}>
                     <Text style={styles.productName}>{item.product.name}</Text>
@@ -234,7 +235,7 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
                   <Text style={styles.tableCell}>{item.quantity}</Text>
                 </View>
                 <View style={styles.tableColSmall}>
-                  <Text style={styles.tableCell}>{formatCurrency(priceCash)}</Text>
+                  <Text style={styles.tableCell}>{formatCurrency(priceCash ?? 0)}</Text>
                 </View>
               </View>
             );

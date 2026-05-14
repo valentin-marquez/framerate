@@ -58,8 +58,8 @@ export class SpDigitalTracker extends BaseTracker {
       // Extract Price
       let priceCash = 0;
       let priceNormal = 0;
-      const metadata = content.metadata || [];
-      const pricingMeta = metadata.find((m: any) => m.key === "pricing");
+      const metadata = (content.metadata ?? []) as Array<{ key?: string; value?: string }>;
+      const pricingMeta = metadata.find((m) => m.key === "pricing");
 
       if (pricingMeta?.value) {
         try {

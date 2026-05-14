@@ -199,7 +199,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     let hasChanges = false;
 
     QUOTE_SLOTS.filter((s) => s.type === "exclusive").forEach((slot) => {
-      const slotItems = flattenedItems.filter((item) => slot.accepts.includes(item.product?.category?.slug as any));
+      const slotItems = flattenedItems.filter((item) => slot.accepts.includes(item.product?.category?.slug ?? ""));
       if (slotItems.length > 0) {
         const currentSelection = newSelection[slot.id];
         // Check if current selection is valid (exists in current items)
@@ -220,7 +220,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
 
   const activeItems = useMemo(() => {
     return flattenedItems.filter((item) => {
-      const slot = QUOTE_SLOTS.find((s) => s.accepts.includes(item.product?.category?.slug as any));
+      const slot = QUOTE_SLOTS.find((s) => s.accepts.includes(item.product?.category?.slug ?? ""));
       if (!slot) return true; // "Other" items are always active
       if (slot.type === "additive") return true;
 
@@ -229,7 +229,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
       // If no selection yet (initial render), show first
       if (!selectedId) {
         // Fallback logic matches useEffect but for render safety
-        const slotItems = flattenedItems.filter((i) => slot.accepts.includes(i.product?.category?.slug as any));
+        const slotItems = flattenedItems.filter((i) => slot.accepts.includes(i.product?.category?.slug ?? ""));
         if (
           slotItems.length > 0 &&
           (item.originalItem?.id || item.id) === (slotItems[0].originalItem?.id || slotItems[0].id)

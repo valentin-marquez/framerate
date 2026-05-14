@@ -1,3 +1,4 @@
+import type { Json } from "@framerate/db";
 import { Logger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 
@@ -12,12 +13,18 @@ export interface ExtractionOptions {
   url?: string;
 }
 
+export type ExtractionContext =
+  | string
+  | (Record<string, unknown> & {
+      onCacheHit?: () => void;
+      onLlmCall?: () => void;
+    });
+
 export async function scheduleExtraction(
   category: string,
   mpn: string,
   text: string,
-  // biome-ignore lint/suspicious/noExplicitAny: contexto de extracción libre por categoría
-  context?: any,
+  context?: ExtractionContext,
   options?: ExtractionOptions,
 ): Promise<void> {
   const logger = new Logger("IAExtractor");
@@ -38,7 +45,7 @@ export async function scheduleExtraction(
       mpn,
       category,
       raw_text: text,
-      context: rawContext,
+      context: rawContext as Json,
       normalized_title: options?.normalizedTitle,
       brand: options?.brand,
       url: options?.url,
@@ -58,8 +65,7 @@ export async function extractForCategory<T = unknown>(
   category: string,
   mpn: string,
   text: string,
-  // biome-ignore lint/suspicious/noExplicitAny: contexto de extracción libre por categoría
-  context?: any,
+  context?: ExtractionContext,
   options?: ExtractionOptions,
 ): Promise<T | null> {
   const logger = new Logger("IAExtractor");
@@ -93,14 +99,14 @@ export async function extractForCategory<T = unknown>(
     if (!cacheError && cached && cached.result) {
       logger.info(`Cache HIT para MPN: ${mpn}`);
       try {
-        if (context && typeof context.onCacheHit === "function") context.onCacheHit();
+        if (context && typeof context === "object" && typeof context.onCacheHit === "function") context.onCacheHit();
       } catch (_) {}
-      // biome-ignore lint/suspicious/noExplicitAny: result is jsonb
-      return (cached.result as any).specs as T;
+      const result = (cached.result ?? {}) as { specs?: unknown };
+      return (result.specs ?? null) as T | null;
     }
 
     try {
-      if (context && typeof context.onLlmCall === "function") context.onLlmCall();
+      if (context && typeof context === "object" && typeof context.onLlmCall === "function") context.onLlmCall();
     } catch (_) {}
 
     await scheduleExtraction(category, mpn, text, context, options);

@@ -1,3 +1,16 @@
+import type {
+  CaseFanSpecs,
+  CaseSpecs,
+  CpuCoolerSpecs,
+  CpuSpecs,
+  GpuSpecs,
+  HddSpecs,
+  MotherboardSpecs,
+  ProductSpecs,
+  PsuSpecs,
+  RamSpecs,
+  SsdSpecs,
+} from "@framerate/db";
 import { IconEye } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
@@ -19,46 +32,65 @@ interface CardProductDropProps {
   className?: string;
 }
 
-function getSpecsSummary(categorySlug: string, specs: any): string[] {
+function getSpecsSummary(categorySlug: string, specs: ProductSpecs | null): string[] {
   if (!categorySlug || !specs) return [];
 
-  const s = specs as any;
   let summary: (string | undefined | null | number)[] = [];
 
   switch (categorySlug) {
-    case "tarjetas-de-video":
-      summary = [s.chipset || s.gpu_model, s.memory_gb ? `${s.memory_gb}GB` : s.memory];
+    case "tarjetas-de-video": {
+      const s = specs as GpuSpecs;
+      summary = [s.chipset, s.memory_gb ? `${s.memory_gb}GB` : null];
       break;
-    case "procesadores":
+    }
+    case "procesadores": {
+      const s = specs as CpuSpecs;
       summary = [
-        s.cores?.total ? `${s.cores.total} Cores` : s.cores_threads,
-        s.clocks?.boost_ghz ? `${s.clocks.boost_ghz}GHz` : s.frequency,
+        s.cores?.total ? `${s.cores.total} Cores` : null,
+        s.clocks?.boost_ghz ? `${s.clocks.boost_ghz}GHz` : null,
       ];
       break;
-    case "memorias-ram":
-      summary = [s.total_capacity_gb ? `${s.total_capacity_gb}GB` : s.capacity, s.type];
+    }
+    case "memorias-ram": {
+      const s = specs as RamSpecs;
+      summary = [s.total_capacity_gb ? `${s.total_capacity_gb}GB` : null, s.type];
       break;
-    case "ssd":
-      summary = [s.capacity_gb ? `${s.capacity_gb}GB` : s.capacity, s.form_factor || s.format];
+    }
+    case "ssd": {
+      const s = specs as SsdSpecs;
+      summary = [s.capacity_gb ? `${s.capacity_gb}GB` : null, s.form_factor];
       break;
-    case "discos-duros":
-      summary = [s.capacity_gb ? `${s.capacity_gb}GB` : s.capacity, s.rpm ? `${s.rpm} RPM` : null];
+    }
+    case "discos-duros": {
+      const s = specs as HddSpecs;
+      summary = [s.capacity_gb ? `${s.capacity_gb}GB` : null, s.rpm ? `${s.rpm} RPM` : null];
       break;
-    case "placas-madre":
+    }
+    case "placas-madre": {
+      const s = specs as MotherboardSpecs;
       summary = [s.socket, s.chipset, s.form_factor];
       break;
-    case "fuentes-de-poder":
-      summary = [s.wattage ? `${s.wattage}W` : null, s.efficiency_rating || s.certification];
+    }
+    case "fuentes-de-poder": {
+      const s = specs as PsuSpecs;
+      summary = [s.wattage ? `${s.wattage}W` : null, s.efficiency_rating];
       break;
-    case "gabinetes":
+    }
+    case "gabinetes": {
+      const s = specs as CaseSpecs;
       summary = [s.form_factor, s.side_panel];
       break;
-    case "coolers-cpu":
+    }
+    case "coolers-cpu": {
+      const s = specs as CpuCoolerSpecs;
       summary = [s.type, s.radiator_size_mm ? `${s.radiator_size_mm}mm` : s.fan_size_mm ? `${s.fan_size_mm}mm` : null];
       break;
-    case "ventiladores":
-      summary = [s.size_mm ? `${s.size_mm}mm` : s.size, s.rgb ? "RGB" : null];
+    }
+    case "ventiladores": {
+      const s = specs as CaseFanSpecs;
+      summary = [s.size_mm ? `${s.size_mm}mm` : null, s.rgb ? "RGB" : null];
       break;
+    }
   }
 
   return summary.filter((item): item is string => !!item && item !== "Desconocido").map(String);

@@ -32,15 +32,19 @@ class MatcherService {
     // Map DB rows to CanonicalProduct interface
     // We assume DB schema matches (it does mostly, specs is jsonb)
     const products: CanonicalProduct[] = data.map((row) => {
-      // biome-ignore lint/suspicious/noExplicitAny: specs sin tipo estricto
-      const specs = row.specifications as any;
+      const specs = (row.specifications ?? {}) as Record<string, string | number | boolean | string[]>;
+      const type = typeof specs.type === "string" ? (specs.type as CanonicalProduct["type"]) : "GPU";
+      const manufacturer = typeof specs.manufacturer === "string" ? specs.manufacturer : "Unknown";
+      const model = typeof specs.model === "string" ? specs.model : "Unknown";
+      const series = typeof specs.series === "string" ? specs.series : undefined;
+      const mpn = typeof specs.mpn === "string" ? specs.mpn : undefined;
       return {
         id: row.id,
-        type: specs.type || "GPU",
-        manufacturer: specs.manufacturer || "Unknown",
-        model: specs.model || "Unknown",
-        series: specs.series,
-        mpn: specs.mpn,
+        type,
+        manufacturer,
+        model,
+        series,
+        mpn,
         specifications: specs,
       };
     });

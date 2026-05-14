@@ -6,7 +6,7 @@ import type { CatalogService, CategorySlug } from "@/collector/services/catalog.
 import { Logger } from "@/lib/logger";
 import { uploadProductImage } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
-import { extractForCategory } from "@/processors/ai/base";
+import { type ExtractionContext, extractForCategory } from "@/processors/ai/base";
 import { normalizeTitle } from "@/processors/normalizers";
 import type { CrawlerType } from "@/queues";
 
@@ -151,7 +151,7 @@ export class ProductPipeline {
     rawSpecs: Record<string, string>,
     title: string,
     mpn?: string | null,
-    context?: unknown,
+    context?: ExtractionContext,
     options?: { normalizedTitle?: string; brand?: string; url?: string },
   ) {
     if (mpn) {

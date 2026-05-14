@@ -22,8 +22,7 @@ products.get(
       return c.json({ data: [] });
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: Supabase RPC sin tipos generados
-    const { data, error } = await supabase.rpc("quick_search_products" as any, {
+    const { data, error } = await supabase.rpc("quick_search_products", {
       search_term: query.trim(),
       p_limit: limit,
     });
@@ -54,8 +53,7 @@ products.get(
       return c.json({ error: 'Query parameter "q" is required' }, 400);
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: Supabase RPC sin tipos generados
-    const { data, error } = await supabase.rpc("search_products" as any, {
+    const { data, error } = await supabase.rpc("search_products", {
       search_term: query,
       p_limit: limit,
       p_offset: offset,

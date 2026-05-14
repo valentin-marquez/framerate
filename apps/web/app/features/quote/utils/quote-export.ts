@@ -1,9 +1,9 @@
-// biome-ignore lint/suspicious/noExplicitAny: Legacy quote types need gradual typing
-export const exportToExcel = async (quote: any, items?: any[]) => {
+import type { QuoteDetail, QuoteItem } from "~/features/quote/services/quotes";
+
+export const exportToExcel = async (quote: QuoteDetail, items?: QuoteItem[]) => {
   const XLSX = await import("xlsx");
   const itemsToExport = items || quote.items;
-  // biome-ignore lint/suspicious/noExplicitAny: Legacy quote item types
-  const data = itemsToExport.map((item: any) => {
+  const data = itemsToExport.map((item) => {
     const priceNormal = item.selected_listing ? item.selected_listing.price_normal : item.product.prices?.normal || 0;
     const priceCash = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
 
@@ -15,8 +15,8 @@ export const exportToExcel = async (quote: any, items?: any[]) => {
       Cantidad: item.quantity,
       "Precio Normal Unitario": priceNormal,
       "Precio Efectivo Unitario": priceCash,
-      "Total Normal": priceNormal * item.quantity,
-      "Total Efectivo": priceCash * item.quantity,
+      "Total Normal": (priceNormal ?? 0) * item.quantity,
+      "Total Efectivo": (priceCash ?? 0) * item.quantity,
     };
   });
 
@@ -41,29 +41,26 @@ export const exportToExcel = async (quote: any, items?: any[]) => {
   XLSX.writeFile(workbook, `${quote.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.xlsx`);
 };
 
-// biome-ignore lint/suspicious/noExplicitAny: Legacy quote types need gradual typing
-export const copyToClipboard = async (quote: any, items?: any[]) => {
+export const copyToClipboard = async (quote: QuoteDetail, items?: QuoteItem[]) => {
   const itemsToExport = items || quote.items;
   const lines = [`Cotización: ${quote.name}`];
   lines.push(`Fecha: ${new Date().toLocaleDateString("es-CL")}`);
   lines.push("");
 
-  // biome-ignore lint/suspicious/noExplicitAny: Legacy quote item types
-  itemsToExport.forEach((item: any) => {
+  itemsToExport.forEach((item) => {
     const priceCash = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
     const store = item.selected_listing?.store?.name || "Mejor precio";
 
     lines.push(`- ${item.quantity}x ${item.product.name}`);
-    lines.push(`  ${store} - $${priceCash.toLocaleString("es-CL")}`);
+    lines.push(`  ${store} - $${(priceCash ?? 0).toLocaleString("es-CL")}`);
     if (item.selected_listing?.url) {
       lines.push(`  Link: ${item.selected_listing.url}`);
     }
   });
 
-  // biome-ignore lint/suspicious/noExplicitAny: Legacy quote item types
-  const totalCash = itemsToExport.reduce((acc: number, item: any) => {
+  const totalCash = itemsToExport.reduce((acc, item) => {
     const price = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
-    return acc + price * item.quantity;
+    return acc + (price ?? 0) * item.quantity;
   }, 0);
 
   lines.push("");
