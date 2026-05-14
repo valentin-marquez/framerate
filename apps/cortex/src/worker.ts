@@ -200,7 +200,12 @@ export async function processJob(jobRaw: unknown) {
               // Update Listing Price/Stock/Activity
               // If we have a URL, we can identify the specific listing efficiently
               if (job.url) {
-                const updateData: { last_updated: string; price_cash?: number; stock_quantity?: number | null; is_active?: boolean } = { last_updated: new Date().toISOString() };
+                const updateData: {
+                  last_updated: string;
+                  price_cash?: number;
+                  stock_quantity?: number | null;
+                  is_active?: boolean;
+                } = { last_updated: new Date().toISOString() };
                 if (price !== undefined && price !== null) updateData.price_cash = price;
                 if (stock !== undefined) updateData.stock_quantity = stock;
                 // If we have valid price/stock, ensure it is active

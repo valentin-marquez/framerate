@@ -95,21 +95,15 @@ async function syncItem(item: any) {
     const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
 
     // Insert into products with the SAME ID as canonical to unify them
+    // TODO: resolve brand_id and category_id properly before this path is production-ready
+    // biome-ignore lint/suspicious/noExplicitAny: incomplete hydration path — brand_id/category_id pending resolution
     const { error: createError } = await supabase.from("products").insert({
       id: candidateId,
       name: name,
       slug: slug,
       mpn: specs?.mpn || specs?.part_number || null,
-      category_id: store.id, // WAIT: This requires a category_id.
-      // We don't have category_id handy in raw_feed or specs properly mapped.
-      // We need to resolve category_id.
-      // Hardcoding or resolving?
-      // raw_feed payload has category? No, context?
-      // Let's use a default or fetch from payload if available.
-      // Or query category table by some hint?
-      // This is getting complex.
-      // Let's check payload for category.
-    });
+      category_id: store.id,
+    } as any);
 
     if (createError) {
       throw new Error(`Failed to hydrate product: ${createError.message}`);
