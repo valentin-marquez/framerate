@@ -454,6 +454,33 @@ export class SpDigitalCrawler extends BaseCrawler<string> {
         }
       }
 
+      // Extract detailed specs from metadata "specs" field (Icecat data)
+      // Format: { fields: ["product_id","feature_category_id","feature_category_name","feature_id","feature_name","value"], values: [[...], ...] }
+      const specsMeta = metadata.find((m) => m.key === "specs");
+      if (specsMeta?.value) {
+        try {
+          const specsData = JSON.parse(specsMeta.value) as {
+            fields?: string[];
+            values?: unknown[][];
+          };
+          if (specsData.fields && specsData.values) {
+            const nameIdx = specsData.fields.indexOf("feature_name");
+            const valueIdx = specsData.fields.indexOf("value");
+            if (nameIdx !== -1 && valueIdx !== -1) {
+              for (const row of specsData.values) {
+                const key = row[nameIdx];
+                const val = row[valueIdx];
+                if (typeof key === "string" && typeof val === "string" && key && val) {
+                  specs[key] = val;
+                }
+              }
+            }
+          }
+        } catch (_e) {
+          this.logger.warn(`Error parsing specs metadata for ${url}`);
+        }
+      }
+
       // Context
       const descriptionBlocks = content.description
         ? ((JSON.parse(content.description) as { blocks?: Array<{ data?: { text?: string } }> })?.blocks ?? [])
