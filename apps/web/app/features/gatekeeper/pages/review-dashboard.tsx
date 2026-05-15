@@ -1,6 +1,7 @@
 import type { Database } from "@framerate/db";
 import { createServerClient, parseCookieHeader, serializeCookieHeader } from "@supabase/ssr";
 import { useFetcher } from "react-router";
+import { requireRole } from "@/features/auth/services/auth.server";
 import type { Route } from "./+types/review-dashboard";
 
 // Helper to get supabase client (assuming shared utility or simple construction)
@@ -65,6 +66,9 @@ interface ReviewDashboardData {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  // Sólo moderadores y admins pueden ver el dashboard de gatekeeper.
+  await requireRole(request, "moderator");
+
   const { supabase, headers } = getSupabase(request);
 
   // Call the robust RPC function we created
@@ -113,6 +117,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  // Reforzamos el chequeo en el action: un POST directo también debe pasar.
+  await requireRole(request, "moderator");
+
   const { supabase, headers } = getSupabase(request);
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
