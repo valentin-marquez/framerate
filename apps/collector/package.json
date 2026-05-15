@@ -8,7 +8,8 @@
     "start": "bun src/index.ts",
     "test": "bun test",
     "lint": "biome lint .",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "cleanup:blocked-mpns": "bun run scripts/deactivate-blocked-mpns.ts"
   },
   "dependencies": {
     "@framerate/db": "workspace:*",
