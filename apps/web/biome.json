@@ -14,6 +14,6 @@
     }
   },
   "files": {
-    "includes": ["**/*", "!app/styles"]
+    "includes": ["**/*", "!app/styles", "!worker-configuration.d.ts", "!.react-router"]
   }
 }
