@@ -59,6 +59,9 @@ tmp
 # Local DB snapshots (large prod data dumps)
 packages/db/local/prod-data.sql
 
+# OpenDB local clone for janitor dev (synced via git-sync container in prod)
+apps/janitor/opendb/
+
 # Debug artifacts
 *.stackdump
 **/error_log.txt
