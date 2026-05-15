@@ -17,7 +17,8 @@
     "db:link": "bun src/scripts/db-link.ts",
     "group-variants": "bun run src/scripts/group-variants.ts",
     "convert-images": "bun src/scripts/convert-images-to-avif.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:rls": "bun test src/__tests__/rls.test.ts"
   },
   "dependencies": {
     "@framerate/utils": "workspace:*",
