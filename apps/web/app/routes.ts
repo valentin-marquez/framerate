@@ -28,6 +28,11 @@ export default [
     route("preferences", "features/settings/pages/preferences.tsx"),
   ]),
 
+  // Fase 1: stores + claim flow
+  route("stores/:slug", "features/stores/pages/store-page.tsx"),
+  route("stores/:slug/admin", "features/stores/pages/store-admin.tsx"),
+  route("claim", "features/stores/pages/claim-page.tsx"),
+
   // Admin
   route("admin/gatekeeper", "features/gatekeeper/pages/review-dashboard.tsx"),
 
