@@ -39,6 +39,9 @@ export default [
 
   // Admin
   route("admin/gatekeeper", "features/gatekeeper/pages/review-dashboard.tsx"),
+  // Fase 4: moderation
+  route("admin/moderation", "features/moderation/pages/moderation-dashboard.tsx"),
+  route("admin/users", "features/moderation/pages/users-admin.tsx"),
 
   route("theme-switcher", "shared/components/theme/theme-switcher.ts"),
   route("lang-switcher", "shared/components/lang/lang-switcher.ts"),
