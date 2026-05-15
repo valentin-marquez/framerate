@@ -15,6 +15,81 @@ export interface PipelineContext {
   crawlerType: CrawlerType;
 }
 
+export interface ReconcileGpuTitleResult {
+  title: string;
+  corrected: boolean;
+  titleGb?: number;
+  specsGb?: number;
+}
+
+/**
+ * Defense-in-depth reconciliation between the SEO title produced by the
+ * per-category normalizer (heuristic regex) and the authoritative specs
+ * returned by the LLM extraction pipeline.
+ *
+ * Policy: when the title claims a GB value for VRAM that disagrees with
+ * `specs.memory_gb`, we trust the LLM specs and rewrite the title.
+ *
+ * Notes:
+ * - We only rewrite an EXISTING wrong "<n>GB" token. We do NOT inject a GB
+ *   token into a title that lacks one — bracketed MPN suffixes such as
+ *   `[DUAL-RTX5070-O12G]` legitimately omit the standalone GB phrase, and
+ *   inserting one risks corrupting otherwise-clean titles.
+ * - When several "<n>GB" tokens are present we pick the one closest to the
+ *   end of the title (excluding any bracketed suffix), because AIB titles
+ *   conventionally place the VRAM right before the SKU suffix
+ *   (e.g., "... 12GB OC [DUAL-RTX5070-O12G]"). Bracketed suffixes are
+ *   preserved verbatim.
+ *
+ * TODO: extend reconciliation to other categories. Likely candidates:
+ *   - ssd.capacity_gb ↔ title GB/TB
+ *   - ram.modules[*].capacity_gb ↔ title GB
+ *   - psu.wattage ↔ title W
+ */
+export function reconcileGpuTitle(seoTitle: string, specs: unknown): ReconcileGpuTitleResult {
+  if (!specs || typeof specs !== "object") {
+    return { title: seoTitle, corrected: false };
+  }
+
+  const specsGbRaw = (specs as Record<string, unknown>).memory_gb;
+  const specsGb = typeof specsGbRaw === "number" && Number.isFinite(specsGbRaw) ? specsGbRaw : undefined;
+  if (specsGb === undefined || specsGb <= 0) {
+    return { title: seoTitle, corrected: false };
+  }
+
+  // Split off a trailing bracketed suffix (typically `[MPN]`) so we never
+  // touch its contents — MPN strings frequently embed digits like `O12G`
+  // that look like memory tokens but are SKU codes.
+  const suffixMatch = seoTitle.match(/\s*\[[^\]]+\]\s*$/);
+  const suffix = suffixMatch ? suffixMatch[0] : "";
+  const body = suffix ? seoTitle.slice(0, seoTitle.length - suffix.length) : seoTitle;
+
+  const gbRegex = /\b(\d+)\s*GB\b/gi;
+  const matches = [...body.matchAll(gbRegex)];
+  if (matches.length === 0) {
+    return { title: seoTitle, corrected: false };
+  }
+
+  // Prefer the GB token closest to the end of the body — that's where AIB
+  // titles place the VRAM (e.g., "... 12GB OC").
+  const last = matches[matches.length - 1];
+  if (!last || last.index === undefined) {
+    return { title: seoTitle, corrected: false };
+  }
+
+  const titleGb = Number.parseInt(last[1] ?? "", 10);
+  if (!Number.isFinite(titleGb) || titleGb === specsGb) {
+    return { title: seoTitle, corrected: false, titleGb, specsGb };
+  }
+
+  const start = last.index;
+  const end = start + last[0].length;
+  const newBody = `${body.slice(0, start)}${specsGb}GB${body.slice(end)}`;
+  const newTitle = `${newBody}${suffix}`;
+
+  return { title: newTitle, corrected: true, titleGb, specsGb };
+}
+
 export interface ProcessingResult {
   success: boolean;
   productId?: string | null;
@@ -298,6 +373,26 @@ export class ProductPipeline {
       }
     } else {
       if (normalizedSpecs != null) this.logger.warn(`Normalized specs for ${ctx.category} are not an object`);
+    }
+
+    // Defense-in-depth: reconcile the seoTitle against the LLM specs so a
+    // buggy normalizer regex can't bake the wrong VRAM into the public slug.
+    // TODO: extend reconciliation to other categories (ssd.capacity_gb,
+    // ram.modules.capacity_gb, psu.wattage, ...).
+    if (ctx.category === "gpu" && normalizedSpecs && typeof normalizedSpecs === "object") {
+      const reconciled = reconcileGpuTitle(seoTitle, normalizedSpecs);
+      if (reconciled.corrected) {
+        this.logger.warn("title_specs_mismatch", {
+          event: "title_specs_mismatch",
+          category: ctx.category,
+          mpn: raw.mpn ?? null,
+          seoTitle,
+          title_gb: reconciled.titleGb,
+          specs_gb: reconciled.specsGb,
+          source: ctx.crawlerType,
+        });
+        seoTitle = reconciled.title;
+      }
     }
 
     let imageUrl: string | null = raw.imageUrl ?? null;
