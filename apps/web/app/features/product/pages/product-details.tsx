@@ -11,6 +11,8 @@ import {
 import { Link, redirect } from "react-router";
 import { useAuthStore } from "~/features/auth/store/auth";
 import { getCategoryConfig } from "~/features/category/utils/categories";
+// Fase 3: comments
+import { CommentsSection } from "~/features/comments/components/comments-section";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
 import { PriceHistoryChart } from "~/features/product/components/price-history-chart";
 import { usePriceHistory } from "~/features/product/hooks/useProducts";
@@ -487,6 +489,9 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                   </div>
                 </section>
               )}
+
+              {/* Fase 3: comments threaded estilo Reddit */}
+              {product.id && <CommentsSection targetType="product" targetId={product.id} />}
             </div>
           </div>
         </div>
