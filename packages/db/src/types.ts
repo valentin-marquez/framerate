@@ -347,6 +347,81 @@ export type Database = {
         };
         Relationships: [];
       };
+      outbound_clicks: {
+        Row: {
+          created_at: string;
+          id: string;
+          listing_id: string | null;
+          product_id: string | null;
+          referrer_path: string | null;
+          source: string;
+          store_id: string | null;
+          target_url: string;
+          user_agent: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          listing_id?: string | null;
+          product_id?: string | null;
+          referrer_path?: string | null;
+          source: string;
+          store_id?: string | null;
+          target_url: string;
+          user_agent?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          listing_id?: string | null;
+          product_id?: string | null;
+          referrer_path?: string | null;
+          source?: string;
+          store_id?: string | null;
+          target_url?: string;
+          user_agent?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "outbound_clicks_listing_id_fkey";
+            columns: ["listing_id"];
+            isOneToOne: false;
+            referencedRelation: "listings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "outbound_clicks_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "api_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "outbound_clicks_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "outbound_clicks_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products_with_prices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "outbound_clicks_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       price_alerts: {
         Row: {
           created_at: string;

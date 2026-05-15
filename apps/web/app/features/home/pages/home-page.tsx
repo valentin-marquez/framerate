@@ -5,6 +5,7 @@ import { CategoriesGrid } from "~/features/home/components/categories-grid";
 import { HeroSection } from "~/features/home/components/hero-section";
 import { PopularProducts } from "~/features/home/components/popular-products";
 import { PriceDropsCarousel } from "~/features/home/components/price-drops-carousel";
+import { isRateLimitError } from "~/shared/lib/api";
 import type { Route } from "./+types/home-page";
 
 export function meta() {
@@ -61,7 +62,11 @@ export async function loader() {
     ]);
     return { popularProducts, categories, priceDrops };
   } catch (error) {
-    console.error("Failed to fetch data", error);
+    // Si el API rate-limita, degradamos a estado vacío para no tirar al error
+    // boundary; el cliente revalida en el siguiente foco/navegación.
+    if (!isRateLimitError(error)) {
+      console.error("Failed to fetch data", error);
+    }
     return {
       popularProducts: {
         data: [],

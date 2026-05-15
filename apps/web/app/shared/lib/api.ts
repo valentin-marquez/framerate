@@ -22,6 +22,24 @@ export class ApiError extends Error {
     this.status = status;
     this.data = data;
   }
+
+  /**
+   * El backend está saturado o limitando este cliente. Loaders deben tratarlo
+   * como una respuesta vacía suave (skeleton / empty state) en lugar de romper
+   * con el error boundary.
+   */
+  get isRateLimited(): boolean {
+    return this.status === 429;
+  }
+}
+
+/**
+ * Helper para detectar errores 429 (rate limit) en loaders sin necesidad de
+ * tipar `unknown` a mano. Devuelve true sólo si el error es una `ApiError`
+ * con status === 429.
+ */
+export function isRateLimitError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status === 429;
 }
 
 async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {

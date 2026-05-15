@@ -4,6 +4,7 @@ import auth from "@/routes/auth";
 import categories from "@/routes/categories";
 // Fase 1: claims + stores
 import claims from "@/routes/claims";
+import clicks from "@/routes/clicks";
 // Fase 3: comments
 import commentsRoutes from "@/routes/comments";
 import products from "@/routes/products";
@@ -25,6 +26,10 @@ export const routes = [
   {
     path: `/${API_VERSION}/categories`,
     route: categories,
+  },
+  {
+    path: `/${API_VERSION}/clicks`,
+    route: clicks,
   },
   // images route is mounted manually in index.ts to bypass global middleware
   {

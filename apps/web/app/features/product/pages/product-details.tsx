@@ -17,15 +17,79 @@ import { AddToQuote } from "~/features/product/components/add-to-quote";
 import { PriceHistoryChart } from "~/features/product/components/price-history-chart";
 import { usePriceHistory } from "~/features/product/hooks/useProducts";
 import { productsService } from "~/features/product/services/products";
+import { OutboundLink } from "~/shared/components/outbound-link";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Badge } from "~/shared/components/primitives/badge";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import { Card } from "~/shared/components/primitives/card";
+import { isRateLimitError } from "~/shared/lib/api";
 import { getTranslation } from "~/shared/lib/translations";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import { getImageUrl } from "~/shared/utils/images";
 import type { Route } from "./+types/product-details";
+
+type Translator = (key: string, params?: Record<string, string | number>) => string;
+
+// Si t() no encuentra traducción devuelve la clave raw (e.g. "usb_3_2_gen_1");
+// formateamos snake_case a "Title Case" para que al menos sea legible.
+function formatSpecKey(key: string, t: Translator): string {
+  const translated = t(key);
+  if (translated !== key) return translated;
+  // react-doctor-disable-next-line js-combine-iterations -- string-builder chain; rewriting to for-loop hurts readability
+  return key
+    .split(/[_\s]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+interface SpecValueProps {
+  value: unknown;
+  t: Translator;
+}
+
+function SpecValue({ value, t }: SpecValueProps): React.ReactNode {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "boolean") return value ? t("yes") : t("no");
+  if (Array.isArray(value)) {
+    // Array de primitivos: join simple. Array de objects: cada item se renderiza como un grupo.
+    const allPrimitive = value.every((v) => v === null || typeof v !== "object");
+    if (allPrimitive) return value.join(", ");
+    return (
+      <div className="flex flex-col gap-2 items-end w-full">
+        {value.map((item) => {
+          // Derivamos una key estable a partir del contenido del item (no índice).
+          const itemKey = typeof item === "object" ? JSON.stringify(item) : String(item);
+          return (
+            <div key={itemKey} className="flex flex-col gap-0.5 items-end w-full border-l-2 border-border/40 pl-2">
+              <SpecValue value={item} t={t} />
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  if (typeof value === "object") {
+    return (
+      <div className="flex flex-col gap-1 items-end w-full">
+        {Object.entries(value).map(([k, v]) => {
+          if (v === null || v === undefined) return null;
+          if (Array.isArray(v) && v.length === 0) return null;
+          return (
+            <div key={k} className="flex gap-2 text-xs w-full justify-between sm:justify-end">
+              <span className="text-muted-foreground mr-1">{formatSpecKey(k, t)}:</span>
+              <span className="font-mono text-foreground">
+                <SpecValue value={v} t={t} />
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  return String(value);
+}
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data) return [{ title: "Producto no encontrado - Framerate" }];
@@ -64,6 +128,13 @@ export async function loader({ params }: Route.LoaderArgs) {
     // Respeta redirects/respuestas explícitas (incluye `throw redirect(...)`).
     if (error instanceof Response) throw error;
 
+    // 429: el API rate-limitó. No queremos pintar un 404 (que sería confuso y
+    // se cachearía en SEO). Lanzamos un 503 transitorio para que el navegador
+    // reintente la próxima.
+    if (isRateLimitError(error)) {
+      throw new Response("Servicio saturado, intenta en unos segundos.", { status: 503 });
+    }
+
     // Antes de rendir un 404 final, chequear si el slug fue renombrado.
     try {
       const canonical = await productsService.resolveRedirect(params.slug);
@@ -72,6 +143,9 @@ export async function loader({ params }: Route.LoaderArgs) {
       }
     } catch (redirectErr) {
       if (redirectErr instanceof Response) throw redirectErr;
+      if (isRateLimitError(redirectErr)) {
+        throw new Response("Servicio saturado, intenta en unos segundos.", { status: 503 });
+      }
       // Fallthrough al 404.
     }
 
@@ -79,6 +153,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
 }
 
+// react-doctor-disable-next-line no-giant-component -- breaking into focused components is a separate task, tracked
 export default function ProductPage({ loaderData }: Route.ComponentProps) {
   const { profile } = useAuthStore();
   const lang = profile?.lang || "es";
@@ -105,55 +180,6 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
       if (typeof value === "object" && Object.keys(value).length === 0) return false;
       return true;
     });
-
-  // Si t() no encuentra traducción devuelve la clave raw (e.g. "usb_3_2_gen_1");
-  // formateamos snake_case a "Title Case" para que al menos sea legible.
-  const formatSpecKey = (key: string): string => {
-    const translated = t(key);
-    if (translated !== key) return translated;
-    return key
-      .split(/[_\s]+/)
-      .filter(Boolean)
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
-  };
-
-  const renderSpecValue = (value: unknown): React.ReactNode => {
-    if (value === null || value === undefined) return null;
-    if (typeof value === "boolean") return value ? t("yes") : t("no");
-    if (Array.isArray(value)) {
-      // Array de primitivos: join simple. Array de objects: cada item se renderiza como un grupo.
-      const allPrimitive = value.every((v) => v === null || typeof v !== "object");
-      if (allPrimitive) return value.join(", ");
-      return (
-        <div className="flex flex-col gap-2 items-end w-full">
-          {value.map((item, idx) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: items de spec sin clave estable
-            <div key={idx} className="flex flex-col gap-0.5 items-end w-full border-l-2 border-border/40 pl-2">
-              {renderSpecValue(item)}
-            </div>
-          ))}
-        </div>
-      );
-    }
-    if (typeof value === "object") {
-      return (
-        <div className="flex flex-col gap-1 items-end w-full">
-          {Object.entries(value).map(([k, v]) => {
-            if (v === null || v === undefined) return null;
-            if (Array.isArray(v) && v.length === 0) return null;
-            return (
-              <div key={k} className="flex gap-2 text-xs w-full justify-between sm:justify-end">
-                <span className="text-muted-foreground mr-1">{formatSpecKey(k)}:</span>
-                <span className="font-mono text-foreground">{renderSpecValue(v)}</span>
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-    return String(value);
-  };
 
   const structuredData = {
     "@context": "https://schema.org/",
@@ -229,7 +255,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
               </div>
 
               <div className="lg:hidden">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground leading-tight">{product.name}</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground leading-tight">{product.name}</h1>
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     <IconCircleCheck className="size-3.5" />
@@ -247,7 +273,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
 
             <div className="lg:col-span-7 flex flex-col gap-8">
               <div className="hidden lg:block">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
                   {product.name}
                 </h1>
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
@@ -294,15 +320,18 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                   </div>
 
                   <div className="hidden md:flex flex-col gap-2 w-full md:w-auto min-w-[200px]">
-                    <a
-                      href={bestOffer?.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(buttonVariants({ size: "lg" }), "w-full flex items-center justify-center gap-2")}
-                    >
-                      {t("go_to_store")}
-                      <IconExternalLink className="size-4" />
-                    </a>
+                    {bestOffer?.url && (
+                      <OutboundLink
+                        href={bestOffer.url}
+                        source="product_details_hero"
+                        listingId={bestOffer.id}
+                        productId={product.id}
+                        className={cn(buttonVariants({ size: "lg" }), "w-full flex items-center justify-center gap-2")}
+                      >
+                        {t("go_to_store")}
+                        <IconExternalLink className="size-4" />
+                      </OutboundLink>
+                    )}
                     <AddToQuote product={product} className="w-full" />
                   </div>
                 </div>
@@ -383,7 +412,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                         : 0;
                       return (
                         <div
-                          key={`${listing.store.slug}-${idx}`}
+                          key={`${listing.store.slug}-${listing.url}`}
                           className="group relative grid grid-cols-12 gap-4 px-5 md:px-6 py-4 md:py-5 items-center hover:bg-muted/20 transition-colors"
                         >
                           {/* Tienda */}
@@ -441,10 +470,11 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
 
                           {/* Acción */}
                           <div className="col-span-5 md:col-span-3 flex md:justify-end items-center min-w-0">
-                            <a
+                            <OutboundLink
                               href={listing.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              source="product_details_comparison"
+                              listingId={listing.id}
+                              productId={product.id}
                               className={cn(
                                 buttonVariants({
                                   size: "sm",
@@ -455,7 +485,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                             >
                               {t("see_offer")}
                               <IconExternalLink className="size-3" />
-                            </a>
+                            </OutboundLink>
                           </div>
                         </div>
                       );
@@ -478,9 +508,9 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                             key={key}
                             className="grid grid-cols-2 md:grid-cols-3 gap-4 px-4 md:px-6 py-3 hover:bg-muted/15 transition-colors"
                           >
-                            <dt className="text-sm text-muted-foreground flex items-center">{formatSpecKey(key)}</dt>
+                            <dt className="text-sm text-muted-foreground flex items-center">{formatSpecKey(key, t)}</dt>
                             <dd className="col-span-1 md:col-span-2 text-sm text-foreground text-right md:text-left break-words">
-                              {renderSpecValue(value)}
+                              <SpecValue value={value} t={t} />
                             </dd>
                           </div>
                         );
@@ -512,14 +542,17 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                 </span>
               </div>
 
-              <a
-                href={sortedListings[0]?.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(buttonVariants({ size: "lg" }), "rounded-xl px-5 font-medium shrink-0")}
-              >
-                {t("go_to_store")}
-              </a>
+              {sortedListings[0]?.url && (
+                <OutboundLink
+                  href={sortedListings[0].url}
+                  source="product_details_mobile"
+                  listingId={sortedListings[0].id}
+                  productId={product.id}
+                  className={cn(buttonVariants({ size: "lg" }), "rounded-xl px-5 font-medium shrink-0")}
+                >
+                  {t("go_to_store")}
+                </OutboundLink>
+              )}
             </div>
           </div>
         </div>
