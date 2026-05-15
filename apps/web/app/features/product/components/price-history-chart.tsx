@@ -33,6 +33,7 @@ interface NormalizedPoint {
 const PADDING = { top: 16, right: 16, bottom: 28, left: 56 };
 const HEIGHT = 240;
 
+// react-doctor-disable-next-line no-giant-component -- breaking into focused components is a separate task, tracked
 export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
   const { t, lang } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +58,7 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
   }, []);
 
   const enrichedSeries = useMemo(() => {
+    // react-doctor-disable-next-line js-combine-iterations -- micro-optimization not worth losing readability
     return data.series
       .filter((s) => s.points.length > 0)
       .map((s, i) => ({
@@ -113,6 +115,7 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
     const yScaleLocal = (price: number) =>
       yMax === yMin ? PADDING.top + innerH / 2 : PADDING.top + (1 - (price - yMin) / (yMax - yMin)) * innerH;
     const tHover = minT + ((hoverX - PADDING.left) / innerW) * (maxT - minT);
+    // react-doctor-disable-next-line js-combine-iterations -- map's type narrowing + final filter type predicate is clearer than a manual for-loop
     return enrichedSeries
       .map((s) => {
         if (s.points.length === 0) return null;
@@ -294,6 +297,7 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
                 />
                 {/* Si la serie tiene solo 1 punto, dibujar círculo */}
                 {s.points.length === 1 && (
+                  // react-doctor-disable-next-line rendering-hydration-mismatch-time -- parsing fixed recorded_at to ms; getTime() is locale/timezone-independent
                   <circle
                     cx={xScale(new Date(s.points[0].recorded_at).getTime())}
                     cy={yScale(s.points[0].price_cash)}

@@ -27,7 +27,7 @@ export function SectionHeader({ icon, title, description, action, badge }: Secti
         )}
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">{title}</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">{title}</h2>
             {badge && (
               <Badge variant={badge.variant || "secondary"} className="text-xs font-medium">
                 {badge.label}

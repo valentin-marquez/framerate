@@ -1,30 +1,34 @@
 import { IconAlertOctagon, IconAlertTriangle, IconCircleCheck, IconInfoCircle, IconLoader } from "@tabler/icons-react";
-import { motion, useReducedMotion } from "motion/react";
+import { domAnimation, LazyMotion, m, useReducedMotion } from "motion/react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 import { useTheme } from "~/shared/lib/client";
 
 const SuccessIcon = () => {
   const shouldReduceMotion = useReducedMotion();
   return (
-    <motion.div
-      initial={shouldReduceMotion ? false : { scale: 0.95, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{
-        type: "spring",
-        stiffness: 260,
-        damping: 20,
-      }}
-    >
-      <IconCircleCheck className="size-5" />
-    </motion.div>
+    <LazyMotion features={domAnimation}>
+      <m.div
+        initial={shouldReduceMotion ? false : { scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 260,
+          damping: 20,
+        }}
+      >
+        <IconCircleCheck className="size-5" />
+      </m.div>
+    </LazyMotion>
   );
 };
 
 const LoadingIcon = () => {
   return (
-    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-      <IconLoader className="size-4" />
-    </motion.div>
+    <LazyMotion features={domAnimation}>
+      <m.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+        <IconLoader className="size-4" />
+      </m.div>
+    </LazyMotion>
   );
 };
 

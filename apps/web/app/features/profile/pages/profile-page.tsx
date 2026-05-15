@@ -102,8 +102,15 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
   const quotes = (isOwner && quotesData?.data) || loaderData.quotes;
 
   const locale = lang === "en" ? "en-US" : "es-CL";
+  // timeZone explícito evita hydration mismatch: el server (Workers) y el cliente
+  // pueden estar en distintas zonas. Forzamos America/Santiago para que el output
+  // sea idéntico en ambos entornos.
   const joinDate = profileUser?.created_at
-    ? new Date(profileUser.created_at).toLocaleDateString(locale, { month: "long", year: "numeric" })
+    ? new Date(profileUser.created_at).toLocaleDateString(locale, {
+        month: "long",
+        year: "numeric",
+        timeZone: "America/Santiago",
+      })
     : "—";
 
   const displayName = profileUser.full_name || profileUser.username || t("profile_default_name");
@@ -177,7 +184,7 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
         <div className="rounded-3xl border border-border/60 bg-card pt-20 sm:pt-24 px-5 sm:px-8 pb-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">{displayName}</h1>
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight truncate">{displayName}</h1>
               {profileUser.username && <p className="text-sm text-muted-foreground">@{profileUser.username}</p>}
             </div>
 
@@ -187,7 +194,13 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
                 <span className="hidden sm:inline">{t("profile_share")}</span>
               </Button>
               {isOwner && (
-                <Button variant="secondary" size="sm" className="gap-1.5" render={<Link to="/settings/account" />}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-1.5"
+                  nativeButton={false}
+                  render={<Link to="/settings/account" />}
+                >
                   <IconPencil className="size-4" />
                   <span className="hidden sm:inline">{t("profile_edit")}</span>
                 </Button>
@@ -247,10 +260,12 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
           <div className="grid gap-3">
             {quotes.map((quote, index) => {
               const isNewOptimistic = index === 0 && quote.id.startsWith("temp-");
+              // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
               const dateLabel = new Date(quote.updated_at).toLocaleDateString(locale, {
                 day: "numeric",
                 month: "short",
                 year: "numeric",
+                timeZone: "America/Santiago",
               });
               const componentsCount = quote.quote_items?.[0]?.count || 0;
 
@@ -265,7 +280,7 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
                   </div>
                   <div className="flex-1 py-2 pr-4 flex items-center justify-between min-w-0">
                     <div className="space-y-1.5 min-w-0">
-                      <h3 className="font-bold text-base sm:text-lg group-hover:text-primary transition-colors tracking-tight truncate">
+                      <h3 className="font-semibold text-base sm:text-lg group-hover:text-primary transition-colors tracking-tight truncate">
                         {quote.name}
                       </h3>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
@@ -326,9 +341,11 @@ export function ErrorBoundary() {
       <div className="mx-auto size-16 rounded-full bg-destructive/10 flex items-center justify-center mb-6">
         <IconAlertCircle className="size-8 text-destructive" />
       </div>
-      <h1 className="text-2xl font-bold tracking-tight mb-2">{message}</h1>
+      <h1 className="text-2xl font-semibold tracking-tight mb-2">{message}</h1>
       <p className="text-muted-foreground mb-8">{details}</p>
-      <Button render={<Link to="/" />}>{t("profile_back_home")}</Button>
+      <Button nativeButton={false} render={<Link to="/" />}>
+        {t("profile_back_home")}
+      </Button>
     </div>
   );
 }

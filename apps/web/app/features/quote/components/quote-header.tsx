@@ -24,7 +24,7 @@ export function QuoteHeader({
   return (
     <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between animate-in fade-in slide-in-from-top-2 duration-500">
       <div className="space-y-3">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground transition-colors">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-foreground transition-colors">
           {quoteName}
         </h1>
 
@@ -42,10 +42,12 @@ export function QuoteHeader({
             </div>
             <span>
               {t("updated_on", {
+                // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
                 date: new Date(updatedAt).toLocaleDateString("es-CL", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
+                  timeZone: "America/Santiago",
                 }),
               })}
             </span>

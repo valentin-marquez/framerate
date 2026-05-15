@@ -56,8 +56,16 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
                 <div>
                   <div className="font-medium">{c.claimed_domain}</div>
                   <div className="text-muted-foreground text-xs">
-                    {c.status} · creado {new Date(c.created_at).toLocaleDateString()} · expira{" "}
-                    {new Date(c.expires_at).toLocaleDateString()}
+                    {c.status} · creado{" "}
+                    {
+                      // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+                      new Date(c.created_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
+                    }{" "}
+                    · expira{" "}
+                    {
+                      // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+                      new Date(c.expires_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
+                    }
                   </div>
                 </div>
                 <code className="rounded bg-secondary/50 px-2 py-1 text-xs">{c.status}</code>

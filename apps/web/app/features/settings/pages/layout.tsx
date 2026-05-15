@@ -38,7 +38,7 @@ export default function SettingsLayout() {
       <div className="flex flex-col md:flex-row gap-6 md:gap-8">
         <aside className="w-full md:w-64 shrink-0 space-y-6 md:space-y-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4 md:mb-6">{t("settings")}</h1>
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4 md:mb-6">{t("settings")}</h1>
             <nav className="flex flex-row md:flex-col gap-2 md:gap-0 md:space-y-1 overflow-x-auto pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
               {sidebarItems.map((item, index) => {
                 const isDefaultActive = isDefaultRoute && index === 0;

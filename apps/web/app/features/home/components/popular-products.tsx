@@ -51,6 +51,7 @@ export function PopularProducts({ products, totalProducts }: PopularProductsProp
             variant="secondary"
             size="lg"
             className="rounded-xl"
+            nativeButton={false}
             render={
               <Link to="/explorar" prefetch="intent">
                 Ver más productos

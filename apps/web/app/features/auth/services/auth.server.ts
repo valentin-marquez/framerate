@@ -44,9 +44,12 @@ function rolesFromSession(accessToken: string | null | undefined): {
   const payload = decodeJwtPayload(accessToken);
   const role = normalizeRole(payload?.user_role);
   const rolesRaw = Array.isArray(payload?.user_roles) ? payload?.user_roles : [];
-  const roles = (rolesRaw as unknown[])
-    .filter((v): v is string => typeof v === "string")
-    .filter((v): v is UserRole => VALID_ROLES.has(v as UserRole));
+  const roles: UserRole[] = [];
+  for (const v of rolesRaw as unknown[]) {
+    if (typeof v === "string" && VALID_ROLES.has(v as UserRole)) {
+      roles.push(v as UserRole);
+    }
+  }
   return { role, roles: roles.length > 0 ? roles : [role] };
 }
 

@@ -1,22 +1,13 @@
 "use client";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
-import { motion, type Transition, useMotionValue } from "motion/react";
-import {
-  Children,
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { domAnimation, LazyMotion, m, type Transition, useMotionValue } from "motion/react";
+import { Children, createContext, type ReactNode, use, useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "~/shared/lib/utils";
 
 export type CarouselContextType = {
   index: number;
-  setIndex: (newIndex: number) => void;
+  // Acepta valor o updater para evitar `setX(prev + 1)` stale-cierre.
+  setIndex: (newIndex: number | ((prev: number) => number)) => void;
   itemsCount: number;
   setItemsCount: (newItemsCount: number) => void;
   visibleItemsCount: number;
@@ -31,27 +22,48 @@ export type CarouselContextType = {
 const CarouselContext = createContext<CarouselContextType | undefined>(undefined);
 
 function useCarousel() {
-  const context = useContext(CarouselContext);
+  const context = use(CarouselContext);
   if (!context) {
     throw new Error("useCarousel must be used within an CarouselProvider");
   }
   return context;
 }
 
-export type CarouselProviderProps = {
+export type CarouselProps = {
   children: ReactNode;
-  initialIndex?: number;
+  className?: string;
+  index?: number;
   onIndexChange?: (newIndex: number) => void;
   disableDrag?: boolean;
 };
 
-function CarouselProvider({ children, initialIndex = 0, onIndexChange, disableDrag = false }: CarouselProviderProps) {
-  const [index, setIndex] = useState<number>(initialIndex);
+function Carousel({ children, className, index: externalIndex, onIndexChange, disableDrag = false }: CarouselProps) {
+  // Estado inicial uncontrolled — siempre arranca en 0. Si se necesita controlar el
+  // índice, pasarlo vía la prop `index` (modo controlado).
+  const [internalIndex, setInternalIndex] = useState<number>(0);
   const [itemsCount, setItemsCount] = useState<number>(0);
   const [visibleItemsCount, setVisibleItemsCount] = useState<number>(1);
-
-  // Stable slide ids list for indicators to use as keys
   const [slides, setSlides] = useState<string[]>([]);
+
+  const isControlled = externalIndex !== undefined;
+  const index = isControlled ? externalIndex : internalIndex;
+
+  const setIndex = useCallback(
+    (newIndex: number | ((prev: number) => number)) => {
+      if (!isControlled) {
+        setInternalIndex((prev) => {
+          const next = typeof newIndex === "function" ? newIndex(prev) : newIndex;
+          onIndexChange?.(next);
+          return next;
+        });
+        return;
+      }
+      // En modo controlado no tenemos prev local — el dueño del externalIndex lo sabe.
+      const next = typeof newIndex === "function" ? newIndex(externalIndex as number) : newIndex;
+      onIndexChange?.(next);
+    },
+    [isControlled, onIndexChange, externalIndex],
+  );
 
   const registerSlide = useCallback((id: string) => {
     setSlides((prev) => (prev.includes(id) ? prev : [...prev, id]));
@@ -61,70 +73,25 @@ function CarouselProvider({ children, initialIndex = 0, onIndexChange, disableDr
     setSlides((prev) => prev.filter((s) => s !== id));
   }, []);
 
-  const handleSetIndex = (newIndex: number) => {
-    setIndex(newIndex);
-    onIndexChange?.(newIndex);
-  };
-
-  useEffect(() => {
-    setIndex(initialIndex);
-  }, [initialIndex]);
-
   return (
     <CarouselContext.Provider
       value={{
         index,
-        setIndex: handleSetIndex,
+        setIndex,
         itemsCount,
         setItemsCount,
         visibleItemsCount,
         setVisibleItemsCount,
         disableDrag,
-        // expose slides and register/unregister helpers for stable keys
         slides,
         registerSlide,
         unregisterSlide,
       }}
     >
-      {children}
-    </CarouselContext.Provider>
-  );
-}
-
-export type CarouselProps = {
-  children: ReactNode;
-  className?: string;
-  initialIndex?: number;
-  index?: number;
-  onIndexChange?: (newIndex: number) => void;
-  disableDrag?: boolean;
-};
-
-function Carousel({
-  children,
-  className,
-  initialIndex = 0,
-  index: externalIndex,
-  onIndexChange,
-  disableDrag = false,
-}: CarouselProps) {
-  const [internalIndex, setInternalIndex] = useState<number>(initialIndex);
-  const isControlled = externalIndex !== undefined;
-  const currentIndex = isControlled ? externalIndex : internalIndex;
-
-  const handleIndexChange = (newIndex: number) => {
-    if (!isControlled) {
-      setInternalIndex(newIndex);
-    }
-    onIndexChange?.(newIndex);
-  };
-
-  return (
-    <CarouselProvider initialIndex={currentIndex} onIndexChange={handleIndexChange} disableDrag={disableDrag}>
       <div className={cn("group/hover relative", className)}>
         <div className="overflow-hidden">{children}</div>
       </div>
-    </CarouselProvider>
+    </CarouselContext.Provider>
   );
 }
 
@@ -156,7 +123,7 @@ function CarouselNavigation({ className, classNameButton, alwaysShow }: Carousel
         disabled={index === 0}
         onClick={() => {
           if (index > 0) {
-            setIndex(index - 1);
+            setIndex((prev) => prev - 1);
           }
         }}
       >
@@ -174,7 +141,7 @@ function CarouselNavigation({ className, classNameButton, alwaysShow }: Carousel
         disabled={index + visibleItemsCount >= itemsCount}
         onClick={() => {
           if (index + visibleItemsCount < itemsCount) {
-            setIndex(index + 1);
+            setIndex((prev) => prev + 1);
           }
         }}
       >
@@ -193,7 +160,7 @@ function CarouselIndicator({ className, classNameButton }: CarouselIndicatorProp
   const { index, slides, setIndex } = useCarousel();
   return (
     <div className={cn("absolute bottom-0 z-10 flex w-full items-center justify-center", className)}>
-      <div className="flex space-x-2">
+      <div className="flex gap-x-2">
         {slides.map((id, i) => (
           <button
             key={id}
@@ -264,44 +231,46 @@ function CarouselContent({ children, className, transition }: CarouselContentPro
     const x = dragX.get();
 
     if (x <= -10 && index < itemsLength - 1) {
-      setIndex(index + 1);
+      setIndex((prev) => prev + 1);
     } else if (x >= 10 && index > 0) {
-      setIndex(index - 1);
+      setIndex((prev) => prev - 1);
     }
   };
 
   return (
-    <motion.div
-      drag={disableDrag ? false : "x"}
-      dragConstraints={
-        disableDrag
-          ? undefined
-          : {
-              left: 0,
-              right: 0,
-            }
-      }
-      dragMomentum={disableDrag ? undefined : false}
-      style={{
-        x: disableDrag ? undefined : dragX,
-      }}
-      animate={{
-        translateX: `-${index * (100 / visibleItemsCount)}%`,
-      }}
-      onDragEnd={disableDrag ? undefined : onDragEnd}
-      transition={
-        transition || {
-          damping: 18,
-          stiffness: 90,
-          type: "spring",
-          duration: 0.2,
+    <LazyMotion features={domAnimation}>
+      <m.div
+        drag={disableDrag ? false : "x"}
+        dragConstraints={
+          disableDrag
+            ? undefined
+            : {
+                left: 0,
+                right: 0,
+              }
         }
-      }
-      className={cn("flex items-center", !disableDrag && "cursor-grab active:cursor-grabbing", className)}
-      ref={containerRef}
-    >
-      {children}
-    </motion.div>
+        dragMomentum={disableDrag ? undefined : false}
+        style={{
+          x: disableDrag ? undefined : dragX,
+        }}
+        animate={{
+          translateX: `-${index * (100 / visibleItemsCount)}%`,
+        }}
+        onDragEnd={disableDrag ? undefined : onDragEnd}
+        transition={
+          transition || {
+            damping: 18,
+            stiffness: 90,
+            type: "spring",
+            duration: 0.2,
+          }
+        }
+        className={cn("flex items-center", !disableDrag && "cursor-grab active:cursor-grabbing", className)}
+        ref={containerRef}
+      >
+        {children}
+      </m.div>
+    </LazyMotion>
   );
 }
 
@@ -320,9 +289,11 @@ function CarouselItem({ children, className }: CarouselItemProps) {
   }, [id, registerSlide, unregisterSlide]);
 
   return (
-    <motion.div data-carousel-id={id} className={cn("w-full min-w-0 shrink-0 grow-0 overflow-hidden", className)}>
-      {children}
-    </motion.div>
+    <LazyMotion features={domAnimation}>
+      <m.div data-carousel-id={id} className={cn("w-full min-w-0 shrink-0 grow-0 overflow-hidden", className)}>
+        {children}
+      </m.div>
+    </LazyMotion>
   );
 }
 

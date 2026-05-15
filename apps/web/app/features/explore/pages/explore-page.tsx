@@ -16,6 +16,7 @@ import {
 import { productsService } from "~/features/product/services/products";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
+import { isRateLimitError } from "~/shared/lib/api";
 import { getFiltersForCategory } from "~/shared/utils/filter-config";
 import type { Route } from "./+types/explore-page";
 
@@ -134,9 +135,16 @@ export async function loader({ request }: Route.LoaderArgs) {
       currentCategory: category || null,
       currentSearch: search || null,
       currentBrand: brand || null,
+      rateLimited: false,
     };
   } catch (error) {
-    console.error("Error loading explore page:", error);
+    // Bajo rate limit, degradamos a estado vacío para que la página renderice
+    // con skeletons / empty state en lugar de tirar al error boundary. El
+    // cliente revalida en el siguiente navigation/focus.
+    const rateLimited = isRateLimitError(error);
+    if (!rateLimited) {
+      console.error("Error loading explore page:", error);
+    }
     return {
       products: [],
       meta: { page: 1, limit: 24, total: 0, totalPages: 0 },
@@ -146,12 +154,14 @@ export async function loader({ request }: Route.LoaderArgs) {
       currentCategory: category || null,
       currentSearch: search || null,
       currentBrand: brand || null,
+      rateLimited,
     };
   }
 }
 
 export default function ExplorePage({ loaderData }: Route.ComponentProps) {
-  const { products, meta, filters, brands, priceRange, currentCategory, currentSearch, currentBrand } = loaderData;
+  const { products, meta, filters, brands, priceRange, currentCategory, currentSearch, currentBrand, rateLimited } =
+    loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [searchInput, setSearchInput] = useState(currentSearch || "");
@@ -192,6 +202,14 @@ export default function ExplorePage({ loaderData }: Route.ComponentProps) {
   return (
     // Margen negativo para escapar del container del root.tsx
     <div className="-mx-4 -mt-11">
+      {/* Banner suave de saturación. Sólo se muestra cuando el loader degradó
+          por 429. No tira al error boundary para preservar SSR/CSR fluido. */}
+      {rateLimited && (
+        <div className="px-4 lg:px-6 py-2 bg-card/60 border-b border-border/60 backdrop-blur-md text-center text-xs text-muted-foreground">
+          Estamos saturados ahora mismo. Intenta de nuevo en unos segundos.
+        </div>
+      )}
+
       {/* Header section - sticky bajo el navbar */}
       <div className="sticky top-13 z-30 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="px-4 lg:px-6 py-4">

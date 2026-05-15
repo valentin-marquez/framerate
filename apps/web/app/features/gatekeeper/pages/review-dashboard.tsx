@@ -1,6 +1,6 @@
 import type { Database } from "@framerate/db";
 import { createServerClient, parseCookieHeader, serializeCookieHeader } from "@supabase/ssr";
-import { useFetcher } from "react-router";
+import { data, useFetcher } from "react-router";
 import { requireRole } from "@/features/auth/services/auth.server";
 import type { Route } from "./+types/review-dashboard";
 
@@ -77,12 +77,12 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (error) {
     console.error("Error fetching review item:", error);
     // Fail gracefully, possibly specific error UI
-    return Response.json({ queueDepth: "?", currentItem: null } as ReviewDashboardData, { headers });
+    return data<ReviewDashboardData>({ queueDepth: "?", currentItem: null }, { headers });
   }
 
   if (!item || !item[0]) {
     // Queue empty
-    return Response.json({ queueDepth: "0", currentItem: null } as ReviewDashboardData, { headers });
+    return data<ReviewDashboardData>({ queueDepth: "0", currentItem: null }, { headers });
   }
 
   const result = item[0];
@@ -91,7 +91,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const reasons = Array.isArray(result.match_reasons) ? result.match_reasons : [];
 
   // Transform to UI format
-  const currentItem = {
+  const currentItem: ReviewDashboardData["currentItem"] = {
     id: result.raw_feed_id,
     msgId: String(result.msg_id),
     scraped: {
@@ -113,7 +113,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const queueDepth = "?";
 
-  return Response.json({ queueDepth, currentItem } as ReviewDashboardData, { headers });
+  return data<ReviewDashboardData>({ queueDepth, currentItem }, { headers });
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -127,7 +127,7 @@ export async function action({ request }: Route.ActionArgs) {
   const msgId = formData.get("msgId") as string;
 
   if (!itemId || !msgId) {
-    return Response.json({ success: false, error: "Missing ID" }, { headers });
+    return data({ success: false, error: "Missing ID" }, { headers });
   }
 
   let decision = "MATCH"; // Default
@@ -141,10 +141,10 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (error) {
     console.error("Error resolving item:", error);
-    return Response.json({ success: false, error: error.message }, { headers });
+    return data({ success: false, error: error.message }, { headers });
   }
 
-  return Response.json({ success: true }, { headers });
+  return data({ success: true }, { headers });
 }
 
 export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
@@ -153,74 +153,76 @@ export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
 
   if (!currentItem) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">All Caught Up! 🎉</h1>
-        <p className="text-gray-600">The review queue is empty.</p>
-        <div className="mt-8 bg-white px-4 py-2 rounded-lg shadow-sm border">
-          <span className="text-gray-500 text-sm">Queue Depth:</span>
-          <span className="ml-2 font-mono font-bold text-blue-600">0</span>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
+        <h1 className="text-3xl font-semibold text-foreground mb-4">All Caught Up! 🎉</h1>
+        <p className="text-muted-foreground">The review queue is empty.</p>
+        <div className="mt-8 bg-card px-4 py-2 rounded-lg shadow-sm border border-border">
+          <span className="text-muted-foreground text-sm">Queue Depth:</span>
+          <span className="ml-2 font-mono font-semibold text-primary">0</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <header className="mb-8 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Gatekeeper</h1>
-        <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
-          <span className="text-gray-500 text-sm">Queue estimate:</span>
-          <span className="ml-2 font-mono font-bold text-blue-600">{queueDepth}</span>
+        <h1 className="text-2xl font-semibold text-foreground">Gatekeeper</h1>
+        <div className="bg-card px-4 py-2 rounded-lg shadow-sm">
+          <span className="text-muted-foreground text-sm">Queue estimate:</span>
+          <span className="ml-2 font-mono font-semibold text-primary">{queueDepth}</span>
         </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {/* Scraped Item */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Incoming (Scraped)</h2>
+        <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+            Incoming (Scraped)
+          </h2>
           <div className="space-y-4">
             <div>
-              <span className="text-xs text-gray-500">Title</span>
-              <p className="text-lg font-medium text-gray-900">{currentItem.scraped.title}</p>
+              <span className="text-xs text-muted-foreground">Title</span>
+              <p className="text-lg font-medium text-foreground">{currentItem.scraped.title}</p>
             </div>
             <div className="flex gap-4">
               <div>
-                <span className="text-xs text-gray-500">Retailer</span>
+                <span className="text-xs text-muted-foreground">Retailer</span>
                 <p className="font-mono text-sm">{currentItem.scraped.retailer}</p>
               </div>
               <div>
-                <span className="text-xs text-gray-500">Price</span>
+                <span className="text-xs text-muted-foreground">Price</span>
                 <p className="font-mono text-sm">${Number(currentItem.scraped.price).toLocaleString()}</p>
               </div>
             </div>
             {/* Visual Diff Placeholder */}
-            <div className="p-4 bg-yellow-50 text-yellow-800 text-sm rounded-md border border-yellow-100">
+            <div className="p-4 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-sm rounded-md border border-amber-500/20">
               ⚠ Ambiguous Match (Score: {currentItem.score})
             </div>
           </div>
         </div>
 
         {/* Candidate Item */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 ring-2 ring-blue-500/10">
-          <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-4">Suggested Match (OpenDB)</h2>
+        <div className="bg-card p-6 rounded-xl shadow-sm border border-border ring-2 ring-primary/10">
+          <h2 className="text-sm font-semibold text-primary uppercase tracking-wide mb-4">Suggested Match (OpenDB)</h2>
           <div className="space-y-4">
             <div>
-              <span className="text-xs text-gray-500">Canonical Title</span>
-              <p className="text-lg font-medium text-gray-900">{currentItem.candidate.model}</p>
+              <span className="text-xs text-muted-foreground">Canonical Title</span>
+              <p className="text-lg font-medium text-foreground">{currentItem.candidate.model}</p>
             </div>
             <div className="flex gap-4">
               <div>
-                <span className="text-xs text-gray-500">MPN</span>
+                <span className="text-xs text-muted-foreground">MPN</span>
                 <p className="font-mono text-sm">{currentItem.candidate.mpn}</p>
               </div>
               <div>
-                <span className="text-xs text-gray-500">Manufacturer</span>
+                <span className="text-xs text-muted-foreground">Manufacturer</span>
                 <p className="text-sm">{currentItem.candidate.manufacturer}</p>
               </div>
             </div>
             <div>
-              <span className="text-xs text-gray-500">Specs</span>
-              <pre className="text-xs bg-gray-50 p-2 rounded border mt-1 overflow-x-auto">
+              <span className="text-xs text-muted-foreground">Specs</span>
+              <pre className="text-xs bg-secondary p-2 rounded border border-border mt-1 overflow-x-auto">
                 {JSON.stringify(currentItem.candidate.specifications, null, 2)}
               </pre>
             </div>
@@ -229,14 +231,14 @@ export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
       </div>
 
       {/* Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-center gap-4 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 flex justify-center gap-4 shadow-lg">
         <fetcher.Form method="post">
           <input type="hidden" name="itemId" value={currentItem.id} />
           <input type="hidden" name="msgId" value={String(currentItem.msgId)} />
           <button
             name="intent"
             value="reject"
-            className="px-8 py-3 bg-red-50 text-red-600 font-medium rounded-lg hover:bg-red-100 transition-colors"
+            className="px-8 py-3 bg-destructive/10 text-destructive font-medium rounded-lg hover:bg-destructive/15 transition-colors"
             type="submit"
             disabled={fetcher.state !== "idle"}
           >
@@ -250,7 +252,7 @@ export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
           <button
             name="intent"
             value="confirm"
-            className="px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md transition-colors"
+            className="px-8 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 shadow-md transition-colors"
             type="submit"
             disabled={fetcher.state !== "idle"}
           >

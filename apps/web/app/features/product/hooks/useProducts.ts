@@ -1,4 +1,4 @@
-import { keepPreviousData, type UseQueryOptions, useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, type UseQueryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type PriceHistoryResponse,
   type ProductDrop,
@@ -64,7 +64,14 @@ export function usePriceHistory(slug: string, days = 30, options?: Partial<UseQu
 }
 
 export function useTrackProductView() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: productsService.trackView,
+    onSuccess: (_data, slug) => {
+      // El backend incrementa el view count + actualiza popularidad. Invalida el detalle del producto
+      // y las listas/drops para que el ranking refleje la nueva vista.
+      queryClient.invalidateQueries({ queryKey: productKeys.detail(slug) });
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+    },
   });
 }

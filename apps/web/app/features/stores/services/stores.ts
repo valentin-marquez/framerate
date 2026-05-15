@@ -40,8 +40,12 @@ export interface StoreUpdate {
   banner_url?: string | null;
 }
 
+export type ViewerStoreRole = "owner" | "editor" | "admin";
+
 export const storesService = {
   get: (slug: string) => api.get<StoreDetail>(`/v1/stores/${slug}`),
+  getMyRole: (slug: string, token: string) =>
+    api.get<{ role: ViewerStoreRole | null }>(`/v1/stores/${slug}/me`, { token }),
   update: (slug: string, data: StoreUpdate, token: string) =>
     api.patch<StoreDetail>(`/v1/stores/${slug}`, data, { token }),
   listMembers: (slug: string, token: string) =>

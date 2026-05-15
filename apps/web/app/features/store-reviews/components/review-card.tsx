@@ -36,9 +36,11 @@ interface ReviewCardProps {
   hasMarkedHelpful?: boolean;
 }
 
+const dateFmt = new Intl.DateTimeFormat("es-CL", { dateStyle: "medium" });
+
 function formatDate(iso: string): string {
   try {
-    return new Intl.DateTimeFormat("es-CL", { dateStyle: "medium" }).format(new Date(iso));
+    return dateFmt.format(new Date(iso));
   } catch {
     return iso;
   }

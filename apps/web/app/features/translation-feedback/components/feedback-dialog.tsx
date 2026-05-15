@@ -1,5 +1,5 @@
 import { IconCheck, IconSearch, IconSend, IconX } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { useMemo, useReducer } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "~/features/auth/store/auth";
 import { translationFeedbackService } from "~/features/translation-feedback/services/translation-feedback";
@@ -21,14 +21,64 @@ interface DictEntry {
   reference: string; // Spanish source text for context
 }
 
+// useReducer consolida los 5 campos del wizard (query/selectedKey/suggestion/comment/submitting)
+// en una sola fuente de verdad. Cada paso del flujo (seleccionar entry → editar suggestion →
+// enviar) es una transición atómica.
+
+type FeedbackState = {
+  query: string;
+  selectedKey: string | null;
+  suggestion: string;
+  comment: string;
+  submitting: boolean;
+};
+
+type FeedbackAction =
+  | { type: "set-query"; query: string }
+  | { type: "select"; key: string; suggestion: string }
+  | { type: "clear-selection" }
+  | { type: "set-suggestion"; suggestion: string }
+  | { type: "set-comment"; comment: string }
+  | { type: "submit-start" }
+  | { type: "submit-end" }
+  | { type: "reset" };
+
+const initialFeedbackState: FeedbackState = {
+  query: "",
+  selectedKey: null,
+  suggestion: "",
+  comment: "",
+  submitting: false,
+};
+
+function feedbackReducer(state: FeedbackState, action: FeedbackAction): FeedbackState {
+  switch (action.type) {
+    case "set-query":
+      return { ...state, query: action.query };
+    case "select":
+      return { ...state, selectedKey: action.key, suggestion: action.suggestion };
+    case "clear-selection":
+      return { ...state, selectedKey: null, suggestion: "" };
+    case "set-suggestion":
+      return { ...state, suggestion: action.suggestion };
+    case "set-comment":
+      return { ...state, comment: action.comment };
+    case "submit-start":
+      return { ...state, submitting: true };
+    case "submit-end":
+      return { ...state, submitting: false };
+    case "reset":
+      return initialFeedbackState;
+    default:
+      return state;
+  }
+}
+
 export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps) {
   const { supabase } = useAuthStore();
   const { t } = useTranslation();
-  const [query, setQuery] = useState("");
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const [suggestion, setSuggestion] = useState("");
-  const [comment, setComment] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [state, dispatch] = useReducer(feedbackReducer, initialFeedbackState);
+  const { query, selectedKey, suggestion, comment, submitting } = state;
 
   const entries = useMemo<DictEntry[]>(() => {
     const langDict = dictionaries[lang] ?? {};
@@ -53,10 +103,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
   );
 
   const reset = () => {
-    setQuery("");
-    setSelectedKey(null);
-    setSuggestion("");
-    setComment("");
+    dispatch({ type: "reset" });
   };
 
   const close = () => {
@@ -76,7 +123,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
       return;
     }
 
-    setSubmitting(true);
+    dispatch({ type: "submit-start" });
     try {
       const session = await supabase?.auth.getSession();
       const token = session?.data.session?.access_token;
@@ -97,7 +144,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
       console.error(e);
       toast.error(t("feedback_send_error"));
     } finally {
-      setSubmitting(false);
+      dispatch({ type: "submit-end" });
     }
   };
 
@@ -136,9 +183,8 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
               <div className="relative">
                 <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                 <Input
-                  autoFocus
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => dispatch({ type: "set-query", query: e.target.value })}
                   placeholder={t("feedback_search_placeholder")}
                   className="pl-9"
                 />
@@ -152,10 +198,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
                     <button
                       type="button"
                       key={e.key}
-                      onClick={() => {
-                        setSelectedKey(e.key);
-                        setSuggestion(e.current);
-                      }}
+                      onClick={() => dispatch({ type: "select", key: e.key, suggestion: e.current })}
                       className="w-full text-left px-3 py-2.5 hover:bg-secondary/60 transition-colors"
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -184,10 +227,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
                   <code className="text-xs font-mono text-muted-foreground">{selected.key}</code>
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedKey(null);
-                      setSuggestion("");
-                    }}
+                    onClick={() => dispatch({ type: "clear-selection" })}
                     className="text-xs text-muted-foreground hover:text-foreground underline"
                   >
                     {t("feedback_change")}
@@ -214,7 +254,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
                 <Textarea
                   id="feedback-suggestion"
                   value={suggestion}
-                  onChange={(e) => setSuggestion(e.target.value)}
+                  onChange={(e) => dispatch({ type: "set-suggestion", suggestion: e.target.value })}
                   placeholder={t("feedback_suggestion_placeholder")}
                   maxLength={2000}
                   rows={3}
@@ -229,7 +269,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
                 <Textarea
                   id="feedback-comment"
                   value={comment}
-                  onChange={(e) => setComment(e.target.value)}
+                  onChange={(e) => dispatch({ type: "set-comment", comment: e.target.value })}
                   placeholder={t("feedback_comment_placeholder")}
                   maxLength={2000}
                   rows={2}

@@ -17,7 +17,7 @@ export function useOptimisticLang(): Lang | undefined {
 export function useTranslation() {
   const requestInfo = useRequestInfo();
   const optimistic = useOptimisticLang();
-  const { profile, setProfile, supabase } = useAuthStore();
+  const { setProfile, supabase } = useAuthStore();
   // requestInfo.userPrefs.lang is the source of truth (root loader keeps cookie
   // and profile.lang in sync per request). Optimistic value flips it instantly.
   const lang: Lang = optimistic ?? requestInfo.userPrefs.lang ?? "es";
@@ -35,8 +35,11 @@ export function useTranslation() {
       fetcher.submit({ lang: next }, { method: "post", action: "/lang-switcher" });
 
       // For authed users, also sync to profile so it follows them across devices.
-      if (profile) {
-        setProfile({ ...profile, lang: next });
+      // Leemos el profile actual con getState() para evitar el patrón "spread from closure"
+      // (setProfile de zustand no soporta updater functions).
+      const currentProfile = useAuthStore.getState().profile;
+      if (currentProfile) {
+        setProfile({ ...currentProfile, lang: next });
         try {
           const { data } = (await supabase?.auth.getSession()) ?? {};
           const token = data?.session?.access_token;
@@ -46,7 +49,7 @@ export function useTranslation() {
         }
       }
     },
-    [fetcher, profile, setProfile, supabase],
+    [fetcher, setProfile, supabase],
   );
 
   return { t, lang, setLanguage };

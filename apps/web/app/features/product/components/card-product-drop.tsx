@@ -92,7 +92,12 @@ function getSpecsSummary(categorySlug: string, specs: ProductSpecs | null): stri
     }
   }
 
-  return summary.filter((item): item is string => !!item && item !== "Desconocido").map(String);
+  const result: string[] = [];
+  for (const item of summary) {
+    if (!item || item === "Desconocido") continue;
+    result.push(String(item));
+  }
+  return result;
 }
 
 export function CardProductDrop({ drop, className }: CardProductDropProps) {
@@ -164,7 +169,7 @@ export function CardProductDrop({ drop, className }: CardProductDropProps) {
         </div>
 
         <h3
-          className="mb-2 line-clamp-2 text-sm font-bold tracking-tight leading-tight min-h-[2.5em] group-hover:text-primary transition-colors"
+          className="mb-2 line-clamp-2 text-sm font-semibold tracking-tight leading-tight min-h-[2.5em] group-hover:text-primary transition-colors"
           title={product_name}
         >
           <Link to={productLink} onClick={handleProductClick}>

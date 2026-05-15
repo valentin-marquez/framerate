@@ -1,5 +1,5 @@
 import { IconLoader2, IconPhoto, IconSearch, IconTag } from "@tabler/icons-react";
-import { type ButtonHTMLAttributes, forwardRef, useCallback, useEffect, useState } from "react";
+import { type ButtonHTMLAttributes, type Ref, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useCategories } from "~/features/category/hooks/useCategories";
 import type { CategoryWithCount } from "~/features/category/services/categories";
@@ -82,18 +82,25 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
 
   const { data: categories = [] } = useCategories();
 
-  // Keyboard shortcut (Ctrl+K)
+  // Keyboard shortcut (Ctrl+K). Patrón ref-stash: useEffectEvent es experimental en
+  // React 19.1 (types-only, sin runtime). Guardamos isOpen/setter en refs frescas y
+  // las leemos dentro del listener, así la sub al document corre una sola vez.
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
+  const handleSetIsOpenRef = useRef(handleSetIsOpen);
+  handleSetIsOpenRef.current = handleSetIsOpen;
+
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        handleSetIsOpen(!isOpen);
+        handleSetIsOpenRef.current(!isOpenRef.current);
       }
     };
 
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, [isOpen, handleSetIsOpen]);
+  }, []);
 
   const handleSelectProduct = useCallback(
     (product: QuickSearchResult) => {
@@ -291,31 +298,31 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
   );
 }
 
-// forwardRef + spread permiten que un wrapper externo (e.g. <TooltipTrigger render={<SearchTrigger/>}>)
+// React 19: `ref` ahora es un prop normal en function components, ya no necesitamos forwardRef.
+// Esto sigue permitiendo que un wrapper externo (e.g. <TooltipTrigger render={<SearchTrigger/>}>)
 // pase ref/props directamente al <button>, evitando el button-anidado-en-button que rompía hidratación.
-export const SearchTrigger = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement>>(
-  ({ onClick, className, ...rest }, ref) => {
-    const [open, setOpen] = useState(false);
+type SearchTriggerProps = ButtonHTMLAttributes<HTMLButtonElement> & { ref?: Ref<HTMLButtonElement> };
 
-    return (
-      <>
-        <Button
-          ref={ref}
-          variant="ghost"
-          aria-label="Buscar"
-          size="icon"
-          {...rest}
-          className={cn("rounded-full transition-all duration-200 hover:scale-105 active:scale-95", className)}
-          onClick={(e) => {
-            onClick?.(e);
-            setOpen(true);
-          }}
-        >
-          <IconSearch className="size-4 text-muted-foreground transition-colors duration-200" />
-        </Button>
-        <SearchDialog open={open} onOpenChange={setOpen} />
-      </>
-    );
-  },
-);
-SearchTrigger.displayName = "SearchTrigger";
+export function SearchTrigger({ onClick, className, ref, ...rest }: SearchTriggerProps) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button
+        ref={ref}
+        variant="ghost"
+        aria-label="Buscar"
+        size="icon"
+        {...rest}
+        className={cn("rounded-full transition-all duration-200 hover:scale-105 active:scale-95", className)}
+        onClick={(e) => {
+          onClick?.(e);
+          setOpen(true);
+        }}
+      >
+        <IconSearch className="size-4 text-muted-foreground transition-colors duration-200" />
+      </Button>
+      <SearchDialog open={open} onOpenChange={setOpen} />
+    </>
+  );
+}

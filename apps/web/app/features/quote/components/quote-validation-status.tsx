@@ -149,8 +149,11 @@ export function QuoteValidationStatus({ status, issues }: QuoteValidationStatusP
               <div key={key} className="space-y-2">
                 <p className="text-xs uppercase tracking-wider font-medium text-muted-foreground px-1">{group.label}</p>
                 <div className="space-y-3">
-                  {group.issues.map((issue, index) => (
-                    <IssueCard key={`${issue.code}-${index}`} issue={issue} />
+                  {group.issues.map((issue) => (
+                    <IssueCard
+                      key={`${issue.code}-${issue.message}-${issue.componentA ?? ""}-${issue.componentB ?? ""}`}
+                      issue={issue}
+                    />
                   ))}
                 </div>
               </div>
@@ -260,8 +263,11 @@ function InsufficientDataAccordion({ issues, isOpen, onToggle }: InsufficientDat
           aria-labelledby={headingId}
           className="border-t border-border/40 px-5 py-4 space-y-2 bg-background/40"
         >
-          {issues.map((issue, index) => (
-            <InsufficientDataRow key={`${issue.code}-${index}`} issue={issue} />
+          {issues.map((issue) => (
+            <InsufficientDataRow
+              key={`${issue.code}-${issue.message}-${issue.componentA ?? ""}-${issue.componentB ?? ""}`}
+              issue={issue}
+            />
           ))}
         </section>
       )}

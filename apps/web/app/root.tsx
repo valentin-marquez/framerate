@@ -16,8 +16,9 @@ import { Button } from "~/shared/components/primitives/button";
 import { Toaster } from "~/shared/components/primitives/sonner";
 import { useNonce } from "~/shared/hooks/use-nonce";
 import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
+import { isRateLimitError } from "~/shared/lib/api";
 import { getHints, useTheme } from "~/shared/lib/client";
-import { queryClient } from "~/shared/lib/query-client";
+import { getQueryClient } from "~/shared/lib/query-client";
 import type { Lang } from "~/shared/lib/translations";
 import { getClientEnv } from "~/shared/services/env.server";
 import { getCookieLang, resolveLang, setLangCookie } from "~/shared/services/lang.server";
@@ -48,7 +49,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   try {
     categories = await categoriesService.getAll();
   } catch (error) {
-    console.error("Failed to fetch categories in root loader:", error);
+    // 429 (rate limit) es esperado bajo carga; degradamos a lista vacía y
+    // dejamos que el cliente revalide. No es worth de console.error spam.
+    if (!isRateLimitError(error)) {
+      console.error("Failed to fetch categories in root loader:", error);
+    }
   }
 
   let profile = null;
@@ -60,7 +65,9 @@ export async function loader({ request }: Route.LoaderArgs) {
       try {
         profile = await profilesService.getMe(session.access_token);
       } catch (e) {
-        console.error("Failed to fetch profile", e);
+        if (!isRateLimitError(e)) {
+          console.error("Failed to fetch profile", e);
+        }
       }
     }
   }
@@ -112,6 +119,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useNonce();
   const requestInfo = useOptionalRequestInfo();
   const lang = requestInfo?.userPrefs.lang ?? "es";
+  const [queryClient] = useState(() => getQueryClient());
 
   return (
     <html lang={lang} suppressHydrationWarning>

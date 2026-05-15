@@ -111,7 +111,12 @@ function getSpecsSummary(product: Product): string[] {
     }
   }
 
-  return summary.filter((item): item is string => !!item && item !== "Desconocido").map(String);
+  const result: string[] = [];
+  for (const item of summary) {
+    if (!item || item === "Desconocido") continue;
+    result.push(String(item));
+  }
+  return result;
 }
 
 function formatViews(views: number): string {

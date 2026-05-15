@@ -37,6 +37,7 @@ export function AsyncImage({
   ...props
 }: AsyncImageProps) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const prevImageSrcRef = useRef<string | undefined>(undefined);
   const imgRef = useRef<HTMLImageElement>(null);
 
   // Transform URL through API proxy for CDN caching
@@ -45,15 +46,17 @@ export function AsyncImage({
   // Determine loading strategy based on priority
   const loadingStrategy = priority ? "eager" : (loading ?? "lazy");
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: We want to reset on imageSrc change
-  useEffect(() => {
-    // Reset status when src changes
+  // Reset status during render when src changes (no effect needed).
+  // Ref evita un re-render adicional vs. useState — el cambio de `status` ya dispara
+  // el render siguiente cuando hace falta.
+  if (prevImageSrcRef.current !== imageSrc) {
+    prevImageSrcRef.current = imageSrc;
     setStatus("loading");
-  }, [imageSrc]);
+  }
 
+  // Check if image is already complete (e.g. served from cache before onLoad fires).
   // biome-ignore lint/correctness/useExhaustiveDependencies: Check cached state on imageSrc change
   useEffect(() => {
-    // Check if image is already loaded (e.g. from cache)
     if (imgRef.current?.complete) {
       if (imgRef.current.naturalWidth === 0) {
         setStatus("error");

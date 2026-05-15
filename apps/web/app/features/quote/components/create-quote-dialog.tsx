@@ -62,7 +62,7 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         {trigger || (
           <Button variant="default" className="gap-2">
             <IconPlus className="size-4" />
@@ -86,7 +86,7 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
               placeholder={t("quote_name_placeholder")}
               required
             />
@@ -99,7 +99,7 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               placeholder={t("quote_description_placeholder")}
             />
           </div>
@@ -108,7 +108,7 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
             <Switch
               id="is_public"
               checked={formData.is_public}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_public: checked })}
+              onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, is_public: checked }))}
             />
             <Label htmlFor="is_public" className="cursor-pointer text-card-foreground/65">
               {t("public_quote")}

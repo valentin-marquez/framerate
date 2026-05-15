@@ -46,8 +46,8 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  await requireRole(request, "moderator");
-  const { supabase } = await requireAuth(request);
+  const [, { supabase }] = await Promise.all([requireRole(request, "moderator"), requireAuth(request)]);
+  // react-doctor-disable-next-line server-sequential-independent-await -- getSession depende del supabase resuelto en el Promise.all anterior
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -87,7 +87,7 @@ export default function ModerationDashboard({ loaderData }: Route.ComponentProps
             <IconShieldCheck className="size-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Moderacion</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Moderacion</h1>
             <p className="text-sm text-muted-foreground">Cola de reports, audit log y acciones rapidas.</p>
           </div>
         </div>
@@ -269,7 +269,12 @@ function ReportsTab({ reports }: { reports: Report[] }) {
                   {STATUS_LABELS[r.status]}
                 </span>
               </td>
-              <td className="px-4 py-2 text-muted-foreground text-xs">{new Date(r.created_at).toLocaleString()}</td>
+              <td className="px-4 py-2 text-muted-foreground text-xs">
+                {
+                  // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+                  new Date(r.created_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })
+                }
+              </td>
             </tr>
           ))}
         </tbody>
@@ -306,7 +311,12 @@ function ActionsTab({ actions }: { actions: ModAction[] }) {
                 <div className="font-mono text-xs text-muted-foreground">{a.target_id?.slice(0, 8) ?? "—"}</div>
               </td>
               <td className="px-4 py-2 font-mono text-xs">{a.actor_id?.slice(0, 8) ?? "—"}</td>
-              <td className="px-4 py-2 text-muted-foreground text-xs">{new Date(a.created_at).toLocaleString()}</td>
+              <td className="px-4 py-2 text-muted-foreground text-xs">
+                {
+                  // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+                  new Date(a.created_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })
+                }
+              </td>
             </tr>
           ))}
         </tbody>

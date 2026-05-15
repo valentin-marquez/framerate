@@ -1,8 +1,10 @@
+import { IconLockOpen2, IconShieldCheck } from "@tabler/icons-react";
 import { Link } from "react-router";
+import { getSession } from "~/features/auth/services/auth.server";
 import { StoreReviewsSection } from "~/features/store-reviews/components/store-reviews-section";
 import { ApiError } from "~/shared/lib/api";
 import { StoreHeader } from "../components/store-header";
-import { storesService } from "../services/stores";
+import { storesService, type ViewerStoreRole } from "../services/stores";
 import type { Route } from "./+types/store-page";
 
 export function meta({ data }: Route.MetaArgs) {
@@ -13,10 +15,22 @@ export function meta({ data }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ request, params }: Route.LoaderArgs) {
   try {
-    const store = await storesService.get(params.slug);
-    return { store };
+    const [store, { session }] = await Promise.all([storesService.get(params.slug), getSession(request)]);
+
+    let viewerRole: ViewerStoreRole | null = null;
+    const isAuthenticated = !!session?.access_token;
+    if (session?.access_token) {
+      try {
+        const me = await storesService.getMyRole(params.slug, session.access_token);
+        viewerRole = me.role;
+      } catch {
+        viewerRole = null;
+      }
+    }
+
+    return { store, viewerRole, isAuthenticated };
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       throw new Response("Not found", { status: 404 });
@@ -26,41 +40,47 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export default function StorePage({ loaderData }: Route.ComponentProps) {
-  const { store } = loaderData;
+  const { store, viewerRole, isAuthenticated } = loaderData;
+  const canManage = viewerRole !== null;
+  const showClaimCta = isAuthenticated && !canManage && !store.verified_at;
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-4 pt-8">
       <StoreHeader store={store} />
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="text-muted-foreground text-xs uppercase">Sitio</div>
-          <div className="mt-1 truncate text-sm">{store.website ? new URL(store.website).hostname : "—"}</div>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="text-muted-foreground text-xs uppercase">Miembros</div>
-          <div className="mt-1 text-sm">{store.member_count}</div>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="text-muted-foreground text-xs uppercase">Rating</div>
-          <div className="mt-1 text-sm">
-            {store.rating.average !== null
-              ? `${store.rating.average.toFixed(1)} ★ (${store.rating.count})`
-              : "Sin reviews"}
+      {canManage && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm">
+            <IconShieldCheck className="size-4 text-primary" />
+            <span className="text-foreground">
+              Administras esta tienda como <span className="font-medium">{viewerRole}</span>.
+            </span>
           </div>
+          <Link
+            to={`/tiendas/${store.slug}/admin`}
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-primary px-3 font-medium text-primary-foreground text-sm transition-all hover:opacity-90"
+          >
+            Panel de administración
+          </Link>
         </div>
-      </section>
+      )}
 
-      <StoreReviewsSection storeSlug={store.slug} />
+      {showClaimCta && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <IconLockOpen2 className="size-4" />
+            <span>¿Eres dueño de esta tienda? Verifica tu dominio para gestionarla.</span>
+          </div>
+          <Link
+            to="/reclamar"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-secondary/70 px-3 font-medium text-secondary-foreground/80 text-sm transition-all hover:bg-primary hover:text-primary-foreground"
+          >
+            Reclamar tienda
+          </Link>
+        </div>
+      )}
 
-      <div className="flex justify-end">
-        <Link
-          to={`/stores/${store.slug}/admin`}
-          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-secondary/70 px-3 text-secondary-foreground/80 text-sm font-medium transition-all hover:bg-primary hover:text-primary-foreground"
-        >
-          Panel de admin
-        </Link>
-      </div>
+      <StoreReviewsSection storeSlug={store.slug} canManage={canManage} />
     </main>
   );
 }

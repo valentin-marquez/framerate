@@ -188,7 +188,13 @@ export function useAnalyzeQuote() {
 }
 
 export function useAnalyzeBuild() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (productIds: string[]) => quotesService.analyze(productIds),
+    onSuccess: () => {
+      // El análisis no toca cotizaciones persistidas, pero invalidamos listas y detalles
+      // por si la respuesta cambia rankings/derivados cacheados.
+      queryClient.invalidateQueries({ queryKey: quoteKeys.all });
+    },
   });
 }

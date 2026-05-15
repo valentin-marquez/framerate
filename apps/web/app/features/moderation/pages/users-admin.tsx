@@ -28,8 +28,8 @@ interface ProfileSearchResult {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  await requireRole(request, "admin");
-  const { supabase } = await requireAuth(request);
+  const [, { supabase }] = await Promise.all([requireRole(request, "admin"), requireAuth(request)]);
+  // react-doctor-disable-next-line server-sequential-independent-await -- getSession depende del supabase resuelto en el Promise.all anterior
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -56,7 +56,10 @@ export async function loader({ request }: Route.LoaderArgs) {
         supabase.from("user_roles").select("user_id, role").in("user_id", ids),
       ]);
 
-      const banMap = new Map((bans ?? []).filter((b) => b.lifted_at === null).map((b) => [b.user_id, b]));
+      const banMap = new Map<string, NonNullable<typeof bans>[number]>();
+      for (const b of bans ?? []) {
+        if (b.lifted_at === null) banMap.set(b.user_id, b);
+      }
       const roleMap = new Map((roles ?? []).map((r) => [r.user_id, r.role]));
 
       results = profiles.map((p) => {
@@ -118,7 +121,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
           <IconUserShield className="size-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Usuarios</h1>
+          <h1 className="text-2xl font-semibold">Usuarios</h1>
           <p className="text-sm text-muted-foreground">Admin only. Busca un user por username y gestiona su ban.</p>
         </div>
       </header>

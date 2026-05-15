@@ -27,7 +27,16 @@ export function RatingSummary({ storeSlug }: RatingSummaryProps) {
     return (
       <Card>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Aún no hay reseñas para esta tienda.</p>
+          <div className="flex flex-col items-center gap-3 py-2 sm:flex-row sm:items-center sm:gap-6 sm:py-1">
+            <div className="flex flex-col items-center gap-1 sm:min-w-[120px]">
+              <span className="text-4xl font-semibold tabular-nums text-muted-foreground/40">—</span>
+              <RatingStars value={0} size="md" />
+              <span className="text-xs text-muted-foreground">Sin reseñas todavía</span>
+            </div>
+            <p className="text-balance text-center text-sm text-muted-foreground sm:flex-1 sm:text-left">
+              Sé el primero en compartir tu experiencia con esta tienda y ayuda a otros compradores a decidir.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );

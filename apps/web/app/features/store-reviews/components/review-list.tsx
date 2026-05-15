@@ -38,6 +38,10 @@ export function ReviewList({ storeSlug, canManage = false, helpfulReviewIds }: R
   const total = data?.meta.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  // El estado vacío lo cubre RatingSummary con un placeholder visual; aquí
+  // dejaríamos un mensaje redundante ("Aún no hay reseñas...").
+  if (!isLoading && !isError && total === 0) return null;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -74,10 +78,6 @@ export function ReviewList({ storeSlug, canManage = false, helpfulReviewIds }: R
       )}
 
       {isError && <p className="text-sm text-destructive">No se pudieron cargar las reseñas.</p>}
-
-      {!isLoading && !isError && data && data.data.length === 0 && (
-        <p className="text-sm text-muted-foreground">Aún no hay reseñas para esta tienda.</p>
-      )}
 
       <ul className="flex flex-col gap-3">
         {data?.data.map((review: StoreReviewItem) => (

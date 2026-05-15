@@ -45,8 +45,10 @@ function InputGroupAddon({
   align = "inline-start",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
+  const focusSiblingInput = (currentTarget: HTMLElement) => {
+    currentTarget.parentElement?.querySelector("input")?.focus();
+  };
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: this div has role="group" for accessibility purposes
     // biome-ignore lint/a11y/useSemanticElements: this is a div for styling purposes
     <div
       role="group"
@@ -57,7 +59,17 @@ function InputGroupAddon({
         if ((e.target as HTMLElement).closest("button")) {
           return;
         }
-        e.currentTarget.parentElement?.querySelector("input")?.focus();
+        focusSiblingInput(e.currentTarget);
+      }}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter" && e.key !== " ") {
+          return;
+        }
+        if ((e.target as HTMLElement).closest("button")) {
+          return;
+        }
+        e.preventDefault();
+        focusSiblingInput(e.currentTarget);
       }}
       {...props}
     />

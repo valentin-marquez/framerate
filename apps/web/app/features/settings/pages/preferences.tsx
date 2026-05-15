@@ -1,5 +1,5 @@
 import { IconCheck, IconDeviceLaptop, IconFlask, IconMessage, IconMoon, IconSun } from "@tabler/icons-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useState } from "react";
 import { useFetcher } from "react-router";
 import { requireAuth } from "~/features/auth/services/auth.server";
@@ -154,37 +154,39 @@ function ThemeCard({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "group flex flex-col items-stretch gap-2 rounded-2xl p-1.5 text-left transition-all cursor-pointer",
-        "border-2 bg-card",
-        active ? "border-primary shadow-sm" : "border-transparent hover:border-border focus-visible:border-border",
-      )}
-    >
-      <div className="relative aspect-12/5 w-full overflow-hidden rounded-xl border border-border/40">{children}</div>
-      <div className="flex w-full items-center justify-between px-1.5 py-1">
-        <span className="flex items-center gap-2 text-sm font-medium">
-          <span className="text-muted-foreground">{icon}</span>
-          {label}
-        </span>
-        <AnimatePresence>
-          {active && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              transition={{ duration: 0.15 }}
-              className="inline-flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground"
-            >
-              <IconCheck className="size-3" />
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </div>
-    </button>
+    <LazyMotion features={domAnimation}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={active}
+        className={cn(
+          "group flex flex-col items-stretch gap-2 rounded-2xl p-1.5 text-left transition-all cursor-pointer",
+          "border-2 bg-card",
+          active ? "border-primary shadow-sm" : "border-transparent hover:border-border focus-visible:border-border",
+        )}
+      >
+        <div className="relative aspect-12/5 w-full overflow-hidden rounded-xl border border-border/40">{children}</div>
+        <div className="flex w-full items-center justify-between px-1.5 py-1">
+          <span className="flex items-center gap-2 text-sm font-medium">
+            <span className="text-muted-foreground">{icon}</span>
+            {label}
+          </span>
+          <AnimatePresence>
+            {active && (
+              <m.span
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.15 }}
+                className="inline-flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground"
+              >
+                <IconCheck className="size-3" />
+              </m.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </button>
+    </LazyMotion>
   );
 }
 

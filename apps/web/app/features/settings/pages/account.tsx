@@ -183,8 +183,17 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
 }
 
 function BioField({ defaultValue, placeholder, label }: { defaultValue: string; placeholder: string; label: string }) {
-  const [value, setValue] = useState(defaultValue);
-  const remaining = BIO_MAX - value.length;
+  // Solo necesitamos el conteo para el contador visible. El <Textarea> es uncontrolled
+  // (usa defaultValue), así que no derivamos un useState del prop — sólo trackeamos length.
+  // Re-seed si defaultValue cambia (raro: el form se remontiza al navegar, pero curamos).
+  // react-doctor-disable-next-line no-derived-useState -- prop re-seed via useRef es el patrón oficial de React docs
+  const [length, setLength] = useState(defaultValue.length);
+  const prevDefaultRef = useRef(defaultValue);
+  if (defaultValue !== prevDefaultRef.current) {
+    prevDefaultRef.current = defaultValue;
+    setLength(defaultValue.length);
+  }
+  const remaining = BIO_MAX - length;
   const overLimit = remaining < 0;
 
   return (
@@ -207,7 +216,7 @@ function BioField({ defaultValue, placeholder, label }: { defaultValue: string; 
         id="bio"
         name="bio"
         defaultValue={defaultValue}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => setLength(e.target.value.length)}
         placeholder={placeholder}
         maxLength={BIO_MAX + 50}
         rows={3}

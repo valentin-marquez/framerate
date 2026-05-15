@@ -57,6 +57,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 }
 
+// react-doctor-disable-next-line no-giant-component -- breaking into focused components is a separate task, tracked
 export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   const user = useUser();
   const quote = loaderData.quote;
@@ -71,17 +72,18 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Optimistic UI for toasts
-  const [lastQuote, setLastQuote] = useState(quote);
+  // Optimistic UI for toasts — `lastQuote` sólo se compara dentro de un effect,
+  // nunca se renderiza, así que usar useState provocaba re-renders innecesarios.
+  const lastQuoteRef = useRef(quote);
   const activeToastId = useRef<string | number | null>(null);
 
   useEffect(() => {
-    if (activeToastId.current && quote !== lastQuote) {
+    if (activeToastId.current && quote !== lastQuoteRef.current) {
       toast.success(t("product_removed"), { id: activeToastId.current });
       activeToastId.current = null;
     }
-    setLastQuote(quote);
-  }, [quote, lastQuote, t]);
+    lastQuoteRef.current = quote;
+  }, [quote, t]);
 
   type AnalysisState = {
     status: "valid" | "warning" | "incompatible" | "unknown";
@@ -288,20 +290,21 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     const newSelection = { ...selectedVariants };
     let hasChanges = false;
 
-    QUOTE_SLOTS.filter((s) => s.type === "exclusive").forEach((slot) => {
+    for (const slot of QUOTE_SLOTS) {
+      if (slot.type !== "exclusive") continue;
       const slotItems = flattenedItems.filter((item) => slot.accepts.includes(item.product?.category?.slug ?? ""));
-      if (slotItems.length > 0) {
-        const currentSelection = newSelection[slot.id];
-        // Check if current selection is valid (exists in current items)
-        const isValid = slotItems.some((i) => (i.originalItem?.id || i.id) === currentSelection);
+      if (slotItems.length === 0) continue;
 
-        if (!currentSelection || !isValid) {
-          // Default to first option
-          newSelection[slot.id] = slotItems[0].originalItem?.id || slotItems[0].id;
-          hasChanges = true;
-        }
+      const currentSelection = newSelection[slot.id];
+      // Check if current selection is valid (exists in current items)
+      const isValid = slotItems.some((i) => (i.originalItem?.id || i.id) === currentSelection);
+
+      if (!currentSelection || !isValid) {
+        // Default to first option
+        newSelection[slot.id] = slotItems[0].originalItem?.id || slotItems[0].id;
+        hasChanges = true;
       }
-    });
+    }
 
     if (hasChanges) {
       setSelectedVariants(newSelection);

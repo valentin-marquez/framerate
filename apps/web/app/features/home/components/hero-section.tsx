@@ -19,13 +19,13 @@ export function HeroSection({ totalProducts, totalCategories }: HeroSectionProps
       </div>
 
       <div className="container mx-auto px-4 pt-8 pb-16 md:pt-12 md:pb-24">
-        <div className="flex flex-col items-center text-center max-w-3xl mx-auto space-y-6">
+        <div className="flex flex-col items-center text-center max-w-3xl mx-auto gap-y-6">
           <Badge variant="outline" className="px-4 py-1.5 text-xs font-medium border-primary/20 bg-primary/5">
             <IconSparkles className="size-3.5 mr-1.5 text-primary" />
             Compara precios en tiempo real
           </Badge>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight text-foreground">
             Arma tu PC al <span className="text-primary">mejor precio</span>
           </h1>
 
@@ -38,6 +38,7 @@ export function HeroSection({ totalProducts, totalCategories }: HeroSectionProps
             <Button
               size="lg"
               className="h-12 px-8 text-base rounded-xl"
+              nativeButton={false}
               render={
                 <Link to="/explorar" prefetch="intent">
                   <IconDeviceDesktop className="size-5 mr-2" />
@@ -49,6 +50,7 @@ export function HeroSection({ totalProducts, totalCategories }: HeroSectionProps
               variant="outline"
               size="lg"
               className="h-12 px-8 text-base rounded-xl"
+              nativeButton={false}
               render={
                 <Link to="/categoria/tarjetas-de-video" prefetch="intent">
                   Ver ofertas

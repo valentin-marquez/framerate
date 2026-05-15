@@ -59,7 +59,7 @@ export function QuoteActions({
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-end">
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogTrigger>
+        <DialogTrigger asChild>
           <Button variant="ghost" className="gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive">
             <IconTrash size={18} />
             Eliminar

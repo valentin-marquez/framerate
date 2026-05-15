@@ -1,5 +1,5 @@
 import { IconCompass, IconCpu, IconLogin, IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "react-router";
 import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
 import type { Category } from "~/features/category/services/categories";
@@ -49,40 +49,106 @@ function getTimeOfDay(): TimeOfDay {
   return "night";
 }
 
+const GRADIENT_FADE_MS = 700;
+
+// --- Reducer para colapsar el grupo de estados time-of-day / greeting / gradient.
+// Antes había 5 useState que se actualizaban en cascada dentro de un mismo useEffect,
+// generando renders redundantes. Ahora cada transición es un único dispatch atómico.
+
+type NavState = {
+  timeOfDay: TimeOfDay;
+  greetingMessage: string;
+  showGreeting: boolean;
+  visibleGradient: string;
+  gradientVisible: boolean;
+};
+
+type NavAction =
+  | { type: "tick"; timeOfDay: TimeOfDay; greeting: string }
+  | { type: "show-greeting" }
+  | { type: "hide-greeting" }
+  | { type: "gradient-replace"; target: string; visible: boolean }
+  | { type: "gradient-fade-out" }
+  | { type: "gradient-fade-in"; visible: boolean };
+
+const initialNavState: NavState = {
+  timeOfDay: "afternoon",
+  greetingMessage: "",
+  showGreeting: false,
+  visibleGradient: "transparent",
+  gradientVisible: false,
+};
+
+function navReducer(state: NavState, action: NavAction): NavState {
+  switch (action.type) {
+    case "tick":
+      return { ...state, timeOfDay: action.timeOfDay, greetingMessage: action.greeting };
+    case "show-greeting":
+      return state.showGreeting ? state : { ...state, showGreeting: true };
+    case "hide-greeting":
+      return state.showGreeting ? { ...state, showGreeting: false } : state;
+    case "gradient-replace":
+      return { ...state, visibleGradient: action.target, gradientVisible: action.visible };
+    case "gradient-fade-out":
+      return state.gradientVisible ? { ...state, gradientVisible: false } : state;
+    case "gradient-fade-in":
+      return state.gradientVisible === action.visible ? state : { ...state, gradientVisible: action.visible };
+    default:
+      return state;
+  }
+}
+
+// --- useSyncExternalStore: leemos location.pathname + search sin un useEffect
+// que cause flicker. Server snapshot devuelve "/" (placeholder estable); el
+// cliente lo reemplaza inmediatamente al hidratar.
+function subscribeToLocation(callback: () => void) {
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
+}
+
+function getLocationSnapshot() {
+  return window.location.pathname + window.location.search;
+}
+
+function getServerLocationSnapshot() {
+  return "/";
+}
+
 export function Navbar({ categories, blurred }: NavbarProps) {
   const user = useUser();
   const profile = useProfile();
   const { t } = useTranslation();
 
   const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("afternoon");
-  const [currentPath, setCurrentPath] = useState<string>("/");
-  const [showGreeting, setShowGreeting] = useState(false);
-  const [greetingMessage, setGreetingMessage] = useState("");
+  const [state, dispatch] = useReducer(navReducer, initialNavState);
+  const { timeOfDay, greetingMessage, showGreeting, visibleGradient, gradientVisible } = state;
 
-  const [visibleGradient, setVisibleGradient] = useState<string>("transparent");
-  const [gradientVisible, setGradientVisible] = useState<boolean>(false);
-  const GRADIENT_FADE_MS = 700;
+  // currentPath se lee desde window de forma reactiva; suppressHydrationWarning
+  // en el <input> donde se pinta evita warning durante el primer paint.
+  const currentPath = useSyncExternalStore(subscribeToLocation, getLocationSnapshot, getServerLocationSnapshot);
+
+  // mantenemos en ref el `t` actual para que el setInterval no se recree en cada
+  // cambio de idioma sin perder el último traductor disponible.
+  const tRef = useRef(t);
+  tRef.current = t;
 
   void categories;
 
   useEffect(() => {
-    const currentTimeOfDay = getTimeOfDay();
-    setTimeOfDay(currentTimeOfDay);
-
-    // Initial greeting
-    const randomIndex = Math.floor(Math.random() * 5) + 1;
-    setGreetingMessage(t(`greeting_${currentTimeOfDay}_${randomIndex}`));
-
-    const interval = setInterval(() => {
+    const tick = () => {
       const newTimeOfDay = getTimeOfDay();
-      setTimeOfDay(newTimeOfDay);
-      const newRandomIndex = Math.floor(Math.random() * 5) + 1;
-      setGreetingMessage(t(`greeting_${newTimeOfDay}_${newRandomIndex}`));
-    }, 60000);
+      const randomIndex = Math.floor(Math.random() * 5) + 1;
+      dispatch({
+        type: "tick",
+        timeOfDay: newTimeOfDay,
+        greeting: tRef.current(`greeting_${newTimeOfDay}_${randomIndex}`),
+      });
+    };
 
+    tick();
+    const interval = setInterval(tick, 60000);
     return () => clearInterval(interval);
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     const target = GRADIENTS[timeOfDay] ?? "transparent";
@@ -90,22 +156,22 @@ export function Navbar({ categories, blurred }: NavbarProps) {
     let fadeInTimer: number | undefined;
 
     if (visibleGradient === "transparent" && !gradientVisible) {
-      setVisibleGradient(target);
-      fadeInTimer = window.setTimeout(() => setGradientVisible(true), 50);
+      dispatch({ type: "gradient-replace", target, visible: false });
+      fadeInTimer = window.setTimeout(() => dispatch({ type: "gradient-fade-in", visible: true }), 50);
       return () => {
         if (fadeInTimer) clearTimeout(fadeInTimer);
       };
     }
 
     if (visibleGradient === target) {
-      setGradientVisible(true);
+      dispatch({ type: "gradient-fade-in", visible: true });
       return;
     }
 
-    setGradientVisible(false);
+    dispatch({ type: "gradient-fade-out" });
     fadeOutTimer = window.setTimeout(() => {
-      setVisibleGradient(target);
-      fadeInTimer = window.setTimeout(() => setGradientVisible(true), 50);
+      dispatch({ type: "gradient-replace", target, visible: false });
+      fadeInTimer = window.setTimeout(() => dispatch({ type: "gradient-fade-in", visible: true }), 50);
     }, GRADIENT_FADE_MS);
 
     return () => {
@@ -114,18 +180,14 @@ export function Navbar({ categories, blurred }: NavbarProps) {
     };
   }, [timeOfDay, gradientVisible, visibleGradient]);
 
-  useEffect(() => {
-    setCurrentPath(window.location.pathname + window.location.search);
-  }, []);
-
   // mostrar mensaje despues de que la pagina haya cargado completamente
   useEffect(() => {
     const SHOW_DELAY = 500;
     const VISIBLE_MS = 12000;
 
     const showSequence = () => {
-      const showTimer = setTimeout(() => setShowGreeting(true), SHOW_DELAY);
-      const hideTimer = setTimeout(() => setShowGreeting(false), SHOW_DELAY + VISIBLE_MS);
+      const showTimer = setTimeout(() => dispatch({ type: "show-greeting" }), SHOW_DELAY);
+      const hideTimer = setTimeout(() => dispatch({ type: "hide-greeting" }), SHOW_DELAY + VISIBLE_MS);
 
       return () => {
         clearTimeout(showTimer);

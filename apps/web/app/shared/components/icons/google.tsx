@@ -166,10 +166,10 @@ const Google = (props: SVGProps<SVGSVGElement>) => (
         gradientTransform="matrix(-.0814 -1.93722 2.92674 -.11625 -215.135 632.86)"
         gradientUnits="userSpaceOnUse"
       />
-      <filter id="google__q" width="1.097" height="1.116" x="-.048" y="-.058" color-interpolation-filters="sRGB">
+      <filter id="google__q" width="1.097" height="1.116" x="-.048" y="-.058" colorInterpolationFilters="sRGB">
         <feGaussianBlur stdDeviation="1.701" />
       </filter>
-      <filter id="google__k" width="1.033" height="1.02" x="-.017" y="-.01" color-interpolation-filters="sRGB">
+      <filter id="google__k" width="1.033" height="1.02" x="-.017" y="-.01" colorInterpolationFilters="sRGB">
         <feGaussianBlur stdDeviation=".242" />
       </filter>
       <clipPath id="google__i" clipPathUnits="userSpaceOnUse">

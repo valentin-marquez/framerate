@@ -1,5 +1,6 @@
 import { Document, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { QuoteDetail, QuoteItem } from "~/features/quote/services/quotes";
+import { buildOutboundUrl } from "~/shared/utils/outbound";
 
 // Register a font that supports special characters if needed,
 // but standard fonts usually work for basic Spanish.
@@ -163,8 +164,20 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
         <View style={styles.header}>
           <Text style={styles.title}>{quote.name}</Text>
           <View style={styles.metadata}>
-            <Text>Creado: {new Date(quote.created_at).toLocaleDateString("es-CL")}</Text>
-            <Text>Actualizado: {new Date(quote.updated_at).toLocaleDateString("es-CL")}</Text>
+            <Text>
+              Creado:{" "}
+              {
+                // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+                new Date(quote.created_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
+              }
+            </Text>
+            <Text>
+              Actualizado:{" "}
+              {
+                // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+                new Date(quote.updated_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
+              }
+            </Text>
           </View>
         </View>
 
@@ -222,7 +235,7 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
                 <View style={styles.tableColSmall}>
                   {item.selected_listing?.url ? (
                     <Link
-                      src={item.selected_listing.url}
+                      src={buildOutboundUrl(item.selected_listing.url, "quote_pdf")}
                       style={{ ...styles.tableCell, color: "#2563EB", textDecoration: "none" }}
                     >
                       {item.selected_listing?.store?.name || "Mejor precio"}
@@ -245,7 +258,7 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
         <View style={styles.totals}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total Normal:</Text>
-            <Text style={{ ...styles.totalValue, color: "#6B7280", textDecoration: "line-through", fontSize: 10 }}>
+            <Text style={{ ...styles.totalValue, color: "#6B7280", textDecoration: "line-through", fontSize: 12 }}>
               {formatCurrency(totalNormal)}
             </Text>
           </View>

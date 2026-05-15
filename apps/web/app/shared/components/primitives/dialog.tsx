@@ -1,7 +1,7 @@
 "use client";
 import { IconX } from "@tabler/icons-react";
-import { AnimatePresence, motion, type Transition, type Variants } from "motion/react";
-import React, { createContext, useContext, useEffect, useId, useRef } from "react";
+import { AnimatePresence, domAnimation, LazyMotion, m, type Transition, type Variants } from "motion/react";
+import React, { createContext, use, useEffect, useId, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { usePreventScroll } from "~/shared/hooks/use-prevent-scroll";
 import { cn } from "~/shared/lib/utils";
@@ -72,6 +72,7 @@ function Dialog({
     [onOpenChange],
   );
 
+  // react-doctor-disable-next-line prefer-use-effect-event -- useEffectEvent is types-only in React 19.1 stable; effect re-runs on isOpen change for body-class management anyway
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -82,6 +83,9 @@ function Dialog({
       document.body.classList.remove("overflow-hidden");
     }
 
+    // Listener inline: el effect ya re-corre en cada cambio de isOpen para gestionar
+    // la clase del body, así que re-suscribir no agrega trabajo y nos evita el hook
+    // experimental useEffectEvent.
     const handleCancel = (e: Event) => {
       e.preventDefault();
       if (isOpen) {
@@ -140,11 +144,27 @@ function Dialog({
 export type DialogTriggerProps = {
   children: React.ReactNode;
   className?: string;
+  asChild?: boolean;
 };
 
-function DialogTrigger({ children, className }: DialogTriggerProps) {
-  const context = useContext(DialogContext);
+function DialogTrigger({ children, className, asChild }: DialogTriggerProps) {
+  const context = use(DialogContext);
   if (!context) throw new Error("DialogTrigger must be used within Dialog");
+
+  if (asChild && React.isValidElement(children)) {
+    const child = children as React.ReactElement<{
+      onClick?: (e: React.MouseEvent) => void;
+      className?: string;
+    }>;
+    const childOnClick = child.props.onClick;
+    return React.cloneElement(child, {
+      onClick: (e: React.MouseEvent) => {
+        childOnClick?.(e);
+        if (!e.defaultPrevented) context.handleTrigger();
+      },
+      className: cn(child.props.className, className),
+    });
+  }
 
   return (
     <button
@@ -167,20 +187,24 @@ export type DialogPortalProps = {
   container?: HTMLElement | null;
 };
 
+// useSyncExternalStore: detecta cliente sin un useEffect+useState que provoque
+// re-renders extra — sirve para diferir el portal hasta la hidratación.
+const portalSubscribeNoop = () => () => {};
+const portalGetSnapshot = () => true;
+const portalGetServerSnapshot = () => false;
+
 function DialogPortal({
   children,
   container = typeof window !== "undefined" ? document.body : null,
 }: DialogPortalProps) {
-  const [mounted, setMounted] = React.useState(false);
-  const [portalContainer, setPortalContainer] = React.useState<HTMLElement | null>(null);
+  const mounted = useSyncExternalStore(portalSubscribeNoop, portalGetSnapshot, portalGetServerSnapshot);
 
-  useEffect(() => {
-    setMounted(true);
-    setPortalContainer(container || document.body);
-    return () => setMounted(false);
-  }, [container]);
+  if (!mounted) {
+    return null;
+  }
 
-  if (!mounted || !portalContainer) {
+  const portalContainer = container || (typeof document !== "undefined" ? document.body : null);
+  if (!portalContainer) {
     return null;
   }
 
@@ -193,43 +217,45 @@ export type DialogContentProps = {
 };
 
 function DialogContent({ children, className, container }: DialogContentProps) {
-  const context = useContext(DialogContext);
+  const context = use(DialogContext);
   if (!context) throw new Error("DialogContent must be used within Dialog");
   const { isOpen, setIsOpen, dialogRef, variants, transition, ids, onAnimationComplete } = context;
 
   const content = (
-    <AnimatePresence mode="wait">
-      {isOpen && (
-        <motion.dialog
-          key={ids.dialog}
-          ref={dialogRef as React.RefObject<HTMLDialogElement>}
-          id={ids.dialog}
-          aria-labelledby={ids.title}
-          aria-describedby={ids.description}
-          aria-modal="true"
-          role="dialog"
-          onClick={(e) => {
-            if (e.target === dialogRef.current) {
-              setIsOpen(false);
-            }
-          }}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          variants={variants}
-          transition={transition}
-          onAnimationComplete={onAnimationComplete}
-          className={cn(
-            "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-border bg-background p-6 shadow-lg",
-            "backdrop:bg-black/50 backdrop:opacity-50",
-            "open:flex open:flex-col",
-            className,
-          )}
-        >
-          <div className="w-full">{children}</div>
-        </motion.dialog>
-      )}
-    </AnimatePresence>
+    <LazyMotion features={domAnimation}>
+      <AnimatePresence mode="wait">
+        {isOpen && (
+          <m.dialog
+            key={ids.dialog}
+            ref={dialogRef as React.RefObject<HTMLDialogElement>}
+            id={ids.dialog}
+            aria-labelledby={ids.title}
+            aria-describedby={ids.description}
+            aria-modal="true"
+            role="dialog"
+            onClick={(e) => {
+              if (e.target === dialogRef.current) {
+                setIsOpen(false);
+              }
+            }}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={variants}
+            transition={transition}
+            onAnimationComplete={onAnimationComplete}
+            className={cn(
+              "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-border bg-background p-6 shadow-lg",
+              "backdrop:bg-black/50 backdrop:opacity-50",
+              "open:flex open:flex-col",
+              className,
+            )}
+          >
+            <div className="w-full">{children}</div>
+          </m.dialog>
+        )}
+      </AnimatePresence>
+    </LazyMotion>
   );
 
   return <DialogPortal container={container}>{content}</DialogPortal>;
@@ -250,7 +276,7 @@ export type DialogTitleProps = {
 };
 
 function DialogTitle({ children, className }: DialogTitleProps) {
-  const context = useContext(DialogContext);
+  const context = use(DialogContext);
   if (!context) throw new Error("DialogTitle must be used within Dialog");
 
   return (
@@ -269,7 +295,7 @@ export type DialogDescriptionProps = {
 };
 
 function DialogDescription({ children, className }: DialogDescriptionProps) {
-  const context = useContext(DialogContext);
+  const context = use(DialogContext);
   if (!context) throw new Error("DialogDescription must be used within Dialog");
 
   return (
@@ -297,7 +323,7 @@ export type DialogCloseProps = {
 };
 
 function DialogClose({ className, children, disabled }: DialogCloseProps) {
-  const context = useContext(DialogContext);
+  const context = use(DialogContext);
   if (!context) throw new Error("DialogClose must be used within Dialog");
 
   return (
