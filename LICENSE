@@ -1,43 +1,214 @@
-# Licensing Information
+# Licensing — Framerate.cl
 
-The Framerate.cl monorepo is a collection of applications and packages with different licensing terms.
-The specific license for each component is detailed below.
+The Framerate.cl source code is made available so anyone can read it,
+study how the platform works, run it for non-commercial purposes, and
+contribute back. **Operating it commercially** — selling access, running
+it as a paid service, monetizing the curated catalog, or launching a
+competing offering — **requires written permission** from the copyright
+holder.
 
-## 1. Proprietary Components (Source Available)
+The Framerate name, the framerate.cl domain, the logo, the color
+palette, and the visual design are **not** licensed under any of the
+terms below. They remain the property of the copyright holder.
 
-The following components are **Proprietary**. You may view the source code for educational purposes, but you may **NOT** use, copy, modify, distribute, or deploy this software for any commercial purpose or to operate a competitive service without prior written consent.
-
-- **apps/scraper**: The core scraping engine and data processing logic.
-- **apps/web**: The frontend application and brand identity.
-  - Copyright (c) 2025 Valentin Marquez. All rights reserved.
-
-## 2. Open Source Components (MIT License)
-
-The following components are provided under the **MIT License**. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the conditions of the MIT License.
-
-- **apps/api**: The API Gateway (Hono/Cloudflare Workers).
-- **packages/**: Shared libraries and configurations.
+Copyright (c) 2025-2026 Valentin Marquez. All rights reserved except as
+expressly granted below.
 
 ---
 
-### MIT License (Applies to Open Source Components)
+## 1. Source Code License
 
-Copyright (c) 2025 Valentin Marquez
+All source code in this repository (everything under `apps/` and
+`packages/`) is licensed under the **PolyForm Noncommercial License
+1.0.0**.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+In short, the PolyForm Noncommercial License lets you:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+- Read, fork, and study the source code.
+- Run the software for personal study, hobby projects, research, or
+  inside a noncommercial organization.
+- Modify the software and redistribute your changes, as long as the
+  downstream use also stays noncommercial.
+- Open pull requests and contribute back to this repository.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+What it does **not** let you do:
+
+- Use the software (modified or not) in any commercial product,
+  service, or offering.
+- Sell access to a hosted instance, charge subscription fees, run ads
+  against it for revenue, or include it in a paid bundle.
+- Operate a price-comparison, affiliate, or data-resale business that
+  monetizes data scraped, normalized, or curated by this codebase.
+
+The full text of the PolyForm Noncommercial License 1.0.0 is reproduced
+in section 4 below and is also available at
+<https://polyformproject.org/licenses/noncommercial/1.0.0>.
+
+> Note on prior versions: code committed before 2026-05-15 was
+> previously offered under a dual MIT / proprietary arrangement. Those
+> historical commits remain available under their original terms in the
+> git history; new uses of the codebase are governed by the license
+> stated in this file.
+
+---
+
+## 2. Trademark, Brand, and Curated Data Notice
+
+The following are **not** licensed under the PolyForm Noncommercial
+License or any other license in this repository, and no license to use
+them is granted by accepting the source code license:
+
+- The names **Framerate** and **Framerate.cl**.
+- The domain **framerate.cl** and any of its subdomains.
+- The Framerate logo, wordmark, color palette, typography choices, and
+  distinctive visual design — including the macOS-inspired layout,
+  components, and styling under `apps/web/app/`.
+- The relationships, agreements, and curated identification of stores
+  listed on the platform.
+- The product database content (canonical products, normalized specs,
+  curated images, store listings) accumulated by operating the
+  pipeline against Framerate's infrastructure.
+
+If you self-host an instance of this codebase under the noncommercial
+license, you must:
+
+1. Replace the name and visual identity with your own.
+2. Remove the Framerate logo, wordmark, and any "framerate.cl"
+   references from the deployed UI, metadata, OG tags, and copy.
+3. Use a domain that is not confusingly similar to framerate.cl.
+4. Stay within the noncommercial restriction of the PolyForm license.
+
+Even with the above changes, the right to **operate the scraper or the
+curated product database commercially** — for example, reselling
+scraped data, operating a paid scraping API, or providing the catalog
+to third parties — is reserved to the copyright holder regardless of
+how the rest of the code is used.
+
+---
+
+## 3. Commercial Use
+
+The copyright holder reserves the right to use, modify, distribute,
+sublicense, and offer this software commercially.
+
+If you want to use this software commercially, embed it in a paid
+product, run a hosted service based on it, or operate a competing
+offering, please reach out to **valentin13.mail@gmail.com** to discuss
+a commercial license.
+
+---
+
+## 4. PolyForm Noncommercial License 1.0.0
+
+<https://polyformproject.org/licenses/noncommercial/1.0.0>
+
+## Acceptance
+
+In order to get any license under these terms, you must agree to them
+as both strict obligations and conditions to all your licenses.
+
+## Copyright License
+
+The licensor grants you a copyright license for the software to do
+everything you might do with the software that would otherwise infringe
+the licensor's copyright in it for any permitted purpose. However, you
+may only distribute the software according to [Distribution
+License](#distribution-license) and make changes or new works based on
+the software according to [Changes and New Works
+License](#changes-and-new-works-license).
+
+## Distribution License
+
+The licensor grants you an additional copyright license to distribute
+copies of the software. Your license to distribute covers distributing
+the software with changes and new works permitted by [Changes and New
+Works License](#changes-and-new-works-license).
+
+## Changes and New Works License
+
+The licensor grants you an additional copyright license to make changes
+and new works based on the software for any permitted purpose.
+
+## Patent License
+
+The licensor grants you a patent license for the software that covers
+patent claims the licensor can license, or becomes able to license,
+that you would infringe by using the software.
+
+## Noncommercial Purposes
+
+Any noncommercial purpose is a permitted purpose.
+
+## Personal Uses
+
+Personal use for research, experiment, and testing for the benefit of
+public knowledge, personal study, private entertainment, hobby
+projects, amateur pursuits, or religious observance, without any
+anticipated commercial application, is use for a permitted purpose.
+
+## Noncommercial Organizations
+
+Use by any charitable organization, educational institution, public
+research organization, public safety or health organization,
+environmental protection organization, or government institution is use
+for a permitted purpose regardless of the source of funding or
+obligations resulting from the funding.
+
+## Fair Use
+
+You may have "fair use" rights for the software under the law. These
+terms do not limit them.
+
+## No Other Rights
+
+These terms do not allow you to sublicense or transfer any of your
+licenses to anyone else, or prevent the licensor from granting licenses
+to anyone else. These terms do not imply any other licenses.
+
+## Patent Defense
+
+If you make any written claim that the software infringes or
+contributes to infringement of any patent, your patent license for the
+software granted under these terms ends immediately. If your company
+makes such a claim, your patent license ends immediately for work on
+behalf of your company.
+
+## Violations
+
+The first time you are notified in writing that you have violated any
+of these terms, or done anything with the software not covered by your
+licenses, your licenses can nonetheless continue if you come into full
+compliance with these terms, and take practical steps to correct past
+violations, within 32 days of receiving notice. Otherwise, all your
+licenses end immediately.
+
+## No Liability
+
+***As far as the law allows, the software comes as is, without any
+warranty or condition, and the licensor will not be liable to you for
+any damages arising out of these terms or the use or nature of the
+software, under any kind of legal claim.***
+
+## Definitions
+
+The **licensor** is the individual or entity offering these terms, and
+the **software** is the software the licensor makes available under
+these terms.
+
+**You** refers to the individual or entity agreeing to these terms.
+
+**Your company** is any legal entity, sole proprietorship, or other
+kind of organization that you work for, plus all organizations that
+have control over, are under the control of, or are under common
+control with that organization. **Control** means ownership of
+substantially all the assets of an entity, or the power to direct its
+management and policies by vote, contract, or otherwise. Control can be
+direct or indirect.
+
+**Your licenses** are all the licenses granted to you for the software
+under these terms.
+
+**Use** means anything you do with the software requiring one of your
+licenses.
+
+**Trademark** means trademarks, service marks, and similar rights.

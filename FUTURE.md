@@ -1,122 +1,205 @@
 # FUTURE.md
 
-## Roadmap Técnico - Framerate.cl
+## Roadmap — Framerate.cl
 
-### Estado Actual
-Sistema de comparación de precios con arquitectura modular: scraping batch (Docker/Puppeteer), API REST (Cloudflare Workers/Hono), frontend SSR (React Router v7), base de datos única (Supabase PostgreSQL).
+> Última actualización: Mayo 2026
 
----
-
-## Planes Futuros
-
-### Asistente de Cotización con IA (Feature Premium)
-
-**Stack Propuesto:** LLM API (DeepSeek/Groq) + Function Calling + Gestión de Estado Conversacional
-
-**Arquitectura:**
-
-```mermaid
-graph TB
-    A[Usuario] -->|Mensaje| B[Chat UI]
-    B -->|Request| C[Workers API]
-    C -->|LLM Request| D[DeepSeek/Groq]
-    D -->|Tool Calls| E[Tool Executor]
-    E -->|Query| F[Supabase]
-    E -->|Response| D
-    D -->|Respuesta| C
-    C -->|Rate Limit Check| G[Rate Limiter]
-    C -->|Estado| H[Session Store]
-    C -->|Stream| B
-    
-    style D fill:#f9f,stroke:#333
-    style E fill:#bbf,stroke:#333
-    style F fill:#bfb,stroke:#333
-```
-
-**Implementación Core:**
-
-- **Function Calling nativo**: Set de herramientas expuestas al LLM (`search_products`, `add_to_quote`, `check_compatibility`, `calculate_total`, `get_best_deals`)
-- **Conversaciones multi-turno**: Historial de conversación almacenado en BD con manejo de context window
-- **Cotizaciones con estado**: Tabla `ai_quotes` con JSONB para items, historial y metadata de sesión
-- **Capa de ejecución de herramientas**: Orquestador que mapea function calls del LLM a queries reales contra la API interna
-- **Motor de compatibilidad**: Sistema de validación de specs (socket CPU/mobo, clearance RAM/cooler, TDP/PSU, etc.)
-
-**Capacidades Técnicas:**
-
-- Parsing de intención del usuario (presupuesto, caso de uso, preferencias de marca)
-- Construcción dinámica de queries con filtros multi-dimensionales
-- Algoritmo de balanceo de presupuesto por categoría (GPU 35-40%, CPU 20-25%, etc.)
-- Fallback automático a alternativas si stock no disponible
-- Seguimiento diferencial de precios para alertar cambios durante la conversación
-- Streaming de respuestas (SSE) para UX responsiva
-
-**Diferenciación Premium:**
-
-Límites por tier:
-- Free: 3 cotizaciones/mes, 20 mensajes/cotización, máx 10 productos
-- Premium: Cotizaciones ilimitadas, mensajes ilimitados, hasta 50 productos, features adicionales (entrada de voz, guardar/exportar cotizaciones, alertas de precio)
-
-**Monetización:**
-- Medición basada en tokens para llamadas a LLM
-- Feature flags por nivel de suscripción
-- Analytics de uso para optimizar costos de API
+Este documento describe hacia dónde va el proyecto. Lo que ya está
+implementado vive en [`README.md`](./README.md). Lo que sigue acá es
+intencionalmente direccional: un compromiso con un *rumbo*, no con un
+sprint plan.
 
 ---
 
-### Otras Características Técnicas en Evaluación
+## Estado actual (resumen)
 
-#### Sistema de Alertas Reactivas
-WebSocket/SSE para notificaciones real-time cuando productos observados alcancen umbrales. Cron jobs que comparan `price_history` contra reglas definidas por usuario.
+Lo que ya funciona y no necesita planificación:
 
-#### Almacenamiento Persistente de Cotizaciones
-Schema relacional (`ai_quotes`, `ai_quote_items`) con versionado. Export a PDF/JSON. Compartir via slugs únicos con TTL configurable.
-
-#### Validación Avanzada de Compatibilidad
-Motor de reglas basado en specs normalizadas: matching de sockets, cálculos de clearance de RAM, requerimientos de wattage de PSU, restricciones de form factor de gabinete. Extensible via archivos de configuración.
-
-#### Herramienta de Comparación de Builds
-Diff lado a lado de múltiples configuraciones con scoring algorítmico (FPS estimado, relación valor/precio, eficiencia energética). Data de benchmarks integrada desde fuentes públicas.
-
-#### Optimización de Scraping
-- Migración a colas distribuidas (BullMQ + Redis) para escalado horizontal
-- Fingerprinting avanzado para matching de productos (más allá de MPN)
-- Detección automática de productos descontinuados
-- Patrón circuit breaker para tiendas con fallos recurrentes
-
----
-
-## Consideraciones de Implementación
-
-### Dependencias Técnicas Nuevas
-- Proveedor de LLM API (DeepSeek, Groq, o similar con function calling)
-- Session store para estado conversacional (Redis/Upstash recomendado)
-- Infraestructura de streaming (SSE o WebSockets)
-- Sistema de autenticación para tiers premium (Supabase Auth ya disponible)
-
-### Desafíos Técnicos
-- **Manejo de context window**: Truncar historial antiguo manteniendo contexto relevante
-- **Optimización de costos**: Cache de respuestas LLM por intenciones similares
-- **Confiabilidad de herramientas**: Manejo de timeouts y degradación graceful si herramientas fallan
-- **Validación de compatibilidad**: Mantener reglas actualizadas con nuevos lanzamientos de hardware
-
-### Decisiones de Arquitectura Pendientes
-- ¿Function calling nativo vs capa bridge MCP?
-- ¿Respuestas streaming o completions batch?
-- ¿Manejo de estado client-side (React context) o sesiones server-side?
-- ¿Qué modelo LLM balancea mejor costo/calidad para este caso de uso?
+- **Catálogo y comparación** — 7 crawlers, ~10 categorías, histórico de
+  precios, normalización con regex + LLM (DeepSeek), cache en Edge.
+- **Cotizaciones** — armado, validación básica de compatibilidad,
+  totalización, links públicos/privados, embeds inline en comentarios
+  tipo Notion.
+- **Comentarios** — threaded por producto, slash commands
+  (`/cotizacion`), renderer con embeds, soft-delete.
+- **Tiendas** — perfiles públicos, reseñas con voting "útil", flujo de
+  reclamo verificado, panel de admin para dueños.
+- **Identidad** — OAuth con sync de avatars, perfiles públicos con
+  builds del usuario.
+- **Moderación** — reportes, gatekeeper, bans, RLS-gated dashboards.
+- **Tracking** — clicks outbound a tiendas con UTM (cobertura inicial
+  en cards y product details).
 
 ---
 
-## Notas de Desarrollo
+## Próxima apuesta: comunidad de armadores
 
-Este roadmap es iterativo. Las features se implementarán basadas en:
-1. Validación técnica de viabilidad
-2. Feedback de usuarios beta
-3. Análisis de costos de operación (especialmente llamadas a LLM API)
-4. Priorización por impacto vs esfuerzo
+La hipótesis es que un comparador de precios chileno se diferencia
+sostenidamente cuando hay **conversación y curaduría comunitaria**
+arriba del catálogo. La data cruda la tienen muchos; la opinión
+informada de gente que ya armó esa build no.
 
-Cada feature nueva debe mantener los principios arquitectónicos del proyecto: separación de responsabilidades, seguridad por capas, y despliegue edge-first.
+Las funcionalidades sociales se construyen sobre lo que ya existe
+(perfiles, cotizaciones, comentarios, reseñas) y se priorizan en este
+orden:
+
+### 1. Builds como objeto social de primera clase
+
+Hoy una cotización es un carrito guardado. La idea es promoverla a
+*build*: algo que tiene autor visible, contexto (presupuesto, uso
+declarado: gaming/edición/oficina), notas, y un ciclo de vida
+(borrador → publicada → arquivada).
+
+- **Voting** sobre builds publicadas (útil / no útil) con anti-abuse
+  (un voto por usuario, decae con el tiempo).
+- **Save / Bookmark** para construir tu lista privada de builds que te
+  gustaron.
+- **Forks** explícitos: "armar a partir de" deja un link bidireccional
+  entre la build original y la derivada.
+- **Estado de stock** automático: si un componente queda sin stock en
+  todas las tiendas, marcar la build como "stale" sin esconderla.
+
+### 2. Ranking y reputación de armadores
+
+Los buenos armadores deberían destacar por encima del ruido.
+
+- **Score por usuario** ponderado por: votos en builds publicadas,
+  votos útiles en comentarios, reseñas con respaldo de la comunidad,
+  reportes que terminaron en moderación correcta.
+- **Tiers visibles** en el perfil (sin gamificación cringe — un badge
+  discreto del estilo "Armador verificado", "Top reviewer mes",
+  "Curador de tienda").
+- **Leaderboard mensual** por categoría: armadores más útiles en GPU,
+  CPU, builds bajo $500k, builds para edición, etc. Reset suave (no
+  rolling all-time).
+
+### 3. Feed social y descubrimiento
+
+Hoy el home muestra productos populares. Falta una entrada para "qué
+está pasando en la comunidad".
+
+- **Feed personalizado**: builds nuevas de gente que sigues, productos
+  comentados, reseñas relevantes para tus búsquedas recientes.
+- **Trending por presupuesto**: las builds más voted en los últimos 7
+  días, segmentadas por banda de presupuesto chilena (sub $300k, $300-
+  600k, $600k-1M, +$1M).
+- **Editor's picks** — slot manual para destacar builds curadas por
+  los moderadores (sin algoritmo, intencional).
+
+### 4. Follows y notificaciones
+
+- **Seguir armadores** y/o **seguir tiendas** con su propio feed.
+- **Notificaciones** in-app y opcionalmente por email:
+  - Alguien comentó / forkeó tu build.
+  - Una build que guardaste cambió de precio (>X% o cruzó tu umbral).
+  - Una tienda que sigues publicó respuesta a tu reseña.
+  - Un armador que sigues publicó algo nuevo.
+- **Mentions** `@usuario` en comentarios con notificación.
+
+### 5. Identidad pública más rica
+
+- Perfil con bio, foto, builds publicadas, reseñas escritas, badges,
+  últimas actividades.
+- **Username canónico** ya existente (`/u/:username`) — falta UI de
+  selección al registrarse y panel para reclamarlo / cambiarlo.
+- **Perfil de tienda** simétrico: respuestas a reseñas, builds en las
+  que aparece, tasa de stock real vs publicado.
 
 ---
 
-*Última actualización: Diciembre 2025*
+## Otras bets en evaluación
+
+Cosas que tienen sentido pero no son la apuesta principal este ciclo:
+
+### Asistente IA de cotización
+
+LLM con function calling para armar una build conversacionalmente
+("quiero $500k para Cyberpunk en 1440p"). Ya hay piezas: catálogo
+normalizado, motor de compatibilidad básico, cotizaciones manuales
+como cimiento. Se mantiene en evaluación porque (a) los costos por
+sesión hay que medirlos contra el upside, y (b) la apuesta social
+arriba debería traer suficiente engagement antes de invertir en un
+copilot.
+
+### Cobertura del catálogo
+
+- Más tiendas chilenas (objetivo: 12+ crawlers).
+- Más categorías: periféricos (mouse/teclado/audio), monitores,
+  notebooks pre-armados.
+- Mejor matching cross-store: ir más allá de MPN exacto con
+  fingerprinting de specs normalizadas.
+
+### Self-hosted friendly
+
+Como la licencia explícitamente permite self-hosting no comercial,
+vale la pena documentar el camino:
+
+- Docker compose mínimo para `collector` + `tracker` + Postgres
+  (Supabase self-hosted o Neon).
+- Variables de entorno bien documentadas con defaults sensatos.
+- Guía de "cómo cambiar el branding" antes de desplegar (per LICENSE).
+
+### Analítica para tiendas reclamadas
+
+El tracking de outbound clicks ya existe — falta exponer un panel
+para tiendas reclamadas con: clicks por producto, tasa de conversión
+estimada, productos con más interés vs sin stock. Posible base para
+una conversación comercial con tiendas más adelante.
+
+---
+
+## Cambios técnicos que habilitan lo de arriba
+
+- **Tabla `builds`** (rebrand de `quotes` para uso público) con
+  estado, autor visible, votos, forks, contexto declarado.
+- **Sistema de votos genérico** reusable (votes en comentarios ya
+  existe; extender a builds y reseñas con la misma infra).
+- **Notificaciones**: tabla `notifications` + worker en `cortex` que
+  procesa eventos (insert en `comments`, `votes`, `price_history`,
+  etc.) y crea filas. Render in-app + envío email opt-in.
+- **Score / reputation** calculado periódicamente por `cortex`
+  (materialized view o tabla cacheada con refresh cada 1-6h).
+- **Feed**: fan-out vs fan-in; probablemente fan-in (calcular el feed
+  on-read con queries indexadas, sin tabla de timeline) hasta que el
+  volumen lo justifique.
+- **Postgres como queue** ya está en uso para extracción IA
+  (`ai_extraction_jobs`) — extender al worker de notificaciones en
+  vez de meter Redis.
+
+---
+
+## Decisiones pendientes
+
+- ¿Voting en builds requiere cuenta? Probablemente sí — sin auth no
+  se puede medir reputación. ¿Voto anónimo en comentarios sí o no?
+- ¿Cómo manejamos forks de builds cuando la build original cambia
+  (precio, item descontinuado)? ¿Snapshot al momento del fork o
+  referencia viva?
+- ¿Reputación es global o segmentada por categoría? (Argumento por
+  segmentada: alguien que arma builds de oficina no necesariamente
+  sabe de overclock.)
+- ¿Cuánto del feed personalizado se calcula server-side cacheado vs
+  on-demand por usuario activo?
+- ¿Notificaciones por email desde día uno o sólo in-app + push web?
+
+---
+
+## Notas de método
+
+Este roadmap es iterativo. Cada feature se implementa cuando:
+
+1. Hay señal de demanda (uso de la pieza adyacente que la habilita).
+2. La validación técnica está hecha (no introducir Redis sin
+   demostrar que Postgres no alcanza).
+3. Encaja con los principios del repo: separación de responsabilidades
+   (web → api → db), URLs en español, RLS para todo, edge-first.
+
+Lo que **no** está en este documento, intencionalmente:
+
+- Mobile app nativa — la web SSR actual ya rinde bien en mobile.
+- Cripto/blockchain/NFT — no aplica.
+- Marketplace propio (vender directo) — fuera del scope; somos
+  comparador, no vendedor.
+- Internacionalización fuera de Chile — el valor del producto es la
+  curaduría local. Replicar en otro mercado es un fork legítimo bajo
+  la licencia, pero no es nuestro roadmap.
