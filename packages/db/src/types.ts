@@ -797,11 +797,45 @@ export type Database = {
           },
         ];
       };
+      store_review_helpful: {
+        Row: {
+          created_at: string;
+          review_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          review_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          review_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "store_review_helpful_review_id_fkey";
+            columns: ["review_id"];
+            isOneToOne: false;
+            referencedRelation: "store_reviews";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       store_reviews: {
         Row: {
           comment: string | null;
           created_at: string;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          deleted_reason: string | null;
+          helpful_count: number;
           id: string;
+          is_pinned: boolean;
+          owner_response: string | null;
+          owner_response_at: string | null;
+          owner_response_by: string | null;
           rating: number;
           store_id: string;
           updated_at: string;
@@ -810,7 +844,15 @@ export type Database = {
         Insert: {
           comment?: string | null;
           created_at?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          deleted_reason?: string | null;
+          helpful_count?: number;
           id?: string;
+          is_pinned?: boolean;
+          owner_response?: string | null;
+          owner_response_at?: string | null;
+          owner_response_by?: string | null;
           rating: number;
           store_id: string;
           updated_at?: string;
@@ -819,7 +861,15 @@ export type Database = {
         Update: {
           comment?: string | null;
           created_at?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          deleted_reason?: string | null;
+          helpful_count?: number;
           id?: string;
+          is_pinned?: boolean;
+          owner_response?: string | null;
+          owner_response_at?: string | null;
+          owner_response_by?: string | null;
           rating?: number;
           store_id?: string;
           updated_at?: string;
@@ -1099,6 +1149,7 @@ export type Database = {
         Args: { bucket_name: string; file_path: string };
         Returns: string;
       };
+      get_store_rating_stats: { Args: { p_store_slug: string }; Returns: Json };
       increment_product_view: { Args: { p_slug: string }; Returns: undefined };
       is_store_member: {
         Args: { p_required_role?: string; p_store_id: string };
