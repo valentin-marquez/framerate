@@ -22,4 +22,6 @@ export type Variables = {
   userRole: UserRole;
   /** Array con todos los roles globales del usuario. */
   userRoles: UserRole[];
+  /** Fase 1: store_id resuelto por requireStoreRoleBySlug. */
+  storeId?: string;
 };

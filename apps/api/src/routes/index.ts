@@ -1,8 +1,11 @@
 import auth from "@/routes/auth";
 import categories from "@/routes/categories";
+// Fase 1: claims + stores
+import claims from "@/routes/claims";
 import products from "@/routes/products";
 import profiles from "@/routes/profiles";
 import quotes from "@/routes/quotes";
+import stores from "@/routes/stores";
 import translationFeedback from "@/routes/translation-feedback";
 
 const API_VERSION = "v1";
@@ -36,5 +39,14 @@ export const routes = [
   {
     path: `/${API_VERSION}/translation-feedback`,
     route: translationFeedback,
+  },
+  // Fase 1: claims + stores
+  {
+    path: `/${API_VERSION}/claims`,
+    route: claims,
+  },
+  {
+    path: `/${API_VERSION}/stores`,
+    route: stores,
   },
 ];

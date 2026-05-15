@@ -63,6 +63,14 @@ app.use("/v1/categories/*", Limit("lenient"));
 app.use("/v1/profiles/*", Limit("lenient"));
 app.use("/v1/auth/*", Limit("lenient"));
 
+// Fase 1: claims + stores
+app.use("/v1/claims", Limit("strict"));
+app.use("/v1/claims/*/verify", Limit("strict"));
+app.use("/v1/claims/*/confirm", Limit("strict"));
+app.use("/v1/claims/my", Limit("lenient"));
+app.use("/v1/stores/*/members", Limit("moderate"));
+app.use("/v1/stores/*", Limit("moderate"));
+
 app.get("/", (c) => {
   return c.json({
     message: "Welcome to Framerate API",

@@ -1,0 +1,233 @@
+import { Logger } from "@framerate/utils";
+import { Hono } from "hono";
+import type { Bindings, Variables } from "@/bindings";
+import { verifyTxtRecord } from "@/lib/doh";
+import { generateToken, normalizeDomain, txtRecordName, txtRecordValue } from "@/lib/domain";
+import { createSupabase } from "@/lib/supabase";
+import { authMiddleware } from "@/middleware/auth";
+
+const logger = new Logger("Claims");
+
+const claims = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+claims.use("*", authMiddleware);
+
+/**
+ * POST /v1/claims
+ * body: { domain: string, store_id?: uuid }
+ *
+ * Crea un claim pending y devuelve las instrucciones de TXT.
+ */
+claims.post("/", async (c) => {
+  const user = c.get("user");
+  const token = c.get("token");
+
+  const body = await c.req.json<{ domain?: string; store_id?: string }>().catch(() => null);
+  if (!body || typeof body.domain !== "string") {
+    return c.json({ error: "Body { domain: string, store_id?: uuid } requerido" }, 400);
+  }
+
+  const domain = normalizeDomain(body.domain);
+  if (!domain) {
+    return c.json({ error: "Dominio inválido" }, 400);
+  }
+
+  const verificationToken = generateToken();
+  const txtName = txtRecordName(domain);
+  const txtValue = txtRecordValue(verificationToken);
+
+  const supabase = createSupabase(c.env, token);
+
+  // Si user pasó store_id, validar que existe.
+  let storeId: string | null = null;
+  if (body.store_id) {
+    const { data: store, error } = await supabase.from("stores").select("id").eq("id", body.store_id).maybeSingle();
+    if (error || !store) {
+      return c.json({ error: "store_id no encontrado" }, 404);
+    }
+    storeId = store.id;
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: types se regeneran tras migration up
+  const { data: inserted, error: insertErr } = await (supabase as any)
+    .from("store_claim_requests")
+    .insert({
+      store_id: storeId,
+      claimed_domain: domain,
+      claimant_user_id: user.id,
+      verification_token: verificationToken,
+      txt_record_name: txtName,
+    })
+    .select()
+    .single();
+
+  if (insertErr) {
+    logger.error(`Insert claim failed: ${insertErr.message}`);
+    // Constraint único activo -> ya hay un claim pending/verified.
+    if (insertErr.code === "23505") {
+      return c.json({ error: "Ya existe un reclamo activo para este dominio" }, 409);
+    }
+    return c.json({ error: "No se pudo crear el reclamo" }, 500);
+  }
+
+  return c.json(
+    {
+      id: inserted.id,
+      domain,
+      txt_name: txtName,
+      txt_value: txtValue,
+      status: inserted.status,
+      expires_at: inserted.expires_at,
+      instructions: {
+        es: `Agregá un registro TXT en tu DNS:\n  Nombre: ${txtName}\n  Valor: ${txtValue}\nLuego POSTeá a /v1/claims/${inserted.id}/verify.`,
+        en: `Add a TXT record to your DNS:\n  Name: ${txtName}\n  Value: ${txtValue}\nThen POST to /v1/claims/${inserted.id}/verify.`,
+      },
+    },
+    201,
+  );
+});
+
+/**
+ * POST /v1/claims/:id/verify
+ *
+ * Hace DoH paralelo contra Cloudflare + Google, requiere match en ambos.
+ * Actualiza el claim a 'verified' si pasa, o registra el intento si no.
+ */
+claims.post("/:id/verify", async (c) => {
+  const user = c.get("user");
+  const token = c.get("token");
+  const claimId = c.req.param("id");
+
+  const supabase = createSupabase(c.env, token);
+
+  // biome-ignore lint/suspicious/noExplicitAny: types regen
+  const { data: claim, error: fetchErr } = await (supabase as any)
+    .from("store_claim_requests")
+    .select("*")
+    .eq("id", claimId)
+    .maybeSingle();
+
+  if (fetchErr || !claim) {
+    return c.json({ error: "Claim no encontrado" }, 404);
+  }
+
+  if (claim.claimant_user_id !== user.id) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  if (claim.status === "verified") {
+    return c.json({ id: claim.id, status: "verified", verified_at: claim.verified_at });
+  }
+
+  if (claim.status !== "pending") {
+    return c.json({ error: `Claim is ${claim.status}` }, 400);
+  }
+
+  if (new Date(claim.expires_at).getTime() < Date.now()) {
+    // biome-ignore lint/suspicious/noExplicitAny: types regen
+    await (supabase as any).from("store_claim_requests").update({ status: "expired" }).eq("id", claimId);
+    return c.json({ error: "Claim expired" }, 410);
+  }
+
+  const expectedValue = txtRecordValue(claim.verification_token);
+  const result = await verifyTxtRecord(claim.txt_record_name, expectedValue);
+
+  const update: Record<string, unknown> = {
+    attempts: (claim.attempts ?? 0) + 1,
+    last_checked_at: new Date().toISOString(),
+  };
+
+  if (result.matched) {
+    update.status = "verified";
+    update.verified_at = new Date().toISOString();
+    update.last_error = null;
+  } else {
+    update.last_error = JSON.stringify({ status: result.status, details: result.details });
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: types regen
+  const { data: updated, error: updateErr } = await (supabase as any)
+    .from("store_claim_requests")
+    .update(update)
+    .eq("id", claimId)
+    .select()
+    .single();
+
+  if (updateErr) {
+    // RLS bloquea update por usuarios: la verificación debe usar service role en prod.
+    // En LOCAL como degradación devolvemos el resultado.
+    logger.warn(`Update bloqueado por RLS (esperado si no es admin): ${updateErr.message}`);
+    return c.json({
+      id: claimId,
+      status: result.matched ? "verified" : "pending",
+      matched: result.matched,
+      dns: result.details,
+      note: "El estado persistido se actualizará via worker con service_role",
+    });
+  }
+
+  return c.json({
+    id: updated.id,
+    status: updated.status,
+    matched: result.matched,
+    attempts: updated.attempts,
+    dns: result.details,
+  });
+});
+
+/**
+ * POST /v1/claims/:id/confirm
+ *
+ * Llama al RPC confirm_store_claim que atómicamente crea store_members(owner)
+ * y actualiza stores.owner_user_id + verified_at. Requiere status='verified'.
+ */
+claims.post("/:id/confirm", async (c) => {
+  const token = c.get("token");
+  const claimId = c.req.param("id");
+  const supabase = createSupabase(c.env, token);
+
+  // biome-ignore lint/suspicious/noExplicitAny: RPC types regen
+  const { data, error } = await (supabase as any).rpc("confirm_store_claim", { p_claim_id: claimId });
+
+  if (error) {
+    logger.warn(`confirm_store_claim failed: ${error.message}`);
+    const msg = error.message ?? "Confirm failed";
+    if (msg.includes("not verified")) return c.json({ error: msg }, 400);
+    if (msg.includes("unauthorized")) return c.json({ error: "Forbidden" }, 403);
+    if (msg.includes("not found")) return c.json({ error: "Claim no encontrado" }, 404);
+    if (msg.includes("expired")) return c.json({ error: "Claim expired" }, 410);
+    if (msg.includes("no associated store")) return c.json({ error: msg }, 422);
+    return c.json({ error: "No se pudo confirmar" }, 500);
+  }
+
+  return c.json({ store: data });
+});
+
+/**
+ * GET /v1/claims/my
+ *
+ * Lista los claims del usuario autenticado.
+ */
+claims.get("/my", async (c) => {
+  const user = c.get("user");
+  const token = c.get("token");
+  const supabase = createSupabase(c.env, token);
+
+  // biome-ignore lint/suspicious/noExplicitAny: types regen
+  const { data, error } = await (supabase as any)
+    .from("store_claim_requests")
+    .select(
+      "id, store_id, claimed_domain, txt_record_name, status, attempts, last_checked_at, verified_at, expires_at, created_at",
+    )
+    .eq("claimant_user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    logger.error(`List my claims: ${error.message}`);
+    return c.json({ error: "No se pudieron listar reclamos" }, 500);
+  }
+
+  return c.json({ claims: data ?? [] });
+});
+
+export default claims;
