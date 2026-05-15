@@ -68,80 +68,114 @@ export function CommentThread({ productId, root, sort, initiallyExpanded }: Comm
   const editMutation = useEditComment();
   const deleteMutation = useSoftDeleteComment();
 
-  // Render the root using its own metadata (so the score/edits stay accurate
-  // even before the thread loads).
-  const renderRoot = (): React.ReactNode => {
-    const rootDisplay: CommentNodeT = {
-      id: root.id,
-      target_type: "product",
-      target_id: root.target_id,
-      parent_id: null,
-      root_id: root.id,
-      path: "",
-      depth: 0,
-      author_id: root.author_id,
-      author_username: root.author_username,
-      author_avatar_url: root.author_avatar_url,
-      body: root.body,
-      score: tree?.node ? (tree.node as CommentNodeT).score : root.score,
-      deleted_at: root.deleted_at,
-      deleted_reason: root.deleted_reason,
-      edited_at: root.edited_at,
-      created_at: root.created_at,
-    };
-
-    const node = (tree?.node as CommentNodeT) || rootDisplay;
-    return (
-      <CommentNode
-        node={node}
-        myVote={voteMap.get(node.id) ?? 0}
-        onVote={(v) => voteMutation.mutate({ commentId: node.id, value: v })}
-        onReply={async (body) => {
-          await createMutation.mutateAsync({ parent_id: node.id, body });
-          // Force-expand after replying so the new node appears.
+  return (
+    <div className="space-y-2">
+      <RootCommentNode
+        root={root}
+        tree={tree}
+        voteMap={voteMap}
+        expanded={expanded}
+        renderLimit={renderLimit}
+        onVote={(id, v) => voteMutation.mutate({ commentId: id, value: v })}
+        onReplyToRoot={async (body) => {
+          await createMutation.mutateAsync({ parent_id: root.id, body });
           setExpanded(true);
         }}
-        onEdit={async (body) => {
-          await editMutation.mutateAsync({ id: node.id, body });
+        onReplyToChild={async (parentId, body) => {
+          await createMutation.mutateAsync({ parent_id: parentId, body });
         }}
-        onDelete={() => deleteMutation.mutate({ id: node.id })}
-        canReply={node.depth < MAX_RENDER_DEPTH}
-      >
-        {expanded && tree && (
-          <ChildList
-            nodes={tree.children}
-            voteMap={voteMap}
-            renderLimit={renderLimit}
-            onVote={(id, v) => voteMutation.mutate({ commentId: id, value: v })}
-            onReply={async (parentId, body) => {
-              await createMutation.mutateAsync({ parent_id: parentId, body });
-            }}
-            onEdit={async (id, body) => {
-              await editMutation.mutateAsync({ id, body });
-            }}
-            onDelete={(id) => deleteMutation.mutate({ id })}
-          />
-        )}
-      </CommentNode>
-    );
-  };
-
-  return (
-    <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
-      {renderRoot()}
+        onEdit={async (id, body) => {
+          await editMutation.mutateAsync({ id, body });
+        }}
+        onDelete={(id) => deleteMutation.mutate({ id })}
+      />
 
       {!expanded && root.reply_count > 0 && (
-        <Button variant="ghost" size="sm" onClick={() => setExpanded(true)}>
-          Ver {root.reply_count} {root.reply_count === 1 ? "respuesta" : "respuestas"}
-        </Button>
+        <div className="pl-11">
+          <Button variant="ghost" size="sm" onClick={() => setExpanded(true)}>
+            Ver {root.reply_count} {root.reply_count === 1 ? "respuesta" : "respuestas"}
+          </Button>
+        </div>
       )}
 
       {expanded && nodes.length > renderLimit && (
-        <Button variant="ghost" size="sm" onClick={() => setRenderLimit((n) => n + 50)}>
-          Ver más comentarios
-        </Button>
+        <div className="pl-11">
+          <Button variant="ghost" size="sm" onClick={() => setRenderLimit((n) => n + 50)}>
+            Ver más comentarios
+          </Button>
+        </div>
       )}
     </div>
+  );
+}
+
+interface RootCommentNodeProps {
+  root: CommentRoot;
+  tree: TreeNode | null;
+  voteMap: Map<string, -1 | 1>;
+  expanded: boolean;
+  renderLimit: number;
+  onVote: (id: string, v: -1 | 0 | 1) => void;
+  onReplyToRoot: (body: string) => Promise<void>;
+  onReplyToChild: (parentId: string, body: string) => Promise<void>;
+  onEdit: (id: string, body: string) => Promise<void>;
+  onDelete: (id: string) => void;
+}
+
+function RootCommentNode({
+  root,
+  tree,
+  voteMap,
+  expanded,
+  renderLimit,
+  onVote,
+  onReplyToRoot,
+  onReplyToChild,
+  onEdit,
+  onDelete,
+}: RootCommentNodeProps) {
+  const rootDisplay: CommentNodeT = {
+    id: root.id,
+    target_type: "product",
+    target_id: root.target_id,
+    parent_id: null,
+    root_id: root.id,
+    path: "",
+    depth: 0,
+    author_id: root.author_id,
+    author_username: root.author_username,
+    author_avatar_url: root.author_avatar_url,
+    body: root.body,
+    score: tree?.node ? (tree.node as CommentNodeT).score : root.score,
+    deleted_at: root.deleted_at,
+    deleted_reason: root.deleted_reason,
+    edited_at: root.edited_at,
+    created_at: root.created_at,
+  };
+
+  const node = (tree?.node as CommentNodeT) || rootDisplay;
+  return (
+    <CommentNode
+      node={node}
+      myVote={voteMap.get(node.id) ?? 0}
+      onVote={(v) => onVote(node.id, v)}
+      onReply={onReplyToRoot}
+      onEdit={(body) => onEdit(node.id, body)}
+      onDelete={() => onDelete(node.id)}
+      canReply={node.depth < MAX_RENDER_DEPTH}
+    >
+      {expanded && tree && (
+        <ChildList
+          nodes={tree.children}
+          voteMap={voteMap}
+          renderLimit={renderLimit}
+          onVote={onVote}
+          onReply={onReplyToChild}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      )}
+    </CommentNode>
   );
 }
 

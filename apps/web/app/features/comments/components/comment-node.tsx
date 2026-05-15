@@ -1,12 +1,12 @@
-import { IconDots, IconPencil, IconTrash, IconUser } from "@tabler/icons-react";
+import { IconArrowBackUp, IconHeart, IconHeartFilled, IconPencil, IconTrash, IconUser } from "@tabler/icons-react";
+import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useState } from "react";
 import { useAuthStore } from "~/features/auth/store/auth";
+import { CommentBody } from "~/features/comments/components/comment-body";
 import { CommentForm } from "~/features/comments/components/comment-form";
-import { VoteButtons } from "~/features/comments/components/vote-buttons";
 import type { CommentNode as CommentNodeT } from "~/features/comments/services/comments";
 import { ReportButton } from "~/features/moderation";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
-import { Button } from "~/shared/components/primitives/button";
 import { cn } from "~/shared/lib/utils";
 import { getImageUrl } from "~/shared/utils/images";
 
@@ -69,112 +69,177 @@ export function CommentNode({
   const [showReply, setShowReply] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  const isAuthed = !!user;
+  const liked = myVote === 1;
   const displayName = isDeleted ? "[eliminado]" : node.author_username || (node.author_id ? "usuario" : "[anónimo]");
 
+  const handleLike = () => {
+    if (!isAuthed || votePending || isDeleted) return;
+    onVote(liked ? 0 : 1);
+  };
+
   return (
-    <article className="flex gap-3 group">
-      <div className="flex flex-col items-center shrink-0 pt-1">
-        <VoteButtons score={node.score} myVote={myVote} pending={votePending} onVote={onVote} />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <header className="flex items-center gap-2 text-xs text-muted-foreground">
-          <div className="size-5 rounded-full overflow-hidden bg-secondary/40 flex items-center justify-center shrink-0">
-            {node.author_avatar_url ? (
-              <AsyncImage src={getImageUrl(node.author_avatar_url)} alt="" className="size-full object-cover" />
-            ) : (
-              <IconUser className="size-3 text-muted-foreground" />
-            )}
-          </div>
-          <span className="font-medium text-foreground">{displayName}</span>
-          <span>·</span>
-          <time dateTime={node.created_at}>{formatRelative(node.created_at)}</time>
-          {node.edited_at && !isDeleted && <span className="italic">(editado)</span>}
-          {isDeleted && (
-            <span className="italic">· eliminado{node.deleted_reason ? ` (${node.deleted_reason})` : ""}</span>
-          )}
-        </header>
-
-        <div className="mt-1.5">
-          {isEditing && !isDeleted ? (
-            <CommentForm
-              initialValue={node.body || ""}
-              submitLabel="Guardar"
-              autoFocus
-              onCancel={() => setIsEditing(false)}
-              onSubmit={async (body) => {
-                await onEdit(body);
-                setIsEditing(false);
-              }}
-            />
+    <LazyMotion features={domAnimation}>
+      <article className="flex gap-3 group" data-comment-id={node.id}>
+        <div className="size-8 rounded-full overflow-hidden bg-secondary/40 flex items-center justify-center shrink-0">
+          {node.author_avatar_url ? (
+            <AsyncImage src={getImageUrl(node.author_avatar_url)} alt="" className="size-full object-cover" />
           ) : (
-            <p
-              className={cn(
-                "text-sm leading-relaxed whitespace-pre-wrap break-words",
-                isDeleted ? "text-muted-foreground italic" : "text-foreground",
-              )}
-            >
-              {isDeleted ? "[Comentario eliminado]" : node.body}
-            </p>
+            <IconUser className="size-4 text-muted-foreground" />
           )}
         </div>
 
-        {!isEditing && (
-          <div className="mt-1.5 flex items-center gap-1 text-xs">
-            {!isDeleted && canReply && (
-              <Button variant="ghost" size="xs" onClick={() => setShowReply((v) => !v)} aria-expanded={showReply}>
-                Responder
-              </Button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="font-medium text-foreground text-sm leading-none">{displayName}</span>
+            {isDeleted && (
+              <span className="text-xs italic text-muted-foreground">
+                · eliminado{node.deleted_reason ? ` (${node.deleted_reason})` : ""}
+              </span>
             )}
-            {isWithinEditWindow && (
-              <Button variant="ghost" size="xs" onClick={() => setIsEditing(true)}>
-                <IconPencil className="size-3" />
-                Editar
-              </Button>
-            )}
-            {isAuthor && !isDeleted && (
-              <Button
-                variant="ghost"
-                size="xs"
-                onClick={() => {
-                  if (window.confirm("¿Eliminar este comentario?")) onDelete();
+            {node.edited_at && !isDeleted && <span className="text-xs italic text-muted-foreground">(editado)</span>}
+          </div>
+
+          <div className="mt-1">
+            {isEditing && !isDeleted ? (
+              <CommentForm
+                initialValue={node.body || ""}
+                submitLabel="Guardar cambios"
+                onCancel={() => setIsEditing(false)}
+                onSubmit={async (body) => {
+                  await onEdit(body);
+                  setIsEditing(false);
                 }}
-              >
-                <IconTrash className="size-3" />
-                Eliminar
-              </Button>
-            )}
-            {!isAuthor && !isDeleted && user && (
-              <ReportButton
-                targetType="comment"
-                targetId={node.id}
-                contextLabel={`Comentario de ${displayName}`}
-                size="xs"
               />
+            ) : isDeleted ? (
+              <p className="text-sm leading-relaxed italic text-muted-foreground">[Comentario eliminado]</p>
+            ) : (
+              <CommentBody body={node.body || ""} />
             )}
           </div>
-        )}
 
-        {showReply && !isDeleted && (
-          <div className="mt-2">
-            <CommentForm
-              autoFocus
-              placeholder="Responder…"
-              submitLabel="Responder"
-              onCancel={() => setShowReply(false)}
-              onSubmit={async (body) => {
-                await onReply(body);
-                setShowReply(false);
-              }}
-            />
-          </div>
-        )}
+          {!isEditing && (
+            <div className="mt-1.5 flex items-center gap-3.5 text-xs text-muted-foreground/90">
+              <FooterAction
+                onClick={handleLike}
+                disabled={!isAuthed || votePending || isDeleted}
+                pressed={liked}
+                aria-label={liked ? "Quitar me gusta" : "Me gusta"}
+                className={cn(
+                  "hover:text-rose-600 dark:hover:text-rose-400",
+                  liked && "text-rose-600 dark:text-rose-400",
+                )}
+              >
+                {liked ? <IconHeartFilled className="size-4" /> : <IconHeart className="size-4" />}
+                <span className="tabular-nums">{Math.max(0, node.score)}</span>
+              </FooterAction>
 
-        {children && <div className="mt-3 border-l-2 border-border/40 pl-3 space-y-3">{children}</div>}
-      </div>
+              {!isDeleted && canReply && (
+                <FooterAction onClick={() => setShowReply((v) => !v)} aria-expanded={showReply}>
+                  <IconArrowBackUp className="size-3.5" />
+                  Responder
+                </FooterAction>
+              )}
 
-      {/* Ensures IconDots stays in the JSX for future menu UX; keeps imports clean. */}
-      <IconDots className="hidden" aria-hidden="true" />
-    </article>
+              <time dateTime={node.created_at} className="select-none">
+                {formatRelative(node.created_at)}
+              </time>
+
+              {isWithinEditWindow && (
+                <FooterAction onClick={() => setIsEditing(true)}>
+                  <IconPencil className="size-3.5" />
+                  Editar
+                </FooterAction>
+              )}
+              {isAuthor && !isDeleted && (
+                <FooterAction
+                  onClick={() => {
+                    if (window.confirm("¿Eliminar este comentario?")) onDelete();
+                  }}
+                  className="hover:text-rose-600 dark:hover:text-rose-400"
+                >
+                  <IconTrash className="size-3.5" />
+                  Eliminar
+                </FooterAction>
+              )}
+              {!isAuthor && !isDeleted && user && (
+                <ReportButton
+                  targetType="comment"
+                  targetId={node.id}
+                  contextLabel={`Comentario de ${displayName}`}
+                  size="xs"
+                />
+              )}
+            </div>
+          )}
+
+          <AnimatePresence initial={false}>
+            {showReply && !isDeleted && (
+              <m.div
+                key="reply-form"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="overflow-hidden"
+              >
+                <div className="mt-2">
+                  <CommentForm
+                    placeholder="Responder…"
+                    submitLabel="Responder"
+                    onCancel={() => setShowReply(false)}
+                    onSubmit={async (body) => {
+                      await onReply(body);
+                      setShowReply(false);
+                    }}
+                  />
+                </div>
+              </m.div>
+            )}
+          </AnimatePresence>
+
+          {children && <div className="mt-3 border-l border-border/40 pl-4 space-y-4">{children}</div>}
+        </div>
+      </article>
+    </LazyMotion>
+  );
+}
+
+interface FooterActionProps {
+  onClick: () => void;
+  disabled?: boolean;
+  pressed?: boolean;
+  className?: string;
+  children: React.ReactNode;
+  "aria-label"?: string;
+  "aria-expanded"?: boolean;
+}
+
+function FooterAction({
+  onClick,
+  disabled,
+  pressed,
+  className,
+  children,
+  "aria-label": ariaLabel,
+  "aria-expanded": ariaExpanded,
+}: FooterActionProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={pressed}
+      aria-label={ariaLabel}
+      aria-expanded={ariaExpanded}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md px-1 -mx-1 py-0.5 transition-colors",
+        "hover:text-foreground focus-visible:text-foreground focus-visible:outline-2 focus-visible:outline-ring/50 focus-visible:outline-offset-2",
+        disabled && "opacity-50 cursor-not-allowed hover:text-muted-foreground/90",
+        className,
+      )}
+    >
+      {children}
+    </button>
   );
 }
