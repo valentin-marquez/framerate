@@ -1,9 +1,11 @@
 /**
- * Utilidades de Supabase Storage para gestionar logos de tiendas e imágenes de productos.
+ * Utilidades de Supabase Storage para gestionar logos de tiendas, imágenes de productos
+ * y avatars de usuarios.
  *
  * Buckets:
  * - store-logos: Logos de tiendas identificados por el slug de la tienda (ej. "sp-digital.png")
  * - product-images: Imágenes de productos identificadas por MPN (ej. "RTX4090-GAMING-X-TRIO.webp")
+ * - user-avatars: Avatars de usuarios bajo carpeta {user_id}/ (ej. "abc-123/avatar.webp")
  */
 
 /**
@@ -12,6 +14,7 @@
 export const StorageBuckets = {
   STORE_LOGOS: "store-logos",
   PRODUCT_IMAGES: "product-images",
+  USER_AVATARS: "user-avatars",
 } as const;
 
 export type StorageBucket = (typeof StorageBuckets)[keyof typeof StorageBuckets];
@@ -22,6 +25,7 @@ export type StorageBucket = (typeof StorageBuckets)[keyof typeof StorageBuckets]
 export const AllowedMimeTypes = {
   [StorageBuckets.STORE_LOGOS]: ["image/png", "image/jpeg", "image/webp", "image/svg+xml"],
   [StorageBuckets.PRODUCT_IMAGES]: ["image/png", "image/jpeg", "image/webp", "image/avif"],
+  [StorageBuckets.USER_AVATARS]: ["image/png", "image/jpeg", "image/webp"],
 } as const;
 
 /**
@@ -30,6 +34,7 @@ export const AllowedMimeTypes = {
 export const FileSizeLimits = {
   [StorageBuckets.STORE_LOGOS]: 1048576, // 1MB
   [StorageBuckets.PRODUCT_IMAGES]: 2097152, // 2MB
+  [StorageBuckets.USER_AVATARS]: 2097152, // 2MB
 } as const;
 
 /**
@@ -94,6 +99,34 @@ export function getProductImagePath(mpn: string, extension: "png" | "jpeg" | "jp
 export function getStoragePublicUrl(supabaseUrl: string, bucket: StorageBucket, filePath: string): string {
   const baseUrl = supabaseUrl.replace(/\/$/, ""); // Eliminar barra final
   return `${baseUrl}/storage/v1/object/public/${bucket}/${filePath}`;
+}
+
+/**
+ * Extensión válida para un avatar de usuario. Mantenemos el set pequeño porque
+ * el bucket sólo acepta png/jpeg/webp.
+ */
+export type UserAvatarExtension = "png" | "jpeg" | "jpg" | "webp";
+
+/**
+ * Genera la ruta de almacenamiento para el avatar de un usuario.
+ * Usa estructura de carpetas para que la RLS pueda restringir el acceso por
+ * dueño con `storage.foldername(name)[1] = auth.uid()`.
+ *
+ * @param userId - UUID del usuario (auth.users.id)
+ * @param extension - Extensión del archivo (por defecto "webp")
+ *
+ * @example
+ * getUserAvatarPath("9f0a...e1") // "9f0a...e1/avatar.webp"
+ */
+export function getUserAvatarPath(userId: string, extension: UserAvatarExtension = "webp"): string {
+  return `${userId}/avatar.${extension}`;
+}
+
+/**
+ * Genera la URL pública para el avatar de un usuario.
+ */
+export function getUserAvatarUrl(supabaseUrl: string, userId: string, extension: UserAvatarExtension = "webp"): string {
+  return getStoragePublicUrl(supabaseUrl, StorageBuckets.USER_AVATARS, getUserAvatarPath(userId, extension));
 }
 
 /**

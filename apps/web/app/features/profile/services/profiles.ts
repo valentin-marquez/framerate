@@ -34,4 +34,11 @@ export const profilesService = {
    * Actualiza el perfil del usuario autenticado.
    */
   updateMe: (data: UpdateProfileRequest, token: string) => api.patch<Profile>("/v1/profiles/me", data, { token }),
+
+  /**
+   * Sincroniza el avatar del provider OAuth al bucket `user-avatars`.
+   * Idempotente: si el avatar ya está en el bucket no hace nada.
+   */
+  syncAvatar: (token: string) =>
+    api.post<{ synced: boolean; profile: Profile; reason?: string }>("/v1/auth/sync-avatar", {}, { token }),
 };
