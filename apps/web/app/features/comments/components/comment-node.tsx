@@ -4,6 +4,7 @@ import { useAuthStore } from "~/features/auth/store/auth";
 import { CommentForm } from "~/features/comments/components/comment-form";
 import { VoteButtons } from "~/features/comments/components/vote-buttons";
 import type { CommentNode as CommentNodeT } from "~/features/comments/services/comments";
+import { ReportButton } from "~/features/moderation";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Button } from "~/shared/components/primitives/button";
 import { cn } from "~/shared/lib/utils";
@@ -142,6 +143,14 @@ export function CommentNode({
                 <IconTrash className="size-3" />
                 Eliminar
               </Button>
+            )}
+            {!isAuthor && !isDeleted && user && (
+              <ReportButton
+                targetType="comment"
+                targetId={node.id}
+                contextLabel={`Comentario de ${displayName}`}
+                size="xs"
+              />
             )}
           </div>
         )}

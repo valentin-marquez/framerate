@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useAuthStore } from "~/features/auth/store/auth";
+import { ReportButton } from "~/features/moderation";
 import {
   type StoreReview,
   type StoreReviewItem,
@@ -119,34 +120,40 @@ export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelp
                   <span>Destacada</span>
                 </Badge>
               )}
-              {(canManage || isAuthor) && (
-                <div className="flex items-center gap-1">
-                  {canManage && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={handlePin}
-                      aria-label={full.is_pinned ? "Quitar destacado" : "Destacar reseña"}
-                      title={full.is_pinned ? "Quitar destacado" : "Destacar reseña"}
-                    >
-                      <IconPinFilled className={cn("size-4", full.is_pinned && "text-primary")} />
-                    </Button>
-                  )}
-                  {(isAuthor || canManage) && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={handleDelete}
-                      aria-label="Eliminar reseña"
-                      title="Eliminar"
-                    >
-                      <IconTrash className="size-4" />
-                    </Button>
-                  )}
-                </div>
-              )}
+              <div className="flex items-center gap-1">
+                {!isAuthor && user && (
+                  <ReportButton
+                    targetType="store_review"
+                    targetId={full.id}
+                    contextLabel={`Reseña de ${authorName}`}
+                    iconOnly
+                  />
+                )}
+                {canManage && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={handlePin}
+                    aria-label={full.is_pinned ? "Quitar destacado" : "Destacar reseña"}
+                    title={full.is_pinned ? "Quitar destacado" : "Destacar reseña"}
+                  >
+                    <IconPinFilled className={cn("size-4", full.is_pinned && "text-primary")} />
+                  </Button>
+                )}
+                {(isAuthor || canManage) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={handleDelete}
+                    aria-label="Eliminar reseña"
+                    title="Eliminar"
+                  >
+                    <IconTrash className="size-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 

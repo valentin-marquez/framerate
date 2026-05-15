@@ -132,45 +132,33 @@ claims.post("/:id/verify", async (c) => {
   const expectedValue = txtRecordValue(claim.verification_token);
   const result = await verifyTxtRecord(claim.txt_record_name, expectedValue);
 
-  const update: Record<string, unknown> = {
-    attempts: (claim.attempts ?? 0) + 1,
-    last_checked_at: new Date().toISOString(),
-  };
-
-  if (result.matched) {
-    update.status = "verified";
-    update.verified_at = new Date().toISOString();
-    update.last_error = null;
-  } else {
-    update.last_error = JSON.stringify({ status: result.status, details: result.details });
-  }
-
+  // RPC SECURITY DEFINER que valida auth.uid() = claimant_user_id antes del
+  // update — sortea la policy que sólo permite service_role en updates directos
+  // preservando la trust boundary (api sigue corriendo con anon + JWT user).
   // biome-ignore lint/suspicious/noExplicitAny: types regen
-  const { data: updated, error: updateErr } = await (supabase as any)
-    .from("store_claim_requests")
-    .update(update)
-    .eq("id", claimId)
-    .select()
-    .single();
+  const { data: rpcRow, error: updateErr } = await (supabase as any).rpc("record_claim_verification_attempt", {
+    p_claim_id: claimId,
+    p_matched: result.matched,
+    p_dns_details: result.details
+      ? JSON.parse(JSON.stringify({ status: result.status, details: result.details }))
+      : null,
+  });
 
   if (updateErr) {
-    // RLS bloquea update por usuarios: la verificación debe usar service role en prod.
-    // En LOCAL como degradación devolvemos el resultado.
-    logger.warn(`Update bloqueado por RLS (esperado si no es admin): ${updateErr.message}`);
-    return c.json({
-      id: claimId,
-      status: result.matched ? "verified" : "pending",
-      matched: result.matched,
-      dns: result.details,
-      note: "El estado persistido se actualizará via worker con service_role",
-    });
+    logger.warn(`record_claim_verification_attempt failed: ${updateErr.message}`);
+    const msg = updateErr.message ?? "";
+    if (msg.includes("unauthorized")) return c.json({ error: "Forbidden" }, 403);
+    if (msg.includes("not found")) return c.json({ error: "Claim no encontrado" }, 404);
+    if (msg.includes("expired")) return c.json({ error: "Claim expired" }, 410);
+    return c.json({ error: msg || "Verify failed" }, 500);
   }
 
+  const updated = Array.isArray(rpcRow) ? rpcRow[0] : rpcRow;
   return c.json({
-    id: updated.id,
-    status: updated.status,
+    id: updated?.id ?? claimId,
+    status: updated?.status ?? (result.matched ? "verified" : "pending"),
     matched: result.matched,
-    attempts: updated.attempts,
+    attempts: updated?.attempts,
     dns: result.details,
   });
 });

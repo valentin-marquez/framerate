@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { StoreReviewsSection } from "~/features/store-reviews/components/store-reviews-section";
 import { ApiError } from "~/shared/lib/api";
 import { StoreHeader } from "../components/store-header";
 import { storesService } from "../services/stores";
@@ -50,10 +51,7 @@ export default function StorePage({ loaderData }: Route.ComponentProps) {
         </div>
       </section>
 
-      {/* Fase 2 integrará top productos y reviews aquí */}
-      <section className="rounded-xl border border-dashed border-border p-6 text-center text-muted-foreground text-sm">
-        Top productos y reviews de la tienda — próximamente
-      </section>
+      <StoreReviewsSection storeSlug={store.slug} />
 
       <div className="flex justify-end">
         <Link

@@ -1742,6 +1742,17 @@ export type Database = {
           slug: string;
         }[];
       };
+      record_claim_verification_attempt: {
+        Args: { p_claim_id: string; p_dns_details?: Json; p_matched: boolean };
+        Returns: {
+          attempts: number;
+          id: string;
+          last_checked_at: string;
+          last_error: string;
+          status: string;
+          verified_at: string;
+        }[];
+      };
       resolve_mod_report: {
         Args: {
           p_decision: string;
