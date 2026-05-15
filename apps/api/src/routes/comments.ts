@@ -19,18 +19,11 @@
  *     redacts but we belt-and-suspender it in case rows come back without it.
  */
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware } from "@/middleware/auth";
 import { Cache } from "@/middleware/cache";
-
-// `comments`, `comment_votes`, and the comment RPCs aren't in the generated
-// `Database` types yet (regenerated post-merge). Cast through a permissive
-// alias so the table/rpc strings type-check.
-// biome-ignore lint/suspicious/noExplicitAny: types not regenerated yet (Fase 3 pending types regen)
-type AnySupabase = SupabaseClient<any, any, any>;
 
 const comments = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -57,7 +50,7 @@ comments.get(
 
     const supabase = createSupabase(c.env);
 
-    const { data, error } = await (supabase as AnySupabase).rpc("get_product_comments", {
+    const { data, error } = await supabase.rpc("get_product_comments", {
       p_product_id: productId,
       p_sort: sort,
       p_limit: limit,
@@ -97,7 +90,7 @@ comments.get(
 
     const supabase = createSupabase(c.env);
 
-    const { data, error } = await (supabase as AnySupabase).rpc("get_comment_thread", {
+    const { data, error } = await supabase.rpc("get_comment_thread", {
       p_root_id: rootId,
       p_limit: limit,
     });
@@ -170,7 +163,7 @@ authed.post("/products/:product_id/comments", async (c) => {
     path: "placeholder", // overwritten by trigger
   };
 
-  const { data: inserted, error } = await (supabase as AnySupabase)
+  const { data: inserted, error } = await supabase
     .from("comments")
     .insert(insertPayload)
     .select("id, target_id, parent_id, root_id, depth, body, score, created_at")
@@ -206,7 +199,7 @@ authed.patch("/comments/:id", async (c) => {
 
   // Belt-and-suspenders: also enforce the 5-min window in app layer so we can
   // return a friendly error before hitting RLS.
-  const { data: existing } = await (supabase as AnySupabase)
+  const { data: existing } = await supabase
     .from("comments")
     .select("id, author_id, created_at, deleted_at")
     .eq("id", id)
@@ -220,7 +213,7 @@ authed.patch("/comments/:id", async (c) => {
     return c.json({ error: "Edit window (5 minutes) has expired" }, 409);
   }
 
-  const { data, error } = await (supabase as AnySupabase)
+  const { data, error } = await supabase
     .from("comments")
     .update({ body: text })
     .eq("id", id)
@@ -255,11 +248,7 @@ authed.delete("/comments/:id", async (c) => {
 
   const supabase = createSupabase(c.env, token);
 
-  const { data: existing } = await (supabase as AnySupabase)
-    .from("comments")
-    .select("id, author_id, deleted_at")
-    .eq("id", id)
-    .single();
+  const { data: existing } = await supabase.from("comments").select("id, author_id, deleted_at").eq("id", id).single();
 
   if (!existing) return c.json({ error: "Comment not found" }, 404);
   if (existing.deleted_at) return c.json({ error: "Already deleted" }, 409);
@@ -267,7 +256,7 @@ authed.delete("/comments/:id", async (c) => {
   const isAuthor = existing.author_id === user.id;
   const reason = isAuthor ? "author" : reasonFromBody?.trim() || "moderator";
 
-  const { data, error } = await (supabase as AnySupabase)
+  const { data, error } = await supabase
     .from("comments")
     .update({
       deleted_at: new Date().toISOString(),
@@ -308,17 +297,13 @@ authed.post("/comments/:id/vote", async (c) => {
   const supabase = createSupabase(c.env, token);
 
   if (value === 0) {
-    const { error } = await (supabase as AnySupabase)
-      .from("comment_votes")
-      .delete()
-      .eq("comment_id", id)
-      .eq("user_id", user.id);
+    const { error } = await supabase.from("comment_votes").delete().eq("comment_id", id).eq("user_id", user.id);
     if (error) {
       console.error("Error clearing vote:", error);
       return c.json({ error: error.message }, 500);
     }
   } else {
-    const { error } = await (supabase as AnySupabase)
+    const { error } = await supabase
       .from("comment_votes")
       .upsert({ comment_id: id, user_id: user.id, value }, { onConflict: "comment_id,user_id" });
     if (error) {
@@ -329,7 +314,7 @@ authed.post("/comments/:id/vote", async (c) => {
   }
 
   // Re-read the new score so the client can apply it without an extra request.
-  const { data: scoreRow } = await (supabase as AnySupabase).from("comments").select("id, score").eq("id", id).single();
+  const { data: scoreRow } = await supabase.from("comments").select("id, score").eq("id", id).single();
 
   return c.json({ data: { id, value, score: scoreRow?.score ?? 0 } });
 });
@@ -345,7 +330,7 @@ authed.get("/comments/me/votes", async (c) => {
   if (ids.length === 0) return c.json({ data: [] });
 
   const supabase = createSupabase(c.env, c.get("token"));
-  const { data, error } = await (supabase as AnySupabase).rpc("get_my_comment_votes", { p_comment_ids: ids });
+  const { data, error } = await supabase.rpc("get_my_comment_votes", { p_comment_ids: ids });
   if (error) {
     console.error("Error fetching my votes:", error);
     return c.json({ error: error.message }, 500);

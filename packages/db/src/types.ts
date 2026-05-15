@@ -48,6 +48,138 @@ export type Database = {
         };
         Relationships: [];
       };
+      comment_moderation_log: {
+        Row: {
+          action: string;
+          after_snapshot: Json | null;
+          before_snapshot: Json | null;
+          comment_id: string;
+          created_at: string;
+          id: string;
+          moderator_id: string | null;
+          reason: string | null;
+        };
+        Insert: {
+          action: string;
+          after_snapshot?: Json | null;
+          before_snapshot?: Json | null;
+          comment_id: string;
+          created_at?: string;
+          id?: string;
+          moderator_id?: string | null;
+          reason?: string | null;
+        };
+        Update: {
+          action?: string;
+          after_snapshot?: Json | null;
+          before_snapshot?: Json | null;
+          comment_id?: string;
+          created_at?: string;
+          id?: string;
+          moderator_id?: string | null;
+          reason?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "comment_moderation_log_comment_id_fkey";
+            columns: ["comment_id"];
+            isOneToOne: false;
+            referencedRelation: "comments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      comment_votes: {
+        Row: {
+          comment_id: string;
+          created_at: string;
+          user_id: string;
+          value: number;
+        };
+        Insert: {
+          comment_id: string;
+          created_at?: string;
+          user_id: string;
+          value: number;
+        };
+        Update: {
+          comment_id?: string;
+          created_at?: string;
+          user_id?: string;
+          value?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "comment_votes_comment_id_fkey";
+            columns: ["comment_id"];
+            isOneToOne: false;
+            referencedRelation: "comments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      comments: {
+        Row: {
+          author_id: string | null;
+          body: string;
+          created_at: string;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          deleted_reason: string | null;
+          depth: number;
+          edited_at: string | null;
+          id: string;
+          parent_id: string | null;
+          path: unknown;
+          root_id: string;
+          score: number;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["comment_target_type"];
+        };
+        Insert: {
+          author_id?: string | null;
+          body: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          deleted_reason?: string | null;
+          depth?: number;
+          edited_at?: string | null;
+          id?: string;
+          parent_id?: string | null;
+          path: unknown;
+          root_id: string;
+          score?: number;
+          target_id: string;
+          target_type?: Database["public"]["Enums"]["comment_target_type"];
+        };
+        Update: {
+          author_id?: string | null;
+          body?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          deleted_reason?: string | null;
+          depth?: number;
+          edited_at?: string | null;
+          id?: string;
+          parent_id?: string | null;
+          path?: unknown;
+          root_id?: string;
+          score?: number;
+          target_id?: string;
+          target_type?: Database["public"]["Enums"]["comment_target_type"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "comments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       extraction_jobs: {
         Row: {
           attempts: number;
@@ -175,6 +307,45 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      mod_actions: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          after_snapshot: Json | null;
+          before_snapshot: Json | null;
+          created_at: string;
+          id: string;
+          metadata: Json | null;
+          reason: string | null;
+          target_id: string | null;
+          target_type: string;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          after_snapshot?: Json | null;
+          before_snapshot?: Json | null;
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          reason?: string | null;
+          target_id?: string | null;
+          target_type: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          after_snapshot?: Json | null;
+          before_snapshot?: Json | null;
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          reason?: string | null;
+          target_id?: string | null;
+          target_type?: string;
+        };
+        Relationships: [];
       };
       price_alerts: {
         Row: {
@@ -347,6 +518,64 @@ export type Database = {
             foreignKeyName: "product_metrics_product_id_fkey";
             columns: ["product_id"];
             isOneToOne: true;
+            referencedRelation: "products_with_prices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      product_recheck_queue: {
+        Row: {
+          attempts: number;
+          id: string;
+          last_error: string | null;
+          processed_at: string | null;
+          product_id: string;
+          reason: string | null;
+          requested_at: string;
+          requested_by: string | null;
+          status: string;
+        };
+        Insert: {
+          attempts?: number;
+          id?: string;
+          last_error?: string | null;
+          processed_at?: string | null;
+          product_id: string;
+          reason?: string | null;
+          requested_at?: string;
+          requested_by?: string | null;
+          status?: string;
+        };
+        Update: {
+          attempts?: number;
+          id?: string;
+          last_error?: string | null;
+          processed_at?: string | null;
+          product_id?: string;
+          reason?: string | null;
+          requested_at?: string;
+          requested_by?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_recheck_queue_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "api_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_recheck_queue_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_recheck_queue_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
             referencedRelation: "products_with_prices";
             referencedColumns: ["id"];
           },
@@ -797,6 +1026,139 @@ export type Database = {
           },
         ];
       };
+      reports: {
+        Row: {
+          created_at: string;
+          details: string | null;
+          id: string;
+          reason: Database["public"]["Enums"]["report_reason"];
+          reporter_id: string | null;
+          resolution_note: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          status: Database["public"]["Enums"]["report_status"];
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+        };
+        Insert: {
+          created_at?: string;
+          details?: string | null;
+          id?: string;
+          reason: Database["public"]["Enums"]["report_reason"];
+          reporter_id?: string | null;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: Database["public"]["Enums"]["report_status"];
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+        };
+        Update: {
+          created_at?: string;
+          details?: string | null;
+          id?: string;
+          reason?: Database["public"]["Enums"]["report_reason"];
+          reporter_id?: string | null;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: Database["public"]["Enums"]["report_status"];
+          target_id?: string;
+          target_type?: Database["public"]["Enums"]["report_target_type"];
+        };
+        Relationships: [];
+      };
+      store_claim_requests: {
+        Row: {
+          attempts: number;
+          claimant_user_id: string;
+          claimed_domain: string;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          last_checked_at: string | null;
+          last_error: string | null;
+          status: string;
+          store_id: string | null;
+          txt_record_name: string;
+          verification_token: string;
+          verified_at: string | null;
+        };
+        Insert: {
+          attempts?: number;
+          claimant_user_id: string;
+          claimed_domain: string;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          last_checked_at?: string | null;
+          last_error?: string | null;
+          status?: string;
+          store_id?: string | null;
+          txt_record_name: string;
+          verification_token: string;
+          verified_at?: string | null;
+        };
+        Update: {
+          attempts?: number;
+          claimant_user_id?: string;
+          claimed_domain?: string;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          last_checked_at?: string | null;
+          last_error?: string | null;
+          status?: string;
+          store_id?: string | null;
+          txt_record_name?: string;
+          verification_token?: string;
+          verified_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "store_claim_requests_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      store_members: {
+        Row: {
+          created_at: string;
+          id: string;
+          invited_by: string | null;
+          role: Database["public"]["Enums"]["store_member_role"];
+          store_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          role?: Database["public"]["Enums"]["store_member_role"];
+          store_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          role?: Database["public"]["Enums"]["store_member_role"];
+          store_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "store_members_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       store_review_helpful: {
         Row: {
           created_at: string;
@@ -895,33 +1257,57 @@ export type Database = {
       stores: {
         Row: {
           appearance: string;
+          banner_url: string | null;
           created_at: string;
+          description: string | null;
           id: string;
           is_active: boolean;
           logo_url: string | null;
           name: string;
+          owner_user_id: string | null;
           slug: string;
+          social: Json;
+          updated_at: string;
           url: string;
+          verification_last_checked_at: string | null;
+          verified_at: string | null;
+          website: string | null;
         };
         Insert: {
           appearance?: string;
+          banner_url?: string | null;
           created_at?: string;
+          description?: string | null;
           id?: string;
           is_active?: boolean;
           logo_url?: string | null;
           name: string;
+          owner_user_id?: string | null;
           slug: string;
+          social?: Json;
+          updated_at?: string;
           url: string;
+          verification_last_checked_at?: string | null;
+          verified_at?: string | null;
+          website?: string | null;
         };
         Update: {
           appearance?: string;
+          banner_url?: string | null;
           created_at?: string;
+          description?: string | null;
           id?: string;
           is_active?: boolean;
           logo_url?: string | null;
           name?: string;
+          owner_user_id?: string | null;
           slug?: string;
+          social?: Json;
+          updated_at?: string;
           url?: string;
+          verification_last_checked_at?: string | null;
+          verified_at?: string | null;
+          website?: string | null;
         };
         Relationships: [];
       };
@@ -961,6 +1347,39 @@ export type Database = {
           translation_key?: string;
           user_agent?: string | null;
           user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      user_bans: {
+        Row: {
+          banned_at: string;
+          banned_by: string | null;
+          expires_at: string | null;
+          id: string;
+          lifted_at: string | null;
+          lifted_by: string | null;
+          reason: string | null;
+          user_id: string;
+        };
+        Insert: {
+          banned_at?: string;
+          banned_by?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          lifted_at?: string | null;
+          lifted_by?: string | null;
+          reason?: string | null;
+          user_id: string;
+        };
+        Update: {
+          banned_at?: string;
+          banned_by?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          lifted_at?: string | null;
+          lifted_by?: string | null;
+          reason?: string | null;
+          user_id?: string;
         };
         Relationships: [];
       };
@@ -1051,7 +1470,75 @@ export type Database = {
       };
     };
     Functions: {
-      authorize: { Args: { required_role: string }; Returns: boolean };
+      admin_ban_user: {
+        Args: { p_expires_at?: string; p_reason?: string; p_user_id: string };
+        Returns: string;
+      };
+      admin_unban_user: { Args: { p_user_id: string }; Returns: undefined };
+      authorize:
+        | {
+            Args: { required_role: Database["public"]["Enums"]["app_role"] };
+            Returns: {
+              error: true;
+            } & "Could not choose the best candidate function between: public.authorize(required_role => text), public.authorize(required_role => app_role). Try renaming the parameters or the function itself in the database so function overloading can be resolved";
+          }
+        | {
+            Args: { required_role: string };
+            Returns: {
+              error: true;
+            } & "Could not choose the best candidate function between: public.authorize(required_role => text), public.authorize(required_role => app_role). Try renaming the parameters or the function itself in the database so function overloading can be resolved";
+          };
+      claims_due_for_recheck: {
+        Args: { p_grace?: string };
+        Returns: {
+          attempts: number;
+          claimant_user_id: string;
+          claimed_domain: string;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          last_checked_at: string | null;
+          last_error: string | null;
+          status: string;
+          store_id: string | null;
+          txt_record_name: string;
+          verification_token: string;
+          verified_at: string | null;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "store_claim_requests";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      confirm_store_claim: {
+        Args: { p_claim_id: string };
+        Returns: {
+          appearance: string;
+          banner_url: string | null;
+          created_at: string;
+          description: string | null;
+          id: string;
+          is_active: boolean;
+          logo_url: string | null;
+          name: string;
+          owner_user_id: string | null;
+          slug: string;
+          social: Json;
+          updated_at: string;
+          url: string;
+          verification_last_checked_at: string | null;
+          verified_at: string | null;
+          website: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "stores";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       custom_access_token_hook: { Args: { event: Json }; Returns: Json };
       enqueue_review_item: { Args: { p_raw_feed_id: string }; Returns: number };
       extract_numeric_value: { Args: { input_text: string }; Returns: number };
@@ -1110,7 +1597,56 @@ export type Database = {
           total_count: number;
         }[];
       };
+      flag_product_for_recheck: {
+        Args: { p_product_id: string; p_reason?: string };
+        Returns: string;
+      };
       get_category_filters: { Args: { p_category_slug: string }; Returns: Json };
+      get_comment_thread: {
+        Args: { p_limit?: number; p_root_id: string };
+        Returns: {
+          author_avatar_url: string;
+          author_id: string;
+          author_username: string;
+          body: string;
+          created_at: string;
+          deleted_at: string;
+          deleted_reason: string;
+          depth: number;
+          edited_at: string;
+          id: string;
+          parent_id: string;
+          path: string;
+          root_id: string;
+          score: number;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["comment_target_type"];
+        }[];
+      };
+      get_my_comment_votes: {
+        Args: { p_comment_ids: string[] };
+        Returns: {
+          comment_id: string;
+          value: number;
+        }[];
+      };
+      get_next_mod_item: {
+        Args: never;
+        Returns: {
+          details: string;
+          enqueued_at: string;
+          msg_id: number;
+          read_ct: number;
+          reason: Database["public"]["Enums"]["report_reason"];
+          report_created_at: string;
+          report_id: string;
+          reporter_id: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_id: string;
+          target_snapshot: Json;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+        }[];
+      };
       get_next_review_item: {
         Args: never;
         Returns: {
@@ -1145,15 +1681,53 @@ export type Database = {
           store_name: string;
         }[];
       };
+      get_product_comments: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_product_id: string;
+          p_sort?: string;
+        };
+        Returns: {
+          author_avatar_url: string;
+          author_id: string;
+          author_username: string;
+          body: string;
+          created_at: string;
+          deleted_at: string;
+          deleted_reason: string;
+          edited_at: string;
+          id: string;
+          reply_count: number;
+          score: number;
+          target_id: string;
+        }[];
+      };
       get_storage_url: {
         Args: { bucket_name: string; file_path: string };
         Returns: string;
       };
       get_store_rating_stats: { Args: { p_store_slug: string }; Returns: Json };
       increment_product_view: { Args: { p_slug: string }; Returns: undefined };
+      is_admin: { Args: never; Returns: boolean };
+      is_moderator_or_admin: { Args: never; Returns: boolean };
       is_store_member: {
         Args: { p_required_role?: string; p_store_id: string };
         Returns: boolean;
+      };
+      is_user_banned: { Args: { p_user_id: string }; Returns: boolean };
+      log_mod_action: {
+        Args: {
+          p_action: string;
+          p_actor_id: string;
+          p_after?: Json;
+          p_before?: Json;
+          p_metadata?: Json;
+          p_reason?: string;
+          p_target_id: string;
+          p_target_type: string;
+        };
+        Returns: string;
       };
       quick_search_products: {
         Args: { p_limit?: number; search_term: string };
@@ -1167,6 +1741,15 @@ export type Database = {
           rank: number;
           slug: string;
         }[];
+      };
+      resolve_mod_report: {
+        Args: {
+          p_decision: string;
+          p_msg_id: number;
+          p_note?: string;
+          p_report_id: string;
+        };
+        Returns: undefined;
       };
       resolve_review_item: {
         Args: { p_decision: string; p_msg_id: number; p_raw_feed_id: string };
@@ -1202,11 +1785,26 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      text2ltree: { Args: { "": string }; Returns: unknown };
     };
     Enums: {
+      app_role: "user" | "moderator" | "admin";
+      comment_target_type: "product";
       compatibility_status: "valid" | "warning" | "incompatible" | "unknown";
       feed_processing_status: "NEW" | "PROCESSING" | "MATCHED" | "FAILED";
       job_status: "pending" | "processing" | "completed" | "failed";
+      report_reason:
+        | "spam"
+        | "harassment"
+        | "misleading"
+        | "duplicate"
+        | "wrong_listing"
+        | "broken_link"
+        | "inappropriate"
+        | "other";
+      report_status: "open" | "reviewing" | "resolved" | "dismissed";
+      report_target_type: "product" | "comment" | "store_review" | "store";
+      store_member_role: "owner" | "editor";
       user_role: "user" | "moderator" | "admin";
     };
     CompositeTypes: {
@@ -1327,9 +1925,24 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["user", "moderator", "admin"],
+      comment_target_type: ["product"],
       compatibility_status: ["valid", "warning", "incompatible", "unknown"],
       feed_processing_status: ["NEW", "PROCESSING", "MATCHED", "FAILED"],
       job_status: ["pending", "processing", "completed", "failed"],
+      report_reason: [
+        "spam",
+        "harassment",
+        "misleading",
+        "duplicate",
+        "wrong_listing",
+        "broken_link",
+        "inappropriate",
+        "other",
+      ],
+      report_status: ["open", "reviewing", "resolved", "dismissed"],
+      report_target_type: ["product", "comment", "store_review", "store"],
+      store_member_role: ["owner", "editor"],
       user_role: ["user", "moderator", "admin"],
     },
   },
