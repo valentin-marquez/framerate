@@ -2,6 +2,8 @@ import auth from "@/routes/auth";
 import categories from "@/routes/categories";
 // Fase 1: claims + stores
 import claims from "@/routes/claims";
+// Fase 3: comments
+import commentsRoutes from "@/routes/comments";
 import products from "@/routes/products";
 import profiles from "@/routes/profiles";
 import quotes from "@/routes/quotes";
@@ -56,5 +58,11 @@ export const routes = [
   {
     path: `/${API_VERSION}/reviews`,
     route: storeReviewsById,
+  },
+  // Fase 3: comments. Montado en /v1 porque sirve dos prefijos:
+  // /v1/products/:product_id/comments y /v1/comments/:id.
+  {
+    path: `/${API_VERSION}`,
+    route: commentsRoutes,
   },
 ];

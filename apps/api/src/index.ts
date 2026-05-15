@@ -57,6 +57,10 @@ app.use("/v1/quotes", Limit("moderate"));
 app.use("/v1/profiles/me", Limit("moderate"));
 app.use("/v1/translation-feedback", Limit("strict"));
 
+// Fase 3: comments — escritura y votación con tier moderate.
+app.use("/v1/products/*/comments", Limit("moderate"));
+app.use("/v1/comments/*", Limit("moderate"));
+
 // Lectura pública (100 req/60s)
 app.use("/v1/products/*", Limit("lenient"));
 app.use("/v1/categories/*", Limit("lenient"));
