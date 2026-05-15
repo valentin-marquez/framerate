@@ -30,7 +30,7 @@
     "lint": "turbo run biome:lint"
   },
   "simple-git-hooks": {
-    "pre-commit": "bun run biome && bun run generate:types",
+    "pre-commit": "bun run biome:check",
     "pre-push": "bun run biome:check && bun run build"
   },
   "workspaces": [
