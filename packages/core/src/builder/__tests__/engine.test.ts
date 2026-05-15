@@ -9,7 +9,7 @@ describe("analyzeBuild", () => {
 
     expect(result.status).toBe("valid");
     expect(result.performance).toBeDefined();
-    const tier = result.performance!.tier;
+    const tier = result.performance?.tier;
     // Con RTX 5070 + Ryzen 7 9700X esperamos ≥ "High / 1440p".
     expect(["High / 1440p", "Elite", "4K / Enthusiast"]).toContain(tier);
   });

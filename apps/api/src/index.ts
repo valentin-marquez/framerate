@@ -69,6 +69,13 @@ app.use("/v1/claims/*/verify", Limit("strict"));
 app.use("/v1/claims/*/confirm", Limit("strict"));
 app.use("/v1/claims/my", Limit("lenient"));
 app.use("/v1/stores/*/members", Limit("moderate"));
+
+// Fase 2: store-reviews (lectura lenient, escrituras moderate)
+app.use("/v1/stores/*/reviews", Limit("lenient"));
+app.use("/v1/stores/*/reviews/stats", Limit("lenient"));
+app.use("/v1/reviews/*", Limit("moderate"));
+
+// Fase 1 fallback para resto de /v1/stores (después de los de reviews para no shadow)
 app.use("/v1/stores/*", Limit("moderate"));
 
 app.get("/", (c) => {

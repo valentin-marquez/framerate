@@ -5,6 +5,8 @@ import claims from "@/routes/claims";
 import products from "@/routes/products";
 import profiles from "@/routes/profiles";
 import quotes from "@/routes/quotes";
+// Fase 2: store-reviews (sub-apps por slug y por id)
+import { storeReviewsById, storeReviewsByStore } from "@/routes/store-reviews";
 import stores from "@/routes/stores";
 import translationFeedback from "@/routes/translation-feedback";
 
@@ -20,10 +22,6 @@ export const routes = [
     route: categories,
   },
   // images route is mounted manually in index.ts to bypass global middleware
-  // {
-  //   path: `/${API_VERSION}/images`,
-  //   route: images,
-  // },
   {
     path: `/${API_VERSION}/products`,
     route: products,
@@ -48,5 +46,15 @@ export const routes = [
   {
     path: `/${API_VERSION}/stores`,
     route: stores,
+  },
+  // Fase 2: store-reviews montadas en mismo prefijo /v1/stores (Hono compone rutas
+  // por path completo, así que coexisten con `stores` sin shadowearse) y /v1/reviews
+  {
+    path: `/${API_VERSION}/stores`,
+    route: storeReviewsByStore,
+  },
+  {
+    path: `/${API_VERSION}/reviews`,
+    route: storeReviewsById,
   },
 ];
