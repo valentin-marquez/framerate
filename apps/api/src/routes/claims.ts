@@ -5,6 +5,7 @@ import { verifyTxtRecord } from "@/lib/doh";
 import { generateToken, normalizeDomain, txtRecordName, txtRecordValue } from "@/lib/domain";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware } from "@/middleware/auth";
+import { Limit } from "@/middleware/rate-limit";
 
 const logger = new Logger("Claims");
 
@@ -18,7 +19,7 @@ claims.use("*", authMiddleware);
  *
  * Crea un claim pending y devuelve las instrucciones de TXT.
  */
-claims.post("/", async (c) => {
+claims.post("/", Limit("strict"), async (c) => {
   const user = c.get("user");
   const token = c.get("token");
 
@@ -93,7 +94,7 @@ claims.post("/", async (c) => {
  * Hace DoH paralelo contra Cloudflare + Google, requiere match en ambos.
  * Actualiza el claim a 'verified' si pasa, o registra el intento si no.
  */
-claims.post("/:id/verify", async (c) => {
+claims.post("/:id/verify", Limit("strict"), async (c) => {
   const user = c.get("user");
   const token = c.get("token");
   const claimId = c.req.param("id");
@@ -169,7 +170,7 @@ claims.post("/:id/verify", async (c) => {
  * Llama al RPC confirm_store_claim que atómicamente crea store_members(owner)
  * y actualiza stores.owner_user_id + verified_at. Requiere status='verified'.
  */
-claims.post("/:id/confirm", async (c) => {
+claims.post("/:id/confirm", Limit("strict"), async (c) => {
   const token = c.get("token");
   const claimId = c.req.param("id");
   const supabase = createSupabase(c.env, token);
@@ -196,7 +197,7 @@ claims.post("/:id/confirm", async (c) => {
  *
  * Lista los claims del usuario autenticado.
  */
-claims.get("/my", async (c) => {
+claims.get("/my", Limit("lenient"), async (c) => {
   const user = c.get("user");
   const token = c.get("token");
   const supabase = createSupabase(c.env, token);

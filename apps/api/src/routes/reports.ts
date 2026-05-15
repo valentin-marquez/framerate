@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware } from "@/middleware/auth";
+import { Limit } from "@/middleware/rate-limit";
 
 const logger = new Logger("ReportsRoute");
 
@@ -39,7 +40,7 @@ interface CreateReportBody {
  * Crea un nuevo reporte. RLS exige reporter_id = auth.uid() y que el
  * usuario no este baneado. Indice unique evita duplicados 'open'.
  */
-reports.post("/", async (c) => {
+reports.post("/", Limit("moderate"), async (c) => {
   try {
     const user = c.get("user");
     const supabase = createSupabase(c.env, c.get("token"));
@@ -97,7 +98,7 @@ reports.post("/", async (c) => {
  *
  * Lista los reportes del usuario autenticado.
  */
-reports.get("/my", async (c) => {
+reports.get("/my", Limit("lenient"), async (c) => {
   try {
     const user = c.get("user");
     const supabase = createSupabase(c.env, c.get("token"));

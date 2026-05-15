@@ -4,6 +4,7 @@ import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware, requireStoreRoleBySlug } from "@/middleware/auth";
 import { CACHE_TTL, Cache } from "@/middleware/cache";
+import { Limit } from "@/middleware/rate-limit";
 
 const logger = new Logger("Stores");
 
@@ -16,51 +17,56 @@ const PUBLIC_STORE_FIELDS =
  * GET /v1/stores/:slug
  * Público. Incluye conteo de miembros y rating promedio.
  */
-stores.get("/:slug", Cache({ mode: "public", ttl: CACHE_TTL.LONG, name: "store-detail" }), async (c) => {
-  const slug = c.req.param("slug");
-  const supabase = createSupabase(c.env);
+stores.get(
+  "/:slug",
+  Cache({ mode: "public", ttl: CACHE_TTL.LONG, name: "store-detail" }),
+  Limit("moderate"),
+  async (c) => {
+    const slug = c.req.param("slug");
+    const supabase = createSupabase(c.env);
 
-  // biome-ignore lint/suspicious/noExplicitAny: types regen
-  const { data: store, error } = await (supabase as any)
-    .from("stores")
-    .select(PUBLIC_STORE_FIELDS)
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (error || !store) {
-    return c.json({ error: "Store not found" }, 404);
-  }
-
-  // Rating agregado: store_reviews ya existe. Fase 2 expande la tabla.
-  const [{ count: memberCount }, { data: ratingRow }] = await Promise.all([
     // biome-ignore lint/suspicious/noExplicitAny: types regen
-    (supabase as any)
-      .from("store_members")
-      .select("id", { count: "exact", head: true })
-      .eq("store_id", store.id),
-    supabase
-      .from("store_reviews")
-      .select("rating")
-      .eq("store_id", store.id)
-      .then((res) => {
-        if (!res.data || res.data.length === 0) return { data: null };
-        const avg = res.data.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / res.data.length;
-        return { data: { average: avg, count: res.data.length } };
-      }),
-  ]);
+    const { data: store, error } = await (supabase as any)
+      .from("stores")
+      .select(PUBLIC_STORE_FIELDS)
+      .eq("slug", slug)
+      .maybeSingle();
 
-  return c.json({
-    ...store,
-    member_count: memberCount ?? 0,
-    rating: ratingRow ?? { average: null, count: 0 },
-  });
-});
+    if (error || !store) {
+      return c.json({ error: "Store not found" }, 404);
+    }
+
+    // Rating agregado: store_reviews ya existe. Fase 2 expande la tabla.
+    const [{ count: memberCount }, { data: ratingRow }] = await Promise.all([
+      // biome-ignore lint/suspicious/noExplicitAny: types regen
+      (supabase as any)
+        .from("store_members")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", store.id),
+      supabase
+        .from("store_reviews")
+        .select("rating")
+        .eq("store_id", store.id)
+        .then((res) => {
+          if (!res.data || res.data.length === 0) return { data: null };
+          const avg = res.data.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / res.data.length;
+          return { data: { average: avg, count: res.data.length } };
+        }),
+    ]);
+
+    return c.json({
+      ...store,
+      member_count: memberCount ?? 0,
+      rating: ratingRow ?? { average: null, count: 0 },
+    });
+  },
+);
 
 /**
  * PATCH /v1/stores/:slug
  * Permite a editores actualizar metadata pública. Nunca name/slug/url/is_active.
  */
-stores.patch("/:slug", authMiddleware, requireStoreRoleBySlug("slug", "editor"), async (c) => {
+stores.patch("/:slug", Limit("moderate"), authMiddleware, requireStoreRoleBySlug("slug", "editor"), async (c) => {
   const slug = c.req.param("slug");
   const token = c.get("token");
   const supabase = createSupabase(c.env, token);
@@ -108,10 +114,45 @@ stores.patch("/:slug", authMiddleware, requireStoreRoleBySlug("slug", "editor"),
 });
 
 /**
+ * GET /v1/stores/:slug/me
+ * Devuelve el rol del viewer sobre esta tienda:
+ *   - 'admin' si tiene rol global admin (independiente de store_members).
+ *   - 'owner' | 'editor' si está en store_members.
+ *   - null si no es miembro ni admin global.
+ * Requiere auth. Sin caché (varía por usuario).
+ */
+stores.get("/:slug/me", Limit("lenient"), authMiddleware, async (c) => {
+  const slug = c.req.param("slug");
+  const user = c.get("user");
+  const token = c.get("token");
+  const supabase = createSupabase(c.env, token);
+
+  const { data: store, error: storeErr } = await supabase.from("stores").select("id").eq("slug", slug).maybeSingle();
+
+  if (storeErr || !store) {
+    return c.json({ error: "Store not found" }, 404);
+  }
+
+  if (c.get("userRole") === "admin") {
+    return c.json({ role: "admin" as const });
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: types regen
+  const { data: membership } = await (supabase as any)
+    .from("store_members")
+    .select("role")
+    .eq("store_id", store.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  return c.json({ role: (membership?.role as "owner" | "editor" | null) ?? null });
+});
+
+/**
  * GET /v1/stores/:slug/members
  * Lista miembros (requiere editor para ver detalles).
  */
-stores.get("/:slug/members", authMiddleware, requireStoreRoleBySlug("slug", "editor"), async (c) => {
+stores.get("/:slug/members", Limit("moderate"), authMiddleware, requireStoreRoleBySlug("slug", "editor"), async (c) => {
   const storeId = c.get("storeId");
   const token = c.get("token");
   const supabase = createSupabase(c.env, token);
@@ -134,7 +175,7 @@ stores.get("/:slug/members", authMiddleware, requireStoreRoleBySlug("slug", "edi
  * POST /v1/stores/:slug/members
  * Owner invita a otro user como editor (por user_id).
  */
-stores.post("/:slug/members", authMiddleware, requireStoreRoleBySlug("slug", "owner"), async (c) => {
+stores.post("/:slug/members", Limit("moderate"), authMiddleware, requireStoreRoleBySlug("slug", "owner"), async (c) => {
   const user = c.get("user");
   const storeId = c.get("storeId");
   const token = c.get("token");
@@ -163,21 +204,27 @@ stores.post("/:slug/members", authMiddleware, requireStoreRoleBySlug("slug", "ow
 /**
  * DELETE /v1/stores/:slug/members/:user_id
  */
-stores.delete("/:slug/members/:user_id", authMiddleware, requireStoreRoleBySlug("slug", "owner"), async (c) => {
-  const storeId = c.get("storeId");
-  const userId = c.req.param("user_id");
-  const token = c.get("token");
-  const supabase = createSupabase(c.env, token);
+stores.delete(
+  "/:slug/members/:user_id",
+  Limit("moderate"),
+  authMiddleware,
+  requireStoreRoleBySlug("slug", "owner"),
+  async (c) => {
+    const storeId = c.get("storeId");
+    const userId = c.req.param("user_id");
+    const token = c.get("token");
+    const supabase = createSupabase(c.env, token);
 
-  // biome-ignore lint/suspicious/noExplicitAny: types regen
-  const { error } = await (supabase as any)
-    .from("store_members")
-    .delete()
-    .eq("store_id", storeId)
-    .eq("user_id", userId);
+    // biome-ignore lint/suspicious/noExplicitAny: types regen
+    const { error } = await (supabase as any)
+      .from("store_members")
+      .delete()
+      .eq("store_id", storeId)
+      .eq("user_id", userId);
 
-  if (error) return c.json({ error: error.message }, 500);
-  return c.json({ ok: true });
-});
+    if (error) return c.json({ error: error.message }, 500);
+    return c.json({ ok: true });
+  },
+);
 
 export default stores;

@@ -21,6 +21,7 @@ import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware } from "@/middleware/auth";
 import { CACHE_TTL, Cache, invalidateCache } from "@/middleware/cache";
+import { Limit } from "@/middleware/rate-limit";
 
 const quotes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 const logger = new Logger("Quotes");
@@ -61,7 +62,7 @@ function logInsufficientData(analysis: BuildAnalysis, quoteId?: string) {
  *   "productIds": ["uuid1", "uuid2", ...]
  * }
  */
-quotes.post("/analyze", async (c) => {
+quotes.post("/analyze", Limit("strict"), async (c) => {
   try {
     const body = await c.req.json<AnalyzeBuildRequest>();
 
@@ -158,6 +159,7 @@ quotes.get(
     ttl: CACHE_TTL.SHORT,
     name: "public-profile-quotes",
   }),
+  Limit("lenient"),
   async (c) => {
     try {
       const username = c.req.param("username");
@@ -252,7 +254,7 @@ quotes.get(
  * Obtiene una cotización específica con todos sus items y productos.
  * Solo el dueño o cotizaciones públicas pueden ser accedidas.
  */
-quotes.get("/:id", async (c) => {
+quotes.get("/:id", Limit("moderate"), async (c) => {
   try {
     const quoteId = c.req.param("id");
 
@@ -465,7 +467,7 @@ quotes.get("/:id", async (c) => {
  * Analiza una cotización existente guardada en la base de datos.
  * Actualiza el cache de compatibilidad en la BD.
  */
-quotes.get("/:id/analyze", async (c) => {
+quotes.get("/:id/analyze", Limit("strict"), async (c) => {
   try {
     const quoteId = c.req.param("id");
 
@@ -581,7 +583,7 @@ quotes.use("/*", authMiddleware);
  * Lista todas las cotizaciones del usuario autenticado.
  * Soporta paginación y filtros.
  */
-quotes.get("/", async (c) => {
+quotes.get("/", Limit("moderate"), async (c) => {
   try {
     const user = c.get("user");
     const supabase = createSupabase(c.env, c.get("token"));
@@ -652,7 +654,7 @@ quotes.get("/", async (c) => {
  *   "is_public": false
  * }
  */
-quotes.post("/", async (c) => {
+quotes.post("/", Limit("moderate"), async (c) => {
   try {
     const user = c.get("user");
     const body = await c.req.json<{
@@ -700,7 +702,7 @@ quotes.post("/", async (c) => {
  * Actualiza información de una cotización.
  * Solo el dueño puede actualizar.
  */
-quotes.patch("/:id", async (c) => {
+quotes.patch("/:id", Limit("moderate"), async (c) => {
   try {
     const user = c.get("user");
     const quoteId = c.req.param("id");
@@ -777,7 +779,7 @@ quotes.patch("/:id", async (c) => {
  * Elimina una cotización y todos sus items.
  * Solo el dueño puede eliminar.
  */
-quotes.delete("/:id", async (c) => {
+quotes.delete("/:id", Limit("moderate"), async (c) => {
   try {
     const user = c.get("user");
     const quoteId = c.req.param("id");
@@ -816,7 +818,7 @@ quotes.delete("/:id", async (c) => {
  *   "quantity": 1
  * }
  */
-quotes.post("/:id/items", async (c) => {
+quotes.post("/:id/items", Limit("moderate"), async (c) => {
   try {
     const user = c.get("user");
     const quoteId = c.req.param("id");
@@ -921,7 +923,7 @@ quotes.post("/:id/items", async (c) => {
  *   "quantity": 2
  * }
  */
-quotes.patch("/:id/items/:itemId", async (c) => {
+quotes.patch("/:id/items/:itemId", Limit("moderate"), async (c) => {
   try {
     const user = c.get("user");
     const quoteId = c.req.param("id");
@@ -974,7 +976,7 @@ quotes.patch("/:id/items/:itemId", async (c) => {
  *
  * Elimina un item de la cotización.
  */
-quotes.delete("/:id/items/:itemId", async (c) => {
+quotes.delete("/:id/items/:itemId", Limit("moderate"), async (c) => {
   try {
     const user = c.get("user");
     const quoteId = c.req.param("id");

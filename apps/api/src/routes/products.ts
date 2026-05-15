@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { CACHE_TTL, Cache } from "@/middleware/cache";
+import { Limit } from "@/middleware/rate-limit";
 
 const products = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -13,6 +14,7 @@ products.get(
     ttl: CACHE_TTL.QUICK_SEARCH,
     name: "quick-search",
   }),
+  Limit("search"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const query = c.req.query("q");
@@ -43,6 +45,7 @@ products.get(
     ttl: CACHE_TTL.SEARCH,
     name: "product-search",
   }),
+  Limit("search"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const query = c.req.query("q");
@@ -75,6 +78,7 @@ products.get(
     ttl: CACHE_TTL.SHORT,
     name: "product-drops",
   }),
+  Limit("lenient"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const limit = Number(c.req.query("limit")) || 20;
@@ -103,6 +107,7 @@ products.get(
     ttl: CACHE_TTL.SHORT,
     name: "product-price-history",
   }),
+  Limit("lenient"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const slug = c.req.param("slug");
@@ -184,7 +189,7 @@ products.get(
 );
 
 // POST /products/:slug/view
-products.post("/:slug/view", async (c) => {
+products.post("/:slug/view", Limit("moderate"), async (c) => {
   const supabase = createSupabase(c.env);
   const slug = c.req.param("slug");
 
@@ -208,6 +213,7 @@ products.get(
     ttl: CACHE_TTL.LONG,
     name: "product-redirect",
   }),
+  Limit("lenient"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const slug = c.req.param("slug");
@@ -234,6 +240,7 @@ products.get(
     ttl: CACHE_TTL.LONG,
     name: "product-detail",
   }),
+  Limit("lenient"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const slug = c.req.param("slug");
@@ -304,6 +311,7 @@ products.get(
     ttl: CACHE_TTL.SHORT,
     name: "product-list",
   }),
+  Limit("lenient"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const page = Number(c.req.query("page")) || 1;

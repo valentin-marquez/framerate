@@ -21,7 +21,7 @@
     {
       "name": "LENIENT_RATE_LIMITER",
       "namespace_id": "1003",
-      "simple": { "limit": 100, "period": 60 }
+      "simple": { "limit": 200, "period": 60 }
     },
     {
       "name": "SEARCH_RATE_LIMITER",

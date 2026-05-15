@@ -4,13 +4,14 @@ import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware, requireRole } from "@/middleware/auth";
+import { Limit } from "@/middleware/rate-limit";
 
 const logger = new Logger("AdminModerationRoute");
 
 const admin = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // Todas las rutas requieren autenticacion + rol minimo de moderator.
-admin.use("*", authMiddleware, requireRole("moderator"));
+admin.use("*", Limit("moderate"), authMiddleware, requireRole("moderator"));
 
 type ReportStatus = Database["public"]["Enums"]["report_status"];
 

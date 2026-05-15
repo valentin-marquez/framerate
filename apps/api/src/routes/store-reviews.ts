@@ -15,6 +15,7 @@ import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware } from "@/middleware/auth";
 import { CACHE_TTL, Cache, invalidateCache } from "@/middleware/cache";
+import { Limit } from "@/middleware/rate-limit";
 
 const MAX_COMMENT_LENGTH = 2000;
 const MAX_OWNER_RESPONSE_LENGTH = 1000;
@@ -52,6 +53,7 @@ export const storeReviewsByStore = new Hono<{ Bindings: Bindings; Variables: Var
 storeReviewsByStore.get(
   "/:slug/reviews",
   Cache({ mode: "public", ttl: CACHE_TTL.SHORT, name: "store-reviews-list" }),
+  Limit("lenient"),
   async (c) => {
     const slug = c.req.param("slug");
     const sort = parseSort(c.req.query("sort"));
@@ -140,6 +142,7 @@ storeReviewsByStore.get(
 storeReviewsByStore.get(
   "/:slug/reviews/stats",
   Cache({ mode: "public", ttl: CACHE_TTL.SHORT, name: "store-reviews-stats" }),
+  Limit("lenient"),
   async (c) => {
     const slug = c.req.param("slug");
     const supabase = createSupabase(c.env);
@@ -160,7 +163,7 @@ storeReviewsByStore.get(
  * Crea una reseña. Requiere auth. Un usuario solo puede tener una review activa
  * por store.
  */
-storeReviewsByStore.post("/:slug/reviews", authMiddleware, async (c) => {
+storeReviewsByStore.post("/:slug/reviews", Limit("moderate"), authMiddleware, async (c) => {
   const slug = c.req.param("slug");
   const user = c.get("user");
 
@@ -237,7 +240,7 @@ export const storeReviewsById = new Hono<{ Bindings: Bindings; Variables: Variab
  *
  * No se permite mezclar ambos sets en un mismo request.
  */
-storeReviewsById.patch("/:id", authMiddleware, async (c) => {
+storeReviewsById.patch("/:id", Limit("moderate"), authMiddleware, async (c) => {
   const reviewId = c.req.param("id");
   const user = c.get("user");
   const role = c.get("userRole") ?? "user";
@@ -352,7 +355,7 @@ storeReviewsById.patch("/:id", authMiddleware, async (c) => {
  * Soft delete. Autor borra su propia review (reason 'author'). Mod/admin pueden
  * borrar con razón opcional en el body.
  */
-storeReviewsById.delete("/:id", authMiddleware, async (c) => {
+storeReviewsById.delete("/:id", Limit("moderate"), authMiddleware, async (c) => {
   const reviewId = c.req.param("id");
   const user = c.get("user");
   const role = c.get("userRole") ?? "user";
@@ -419,7 +422,7 @@ storeReviewsById.delete("/:id", authMiddleware, async (c) => {
  *
  * Marca como "útil". Idempotente: si ya existía, no duplica.
  */
-storeReviewsById.post("/:id/helpful", authMiddleware, async (c) => {
+storeReviewsById.post("/:id/helpful", Limit("moderate"), authMiddleware, async (c) => {
   const reviewId = c.req.param("id");
   const user = c.get("user");
   const supabase = createSupabase(c.env, c.get("token"));
@@ -460,7 +463,7 @@ storeReviewsById.post("/:id/helpful", authMiddleware, async (c) => {
 /**
  * DELETE /v1/reviews/:id/helpful
  */
-storeReviewsById.delete("/:id/helpful", authMiddleware, async (c) => {
+storeReviewsById.delete("/:id/helpful", Limit("moderate"), authMiddleware, async (c) => {
   const reviewId = c.req.param("id");
   const user = c.get("user");
   const supabase = createSupabase(c.env, c.get("token"));
@@ -484,7 +487,7 @@ storeReviewsById.delete("/:id/helpful", authMiddleware, async (c) => {
  *
  * Toggle is_pinned. Requiere ser store member (editor/owner) o admin.
  */
-storeReviewsById.post("/:id/pin", authMiddleware, async (c) => {
+storeReviewsById.post("/:id/pin", Limit("moderate"), authMiddleware, async (c) => {
   const reviewId = c.req.param("id");
   const role = c.get("userRole") ?? "user";
   const supabase = createSupabase(c.env, c.get("token"));

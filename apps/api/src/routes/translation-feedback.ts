@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
+import { Limit } from "@/middleware/rate-limit";
 
 const SUPPORTED_LANGS = ["es", "en", "arn"] as const;
 type Lang = (typeof SUPPORTED_LANGS)[number];
@@ -27,7 +28,7 @@ function trimOrNull(value: unknown, max: number): string | null {
 
 const translationFeedback = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-translationFeedback.post("/", async (c) => {
+translationFeedback.post("/", Limit("strict"), async (c) => {
   let body: FeedbackBody;
   try {
     body = await c.req.json<FeedbackBody>();

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { CACHE_TTL, Cache } from "@/middleware/cache";
+import { Limit } from "@/middleware/rate-limit";
 
 const categories = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -13,6 +14,7 @@ categories.get(
     ttl: CACHE_TTL.MEDIUM,
     name: "category-filters",
   }),
+  Limit("lenient"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const slug = c.req.param("slug");
@@ -41,6 +43,7 @@ categories.get(
     ttl: CACHE_TTL.MEDIUM,
     name: "category-price-range",
   }),
+  Limit("lenient"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const slug = c.req.param("slug");
@@ -81,6 +84,7 @@ categories.get(
     ttl: CACHE_TTL.MEDIUM,
     name: "category-brands",
   }),
+  Limit("lenient"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const slug = c.req.param("slug");
@@ -118,6 +122,7 @@ categories.get(
     ttl: CACHE_TTL.MEDIUM,
     name: "categories-list",
   }),
+  Limit("lenient"),
   async (c) => {
     const supabase = createSupabase(c.env);
     const withCounts = c.req.query("with_counts") === "true";

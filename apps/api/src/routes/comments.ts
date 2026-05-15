@@ -24,6 +24,7 @@ import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
 import { authMiddleware } from "@/middleware/auth";
 import { Cache } from "@/middleware/cache";
+import { Limit } from "@/middleware/rate-limit";
 
 const comments = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -38,6 +39,7 @@ const COMMENTS_CACHE_TTL = 60; // 1 minute. Threads churn faster than product de
 comments.get(
   "/products/:product_id/comments",
   Cache({ mode: "public", ttl: COMMENTS_CACHE_TTL, name: "product-comments" }),
+  Limit("lenient"),
   async (c) => {
     const productId = c.req.param("product_id");
     const sort = c.req.query("sort") || "best";
@@ -84,6 +86,7 @@ comments.get(
 comments.get(
   "/comments/:root_id/thread",
   Cache({ mode: "public", ttl: COMMENTS_CACHE_TTL, name: "comment-thread" }),
+  Limit("lenient"),
   async (c) => {
     const rootId = c.req.param("root_id");
     const limit = Math.min(Math.max(Number(c.req.query("limit")) || 200, 1), 500);
@@ -122,7 +125,7 @@ const authed = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 authed.use("*", authMiddleware);
 
 // POST /products/:product_id/comments → create root or reply
-authed.post("/products/:product_id/comments", async (c) => {
+authed.post("/products/:product_id/comments", Limit("moderate"), async (c) => {
   const productId = c.req.param("product_id");
   const user = c.get("user");
   const token = c.get("token");
@@ -179,7 +182,7 @@ authed.post("/products/:product_id/comments", async (c) => {
 });
 
 // PATCH /comments/:id → edit body (RLS validates 5-min window + author)
-authed.patch("/comments/:id", async (c) => {
+authed.patch("/comments/:id", Limit("moderate"), async (c) => {
   const id = c.req.param("id");
   const user = c.get("user");
   const token = c.get("token");
@@ -230,7 +233,7 @@ authed.patch("/comments/:id", async (c) => {
 
 // DELETE /comments/:id → soft delete. Author can always soft-delete their own;
 // moderators/admins can soft-delete anyone with a reason.
-authed.delete("/comments/:id", async (c) => {
+authed.delete("/comments/:id", Limit("moderate"), async (c) => {
   const id = c.req.param("id");
   const user = c.get("user");
   const token = c.get("token");
@@ -277,7 +280,7 @@ authed.delete("/comments/:id", async (c) => {
 });
 
 // POST /comments/:id/vote → upsert / clear vote
-authed.post("/comments/:id/vote", async (c) => {
+authed.post("/comments/:id/vote", Limit("moderate"), async (c) => {
   const id = c.req.param("id");
   const user = c.get("user");
   const token = c.get("token");
@@ -320,7 +323,7 @@ authed.post("/comments/:id/vote", async (c) => {
 });
 
 // GET /comments/me/votes?ids=a,b,c → current user's votes on a set of comments
-authed.get("/comments/me/votes", async (c) => {
+authed.get("/comments/me/votes", Limit("lenient"), async (c) => {
   const idsParam = c.req.query("ids");
   if (!idsParam) return c.json({ data: [] });
   const ids = idsParam

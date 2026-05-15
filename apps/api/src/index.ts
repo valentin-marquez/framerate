@@ -3,7 +3,6 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import type { Bindings, Variables } from "@/bindings";
-import { Limit } from "@/middleware/rate-limit";
 import { routes } from "@/routes";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -45,47 +44,9 @@ app.use("*", async (c, next) => {
   logger.http(`${c.req.method} ${c.req.path} - ${c.res.status} - ${ms}ms`);
 });
 
-app.use("/v1/products/search/*", Limit("search"));
-
-// Endpoints computacionalmente costosos (10 req/60s)
-app.use("/v1/quotes/analyze", Limit("strict"));
-app.use("/v1/quotes/*/analyze", Limit("strict"));
-
-// Tracking y escritura (30 req/60s)
-app.use("/v1/products/*/view", Limit("moderate"));
-app.use("/v1/quotes", Limit("moderate"));
-app.use("/v1/profiles/me", Limit("moderate"));
-app.use("/v1/translation-feedback", Limit("strict"));
-
-// Fase 3: comments — escritura y votación con tier moderate.
-app.use("/v1/products/*/comments", Limit("moderate"));
-app.use("/v1/comments/*", Limit("moderate"));
-
-// Fase 4: moderation
-app.use("/v1/reports", Limit("moderate"));
-app.use("/v1/reports/*", Limit("moderate"));
-app.use("/v1/admin/moderation/*", Limit("moderate"));
-
-// Lectura pública (100 req/60s)
-app.use("/v1/products/*", Limit("lenient"));
-app.use("/v1/categories/*", Limit("lenient"));
-app.use("/v1/profiles/*", Limit("lenient"));
-app.use("/v1/auth/*", Limit("lenient"));
-
-// Fase 1: claims + stores
-app.use("/v1/claims", Limit("strict"));
-app.use("/v1/claims/*/verify", Limit("strict"));
-app.use("/v1/claims/*/confirm", Limit("strict"));
-app.use("/v1/claims/my", Limit("lenient"));
-app.use("/v1/stores/*/members", Limit("moderate"));
-
-// Fase 2: store-reviews (lectura lenient, escrituras moderate)
-app.use("/v1/stores/*/reviews", Limit("lenient"));
-app.use("/v1/stores/*/reviews/stats", Limit("lenient"));
-app.use("/v1/reviews/*", Limit("moderate"));
-
-// Fase 1 fallback para resto de /v1/stores (después de los de reviews para no shadow)
-app.use("/v1/stores/*", Limit("moderate"));
+// Rate limiting se aplica per-handler dentro de cada route file. Esto permite
+// que el middleware `Cache(...)` corra ANTES de `Limit(...)` y así un HIT de
+// cache no consuma cuota. Ver `apps/api/src/middleware/{cache,rate-limit}.ts`.
 
 app.get("/", (c) => {
   return c.json({
