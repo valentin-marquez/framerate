@@ -1,4 +1,5 @@
 import { ProductSpecsSchema, toJson } from "@framerate/db";
+import { isAllowedForCategory, isMpnBlocked } from "@/collector/domain/category-filters";
 import { type ScrapedProduct, ScrapedProductSchema } from "@/collector/domain/schemas";
 import type { BrandService } from "@/collector/services/brand.service";
 import type { CatalogService, CategorySlug } from "@/collector/services/catalog.service";
@@ -97,6 +98,12 @@ export interface ProcessingResult {
   error?: string;
 }
 
+/**
+ * Filtros transversales de estado de producto (caja abierta, usado, kits, etc).
+ * Ortogonales a la categoría — un "Kit de montaje" no es gpu *ni* motherboard,
+ * sin importar dónde lo haya colgado la tienda. Las reglas por-categoría
+ * (requiredTerms / excludeIfContains) viven ahora en `category-filters.ts`.
+ */
 const GLOBAL_INVALID_TERMS = [
   "CAJA ABIERTA",
   "DAÑADA",
@@ -115,83 +122,6 @@ const GLOBAL_INVALID_TERMS = [
   "KIT DE MONTAJE",
   "BASE PARA SILLA",
 ];
-
-interface CategoryValidationRule {
-  invalidTerms?: string[];
-  requiredTerms?: string[];
-  excludeIfContains?: string[];
-  customCheck?: (title: string) => { valid: boolean; reason?: string };
-}
-
-const CATEGORY_VALIDATION_RULES: Partial<Record<CategorySlug, CategoryValidationRule>> = {
-  gpu: {
-    excludeIfContains: ["SOPORTE"],
-  },
-  motherboard: {
-    excludeIfContains: ["PROCESADOR"],
-  },
-  cpu: {
-    excludeIfContains: ["PLACA MADRE", "CONTROLADOR", "CONTROL DE LUCES", "ARGB CONTROLLER", "RGB CONTROLLER"],
-  },
-  psu: {
-    excludeIfContains: ["MEMORIA RAM", "CONTROLADOR", "CONTROLADOR DE LUCES"],
-  },
-  case: {
-    requiredTerms: ["GABINETE"],
-    invalidTerms: ["CARCASA", "PLATAFORMA GIRATORIA"],
-  },
-  ssd: {
-    invalidTerms: ["SOPORTE", "ADAPTADOR", "CARCASA", "MICROSD", "PENDRIVE"],
-  },
-  hdd: {
-    invalidTerms: ["SOPORTE", "ADAPTADOR", "CARCASA", "MICROSD", "PENDRIVE"],
-  },
-  ram: {
-    excludeIfContains: ["SOPORTE", "DISIPADOR SOLO"],
-  },
-  case_fan: {
-    excludeIfContains: ["PASTA TERMICA", "PASTA TÉRMICA", "HUB"],
-    customCheck: (title: string) => {
-      const hasVentilador = title.includes("VENTILADOR") || title.includes("VENTILADORES");
-      const isExcluded =
-        title.includes("SOPORTE") ||
-        title.includes("COOLER CPU") ||
-        title.includes("DISIPADOR") ||
-        title.includes("WATER COOLING") ||
-        title.includes("REFRIGERACION LIQUIDA") ||
-        title.includes("REFRIGERACIÓN LÍQUIDA") ||
-        title.includes("AIO");
-
-      if (!hasVentilador) return { valid: false, reason: "Case fan must contain 'VENTILADOR'" };
-      if (isExcluded) return { valid: false, reason: "Product is excluded (CPU cooler, support, etc.)" };
-      return { valid: true };
-    },
-  },
-  cpu_cooler: {
-    excludeIfContains: ["ADAPTADOR", "PASTA TERMICA", "PASTA TÉRMICA", "HUB"],
-    customCheck: (title: string) => {
-      const isLiquidCooling =
-        title.includes("REFRIGERACION LIQUIDA") ||
-        title.includes("REFRIGERACIÓN LÍQUIDA") ||
-        title.includes("REGRIGERACION LIQUIDA") ||
-        title.includes("WATERCOOLING") ||
-        title.includes("WATER COOLING") ||
-        title.includes("AIO");
-
-      const isAirCooler =
-        title.includes("VENTILADOR PARA CPU") ||
-        title.includes("VENTILADOR CPU") ||
-        title.includes("COOLER CPU") ||
-        title.includes("CPU COOLER") ||
-        title.includes("DISIPADOR CPU");
-
-      if (!isLiquidCooling && !isAirCooler) {
-        return { valid: false, reason: "Product is not a CPU cooler" };
-      }
-      return { valid: true };
-    },
-  },
-};
 
 export class ProductPipeline {
   private logger = new Logger("ProductPipeline");
@@ -259,43 +189,17 @@ export class ProductPipeline {
     const title = product.title ?? "";
     const titleUpper = title.toUpperCase();
 
+    // 1. Filtros de estado de producto (ortogonales a la categoría).
     for (const term of GLOBAL_INVALID_TERMS) {
       if (titleUpper.includes(term)) {
         return { valid: false, reason: `Contains invalid term: ${term}` };
       }
     }
 
-    const categoryRule = CATEGORY_VALIDATION_RULES[category];
-    if (!categoryRule) return { valid: true };
-
-    if (categoryRule.invalidTerms) {
-      for (const term of categoryRule.invalidTerms) {
-        if (titleUpper.includes(term)) {
-          return { valid: false, reason: `Category ${category}: contains invalid term '${term}'` };
-        }
-      }
-    }
-
-    if (categoryRule.requiredTerms) {
-      const hasRequired = categoryRule.requiredTerms.some((term) => titleUpper.includes(term));
-      if (!hasRequired) {
-        return {
-          valid: false,
-          reason: `Category ${category}: missing required terms (${categoryRule.requiredTerms.join(", ")})`,
-        };
-      }
-    }
-
-    if (categoryRule.excludeIfContains) {
-      for (const term of categoryRule.excludeIfContains) {
-        if (titleUpper.includes(term)) {
-          return { valid: false, reason: `Category ${category}: miscategorized product (contains '${term}')` };
-        }
-      }
-    }
-
-    if (categoryRule.customCheck) {
-      return categoryRule.customCheck(titleUpper);
+    // 2. Filtros por-categoría centralizados en `category-filters.ts`.
+    const allowed = isAllowedForCategory(title, category);
+    if (!allowed.allowed) {
+      return { valid: false, reason: `Category ${category}: ${allowed.reason ?? "rechazado"}` };
     }
 
     return { valid: true };
@@ -311,6 +215,17 @@ export class ProductPipeline {
     }
 
     const raw: ScrapedProduct = parse.data;
+
+    // Hard-block manually-curated bad MPNs (e.g., accessories that PC Express
+    // files under the parent category). Skipped products never get persisted.
+    if (raw.mpn && isMpnBlocked(raw.mpn)) {
+      this.logger.info("Product rejected: MPN bloqueado", {
+        mpn: raw.mpn,
+        title: raw.title,
+        category: ctx.category,
+      });
+      return { success: false, error: `MPN bloqueado: ${raw.mpn}` };
+    }
 
     const validation = this.validateProduct({ title: raw.title }, ctx.category);
     if (!validation.valid) {

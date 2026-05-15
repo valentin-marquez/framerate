@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { isAllowedForCategory, isMpnBlocked } from "@/collector/domain/category-filters";
 import type { Category, CategoryMap } from "@/constants/categories";
 import { BaseCrawler, type ProductData } from "./base";
 
@@ -33,7 +34,7 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
       const categoryUrl = this.buildCategoryUrl(pathId);
       this.logger.info(`Scraping subcategory path=${pathId}`);
 
-      const urls = await this.getCategoryProductUrls(categoryUrl);
+      const urls = await this.getCategoryProductUrls(categoryUrl, category);
       allUrls.push(...urls);
     }
 
@@ -44,7 +45,7 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
   }
 
   /** Obtiene URLs de productos con paginación automática */
-  async getCategoryProductUrls(categoryUrl: string): Promise<string[]> {
+  async getCategoryProductUrls(categoryUrl: string, category?: Category): Promise<string[]> {
     const allUrls: string[] = [];
     const limit = 100;
 
@@ -53,7 +54,7 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
     this.logger.info(`Starting scraping of category: ${urlWithLimit}`);
 
     const firstPageHtml = await this.fetchHtml(urlWithLimit);
-    const firstPageUrls = await this.getProductUrls(firstPageHtml);
+    const firstPageUrls = this.filterEntriesByCategory(this.extractListingEntries(firstPageHtml), category);
     allUrls.push(...firstPageUrls);
 
     const totalPages = this.getTotalPages(firstPageHtml);
@@ -64,11 +65,14 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
       this.logger.info(`Fetching page ${page}/${totalPages}: ${pageUrl}`);
 
       const pageHtml = await this.fetchHtml(pageUrl);
-      const pageUrls = await this.getProductUrls(pageHtml);
+      const pageEntries = this.extractListingEntries(pageHtml);
+      const pageUrls = this.filterEntriesByCategory(pageEntries, category);
 
-      this.logger.info(`Found ${pageUrls.length} product URLs on page ${page}`);
-      if (pageUrls.length === 0) {
-        this.logger.warn(`No product URLs found on page ${page}, stopping pagination early.`);
+      this.logger.info(
+        `Found ${pageEntries.length} entries on page ${page}, ${pageUrls.length} survive category filter`,
+      );
+      if (pageEntries.length === 0) {
+        this.logger.warn(`No product entries found on page ${page}, stopping pagination early.`);
         break;
       }
 
@@ -79,38 +83,100 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
     return allUrls;
   }
 
+  /**
+   * `getProductUrls` se mantiene por el contrato de `BaseCrawler` y devuelve
+   * sólo URLs; el filtrado por categoría se hace en `getCategoryProductUrls`
+   * donde sí conocemos el `category` esperado.
+   */
   async getProductUrls(html: string): Promise<string[]> {
-    const urls: string[] = [];
+    return this.extractListingEntries(html).map((e) => e.url);
+  }
+
+  /**
+   * Extrae los pares {url, title} de una página de listado. El título suele
+   * estar en el anchor `.product-list__name a`; el href está disponible tanto
+   * ahí como en el thumbnail anchor — dedupeamos por URL.
+   */
+  private extractListingEntries(html: string): Array<{ url: string; title: string }> {
+    const titleByUrl = new Map<string, string>();
+
     const rewriter = new HTMLRewriter();
+
+    const recordUrl = (link: string | null) => {
+      if (!link) return null;
+      const decodedHref = link.replace(/&amp;/g, "&");
+      const absoluteUrl = decodedHref.startsWith("http") ? decodedHref : `${this.baseUrl}${decodedHref}`;
+      if (!titleByUrl.has(absoluteUrl)) titleByUrl.set(absoluteUrl, "");
+      return absoluteUrl;
+    };
 
     rewriter.on(".product-list__item .product-list__image a", {
       element: (element) => {
-        const link = element.getAttribute("href");
-
-        if (link) {
-          const decodedHref = link.replace(/&amp;/g, "&");
-          const absoluteUrl = decodedHref.startsWith("http") ? decodedHref : `${this.baseUrl}${decodedHref}`;
-
-          urls.push(absoluteUrl);
-        }
+        recordUrl(element.getAttribute("href"));
       },
     });
 
-    // Backup: some versions put the product link on the name
+    // El anchor del nombre suele llevar el título como texto. Lo capturamos
+    // por concatenación de chunks de texto vía el handler `text`.
+    let currentUrl: string | null = null;
+    let currentTitle = "";
     rewriter.on(".product-list__name a", {
       element: (element) => {
-        const link = element.getAttribute("href");
-        if (link) {
-          const decodedHref = link.replace(/&amp;/g, "&");
-          const absoluteUrl = decodedHref.startsWith("http") ? decodedHref : `${this.baseUrl}${decodedHref}`;
-          urls.push(absoluteUrl);
+        // Cierra el entry previo si hay alguno colgando.
+        if (currentUrl) {
+          const existing = titleByUrl.get(currentUrl) ?? "";
+          if (!existing && currentTitle) titleByUrl.set(currentUrl, currentTitle.trim());
+        }
+        currentUrl = recordUrl(element.getAttribute("href"));
+        currentTitle = "";
+      },
+      text: (chunk) => {
+        if (currentUrl) currentTitle += chunk.text;
+        if (chunk.lastInTextNode && currentUrl) {
+          const existing = titleByUrl.get(currentUrl) ?? "";
+          if (!existing && currentTitle) titleByUrl.set(currentUrl, currentTitle.trim());
         }
       },
     });
 
     rewriter.transform(html);
 
-    return urls;
+    // Flush para la última entry si quedó colgando.
+    if (currentUrl) {
+      const existing = titleByUrl.get(currentUrl) ?? "";
+      if (!existing && currentTitle) titleByUrl.set(currentUrl, currentTitle.trim());
+    }
+
+    return [...titleByUrl.entries()].map(([url, title]) => ({ url, title }));
+  }
+
+  /**
+   * Aplica `isAllowedForCategory` a cada entry. Si no hay título o no se pasa
+   * `category` (caller legacy), pasa todo y deja que el pipeline decida.
+   */
+  private filterEntriesByCategory(entries: Array<{ url: string; title: string }>, category?: Category): string[] {
+    if (!category) return entries.map((e) => e.url);
+
+    const surviving: string[] = [];
+    let dropped = 0;
+    for (const entry of entries) {
+      // Sin título no podemos juzgar — dejar pasar; el pipeline lo validará tras parseo.
+      if (!entry.title) {
+        surviving.push(entry.url);
+        continue;
+      }
+      const verdict = isAllowedForCategory(entry.title, category);
+      if (!verdict.allowed) {
+        dropped++;
+        this.logger.info(
+          `Dropping at discovery [${category}] "${entry.title}" :: ${verdict.reason ?? "rechazado"} (${entry.url})`,
+        );
+        continue;
+      }
+      surviving.push(entry.url);
+    }
+    if (dropped > 0) this.logger.info(`Discovery filter dropped ${dropped}/${entries.length} entries for ${category}`);
+    return surviving;
   }
 
   async parseProduct(html: string, url: string): Promise<ProductData | null> {
@@ -149,6 +215,14 @@ export class PcExpressCrawler extends BaseCrawler<Category> {
     // Fallback de MPN: usar productId si no se encontró
     if (!mpnRaw && productId) mpnRaw = `PCX-${productId}`;
     product.mpn = mpnRaw || null;
+
+    // Hard MPN blocklist: PC Express archiva accesorios (risers, NVLink bridges,
+    // módulos TPM...) bajo la categoría padre (gpu / motherboard). Cortamos acá
+    // para ahorrar la descarga del HTML de descripción y el round-trip de pipeline.
+    if (isMpnBlocked(product.mpn)) {
+      this.logger.info(`Skipping blocked MPN at crawler: ${product.mpn} (${url})`);
+      return null;
+    }
 
     // Precios: 2 contenedores .rm-product-page__price (cash con h3.text-primary, normal sin)
     let cash: number | null = null;
