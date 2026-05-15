@@ -61,6 +61,11 @@ app.use("/v1/translation-feedback", Limit("strict"));
 app.use("/v1/products/*/comments", Limit("moderate"));
 app.use("/v1/comments/*", Limit("moderate"));
 
+// Fase 4: moderation
+app.use("/v1/reports", Limit("moderate"));
+app.use("/v1/reports/*", Limit("moderate"));
+app.use("/v1/admin/moderation/*", Limit("moderate"));
+
 // Lectura pública (100 req/60s)
 app.use("/v1/products/*", Limit("lenient"));
 app.use("/v1/categories/*", Limit("lenient"));
