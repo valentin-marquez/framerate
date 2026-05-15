@@ -403,14 +403,37 @@ function extractGpuBrandLine(title: string, mpn?: string): BrandModel | null {
 // ============================================================================
 
 /**
- * Extracts VRAM amount from title
+ * Extracts VRAM amount from title.
+ *
+ * Strategy (in priority order):
+ *   1. Prefer an explicit "GB" with word boundaries (e.g. "12GB", "16 GB").
+ *      This is the safest and unambiguous form.
+ *   2. Fall back to a lone "G" *only* when:
+ *        - it is preceded by a non-digit (avoids matching "70 G" inside
+ *          "5070 GDDR7" — the bug that previously produced "70GB" titles);
+ *        - it is not immediately followed by another letter or digit
+ *          (avoids consuming "G" in "GDDR", "GHZ", "GIGABYTE", etc.);
+ *        - it is not followed (after optional whitespace) by "DDR" or "HZ"
+ *          (memory-bus / clock indicators that aren't VRAM).
+ *
+ * This must NEVER produce a wrong number for the canonical PC Express raw
+ * title `"rtx 5070 gddr7 12gb sdram oc edition"` — see __tests__/gpu.test.ts.
  */
 function extractVram(title: string): string | null {
-  // Match patterns like "32GB", "16 GB", "8G"
-  const match = title.match(/(\d{1,2})\s*G(?:B)?(?:\s|D|$)/i);
-  if (match) {
-    return `${match[1]}GB`;
+  // 1. Highest precedence: explicit "GB" with word boundary.
+  const gb = title.match(/\b(\d{1,3})\s*GB\b/i);
+  if (gb) {
+    return `${gb[1]}GB`;
   }
+
+  // 2. Fallback: lone "G" right after a small VRAM number (e.g. "8G OC", "O12G").
+  //    Reject if preceded by another digit (avoid "5070 g" → "70G")
+  //    or followed by DDR/HZ/letters/digits.
+  const lone = title.match(/(?:^|[^0-9])(\d{1,2})G(?![A-Z0-9])(?!\s*(?:DDR|HZ))/i);
+  if (lone) {
+    return `${lone[1]}GB`;
+  }
+
   return null;
 }
 
