@@ -91,6 +91,9 @@ export const productsService = {
 
   getBySlug: (slug: string) => api.get<ProductDetail>(`/v1/products/${slug}`),
 
+  // Si `slug` fue renombrado, devuelve el slug canónico. 404 si no hay redirect.
+  resolveRedirect: (slug: string) => api.get<{ slug: string }>(`/v1/products/redirects/${slug}`),
+
   getPriceHistory: (slug: string, days = 30) =>
     api.get<PriceHistoryResponse>(`/v1/products/${slug}/price-history`, {
       params: { days: days.toString() },

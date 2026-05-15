@@ -8,7 +8,7 @@ import {
   IconExternalLink,
   IconHome,
 } from "@tabler/icons-react";
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 import { useAuthStore } from "~/features/auth/store/auth";
 import { getCategoryConfig } from "~/features/category/utils/categories";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
@@ -51,14 +51,28 @@ export function meta({ data }: Route.MetaArgs) {
 export async function loader({ params }: Route.LoaderArgs) {
   try {
     const product = await productsService.getBySlug(params.slug);
-    productsService.trackView(params.slug).catch(() => {});
 
     if (!product || product.prices?.cash === 0 || product.prices?.cash == null) {
       throw new Response("Producto no encontrado", { status: 404 });
     }
 
+    productsService.trackView(params.slug).catch(() => {});
     return product;
-  } catch (_error) {
+  } catch (error) {
+    // Respeta redirects/respuestas explícitas (incluye `throw redirect(...)`).
+    if (error instanceof Response) throw error;
+
+    // Antes de rendir un 404 final, chequear si el slug fue renombrado.
+    try {
+      const canonical = await productsService.resolveRedirect(params.slug);
+      if (canonical?.slug && canonical.slug !== params.slug) {
+        throw redirect(`/producto/${canonical.slug}`, 301);
+      }
+    } catch (redirectErr) {
+      if (redirectErr instanceof Response) throw redirectErr;
+      // Fallthrough al 404.
+    }
+
     throw new Response("Producto no encontrado", { status: 404 });
   }
 }

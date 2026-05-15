@@ -29,6 +29,135 @@ export function normalizeMpnKey(mpn: string | null | undefined): string {
   return (mpn ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
+/**
+ * Extrae el primer token "<digits>GB" del nombre del producto.
+ * Devuelve el número (e.g., 12) o null si no hay match.
+ * El nombre típicamente tiene la forma:
+ *   "ASUS Dual RTX 5070 12GB OC [DUAL-RTX5070-O12G]"
+ *   "MSI Ventus 3X OC RTX 5070 70GB" (bug case: nombre incorrecto)
+ *
+ * Solo capturamos el primer token fuera de los corchetes del MPN.
+ */
+function extractGbFromName(name: string | null | undefined): number | null {
+  if (!name) return null;
+  // Strip bracketed MPN suffix to evitar capturar el MPN como "12G"
+  const stripped = name.replace(/\s*\[.*?\]\s*$/, "");
+  const m = stripped.match(/\b(\d{1,4})\s*GB\b/i);
+  if (!m) return null;
+  const n = Number.parseInt(m[1], 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Intenta inferir la capacidad (GB) implícita en un MPN.
+ * Patrones comunes en GPUs:
+ *   - DUAL-RTX5070-O12G  → 12
+ *   - RTX5060-O8G        → 8
+ *   - GV-N4060OC-8GD     → 8
+ *   - VCG507012DFXPB1    → ambiguo, no debería matchear
+ *
+ * Estrategia: primero buscar capacidad con prefijo "O" o "-" (más confiable),
+ * luego fallback al sufijo "<digits>G" o "<digits>GB".
+ * Solo devolvemos valores en un rango razonable (1..128 GB) para evitar
+ * matchear cosas tipo "5070" como "070G".
+ */
+function extractGbHintFromMpn(mpn: string | null | undefined): number | null {
+  if (!mpn) return null;
+  const upper = mpn.toUpperCase();
+
+  // 1) Prefijo "O" o "-" seguido de dígitos + G (más confiable)
+  //    Matchea "-O12G", "-O8G", "-12G", " O8G ".
+  const prefixed = upper.match(/(?:^|[^A-Z0-9])(?:O|-)(\d{1,3})G(?![A-Z0-9])/);
+  if (prefixed) {
+    const n = Number.parseInt(prefixed[1], 10);
+    if (Number.isFinite(n) && n >= 1 && n <= 128) return n;
+  }
+
+  // 2) Sufijo terminando en "<digits>G" o "<digits>GB"
+  const suffix = upper.match(/(\d{1,3})\s*GB?$/);
+  if (suffix) {
+    const n = Number.parseInt(suffix[1], 10);
+    if (Number.isFinite(n) && n >= 1 && n <= 128) return n;
+  }
+
+  // 3) "GD" sufijo (Gigabyte-style: "8GD6", "12GD7") — capturar dígitos antes
+  const gigabyte = upper.match(/(\d{1,3})GD\d?/);
+  if (gigabyte) {
+    const n = Number.parseInt(gigabyte[1], 10);
+    if (Number.isFinite(n) && n >= 1 && n <= 128) return n;
+  }
+
+  return null;
+}
+
+/**
+ * Genera el slug base a partir de un nombre de producto. No incluye sufijo único.
+ */
+export function nameToSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * Decide si conviene reemplazar el nombre persistido por uno nuevo cuando se mergea
+ * un listing bajo un producto existente. La motivación es corregir capacidades VRAM
+ * mal extraídas históricamente (bug en `processors/normalizers/gpu.ts`) sin reescribir
+ * datos en masa.
+ *
+ * Reglas:
+ *   1. Si MPN sugiere capacidad (e.g., "DUAL-RTX5070-O12G" → 12), preferir el nombre
+ *      cuya capacidad GB coincide con la del MPN. Si ninguno coincide, mantener existente.
+ *   2. Si MPN no da pista y los GB difieren, mantener existente (conservador, no churn).
+ *   3. Si ambos coinciden o no hay GB en ninguno, mantener existente (no-op).
+ */
+export function pickBetterName({
+  existingName,
+  newName,
+  mpn,
+}: {
+  existingName: string;
+  newName: string;
+  mpn: string | null | undefined;
+}): { name: string; renamed: boolean; reason: string } {
+  const existingGb = extractGbFromName(existingName);
+  const newGb = extractGbFromName(newName);
+  const mpnHint = extractGbHintFromMpn(mpn);
+
+  // Same GB → keep existing (no-op).
+  if (existingGb === newGb) {
+    return { name: existingName, renamed: false, reason: "same_gb_or_no_gb" };
+  }
+
+  if (mpnHint != null) {
+    // Caso ideal: una de las dos coincide con el MPN.
+    if (existingGb === mpnHint && newGb !== mpnHint) {
+      return { name: existingName, renamed: false, reason: "existing_matches_mpn" };
+    }
+    if (newGb === mpnHint && existingGb !== mpnHint) {
+      return {
+        name: newName,
+        renamed: true,
+        reason: `new_matches_mpn_hint_${mpnHint}gb_existing_was_${existingGb ?? "none"}gb`,
+      };
+    }
+    // Ninguno coincide con la pista del MPN: no churn.
+    return {
+      name: existingName,
+      renamed: false,
+      reason: `mpn_hint_${mpnHint}gb_no_name_matches`,
+    };
+  }
+
+  // Sin pista de MPN: conservador. Mantener existente.
+  return {
+    name: existingName,
+    renamed: false,
+    reason: `no_mpn_hint_gb_differs_existing_${existingGb ?? "none"}_new_${newGb ?? "none"}`,
+  };
+}
+
 export class CatalogService {
   private logger = new Logger("CatalogService");
   private brandCache = new Map<string, string>();
@@ -404,7 +533,7 @@ export class CatalogService {
         }
         const insert: TablesInsert<"products"> = {
           name: normalizedTitle,
-          slug: `${normalizedTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`,
+          slug: `${nameToSlug(normalizedTitle)}-${Date.now()}`,
           mpn: product.mpn,
           category_id: product.categoryId,
           brand_id: product.brandId,
@@ -430,15 +559,69 @@ export class CatalogService {
           productId = data?.id ?? null;
         }
       } else {
+        // Fetch the existing product's current name + slug so we can decide
+        // whether the incoming title carries a better (e.g. correct VRAM) name.
+        const { data: existingProduct } = await supabase
+          .from("products")
+          .select("name, slug")
+          .eq("id", productId)
+          .single();
+
+        const updatePayload: Record<string, unknown> = {};
+
+        if (existingProduct?.name && normalizedTitle) {
+          const decision = pickBetterName({
+            existingName: existingProduct.name,
+            newName: normalizedTitle,
+            mpn: product.mpn,
+          });
+
+          if (decision.renamed) {
+            const newSlug = `${nameToSlug(decision.name)}-${Date.now()}`;
+            updatePayload.name = decision.name;
+            updatePayload.slug = newSlug;
+            // Insertar el slug viejo en product_slug_redirects para servir 301.
+            // No bloqueamos el upsert si falla (es best-effort).
+            if (existingProduct.slug && existingProduct.slug !== newSlug) {
+              const { error: redirectError } = await supabase
+                .from("product_slug_redirects")
+                .insert({ old_slug: existingProduct.slug, product_id: productId });
+              if (redirectError && !/duplicate key/i.test(redirectError.message ?? "")) {
+                this.logger.warn(`Failed to record slug redirect for ${productId}: ${redirectError.message}`);
+              }
+            }
+            this.logger.info("product_renamed", {
+              product_id: productId,
+              old_name: existingProduct.name,
+              new_name: decision.name,
+              old_slug: existingProduct.slug,
+              new_slug: newSlug,
+              reason: decision.reason,
+              mpn: product.mpn,
+            });
+          } else if (decision.reason !== "same_gb_or_no_gb") {
+            // Mismatch detected but we decided to keep existing — emit a warning so
+            // we can spot data drift without churning slugs.
+            this.logger.warn("product_name_mismatch_kept_existing", {
+              product_id: productId,
+              existing_name: existingProduct.name,
+              candidate_name: normalizedTitle,
+              reason: decision.reason,
+              mpn: product.mpn,
+            });
+          }
+        }
+
         // update specs if present
         if (product.specs) {
-          const { error } = await supabase
-            .from("products")
-            .update({ specs: product.specs as Json })
-            .eq("id", productId);
+          updatePayload.specs = product.specs as Json;
+        }
+
+        if (Object.keys(updatePayload).length > 0) {
+          const { error } = await supabase.from("products").update(updatePayload).eq("id", productId);
           if (error) {
             const msg = (error as { message?: unknown }).message as string | undefined;
-            this.logger.error(`Failed to update product specs: ${productId}`, msg ?? String(error));
+            this.logger.error(`Failed to update product: ${productId}`, msg ?? String(error));
           }
         }
       }

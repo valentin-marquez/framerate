@@ -199,6 +199,33 @@ products.post("/:slug/view", async (c) => {
   return c.json({ success: true });
 });
 
+// GET /products/redirects/:slug — Lookup canonical slug for a renamed product.
+// Devuelve 200 con el slug actual si el slug consultado fue renombrado.
+products.get(
+  "/redirects/:slug",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.LONG,
+    name: "product-redirect",
+  }),
+  async (c) => {
+    const supabase = createSupabase(c.env);
+    const slug = c.req.param("slug");
+
+    const { data, error } = await supabase
+      .from("product_slug_redirects")
+      .select("product_id, products!inner(slug)")
+      .eq("old_slug", slug)
+      .maybeSingle();
+
+    if (error || !data) {
+      return c.json({ error: "No redirect found" }, 404);
+    }
+
+    return c.json({ slug: data.products.slug });
+  },
+);
+
 // GET /products/:slug
 products.get(
   "/:slug",
