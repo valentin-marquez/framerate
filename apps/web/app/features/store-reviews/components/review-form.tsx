@@ -4,7 +4,7 @@ import {
   type StoreReview,
   useCreateStoreReview,
   useUpdateStoreReview,
-} from "~/features/store-reviews/services/store-reviews.client";
+} from "~/features/store-reviews/services/store-reviews";
 import { Button } from "~/shared/components/primitives/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/shared/components/primitives/card";
 import { Textarea } from "~/shared/components/primitives/textarea";

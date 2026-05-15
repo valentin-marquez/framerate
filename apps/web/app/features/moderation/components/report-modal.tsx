@@ -15,12 +15,7 @@ import { Label } from "~/shared/components/primitives/label";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
-import {
-  type CreateReportPayload,
-  type ReportReason,
-  type ReportTargetType,
-  reportsClient,
-} from "../services/reports.client";
+import { type CreateReportPayload, type ReportReason, type ReportTargetType, reportsClient } from "../services/reports";
 
 const REASON_LABELS: Record<ReportReason, string> = {
   spam: "Spam o promocional",

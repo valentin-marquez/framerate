@@ -9,7 +9,7 @@ import { Label } from "~/shared/components/primitives/label";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
-import { moderationClient } from "../services/moderation.client";
+import { moderationClient } from "../services/moderation";
 import type { Route } from "./+types/users-admin";
 
 export function meta(_: Route.MetaArgs) {

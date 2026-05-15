@@ -16,7 +16,7 @@ export {
   type QueueItem,
   type ResolveDecision,
   type ResolvePayload,
-} from "./services/moderation.client";
+} from "./services/moderation";
 export {
   type CreateReportPayload,
   type Report,
@@ -24,4 +24,4 @@ export {
   type ReportStatus,
   type ReportTargetType,
   reportsClient,
-} from "./services/reports.client";
+} from "./services/reports";

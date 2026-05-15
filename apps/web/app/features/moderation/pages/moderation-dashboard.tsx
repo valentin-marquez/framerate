@@ -7,9 +7,9 @@ import { Button } from "~/shared/components/primitives/button";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
-import type { ModAction, QueueItem } from "../services/moderation.client";
-import { moderationClient } from "../services/moderation.client";
-import type { Report } from "../services/reports.client";
+import type { ModAction, QueueItem } from "../services/moderation";
+import { moderationClient } from "../services/moderation";
+import type { Report } from "../services/reports";
 import type { Route } from "./+types/moderation-dashboard";
 
 const REASON_LABELS: Record<Report["reason"], string> = {

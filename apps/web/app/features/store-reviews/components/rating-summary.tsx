@@ -1,4 +1,4 @@
-import { useStoreRatingStats } from "~/features/store-reviews/services/store-reviews.client";
+import { useStoreRatingStats } from "~/features/store-reviews/services/store-reviews";
 import { Card, CardContent } from "~/shared/components/primitives/card";
 import { Skeleton } from "~/shared/components/primitives/skeleton";
 import { RatingStars } from "./rating-stars";

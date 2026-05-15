@@ -1,5 +1,5 @@
 /**
- * @module features/store-reviews/services/store-reviews.client
+ * @module features/store-reviews/services/store-reviews
  *
  * Cliente del API para reseñas de tiendas. Hooks de TanStack Query.
  */

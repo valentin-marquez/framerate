@@ -1,7 +1,7 @@
 import { IconFlag } from "@tabler/icons-react";
 import { useState } from "react";
 import { Button, type ButtonProps } from "~/shared/components/primitives/button";
-import type { ReportTargetType } from "../services/reports.client";
+import type { ReportTargetType } from "../services/reports";
 import { ReportModal } from "./report-modal";
 
 export interface ReportButtonProps {

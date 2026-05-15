@@ -1,5 +1,5 @@
 import { api } from "~/shared/lib/api";
-import type { Report, ReportStatus } from "./reports.client";
+import type { Report, ReportStatus } from "./reports";
 
 export interface QueueItem {
   msg_id: number;

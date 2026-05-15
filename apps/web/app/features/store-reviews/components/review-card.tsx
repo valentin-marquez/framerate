@@ -15,7 +15,7 @@ import {
   useDeleteStoreReview,
   useMarkReviewHelpful,
   usePinReview,
-} from "~/features/store-reviews/services/store-reviews.client";
+} from "~/features/store-reviews/services/store-reviews";
 import { Badge } from "~/shared/components/primitives/badge";
 import { Button } from "~/shared/components/primitives/button";
 import { Card, CardContent } from "~/shared/components/primitives/card";

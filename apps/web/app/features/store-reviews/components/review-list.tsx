@@ -3,7 +3,7 @@ import {
   type ReviewSort,
   type StoreReviewItem,
   useStoreReviews,
-} from "~/features/store-reviews/services/store-reviews.client";
+} from "~/features/store-reviews/services/store-reviews";
 import { Button } from "~/shared/components/primitives/button";
 import { Skeleton } from "~/shared/components/primitives/skeleton";
 import { ReviewCard } from "./review-card";

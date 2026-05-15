@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { type StoreReview, useUpdateStoreReview } from "~/features/store-reviews/services/store-reviews.client";
+import { type StoreReview, useUpdateStoreReview } from "~/features/store-reviews/services/store-reviews";
 import { Button } from "~/shared/components/primitives/button";
 import { Textarea } from "~/shared/components/primitives/textarea";
 
