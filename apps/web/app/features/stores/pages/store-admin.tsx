@@ -104,7 +104,7 @@ export default function StoreAdmin({ loaderData }: Route.ComponentProps) {
         <div>
           <h1 className="font-semibold text-2xl">Admin · {store.name}</h1>
           <p className="text-muted-foreground text-sm">
-            <Link to={`/stores/${store.slug}`} className="hover:text-foreground">
+            <Link to={`/tiendas/${store.slug}`} className="hover:text-foreground">
               ← Volver a la tienda pública
             </Link>
           </p>

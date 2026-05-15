@@ -28,14 +28,20 @@ export default [
     route("preferences", "features/settings/pages/preferences.tsx"),
   ]),
 
-  // Fase 1: stores + claim flow
-  route("stores/:slug", "features/stores/pages/store-page.tsx"),
-  route("stores/:slug/admin", "features/stores/pages/store-admin.tsx"),
-  route("claim", "features/stores/pages/claim-page.tsx"),
+  // Fase 1: tiendas + flujo de reclamo (URLs en español — el sitio sirve audiencia chilena).
+  route("tiendas/:slug", "features/stores/pages/store-page.tsx"),
+  route("tiendas/:slug/admin", "features/stores/pages/store-admin.tsx"),
+  route("reclamar", "features/stores/pages/claim-page.tsx"),
 
   // Fase 2: vista standalone de reseñas (mantener mientras Fase 1 no embede
   // <StoreReviewsSection /> en store-page; se conecta en el wiring cross-fase)
   route("tiendas/:slug/resenas", "features/store-reviews/pages/store-reviews-page.tsx"),
+
+  // Redirects 301 desde URLs viejas en inglés. Mantener al menos hasta que
+  // expiren los caches públicos y links externos se actualicen.
+  route("stores/:slug", "features/stores/pages/redirect-old-store.tsx"),
+  route("stores/:slug/admin", "features/stores/pages/redirect-old-store-admin.tsx"),
+  route("claim", "features/stores/pages/redirect-old-claim.tsx"),
 
   // Admin
   route("admin/gatekeeper", "features/gatekeeper/pages/review-dashboard.tsx"),
