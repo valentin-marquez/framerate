@@ -152,3 +152,41 @@ export const requireStoreRole = (storeIdParam: string, role: string = "editor") 
 
     await next();
   });
+
+/**
+ * Fase 1: variante de `requireStoreRole` que acepta un slug en lugar de un UUID.
+ * Resuelve el slug a `store_id` antes de llamar al RPC. Útil para rutas
+ * `/v1/stores/:slug/...`.
+ *
+ * Deja el `storeId` resuelto en `c.var.storeId` para que el handler lo reutilice.
+ */
+export const requireStoreRoleBySlug = (slugParam: string = "slug", role: "owner" | "editor" = "editor") =>
+  createMiddleware<{ Bindings: Bindings; Variables: Variables }>(async (c, next) => {
+    const token = c.get("token");
+    if (!token) return c.json({ error: "Authentication required" }, 401);
+
+    const slug = c.req.param(slugParam);
+    if (!slug) return c.json({ error: `Missing route param '${slugParam}'` }, 400);
+
+    const supabase = createSupabase(c.env, token);
+    const { data: store, error: storeErr } = await supabase.from("stores").select("id").eq("slug", slug).maybeSingle();
+    if (storeErr || !store) return c.json({ error: "Store not found" }, 404);
+
+    c.set("storeId", store.id);
+
+    if (c.get("userRole") === "admin") {
+      await next();
+      return;
+    }
+
+    const { data, error } = await supabase.rpc("is_store_member", {
+      p_store_id: store.id,
+      p_required_role: role,
+    });
+    if (error) {
+      logger.error(`is_store_member rpc failed: ${error.message}`);
+      return c.json({ error: "Authorization check failed" }, 500);
+    }
+    if (data !== true) return c.json({ error: "Forbidden" }, 403);
+    await next();
+  });
