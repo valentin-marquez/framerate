@@ -11,7 +11,7 @@ describe("analyzeBuild", () => {
     expect(result.performance).toBeDefined();
     const tier = result.performance?.tier;
     // Con RTX 5070 + Ryzen 7 9700X esperamos ≥ "High / 1440p".
-    expect(["High / 1440p", "Elite", "4K / Enthusiast"]).toContain(tier);
+    expect(["High / 1440p", "Elite", "4K / Enthusiast"]).toContain(tier as string);
   });
 
   test("AM4 CPU + AM5 motherboard => incompatible con SOCKET_MISMATCH", () => {
