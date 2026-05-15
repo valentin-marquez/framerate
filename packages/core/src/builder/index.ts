@@ -8,8 +8,12 @@
  *
  * @example
  * ```typescript
- * import { CompatibilityEngine, ALL_RULES } from "@framerate/core/builder";
+ * // Forma recomendada (función pura):
+ * import { analyzeBuild } from "@framerate/core/builder";
+ * const analysis = analyzeBuild(componentsMap);
  *
+ * // Forma legacy (clase, mantenida por compat):
+ * import { CompatibilityEngine, ALL_RULES } from "@framerate/core/builder";
  * const engine = new CompatibilityEngine(ALL_RULES);
  * const analysis = engine.run(componentsMap);
  * ```
@@ -26,13 +30,31 @@ export type {
   ValidationIssue,
   ValidationSeverity,
 } from "@framerate/db";
-export { CompatibilityEngine } from "./engine";
+export {
+  CPU_GEN_FACTORS,
+  estimateGpuWattageFromName,
+  GPU_ARCH_FACTORS,
+  GPU_WATTAGE_FALLBACK,
+  inferGpuArchitecture,
+  resolveGpuArchitecture,
+} from "./calibration";
+export {
+  analyzeBuild,
+  CompatibilityEngine,
+  calculateEstimatedWattage,
+  estimatePerformance,
+} from "./engine";
 export {
   ALL_RULES,
   CompletenessRule,
   CoolerClearanceRule,
   GpuClearanceRule,
+  MemorySlotRule,
+  MemorySpeedRule,
   MemoryTypeRule,
+  MotherboardFormFactorRule,
+  PsuConnectorRule,
   SocketCompatibilityRule,
+  StorageInterfaceRule,
   WattageRule,
 } from "./rules";

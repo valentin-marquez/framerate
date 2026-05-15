@@ -8,6 +8,7 @@ interface QuoteHeaderProps {
   updatedAt: string;
   compatibilityStatus: string;
   estimatedWattage?: number;
+  isAnalyzing?: boolean;
 }
 
 export function QuoteHeader({
@@ -16,6 +17,7 @@ export function QuoteHeader({
   updatedAt,
   compatibilityStatus,
   estimatedWattage,
+  isAnalyzing = false,
 }: QuoteHeaderProps) {
   const { t } = useTranslation();
 
@@ -52,7 +54,7 @@ export function QuoteHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start">
-        <CompatibilityBadge status={compatibilityStatus} />
+        <CompatibilityBadge status={compatibilityStatus} isAnalyzing={isAnalyzing} />
 
         {estimatedWattage ? (
           <div

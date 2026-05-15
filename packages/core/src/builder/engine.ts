@@ -12,338 +12,280 @@ import type {
   BuildRule,
   CaseSpecs,
   CompatibilityStatus,
+  CpuCoolerSpecs,
   CpuSpecs,
   GpuSpecs,
   PerformanceEstimation,
   ValidationIssue,
 } from "@framerate/db";
-
-// Constantes de calibración de rendimiento por generación/arquitectura
-const CPU_GEN_FACTORS: Record<string, number> = {
-  // AMD
-  "Zen 5": 1.6,
-  "Zen 4": 1.35,
-  "Zen 3": 1.2,
-  "Zen 2": 1.0, // Base de referencia
-  "Zen+": 0.9,
-  Zen: 0.8,
-  // Intel
-  "Arrow Lake": 1.5,
-  "Core Ultra 200": 1.5,
-  "Raptor Lake Refresh": 1.45,
-  "Raptor Lake": 1.4,
-  "Alder Lake": 1.3,
-  "Rocket Lake": 1.1,
-  "Comet Lake": 1.05,
-  "Coffee Lake": 1.0,
-};
-
-const GPU_ARCH_FACTORS: Record<string, number> = {
-  // NVIDIA
-  Blackwell: 2.6, // RTX 50 series
-  "Ada Lovelace": 2.1, // RTX 40 series
-  Ampere: 1.6, // RTX 30 series
-  Turing: 1.3, // RTX 20/16xx series
-  Pascal: 1.0, // GTX 10 series
-  // AMD
-  "RDNA 3": 1.9,
-  "RDNA 2": 1.5,
-  RDNA: 1.2,
-};
+import {
+  CPU_GEN_FACTORS,
+  estimateGpuWattageFromName,
+  GPU_ARCH_FACTORS,
+  getGpuTransientFactor,
+  PERIPHERAL_WATTAGE,
+  POWER_FACTORS,
+  resolveGpuArchitecture,
+} from "./calibration";
 
 /**
- * Motor principal de análisis de compatibilidad.
+ * Determina si un cooler es del tipo AIO (refrigeración líquida).
  *
- * Ejecuta una serie de reglas de validación sobre un conjunto de componentes
- * y devuelve un análisis completo con el estado de compatibilidad y problemas detectados.
+ * Estrategia:
+ * 1. Lee `specs.type` (enum del schema, valor "AIO" o "Custom Loop").
+ * 2. Si no, revisa `specs.water_cooled` o presencia de `radiator_size_mm > 0`.
+ * 3. Como último recurso, busca substrings en el nombre.
+ */
+function isAioCooler(name: string, specs: CpuCoolerSpecs | undefined): boolean {
+  if (specs) {
+    if (specs.type === "AIO" || specs.type === "Custom Loop") return true;
+    if (specs.type === "Air" || specs.type === "Fanless") return false;
+    if (specs.water_cooled === true) return true;
+    if (typeof specs.radiator_size_mm === "number" && specs.radiator_size_mm > 0) {
+      return true;
+    }
+  }
+  const n = name.toLowerCase();
+  return n.includes("liquid") || n.includes("aio") || n.includes("water");
+}
+
+/**
+ * Función pura que ejecuta el análisis de un build.
  *
- * @example
- * ```typescript
- * const engine = new CompatibilityEngine([
- *   SocketCompatibilityRule,
- *   WattageRule,
- *   MemoryTypeRule
- * ]);
+ * Es la entrada recomendada del motor: no requiere instancia, no muta estado,
+ * y permite testear/componer fácilmente.
  *
- * const analysis = engine.run({
- *   cpu: { ...productData, specs: { socket: "AM5", tdp_w: 120 } },
- *   motherboard: { ...productData, specs: { socket: "AM5" } }
- * });
+ * @param components Mapa de componentes a analizar
+ * @param rules Reglas a ejecutar. Si se omite, se usan ALL_RULES.
+ */
+export function analyzeBuild(components: BuildComponentsMap, rules?: BuildRule[]): BuildAnalysis {
+  // Lazy import para evitar ciclo: rules.ts importa de engine.ts.
+  // Si no se pasan reglas, las cargamos desde el módulo de reglas.
+  const activeRules = rules ?? requireAllRules();
+
+  const issues: ValidationIssue[] = [];
+
+  for (const rule of activeRules) {
+    try {
+      const ruleIssues = rule.validate(components);
+      issues.push(...ruleIssues);
+    } catch (error) {
+      console.error(`Rule ${rule.name} failed:`, error);
+      issues.push({
+        code: "INTERNAL_VALIDATION_ERROR",
+        severity: "warning",
+        message: `No se pudo validar: ${rule.name}`,
+        details: error instanceof Error ? error.message : "Error desconocido",
+      });
+    }
+  }
+
+  const estimatedWattage = calculateEstimatedWattage(components);
+  const status = determineStatus(issues);
+  const performance = estimatePerformance(components);
+
+  return {
+    status,
+    estimatedWattage,
+    performance,
+    issues,
+    analyzedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Determina el estado general de compatibilidad a partir de los issues.
+ * Solo `error` baja a "incompatible"; `warning` a "warning"; `info` no afecta.
+ */
+function determineStatus(issues: ValidationIssue[]): CompatibilityStatus {
+  if (issues.length === 0) return "valid";
+
+  const hasErrors = issues.some((issue) => issue.severity === "error");
+  if (hasErrors) return "incompatible";
+
+  const hasWarnings = issues.some((issue) => issue.severity === "warning");
+  if (hasWarnings) return "warning";
+
+  return "valid";
+}
+
+/**
+ * Estima el rendimiento del build (Gaming Score).
+ */
+export function estimatePerformance(components: BuildComponentsMap): PerformanceEstimation {
+  const cpu = components.cpu;
+  const gpu = components.gpu;
+
+  // 1. CPU Score
+  let cpuScore = 0;
+  if (cpu?.specs) {
+    const specs = cpu.specs as CpuSpecs;
+    const microArch = specs.microarchitecture || "Zen 2";
+    const factor = CPU_GEN_FACTORS[microArch] ?? 1.0;
+
+    const cores = specs.cores?.total ?? 4;
+    const threads = specs.cores?.threads ?? cores;
+    const boost = specs.clocks?.boost_ghz ?? 3.5;
+
+    cpuScore = Math.round((cores * 0.7 + threads * 0.3) * boost * factor * 110);
+  }
+
+  // 2. GPU Score
+  let gpuScore = 0;
+  if (gpu?.specs) {
+    const specs = gpu.specs as GpuSpecs;
+    const arch = resolveGpuArchitecture(specs) || "Pascal";
+    const factor = GPU_ARCH_FACTORS[arch] ?? 1.2;
+
+    const vram = specs.memory_gb ?? 4;
+    const bus = specs.memory_bus_bit ?? 128;
+    const clockMhz = specs.core_boost_clock_mhz ?? 1500;
+    const clock = clockMhz / 1000;
+
+    gpuScore = Math.round(vram * (bus / 64) * clock * factor * 65);
+  }
+
+  // 3. Score combinado (85% GPU / 15% CPU para gaming, harmónico)
+  const safeCpuScore = cpuScore || 1000;
+  const safeGpuScore = gpuScore || 1000;
+  const totalScore = Math.round(1 / (0.85 / safeGpuScore + 0.15 / safeCpuScore));
+
+  let tier = "Entry";
+  if (totalScore > 25000) tier = "4K / Enthusiast";
+  else if (totalScore > 20000) tier = "Elite";
+  else if (totalScore > 10000) tier = "High / 1440p";
+  else if (totalScore > 5000) tier = "Mid / 1080p";
+  else tier = "Entry / Ofimática";
+
+  return { cpuScore, gpuScore, totalScore, tier };
+}
+
+// Registro de reglas por defecto. `rules.ts` lo poblará al importarse
+// (evitamos un import circular estático).
+let defaultRulesRegistry: BuildRule[] | null = null;
+
+/**
+ * Registra el set de reglas por defecto que `analyzeBuild` usa cuando se
+ * llama sin pasar reglas explícitas.
  *
- * if (analysis.status === "incompatible") {
- *   console.error("Build inválido:", analysis.issues);
- * }
- * ```
+ * Llamado por `rules.ts` al cargar el módulo. No es para uso público.
+ */
+export function _registerDefaultRules(rules: BuildRule[]): void {
+  defaultRulesRegistry = rules;
+}
+
+function requireAllRules(): BuildRule[] {
+  if (defaultRulesRegistry) return defaultRulesRegistry;
+  // Fallback: si nadie registró reglas, devolvemos vacío en vez de crashear.
+  // Esto solo pasaría si `analyzeBuild` se importa antes que `rules.ts`,
+  // lo cual no ocurre en el path normal porque `index.ts` importa rules.
+  return [];
+}
+
+/**
+ * Motor principal de análisis de compatibilidad (clase, mantenida por compat).
+ *
+ * Internamente delega en `analyzeBuild`. Nuevos consumidores deberían usar
+ * la función pura.
  */
 export class CompatibilityEngine {
   private rules: BuildRule[];
 
-  /**
-   * Crea una nueva instancia del motor con las reglas especificadas.
-   *
-   * @param rules Array de reglas a ejecutar durante el análisis
-   */
   constructor(rules: BuildRule[]) {
     this.rules = rules;
   }
 
-  /**
-   * Ejecuta todas las reglas sobre el conjunto de componentes.
-   *
-   * @param components Mapa de componentes a analizar
-   * @returns Análisis completo con estado y problemas detectados
-   */
   run(components: BuildComponentsMap): BuildAnalysis {
-    const issues: ValidationIssue[] = [];
-
-    // Ejecutar todas las reglas y acumular problemas
-    for (const rule of this.rules) {
-      try {
-        const ruleIssues = rule.validate(components);
-        issues.push(...ruleIssues);
-      } catch (error) {
-        // Si una regla falla, registrar como warning interno
-        console.error(`Rule ${rule.name} failed:`, error);
-        issues.push({
-          code: "INTERNAL_VALIDATION_ERROR",
-          severity: "warning",
-          message: `No se pudo validar: ${rule.name}`,
-          details: error instanceof Error ? error.message : "Error desconocido",
-        });
-      }
-    }
-
-    // Calcular consumo estimado de energía
-    const estimatedWattage = this.calculateWattage(components);
-
-    // Determinar estado general basado en la severidad de los problemas
-    const status = this.determineStatus(issues);
-
-    // Calcular estimación de rendimiento
-    const performance = this.estimatePerformance(components);
-
-    return {
-      status,
-      estimatedWattage,
-      performance,
-      issues,
-      analyzedAt: new Date().toISOString(),
-    };
+    return analyzeBuild(components, this.rules);
   }
 
   /**
-   * Estima el rendimiento del build para Gaming.
-   *
-   * @param components Mapa de componentes
-   * @returns Estimación de rendimiento
+   * @deprecated Usar `estimatePerformance` exportado del módulo.
    */
-  public estimatePerformance(components: BuildComponentsMap): PerformanceEstimation {
-    const cpu = components.cpu;
-    const gpu = components.gpu;
-
-    // 1. Calcular CPU Score
-    let cpuScore = 0;
-    if (cpu?.specs) {
-      const specs = cpu.specs as CpuSpecs;
-      const microArch = specs.microarchitecture || "Zen 2"; // Default fallback
-      const factor = CPU_GEN_FACTORS[microArch] || 1.0;
-
-      const cores = specs.cores?.total ?? 4;
-      const threads = specs.cores?.threads ?? cores;
-      const boost = specs.clocks?.boost_ghz ?? 3.5;
-
-      cpuScore = Math.round((cores * 0.7 + threads * 0.3) * boost * factor * 110);
-    }
-
-    // 2. Calcular GPU Score
-    let gpuScore = 0;
-    if (gpu?.specs) {
-      const specs = gpu.specs as GpuSpecs;
-      const arch = specs.architecture || "Pascal"; // Default fallback
-      const factor = GPU_ARCH_FACTORS[arch] || 1.2;
-
-      const vram = specs.memory_gb ?? 4;
-      const bus = specs.memory_bus_bit ?? 128; // Default 128 bit
-      const clockMhz = specs.core_boost_clock_mhz ?? 1500;
-      const clock = clockMhz / 1000; // GHz
-
-      gpuScore = Math.round(vram * (bus / 64) * clock * factor * 65);
-    }
-
-    // 3. Score Combinado (Ponderado 85% GPU / 15% CPU para Gaming)
-    // Evitar división por cero
-    const safeCpuScore = cpuScore || 1000;
-    const safeGpuScore = gpuScore || 1000;
-
-    const totalScore = Math.round(1 / (0.85 / safeGpuScore + 0.15 / safeCpuScore));
-
-    // Determinar Tier
-    let tier = "Entry";
-    if (totalScore > 25000) tier = "4K / Enthusiast";
-    else if (totalScore > 20000) tier = "Elite";
-    else if (totalScore > 10000) tier = "High / 1440p";
-    else if (totalScore > 5000) tier = "Mid / 1080p";
-    else tier = "Entry / Ofimática";
-
-    return {
-      cpuScore,
-      gpuScore,
-      totalScore,
-      tier,
-    };
+  estimatePerformance(components: BuildComponentsMap): PerformanceEstimation {
+    return estimatePerformance(components);
   }
 
-  /**
-   * Calcula el consumo total estimado de energía del build.
-   *
-   * @param components Mapa de componentes
-   * @returns Consumo estimado en Watts
-   */
-  private calculateWattage(components: BuildComponentsMap): number {
-    return calculateEstimatedWattage(components);
-  }
-
-  /**
-   * Determina el estado general del build basado en los problemas encontrados.
-   *
-   * @param issues Lista de problemas
-   * @returns Estado de compatibilidad
-   */
-  private determineStatus(issues: ValidationIssue[]): CompatibilityStatus {
-    if (issues.length === 0) return "valid";
-
-    const hasErrors = issues.some((issue) => issue.severity === "error");
-    if (hasErrors) return "incompatible";
-
-    const hasWarnings = issues.some((issue) => issue.severity === "warning");
-    if (hasWarnings) return "warning";
-
-    return "valid";
-  }
-
-  /**
-   * Agrega una regla adicional al motor.
-   *
-   * @param rule Regla a agregar
-   */
   addRule(rule: BuildRule): void {
     this.rules.push(rule);
   }
 
-  /**
-   * Remueve una regla del motor por nombre.
-   *
-   * @param ruleName Nombre de la regla a remover
-   */
   removeRule(ruleName: string): void {
     this.rules = this.rules.filter((rule) => rule.name !== ruleName);
   }
 
-  /**
-   * Obtiene la lista de reglas activas.
-   *
-   * @returns Array de nombres de reglas
-   */
   getActiveRules(): string[] {
     return this.rules.map((rule) => rule.name);
   }
 }
 
 /**
- * Calcula el consumo total estimado de energía del build.
- * Implementa lógica de fallback para componentes sin datos de consumo.
+ * Calcula el consumo total estimado de energía del build, en Watts.
+ *
+ * No es la suma simple de TDPs nominales: aplica factores de boost para CPU
+ * (PPT/PL2, ~1.3×) y de transient para GPU (1.2–1.4× según arquitectura).
+ * El valor resultante aproxima el consumo real bajo carga combinado, que es
+ * el que la PSU debe soportar de pico para evitar OCP trips.
+ *
+ * Fuentes de los factores: `calibration.ts > POWER_FACTORS / PERIPHERAL_WATTAGE`.
  */
 export function calculateEstimatedWattage(components: BuildComponentsMap): number {
   let total = 0;
 
-  // CPU TDP
+  // CPU: TDP × boost factor (aproxima PPT/PL2 bajo carga sostenida)
   const cpu = components.cpu;
   if (cpu?.specs && "tdp_w" in cpu.specs) {
-    total += (cpu.specs as CpuSpecs).tdp_w || 0;
+    const tdp = (cpu.specs as CpuSpecs).tdp_w || 0;
+    total += tdp * POWER_FACTORS.CPU_BOOST;
   }
 
-  // GPU TDP con Fallback System
+  // GPU: TDP × transient factor (modern/legacy según arquitectura)
   const gpu = components.gpu;
   if (gpu) {
     const gpuSpecs = gpu.specs as GpuSpecs;
-    if (gpuSpecs.tdp_w) {
-      total += gpuSpecs.tdp_w;
-    } else {
-      // Fallback basado en el nombre del modelo
-      const name = gpu.name.toLowerCase();
-
-      // NVIDIA RTX 40 Series
-      if (name.includes("4090")) total += 450;
-      else if (name.includes("4080")) total += 320;
-      else if (name.includes("4070 ti")) total += 285;
-      else if (name.includes("4070")) total += 200;
-      else if (name.includes("4060 ti")) total += 160;
-      else if (name.includes("4060")) total += 115;
-      // NVIDIA RTX 30 Series
-      else if (name.includes("3090")) total += 350;
-      else if (name.includes("3080")) total += 320;
-      else if (name.includes("3070")) total += 220;
-      else if (name.includes("3060 ti")) total += 200;
-      else if (name.includes("3060")) total += 170;
-      else if (name.includes("3050") && name.includes("6gb")) total += 75;
-      else if (name.includes("3050")) total += 130;
-      // AMD Radeon RX 6000 Series
-      else if (name.includes("6950")) total += 335;
-      else if (name.includes("6900")) total += 300;
-      else if (name.includes("6800")) total += 250;
-      else if (name.includes("6750")) total += 250;
-      else if (name.includes("6700")) total += 230;
-      else if (name.includes("6650")) total += 180;
-      else if (name.includes("6600")) total += 132;
-      // Gamas de Entrada / Legacy
-      else if (name.includes("1660")) total += 125;
-      else if (name.includes("1650")) total += 75;
-      else if (name.includes("1050")) total += 75;
-      else if (name.includes("1030")) total += 30;
-      // Fallback genérico de seguridad
-      else total += 150;
-    }
+    const baseTdp = gpuSpecs.tdp_w || estimateGpuWattageFromName(gpu.name);
+    const arch = resolveGpuArchitecture(gpuSpecs);
+    total += baseTdp * getGpuTransientFactor(arch);
   }
 
-  // RAM: ~5W por módulo
+  // RAM
   if (components.ram) {
-    total += 5 * (components.ram.quantity || 1);
+    total += PERIPHERAL_WATTAGE.RAM_PER_MODULE * (components.ram.quantity || 1);
   }
 
-  // Storage: ~5W por unidad (SSD) / ~8W (HDD)
+  // Storage
   if (components.ssd) {
-    total += 5 * (components.ssd.quantity || 1);
+    total += PERIPHERAL_WATTAGE.SSD_PER_UNIT * (components.ssd.quantity || 1);
   }
   if (components.hdd) {
-    total += 8 * (components.hdd.quantity || 1);
+    total += PERIPHERAL_WATTAGE.HDD_PER_UNIT * (components.hdd.quantity || 1);
   }
 
-  // CPU Cooler: Diferenciación Aire vs AIO
+  // CPU Cooler (AIO consume bomba + fans + RGB)
   const cooler = components["cpu-cooler"];
   if (cooler) {
-    const name = cooler.name.toLowerCase();
-    const isAio = name.includes("liquid") || name.includes("aio") || name.includes("water");
-
-    const watts = isAio ? 15 : 5;
+    const aio = isAioCooler(cooler.name, cooler.specs as CpuCoolerSpecs | undefined);
+    const watts = aio ? PERIPHERAL_WATTAGE.COOLER_AIO : PERIPHERAL_WATTAGE.COOLER_AIR;
     total += watts * (cooler.quantity || 1);
   }
 
-  // Case Fans: ~5W cada uno (incluidos en gabinete + comprados aparte)
+  // Case fans extra
   if (components["case-fan"]) {
-    total += 5 * (components["case-fan"].quantity || 1);
+    total += PERIPHERAL_WATTAGE.CASE_FAN * (components["case-fan"].quantity || 1);
   }
 
-  // Si el gabinete incluye ventiladores, sumar su consumo
+  // Case included fans
   const pcCase = components.case;
   if (pcCase?.specs && "included_fans" in pcCase.specs) {
     const includedFans = (pcCase.specs as CaseSpecs).included_fans || 0;
     if (includedFans > 0) {
-      total += 5 * includedFans;
+      total += PERIPHERAL_WATTAGE.CASE_FAN * includedFans;
     }
   }
 
-  // Motherboard: ~50W base
-  total += 50;
+  // Motherboard base + overhead del sistema (USB, audio, sensores, BIOS)
+  total += PERIPHERAL_WATTAGE.MOTHERBOARD_BASE;
+  total += PERIPHERAL_WATTAGE.SYSTEM_OVERHEAD;
 
   return Math.round(total);
 }

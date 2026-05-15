@@ -8,12 +8,14 @@
 import { ALL_RULES, CompatibilityEngine } from "@framerate/core/builder";
 import {
   type AnalyzeBuildRequest,
+  type BuildAnalysis,
   type BuildComponentCategory,
   type BuildComponentsMap,
   type BuildProduct,
   type ProductSpecs,
   toJson,
 } from "@framerate/db";
+import { Logger } from "@framerate/utils";
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
@@ -21,9 +23,31 @@ import { authMiddleware } from "@/middleware/auth";
 import { CACHE_TTL, Cache, invalidateCache } from "@/middleware/cache";
 
 const quotes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+const logger = new Logger("Quotes");
 
 // Instanciar el motor de compatibilidad con todas las reglas activas
 const compatibilityEngine = new CompatibilityEngine(ALL_RULES);
+
+/**
+ * Emite telemetría estructurada para issues `INSUFFICIENT_DATA` que reporta el
+ * compatibility engine. Sirve para que el equipo de datos pueda detectar
+ * gaps en la extracción de specs (qué campos faltan en qué componentes).
+ *
+ * Se emite un log por issue para que sea fácil agregarlo después.
+ */
+function logInsufficientData(analysis: BuildAnalysis, quoteId?: string) {
+  const insufficient = analysis.issues.filter((i) => i.code === "INSUFFICIENT_DATA");
+  if (insufficient.length === 0) return;
+
+  for (const issue of insufficient) {
+    logger.info("engine_insufficient_data", {
+      event: "engine_insufficient_data",
+      quote_id: quoteId,
+      component: issue.componentA ?? "unknown",
+      details: issue.details ?? issue.message,
+    });
+  }
+}
 
 /**
  * POST /v1/quotes/analyze
@@ -71,7 +95,7 @@ quotes.post("/analyze", async (c) => {
       .in("id", body.productIds);
 
     if (productsError) {
-      console.error("Error fetching products:", productsError);
+      logger.error("Error fetching products:", productsError);
       return c.json({ error: "Failed to fetch products" }, 500);
     }
 
@@ -107,19 +131,15 @@ quotes.post("/analyze", async (c) => {
     // Mapear productos a categorías para el análisis
     const componentsMap = mapProductsToComponents(buildProducts);
 
-    console.log("--- DEBUG STATELESS ANALYSIS ---");
-    console.log("Product IDs:", body.productIds);
-    console.log("Components Map Keys:", Object.keys(componentsMap));
-
     // Ejecutar análisis
     const analysis = compatibilityEngine.run(componentsMap);
 
-    console.log("Analysis Result:", JSON.stringify(analysis, null, 2));
-    console.log("----------------------");
+    // Telemetría: gaps de datos detectados por el engine (sin quote_id en stateless)
+    logInsufficientData(analysis);
 
     return c.json(analysis);
   } catch (error) {
-    console.error("Error analyzing build:", error);
+    logger.error("Error analyzing build:", error);
     return c.json({ error: "Internal server error during analysis" }, 500);
   }
 });
@@ -205,7 +225,7 @@ quotes.get(
       const { data: quotesData, count, error: quotesError } = await query;
 
       if (quotesError) {
-        console.error("Error fetching user quotes:", quotesError);
+        logger.error("Error fetching user quotes:", quotesError);
         return c.json({ error: "Failed to fetch quotes" }, 500);
       }
 
@@ -220,7 +240,7 @@ quotes.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching user profile quotes:", error);
+      logger.error("Error fetching user profile quotes:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },
@@ -312,7 +332,7 @@ quotes.get("/:id", async (c) => {
       .order("created_at", { ascending: true });
 
     if (itemsError) {
-      console.error("Error fetching quote items:", itemsError);
+      logger.error("Error fetching quote items:", itemsError);
       return c.json({ error: "Failed to fetch quote items" }, 500);
     }
 
@@ -434,7 +454,7 @@ quotes.get("/:id", async (c) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching quote:", error);
+    logger.error("Error fetching quote:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -494,7 +514,7 @@ quotes.get("/:id/analyze", async (c) => {
       .eq("quote_id", quoteId);
 
     if (itemsError) {
-      console.error("Error fetching quote items:", itemsError);
+      logger.error("Error fetching quote items:", itemsError);
       return c.json({ error: "Failed to fetch quote items" }, 500);
     }
 
@@ -525,18 +545,13 @@ quotes.get("/:id/analyze", async (c) => {
       })
       .filter((p): p is BuildProduct => p !== null);
 
-    const componentsMap = mapProductsToComponents(products);
-
-    console.log("--- DEBUG ANALYSIS ---");
-    console.log("Quote ID:", quoteId);
-    console.log("Components Map Keys:", Object.keys(componentsMap));
-    console.log("Components Map:", JSON.stringify(componentsMap, null, 2));
+    const componentsMap = mapProductsToComponents(products, quoteId);
 
     // Ejecutar análisis
     const analysis = compatibilityEngine.run(componentsMap);
 
-    console.log("Analysis Result:", JSON.stringify(analysis, null, 2));
-    console.log("----------------------");
+    // Telemetría: gaps de datos detectados por el engine
+    logInsufficientData(analysis, quoteId);
 
     // Actualizar cache en la BD (solo si es el dueño)
     if (isOwner) {
@@ -553,7 +568,7 @@ quotes.get("/:id/analyze", async (c) => {
 
     return c.json(analysis);
   } catch (error) {
-    console.error("Error analyzing quote:", error);
+    logger.error("Error analyzing quote:", error);
     return c.json({ error: "Internal server error during analysis" }, 500);
   }
 });
@@ -596,7 +611,7 @@ quotes.get("/", async (c) => {
       .range(offset, offset + limit - 1);
 
     if (quotesError) {
-      console.error("Error fetching quotes:", quotesError);
+      logger.error("Error fetching quotes:", quotesError);
       return c.json({ error: "Failed to fetch quotes" }, 500);
     }
 
@@ -607,7 +622,7 @@ quotes.get("/", async (c) => {
       .eq("user_id", user.id);
 
     if (countError) {
-      console.error("Error counting quotes:", countError);
+      logger.error("Error counting quotes:", countError);
     }
 
     return c.json({
@@ -620,7 +635,7 @@ quotes.get("/", async (c) => {
       },
     });
   } catch (error) {
-    console.error("Error listing quotes:", error);
+    logger.error("Error listing quotes:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -668,13 +683,13 @@ quotes.post("/", async (c) => {
       .single();
 
     if (quoteError) {
-      console.error("Error creating quote:", quoteError);
+      logger.error("Error creating quote:", quoteError);
       return c.json({ error: "Failed to create quote" }, 500);
     }
 
     return c.json(quote, 201);
   } catch (error) {
-    console.error("Error creating quote:", error);
+    logger.error("Error creating quote:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -735,7 +750,7 @@ quotes.patch("/:id", async (c) => {
       .single();
 
     if (updateError) {
-      console.error("Error updating quote:", updateError);
+      logger.error("Error updating quote:", updateError);
       return c.json({ error: "Failed to update quote" }, 500);
     }
 
@@ -751,7 +766,7 @@ quotes.patch("/:id", async (c) => {
 
     return c.json(quote);
   } catch (error) {
-    console.error("Error updating quote:", error);
+    logger.error("Error updating quote:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -779,13 +794,13 @@ quotes.delete("/:id", async (c) => {
     const { error: deleteError } = await supabase.from("quotes").delete().eq("id", quoteId);
 
     if (deleteError) {
-      console.error("Error deleting quote:", deleteError);
+      logger.error("Error deleting quote:", deleteError);
       return c.json({ error: "Failed to delete quote" }, 500);
     }
 
     return c.json({ success: true, message: "Quote deleted successfully" });
   } catch (error) {
-    console.error("Error deleting quote:", error);
+    logger.error("Error deleting quote:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -865,7 +880,7 @@ quotes.post("/:id/items", async (c) => {
         .single();
 
       if (updateError) {
-        console.error("Error updating quote item:", updateError);
+        logger.error("Error updating quote item:", updateError);
         return c.json({ error: "Failed to update item quantity" }, 500);
       }
 
@@ -885,13 +900,13 @@ quotes.post("/:id/items", async (c) => {
       .single();
 
     if (itemError) {
-      console.error("Error creating quote item:", itemError);
+      logger.error("Error creating quote item:", itemError);
       return c.json({ error: "Failed to add item to quote" }, 500);
     }
 
     return c.json(item, 201);
   } catch (error) {
-    console.error("Error adding item to quote:", error);
+    logger.error("Error adding item to quote:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -949,7 +964,7 @@ quotes.patch("/:id/items/:itemId", async (c) => {
 
     return c.json(item);
   } catch (error) {
-    console.error("Error updating quote item:", error);
+    logger.error("Error updating quote item:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -977,13 +992,13 @@ quotes.delete("/:id/items/:itemId", async (c) => {
     const { error: deleteError } = await supabase.from("quote_items").delete().eq("id", itemId).eq("quote_id", quoteId);
 
     if (deleteError) {
-      console.error("Error deleting quote item:", deleteError);
+      logger.error("Error deleting quote item:", deleteError);
       return c.json({ error: "Failed to delete item" }, 500);
     }
 
     return c.json({ success: true, message: "Item removed successfully" });
   } catch (error) {
-    console.error("Error deleting quote item:", error);
+    logger.error("Error deleting quote item:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
@@ -1010,8 +1025,20 @@ function mapCategorySlugToComponent(slug: string): BuildComponentCategory | null
 
 /**
  * Mapea una lista de productos a un BuildComponentsMap.
+ *
+ * Política para múltiples productos en la misma categoría:
+ * - Mismo `id`: se suman cantidades (ej: 2 unidades del mismo kit de RAM).
+ * - `id` distinto: se MANTIENE la primera ocurrencia y se descarta la segunda,
+ *   emitiendo telemetría estructurada. Esto evita crashear el análisis cuando
+ *   el usuario agrega dos productos diferentes de la misma categoría (ej:
+ *   DDR4 + DDR5 por error), pero deja un rastro para que el equipo de datos
+ *   pueda detectar el patrón. La validación cruzada multi-producto por
+ *   categoría se considera fuera del alcance del engine actual.
  */
-function mapProductsToComponents(products: (BuildProduct & { quantity?: number })[]): BuildComponentsMap {
+function mapProductsToComponents(
+  products: (BuildProduct & { quantity?: number })[],
+  quoteId?: string,
+): BuildComponentsMap {
   const componentsMap: BuildComponentsMap = {};
 
   for (const product of products) {
@@ -1019,21 +1046,33 @@ function mapProductsToComponents(products: (BuildProduct & { quantity?: number }
     if (!categorySlug) continue;
 
     const componentCategory = mapCategorySlugToComponent(categorySlug);
-    if (componentCategory) {
-      const existing = componentsMap[componentCategory];
-      const quantity = product.quantity || 1;
+    if (!componentCategory) continue;
 
-      if (existing) {
-        // If component already exists for this category, just add to its quantity
-        // ignoring which specific product is stored (first one wins for compatibility checks)
-        existing.quantity = (existing.quantity || 1) + quantity;
-      } else {
-        componentsMap[componentCategory] = {
-          ...product,
-          quantity,
-        };
-      }
+    const existing = componentsMap[componentCategory];
+    const quantity = product.quantity || 1;
+
+    if (!existing) {
+      componentsMap[componentCategory] = {
+        ...product,
+        quantity,
+      };
+      continue;
     }
+
+    // Mismo producto: sumar cantidades (kit duplicado / 2x del mismo SKU).
+    if (existing.id && product.id && existing.id === product.id) {
+      existing.quantity = (existing.quantity || 1) + quantity;
+      continue;
+    }
+
+    // Producto distinto en la misma categoría: conservar el primero, loggear.
+    logger.warn("multi_product_same_category", {
+      event: "multi_product_same_category",
+      quote_id: quoteId,
+      category: componentCategory,
+      kept: existing.id,
+      dropped: product.id,
+    });
   }
 
   return componentsMap;

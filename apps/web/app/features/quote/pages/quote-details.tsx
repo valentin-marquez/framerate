@@ -1,5 +1,5 @@
-import type { ValidationIssue } from "@framerate/db";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type { PerformanceEstimation, ValidationIssue } from "@framerate/db";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
@@ -7,6 +7,7 @@ import { getAuthUser } from "~/features/auth/services/auth.server";
 import { QuoteActions } from "~/features/quote/components/quote-actions";
 import { QuoteHeader } from "~/features/quote/components/quote-header";
 import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
+import { QuotePerformanceCard } from "~/features/quote/components/quote-performance-card";
 import { QuoteValidationStatus } from "~/features/quote/components/quote-validation-status";
 import {
   useAnalyzeQuote,
@@ -82,22 +83,103 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     setLastQuote(quote);
   }, [quote, lastQuote, t]);
 
-  const [analysis, setAnalysis] = useState<{
+  type AnalysisState = {
     status: "valid" | "warning" | "incompatible" | "unknown";
     issues: ValidationIssue[];
     estimatedWattage: number | null;
-  } | null>(null);
+    performance: PerformanceEstimation | null;
+    hasRun: boolean;
+  };
 
-  // Initialize with quote data
+  // Synchronous init from loader to avoid the "Sin verificar" flash on first paint.
+  // hasRun reflects whether the cached analysis is meaningful (last_analyzed_at is set).
+  const [analysis, setAnalysis] = useState<AnalysisState>(() => ({
+    status: quote.compatibility_status,
+    estimatedWattage: quote.estimated_wattage,
+    issues: quote.validation_errors || [],
+    performance: null,
+    hasRun: !!quote.last_analyzed_at,
+  }));
+
+  // Re-sync when the loader returns a fresh quote (after revalidation).
+  // We keep the in-memory `performance` since it isn't persisted server-side yet.
+  const lastSyncedQuoteId = useRef(quote.id);
+  const lastSyncedAnalyzedAt = useRef(quote.last_analyzed_at);
   useEffect(() => {
-    if (quote) {
-      setAnalysis({
+    if (quote.id !== lastSyncedQuoteId.current || quote.last_analyzed_at !== lastSyncedAnalyzedAt.current) {
+      lastSyncedQuoteId.current = quote.id;
+      lastSyncedAnalyzedAt.current = quote.last_analyzed_at;
+      setAnalysis((prev) => ({
+        ...prev,
         status: quote.compatibility_status,
         estimatedWattage: quote.estimated_wattage,
         issues: quote.validation_errors || [],
-      });
+        hasRun: !!quote.last_analyzed_at,
+      }));
     }
-  }, [quote]);
+  }, [quote.id, quote.last_analyzed_at, quote.compatibility_status, quote.estimated_wattage, quote.validation_errors]);
+
+  // ---------- Debounced auto-analyze ----------
+  // Single shared debounce timer + "queued" flag so concurrent mutations only ever
+  // schedule one analyze. If a re-analysis lands while another is already in flight,
+  // we queue exactly one follow-up after it completes.
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reanalyzePending = useRef(false);
+  const isAnalyzingRef = useRef(false);
+
+  const runAnalyze = useCallback(() => {
+    isAnalyzingRef.current = true;
+    analyzeQuote.mutate(quote.id, {
+      onSuccess: (data) => {
+        setAnalysis({
+          status: data.status,
+          issues: data.issues,
+          estimatedWattage: data.estimatedWattage,
+          performance: data.performance ?? null,
+          hasRun: true,
+        });
+        revalidator.revalidate();
+      },
+      onError: (error) => {
+        console.error("auto-analyze failed", error);
+      },
+      onSettled: () => {
+        isAnalyzingRef.current = false;
+        // If something asked for another analyze while we were running, honor it now.
+        if (reanalyzePending.current) {
+          reanalyzePending.current = false;
+          runAnalyze();
+        }
+      },
+    });
+  }, [analyzeQuote, quote.id, revalidator]);
+
+  const scheduleAutoAnalyze = useCallback(() => {
+    // If an analyze is already in flight, just mark a follow-up.
+    if (isAnalyzingRef.current) {
+      reanalyzePending.current = true;
+      return;
+    }
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      debounceTimer.current = null;
+      runAnalyze();
+    }, 1500);
+  }, [runAnalyze]);
+
+  // Cleanup pending timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
+
+  const cancelDebouncedAnalyze = useCallback(() => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = null;
+    }
+  }, []);
 
   const handleDeleteQuote = () => {
     deleteQuote.mutate(quote.id, {
@@ -122,6 +204,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           setIsSearchOpen(false);
           toast.success(t("product_added_short"));
           revalidator.revalidate();
+          scheduleAutoAnalyze();
         },
         onError: () => {
           toast.error(t("product_add_error"));
@@ -131,21 +214,28 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   };
 
   const handleCheckCompatibility = () => {
+    // Manual click pre-empts any pending debounced analyze.
+    cancelDebouncedAnalyze();
+    reanalyzePending.current = false;
+    isAnalyzingRef.current = true;
     analyzeQuote.mutate(quote.id, {
       onSuccess: (data) => {
-        console.log("--- DEBUG FRONTEND ANALYSIS ---");
-        console.log("Analysis Data:", data);
         setAnalysis({
           status: data.status,
           issues: data.issues,
           estimatedWattage: data.estimatedWattage,
+          performance: data.performance ?? null,
+          hasRun: true,
         });
         revalidator.revalidate();
         toast.success(t("compatibility_checked"));
       },
       onError: (error) => {
-        console.error("--- DEBUG FRONTEND ANALYSIS ERROR ---", error);
+        console.error("compatibility check failed", error);
         toast.error(t("compatibility_check_error"));
+      },
+      onSettled: () => {
+        isAnalyzingRef.current = false;
       },
     });
   };
@@ -257,6 +347,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
         {
           onSuccess: () => {
             revalidator.revalidate();
+            scheduleAutoAnalyze();
           },
           onError: () => {
             toast.error(t("remove_product_error"), { id: toastId });
@@ -270,6 +361,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
         {
           onSuccess: () => {
             revalidator.revalidate();
+            scheduleAutoAnalyze();
           },
           onError: () => {
             toast.error(t("remove_product_error"), { id: toastId });
@@ -281,7 +373,6 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   };
 
   const handleChangeStore = (item: VirtualQuoteItem, listingId: string | null) => {
-    console.log("Changing store:", { itemId: item.id, listingId });
     if (item.isVirtual && item.originalItem) {
       const newQuantity = item.originalItem.quantity - 1;
       updateItem.mutate(
@@ -301,7 +392,12 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
                   listing_id: listingId || undefined,
                 },
               },
-              { onSuccess: () => revalidator.revalidate() },
+              {
+                onSuccess: () => {
+                  revalidator.revalidate();
+                  scheduleAutoAnalyze();
+                },
+              },
             );
           },
         },
@@ -314,7 +410,10 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           data: { listing_id: listingId },
         },
         {
-          onSuccess: () => revalidator.revalidate(),
+          onSuccess: () => {
+            revalidator.revalidate();
+            scheduleAutoAnalyze();
+          },
           onError: (error) => {
             console.error("Failed to update item store:", error);
           },
@@ -335,9 +434,15 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     return acc + (price || 0);
   }, 0);
 
-  const compatibilityStatus = analysis?.status || "unknown";
-  const estimatedWattage = analysis?.estimatedWattage;
-  const validationErrors = analysis?.issues || [];
+  const hasItems = quote.items.length > 0;
+  // If we've never analyzed and have no items, surface "unknown" without items will hide
+  // the badge through QuoteValidationStatus, but the header still renders one.
+  // Spec: empty + never analyzed -> show nothing/"Vacía" via the header.
+  const compatibilityStatus = analysis.hasRun || hasItems ? analysis.status : "empty";
+  const estimatedWattage = analysis.estimatedWattage;
+  const validationErrors = analysis.issues || [];
+  const performance = analysis.performance;
+  const isAnalyzing = analyzeQuote.isPending;
   const isOwner = user?.id === quote.user_id;
 
   return (
@@ -349,9 +454,12 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           updatedAt={quote.updated_at}
           compatibilityStatus={compatibilityStatus}
           estimatedWattage={estimatedWattage || 0}
+          isAnalyzing={isAnalyzing}
         />
 
-        <QuoteValidationStatus status={compatibilityStatus} issues={validationErrors} />
+        {performance && <QuotePerformanceCard performance={performance} />}
+
+        <QuoteValidationStatus status={analysis.status} issues={validationErrors} />
 
         <QuoteItemsList
           flattenedItems={flattenedItems}
