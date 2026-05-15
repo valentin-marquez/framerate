@@ -40,3 +40,11 @@ export const quoteKeys = {
   details: () => [...quoteKeys.all, "detail"] as const,
   detail: (id: string) => [...quoteKeys.details(), id] as const,
 };
+
+// Fase 3: comments
+export const commentKeys = {
+  all: ["comments"] as const,
+  productRoots: (productId: string, sort: string) => [...commentKeys.all, "product", productId, sort] as const,
+  thread: (rootId: string) => [...commentKeys.all, "thread", rootId] as const,
+  myVotes: (ids: string[]) => [...commentKeys.all, "my-votes", [...ids].sort().join(",")] as const,
+};
