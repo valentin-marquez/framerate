@@ -914,6 +914,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_roles: {
+        Row: {
+          granted_at: string;
+          granted_by: string | null;
+          id: string;
+          role: Database["public"]["Enums"]["user_role"];
+          user_id: string;
+        };
+        Insert: {
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          role: Database["public"]["Enums"]["user_role"];
+          user_id: string;
+        };
+        Update: {
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          role?: Database["public"]["Enums"]["user_role"];
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       api_products: {
@@ -977,6 +1001,8 @@ export type Database = {
       };
     };
     Functions: {
+      authorize: { Args: { required_role: string }; Returns: boolean };
+      custom_access_token_hook: { Args: { event: Json }; Returns: Json };
       enqueue_review_item: { Args: { p_raw_feed_id: string }; Returns: number };
       extract_numeric_value: { Args: { input_text: string }; Returns: number };
       f_norm_mpn: { Args: { mpn: string }; Returns: string };
@@ -1074,6 +1100,10 @@ export type Database = {
         Returns: string;
       };
       increment_product_view: { Args: { p_slug: string }; Returns: undefined };
+      is_store_member: {
+        Args: { p_required_role?: string; p_store_id: string };
+        Returns: boolean;
+      };
       quick_search_products: {
         Args: { p_limit?: number; search_term: string };
         Returns: {
@@ -1121,13 +1151,12 @@ export type Database = {
           isSetofReturn: true;
         };
       };
-      show_limit: { Args: never; Returns: number };
-      show_trgm: { Args: { "": string }; Returns: string[] };
     };
     Enums: {
       compatibility_status: "valid" | "warning" | "incompatible" | "unknown";
       feed_processing_status: "NEW" | "PROCESSING" | "MATCHED" | "FAILED";
       job_status: "pending" | "processing" | "completed" | "failed";
+      user_role: "user" | "moderator" | "admin";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -1250,6 +1279,7 @@ export const Constants = {
       compatibility_status: ["valid", "warning", "incompatible", "unknown"],
       feed_processing_status: ["NEW", "PROCESSING", "MATCHED", "FAILED"],
       job_status: ["pending", "processing", "completed", "failed"],
+      user_role: ["user", "moderator", "admin"],
     },
   },
 } as const;
