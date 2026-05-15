@@ -33,6 +33,10 @@ export default [
   route("stores/:slug/admin", "features/stores/pages/store-admin.tsx"),
   route("claim", "features/stores/pages/claim-page.tsx"),
 
+  // Fase 2: vista standalone de reseñas (mantener mientras Fase 1 no embede
+  // <StoreReviewsSection /> en store-page; se conecta en el wiring cross-fase)
+  route("tiendas/:slug/resenas", "features/store-reviews/pages/store-reviews-page.tsx"),
+
   // Admin
   route("admin/gatekeeper", "features/gatekeeper/pages/review-dashboard.tsx"),
 
