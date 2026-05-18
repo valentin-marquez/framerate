@@ -163,17 +163,21 @@ export class CatalogService {
   private brandCache = new Map<string, string>();
   private brandPendingPromises = new Map<string, Promise<string | null>>();
 
-  private CATEGORY_CONFIG: Record<CategorySlug, { slug: CategorySlug; name: string }> = {
-    gpu: { slug: "gpu", name: "Graphics Card" },
-    cpu: { slug: "cpu", name: "Processor" },
-    psu: { slug: "psu", name: "Power Supply" },
-    motherboard: { slug: "motherboard", name: "Motherboard" },
-    case: { slug: "case", name: "Case" },
-    ram: { slug: "ram", name: "RAM" },
-    hdd: { slug: "hdd", name: "HDD" },
-    ssd: { slug: "ssd", name: "SSD" },
-    case_fan: { slug: "case_fan", name: "Case Fan" },
-    cpu_cooler: { slug: "cpu_cooler", name: "CPU Cooler" },
+  // `code` es el identificador interno estable (inglés, igual a la CategorySlug).
+  // `slug` y `name` son PÚBLICOS y van en español: deben coincidir con la migración
+  // 20260106120000_add_code_to_categories y con los consumidores
+  // (web QUOTE_SLOTS, /categoria/:slug, mapCategorySlugToComponent en la API).
+  private CATEGORY_CONFIG: Record<CategorySlug, { code: CategorySlug; slug: string; name: string }> = {
+    gpu: { code: "gpu", slug: "tarjetas-de-video", name: "Tarjetas de Video" },
+    cpu: { code: "cpu", slug: "procesadores", name: "Procesadores" },
+    psu: { code: "psu", slug: "fuentes-de-poder", name: "Fuentes de Poder" },
+    motherboard: { code: "motherboard", slug: "placas-madre", name: "Placas Madre" },
+    case: { code: "case", slug: "gabinetes", name: "Gabinetes" },
+    ram: { code: "ram", slug: "memorias-ram", name: "Memorias RAM" },
+    hdd: { code: "hdd", slug: "discos-duros", name: "Discos Duros" },
+    ssd: { code: "ssd", slug: "ssd", name: "SSD" },
+    case_fan: { code: "case_fan", slug: "ventiladores", name: "Ventiladores" },
+    cpu_cooler: { code: "cpu_cooler", slug: "coolers-cpu", name: "Coolers CPU" },
   };
 
   async getCategoryId(slug: CategorySlug): Promise<string | null> {
@@ -182,7 +186,7 @@ export class CatalogService {
     const { data: existing, error: selError } = await supabase
       .from("categories")
       .select("id")
-      .eq("code", config.slug)
+      .eq("code", config.code)
       .single();
 
     if (selError) this.logger.error("getCategoryId: select error", selError.message || String(selError));
@@ -192,7 +196,7 @@ export class CatalogService {
     const insert: TablesInsert<"categories"> = {
       name: config.name,
       slug: config.slug,
-      code: config.slug,
+      code: config.code,
     };
 
     const { data: created, error } = await supabase.from("categories").insert(insert).select("id").single();
@@ -200,7 +204,7 @@ export class CatalogService {
     if (error) {
       const code = (error as { code?: unknown }).code as string | undefined;
       if (code === "23505") {
-        const { data: retryExisting } = await supabase.from("categories").select("id").eq("code", config.slug).single();
+        const { data: retryExisting } = await supabase.from("categories").select("id").eq("code", config.code).single();
         if (retryExisting) return retryExisting.id;
       }
 
