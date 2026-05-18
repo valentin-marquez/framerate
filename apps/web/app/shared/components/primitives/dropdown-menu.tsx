@@ -113,9 +113,11 @@ function DropdownMenuItem({
       className={cn(
         // Estilos base - transparente por defecto con texto apagado
         "bg-transparent text-muted-foreground",
-        // Estilos en hover/focus - fondo secondary y texto normal
-        "hover:bg-secondary hover:text-primary-foreground",
-        "focus:bg-secondary focus:text-secondary-foreground",
+        // Estilos en hover/focus - fondo secondary y texto legible.
+        // `foreground` siempre contrasta con `secondary` en ambos temas;
+        // antes hover usaba `primary-foreground` (negro en dark) -> texto ilegible.
+        "hover:bg-secondary hover:text-foreground",
+        "focus:bg-secondary focus:text-foreground",
         // Variante destructive
         "data-[variant=destructive]:text-destructive",
         "data-[variant=destructive]:hover:bg-destructive/10 data-[variant=destructive]:focus:bg-destructive/10",
@@ -123,13 +125,13 @@ function DropdownMenuItem({
         "data-[variant=destructive]:*:[svg]:text-destructive",
         // Iconos también apagados por defecto
         "[&_svg]:text-muted-foreground",
-        "hover:[&_svg]:text-secondary-foreground/65 focus:[&_svg]:text-secondary-foreground/65",
+        "hover:[&_svg]:text-foreground/70 focus:[&_svg]:text-foreground/70",
         "data-[variant=destructive]:[&_svg]:text-destructive",
         // Resto de estilos
         "gap-2.5 rounded-xl px-3 py-2 text-sm [&_svg:not([class*='size-'])]:size-4",
         "group/dropdown-menu-item relative flex cursor-pointer items-center outline-hidden select-none",
         "data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-8",
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0 transition slow-transition",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 transition-colors duration-200",
         className,
       )}
       {...props}

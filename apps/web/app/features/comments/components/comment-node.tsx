@@ -156,7 +156,7 @@ export function CommentNode({
                   onClick={() => {
                     if (window.confirm("¿Eliminar este comentario?")) onDelete();
                   }}
-                  className="hover:text-rose-600 dark:hover:text-rose-400"
+                  className="hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
                 >
                   <IconTrash className="size-3.5" />
                   Eliminar

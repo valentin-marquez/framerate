@@ -1,10 +1,10 @@
 import { categoriesService } from "@/features/category/services/categories";
-import { useProductDrops, useProducts } from "@/features/product/hooks/useProducts";
 import { productsService } from "@/features/product/services/products";
-import { CategoriesGrid } from "~/features/home/components/categories-grid";
-import { HeroSection } from "~/features/home/components/hero-section";
-import { PopularProducts } from "~/features/home/components/popular-products";
-import { PriceDropsCarousel } from "~/features/home/components/price-drops-carousel";
+import { getCategoryConfig } from "~/features/category/utils/categories";
+import { CategoryLinks } from "~/features/home/components/category-links";
+import { CompactSearchHero } from "~/features/home/components/compact-search-hero";
+import { ProductRow } from "~/features/home/components/product-row";
+import type { Product } from "~/features/product/services/products";
 import { isRateLimitError } from "~/shared/lib/api";
 import type { Route } from "./+types/home-page";
 
@@ -53,41 +53,64 @@ function generateJsonLd() {
   };
 }
 
+interface HomeRow {
+  key: string;
+  title: string;
+  href: string;
+  products: Product[];
+}
+
+// Mínimo de productos para que una fila/carrusel valga la pena mostrarse.
+const MIN_ROW_PRODUCTS = 4;
+
 export async function loader() {
+  let categories: Awaited<ReturnType<typeof categoriesService.getAll>> = [];
   try {
-    const [popularProducts, categories, priceDrops] = await Promise.all([
-      productsService.getAll({ limit: 50, sort: "popularity" }),
-      categoriesService.getAll(),
-      productsService.getDrops(12, 5),
-    ]);
-    return { popularProducts, categories, priceDrops };
+    categories = await categoriesService.getAll();
   } catch (error) {
-    // Si el API rate-limita, degradamos a estado vacío para no tirar al error
-    // boundary; el cliente revalida en el siguiente foco/navegación.
     if (!isRateLimitError(error)) {
-      console.error("Failed to fetch data", error);
+      console.error("Failed to fetch categories", error);
     }
-    return {
-      popularProducts: {
-        data: [],
-        meta: { page: 1, limit: 10, total: 0, totalPages: 0 },
-      },
-      categories: [],
-      priceDrops: [],
-    };
   }
+
+  // Filas curadas + una por categoría. allSettled aísla fallos/rate-limit:
+  // una fila que falla simplemente no se renderiza, sin tirar al error boundary.
+  const rowDefs: { key: string; title: string; href: string }[] = [
+    { key: "discount", title: "Mejores ofertas", href: "/explorar?sort=discount" },
+    { key: "popular", title: "Lo más popular", href: "/explorar" },
+    ...categories.map((c) => {
+      const config = getCategoryConfig(c.slug);
+      return { key: c.slug, title: config.label, href: `/categoria/${config.urlSlug}` };
+    }),
+  ];
+
+  const fetches = [
+    productsService.getAll({ sort: "discount", limit: 15 }),
+    productsService.getAll({ sort: "popularity", limit: 15 }),
+    ...categories.map((c) => productsService.getAll({ category: c.slug, sort: "popularity", limit: 12 })),
+  ];
+
+  const settled = await Promise.allSettled(fetches);
+
+  const rows: HomeRow[] = [];
+  settled.forEach((result, i) => {
+    if (result.status !== "fulfilled") {
+      if (result.reason && !isRateLimitError(result.reason)) {
+        console.error(`Failed to fetch home row "${rowDefs[i].key}"`, result.reason);
+      }
+      return;
+    }
+    const products = result.value.data ?? [];
+    if (products.length >= MIN_ROW_PRODUCTS) {
+      rows.push({ ...rowDefs[i], products });
+    }
+  });
+
+  return { categories, rows };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { popularProducts: initialPopular, categories: initialCategories, priceDrops: initialDrops } = loaderData;
-
-  const { data: popularProducts } = useProducts({ limit: 50, sort: "popularity" }, { initialData: initialPopular });
-
-  const { data: priceDrops } = useProductDrops(12, 5, { initialData: initialDrops });
-
-  const products = popularProducts ?? initialPopular;
-  const drops = priceDrops ?? initialDrops;
-  const categories = initialCategories ?? [];
+  const { categories, rows } = loaderData;
 
   return (
     <>
@@ -99,19 +122,20 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       />
 
       <div className="flex flex-col min-h-screen">
-        {/* Hero Section */}
-        <HeroSection totalProducts={products.meta.total} totalCategories={categories.length} />
+        <CompactSearchHero categories={categories} />
 
-        {/* Main Content */}
-        <div className="flex flex-col gap-16 md:gap-24 pb-20">
-          {/* Price Drops Carousel */}
-          <PriceDropsCarousel drops={drops} />
+        <div className="flex flex-col gap-10 md:gap-12 pb-16">
+          {rows.map((row, index) => (
+            <ProductRow
+              key={row.key}
+              title={row.title}
+              href={row.href}
+              products={row.products}
+              priority={index === 0}
+            />
+          ))}
 
-          {/* Categories Grid */}
-          <CategoriesGrid categories={categories} />
-
-          {/* Popular Products */}
-          <PopularProducts products={products.data} totalProducts={products.meta.total} />
+          <CategoryLinks categories={categories} />
         </div>
       </div>
     </>

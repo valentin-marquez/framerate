@@ -1,16 +1,19 @@
 import { IconCompass, IconCpu, IconLogin, IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react";
+import { domAnimation, LazyMotion, m, useTransform } from "motion/react";
 import { useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
 import type { Category } from "~/features/category/services/categories";
 import { getCategoryConfig } from "~/features/category/utils/categories";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
-import { SearchTrigger } from "~/features/search/components/search-dialog";
 import { Apple } from "~/shared/components/icons/apple";
 import { Discord } from "~/shared/components/icons/discord";
 import { Facebook } from "~/shared/components/icons/facebook";
 import { Google } from "~/shared/components/icons/google";
 import { Logo } from "~/shared/components/layout/logo";
+import { navTargetWidth } from "~/shared/components/layout/morph-search";
+import { useMediaQuery } from "~/shared/hooks/use-media-query";
+import { useMorphState } from "~/shared/hooks/use-morph-state";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { AsyncImage } from "../primitives/async-image";
@@ -118,6 +121,22 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   const user = useUser();
   const profile = useProfile();
   const { t } = useTranslation();
+  const location = useLocation();
+
+  // El ancla del buscador sólo existe en la landing (donde está el hero que lo
+  // origina). ≥1024px: ancla inline que crece su ancho con el scroll y separa
+  // Explorar/Hardware. <1024px: segunda fila (doble navbar) que se abre con el
+  // scroll. El campo real flota encima vía MorphSearch (interpolación continua).
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const showAnchor = location.pathname === "/";
+  // `e` one-shot 0↔1 (200ms al cruzar el umbral). El ancla crece su ancho y la
+  // fila móvil su alto en sincronía con el morph del campo (mismo driver).
+  const e = useMorphState();
+  const navAnchorW = useTransform(
+    e,
+    (k) => k * navTargetWidth(typeof window !== "undefined" ? window.innerWidth : 1280, isDesktop),
+  );
+  const mobileBarH = useTransform(e, [0, 1], [0, 56]);
 
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [state, dispatch] = useReducer(navReducer, initialNavState);
@@ -228,7 +247,9 @@ export function Navbar({ categories, blurred }: NavbarProps) {
       <nav
         className={cn(
           "sticky top-0 z-40 h-13 w-full transition-all duration-300 ease-in-out overflow-hidden border-b",
-          blurred ? "backdrop-blur-lg border-border" : "border-transparent",
+          // Al hacer scroll deja de ser blur translúcido (se sentía débil) y
+          // pasa a la misma superficie sólida que la barra de búsqueda móvil.
+          blurred ? "bg-background/90 backdrop-blur-md border-border" : "border-transparent",
         )}
       >
         <div className="flex size-full items-center justify-between px-4 relative z-10">
@@ -293,43 +314,53 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-            <Button variant="link" className="p-0 m-0">
-              <Link to="/explorar" className="flex items-center gap-1.5" prefetch="intent">
-                <IconCompass className="size-4" />
-                <span>{t("explore")}</span>
-              </Link>
-            </Button>
+          {/* Centro absoluto sin transform (no choca con la proyección de
+              Framer). El ancla B invisible crece su ancho con el progreso de
+              scroll y empuja Explorar/Hardware hacia los lados; el campo real
+              (MorphSearch) flota encima e interpola su caja de forma continua. */}
+          <LazyMotion features={domAnimation}>
+            <div className="hidden md:flex items-center gap-6 absolute inset-x-0 mx-auto w-max">
+              <Button variant="link" className="p-0 m-0">
+                <Link to="/explorar" className="flex items-center gap-1.5" prefetch="intent">
+                  <IconCompass className="size-4" />
+                  <span>{t("explore")}</span>
+                </Link>
+              </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger className={cn(buttonVariants({ variant: "link" }))}>
-                <IconCpu className="size-4" />
-                <span>{t("hardware")}</span>
-              </DropdownMenuTrigger>
+              {showAnchor && isDesktop && (
+                <m.div id="nav-search-anchor" aria-hidden style={{ width: navAnchorW }} className="h-9 shrink-0" />
+              )}
 
-              <DropdownMenuContent align="center" className="w-56 mt-2">
-                {categories && categories.length > 0 ? (
-                  categories.map((c) => {
-                    const categoryConfig = getCategoryConfig(c.slug);
-                    return (
-                      <DropdownMenuItem key={c.id}>
-                        <Link
-                          to={`/categoria/${categoryConfig.urlSlug}`}
-                          viewTransition
-                          className="cursor-pointer"
-                          prefetch="intent"
-                        >
-                          {categoryConfig.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    );
-                  })
-                ) : (
-                  <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger className={cn(buttonVariants({ variant: "link" }))}>
+                  <IconCpu className="size-4" />
+                  <span>{t("hardware")}</span>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="center" className="w-56 mt-2">
+                  {categories && categories.length > 0 ? (
+                    categories.map((c) => {
+                      const categoryConfig = getCategoryConfig(c.slug);
+                      return (
+                        <DropdownMenuItem key={c.id}>
+                          <Link
+                            to={`/categoria/${categoryConfig.urlSlug}`}
+                            viewTransition
+                            className="cursor-pointer"
+                            prefetch="intent"
+                          >
+                            {categoryConfig.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      );
+                    })
+                  ) : (
+                    <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </LazyMotion>
 
           <div className="flex items-center gap-2">
             {user ? (
@@ -346,21 +377,17 @@ export function Navbar({ categories, blurred }: NavbarProps) {
               />
             ) : null}
 
-            <Tooltip>
-              <TooltipTrigger render={<SearchTrigger />} />
-              <TooltipContent side="bottom" className="px-2 py-1">
-                <div className="flex items-center gap-2">
-                  <span>{t("search")}</span>
-                  <kbd className="rounded-4xl text-xs">Ctrl+K</kbd>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label={t("user")}
-                  className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "rounded-full p-0")}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "icon" }),
+                    "rounded-full p-0",
+                    // Suaviza el foco: el ring de 3px + border-ring de buttonVariants
+                    // se ve muy fuerte (blanco puro en dark) alrededor del avatar.
+                    "focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-transparent",
+                  )}
                 >
                   {profile?.avatar_url || user.user_metadata?.avatar_url ? (
                     <AsyncImage
@@ -534,6 +561,20 @@ export function Navbar({ categories, blurred }: NavbarProps) {
           </div>
         </div>
       </nav>
+
+      {/* Doble navbar en móvil/tablet: el buscador no cabe inline, así que la
+          segunda fila se ABRE con el scroll (alto ligado al progreso) y el
+          campo real (MorphSearch) se interpola hasta el ancla de adentro. */}
+      {showAnchor && !isDesktop && (
+        <LazyMotion features={domAnimation}>
+          <m.div
+            style={{ height: mobileBarH }}
+            className="lg:hidden w-full overflow-hidden bg-background/90 backdrop-blur-md"
+          >
+            <div id="nav-search-anchor" aria-hidden className="mx-4 my-[10px] h-9" />
+          </m.div>
+        </LazyMotion>
+      )}
     </>
   );
 }

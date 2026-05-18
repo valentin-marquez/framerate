@@ -11,6 +11,7 @@ import { useCategories } from "~/features/category/hooks/useCategories";
 import { categoriesService } from "~/features/category/services/categories";
 import { profilesService } from "~/features/profile/services/profiles";
 import { Logo } from "~/shared/components/layout/logo";
+import { MorphSearch } from "~/shared/components/layout/morph-search";
 import { Navbar } from "~/shared/components/layout/navbar";
 import { Button } from "~/shared/components/primitives/button";
 import { Toaster } from "~/shared/components/primitives/sonner";
@@ -217,6 +218,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <header className="sticky top-0 z-50 w-full">
         <Navbar categories={categories ?? []} blurred={scrolled} />
       </header>
+
+      {/* Buscador único flotante: se interpola de forma continua entre el
+          ancla del hero y la del navbar según el scroll (sólo en "/"). */}
+      <MorphSearch />
+
       <main className="container mx-auto px-4 flex-1 pt-11">
         <Outlet />
       </main>
