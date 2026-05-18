@@ -1,3 +1,4 @@
+import { areVariants } from "@/collector/domain/variant-matching";
 import { Logger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 
@@ -132,7 +133,7 @@ export class MaintenanceService {
           const p2 = brandProducts[j];
           if (!p2.mpn) continue;
 
-          if (this.areVariants(p1.mpn, p2.mpn)) {
+          if (areVariants(p1.mpn, p2.mpn)) {
             logger.info(`Variantes potenciales encontradas: ${p1.mpn} <-> ${p2.mpn}`);
             await this.linkProducts(p1, p2);
             linkedCount++;
@@ -142,47 +143,6 @@ export class MaintenanceService {
     }
     logger.info("Agrupación de variantes finalizada.");
     return { message: "Variants grouped successfully", count: linkedCount };
-  }
-
-  private areVariants(mpn1: string, mpn2: string): boolean {
-    if (mpn1 === mpn2) return false;
-
-    // Estrategia 1: Prefijo común (variantes de color/empaque: -BLK, -WHT, -RED)
-    const commonPrefix = this.getCommonPrefix(mpn1, mpn2);
-    const maxLen = Math.max(mpn1.length, mpn2.length);
-
-    if (maxLen > 5 && commonPrefix.length / maxLen > 0.85) {
-      const suffix1 = mpn1.slice(commonPrefix.length);
-      const suffix2 = mpn2.slice(commonPrefix.length);
-
-      if (suffix1.length <= 4 && suffix2.length <= 4) {
-        return true;
-      }
-    }
-
-    // Estrategia 2: Variantes de capacidad (storage/RAM: 500G vs 1000G, 8GB vs 16GB, 1TB vs 2TB)
-    const capacityPattern = /\d+(?:GB?|TB?)/g;
-    if (capacityPattern.test(mpn1)) {
-      capacityPattern.lastIndex = 0;
-      if (capacityPattern.test(mpn2)) {
-        const norm1 = mpn1.replace(/\d+(?:GB?|TB?)/g, "");
-        const norm2 = mpn2.replace(/\d+(?:GB?|TB?)/g, "");
-
-        if (norm1.length > 3 && norm1 === norm2) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  private getCommonPrefix(s1: string, s2: string): string {
-    let i = 0;
-    while (i < s1.length && i < s2.length && s1[i] === s2[i]) {
-      i++;
-    }
-    return s1.slice(0, i);
   }
 
   private async linkProducts(

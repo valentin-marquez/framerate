@@ -78,8 +78,66 @@ async function main() {
   logger.info("Listo.");
 }
 
+// NOTA: implementación canónica y testeada en
+// apps/collector/src/collector/domain/variant-matching.ts (la que corre en prod tras
+// cada scrape). Este script es un escape hatch manual; mantener ambas en sync.
+//
+// Tokens de color/acabado comunes en MPNs (palabra completa y abreviaturas usuales).
+// Se comparan SIEMPRE como segmento delimitado, nunca como substring.
+const COLOR_TOKENS = new Set([
+  "WHITE",
+  "WHT",
+  "WH",
+  "BLACK",
+  "BLK",
+  "BK",
+  "RED",
+  "BLUE",
+  "BLU",
+  "GREEN",
+  "GRN",
+  "SILVER",
+  "SLV",
+  "GREY",
+  "GRAY",
+  "GRY",
+  "PINK",
+  "RGB",
+  "ARGB",
+]);
+
+function splitMpnTokens(mpn: string): string[] {
+  return mpn
+    .toUpperCase()
+    .split(/[^A-Z0-9]+/)
+    .filter(Boolean);
+}
+
+/**
+ * Estrategia de color: dos MPN son variantes si son idénticos salvo por un token
+ * de color/acabado. Maneja casos asimétricos (`-WHITE` vs `-BK`). Exige base
+ * idéntica con ≥2 tokens para no agrupar productos distintos.
+ */
+function isColorVariant(mpn1: string, mpn2: string): boolean {
+  const t1 = splitMpnTokens(mpn1);
+  const t2 = splitMpnTokens(mpn2);
+  const isColor = (t: string) => COLOR_TOKENS.has(t);
+
+  const base1 = t1.filter((t) => !isColor(t));
+  const base2 = t2.filter((t) => !isColor(t));
+
+  const hadColor = base1.length !== t1.length || base2.length !== t2.length;
+  if (!hadColor) return false;
+
+  if (base1.length < 2 || base1.length !== base2.length) return false;
+  return base1.every((tok, i) => tok === base2[i]);
+}
+
 function areVariants(mpn1: string, mpn2: string): boolean {
   if (mpn1 === mpn2) return false;
+
+  // Estrategia 0: variante de color/acabado (e.g. ICEBURG-240-DIGITAL-WHITE vs -BK).
+  if (isColorVariant(mpn1, mpn2)) return true;
 
   // Estrategia 1: Prefijo común (variantes de color/empaque: -BLK, -WHT, -RED)
   const commonPrefix = getCommonPrefix(mpn1, mpn2);
