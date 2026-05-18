@@ -27,11 +27,19 @@ async function main() {
   logger.info(`Monitoring OpenDB at: ${OPENDB_PATH}`);
 
   const repo = new OpenDBRepo(OPENDB_PATH);
+  let warnedUnavailable = false;
 
   // Initial Sync or Resume
   while (true) {
     try {
-      await sync(repo);
+      const ready = await repo.ensureRepo();
+      if (ready) {
+        warnedUnavailable = false;
+        await sync(repo);
+      } else if (!warnedUnavailable) {
+        logger.warn(`Janitor inactivo: ${repo.unavailable}`);
+        warnedUnavailable = true;
+      }
     } catch (error) {
       logger.error("Sync failed", error);
     }
