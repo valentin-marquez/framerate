@@ -10,17 +10,19 @@ import type {
   RamSpecs,
   SsdSpecs,
 } from "@framerate/db";
-import { IconEye } from "@tabler/icons-react";
+import { IconTrendingUp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
 import type { Product } from "~/features/product/services/products";
 import { productsService } from "~/features/product/services/products";
+import { getProductPricing } from "~/features/product/utils/pricing";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Badge } from "~/shared/components/primitives/badge";
 
 import { productKeys } from "~/shared/lib/query-keys";
 import { cn } from "~/shared/lib/utils";
+import { formatCLP } from "~/shared/utils/format";
 import { getImageUrl } from "~/shared/utils/images";
 
 import { PsuBadge } from "./psu-badge";
@@ -29,6 +31,8 @@ interface ProductCardProps {
   product: Product;
   className?: string;
   priority?: boolean;
+  /** Marca el producto como "Tendencia" (viene del ranking server-side). */
+  trending?: boolean;
 }
 
 function getSpecsSummary(product: Product): string[] {
@@ -119,23 +123,18 @@ function getSpecsSummary(product: Product): string[] {
   return result;
 }
 
-function formatViews(views: number): string {
-  if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`;
-  if (views >= 1000) return `${(views / 1000).toFixed(1)}k`;
-  return views.toString();
-}
-
-export function ProductCard({ product, className, priority = false }: ProductCardProps) {
+export function ProductCard({ product, className, priority = false, trending = false }: ProductCardProps) {
   const queryClient = useQueryClient();
-  const currentPrice = product.prices?.cash || product.prices?.normal;
-  const normalPrice = product.prices?.normal;
-  const discount =
-    currentPrice && normalPrice && currentPrice !== normalPrice
-      ? Math.round((1 - currentPrice / normalPrice) * 100)
-      : 0;
+  const {
+    current: currentPrice,
+    card: cardPrice,
+    hasCardGap,
+    hasRealDrop,
+    reference,
+    dropPct,
+  } = getProductPricing(product.prices);
 
   const specsSummary = getSpecsSummary(product);
-  const hasViews = product.popularity_score && product.popularity_score > 0;
 
   // Lógica PSU
   const isPsu = product.category?.slug === "fuentes-de-poder";
@@ -195,9 +194,9 @@ export function ProductCard({ product, className, priority = false }: ProductCar
           </div>
         )}
 
-        {discount > 0 && (
+        {hasRealDrop && (
           <Badge className="absolute top-3 right-3 rounded-full bg-primary/90 px-2.5 py-1 text-xs font-medium z-10">
-            -{discount}%
+            -{dropPct}%
           </Badge>
         )}
       </Link>
@@ -210,11 +209,11 @@ export function ProductCard({ product, className, priority = false }: ProductCar
             </span>
           )}
 
-          {hasViews && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground ml-auto">
-              <IconEye className="size-3" />
-              <span className="font-medium">{formatViews(product.popularity_score)}</span>
-            </div>
+          {trending && (
+            <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+              <IconTrendingUp className="size-3" />
+              Tendencia
+            </span>
           )}
         </div>
 
@@ -241,15 +240,22 @@ export function ProductCard({ product, className, priority = false }: ProductCar
         {currentPrice ? (
           <div className="mt-auto pt-3 border-t border-border/50">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-base font-semibold text-primary">${currentPrice.toLocaleString("es-CL")}</span>
-                {discount > 0 && normalPrice && (
-                  <span className="text-xs text-muted-foreground line-through decoration-muted-foreground">
-                    ${normalPrice.toLocaleString("es-CL")}
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-base font-semibold text-primary">{formatCLP(currentPrice)}</span>
+                  {hasRealDrop && reference && (
+                    <span className="text-xs text-muted-foreground line-through decoration-muted-foreground">
+                      {formatCLP(reference)}
+                    </span>
+                  )}
+                </div>
+                {hasCardGap && cardPrice && (
+                  <span className="text-[11px] text-muted-foreground truncate">
+                    Transferencia · tarjeta {formatCLP(cardPrice)}
                   </span>
                 )}
               </div>
-              <AddToQuote product={product} className="size-9" />
+              <AddToQuote product={product} className="size-9 shrink-0" />
             </div>
           </div>
         ) : (

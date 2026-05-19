@@ -1,4 +1,4 @@
-import { IconFilter, IconSearch, IconX } from "@tabler/icons-react";
+import { IconArrowRight, IconFilter, IconSearch, IconX } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { useSearchParams } from "react-router";
 import { categoriesService } from "~/features/category/services/categories";
@@ -15,8 +15,8 @@ import {
 } from "~/features/explore/components";
 import { productsService } from "~/features/product/services/products";
 import { Button } from "~/shared/components/primitives/button";
-import { Input } from "~/shared/components/primitives/input";
 import { isRateLimitError } from "~/shared/lib/api";
+import { cn } from "~/shared/lib/utils";
 import { getFiltersForCategory } from "~/shared/utils/filter-config";
 import type { Route } from "./+types/explore-page";
 
@@ -85,8 +85,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   try {
-    // Fetch products + category-specific data in parallel
-    const [productsResponse, filters, brands, priceRange] = await Promise.all([
+    // Fetch products + category-specific data + trending ids in parallel
+    const [productsResponse, filters, brands, priceRange, trending] = await Promise.all([
       productsService.getAll({
         page,
         limit,
@@ -122,6 +122,10 @@ export async function loader({ request }: Route.LoaderArgs) {
       category ? categoriesService.getBrands(category).catch(() => []) : Promise.resolve([]),
       // Fetch price range for category
       category ? categoriesService.getPriceRange(category).catch(() => null) : Promise.resolve(null),
+      // Ranking de tendencia (cacheado en el edge) para el badge en los cards
+      productsService
+        .getTrending(40)
+        .catch(() => ({ ids: [] as string[] })),
     ]);
 
     const { data: products, meta } = productsResponse;
@@ -135,6 +139,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       currentCategory: category || null,
       currentSearch: search || null,
       currentBrand: brand || null,
+      trendingIds: trending.ids,
       rateLimited: false,
     };
   } catch (error) {
@@ -154,17 +159,32 @@ export async function loader({ request }: Route.LoaderArgs) {
       currentCategory: category || null,
       currentSearch: search || null,
       currentBrand: brand || null,
+      trendingIds: [] as string[],
       rateLimited,
     };
   }
 }
 
 export default function ExplorePage({ loaderData }: Route.ComponentProps) {
-  const { products, meta, filters, brands, priceRange, currentCategory, currentSearch, currentBrand, rateLimited } =
-    loaderData;
+  const {
+    products,
+    meta,
+    filters,
+    brands,
+    priceRange,
+    currentCategory,
+    currentSearch,
+    currentBrand,
+    trendingIds,
+    rateLimited,
+  } = loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [searchInput, setSearchInput] = useState(currentSearch || "");
+
+  const trendingSet = new Set(trendingIds);
+  const hasFilters = filters.length > 0 || brands.length > 0;
+  const categoryLabel = currentCategory ? getCategoryConfig(currentCategory).label : "Todos los productos";
 
   const handlePageChange = useCallback(
     (page: number) => {
@@ -200,22 +220,77 @@ export default function ExplorePage({ loaderData }: Route.ComponentProps) {
   }, [searchParams, setSearchParams]);
 
   return (
-    // Margen negativo para escapar del container del root.tsx
-    <div className="-mx-4 -mt-11">
-      {/* Banner suave de saturación. Sólo se muestra cuando el loader degradó
-          por 429. No tira al error boundary para preservar SSR/CSR fluido. */}
+    <div className="flex flex-col gap-6">
+      {/* Banner suave de saturación: sólo cuando el loader degradó por 429. */}
       {rateLimited && (
-        <div className="px-4 lg:px-6 py-2 bg-card/60 border-b border-border/60 backdrop-blur-md text-center text-xs text-muted-foreground">
+        <div className="rounded-xl border border-border/60 bg-card/70 backdrop-blur-md px-4 py-2 text-center text-xs text-muted-foreground">
           Estamos saturados ahora mismo. Intenta de nuevo en unos segundos.
         </div>
       )}
 
-      {/* Header section - sticky bajo el navbar */}
-      <div className="sticky top-13 z-30 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="px-4 lg:px-6 py-4">
-          {/* Primera fila: Título + botón filtros móvil */}
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">Explorar</h1>
+      {/* Encabezado compacto, alineado al estilo del home */}
+      <header className="flex flex-col gap-5 pt-1">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">{categoryLabel}</h1>
+          <p className="text-sm text-muted-foreground">
+            {meta.total > 0 ? (
+              <>
+                <span className="font-medium text-foreground">{meta.total.toLocaleString("es-CL")}</span> productos ·
+                compara precios de tiendas en Chile
+              </>
+            ) : (
+              "Compara precios de hardware de las principales tiendas de Chile"
+            )}
+          </p>
+        </div>
+
+        {/* Buscador grande, con la misma estética del campo morph del home */}
+        <form onSubmit={handleSearch} className="relative w-full max-w-2xl">
+          <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 size-[18px] text-muted-foreground pointer-events-none" />
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="¿Qué componente buscas? Ej: RTX 4070, Ryzen 7…"
+            aria-label="Buscar productos"
+            className={cn(
+              "h-12 w-full rounded-xl bg-card border border-border/60 shadow-sm",
+              "pl-12 pr-24 text-[15px] text-secondary-foreground placeholder:text-muted-foreground",
+              "outline-none transition-colors focus:border-primary",
+            )}
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              aria-label="Limpiar búsqueda"
+              className="absolute right-12 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <IconX className="size-4" />
+            </button>
+          )}
+          <button
+            type="submit"
+            aria-label="Buscar"
+            className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center size-8 rounded-lg bg-secondary/40 text-secondary-foreground/70 transition-colors duration-200 hover:bg-primary hover:text-primary-foreground"
+          >
+            <IconArrowRight className="size-4" />
+          </button>
+        </form>
+
+        {/* Pills de categoría */}
+        <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+          <CategorySelector currentCategory={currentCategory} />
+        </div>
+      </header>
+
+      {/* Barra flotante (glass) con resumen + controles. Sticky bajo el navbar. */}
+      <div className="sticky top-13 z-30 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/80 px-4 py-2.5 backdrop-blur-md">
+        <ResultsSummary total={meta.total} currentPage={meta.page} limit={meta.limit} />
+        <div className="flex items-center gap-2 shrink-0">
+          <PriceRangeQuickFilters priceRange={priceRange} className="hidden md:flex" />
+          <SortSelector />
+          {hasFilters && (
             <Button
               variant="secondary"
               size="sm"
@@ -225,83 +300,42 @@ export default function ExplorePage({ loaderData }: Route.ComponentProps) {
               <IconFilter className="size-4" />
               <span>Filtros</span>
             </Button>
-          </div>
-
-          {/* Category pills - scroll horizontal en móvil */}
-          <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 pb-2 scrollbar-hide">
-            <CategorySelector currentCategory={currentCategory} />
-          </div>
-
-          {/* Barra de búsqueda y controles */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-4">
-            <form onSubmit={handleSearch} className="flex-1 max-w-sm relative">
-              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              <Input
-                type="text"
-                placeholder="Buscar productos..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="pl-9 pr-8 h-9"
-              />
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <IconX className="size-4" />
-                </button>
-              )}
-            </form>
-
-            <div className="flex items-center gap-3 shrink-0">
-              <PriceRangeQuickFilters priceRange={priceRange} className="hidden md:flex" />
-              <SortSelector />
-            </div>
-          </div>
-
-          {/* Active filters */}
-          <ActiveFilters className="mt-3" />
+          )}
         </div>
       </div>
 
-      {/* Main content area */}
-      <div className="flex min-h-[calc(100vh-200px)]">
-        {/* Sidebar - Desktop */}
-        <aside className="hidden lg:flex w-64 xl:w-72 shrink-0 border-r border-border bg-card/30">
-          <div className="sticky top-54 h-[calc(100vh-13.5rem)] w-full overflow-hidden">
-            <FilterSidebar filters={filters} brands={brands} currentBrand={currentBrand} />
-          </div>
-        </aside>
+      <ActiveFilters />
 
-        {/* Mobile sidebar */}
-        <FilterSidebar
-          filters={filters}
-          brands={brands}
-          currentBrand={currentBrand}
-          isMobileOpen={isMobileFiltersOpen}
-          onMobileClose={() => setIsMobileFiltersOpen(false)}
-          className="lg:hidden"
-        />
-
-        {/* Products grid area */}
-        <main className="flex-1 min-w-0">
-          <div className="px-4 lg:px-6 py-6">
-            {/* Results summary */}
-            <div className="flex items-center justify-between mb-6">
-              <ResultsSummary total={meta.total} currentPage={meta.page} limit={meta.limit} />
+      {/* Cuerpo: sidebar de filtros sólo cuando hay filtros (sin columna vacía) */}
+      <div className="flex gap-6">
+        {hasFilters && (
+          <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
+            <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto rounded-2xl border border-border/60 bg-card">
+              <FilterSidebar filters={filters} brands={brands} currentBrand={currentBrand} />
             </div>
+          </aside>
+        )}
 
-            {/* Grid */}
-            <ProductGrid products={products} />
+        {/* Drawer móvil (glass) */}
+        {hasFilters && (
+          <FilterSidebar
+            filters={filters}
+            brands={brands}
+            currentBrand={currentBrand}
+            isMobileOpen={isMobileFiltersOpen}
+            onMobileClose={() => setIsMobileFiltersOpen(false)}
+            className="lg:hidden"
+          />
+        )}
 
-            {/* Pagination */}
-            {meta.totalPages > 1 && (
-              <div className="mt-10 pb-6">
-                <Pagination currentPage={meta.page} totalPages={meta.totalPages} onPageChange={handlePageChange} />
-              </div>
-            )}
-          </div>
+        <main className="flex-1 min-w-0">
+          <ProductGrid products={products} trendingIds={trendingSet} />
+
+          {meta.totalPages > 1 && (
+            <div className="mt-10">
+              <Pagination currentPage={meta.page} totalPages={meta.totalPages} onPageChange={handlePageChange} />
+            </div>
+          )}
         </main>
       </div>
     </div>

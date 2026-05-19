@@ -1,7 +1,9 @@
+import { IconTrendingUp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { Product } from "~/features/product/services/products";
 import { productsService } from "~/features/product/services/products";
+import { getProductPricing } from "~/features/product/utils/pricing";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Badge } from "~/shared/components/primitives/badge";
 import { productKeys } from "~/shared/lib/query-keys";
@@ -13,6 +15,8 @@ interface ProductCardCompactProps {
   product: Product;
   className?: string;
   priority?: boolean;
+  /** Marca el producto como "Tendencia" (ranking server-side). */
+  trending?: boolean;
 }
 
 /**
@@ -20,15 +24,15 @@ interface ProductCardCompactProps {
  * Densa y de baja altura: imagen + nombre + precio. La card alta con specs
  * y AddToQuote (`ProductCard`) se mantiene para /explorar.
  */
-export function ProductCardCompact({ product, className, priority = false }: ProductCardCompactProps) {
+export function ProductCardCompact({
+  product,
+  className,
+  priority = false,
+  trending = false,
+}: ProductCardCompactProps) {
   const queryClient = useQueryClient();
 
-  const currentPrice = product.prices?.cash || product.prices?.normal;
-  const normalPrice = product.prices?.normal;
-  const discount =
-    currentPrice && normalPrice && currentPrice !== normalPrice
-      ? Math.round((1 - currentPrice / normalPrice) * 100)
-      : 0;
+  const { current: currentPrice, hasRealDrop, reference, dropPct } = getProductPricing(product.prices);
 
   const handleProductClick = () => {
     if (product.slug) {
@@ -75,10 +79,17 @@ export function ProductCardCompact({ product, className, priority = false }: Pro
           </div>
         )}
 
-        {discount > 0 && (
+        {hasRealDrop && (
           <Badge className="absolute top-2.5 right-2.5 rounded-full bg-primary/90 px-2 py-0.5 text-[11px] font-semibold">
-            -{discount}%
+            -{dropPct}%
           </Badge>
+        )}
+
+        {trending && (
+          <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-card/85 backdrop-blur-md px-2 py-0.5 text-[10px] font-medium text-primary">
+            <IconTrendingUp className="size-3" />
+            Tendencia
+          </span>
         )}
       </div>
 
@@ -97,9 +108,9 @@ export function ProductCardCompact({ product, className, priority = false }: Pro
           {currentPrice ? (
             <>
               <span className="text-sm font-semibold text-foreground tabular-nums">{formatCLP(currentPrice)}</span>
-              {discount > 0 && normalPrice && (
+              {hasRealDrop && reference && (
                 <span className="text-xs text-muted-foreground line-through decoration-muted-foreground tabular-nums">
-                  {formatCLP(normalPrice)}
+                  {formatCLP(reference)}
                 </span>
               )}
             </>

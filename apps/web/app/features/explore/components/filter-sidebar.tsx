@@ -123,7 +123,7 @@ export function FilterSidebar({
       {isMobileOpen && (
         <button
           type="button"
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden cursor-default"
+          className="fixed inset-0 bg-background/70 backdrop-blur-md z-40 lg:hidden cursor-default"
           onClick={onMobileClose}
           onKeyDown={(e) => e.key === "Escape" && onMobileClose?.()}
           aria-label="Cerrar filtros"
@@ -134,7 +134,7 @@ export function FilterSidebar({
       {isMobileOpen && (
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-80 bg-card border-r border-border flex flex-col lg:hidden",
+            "fixed inset-y-0 left-0 z-50 w-80 bg-card border-r border-border/60 rounded-r-2xl flex flex-col lg:hidden",
             "transform transition-transform duration-300",
             isMobileOpen ? "translate-x-0" : "-translate-x-full",
           )}
@@ -199,7 +199,7 @@ function BrandFilter({ brands, activeBrand, onChange }: BrandFilterProps) {
   const hasMore = brands.length > 6;
 
   return (
-    <div className="border border-border/50 rounded-xl overflow-hidden">
+    <div className="border border-border/60 rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -295,7 +295,7 @@ function FilterSection({ filter, searchParams, onFilterChange }: FilterSectionPr
       : (activeValues as string[]).length > 0;
 
   return (
-    <div className="border border-border/50 rounded-xl overflow-hidden">
+    <div className="border border-border/60 rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -355,7 +355,7 @@ function RangeFilter({ filter, values, onChange }: RangeFilterProps) {
         placeholder={filter.min?.toString() || "Min"}
         value={values.min}
         onChange={(e) => onChange(filter.slug, e.target.value || null, { type: "min" })}
-        className="w-full h-8 px-2 text-sm bg-secondary/30 border border-border rounded-lg focus:border-primary focus:outline-none"
+        className="w-full h-8 px-2 text-sm bg-secondary/30 border border-border/60 rounded-md focus:border-primary focus:outline-none"
       />
       <span className="text-muted-foreground text-sm">-</span>
       <input
@@ -363,7 +363,7 @@ function RangeFilter({ filter, values, onChange }: RangeFilterProps) {
         placeholder={filter.max?.toString() || "Max"}
         value={values.max}
         onChange={(e) => onChange(filter.slug, e.target.value || null, { type: "max" })}
-        className="w-full h-8 px-2 text-sm bg-secondary/30 border border-border rounded-lg focus:border-primary focus:outline-none"
+        className="w-full h-8 px-2 text-sm bg-secondary/30 border border-border/60 rounded-md focus:border-primary focus:outline-none"
       />
     </div>
   );

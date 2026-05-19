@@ -1,5 +1,5 @@
-import { IconAdjustmentsHorizontal, IconChevronDown, IconX } from "@tabler/icons-react";
-import { useCallback } from "react";
+import { IconAdjustmentsHorizontal, IconCheck, IconChevronDown, IconX } from "@tabler/icons-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { CATEGORY_CONFIG } from "~/features/category/utils/categories";
 import { Button } from "~/shared/components/primitives/button";
@@ -142,55 +142,90 @@ interface SortSelectorProps {
   className?: string;
 }
 
+const SORT_OPTIONS = [
+  { value: "price_asc", label: "Precio: menor a mayor" },
+  { value: "price_desc", label: "Precio: mayor a menor" },
+  { value: "discount", label: "Mayor descuento" },
+  { value: "popularity", label: "Popularidad" },
+  { value: "name", label: "Nombre" },
+] as const;
+
 export function SortSelector({ className }: SortSelectorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentSort = searchParams.get("sort") || "price_asc";
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const sortOptions = [
-    { value: "price_asc", label: "Precio: menor a mayor" },
-    { value: "price_desc", label: "Precio: mayor a menor" },
-    { value: "popularity", label: "Popularidad" },
-    { value: "discount", label: "Mayor descuento" },
-    { value: "name", label: "Nombre" },
-  ];
+  // Cerrar al click fuera o Escape (dropdown accionable, no hover).
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   const handleSortChange = useCallback(
     (value: string) => {
       const newParams = new URLSearchParams(searchParams);
       newParams.set("sort", value);
       setSearchParams(newParams);
+      setOpen(false);
     },
     [searchParams, setSearchParams],
   );
 
-  const currentLabel = sortOptions.find((o) => o.value === currentSort)?.label || "Ordenar";
+  const currentLabel = SORT_OPTIONS.find((o) => o.value === currentSort)?.label || "Ordenar";
 
   return (
-    <div className={cn("relative group", className)}>
-      <Button variant="secondary" size="sm" className="gap-1.5">
+    <div ref={ref} className={cn("relative", className)}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="gap-1.5"
+      >
         <IconAdjustmentsHorizontal className="size-4" />
         <span className="hidden sm:inline">{currentLabel}</span>
-        <IconChevronDown className="size-4" />
+        <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
       </Button>
-      <div className="absolute right-0 top-full mt-1 w-48 bg-popover border border-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-        <div className="py-1">
-          {sortOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => handleSortChange(option.value)}
-              className={cn(
-                "w-full px-3 py-2 text-sm text-left transition-colors",
-                currentSort === option.value
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-foreground hover:bg-secondary/50",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
+      {open && (
+        <div
+          role="listbox"
+          className="absolute right-0 top-full mt-2 w-52 overflow-hidden rounded-xl border border-border/60 bg-popover/90 shadow-lg backdrop-blur-md z-50"
+        >
+          <div className="p-1">
+            {SORT_OPTIONS.map((option) => {
+              const active = currentSort === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  onClick={() => handleSortChange(option.value)}
+                  className={cn(
+                    "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm text-left transition-colors",
+                    active ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-secondary/50",
+                  )}
+                >
+                  {option.label}
+                  {active && <IconCheck className="size-4 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -236,7 +271,7 @@ export function PriceRangeQuickFilters({ priceRange, className }: PriceRangeQuic
           placeholder={minPlaceholder}
           value={currentMin}
           onChange={(e) => handlePriceChange("min", e.target.value)}
-          className="w-24 h-8 px-2 text-sm bg-secondary/30 border border-border rounded-lg focus:border-primary focus:outline-none"
+          className="w-24 h-8 px-2 text-sm bg-secondary/30 border border-border/60 rounded-md focus:border-primary focus:outline-none"
         />
         <span className="text-muted-foreground">-</span>
         <input
@@ -244,7 +279,7 @@ export function PriceRangeQuickFilters({ priceRange, className }: PriceRangeQuic
           placeholder={maxPlaceholder}
           value={currentMax}
           onChange={(e) => handlePriceChange("max", e.target.value)}
-          className="w-24 h-8 px-2 text-sm bg-secondary/30 border border-border rounded-lg focus:border-primary focus:outline-none"
+          className="w-24 h-8 px-2 text-sm bg-secondary/30 border border-border/60 rounded-md focus:border-primary focus:outline-none"
         />
       </div>
     </div>

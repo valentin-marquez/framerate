@@ -90,7 +90,11 @@ export async function loader() {
     ...categories.map((c) => productsService.getAll({ category: c.slug, sort: "popularity", limit: 12 })),
   ];
 
-  const settled = await Promise.allSettled(fetches);
+  const [settled, trending] = await Promise.all([
+    Promise.allSettled(fetches),
+    productsService.getTrending(40).catch(() => ({ ids: [] as string[] })),
+  ]);
+  const trendingIds = trending.ids;
 
   const rows: HomeRow[] = [];
   settled.forEach((result, i) => {
@@ -106,11 +110,12 @@ export async function loader() {
     }
   });
 
-  return { categories, rows };
+  return { categories, rows, trendingIds };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { categories, rows } = loaderData;
+  const { categories, rows, trendingIds } = loaderData;
+  const trendingSet = new Set(trendingIds);
 
   return (
     <>
@@ -132,6 +137,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               href={row.href}
               products={row.products}
               priority={index === 0}
+              // En "Lo más popular" todo sería tendencia → ruido; ahí no.
+              trendingIds={row.key === "popular" ? undefined : trendingSet}
             />
           ))}
 

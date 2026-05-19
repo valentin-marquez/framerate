@@ -11,6 +11,9 @@ interface ProductRowProps {
   products: Product[];
   /** La primera fila visible carga sus imágenes con prioridad (LCP). */
   priority?: boolean;
+  /** Ids en tendencia para el badge. La fila "Lo más popular" no lo pasa
+   *  (ahí todo sería tendencia → ruido). */
+  trendingIds?: Set<string>;
 }
 
 /**
@@ -18,7 +21,7 @@ interface ProductRowProps {
  * y un carrusel de cards compactas. Reutilizable para Ofertas, Lo más popular
  * y cada categoría en la home.
  */
-export function ProductRow({ title, href, products, priority = false }: ProductRowProps) {
+export function ProductRow({ title, href, products, priority = false, trendingIds }: ProductRowProps) {
   if (products.length === 0) return null;
 
   return (
@@ -48,7 +51,12 @@ export function ProductRow({ title, href, products, priority = false }: ProductR
                 key={product.id}
                 className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6"
               >
-                <ProductCardCompact product={product} priority={priority && index < 6} className="h-full" />
+                <ProductCardCompact
+                  product={product}
+                  priority={priority && index < 6}
+                  trending={product.id ? trendingIds?.has(product.id) : false}
+                  className="h-full"
+                />
               </CarouselItem>
             ))}
           </CarouselContent>

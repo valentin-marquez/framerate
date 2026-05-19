@@ -8,9 +8,11 @@ interface ProductGridProps {
   products: Product[];
   isLoading?: boolean;
   className?: string;
+  /** Ids en tendencia (ranking server-side) para pintar el badge. */
+  trendingIds?: Set<string>;
 }
 
-export function ProductGrid({ products, isLoading, className }: ProductGridProps) {
+export function ProductGrid({ products, isLoading, className, trendingIds }: ProductGridProps) {
   if (isLoading) {
     return <ProductGridSkeleton count={12} />;
   }
@@ -30,7 +32,12 @@ export function ProductGrid({ products, isLoading, className }: ProductGridProps
   return (
     <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", className)}>
       {products.map((product, index) => (
-        <ProductCard key={product.id} product={product} priority={index < 8} />
+        <ProductCard
+          key={product.id}
+          product={product}
+          priority={index < 8}
+          trending={product.id ? trendingIds?.has(product.id) : false}
+        />
       ))}
     </div>
   );
@@ -89,7 +96,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage <= 1}
         className={cn(
-          "h-9 px-3 text-sm font-medium rounded-lg transition-colors",
+          "h-9 px-3 text-sm font-medium rounded-xl transition-colors",
           currentPage <= 1 ? "text-muted-foreground cursor-not-allowed" : "text-foreground hover:bg-secondary/50",
         )}
       >
@@ -111,7 +118,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
               type="button"
               onClick={() => onPageChange(page)}
               className={cn(
-                "size-9 text-sm font-medium rounded-lg transition-colors",
+                "size-9 text-sm font-medium rounded-xl transition-colors",
                 currentPage === page ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-secondary/50",
               )}
             >
@@ -126,7 +133,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= totalPages}
         className={cn(
-          "h-9 px-3 text-sm font-medium rounded-lg transition-colors",
+          "h-9 px-3 text-sm font-medium rounded-xl transition-colors",
           currentPage >= totalPages
             ? "text-muted-foreground cursor-not-allowed"
             : "text-foreground hover:bg-secondary/50",
