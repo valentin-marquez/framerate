@@ -24,30 +24,47 @@ claims.post("/", Limit("strict"), async (c) => {
   const token = c.get("token");
 
   const body = await c.req.json<{ domain?: string; store_id?: string }>().catch(() => null);
-  if (!body || typeof body.domain !== "string") {
-    return c.json({ error: "Body { domain: string, store_id?: uuid } requerido" }, 400);
+  if (!body || (typeof body.store_id !== "string" && typeof body.domain !== "string")) {
+    return c.json({ error: "Body { store_id: uuid } o { domain: string } requerido" }, 400);
   }
 
-  const domain = normalizeDomain(body.domain);
+  const supabase = createSupabase(c.env, token);
+
+  // Camino preferido: el usuario elige una tienda del catálogo y el dominio se
+  // deriva de `stores.url` (lo que realmente se verifica por DNS). El usuario
+  // nunca tipea dominio ni pega un UUID.
+  let storeId: string | null = null;
+  let domain: string | null = null;
+
+  if (body.store_id) {
+    const { data: store, error } = await supabase
+      .from("stores")
+      .select("id, url")
+      .eq("id", body.store_id)
+      .maybeSingle();
+    if (error || !store) {
+      return c.json({ error: "Tienda no encontrada" }, 404);
+    }
+    domain = store.url ? normalizeDomain(store.url) : null;
+    if (!domain) {
+      return c.json({ error: "Esta tienda no tiene un dominio válido para verificar" }, 400);
+    }
+    storeId = store.id;
+  } else if (typeof body.domain === "string") {
+    // Compat de API: claim por dominio libre (la UI no expone este camino).
+    domain = normalizeDomain(body.domain);
+    if (!domain) {
+      return c.json({ error: "Dominio inválido" }, 400);
+    }
+  }
+
   if (!domain) {
-    return c.json({ error: "Dominio inválido" }, 400);
+    return c.json({ error: "No se pudo determinar el dominio a verificar" }, 400);
   }
 
   const verificationToken = generateToken();
   const txtName = txtRecordName(domain);
   const txtValue = txtRecordValue(verificationToken);
-
-  const supabase = createSupabase(c.env, token);
-
-  // Si user pasó store_id, validar que existe.
-  let storeId: string | null = null;
-  if (body.store_id) {
-    const { data: store, error } = await supabase.from("stores").select("id").eq("id", body.store_id).maybeSingle();
-    if (error || !store) {
-      return c.json({ error: "store_id no encontrado" }, 404);
-    }
-    storeId = store.id;
-  }
 
   // biome-ignore lint/suspicious/noExplicitAny: types se regeneran tras migration up
   const { data: inserted, error: insertErr } = await (supabase as any)
@@ -206,7 +223,7 @@ claims.get("/my", Limit("lenient"), async (c) => {
   const { data, error } = await (supabase as any)
     .from("store_claim_requests")
     .select(
-      "id, store_id, claimed_domain, txt_record_name, status, attempts, last_checked_at, verified_at, expires_at, created_at",
+      "id, store_id, claimed_domain, txt_record_name, verification_token, status, attempts, last_checked_at, verified_at, expires_at, created_at",
     )
     .eq("claimant_user_id", user.id)
     .order("created_at", { ascending: false });
@@ -216,7 +233,14 @@ claims.get("/my", Limit("lenient"), async (c) => {
     return c.json({ error: "No se pudieron listar reclamos" }, 500);
   }
 
-  return c.json({ claims: data ?? [] });
+  // Exponemos el valor TXT calculado (no el token crudo) para que el front
+  // pueda volver a mostrar las instrucciones al retomar un claim pendiente.
+  const claims = (data ?? []).map((row: { verification_token: string; [k: string]: unknown }) => {
+    const { verification_token, ...rest } = row;
+    return { ...rest, txt_record_value: txtRecordValue(verification_token) };
+  });
+
+  return c.json({ claims });
 });
 
 export default claims;

@@ -1,3 +1,4 @@
+import { storeAssetUrlFromPath } from "@framerate/db";
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
@@ -94,7 +95,46 @@ products.get(
       return c.json({ error: error.message }, 500);
     }
 
-    return c.json(data);
+    // get_price_drops devuelve store_logo_url como path del bucket
+    // store-assets (icon del dueño ?? canónico); lo resolvemos a URL pública.
+    const supabaseUrl = (c.env.SUPABASE_URL || Bun.env.SUPABASE_URL || "").replace(/\/$/, "");
+    const rows = (data ?? []).map((r: { store_logo_url: string | null }) => ({
+      ...r,
+      store_logo_url: storeAssetUrlFromPath(supabaseUrl, r.store_logo_url),
+    }));
+
+    return c.json(rows);
+  },
+);
+
+// GET /products/trending — ids de los productos más vistos (ranking server-side
+// cacheado). El front muestra un badge "Tendencia" sutil solo en estos; no es un
+// contador en vivo (inviable en Supabase free tier). Cache MEDIUM: el ranking
+// refresca cada ~10 min, costo ~cero gracias al Cloudflare Cache compartido.
+products.get(
+  "/trending",
+  Cache({
+    mode: "public",
+    ttl: CACHE_TTL.MEDIUM,
+    name: "product-trending",
+  }),
+  Limit("lenient"),
+  async (c) => {
+    const supabase = createSupabase(c.env);
+    const limit = Math.min(Math.max(Number(c.req.query("limit")) || 24, 1), 100);
+
+    const { data, error } = await supabase
+      .from("api_products")
+      .select("id")
+      .gt("popularity_score", 0)
+      .order("popularity_score", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ ids: (data || []).map((p) => p.id).filter((id): id is string => id != null) });
   },
 );
 
@@ -123,9 +163,10 @@ products.get(
       return c.json({ error: "Product not found" }, 404);
     }
 
+    const supabaseUrl = (c.env.SUPABASE_URL || Bun.env.SUPABASE_URL || "").replace(/\/$/, "");
     const { data: listings, error: listingsError } = await supabase
       .from("listings")
-      .select("id, store:stores(slug, name, logo_url)")
+      .select("id, store:stores(slug, name, scraped_icon_path, store_profiles(icon_path))")
       .eq("product_id", product.id);
 
     if (listingsError || !listings?.length) {
@@ -166,10 +207,15 @@ products.get(
       const key = store.slug;
       let bucket = byStore.get(key);
       if (!bucket) {
+        // biome-ignore lint/suspicious/noExplicitAny: embed (1:1) shape regen
+        const sp = (store as any).store_profiles;
+        const profile = Array.isArray(sp) ? sp[0] : sp;
+        // biome-ignore lint/suspicious/noExplicitAny: embed shape regen
+        const iconPath = profile?.icon_path ?? (store as any).scraped_icon_path ?? null;
         bucket = {
           store_slug: store.slug,
           store_name: store.name,
-          store_logo_url: store.logo_url,
+          store_logo_url: storeAssetUrlFromPath(supabaseUrl, iconPath),
           points: [],
         };
         byStore.set(key, bucket);
@@ -284,7 +330,7 @@ products.get(
       url,
       is_active,
       last_scraped_at,
-      store:stores(name, slug, logo_url, appearance)
+      store:stores(name, slug, scraped_icon_path, store_profiles(display_name, icon_path))
     `)
       .eq("product_id", product.id)
       .eq("is_active", true)
@@ -295,10 +341,30 @@ products.get(
       // Aún devolvemos el producto aunque fallen los listados
     }
 
+    // Resuelve la identidad pública de la tienda: el dueño (store_profiles)
+    // pisa el dato canónico. icon_url = path en bucket store-assets → URL
+    // pública (el front la proxia vía getImageUrl).
+    const supabaseUrl = (c.env.SUPABASE_URL || Bun.env.SUPABASE_URL || "").replace(/\/$/, "");
+    const mappedListings = (listings ?? []).map((l) => {
+      // biome-ignore lint/suspicious/noExplicitAny: embed shape (1:1) regen
+      const s = (l as any).store as any;
+      if (!s) return l;
+      const profile = Array.isArray(s.store_profiles) ? s.store_profiles[0] : s.store_profiles;
+      const iconPath = profile?.icon_path ?? s.scraped_icon_path ?? null;
+      return {
+        ...l,
+        store: {
+          name: profile?.display_name || s.name,
+          slug: s.slug,
+          icon_url: storeAssetUrlFromPath(supabaseUrl, iconPath),
+        },
+      };
+    });
+
     return c.json({
       ...product,
       variants,
-      listings: listings || [],
+      listings: mappedListings,
     });
   },
 );

@@ -35,8 +35,14 @@ images.get("/*", async (c) => {
     return c.text("Invalid image path", 400);
   }
 
+  // El path puede traer un cache-buster (?v=timestamp) cuando el dueño
+  // reemplaza un asset reutilizando el mismo nombre de objeto. La query
+  // participa de la cacheKey (busta el cache de Cloudflare) pero NO debe
+  // contar para validar la extensión ni al pedir el objeto a Storage.
+  const cleanPath = path.split("?")[0];
+
   // Security: Validate file extension
-  const extension = path.split(".").pop()?.toLowerCase();
+  const extension = cleanPath.split(".").pop()?.toLowerCase();
   if (!extension || !ALLOWED_EXTENSIONS.has(extension)) {
     return c.text("Invalid file type", 400);
   }
@@ -67,8 +73,9 @@ images.get("/*", async (c) => {
     // Cache miss or error, continue to fetch
   }
 
-  // Construye la URL pública al archivo en Supabase Storage
-  const storageUrl = `${supabaseUrl}/storage/v1/object/public/${path}`;
+  // Construye la URL pública al archivo en Supabase Storage (sin el
+  // cache-buster: Storage sirve por nombre de objeto, no por query).
+  const storageUrl = `${supabaseUrl}/storage/v1/object/public/${cleanPath}`;
 
   try {
     // Fetch with Cloudflare caching hints

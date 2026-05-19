@@ -13,6 +13,7 @@ import {
   type BuildComponentsMap,
   type BuildProduct,
   type ProductSpecs,
+  storeAssetUrlFromPath,
   toJson,
 } from "@framerate/db";
 import { Logger } from "@framerate/utils";
@@ -317,7 +318,7 @@ quotes.get("/:id", Limit("moderate"), async (c) => {
           price_cash,
           url,
           stock_quantity,
-          store:stores(name, logo_url, slug)
+          store:stores(name, slug, scraped_icon_path, store_profiles(display_name, icon_path))
         ),
         product:products(
           id,
@@ -360,7 +361,8 @@ quotes.get("/:id", Limit("moderate"), async (c) => {
       price_normal: number;
       url: string;
       stock_quantity: number | null;
-      store: { name: string; logo_url: string | null; slug: string };
+      // biome-ignore lint/suspicious/noExplicitAny: embed (1:1) shape regen
+      store: any;
     };
     const bestListingsMap: Record<string, BestListing> = {};
     if (productIdsToFetch.length > 0) {
@@ -373,7 +375,7 @@ quotes.get("/:id", Limit("moderate"), async (c) => {
                 price_normal,
                 url,
                 stock_quantity,
-                store:stores(name, logo_url, slug)
+                store:stores(name, slug, scraped_icon_path, store_profiles(display_name, icon_path))
             `)
         .in("product_id", productIdsToFetch)
         .eq("is_active", true)
@@ -431,6 +433,21 @@ quotes.get("/:id", Limit("moderate"), async (c) => {
       return sum + price * quantity;
     }, 0);
 
+    // Resuelve la identidad pública de la tienda del listing: el dueño
+    // (store_profiles) pisa el dato canónico; icon_url => bucket store-assets.
+    const supabaseUrl = (c.env.SUPABASE_URL || Bun.env.SUPABASE_URL || "").replace(/\/$/, "");
+    // biome-ignore lint/suspicious/noExplicitAny: embed (1:1) shape regen
+    const resolveStore = (s: any) => {
+      if (!s) return s;
+      const profile = Array.isArray(s.store_profiles) ? s.store_profiles[0] : s.store_profiles;
+      const iconPath = profile?.icon_path ?? s.scraped_icon_path ?? null;
+      return {
+        name: profile?.display_name || s.name,
+        slug: s.slug,
+        icon_url: storeAssetUrlFromPath(supabaseUrl, iconPath),
+      };
+    };
+
     return c.json({
       ...quote,
       items:
@@ -445,7 +462,9 @@ quotes.get("/:id", Limit("moderate"), async (c) => {
             quantity: item.quantity,
             created_at: item.created_at,
             listing_id: item.listing_id,
-            selected_listing: selectedListing,
+            selected_listing: selectedListing
+              ? { ...selectedListing, store: resolveStore((selectedListing as { store: unknown }).store) }
+              : selectedListing,
             product: productsWithPrices[index],
             category: item.category,
           };
