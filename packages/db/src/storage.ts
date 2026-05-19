@@ -15,6 +15,7 @@ export const StorageBuckets = {
   STORE_LOGOS: "store-logos",
   PRODUCT_IMAGES: "product-images",
   USER_AVATARS: "user-avatars",
+  STORE_ASSETS: "store-assets",
 } as const;
 
 export type StorageBucket = (typeof StorageBuckets)[keyof typeof StorageBuckets];
@@ -26,6 +27,7 @@ export const AllowedMimeTypes = {
   [StorageBuckets.STORE_LOGOS]: ["image/png", "image/jpeg", "image/webp", "image/svg+xml"],
   [StorageBuckets.PRODUCT_IMAGES]: ["image/png", "image/jpeg", "image/webp", "image/avif"],
   [StorageBuckets.USER_AVATARS]: ["image/png", "image/jpeg", "image/webp"],
+  [StorageBuckets.STORE_ASSETS]: ["image/png", "image/jpeg", "image/webp", "image/avif", "image/svg+xml"],
 } as const;
 
 /**
@@ -35,6 +37,7 @@ export const FileSizeLimits = {
   [StorageBuckets.STORE_LOGOS]: 1048576, // 1MB
   [StorageBuckets.PRODUCT_IMAGES]: 2097152, // 2MB
   [StorageBuckets.USER_AVATARS]: 2097152, // 2MB
+  [StorageBuckets.STORE_ASSETS]: 5242880, // 5MB (banner > icono)
 } as const;
 
 /**
@@ -127,6 +130,61 @@ export function getUserAvatarPath(userId: string, extension: UserAvatarExtension
  */
 export function getUserAvatarUrl(supabaseUrl: string, userId: string, extension: UserAvatarExtension = "webp"): string {
   return getStoragePublicUrl(supabaseUrl, StorageBuckets.USER_AVATARS, getUserAvatarPath(userId, extension));
+}
+
+/**
+ * Tipo de asset de tienda alojado en el bucket `store-assets`.
+ * - `icon`   : icono cuadrado (favicon/apple-touch o subido por el dueño).
+ * - `banner` : banner ancho mostrado en la página de la tienda.
+ */
+export type StoreAssetKind = "icon" | "banner";
+
+export type StoreAssetExtension = "png" | "jpeg" | "jpg" | "webp" | "avif" | "svg";
+
+/**
+ * Genera la ruta de almacenamiento (relativa al bucket `store-assets`) de un
+ * asset de tienda. Usa el `store_id` como carpeta para que la RLS pueda
+ * autorizar la escritura por membresía de la account dueña vía
+ * `storage.foldername(name)[1] = store_id`.
+ *
+ * @param storeId - UUID de la tienda (stores.id)
+ * @param kind - "icon" | "banner"
+ * @param extension - Extensión del archivo (por defecto "avif")
+ *
+ * @example
+ * getStoreAssetPath("9f0a...e1", "icon")            // "9f0a...e1/icon.avif"
+ * getStoreAssetPath("9f0a...e1", "banner", "webp")  // "9f0a...e1/banner.webp"
+ */
+export function getStoreAssetPath(
+  storeId: string,
+  kind: StoreAssetKind,
+  extension: StoreAssetExtension = "avif",
+): string {
+  return `${storeId}/${kind}.${extension}`;
+}
+
+/**
+ * Genera la URL pública (Supabase Storage) de un asset de tienda. El frontend
+ * la transforma al proxy `/v1/images/...` vía `getImageUrl`.
+ */
+export function getStoreAssetUrl(
+  supabaseUrl: string,
+  storeId: string,
+  kind: StoreAssetKind,
+  extension: StoreAssetExtension = "avif",
+): string {
+  return getStoragePublicUrl(supabaseUrl, StorageBuckets.STORE_ASSETS, getStoreAssetPath(storeId, kind, extension));
+}
+
+/**
+ * Compone la URL pública a partir de un path ya almacenado en
+ * `store_profiles.icon_path` / `stores.scraped_icon_path` (path relativo al
+ * bucket `store-assets`, ej. "{store_id}/icon.avif"). Devuelve null si el
+ * path es null/vacío.
+ */
+export function storeAssetUrlFromPath(supabaseUrl: string, path: string | null | undefined): string | null {
+  if (!path) return null;
+  return getStoragePublicUrl(supabaseUrl, StorageBuckets.STORE_ASSETS, path);
 }
 
 /**

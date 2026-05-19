@@ -3,6 +3,68 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      account_members: {
+        Row: {
+          account_id: string;
+          created_at: string;
+          id: string;
+          invited_by: string | null;
+          role: Database["public"]["Enums"]["account_member_role"];
+          user_id: string;
+        };
+        Insert: {
+          account_id: string;
+          created_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          role?: Database["public"]["Enums"]["account_member_role"];
+          user_id: string;
+        };
+        Update: {
+          account_id?: string;
+          created_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          role?: Database["public"]["Enums"]["account_member_role"];
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "account_members_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      accounts: {
+        Row: {
+          created_at: string;
+          id: string;
+          kind: string;
+          name: string;
+          slug: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          name: string;
+          slug: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          name?: string;
+          slug?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       brands: {
         Row: {
           created_at: string;
@@ -1199,36 +1261,48 @@ export type Database = {
           },
         ];
       };
-      store_members: {
+      store_profiles: {
         Row: {
+          banner_path: string | null;
           created_at: string;
-          id: string;
-          invited_by: string | null;
-          role: Database["public"]["Enums"]["store_member_role"];
+          description: string | null;
+          display_name: string | null;
+          icon_path: string | null;
+          social: Json;
           store_id: string;
-          user_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          website: string | null;
         };
         Insert: {
+          banner_path?: string | null;
           created_at?: string;
-          id?: string;
-          invited_by?: string | null;
-          role?: Database["public"]["Enums"]["store_member_role"];
+          description?: string | null;
+          display_name?: string | null;
+          icon_path?: string | null;
+          social?: Json;
           store_id: string;
-          user_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          website?: string | null;
         };
         Update: {
+          banner_path?: string | null;
           created_at?: string;
-          id?: string;
-          invited_by?: string | null;
-          role?: Database["public"]["Enums"]["store_member_role"];
+          description?: string | null;
+          display_name?: string | null;
+          icon_path?: string | null;
+          social?: Json;
           store_id?: string;
-          user_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          website?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: "store_members_store_id_fkey";
+            foreignKeyName: "store_profiles_store_id_fkey";
             columns: ["store_id"];
-            isOneToOne: false;
+            isOneToOne: true;
             referencedRelation: "stores";
             referencedColumns: ["id"];
           },
@@ -1331,15 +1405,14 @@ export type Database = {
       };
       stores: {
         Row: {
-          appearance: string;
+          account_id: string | null;
           banner_url: string | null;
           created_at: string;
           description: string | null;
           id: string;
           is_active: boolean;
-          logo_url: string | null;
           name: string;
-          owner_user_id: string | null;
+          scraped_icon_path: string | null;
           slug: string;
           social: Json;
           updated_at: string;
@@ -1349,15 +1422,14 @@ export type Database = {
           website: string | null;
         };
         Insert: {
-          appearance?: string;
+          account_id?: string | null;
           banner_url?: string | null;
           created_at?: string;
           description?: string | null;
           id?: string;
           is_active?: boolean;
-          logo_url?: string | null;
           name: string;
-          owner_user_id?: string | null;
+          scraped_icon_path?: string | null;
           slug: string;
           social?: Json;
           updated_at?: string;
@@ -1367,15 +1439,14 @@ export type Database = {
           website?: string | null;
         };
         Update: {
-          appearance?: string;
+          account_id?: string | null;
           banner_url?: string | null;
           created_at?: string;
           description?: string | null;
           id?: string;
           is_active?: boolean;
-          logo_url?: string | null;
           name?: string;
-          owner_user_id?: string | null;
+          scraped_icon_path?: string | null;
           slug?: string;
           social?: Json;
           updated_at?: string;
@@ -1384,7 +1455,15 @@ export type Database = {
           verified_at?: string | null;
           website?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "stores_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       translation_feedback: {
         Row: {
@@ -1563,6 +1642,7 @@ export type Database = {
               error: true;
             } & "Could not choose the best candidate function between: public.authorize(required_role => text), public.authorize(required_role => app_role). Try renaming the parameters or the function itself in the database so function overloading can be resolved";
           };
+      can_write_store_asset: { Args: { p_store_id: string }; Returns: boolean };
       claims_due_for_recheck: {
         Args: { p_grace?: string };
         Returns: {
@@ -1590,15 +1670,14 @@ export type Database = {
       confirm_store_claim: {
         Args: { p_claim_id: string };
         Returns: {
-          appearance: string;
+          account_id: string | null;
           banner_url: string | null;
           created_at: string;
           description: string | null;
           id: string;
           is_active: boolean;
-          logo_url: string | null;
           name: string;
-          owner_user_id: string | null;
+          scraped_icon_path: string | null;
           slug: string;
           social: Json;
           updated_at: string;
@@ -1618,6 +1697,10 @@ export type Database = {
       enqueue_review_item: { Args: { p_raw_feed_id: string }; Returns: number };
       extract_numeric_value: { Args: { input_text: string }; Returns: number };
       f_norm_mpn: { Args: { mpn: string }; Returns: string };
+      f_price_reference: {
+        Args: { p_lookback_days?: number; p_product_id: string };
+        Returns: number;
+      };
       fetch_pending_jobs: {
         Args: { limit_count: number };
         Returns: {
@@ -1784,8 +1867,16 @@ export type Database = {
       };
       get_store_rating_stats: { Args: { p_store_slug: string }; Returns: Json };
       increment_product_view: { Args: { p_slug: string }; Returns: undefined };
+      is_account_member: {
+        Args: { p_account_id: string; p_required_role?: string };
+        Returns: boolean;
+      };
       is_admin: { Args: never; Returns: boolean };
       is_moderator_or_admin: { Args: never; Returns: boolean };
+      is_store_account_member: {
+        Args: { p_required_role?: string; p_store_id: string };
+        Returns: boolean;
+      };
       is_store_member: {
         Args: { p_required_role?: string; p_store_id: string };
         Returns: boolean;
@@ -1871,9 +1962,11 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      store_account_id: { Args: { p_store_id: string }; Returns: string };
       text2ltree: { Args: { "": string }; Returns: unknown };
     };
     Enums: {
+      account_member_role: "owner" | "admin" | "editor";
       app_role: "user" | "moderator" | "admin";
       comment_target_type: "product";
       compatibility_status: "valid" | "warning" | "incompatible" | "unknown";
@@ -1890,7 +1983,6 @@ export type Database = {
         | "other";
       report_status: "open" | "reviewing" | "resolved" | "dismissed";
       report_target_type: "product" | "comment" | "store_review" | "store";
-      store_member_role: "owner" | "editor";
       user_role: "user" | "moderator" | "admin";
     };
     CompositeTypes: {
@@ -2011,6 +2103,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_member_role: ["owner", "admin", "editor"],
       app_role: ["user", "moderator", "admin"],
       comment_target_type: ["product"],
       compatibility_status: ["valid", "warning", "incompatible", "unknown"],
@@ -2028,7 +2121,6 @@ export const Constants = {
       ],
       report_status: ["open", "reviewing", "resolved", "dismissed"],
       report_target_type: ["product", "comment", "store_review", "store"],
-      store_member_role: ["owner", "editor"],
       user_role: ["user", "moderator", "admin"],
     },
   },
