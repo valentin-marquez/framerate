@@ -34,8 +34,8 @@ export interface QuoteItem {
     url: string;
     store: {
       name: string;
-      logo_url: string | null;
       slug: string;
+      icon_url: string | null;
     };
   } | null;
   product: Product & {

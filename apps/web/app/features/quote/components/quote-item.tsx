@@ -8,6 +8,7 @@ import type { VirtualQuoteItem } from "~/features/quote/services/quotes";
 import { OutboundLink } from "~/shared/components/outbound-link";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Button } from "~/shared/components/primitives/button";
+import { StoreLogo } from "~/shared/components/store-logo";
 import { formatCLP } from "~/shared/utils/format";
 import { getImageUrl } from "~/shared/utils/images";
 
@@ -141,7 +142,7 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
           ) : (
             <div className="col-span-1 md:col-span-2 flex items-center gap-3">
               <div className="flex items-center gap-2 min-w-0">
-                {selectedListing?.store?.logo_url ? (
+                {selectedListing?.store ? (
                   selectedListing.url ? (
                     <OutboundLink
                       href={selectedListing.url}
@@ -150,17 +151,15 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
                       productId={product.id}
                       className="hover:opacity-80 transition-opacity"
                     >
-                      <AsyncImage
-                        src={getImageUrl(selectedListing.store.logo_url)}
-                        alt={selectedListing.store.name}
-                        className={`size-5 object-contain rounded-sm ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
+                      <StoreLogo
+                        store={selectedListing.store}
+                        className={`size-5 rounded-sm ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
                       />
                     </OutboundLink>
                   ) : (
-                    <AsyncImage
-                      src={getImageUrl(selectedListing.store.logo_url)}
-                      alt={selectedListing.store.name}
-                      className={`size-5 object-contain rounded-sm ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
+                    <StoreLogo
+                      store={selectedListing.store}
+                      className={`size-5 rounded-sm ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
                     />
                   )
                 ) : (

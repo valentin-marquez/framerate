@@ -64,7 +64,9 @@ async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise
 
   const headers = new Headers(init.headers);
 
-  if (!headers.has("Content-Type")) {
+  // FormData define su propio Content-Type (con boundary); no lo pisamos.
+  const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
+  if (!isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -129,4 +131,8 @@ export const api = {
     }),
 
   delete: <T>(endpoint: string, options?: FetchOptions) => fetcher<T>(endpoint, { ...options, method: "DELETE" }),
+
+  /** POST multipart/form-data (uploads). No setea Content-Type manualmente. */
+  upload: <T>(endpoint: string, form: FormData, options?: FetchOptions) =>
+    fetcher<T>(endpoint, { ...options, method: "POST", body: form }),
 };

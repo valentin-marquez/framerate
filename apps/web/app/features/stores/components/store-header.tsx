@@ -1,5 +1,7 @@
 import { IconCircleCheckFilled, IconExternalLink } from "@tabler/icons-react";
 import { OutboundLink } from "~/shared/components/outbound-link";
+import { StoreLogo } from "~/shared/components/store-logo";
+import { getImageUrl } from "~/shared/utils/images";
 import type { StoreDetail } from "../services/stores";
 
 interface StoreHeaderProps {
@@ -12,7 +14,7 @@ export function StoreHeader({ store }: StoreHeaderProps) {
       {store.banner_url ? (
         <div
           className="h-40 w-full bg-cover bg-center"
-          style={{ backgroundImage: `url(${store.banner_url})` }}
+          style={{ backgroundImage: `url(${getImageUrl(store.banner_url)})` }}
           aria-hidden
         />
       ) : (
@@ -20,13 +22,7 @@ export function StoreHeader({ store }: StoreHeaderProps) {
       )}
       <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          {store.logo_url && (
-            <img
-              src={store.logo_url}
-              alt={`Logo de ${store.name}`}
-              className="size-16 rounded-xl border border-border bg-background object-contain p-2"
-            />
-          )}
+          <StoreLogo store={store} className="size-16 rounded-xl" />
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-semibold text-2xl">{store.name}</h1>

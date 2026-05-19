@@ -87,6 +87,11 @@ export const productsService = {
       params: { limit: limit.toString(), minDiscount: minDiscount.toString() },
     }),
 
+  // Ids de productos en tendencia (ranking de vistas, cacheado en el edge).
+  // El badge "Tendencia" se pinta solo para estos ids; no es tiempo real.
+  getTrending: (limit = 24) =>
+    api.get<{ ids: string[] }>(`/v1/products/trending`, { params: { limit: limit.toString() } }),
+
   trackView: (slug: string) => api.post(`/v1/products/${slug}/view`, {}),
 
   getBySlug: (slug: string) => api.get<ProductDetail>(`/v1/products/${slug}`),

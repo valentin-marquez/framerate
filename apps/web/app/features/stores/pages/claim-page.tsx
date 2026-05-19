@@ -1,6 +1,6 @@
-import { IconPlus } from "@tabler/icons-react";
+import { IconChevronRight } from "@tabler/icons-react";
 import { useState } from "react";
-import { redirect } from "react-router";
+import { redirect, useRevalidator } from "react-router";
 import { requireAuth } from "~/features/auth/services/auth.server";
 import { Button } from "~/shared/components/primitives/button";
 import { ClaimWizard } from "../components/claim-wizard";
@@ -22,58 +22,103 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { claims, token: session.access_token };
 }
 
+const STATUS_LABEL: Record<ClaimRequest["status"], string> = {
+  pending: "Pendiente",
+  verified: "Verificado",
+  failed: "Falló",
+  expired: "Expirado",
+  revoked: "Revocado",
+  stale: "Sin revalidar",
+};
+
+function isResumable(status: ClaimRequest["status"]) {
+  return status === "pending" || status === "verified";
+}
+
 export default function ClaimPage({ loaderData }: Route.ComponentProps) {
   const { claims, token } = loaderData;
-  const [wizardOpen, setWizardOpen] = useState(false);
+  const { revalidate } = useRevalidator();
+  const [resume, setResume] = useState<ClaimRequest | null>(null);
+  const [wizardKey, setWizardKey] = useState(0);
+
+  function reset() {
+    setResume(null);
+    setWizardKey((k) => k + 1);
+    revalidate();
+  }
+
+  function continueClaim(c: ClaimRequest) {
+    setResume(c);
+    setWizardKey((k) => k + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 p-4 pt-8">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="font-semibold text-2xl">Reclamar tienda</h1>
-          <p className="text-muted-foreground text-sm">Verificá la propiedad de un dominio para gestionar su tienda.</p>
-        </div>
-        <Button onClick={() => setWizardOpen((v) => !v)}>
-          <IconPlus className="size-4" />
-          {wizardOpen ? "Cerrar" : "Nuevo reclamo"}
-        </Button>
+    <main className="mx-auto max-w-2xl space-y-6 p-4 pt-8">
+      <header>
+        <h1 className="font-semibold text-2xl tracking-tight">Reclamá tu tienda</h1>
+        <p className="mt-1 text-muted-foreground text-sm">
+          Elegí tu tienda del catálogo y verificá que el dominio es tuyo. Una vez verificado, vas a poder gestionar su
+          perfil, responder reseñas y más.
+        </p>
       </header>
 
-      {wizardOpen && (
-        <section className="rounded-2xl border border-border bg-card p-5">
-          <ClaimWizard token={token} />
+      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+        <ClaimWizard
+          key={wizardKey}
+          token={token}
+          initialClaim={resume ?? undefined}
+          onDone={revalidate}
+          onCancel={reset}
+        />
+      </section>
+
+      {claims.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-medium text-sm">Tus reclamos</h2>
+          <ul className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border">
+            {claims.map((c: ClaimRequest) => {
+              const resumable = isResumable(c.status);
+              return (
+                <li key={c.id} className="flex items-center gap-3 p-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium text-sm">{c.claimed_domain}</div>
+                    <div className="text-muted-foreground text-xs">
+                      Creado{" "}
+                      {
+                        // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+                        new Date(c.created_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
+                      }{" "}
+                      · expira{" "}
+                      {
+                        // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+                        new Date(c.expires_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
+                      }
+                    </div>
+                  </div>
+                  <StatusBadge status={c.status} />
+                  {resumable && (
+                    <Button variant="secondary" size="sm" onClick={() => continueClaim(c)}>
+                      Continuar
+                      <IconChevronRight className="size-4" />
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </section>
       )}
-
-      <section className="space-y-3">
-        <h2 className="font-medium">Mis reclamos</h2>
-        {claims.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Todavía no creaste ningún reclamo.</p>
-        ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border">
-            {claims.map((c: ClaimRequest) => (
-              <li key={c.id} className="flex items-center justify-between p-4">
-                <div>
-                  <div className="font-medium">{c.claimed_domain}</div>
-                  <div className="text-muted-foreground text-xs">
-                    {c.status} · creado{" "}
-                    {
-                      // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-                      new Date(c.created_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
-                    }{" "}
-                    · expira{" "}
-                    {
-                      // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-                      new Date(c.expires_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
-                    }
-                  </div>
-                </div>
-                <code className="rounded bg-secondary/50 px-2 py-1 text-xs">{c.status}</code>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </main>
   );
+}
+
+function StatusBadge({ status }: { status: ClaimRequest["status"] }) {
+  const tone =
+    status === "verified"
+      ? "bg-primary/10 text-primary"
+      : status === "pending"
+        ? "bg-secondary/60 text-secondary-foreground/80"
+        : "bg-secondary/40 text-muted-foreground";
+  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${tone}`}>{STATUS_LABEL[status]}</span>;
 }

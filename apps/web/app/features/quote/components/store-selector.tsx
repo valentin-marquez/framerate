@@ -3,12 +3,11 @@ import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { productsService } from "~/features/product/services/products";
-import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Button } from "~/shared/components/primitives/button";
+import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import type { Listing, Product } from "~/shared/utils/db-types";
 import { formatCLP } from "~/shared/utils/format";
-import { getImageUrl } from "~/shared/utils/images";
 
 // useSyncExternalStore: detecta si estamos en cliente sin un useEffect+useState
 // que provoque un flicker de portal entre SSR y hidratación.
@@ -175,25 +174,7 @@ export function StoreSelector({
                               )}
                             >
                               <div className="flex items-center gap-3 overflow-hidden">
-                                <div
-                                  className={cn(
-                                    "size-10 rounded-lg p-1.5 border border-border/30 flex items-center justify-center overflow-hidden shrink-0 ",
-                                    listing.store?.appearance === "dark" ? "bg-white/10" : "bg-secondary/10",
-                                  )}
-                                >
-                                  {listing.store?.logo_url ? (
-                                    <AsyncImage
-                                      src={getImageUrl(listing.store.logo_url)}
-                                      alt={listing.store.name}
-                                      className="size-full object-contain"
-                                      fallback={
-                                        <IconBuildingStore size={20} className="text-muted-foreground opacity-50" />
-                                      }
-                                    />
-                                  ) : (
-                                    <IconBuildingStore size={20} className="text-muted-foreground" />
-                                  )}
-                                </div>
+                                <StoreLogo store={listing.store} className="size-10 rounded-lg shrink-0" />
                                 <div className="min-w-0">
                                   <div
                                     className={cn(

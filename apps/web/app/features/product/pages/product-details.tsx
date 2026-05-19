@@ -22,6 +22,7 @@ import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Badge } from "~/shared/components/primitives/badge";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import { Card } from "~/shared/components/primitives/card";
+import { StoreLogo } from "~/shared/components/store-logo";
 import { isRateLimitError } from "~/shared/lib/api";
 import { getTranslation } from "~/shared/lib/translations";
 import { cn } from "~/shared/lib/utils";
@@ -303,18 +304,15 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                     {bestOffer && (
                       <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                         <span>Vendido por:</span>
-                        <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
-                          {bestOffer.store.logo_url ? (
-                            <AsyncImage
-                              src={getImageUrl(bestOffer.store.logo_url)}
-                              alt={bestOffer.store.name}
-                              className="h-4 w-auto object-contain"
-                            />
-                          ) : (
-                            <IconBuildingStore className="size-4" />
-                          )}
+                        <Link
+                          to={`/tiendas/${bestOffer.store.slug}`}
+                          prefetch="intent"
+                          className="group/store inline-flex items-center gap-2 font-medium text-foreground hover:text-primary transition-colors"
+                        >
+                          <StoreLogo store={bestOffer.store} className="size-6 rounded-md" />
                           {bestOffer.store.name}
-                        </span>
+                          <IconChevronRight className="size-3.5 text-muted-foreground transition-transform group-hover/store:translate-x-0.5 group-hover/store:text-primary" />
+                        </Link>
                       </div>
                     )}
                   </div>
@@ -405,65 +403,57 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
 
                   <div className="divide-y divide-border/40">
                     {sortedListings.map((listing, idx) => {
-                      const hasDiscount =
+                      // price_normal NO es un precio anterior: es el precio
+                      // tarjeta del mismo listing (medio de pago). No es un
+                      // descuento; se muestra como referencia, sin tachar.
+                      const hasCardGap =
                         !!listing.price_normal && !!listing.price_cash && listing.price_normal > listing.price_cash;
-                      const discountPct = hasDiscount
-                        ? Math.round(((listing.price_normal! - listing.price_cash!) / listing.price_normal!) * 100)
-                        : 0;
                       return (
                         <div
                           key={`${listing.store.slug}-${listing.url}`}
                           className="group relative grid grid-cols-12 gap-4 px-5 md:px-6 py-4 md:py-5 items-center hover:bg-muted/20 transition-colors"
                         >
-                          {/* Tienda */}
-                          <div className="col-span-12 md:col-span-5 flex items-center gap-4 min-w-0">
-                            <div className="h-12 w-24 shrink-0 flex items-center justify-center rounded-lg bg-white border border-border/60 p-2 overflow-hidden">
-                              {listing.store.logo_url ? (
-                                <AsyncImage
-                                  src={getImageUrl(listing.store.logo_url)}
-                                  alt={listing.store.name}
-                                  className="max-h-full max-w-full object-contain"
-                                />
-                              ) : (
-                                <IconBuildingStore className="size-5 text-muted-foreground" />
-                              )}
-                            </div>
-                            <div className="flex flex-col min-w-0 gap-1">
-                              <span className="font-medium text-sm truncate">{listing.store.name}</span>
-                              <span
-                                className={cn(
-                                  "inline-flex items-center gap-1.5 text-[11px] font-medium",
-                                  listing.is_active
-                                    ? "text-emerald-600 dark:text-emerald-400"
-                                    : "text-muted-foreground",
-                                )}
-                              >
+                          {/* Tienda → enlaza al perfil de la tienda */}
+                          <div className="col-span-12 md:col-span-5 min-w-0">
+                            <Link
+                              to={`/tiendas/${listing.store.slug}`}
+                              prefetch="intent"
+                              className="group/store flex items-center gap-4 min-w-0"
+                            >
+                              <StoreLogo store={listing.store} className="size-12" />
+                              <div className="flex flex-col min-w-0 gap-1">
+                                <span className="font-medium text-sm truncate group-hover/store:text-primary transition-colors">
+                                  {listing.store.name}
+                                </span>
                                 <span
                                   className={cn(
-                                    "size-1.5 rounded-full",
-                                    listing.is_active ? "bg-emerald-500" : "bg-muted-foreground/50",
+                                    "inline-flex items-center gap-1.5 text-[11px] font-medium",
+                                    listing.is_active
+                                      ? "text-emerald-600 dark:text-emerald-400"
+                                      : "text-muted-foreground",
                                   )}
-                                />
-                                {listing.is_active ? t("in_stock") : t("out_of_stock")}
-                              </span>
-                            </div>
+                                >
+                                  <span
+                                    className={cn(
+                                      "size-1.5 rounded-full",
+                                      listing.is_active ? "bg-emerald-500" : "bg-muted-foreground/50",
+                                    )}
+                                  />
+                                  {listing.is_active ? t("in_stock") : t("out_of_stock")}
+                                </span>
+                              </div>
+                            </Link>
                           </div>
 
-                          {/* Precio (efectivo + normal/descuento) */}
+                          {/* Precio: efectivo/transferencia destacado + precio
+                              tarjeta como referencia de medio de pago. */}
                           <div className="col-span-7 md:col-span-4 flex flex-col md:items-end justify-center gap-0.5 min-w-0">
-                            <div className="flex items-center gap-2">
-                              {hasDiscount && (
-                                <span className="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 tabular-nums">
-                                  −{discountPct}%
-                                </span>
-                              )}
-                              <span className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors tabular-nums whitespace-nowrap">
-                                {formatCLP(listing.price_cash || 0)}
-                              </span>
-                            </div>
-                            {hasDiscount && (
-                              <span className="text-xs text-muted-foreground line-through tabular-nums">
-                                {formatCLP(listing.price_normal!)}
+                            <span className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors tabular-nums whitespace-nowrap">
+                              {formatCLP(listing.price_cash || 0)}
+                            </span>
+                            {hasCardGap && (
+                              <span className="text-[11px] text-muted-foreground tabular-nums">
+                                Transferencia · tarjeta {formatCLP(listing.price_normal ?? 0)}
                               </span>
                             )}
                           </div>

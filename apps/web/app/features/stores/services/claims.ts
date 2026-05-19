@@ -5,6 +5,7 @@ export interface ClaimRequest {
   store_id: string | null;
   claimed_domain: string;
   txt_record_name: string;
+  txt_record_value: string;
   status: "pending" | "verified" | "failed" | "expired" | "revoked" | "stale";
   attempts: number;
   last_checked_at: string | null;
@@ -32,8 +33,8 @@ export interface ClaimVerifyResponse {
 }
 
 export const claimsService = {
-  create: (domain: string, storeId: string | undefined, token: string) =>
-    api.post<ClaimCreateResponse>("/v1/claims", { domain, store_id: storeId }, { token }),
+  create: (storeId: string, token: string) =>
+    api.post<ClaimCreateResponse>("/v1/claims", { store_id: storeId }, { token }),
   verify: (id: string, token: string) => api.post<ClaimVerifyResponse>(`/v1/claims/${id}/verify`, {}, { token }),
   confirm: (id: string, token: string) => api.post<{ store: unknown }>(`/v1/claims/${id}/confirm`, {}, { token }),
   listMine: (token: string) => api.get<{ claims: ClaimRequest[] }>("/v1/claims/my", { token }),

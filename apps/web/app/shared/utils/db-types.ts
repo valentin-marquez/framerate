@@ -3,8 +3,16 @@ import type { MergeDeep, Simplify } from "type-fest";
 
 // Typed JSON structures
 export interface ProductPrices {
+  /** Precio efectivo/transferencia (el más bajo entre listings activos). */
   cash: number;
+  /** Precio tarjeta/normal del mismo listing (medio de pago, NO un descuento). */
   normal: number;
+  /**
+   * Precio de referencia para descuento REAL: el cash más alto que tuvo la
+   * oferta más barata en su propio historial (ventana 90d). `null` cuando no
+   * hubo movimiento real de precio → no hay descuento que mostrar.
+   */
+  reference: number | null;
 }
 
 export interface ProductBrand {
@@ -49,7 +57,9 @@ export type QuoteItem = Simplify<Database["public"]["Tables"]["quote_items"]["Ro
 // For joins that are not in the generated types (like listings with store)
 export type Listing = Simplify<
   Omit<ListingRow, "store_id"> & {
-    store: Simplify<Pick<Store, "name" | "slug" | "logo_url" | "appearance">>;
+    // icon_url NO es columna: la API lo resuelve al asset del bucket
+    // store-assets (store_profiles.icon_path ?? stores.scraped_icon_path).
+    store: { name: string; slug: string; icon_url: string | null };
   }
 >;
 
