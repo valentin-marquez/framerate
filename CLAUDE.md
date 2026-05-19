@@ -43,6 +43,10 @@ bun run generate:types   # regenerates packages/db/src/types.ts from remote sche
 
 The `cortex` and `janitor` apps are background services started with `bun run --cwd apps/<name> dev`.
 
+### Logs (consultar la terminal)
+
+The shared `Logger` (`@framerate/utils`, `packages/utils/src/logger.ts`) mirrors every `info/warn/error/http` print to a file **in addition to the console**, so you can review what a running process/worker printed without having its terminal. In Bun apps it writes to `LOG_FILE` (if set) or `logs/dev.log` relative to the process cwd — with turbo that's the app dir, e.g. **`apps/collector/logs/dev.log`** (crawler/pipeline output), `apps/tracker/logs/dev.log`, etc. To inspect: `tail -f apps/collector/logs/dev.log` or `grep -E "\[ERROR\]|product_renamed" apps/collector/logs/dev.log`. Append mode, truncated past ~10 MB; disabled in tests (`NODE_ENV=test`) and with `LOG_TO_FILE=0`. Cloudflare Workers (api, web SSR) have no filesystem → console only. `logs/` is gitignored.
+
 ## Architecture
 
 Framerate.cl is a PC-component price comparison platform for Chile. The system enforces strict separation between scraping, storage, API, and presentation. See `README.md` for the full design doc.

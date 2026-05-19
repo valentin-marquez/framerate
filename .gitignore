@@ -67,3 +67,6 @@ apps/janitor/opendb/
 **/error_log.txt
 **/typecheck_output.txt
 **/*.tmp.*
+
+# Dev logs (scripts/dev-logged.ts)
+logs/
