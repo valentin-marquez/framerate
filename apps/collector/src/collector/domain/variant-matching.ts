@@ -42,6 +42,27 @@ function splitMpnTokens(mpn: string): string[] {
     .filter(Boolean);
 }
 
+// Tokens de color ordenados por longitud desc para que el prefijo más largo
+// gane (e.g. "WHITE" antes que "WH").
+const COLOR_TOKENS_BY_LEN = [...COLOR_TOKENS].sort((a, b) => b.length - a.length);
+
+/**
+ * ¿El token es de color? Acepta el token exacto ("BK", "WHITE") y también
+ * sufijos de color pegados a un sub-código corto del vendor, como
+ * "BKCWW" (BK + CWW) / "WHCWW" (WH + CWW) que MyShop usa en sus partno.
+ * El remanente se limita a ≤3 alfanuméricos para no tragarse modelos
+ * (e.g. "REDUX" no debe contar como "RED").
+ */
+function isColorToken(token: string): boolean {
+  if (COLOR_TOKENS.has(token)) return true;
+  for (const c of COLOR_TOKENS_BY_LEN) {
+    if (token.length > c.length && token.length - c.length <= 3 && token.startsWith(c)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function getCommonPrefix(s1: string, s2: string): string {
   let i = 0;
   while (i < s1.length && i < s2.length && s1[i] === s2[i]) {
@@ -61,16 +82,19 @@ function getCommonPrefix(s1: string, s2: string): string {
 export function isColorVariant(mpn1: string, mpn2: string): boolean {
   const t1 = splitMpnTokens(mpn1);
   const t2 = splitMpnTokens(mpn2);
-  const isColor = (t: string) => COLOR_TOKENS.has(t);
 
-  const base1 = t1.filter((t) => !isColor(t));
-  const base2 = t2.filter((t) => !isColor(t));
+  const base1 = t1.filter((t) => !isColorToken(t));
+  const base2 = t2.filter((t) => !isColorToken(t));
 
   // Al menos uno debía traer un token de color; si no, no es variante de color.
   const hadColor = base1.length !== t1.length || base2.length !== t2.length;
   if (!hadColor) return false;
 
-  if (base1.length < 2 || base1.length !== base2.length) return false;
+  if (base1.length === 0 || base1.length !== base2.length) return false;
+  // Exigir ≥2 tokens de base para no agrupar productos distintos que
+  // casualmente compartan pocos tokens, SALVO que el único token de base
+  // sea largo y específico (e.g. "LEVANTEII240"), no genérico ("X").
+  if (base1.length === 1 && base1[0].length < 6) return false;
   return base1.every((tok, i) => tok === base2[i]);
 }
 

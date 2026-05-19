@@ -25,6 +25,14 @@ const BRANDS: Record<string, { name: string; keywords: string[] }> = {
     name: "Cooler Master",
     keywords: ["COOLER MASTER", "COOLERMASTER", "MLW-", "MLX-", "MLY-"],
   },
+  XPG: {
+    name: "XPG",
+    keywords: ["XPG", "LEVANTE II", "LEVANTEII", "LEVANTE"],
+  },
+  ADATA: {
+    name: "ADATA",
+    keywords: ["ADATA"],
+  },
   NZXT: {
     name: "NZXT",
     keywords: ["NZXT", "RL-KR", "RL-KN", "RL- KR", "RL- KN"],
@@ -149,6 +157,10 @@ const PRODUCT_LINES: Record<string, ProductLine[]> = {
     { name: "Helor", keywords: ["HELOR"], type: "aio" },
     { name: "Aqua", keywords: ["AQUA"], type: "aio" },
   ],
+  XPG: [
+    { name: "Levante II", keywords: ["LEVANTE II", "LEVANTEII"], type: "aio" },
+    { name: "Levante", keywords: ["LEVANTE"], type: "aio" },
+  ],
   GAMEMAX: [
     { name: "Iceburg", keywords: ["ICEBURG"], type: "aio" },
     { name: "Sigma", keywords: ["SIGMA"], type: "air" },
@@ -210,6 +222,7 @@ const JUNK_TERMS = [
   "ENFRIADOR",
   "CPU COOLER",
   "COOLER CPU",
+  "CPU",
   "ENFRIAMIENTO EFICAZ",
   "TORRE ÚNICA",
   "TORRE UNICA",
@@ -259,15 +272,23 @@ function escapeRegExp(str: string): string {
 /**
  * Detect the brand from the title or MPN
  */
+// Intel/AMD también son sockets/compatibilidad ("LGA1700 Intel", "AMD AM5"),
+// así que solo deben ganar como marca si NINGUNA marca específica matchea.
+const GENERIC_BRANDS = new Set(["Intel", "AMD"]);
+
 function detectBrand(title: string, mpn?: string, manufacturer?: string): string | null {
   const titleUpper = title.toUpperCase();
   const mpnUpper = mpn?.toUpperCase() || "";
 
-  for (const brand of Object.values(BRANDS)) {
-    const found = brand.keywords.some((kw) => titleUpper.includes(kw) || mpnUpper.includes(kw));
-    if (found) {
-      return brand.name;
-    }
+  const matchIn = (brands: { name: string; keywords: string[] }[]) =>
+    brands.find((brand) => brand.keywords.some((kw) => titleUpper.includes(kw) || mpnUpper.includes(kw)));
+
+  const all = Object.values(BRANDS);
+  // 1ª pasada: marcas específicas. 2ª pasada: Intel/AMD como último recurso.
+  const found =
+    matchIn(all.filter((b) => !GENERIC_BRANDS.has(b.name))) ?? matchIn(all.filter((b) => GENERIC_BRANDS.has(b.name)));
+  if (found) {
+    return found.name;
   }
 
   // Fallback to manufacturer if provided
@@ -599,13 +620,20 @@ export function normalizeCpuCoolerTitle(title: string, mpn?: string, manufacture
       modelName = modelName.replace(/WHITE|BLANCO|WITHE/gi, "").replace(/BLACK|NEGRO|BK\b|BLK\b/gi, "");
     }
 
-    modelName = modelName.replace(/\s+/g, " ").trim();
+    // Colapsar guiones sueltos / segmentos vacíos que dejan los removals
+    // (ruido tipo "Cpu - - - Levante"); recortar guiones/comas al borde.
+    modelName = modelName
+      .replace(/\s*-\s*(?:-\s*)+/g, " ")
+      .replace(/(?:^|\s)-(?=\s|$)/g, " ")
+      .replace(/^[\s\-,]+|[\s\-,]+$/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
 
     // Title case the model name if we have one
     if (modelName && modelName.length > 2) {
       modelName = modelName
         .split(" ")
-        .filter((w) => w.length > 0)
+        .filter((w) => w.length > 0 && w !== "-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(" ")
         .slice(0, 30); // Limit length

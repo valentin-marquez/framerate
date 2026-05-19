@@ -112,6 +112,23 @@ export function nameToSlug(name: string): string {
  *   2. Si MPN no da pista y los GB difieren, mantener existente (conservador, no churn).
  *   3. Si ambos coinciden o no hay GB en ninguno, mantener existente (no-op).
  */
+/**
+ * ¿El nombre tiene marcas claras de un parseo roto? (paréntesis vacíos o
+ * desbalanceados, paréntesis suelto, runs de guiones vacíos " - - - ", o el
+ * artefacto de categoría manglada "Cpu - "). Los normalizadores actuales NO
+ * emiten ninguno de estos, así que su presencia => nombre histórico corrupto.
+ */
+export function looksCorrupted(name: string): boolean {
+  if (/\(\s*\)/.test(name)) return true; // ()
+  const opens = (name.match(/\(/g) ?? []).length;
+  const closes = (name.match(/\)/g) ?? []).length;
+  if (opens !== closes) return true; // paréntesis desbalanceados
+  if (/(?:^|\s)[()](?:\s|$)/.test(name)) return true; // paréntesis suelto
+  if (/(?:\s-){2,}\s/.test(name)) return true; // " - - - "
+  if (/\b(?:CPU|GPU|PSU|RAM|SSD|HDD|MOBO)\s+-\s/i.test(name)) return true; // "Cpu - "
+  return false;
+}
+
 export function pickBetterName({
   existingName,
   newName,
@@ -121,6 +138,17 @@ export function pickBetterName({
   newName: string;
   mpn: string | null | undefined;
 }): { name: string; renamed: boolean; reason: string } {
+  // Override por corrupción: si lo persistido está roto y lo nuevo está limpio,
+  // renombrar sin importar GB/MPN. No oscila: una vez limpio deja de aplicar.
+  if (
+    looksCorrupted(existingName) &&
+    !looksCorrupted(newName) &&
+    newName.trim().length >= 5 &&
+    newName.trim().toLowerCase() !== existingName.trim().toLowerCase()
+  ) {
+    return { name: newName, renamed: true, reason: "corruption_override" };
+  }
+
   const existingGb = extractGbFromName(existingName);
   const newGb = extractGbFromName(newName);
   const mpnHint = extractGbHintFromMpn(mpn);

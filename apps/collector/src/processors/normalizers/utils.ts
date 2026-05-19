@@ -63,6 +63,39 @@ export function extractRpm(title: string): string | null {
 }
 
 /**
+ * Quita ruido de títulos crudos de tienda antes de normalizar:
+ *  - segmentos entre paréntesis ("(Ensambladores Mayoristas)", "( S1700 )")
+ *  - paréntesis vacíos "()" y paréntesis sueltos/desbalanceados
+ *  - separadores colapsados (" - - - " → " ") y guiones/comas al borde
+ *
+ * Pensado para datos sucios (p.ej. MyShop, cuyo `nombre` trae "Marca () Modelo"
+ * y paréntesis sin cerrar). NO toca corchetes: el sufijo "[MPN]" lo agrega el
+ * pipeline aguas abajo a propósito.
+ */
+export function stripVendorNoise(title: string): string {
+  let out = title;
+
+  // Quitar contenido entre paréntesis de forma iterativa (maneja anidados
+  // simples y múltiples grupos en el mismo título).
+  let prev: string;
+  do {
+    prev = out;
+    out = out.replace(/\([^()]*\)/g, " ");
+  } while (out !== prev);
+
+  out = out
+    .replace(/[()]/g, " ") // paréntesis sueltos restantes
+    .replace(/\s*-\s*(?:-\s*)+/g, " - ") // " - - - " → " - "
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([-,])\s*$/g, "") // guion/coma colgando al final
+    .replace(/^[\s\-,]+|[\s\-,]+$/g, "") // bordes
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return out;
+}
+
+/**
  * Normalización genérica (solo limpieza básica)
  */
 export function normalizeGenericTitle(title: string): string {

@@ -19,7 +19,7 @@ import { normalizePsuTitle } from "./psu";
 import { normalizeRamTitle } from "./ram";
 import { normalizeSsdTitle } from "./ssd";
 import type { CategorySlug } from "./types";
-import { cleanHtmlEntities, normalizeGenericTitle } from "./utils";
+import { cleanHtmlEntities, normalizeGenericTitle, stripVendorNoise } from "./utils";
 
 /**
  * Normaliza un título de producto basado en su categoría
@@ -29,29 +29,34 @@ import { cleanHtmlEntities, normalizeGenericTitle } from "./utils";
  * @param manufacturer - Fabricante desde especificaciones/meta tags (opcional, usado como fallback)
  */
 export function normalizeTitle(title: string, category: CategorySlug, mpn?: string, manufacturer?: string): string {
+  // Saneo común para TODAS las tiendas: el ruido entre paréntesis y los
+  // paréntesis sueltos no son exclusivos de MyShop (también aparecen vía
+  // pc-express, notebooksya, etc.). Se limpia acá, antes de cualquier
+  // normalizador específico, en una sola fuente de verdad.
+  const t = stripVendorNoise(title);
   switch (category) {
     case "hdd":
-      return normalizeHddTitle(title, mpn, manufacturer);
+      return normalizeHddTitle(t, mpn, manufacturer);
     case "ssd":
-      return normalizeSsdTitle(title, mpn, manufacturer);
+      return normalizeSsdTitle(t, mpn, manufacturer);
     case "gpu":
-      return normalizeGpuTitle(title, mpn, manufacturer);
+      return normalizeGpuTitle(t, mpn, manufacturer);
     case "motherboard":
-      return normalizeMotherboardTitle(title, mpn, manufacturer);
+      return normalizeMotherboardTitle(t, mpn, manufacturer);
     case "psu":
-      return normalizePsuTitle(title, mpn, manufacturer);
+      return normalizePsuTitle(t, mpn, manufacturer);
     case "ram":
-      return normalizeRamTitle(title, mpn, manufacturer);
+      return normalizeRamTitle(t, mpn, manufacturer);
     case "case_fan":
-      return normalizeCaseFanTitle(title, mpn, manufacturer);
+      return normalizeCaseFanTitle(t, mpn, manufacturer);
     case "cpu_cooler":
-      return normalizeCpuCoolerTitle(title, mpn, manufacturer);
+      return normalizeCpuCoolerTitle(t, mpn, manufacturer);
     case "cpu":
-      return normalizeCpuTitle(title, mpn, manufacturer);
+      return normalizeCpuTitle(t, mpn, manufacturer);
     case "case":
-      return normalizeCaseTitle(title, mpn, manufacturer);
+      return normalizeCaseTitle(t, mpn, manufacturer);
     default:
-      return normalizeGenericTitle(title);
+      return normalizeGenericTitle(t);
   }
 }
 

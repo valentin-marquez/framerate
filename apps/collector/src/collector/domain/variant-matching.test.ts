@@ -37,6 +37,16 @@ describe("isColorVariant", () => {
     // "BKND" contiene "BK" pero como parte de un token, no como segmento.
     expect(isColorVariant("MODEL-BKND", "MODEL-XYZ")).toBe(false);
   });
+
+  test("MyShop: sufijo de color pegado (BKCWW vs WHCWW), base 1 token largo", () => {
+    // XPG Levante II 240: el partno pega el color al sub-código (BK+CWW /
+    // WH+CWW). La base es un único token largo y específico → sí agrupa.
+    expect(isColorVariant("LEVANTEII240-BKCWW", "LEVANTEII240-WHCWW")).toBe(true);
+  });
+
+  test("base 1 token corto no agrupa aunque sea color pegado", () => {
+    expect(isColorVariant("AB-BKCWW", "AB-WHCWW")).toBe(false);
+  });
 });
 
 describe("areVariants", () => {

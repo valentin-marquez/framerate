@@ -100,6 +100,9 @@ export class MyShopCrawler extends BaseCrawler<Category> {
 
             products.push({
               url: itemUrl,
+              // El `nombre` de MyShop trae ruido (paréntesis vacíos/sueltos);
+              // el saneo es común a todas las tiendas y vive en
+              // `normalizeTitle` (processors/normalizers/index.ts).
               title: item.nombre,
               price: item.precio,
               originalPrice: item.precio_tarjeta > item.precio ? item.precio_tarjeta : item.precio_normal,
