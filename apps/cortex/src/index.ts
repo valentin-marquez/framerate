@@ -1,7 +1,9 @@
+import { supabase } from "@/db";
 import { startJanitor } from "@/janitor";
 import { openDB } from "@/lib/opendb";
 import logger from "@/logger";
 import { startPoller } from "./poller";
+import { startClaimRechecker } from "./workers/claim-rechecker";
 import { startMatcherWorker } from "./workers/matcher";
 import { startSyncerWorker } from "./workers/syncer";
 
@@ -18,6 +20,16 @@ async function main() {
   startPoller().catch((err) => logger.error("Poller failed to start:", err)); // Changed to non-await and added catch
   startMatcherWorker().catch((err) => logger.error("Matcher Worker failed to start:", err));
   startSyncerWorker().catch((err) => logger.error("Syncer Worker failed to start:", err)); // Added Syncer Worker
+
+  // Claim rechecker: re-verifica DNS de claims cada 6h, marca stale y congela tiendas.
+  const claimRechecker = startClaimRechecker(supabase);
+
+  const shutdown = (signal: string) => {
+    logger.info(`Received ${signal}, stopping background workers…`);
+    claimRechecker.stop();
+  };
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 
   // The main poller loop should be awaited to keep the process alive
   // and handle graceful shutdown.
