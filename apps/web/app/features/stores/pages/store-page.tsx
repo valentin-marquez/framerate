@@ -1,5 +1,6 @@
 import { IconShieldCheck, IconSparkles } from "@tabler/icons-react";
 import { Link } from "react-router";
+import { LoginDialog } from "~/features/auth/components/login-dialog";
 import { getSession } from "~/features/auth/services/auth.server";
 import { StoreReviewsSection } from "~/features/store-reviews/components/store-reviews-section";
 import { ApiError } from "~/shared/lib/api";
@@ -40,14 +41,12 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export default function StorePage({ loaderData }: Route.ComponentProps) {
-  const { store, viewerRole } = loaderData;
+  const { store, viewerRole, isAuthenticated } = loaderData;
   const canManage = viewerRole !== null;
   // Banner público de "reclamala" mientras la tienda no tenga dueño. Se muestra
-  // a todos (incluidos anónimos) — la página /reclamar se encarga de pedir login
-  // si hace falta. Si `is_claimed=true`, no aparece porque ya hay account dueña.
+  // a todos (incluidos anónimos): si está logueado va directo a /reclamar; si no,
+  // abre un modal de OAuth con returnTo para que vuelva al wizard tras el login.
   const showClaimCta = !store.is_claimed;
-  // Cuando llegan vía deep-link autenticados, /reclamar arranca el wizard en el
-  // paso DNS con la tienda preseleccionada.
   const claimHref = `/reclamar?store=${store.slug}`;
 
   return (
@@ -90,12 +89,28 @@ export default function StorePage({ loaderData }: Route.ComponentProps) {
               </p>
             </div>
           </div>
-          <Link
-            to={claimHref}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 self-start rounded-xl bg-secondary px-4 font-medium text-secondary-foreground text-sm transition-all hover:bg-primary hover:text-primary-foreground sm:self-auto"
-          >
-            Reclamar tienda
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              to={claimHref}
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 self-start rounded-xl bg-secondary px-4 font-medium text-secondary-foreground text-sm transition-all hover:bg-primary hover:text-primary-foreground sm:self-auto"
+            >
+              Reclamar tienda
+            </Link>
+          ) : (
+            <LoginDialog
+              returnTo={claimHref}
+              title="Iniciá sesión para reclamar"
+              description="Verificá la propiedad usando una cuenta para gestionar la tienda después."
+              trigger={
+                <button
+                  type="button"
+                  className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-1.5 self-start rounded-xl bg-secondary px-4 font-medium text-secondary-foreground text-sm transition-all hover:bg-primary hover:text-primary-foreground sm:self-auto"
+                >
+                  Reclamar tienda
+                </button>
+              }
+            />
+          )}
         </section>
       )}
 
