@@ -18,7 +18,7 @@
  */
 
 import { Logger } from "@framerate/utils";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { supabase } from "@/db";
 import { verifyTxtRecord } from "@/lib/doh";
 
 interface ClaimDueRow {
@@ -54,11 +54,7 @@ const DEFAULT_MAX_FAILURES = 3;
 
 const logger = new Logger("ClaimRechecker");
 
-export function startClaimRechecker(
-  // biome-ignore lint/suspicious/noExplicitAny: client genérico; los RPCs nuevos viven en migración paralela.
-  supabase: SupabaseClient<any, any, any>,
-  opts: ClaimRecheckerOptions = {},
-): { stop: () => void } {
+export function startClaimRechecker(opts: ClaimRecheckerOptions = {}): { stop: () => void } {
   const intervalMs = opts.intervalMs ?? DEFAULT_INTERVAL_MS;
   const grace = opts.graceInterval ?? DEFAULT_GRACE;
   const chunkSize = opts.chunkSize ?? DEFAULT_CHUNK_SIZE;
@@ -74,7 +70,7 @@ export function startClaimRechecker(
     }
     inflight = true;
     try {
-      await runOnce(supabase, { grace, chunkSize, maxFailures });
+      await runOnce({ grace, chunkSize, maxFailures });
     } catch (err) {
       logger.error("Error en pasada de recheck:", err);
     } finally {
@@ -110,11 +106,7 @@ interface RunOpts {
   maxFailures: number;
 }
 
-async function runOnce(
-  // biome-ignore lint/suspicious/noExplicitAny: ver arriba.
-  supabase: SupabaseClient<any, any, any>,
-  { grace, chunkSize, maxFailures }: RunOpts,
-): Promise<void> {
+async function runOnce({ grace, chunkSize, maxFailures }: RunOpts): Promise<void> {
   const startedAt = Date.now();
 
   const { data, error } = await supabase.rpc("claims_due_for_recheck", { p_grace: grace });
@@ -140,7 +132,7 @@ async function runOnce(
 
   for (let i = 0; i < claims.length; i += chunkSize) {
     const slice = claims.slice(i, i + chunkSize);
-    const results = await Promise.allSettled(slice.map((c) => processClaim(supabase, c, maxFailures)));
+    const results = await Promise.allSettled(slice.map((c) => processClaim(c, maxFailures)));
     for (const r of results) {
       if (r.status === "rejected") {
         errored += 1;
@@ -171,12 +163,7 @@ async function runOnce(
 
 type ProcessOutcome = "verified" | "staled" | "unchanged" | "errored";
 
-async function processClaim(
-  // biome-ignore lint/suspicious/noExplicitAny: ver arriba.
-  supabase: SupabaseClient<any, any, any>,
-  claim: ClaimDueRow,
-  maxFailures: number,
-): Promise<ProcessOutcome> {
+async function processClaim(claim: ClaimDueRow, maxFailures: number): Promise<ProcessOutcome> {
   const previousStatus = claim.status;
 
   let dnsResult: Awaited<ReturnType<typeof verifyTxtRecord>>;
@@ -207,7 +194,8 @@ async function processClaim(
     checked_at: new Date().toISOString(),
   };
 
-  const { error } = await supabase.rpc("process_recheck_result", {
+  // biome-ignore lint/suspicious/noExplicitAny: RPC creada en migración 20260520; los types se regeneran post-deploy.
+  const { error } = await (supabase as any).rpc("process_recheck_result", {
     p_claim_id: claim.id,
     p_matched: matched,
     p_dns_details: dnsDetails,

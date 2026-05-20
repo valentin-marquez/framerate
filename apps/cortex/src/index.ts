@@ -1,4 +1,3 @@
-import { supabase } from "@/db";
 import { startJanitor } from "@/janitor";
 import { openDB } from "@/lib/opendb";
 import logger from "@/logger";
@@ -22,7 +21,7 @@ async function main() {
   startSyncerWorker().catch((err) => logger.error("Syncer Worker failed to start:", err)); // Added Syncer Worker
 
   // Claim rechecker: re-verifica DNS de claims cada 6h, marca stale y congela tiendas.
-  const claimRechecker = startClaimRechecker(supabase);
+  const claimRechecker = startClaimRechecker();
 
   const shutdown = (signal: string) => {
     logger.info(`Received ${signal}, stopping background workers…`);
