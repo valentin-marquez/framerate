@@ -1,3 +1,4 @@
+import { storeAssetUrlFromPath } from "@framerate/db";
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
 import { createSupabase } from "@/lib/supabase";
@@ -9,6 +10,7 @@ const profiles = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // Rutas protegidas
 profiles.use("/me", authMiddleware);
+profiles.use("/me/*", authMiddleware);
 
 /**
  * GET /v1/profiles/me
@@ -165,6 +167,83 @@ profiles.patch("/me", Limit("moderate"), async (c) => {
     return c.json(profile);
   } catch (error) {
     console.error("Error updating profile:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+/**
+ * GET /v1/profiles/me/stores
+ *
+ * Lista las tiendas donde el usuario autenticado es miembro de la account dueña.
+ * Devuelve `{ stores: [{ id, slug, name, icon_url, role }] }` ordenado por nombre.
+ * Si no tiene tiendas devuelve `{ stores: [] }`.
+ */
+profiles.get("/me/stores", Limit("moderate"), async (c) => {
+  try {
+    const user = c.get("user");
+    const token = c.get("token");
+    const supabase = createSupabase(c.env, token);
+    const supabaseUrl = (c.env.SUPABASE_URL || Bun.env.SUPABASE_URL || "").replace(/\/$/, "");
+
+    // 1) accounts donde el user es miembro + su rol.
+    // biome-ignore lint/suspicious/noExplicitAny: types regen
+    const { data: memberships, error: mErr } = await (supabase as any)
+      .from("account_members")
+      .select("account_id, role")
+      .eq("user_id", user.id);
+
+    if (mErr) {
+      console.error("Error listing my account memberships:", mErr);
+      return c.json({ error: "No se pudieron listar las tiendas" }, 500);
+    }
+
+    if (!memberships || memberships.length === 0) {
+      return c.json({ stores: [] });
+    }
+
+    const accountIds = memberships.map((m: { account_id: string }) => m.account_id);
+    const roleByAccount = new Map<string, "owner" | "admin" | "editor">(
+      memberships.map((m: { account_id: string; role: "owner" | "admin" | "editor" }) => [m.account_id, m.role]),
+    );
+
+    // 2) Stores de esas accounts + override del icono en store_profiles.
+    // biome-ignore lint/suspicious/noExplicitAny: types regen
+    const { data: storesData, error: sErr } = await (supabase as any)
+      .from("stores")
+      .select("id, slug, name, account_id, scraped_icon_path, profile:store_profiles(icon_path)")
+      .in("account_id", accountIds)
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+
+    if (sErr) {
+      console.error("Error listing my stores:", sErr);
+      return c.json({ error: "No se pudieron listar las tiendas" }, 500);
+    }
+
+    const list = (storesData ?? []).map(
+      (s: {
+        id: string;
+        slug: string;
+        name: string;
+        account_id: string;
+        scraped_icon_path: string | null;
+        profile?: { icon_path: string | null } | { icon_path: string | null }[] | null;
+      }) => {
+        const profile = Array.isArray(s.profile) ? (s.profile[0] ?? null) : (s.profile ?? null);
+        const iconPath = profile?.icon_path ?? s.scraped_icon_path;
+        return {
+          id: s.id,
+          slug: s.slug,
+          name: s.name,
+          icon_url: storeAssetUrlFromPath(supabaseUrl, iconPath),
+          role: roleByAccount.get(s.account_id) ?? null,
+        };
+      },
+    );
+
+    return c.json({ stores: list });
+  } catch (error) {
+    console.error("Error fetching my stores:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
