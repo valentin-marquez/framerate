@@ -1,5 +1,5 @@
 import { IconArrowLeft, IconCircleCheckFilled, IconLoader2 } from "@tabler/icons-react";
-import { useReducer } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { Button } from "~/shared/components/primitives/button";
@@ -14,6 +14,11 @@ interface ClaimWizardProps {
   token: string;
   /** Si viene, el wizard arranca retomando este claim (sin pasar por el selector). */
   initialClaim?: ClaimRequest;
+  /**
+   * Si viene (deep-link `/reclamar?store=<slug>`), el wizard arranca creando
+   * automáticamente el claim para esta tienda y salta al paso de DNS.
+   */
+  initialStore?: ClaimableStore;
   onDone?: () => void;
   onCancel?: () => void;
 }
@@ -82,26 +87,76 @@ function stepIndex(step: Step): number {
   return 1;
 }
 
-export function ClaimWizard({ token, initialClaim, onDone, onCancel }: ClaimWizardProps) {
+export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCancel }: ClaimWizardProps) {
   const [state, dispatch] = useReducer(wizardReducer, initialClaim, initState);
   const { step, identity, claim, submitting } = state;
   const current = stepIndex(step);
 
-  async function selectStore(store: ClaimableStore) {
-    dispatch({ type: "submitting", submitting: true });
-    try {
-      const res = await claimsService.create(store.id, token);
-      dispatch({
-        type: "go-dns",
-        identity: { name: store.name, slug: store.slug, iconUrl: store.icon_url, domain: res.domain },
-        claim: { id: res.id, txtName: res.txt_name, txtValue: res.txt_value },
-      });
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "No se pudo iniciar el reclamo";
-      toast.error(msg);
-      dispatch({ type: "submitting", submitting: false });
-    }
-  }
+  const selectStore = useCallback(
+    async (store: ClaimableStore) => {
+      dispatch({ type: "submitting", submitting: true });
+      try {
+        const res = await claimsService.create(store.id, token);
+        dispatch({
+          type: "go-dns",
+          identity: { name: store.name, slug: store.slug, iconUrl: store.icon_url, domain: res.domain },
+          claim: { id: res.id, txtName: res.txt_name, txtValue: res.txt_value },
+        });
+      } catch (err) {
+        // 409 -> ya existe un claim activo para este dominio (probablemente
+        // creado por este mismo usuario en otra sesión). Buscamos en listMine
+        // el claim pending/verified y resumimos el wizard ahí. Si no lo
+        // encontramos, mostramos el mensaje del API y caemos al picker.
+        if (err instanceof ApiError && err.status === 409) {
+          try {
+            const { claims: mine } = await claimsService.listMine(token);
+            const existing = mine.find(
+              (c) => c.store_id === store.id && (c.status === "pending" || c.status === "verified"),
+            );
+            if (existing) {
+              dispatch({
+                type: "go-dns",
+                identity: {
+                  name: store.name,
+                  slug: store.slug,
+                  iconUrl: store.icon_url,
+                  domain: existing.claimed_domain,
+                },
+                claim: {
+                  id: existing.id,
+                  txtName: existing.txt_record_name,
+                  txtValue: existing.txt_record_value,
+                },
+              });
+              if (existing.status === "verified") {
+                dispatch({ type: "go-verified" });
+              }
+              toast.message("Retomamos tu reclamo en curso para esta tienda.");
+              return;
+            }
+          } catch {
+            // si listMine también falla, seguimos al toast genérico abajo
+          }
+        }
+        const msg = err instanceof ApiError ? err.message : "No se pudo iniciar el reclamo";
+        toast.error(msg);
+        dispatch({ type: "submitting", submitting: false });
+      }
+    },
+    [token],
+  );
+
+  // Auto-seleccionar la tienda cuando llega vía deep-link (`/reclamar?store=`)
+  // y no hay un claim previo que retomar. `autoSelectedRef` garantiza que
+  // dispara una sola vez por instancia del wizard — la page remonta el
+  // componente con `key` cuando cambia el contexto.
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (autoSelectedRef.current) return;
+    if (initialClaim || !initialStore) return;
+    autoSelectedRef.current = true;
+    void selectStore(initialStore);
+  }, [initialClaim, initialStore, selectStore]);
 
   async function verifyClaim() {
     if (!claim) return;
@@ -139,7 +194,15 @@ export function ClaimWizard({ token, initialClaim, onDone, onCancel }: ClaimWiza
     <div className="space-y-5">
       <Stepper current={current} />
 
-      {step === "pick" && <StorePicker onSelect={selectStore} busy={submitting} />}
+      {step === "pick" &&
+        (initialStore && submitting ? (
+          <div className="flex items-center justify-center gap-2 rounded-xl border border-border/40 bg-secondary/30 p-8 text-muted-foreground text-sm">
+            <IconLoader2 className="size-4 animate-spin" />
+            Preparando reclamo para {initialStore.name}…
+          </div>
+        ) : (
+          <StorePicker onSelect={selectStore} busy={submitting} />
+        ))}
 
       {identity && step !== "pick" && step !== "confirmed" && (
         <>
