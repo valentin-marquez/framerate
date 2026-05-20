@@ -19,11 +19,12 @@ const stores = new Hono<{ Bindings: Bindings; Variables: Variables }>();
  * sus tiendas). El render público hace COALESCE(profile, canónico/legacy).
  */
 
-// Canónico + legacy (legacy se mantiene hasta la fase de limpieza).
+// Canónico únicamente (las columnas legacy website/banner_url/description/social
+// fueron dropeadas en la migración phase 6). Toda la capa editable vive en
+// store_profiles.
 const STORE_BASE_SELECT = `
   id, name, slug, url, is_active, account_id, scraped_icon_path,
   verified_at, created_at, updated_at,
-  website, banner_url, description, social,
   profile:store_profiles(display_name, description, website, social, icon_path, banner_path, updated_at),
   account:accounts!stores_account_id_fkey(id, slug, name)
 `;
@@ -39,10 +40,6 @@ interface StoreRow {
   verified_at: string | null;
   created_at: string;
   updated_at: string;
-  website: string | null;
-  banner_url: string | null;
-  description: string | null;
-  social: Record<string, string> | null;
   profile?: {
     display_name: string | null;
     description: string | null;
@@ -101,15 +98,15 @@ function composeStore(
     display_name: profile?.display_name ?? null,
     slug: row.slug,
     url: row.url,
-    website: profile?.website ?? row.website,
+    website: profile?.website ?? null,
     // logo_url/appearance quedaron obsoletos (StoreLogo usa icon_url). Se
     // mantienen las keys por compat del tipo del front hasta la limpieza.
     logo_url: null as string | null,
     appearance: "light" as const,
     icon_url: iconFromOwner ?? iconCanonical,
-    banner_url: bannerFromOwner ?? row.banner_url,
-    description: profile?.description ?? row.description,
-    social: hasKeys(profile?.social) ? profile?.social : (row.social ?? {}),
+    banner_url: bannerFromOwner ?? null,
+    description: profile?.description ?? null,
+    social: hasKeys(profile?.social) ? profile?.social : {},
     is_active: row.is_active,
     is_claimed: row.account_id !== null,
     account,

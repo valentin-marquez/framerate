@@ -1454,57 +1454,45 @@ export type Database = {
       stores: {
         Row: {
           account_id: string | null;
-          banner_url: string | null;
           created_at: string;
-          description: string | null;
           frozen_at: string | null;
           id: string;
           is_active: boolean;
           name: string;
           scraped_icon_path: string | null;
           slug: string;
-          social: Json;
           updated_at: string;
           url: string;
           verification_last_checked_at: string | null;
           verified_at: string | null;
-          website: string | null;
         };
         Insert: {
           account_id?: string | null;
-          banner_url?: string | null;
           created_at?: string;
-          description?: string | null;
           frozen_at?: string | null;
           id?: string;
           is_active?: boolean;
           name: string;
           scraped_icon_path?: string | null;
           slug: string;
-          social?: Json;
           updated_at?: string;
           url: string;
           verification_last_checked_at?: string | null;
           verified_at?: string | null;
-          website?: string | null;
         };
         Update: {
           account_id?: string | null;
-          banner_url?: string | null;
           created_at?: string;
-          description?: string | null;
           frozen_at?: string | null;
           id?: string;
           is_active?: boolean;
           name?: string;
           scraped_icon_path?: string | null;
           slug?: string;
-          social?: Json;
           updated_at?: string;
           url?: string;
           verification_last_checked_at?: string | null;
           verified_at?: string | null;
-          website?: string | null;
         };
         Relationships: [
           {
@@ -1730,21 +1718,17 @@ export type Database = {
         Args: { p_claim_id: string };
         Returns: {
           account_id: string | null;
-          banner_url: string | null;
           created_at: string;
-          description: string | null;
           frozen_at: string | null;
           id: string;
           is_active: boolean;
           name: string;
           scraped_icon_path: string | null;
           slug: string;
-          social: Json;
           updated_at: string;
           url: string;
           verification_last_checked_at: string | null;
           verified_at: string | null;
-          website: string | null;
         };
         SetofOptions: {
           from: "*";
