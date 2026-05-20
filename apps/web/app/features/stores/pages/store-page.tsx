@@ -1,4 +1,4 @@
-import { IconLockOpen2, IconShieldCheck } from "@tabler/icons-react";
+import { IconShieldCheck, IconSparkles } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { getSession } from "~/features/auth/services/auth.server";
 import { StoreReviewsSection } from "~/features/store-reviews/components/store-reviews-section";
@@ -40,9 +40,15 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export default function StorePage({ loaderData }: Route.ComponentProps) {
-  const { store, viewerRole, isAuthenticated } = loaderData;
+  const { store, viewerRole } = loaderData;
   const canManage = viewerRole !== null;
-  const showClaimCta = isAuthenticated && !canManage && !store.verified_at;
+  // Banner público de "reclamala" mientras la tienda no tenga dueño. Se muestra
+  // a todos (incluidos anónimos) — la página /reclamar se encarga de pedir login
+  // si hace falta. Si `is_claimed=true`, no aparece porque ya hay account dueña.
+  const showClaimCta = !store.is_claimed;
+  // Cuando llegan vía deep-link autenticados, /reclamar arranca el wizard en el
+  // paso DNS con la tienda preseleccionada.
+  const claimHref = `/reclamar?store=${store.slug}`;
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-4 pt-8">
@@ -65,19 +71,32 @@ export default function StorePage({ loaderData }: Route.ComponentProps) {
         </div>
       )}
 
-      {showClaimCta && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <IconLockOpen2 className="size-4" />
-            <span>¿Eres dueño de esta tienda? Verifica tu dominio para gestionarla.</span>
+      {showClaimCta && !canManage && (
+        <section
+          aria-label="Reclamar tienda"
+          className="flex flex-col gap-4 rounded-2xl border border-border/40 bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+        >
+          <div className="flex items-start gap-3">
+            <span
+              aria-hidden
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+            >
+              <IconSparkles className="size-5" />
+            </span>
+            <div className="space-y-1">
+              <h2 className="font-semibold text-base text-foreground">¿Esta tienda es tuya?</h2>
+              <p className="max-w-xl text-muted-foreground text-sm">
+                Verificá la propiedad por DNS y vas a poder editar su perfil, responder reseñas y más.
+              </p>
+            </div>
           </div>
           <Link
-            to="/reclamar"
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-secondary/70 px-3 font-medium text-secondary-foreground/80 text-sm transition-all hover:bg-primary hover:text-primary-foreground"
+            to={claimHref}
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 self-start rounded-xl bg-secondary px-4 font-medium text-secondary-foreground text-sm transition-all hover:bg-primary hover:text-primary-foreground sm:self-auto"
           >
             Reclamar tienda
           </Link>
-        </div>
+        </section>
       )}
 
       <StoreReviewsSection storeSlug={store.slug} canManage={canManage} />
