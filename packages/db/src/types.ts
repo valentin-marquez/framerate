@@ -110,6 +110,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      claim_audit_log: {
+        Row: {
+          action: string;
+          actor_user_id: string | null;
+          claim_id: string | null;
+          created_at: string;
+          id: string;
+          metadata: Json;
+          reason: string | null;
+          store_id: string | null;
+        };
+        Insert: {
+          action: string;
+          actor_user_id?: string | null;
+          claim_id?: string | null;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          reason?: string | null;
+          store_id?: string | null;
+        };
+        Update: {
+          action?: string;
+          actor_user_id?: string | null;
+          claim_id?: string | null;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          reason?: string | null;
+          store_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "claim_audit_log_claim_id_fkey";
+            columns: ["claim_id"];
+            isOneToOne: false;
+            referencedRelation: "store_claim_requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "claim_audit_log_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       comment_moderation_log: {
         Row: {
           action: string;
@@ -1409,6 +1457,7 @@ export type Database = {
           banner_url: string | null;
           created_at: string;
           description: string | null;
+          frozen_at: string | null;
           id: string;
           is_active: boolean;
           name: string;
@@ -1426,6 +1475,7 @@ export type Database = {
           banner_url?: string | null;
           created_at?: string;
           description?: string | null;
+          frozen_at?: string | null;
           id?: string;
           is_active?: boolean;
           name: string;
@@ -1443,6 +1493,7 @@ export type Database = {
           banner_url?: string | null;
           created_at?: string;
           description?: string | null;
+          frozen_at?: string | null;
           id?: string;
           is_active?: boolean;
           name?: string;
@@ -1628,6 +1679,10 @@ export type Database = {
         Args: { p_expires_at?: string; p_reason?: string; p_user_id: string };
         Returns: string;
       };
+      admin_revoke_claim: {
+        Args: { p_claim_id: string; p_reason?: string };
+        Returns: undefined;
+      };
       admin_unban_user: { Args: { p_user_id: string }; Returns: undefined };
       authorize:
         | {
@@ -1642,6 +1697,10 @@ export type Database = {
               error: true;
             } & "Could not choose the best candidate function between: public.authorize(required_role => text), public.authorize(required_role => app_role). Try renaming the parameters or the function itself in the database so function overloading can be resolved";
           };
+      can_edit_store_profile: {
+        Args: { p_required_role?: string; p_store_id: string };
+        Returns: boolean;
+      };
       can_write_store_asset: { Args: { p_store_id: string }; Returns: boolean };
       claims_due_for_recheck: {
         Args: { p_grace?: string };
@@ -1674,6 +1733,7 @@ export type Database = {
           banner_url: string | null;
           created_at: string;
           description: string | null;
+          frozen_at: string | null;
           id: string;
           is_active: boolean;
           name: string;
@@ -1894,6 +1954,15 @@ export type Database = {
           p_target_type: string;
         };
         Returns: string;
+      };
+      process_recheck_result: {
+        Args: {
+          p_claim_id: string;
+          p_dns_details?: Json;
+          p_matched: boolean;
+          p_max_failures?: number;
+        };
+        Returns: undefined;
       };
       quick_search_products: {
         Args: { p_limit?: number; search_term: string };

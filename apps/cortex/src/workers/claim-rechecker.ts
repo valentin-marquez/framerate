@@ -194,8 +194,7 @@ async function processClaim(claim: ClaimDueRow, maxFailures: number): Promise<Pr
     checked_at: new Date().toISOString(),
   };
 
-  // biome-ignore lint/suspicious/noExplicitAny: RPC creada en migración 20260520; los types se regeneran post-deploy.
-  const { error } = await (supabase as any).rpc("process_recheck_result", {
+  const { error } = await supabase.rpc("process_recheck_result", {
     p_claim_id: claim.id,
     p_matched: matched,
     p_dns_details: dnsDetails,

@@ -18,7 +18,8 @@ app.use("*", secureHeaders());
 // Origins permitidos: producción + cualquier dev server local (incluyendo IPs de LAN
 // 192.168.x.x / 10.x.x.x para testing en otros dispositivos de la red).
 const ALLOWED_ORIGINS = ["https://framerate.cl"];
-const LAN_DEV_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):(5173|3000|4173|8787)$/;
+const LAN_DEV_ORIGIN =
+  /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):(517\d|3000|4173|8787)$/;
 
 app.use(
   "*",

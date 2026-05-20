@@ -386,12 +386,15 @@ begin
     raise exception 'cooldown active, espera al menos 60s entre intentos' using errcode = '22023';
   end if;
 
+  -- Cualificamos cada columna con store_claim_requests.* porque el `returns table`
+  -- declara nombres iguales (attempts, status, verified_at) y postgres no resuelve
+  -- entre la columna y el output-record sin prefijo.
   update public.store_claim_requests
   set
-    attempts = coalesce(attempts, 0) + 1,
+    attempts = coalesce(store_claim_requests.attempts, 0) + 1,
     last_checked_at = now(),
-    status = case when p_matched then 'verified' else status end,
-    verified_at = case when p_matched then now() else verified_at end,
+    status = case when p_matched then 'verified' else store_claim_requests.status end,
+    verified_at = case when p_matched then now() else store_claim_requests.verified_at end,
     last_error = case
       when p_matched then null
       else coalesce(p_dns_details::text, 'mismatch')
