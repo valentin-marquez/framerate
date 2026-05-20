@@ -1,3 +1,5 @@
+// Fase 5: admin claims (revoke + listado)
+import adminClaims from "@/routes/admin-claims";
 // Fase 4: moderation
 import adminModeration from "@/routes/admin-moderation";
 import auth from "@/routes/auth";
@@ -81,5 +83,10 @@ export const routes = [
   {
     path: `/${API_VERSION}/admin/moderation`,
     route: adminModeration,
+  },
+  // Fase 5: admin claims
+  {
+    path: `/${API_VERSION}/admin/claims`,
+    route: adminClaims,
   },
 ];
