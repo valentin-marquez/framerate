@@ -1,5 +1,15 @@
 import { api } from "~/shared/lib/api";
 
+export type MyStoreRole = "owner" | "admin" | "editor";
+
+export interface MyStore {
+  id: string;
+  slug: string;
+  name: string;
+  icon_url: string | null;
+  role: MyStoreRole | null;
+}
+
 export interface Profile {
   id: string;
   username: string | null;
@@ -41,4 +51,10 @@ export const profilesService = {
    */
   syncAvatar: (token: string) =>
     api.post<{ synced: boolean; profile: Profile; reason?: string }>("/v1/auth/sync-avatar", {}, { token }),
+
+  /**
+   * Lista las tiendas donde el usuario autenticado es miembro de la account
+   * dueña (owner/admin/editor). Devuelve una lista posiblemente vacía.
+   */
+  listMyStores: (token: string) => api.get<{ stores: MyStore[] }>("/v1/profiles/me/stores", { token }),
 };

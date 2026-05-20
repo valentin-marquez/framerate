@@ -6,6 +6,7 @@ import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
 import type { Category } from "~/features/category/services/categories";
 import { getCategoryConfig } from "~/features/category/utils/categories";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
+import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { Apple } from "~/shared/components/icons/apple";
 import { Discord } from "~/shared/components/icons/discord";
 import { Facebook } from "~/shared/components/icons/facebook";
@@ -139,6 +140,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   const mobileBarH = useTransform(e, [0, 1], [0, 56]);
 
   const [isLogoHovered, setIsLogoHovered] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [state, dispatch] = useReducer(navReducer, initialNavState);
   const { timeOfDay, greetingMessage, showGreeting, visibleGradient, gradientVisible } = state;
 
@@ -378,7 +380,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             ) : null}
 
             {user ? (
-              <DropdownMenu>
+              <DropdownMenu open={userMenuOpen} onOpenChange={setUserMenuOpen}>
                 <DropdownMenuTrigger
                   aria-label={t("user")}
                   className={cn(
@@ -452,6 +454,10 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                         <span>{t("settings")}</span>
                       </Link>
                     </DropdownMenuItem>
+
+                    {/* Sólo se monta cuando el dropdown está abierto: evita un */}
+                    {/* fetch innecesario al cargar la navbar para users sin tiendas. */}
+                    {userMenuOpen && <MyStoresMenu enabled={userMenuOpen} />}
 
                     <form method="post" action="/action/auth">
                       <input type="hidden" name="action" value="logout" />

@@ -438,10 +438,14 @@ stores.get("/:slug/members", Limit("moderate"), authMiddleware, requireStoreRole
   const { data: store } = await supabase.from("stores").select("account_id").eq("id", storeId).maybeSingle();
   if (!store?.account_id) return c.json({ members: [] });
 
+  // PostgREST no resuelve el join embedded `profiles:user_id(...)` porque el FK
+  // declarado en `account_members.user_id` apunta a `auth.users(id)`, no a
+  // `public.profiles`. Hacemos dos queries y unimos en memoria manteniendo la
+  // shape `{ members: [{ ..., profiles: {...} }] }` esperada por el front.
   // biome-ignore lint/suspicious/noExplicitAny: types regen
-  const { data, error } = await (supabase as any)
+  const { data: members, error } = await (supabase as any)
     .from("account_members")
-    .select("id, user_id, role, invited_by, created_at, profiles:user_id(username, full_name, avatar_url)")
+    .select("id, user_id, role, invited_by, created_at")
     .eq("account_id", store.account_id)
     .order("created_at", { ascending: true });
 
@@ -449,7 +453,36 @@ stores.get("/:slug/members", Limit("moderate"), authMiddleware, requireStoreRole
     return c.json({ error: error.message }, 500);
   }
 
-  return c.json({ members: data ?? [] });
+  if (!members || members.length === 0) {
+    return c.json({ members: [] });
+  }
+
+  const userIds = members.map((m: { user_id: string }) => m.user_id);
+  // biome-ignore lint/suspicious/noExplicitAny: types regen
+  const { data: profilesData } = await (supabase as any)
+    .from("profiles")
+    .select("id, username, full_name, avatar_url")
+    .in("id", userIds);
+
+  const profilesById = new Map((profilesData ?? []).map((p: { id: string; [k: string]: unknown }) => [p.id, p]));
+
+  const enriched = members.map((m: { user_id: string; [k: string]: unknown }) => {
+    const profile = profilesById.get(m.user_id) as
+      | { username: string | null; full_name: string | null; avatar_url: string | null }
+      | undefined;
+    return {
+      ...m,
+      profiles: profile
+        ? {
+            username: profile.username,
+            full_name: profile.full_name,
+            avatar_url: profile.avatar_url,
+          }
+        : null,
+    };
+  });
+
+  return c.json({ members: enriched });
 });
 
 /**
