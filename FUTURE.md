@@ -184,6 +184,39 @@ una conversación comercial con tiendas más adelante.
 
 ---
 
+## DNS one-click vía Domain Connect (reclamo de tienda)
+
+El flujo de reclamo de tienda verifica propiedad con un registro TXT que
+el usuario agrega a mano. La Fase 1 (en producción) detecta el provider
+DNS del dominio y muestra una guía específica. El paso siguiente sería un
+**one-click real**: que Framerate cree el registro TXT por el usuario.
+
+Se evaluó e **se descartó por ahora** — no por inviabilidad técnica sino
+por costo/beneficio en estado pre-producción.
+
+**Opción A — Domain Connect (estándar, preferida a largo plazo).**
+Estándar abierto (domainconnect.org); Cloudflare soporta el flujo
+síncrono. El usuario aprueba en una pantalla de consentimiento de su
+propio proveedor, sin pegar tokens, y un único template cubre todos los
+providers que soporten el estándar (Cloudflare, GoDaddy, IONOS, …).
+Bloqueante: requiere un **onboarding manual** que no controlamos —
+publicar un template (PR a `Domain-Connect/Templates`), firmar las apply
+URLs (keypair RSA + public key en DNS) y pedir revisión a
+`domain-connect@cloudflare.com`, sin SLA. El discovery (`_domainconnect`)
+ya está probado: Cloudflare publica el record en todas sus zonas.
+
+**Opción B — Token-paste de Cloudflare (puente sin onboarding).**
+El usuario crea un API token scopeado (deep link que pre-llena los
+permisos) y lo pega; el backend crea el TXT vía API y descarta el token.
+Funciona sin depender de nadie, pero es una integración por provider y
+tiene un paso de copiar/pegar.
+
+**Cuándo retomarlo:** post-producción, cuando haya volumen real de
+reclamos y se mida cuántos fallan por fricción del paso manual. Camino
+sugerido: token-paste como puente → Domain Connect como destino.
+
+---
+
 ## Notas de método
 
 Este roadmap es iterativo. Cada feature se implementa cuando:

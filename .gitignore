@@ -56,8 +56,9 @@ tmp
 .claude
 .playwright-mcp
 
-# Local DB snapshots (large prod data dumps)
-packages/db/local/prod-data.sql
+# Carpeta local-only de packages/db: dumps de prod, scripts de dev con
+# claves locales, etc. Nada de acá se versiona.
+packages/db/local/
 
 # OpenDB local clone for janitor dev (synced via git-sync container in prod)
 apps/janitor/opendb/

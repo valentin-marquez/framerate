@@ -101,8 +101,10 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
   }, [preselectError]);
 
   function reset() {
+    // No remontamos el wizard (sin bump de wizardKey): el propio wizard hace
+    // la transición interna a "pick" y anima el alto de la caja. Sólo
+    // limpiamos el resume y revalidamos la lista de reclamos.
     setResume(null);
-    setWizardKey((k) => k + 1);
     revalidate();
   }
 

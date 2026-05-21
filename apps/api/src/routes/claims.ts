@@ -260,4 +260,45 @@ claims.get("/my", Limit("lenient"), async (c) => {
   return c.json({ claims });
 });
 
+/**
+ * GET /v1/claims/:id/dns-check
+ *
+ * "Peek" read-only: hace el lookup DoH y reporta si el TXT ya está, sin tocar
+ * la DB. NO llama al RPC record_claim_verification_attempt — por eso no gatilla
+ * el cooldown de 60s ni el cap de 50 intentos. El front lo pollea seguido para
+ * detección rápida; el commit real (POST /verify) corre una sola vez al match.
+ */
+claims.get("/:id/dns-check", Limit("moderate"), async (c) => {
+  const user = c.get("user");
+  const token = c.get("token");
+  const claimId = c.req.param("id");
+  const supabase = createSupabase(c.env, token);
+
+  // biome-ignore lint/suspicious/noExplicitAny: types regen
+  const { data: claim, error } = await (supabase as any)
+    .from("store_claim_requests")
+    .select("id, txt_record_name, verification_token, status, claimant_user_id")
+    .eq("id", claimId)
+    .maybeSingle();
+
+  if (error || !claim) {
+    return c.json({ error: "Claim no encontrado" }, 404);
+  }
+  if (claim.claimant_user_id !== user.id) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  const expected = txtRecordValue(claim.verification_token);
+
+  // Ya verificado: no hace falta DoH.
+  if (claim.status === "verified") {
+    return c.json({ matched: true, status: "verified", expected, found: [] });
+  }
+
+  const result = await verifyTxtRecord(claim.txt_record_name, expected);
+  const found = Array.from(new Set([...result.details.cloudflare.records, ...result.details.google.records]));
+
+  return c.json({ matched: result.matched, status: result.status, expected, found });
+});
+
 export default claims;

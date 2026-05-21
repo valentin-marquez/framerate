@@ -103,7 +103,7 @@ function StoreRow({
         type="button"
         disabled={disabled}
         onClick={() => onSelect(store)}
-        className="flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-secondary/40 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent"
+        className="flex w-full cursor-pointer items-center gap-3 p-3 text-left transition-colors hover:bg-secondary/40 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent"
       >
         <StoreLogo store={store} className="size-9" />
         <div className="min-w-0 flex-1">

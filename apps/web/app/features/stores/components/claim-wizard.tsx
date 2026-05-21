@@ -1,14 +1,18 @@
-import { IconArrowLeft, IconCircleCheckFilled, IconLoader2 } from "@tabler/icons-react";
+import { IconArrowLeft, IconCircleCheckFilled, IconLoader2, IconRefresh } from "@tabler/icons-react";
+import { domAnimation, LazyMotion, m, type Transition } from "motion/react";
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { Link } from "react-router";
+import useMeasure from "react-use-measure";
 import { toast } from "sonner";
 import { Button } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { ApiError } from "~/shared/lib/api";
+import { useAutoVerify } from "../hooks/use-auto-verify";
 import { type ClaimRequest, claimsService } from "../services/claims";
 import type { ClaimableStore } from "../services/stores";
 import { DnsInstructions } from "./dns-instructions";
 import { StorePicker } from "./store-picker";
+import { VerifyStatus } from "./verify-status";
 
 interface ClaimWizardProps {
   token: string;
@@ -23,7 +27,7 @@ interface ClaimWizardProps {
   onCancel?: () => void;
 }
 
-type Step = "pick" | "dns" | "verifying" | "verified" | "confirmed";
+type Step = "pick" | "dns" | "verified" | "confirmed";
 
 /** Identidad visible de la tienda que se está reclamando (contexto en cada paso). */
 type Identity = { name: string | null; slug: string | null; iconUrl: string | null; domain: string };
@@ -45,9 +49,8 @@ type WizardState = {
 type WizardAction =
   | { type: "submitting"; submitting: boolean }
   | { type: "go-dns"; identity: Identity; claim: ActiveClaim }
-  | { type: "go-verifying" }
   | { type: "go-verified" }
-  | { type: "back-to-dns" }
+  | { type: "back-to-pick" }
   | { type: "confirmed" };
 
 function initState(initialClaim?: ClaimRequest): WizardState {
@@ -74,12 +77,10 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       return { ...state, submitting: action.submitting };
     case "go-dns":
       return { ...state, step: "dns", identity: action.identity, claim: action.claim, submitting: false };
-    case "go-verifying":
-      return { ...state, step: "verifying" };
     case "go-verified":
       return { ...state, step: "verified" };
-    case "back-to-dns":
-      return { ...state, step: "dns" };
+    case "back-to-pick":
+      return { step: "pick", identity: null, claim: null, submitting: false };
     case "confirmed":
       return { ...state, step: "confirmed", submitting: false };
     default:
@@ -95,10 +96,40 @@ function stepIndex(step: Step): number {
   return 1;
 }
 
+// Pantalla lógica del wizard: dns y verified comparten contenido, así que
+// comparten key — no remontamos (y no perdemos estado de DnsInstructions) al
+// pasar de uno al otro.
+function screenKey(step: Step): "pick" | "claim" | "confirmed" {
+  if (step === "pick") return "pick";
+  if (step === "confirmed") return "confirmed";
+  return "claim";
+}
+
+// El contenedor del wizard anima su alto cuando cambia el contenido (paso 1→2,
+// toggle provider/genérico, aparición del estado de verificación). Misma curva
+// que el panel de soporte.
+const WIZARD_RESIZE: Transition = { duration: 0.28, ease: [0.22, 0.61, 0.36, 1] };
+
 export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCancel }: ClaimWizardProps) {
   const [state, dispatch] = useReducer(wizardReducer, initialClaim, initState);
   const { step, identity, claim, submitting } = state;
   const current = stepIndex(step);
+
+  // Mide todo el contenido del wizard para animar el alto de la caja entre
+  // pasos en vez de que pegue un salto.
+  const [stepRef, stepBounds] = useMeasure();
+
+  // Verificación pasiva: mientras el wizard está en el paso DNS, polleamos
+  // solos el TXT. El usuario no aprieta nada — apenas aparece, avanzamos.
+  const auto = useAutoVerify({
+    claimId: claim?.id ?? null,
+    token,
+    enabled: step === "dns",
+    onVerified: () => {
+      dispatch({ type: "go-verified" });
+      toast.success("Dominio verificado");
+    },
+  });
 
   const selectStore = useCallback(
     async (store: ClaimableStore) => {
@@ -174,24 +205,6 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
     void selectStore(initialStore);
   }, [initialClaim, initialStore, selectStore]);
 
-  async function verifyClaim() {
-    if (!claim) return;
-    dispatch({ type: "go-verifying" });
-    try {
-      const res = await claimsService.verify(claim.id, token);
-      if (res.matched || res.status === "verified") {
-        dispatch({ type: "go-verified" });
-        toast.success("Dominio verificado");
-      } else {
-        dispatch({ type: "back-to-dns" });
-        toast.message("Todavía no detectamos el registro TXT. La propagación DNS puede demorar.");
-      }
-    } catch (err) {
-      dispatch({ type: "back-to-dns" });
-      toast.error(err instanceof ApiError ? err.message : "Error verificando el DNS");
-    }
-  }
-
   async function confirmClaim() {
     if (!claim) return;
     dispatch({ type: "submitting", submitting: true });
@@ -207,75 +220,131 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
   }
 
   return (
-    <div className="space-y-5">
-      <Stepper current={current} />
+    <LazyMotion features={domAnimation}>
+      <div className="space-y-5">
+        <Stepper current={current} />
 
-      {step === "pick" &&
-        (initialStore && submitting ? (
-          <div className="flex items-center justify-center gap-2 rounded-xl border border-border/40 bg-secondary/30 p-8 text-muted-foreground text-sm">
-            <IconLoader2 className="size-4 animate-spin" />
-            Preparando reclamo para {initialStore.name}…
-          </div>
-        ) : (
-          <StorePicker onSelect={selectStore} busy={submitting} />
-        ))}
+        <m.div
+          initial={false}
+          animate={{ height: stepBounds.height > 0 ? stepBounds.height : "auto" }}
+          transition={WIZARD_RESIZE}
+          className="overflow-hidden"
+        >
+          <div ref={stepRef}>
+            <m.div
+              key={screenKey(step)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-5"
+            >
+              {step === "pick" &&
+                (initialStore && submitting ? (
+                  <div className="flex items-center justify-center gap-2 rounded-xl border border-border/40 bg-secondary/30 p-8 text-muted-foreground text-sm">
+                    <IconLoader2 className="size-4 animate-spin" />
+                    Preparando reclamo para {initialStore.name}…
+                  </div>
+                ) : (
+                  <StorePicker onSelect={selectStore} busy={submitting} />
+                ))}
 
-      {identity && step !== "pick" && step !== "confirmed" && (
-        <>
-          <IdentityCard identity={identity} />
-          <DnsInstructions
-            txtName={claim?.txtName ?? ""}
-            txtValue={claim?.txtValue ?? ""}
-            dnsProvider={claim?.dnsProvider ?? null}
-            dnsNameservers={claim?.dnsNameservers ?? null}
-          />
+              {identity && step !== "pick" && step !== "confirmed" && (
+                <>
+                  <IdentityCard identity={identity} />
 
-          {step === "verified" ? (
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
-              <div className="flex items-center gap-2 font-medium text-primary text-sm">
-                <IconCircleCheckFilled className="size-4" />
-                Dominio verificado
-              </div>
-              <p className="mt-1 text-muted-foreground text-sm">
-                Confirmá para tomar la propiedad y poder gestionar la tienda.
-              </p>
-              <Button className="mt-3" onClick={confirmClaim} disabled={submitting}>
-                {submitting && <IconLoader2 className="size-4 animate-spin" />}
-                Confirmar y tomar propiedad
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button onClick={verifyClaim} disabled={step === "verifying"}>
-                {step === "verifying" && <IconLoader2 className="size-4 animate-spin" />}
-                {step === "verifying" ? "Verificando…" : "Ya agregué el TXT, verificar"}
-              </Button>
-              {onCancel && (
-                <Button variant="secondary" onClick={onCancel} disabled={step === "verifying"}>
-                  <IconArrowLeft className="size-4" />
-                  Volver
-                </Button>
+                  {step === "dns" && (
+                    <VerifyStatus
+                      status={auto.status}
+                      found={auto.found}
+                      expected={auto.expected}
+                      lastCheckedAt={auto.lastCheckedAt}
+                      checking={auto.checking}
+                      domain={identity.domain}
+                    />
+                  )}
+
+                  <DnsInstructions
+                    txtName={claim?.txtName ?? ""}
+                    txtValue={claim?.txtValue ?? ""}
+                    domain={identity.domain}
+                    dnsProvider={claim?.dnsProvider ?? null}
+                    dnsNameservers={claim?.dnsNameservers ?? null}
+                  />
+
+                  {step === "verified" ? (
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+                      <div className="flex items-center gap-2 font-medium text-primary text-sm">
+                        <IconCircleCheckFilled className="size-4" />
+                        Dominio verificado
+                      </div>
+                      <p className="mt-1 text-muted-foreground text-sm">
+                        Confirmá para tomar la propiedad y poder gestionar la tienda.
+                      </p>
+                      <Button className="mt-3" onClick={confirmClaim} disabled={submitting}>
+                        {submitting && <IconLoader2 className="size-4 animate-spin" />}
+                        Confirmar y tomar propiedad
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-3">
+                      {onCancel && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            // Transición interna a "pick" (la caja anima el alto)
+                            // en vez de remontar el wizard desde el padre.
+                            dispatch({ type: "back-to-pick" });
+                            onCancel();
+                          }}
+                        >
+                          <IconArrowLeft className="size-4" />
+                          Volver
+                        </Button>
+                      )}
+                      {/* Verificamos solos — esto es sólo un atajo de baja jerarquía
+                          para impacientes, por eso es un link y no un botón. */}
+                      <button
+                        type="button"
+                        onClick={auto.checkNow}
+                        disabled={auto.checking}
+                        className="inline-flex cursor-pointer items-center gap-1.5 text-muted-foreground text-xs underline-offset-2 hover:text-foreground hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {auto.checking ? (
+                          <IconLoader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <IconRefresh className="size-3.5" />
+                        )}
+                        {auto.checking ? "Verificando…" : "¿Impaciente? Verificar ahora"}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
-            </div>
-          )}
-        </>
-      )}
 
-      {step === "confirmed" && (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center">
-          <IconCircleCheckFilled className="mx-auto size-8 text-primary" />
-          <p className="mt-2 font-medium">¡Propiedad confirmada!</p>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Ya podés editar la tienda desde su panel de administración.
-          </p>
-          {identity?.slug && (
-            <Button className="mt-4" nativeButton={false} render={<Link to={`/tiendas/${identity.slug}/admin`} />}>
-              Ir al panel
-            </Button>
-          )}
-        </div>
-      )}
-    </div>
+              {step === "confirmed" && (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center">
+                  <IconCircleCheckFilled className="mx-auto size-8 text-primary" />
+                  <p className="mt-2 font-medium">¡Propiedad confirmada!</p>
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Ya podés editar la tienda desde su panel de administración.
+                  </p>
+                  {identity?.slug && (
+                    <Button
+                      className="mt-4"
+                      nativeButton={false}
+                      render={<Link to={`/tiendas/${identity.slug}/admin`} />}
+                    >
+                      Ir al panel
+                    </Button>
+                  )}
+                </div>
+              )}
+            </m.div>
+          </div>
+        </m.div>
+      </div>
+    </LazyMotion>
   );
 }
 

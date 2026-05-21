@@ -12,7 +12,9 @@ import type { DnsProviderId } from "../services/claims";
 export interface DnsProviderUi {
   id: DnsProviderId;
   name: string;
-  dashboardUrl: string;
+  /** Link al panel DNS del proveedor. Función cuando podemos deep-linkear
+   * directo a la zona del dominio; string para el dashboard genérico. */
+  dashboardUrl: string | ((domain: string) => string);
   docsUrl?: string;
   /** Color de marca (hex sin #) usado para el monograma del provider. */
   brandColor: string;
@@ -25,7 +27,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   cloudflare: {
     id: "cloudflare",
     name: "Cloudflare",
-    dashboardUrl: "https://dash.cloudflare.com/",
+    // Deep-link directo a DNS → Records de la zona. Cloudflare resuelve
+    // `:account` solo; si el usuario tiene varias cuentas puede caer al
+    // listado, pero igual es mejor que el dashboard raíz.
+    dashboardUrl: (domain) => `https://dash.cloudflare.com/?to=/:account/${domain}/dns/records`,
     docsUrl: "https://developers.cloudflare.com/dns/manage-dns-records/how-to/create-dns-records/",
     brandColor: "F38020",
     monogram: "CF",

@@ -6,13 +6,15 @@ import { type DnsProviderUi, getDnsProviderUi } from "../lib/dns-providers";
 interface DnsInstructionsProps {
   txtName: string;
   txtValue: string;
+  /** Dominio que se está verificando — usado para deep-linkear al panel. */
+  domain: string;
   /** Id de provider detectado por la API. null = desconocido o falló DoH. */
   dnsProvider?: string | null;
   /** NS records resueltos al crear el claim. Se muestran como evidencia. */
   dnsNameservers?: string[] | null;
 }
 
-export function DnsInstructions({ txtName, txtValue, dnsProvider, dnsNameservers }: DnsInstructionsProps) {
+export function DnsInstructions({ txtName, txtValue, domain, dnsProvider, dnsNameservers }: DnsInstructionsProps) {
   const provider = getDnsProviderUi(dnsProvider);
   const [forceGeneric, setForceGeneric] = useState(false);
   const showProvider = provider && !forceGeneric;
@@ -20,7 +22,7 @@ export function DnsInstructions({ txtName, txtValue, dnsProvider, dnsNameservers
   return (
     <div className="rounded-xl border border-border bg-secondary/30 p-4">
       {showProvider ? (
-        <ProviderHeader provider={provider} nameservers={dnsNameservers ?? []} />
+        <ProviderHeader provider={provider} nameservers={dnsNameservers ?? []} domain={domain} />
       ) : (
         <p className="text-muted-foreground text-sm">
           Agregá el siguiente registro <code className="font-mono">TXT</code> en tu DNS para verificar la propiedad del
@@ -44,7 +46,7 @@ export function DnsInstructions({ txtName, txtValue, dnsProvider, dnsNameservers
           {forceGeneric ? (
             <button
               type="button"
-              className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              className="cursor-pointer text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
               onClick={() => setForceGeneric(false)}
             >
               Volver a ver la guía de {provider.name}
@@ -52,7 +54,7 @@ export function DnsInstructions({ txtName, txtValue, dnsProvider, dnsNameservers
           ) : (
             <button
               type="button"
-              className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              className="cursor-pointer text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
               onClick={() => setForceGeneric(true)}
             >
               ¿No es tu proveedor? Ver instrucciones genéricas
@@ -64,7 +66,17 @@ export function DnsInstructions({ txtName, txtValue, dnsProvider, dnsNameservers
   );
 }
 
-function ProviderHeader({ provider, nameservers }: { provider: DnsProviderUi; nameservers: string[] }) {
+function ProviderHeader({
+  provider,
+  nameservers,
+  domain,
+}: {
+  provider: DnsProviderUi;
+  nameservers: string[];
+  domain: string;
+}) {
+  const dashboardHref =
+    typeof provider.dashboardUrl === "function" ? provider.dashboardUrl(domain) : provider.dashboardUrl;
   return (
     <div className="flex items-start gap-3">
       <ProviderMonogram provider={provider} />
@@ -88,7 +100,7 @@ function ProviderHeader({ provider, nameservers }: { provider: DnsProviderUi; na
         nativeButton={false}
         render={
           <a
-            href={provider.dashboardUrl}
+            href={dashboardHref}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Abrir el panel DNS de ${provider.name}`}

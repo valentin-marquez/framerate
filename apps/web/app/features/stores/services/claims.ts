@@ -43,18 +43,39 @@ export interface ClaimCreateResponse {
   instructions: { es: string; en: string };
 }
 
+/** Lo que cada resolver DoH vio para el TXT durante la verificación. */
+export interface DnsResolverResult {
+  ok: boolean;
+  status: number;
+  records: string[];
+}
+
 export interface ClaimVerifyResponse {
   id: string;
   status: string;
   matched: boolean;
   attempts?: number;
-  dns?: unknown;
+  dns?: {
+    cloudflare: DnsResolverResult;
+    google: DnsResolverResult;
+  };
+}
+
+/** Resultado del peek read-only de DNS (no toca la DB). */
+export interface DnsCheckResponse {
+  matched: boolean;
+  status: "verified" | "pending" | "mismatch" | "error";
+  /** Valor TXT que esperamos encontrar. */
+  expected: string;
+  /** Registros TXT que realmente hay en ese nombre (ambos resolvers, dedup). */
+  found: string[];
 }
 
 export const claimsService = {
   create: (storeId: string, token: string) =>
     api.post<ClaimCreateResponse>("/v1/claims", { store_id: storeId }, { token }),
   verify: (id: string, token: string) => api.post<ClaimVerifyResponse>(`/v1/claims/${id}/verify`, {}, { token }),
+  dnsCheck: (id: string, token: string) => api.get<DnsCheckResponse>(`/v1/claims/${id}/dns-check`, { token }),
   confirm: (id: string, token: string) => api.post<{ store: unknown }>(`/v1/claims/${id}/confirm`, {}, { token }),
   listMine: (token: string) => api.get<{ claims: ClaimRequest[] }>("/v1/claims/my", { token }),
 };
