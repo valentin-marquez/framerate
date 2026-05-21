@@ -7,6 +7,7 @@ import { ScraperStrategy } from "@/collector/strategies/scraper.strategy";
 import type { Category } from "@/constants/categories";
 import { CENTRAL_GAMER_CATEGORIES, CentralGamerCrawler } from "@/crawlers/central-gamer";
 import { CENTRALE_CATEGORIES, CentraleCrawler } from "@/crawlers/centrale";
+import { DUST2_CATEGORIES, Dust2Crawler } from "@/crawlers/dust2";
 import { MYSHOP_CATEGORIES, MyShopCrawler } from "@/crawlers/myshop";
 import { NOTEBOOKSYA_CATEGORIES, NotebooksYaCrawler } from "@/crawlers/notebooksya";
 import { PC_EXPRESS_CATEGORIES, PcExpressCrawler } from "@/crawlers/pc-express";
@@ -66,6 +67,12 @@ export function createStrategy(crawlerType: string): JobStrategy {
       const c = new CentraleCrawler();
       c.CATEGORIES = CENTRALE_CATEGORIES;
       c.slug = "centrale";
+      return new ScraperStrategy<Category>(c, pipeline);
+    }
+    case "dust2": {
+      const c = new Dust2Crawler();
+      c.CATEGORIES = DUST2_CATEGORIES;
+      c.slug = "dust2";
       return new ScraperStrategy<Category>(c, pipeline);
     }
     default:

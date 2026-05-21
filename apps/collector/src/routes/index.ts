@@ -1,5 +1,6 @@
 import centralGamerRoute from "./v1/central-gamer.route";
 import centraleRoute from "./v1/centrale.route";
+import dust2Route from "./v1/dust2.route";
 import maintenanceRoute from "./v1/maintenance.route";
 import myshopRoute from "./v1/myshop.route";
 import notebooksyaRoute from "./v1/notebooksya.route";
@@ -37,6 +38,10 @@ export const routes = [
   {
     path: `/${API_VERSION}/centrale`,
     route: centraleRoute,
+  },
+  {
+    path: `/${API_VERSION}/dust2`,
+    route: dust2Route,
   },
   {
     path: `/${API_VERSION}/maintenance`,
