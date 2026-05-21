@@ -79,7 +79,7 @@ function ProviderHeader({
     typeof provider.dashboardUrl === "function" ? provider.dashboardUrl(domain) : provider.dashboardUrl;
   return (
     <div className="flex items-start gap-3">
-      <ProviderMonogram provider={provider} />
+      <ProviderLogo provider={provider} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
           <IconWorld className="size-3.5" />
@@ -129,14 +129,20 @@ function ProviderSteps({ steps }: { steps: string[] }) {
   );
 }
 
-function ProviderMonogram({ provider }: { provider: DnsProviderUi }) {
+/**
+ * Tile del provider: logo real sobre fondo blanco (estilo app-icon) cuando lo
+ * tenemos, o un monograma con el color de marca como fallback consistente.
+ */
+function ProviderLogo({ provider }: { provider: DnsProviderUi }) {
   return (
-    <div
-      className="flex size-10 shrink-0 items-center justify-center rounded-xl font-bold text-[11px] text-white"
-      style={{ backgroundColor: `#${provider.brandColor}` }}
-      aria-hidden
-    >
-      {provider.monogram}
+    <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white">
+      {provider.logo ? (
+        <img src={`/dns-providers/${provider.logo}`} alt="" className="size-7 object-contain" loading="lazy" />
+      ) : (
+        <span className="font-bold text-[11px]" style={{ color: `#${provider.brandColor}` }} aria-hidden>
+          {provider.monogram}
+        </span>
+      )}
     </div>
   );
 }

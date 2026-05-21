@@ -3,8 +3,8 @@
  *
  * El backend (apps/api/src/lib/dns-provider.ts) sólo devuelve el `id` del
  * provider detectado; este archivo mapea ese id a lo que la UI necesita
- * (nombre, link al panel, color de marca, pasos). Si agregás un provider
- * en la API, agregalo acá también con el mismo id.
+ * (nombre, link al panel, logo, pasos). Si agregás un provider en la API,
+ * agregalo acá también con el mismo id.
  */
 
 import type { DnsProviderId } from "../services/claims";
@@ -16,10 +16,13 @@ export interface DnsProviderUi {
    * directo a la zona del dominio; string para el dashboard genérico. */
   dashboardUrl: string | ((domain: string) => string);
   docsUrl?: string;
-  /** Color de marca (hex sin #) usado para el monograma del provider. */
+  /** Color de marca (hex sin #), usado para el monograma cuando no hay logo. */
   brandColor: string;
-  /** Iniciales para el monograma (max 2 chars). */
+  /** Iniciales para el monograma (fallback cuando no hay `logo`). */
   monogram: string;
+  /** Nombre de archivo del logo en `public/dns-providers/`. Si falta, la UI
+   * cae al monograma con color de marca. */
+  logo?: string;
   steps: string[];
 }
 
@@ -34,6 +37,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     docsUrl: "https://developers.cloudflare.com/dns/manage-dns-records/how-to/create-dns-records/",
     brandColor: "F38020",
     monogram: "CF",
+    logo: "cloudflare.png",
     steps: [
       "Entrá a tu zona en el dashboard de Cloudflare.",
       "Andá a DNS → Records y hacé click en Add record.",
@@ -48,6 +52,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     docsUrl: "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-creating.html",
     brandColor: "FF9900",
     monogram: "R53",
+    logo: "route53.svg",
     steps: [
       "Abrí Route 53 → Hosted zones y entrá a la zona del dominio.",
       "Create record → Record type TXT.",
@@ -62,6 +67,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     docsUrl: "https://cloud.google.com/dns/docs/records",
     brandColor: "4285F4",
     monogram: "GC",
+    logo: "gcdns.svg",
     steps: [
       "Entrá a Cloud DNS → Zones y elegí tu zona.",
       "Add Standard → Resource record type: TXT.",
@@ -76,6 +82,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     docsUrl: "https://vercel.com/docs/projects/domains/working-with-dns",
     brandColor: "000000",
     monogram: "VC",
+    logo: "vercel.svg",
     steps: [
       "Abrí Vercel → Domains y elegí tu dominio.",
       "DNS Records → Add → Type TXT.",
@@ -90,6 +97,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     docsUrl: "https://docs.digitalocean.com/products/networking/dns/how-to/manage-records/",
     brandColor: "0080FF",
     monogram: "DO",
+    logo: "digitalocean.svg",
     steps: [
       "Entrá a Networking → Domains y abrí tu dominio.",
       "En Create new record elegí TXT.",
@@ -104,6 +112,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     docsUrl: "https://www.godaddy.com/help/add-a-txt-record-19232",
     brandColor: "1BDBDB",
     monogram: "GD",
+    logo: "godaddy.svg",
     steps: [
       "Entrá a My Products → DNS del dominio.",
       "Add → Type: TXT.",
@@ -119,6 +128,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
       "https://www.namecheap.com/support/knowledgebase/article.aspx/317/2237/how-do-i-add-txtspfdkimdmarc-records-for-my-domain/",
     brandColor: "DE3910",
     monogram: "NC",
+    logo: "namecheap.svg",
     steps: [
       "Entrá a Domain List → Manage → Advanced DNS.",
       "Add New Record → Type: TXT Record.",
@@ -133,6 +143,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     docsUrl: "https://support.hostinger.com/en/articles/1583227-how-to-manage-dns-records-at-hostinger",
     brandColor: "673DE6",
     monogram: "HG",
+    logo: "hostinger.svg",
     steps: [
       "Entrá a hPanel → Domains → tu dominio → DNS / Nameservers.",
       "Add new record → Type TXT.",
@@ -148,6 +159,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     docsUrl: "https://learn.microsoft.com/azure/dns/dns-operations-recordsets-portal",
     brandColor: "0078D4",
     monogram: "AZ",
+    logo: "azure.svg",
     steps: [
       "Abrí el portal de Azure → DNS zones → tu zona.",
       "+ Record set → Type TXT.",
@@ -162,6 +174,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     docsUrl: "https://www.nic.cl/dnssec/registro-de-dns.html",
     brandColor: "0F4C81",
     monogram: "CL",
+    logo: "nic_cl.png",
     steps: [
       "Entrá a NIC Chile → ingresá con tu RUT y clave.",
       "Modificar datos → DNS del dominio.",
@@ -188,6 +201,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     dashboardUrl: "https://www.sered.net/clientes/clientarea.php",
     brandColor: "F26522",
     monogram: "SR",
+    logo: "sered_cl.ico",
     steps: [
       "Entrá al Área de Clientes de Sered.",
       "Mis dominios → Administrar → Gestión DNS.",
@@ -201,6 +215,7 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     dashboardUrl: "https://clientes.bluehosting.cl/clientarea.php",
     brandColor: "1565C0",
     monogram: "BH",
+    logo: "bluehosting_cl.png",
     steps: [
       "Entrá al Área de Cliente de BlueHosting.",
       "Mis dominios → Administrar → Gestionar DNS.",
