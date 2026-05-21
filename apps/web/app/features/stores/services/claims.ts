@@ -1,5 +1,20 @@
 import { api } from "~/shared/lib/api";
 
+export type DnsProviderId =
+  | "cloudflare"
+  | "route53"
+  | "gcdns"
+  | "vercel"
+  | "digitalocean"
+  | "godaddy"
+  | "namecheap"
+  | "hostinger"
+  | "azure"
+  | "nic_cl"
+  | "hostingplus_cl"
+  | "sered_cl"
+  | "bluehosting_cl";
+
 export interface ClaimRequest {
   id: string;
   store_id: string | null;
@@ -12,6 +27,8 @@ export interface ClaimRequest {
   verified_at: string | null;
   expires_at: string;
   created_at: string;
+  dns_provider: DnsProviderId | string | null;
+  dns_nameservers: string[] | null;
 }
 
 export interface ClaimCreateResponse {
@@ -21,6 +38,8 @@ export interface ClaimCreateResponse {
   txt_value: string;
   status: string;
   expires_at: string;
+  dns_provider: DnsProviderId | string | null;
+  dns_nameservers: string[];
   instructions: { es: string; en: string };
 }
 

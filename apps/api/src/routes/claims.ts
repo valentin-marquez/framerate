@@ -1,6 +1,7 @@
 import { Logger } from "@framerate/utils";
 import { Hono } from "hono";
 import type { Bindings, Variables } from "@/bindings";
+import { detectDnsProvider } from "@/lib/dns-provider";
 import { verifyTxtRecord } from "@/lib/doh";
 import { generateToken, normalizeDomain, txtRecordName, txtRecordValue } from "@/lib/domain";
 import { createSupabase } from "@/lib/supabase";
@@ -66,6 +67,14 @@ claims.post("/", Limit("strict"), async (c) => {
   const txtName = txtRecordName(domain);
   const txtValue = txtRecordValue(verificationToken);
 
+  // Detección best-effort del provider DNS. Si falla DoH o no matchea nada,
+  // dejamos null y la UI cae a las instrucciones genéricas. Nunca bloquea
+  // la creación del claim.
+  const detected = await detectDnsProvider(domain).catch((err: unknown) => {
+    logger.warn(`detectDnsProvider failed for ${domain}: ${err instanceof Error ? err.message : err}`);
+    return { provider: null, nameservers: [] as string[] };
+  });
+
   // biome-ignore lint/suspicious/noExplicitAny: types se regeneran tras migration up
   const { data: inserted, error: insertErr } = await (supabase as any)
     .from("store_claim_requests")
@@ -75,6 +84,8 @@ claims.post("/", Limit("strict"), async (c) => {
       claimant_user_id: user.id,
       verification_token: verificationToken,
       txt_record_name: txtName,
+      dns_provider: detected.provider?.id ?? null,
+      dns_nameservers: detected.nameservers.length > 0 ? detected.nameservers : null,
     })
     .select()
     .single();
@@ -88,6 +99,10 @@ claims.post("/", Limit("strict"), async (c) => {
     return c.json({ error: "No se pudo crear el reclamo" }, 500);
   }
 
+  logger.info(
+    `Claim creado para ${domain}: provider=${detected.provider?.id ?? "unknown"} ns=${detected.nameservers.join(",") || "-"}`,
+  );
+
   return c.json(
     {
       id: inserted.id,
@@ -96,6 +111,8 @@ claims.post("/", Limit("strict"), async (c) => {
       txt_value: txtValue,
       status: inserted.status,
       expires_at: inserted.expires_at,
+      dns_provider: detected.provider?.id ?? null,
+      dns_nameservers: detected.nameservers,
       instructions: {
         es: `Agregá un registro TXT en tu DNS:\n  Nombre: ${txtName}\n  Valor: ${txtValue}\nLuego POSTeá a /v1/claims/${inserted.id}/verify.`,
         en: `Add a TXT record to your DNS:\n  Name: ${txtName}\n  Value: ${txtValue}\nThen POST to /v1/claims/${inserted.id}/verify.`,
@@ -223,7 +240,7 @@ claims.get("/my", Limit("lenient"), async (c) => {
   const { data, error } = await (supabase as any)
     .from("store_claim_requests")
     .select(
-      "id, store_id, claimed_domain, txt_record_name, verification_token, status, attempts, last_checked_at, verified_at, expires_at, created_at",
+      "id, store_id, claimed_domain, txt_record_name, verification_token, status, attempts, last_checked_at, verified_at, expires_at, created_at, dns_provider, dns_nameservers",
     )
     .eq("claimant_user_id", user.id)
     .order("created_at", { ascending: false });

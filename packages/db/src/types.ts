@@ -1259,6 +1259,8 @@ export type Database = {
           claimant_user_id: string;
           claimed_domain: string;
           created_at: string;
+          dns_nameservers: string[] | null;
+          dns_provider: string | null;
           expires_at: string;
           id: string;
           last_checked_at: string | null;
@@ -1274,6 +1276,8 @@ export type Database = {
           claimant_user_id: string;
           claimed_domain: string;
           created_at?: string;
+          dns_nameservers?: string[] | null;
+          dns_provider?: string | null;
           expires_at?: string;
           id?: string;
           last_checked_at?: string | null;
@@ -1289,6 +1293,8 @@ export type Database = {
           claimant_user_id?: string;
           claimed_domain?: string;
           created_at?: string;
+          dns_nameservers?: string[] | null;
+          dns_provider?: string | null;
           expires_at?: string;
           id?: string;
           last_checked_at?: string | null;
@@ -1697,6 +1703,8 @@ export type Database = {
           claimant_user_id: string;
           claimed_domain: string;
           created_at: string;
+          dns_nameservers: string[] | null;
+          dns_provider: string | null;
           expires_at: string;
           id: string;
           last_checked_at: string | null;

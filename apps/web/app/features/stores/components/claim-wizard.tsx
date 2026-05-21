@@ -27,7 +27,13 @@ type Step = "pick" | "dns" | "verifying" | "verified" | "confirmed";
 
 /** Identidad visible de la tienda que se está reclamando (contexto en cada paso). */
 type Identity = { name: string | null; slug: string | null; iconUrl: string | null; domain: string };
-type ActiveClaim = { id: string; txtName: string; txtValue: string };
+type ActiveClaim = {
+  id: string;
+  txtName: string;
+  txtValue: string;
+  dnsProvider: string | null;
+  dnsNameservers: string[] | null;
+};
 
 type WizardState = {
   step: Step;
@@ -53,6 +59,8 @@ function initState(initialClaim?: ClaimRequest): WizardState {
         id: initialClaim.id,
         txtName: initialClaim.txt_record_name,
         txtValue: initialClaim.txt_record_value,
+        dnsProvider: initialClaim.dns_provider ?? null,
+        dnsNameservers: initialClaim.dns_nameservers ?? null,
       },
       submitting: false,
     };
@@ -100,7 +108,13 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
         dispatch({
           type: "go-dns",
           identity: { name: store.name, slug: store.slug, iconUrl: store.icon_url, domain: res.domain },
-          claim: { id: res.id, txtName: res.txt_name, txtValue: res.txt_value },
+          claim: {
+            id: res.id,
+            txtName: res.txt_name,
+            txtValue: res.txt_value,
+            dnsProvider: res.dns_provider ?? null,
+            dnsNameservers: res.dns_nameservers ?? null,
+          },
         });
       } catch (err) {
         // 409 -> ya existe un claim activo para este dominio (probablemente
@@ -126,6 +140,8 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
                   id: existing.id,
                   txtName: existing.txt_record_name,
                   txtValue: existing.txt_record_value,
+                  dnsProvider: existing.dns_provider ?? null,
+                  dnsNameservers: existing.dns_nameservers ?? null,
                 },
               });
               if (existing.status === "verified") {
@@ -207,7 +223,12 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
       {identity && step !== "pick" && step !== "confirmed" && (
         <>
           <IdentityCard identity={identity} />
-          <DnsInstructions txtName={claim?.txtName ?? ""} txtValue={claim?.txtValue ?? ""} />
+          <DnsInstructions
+            txtName={claim?.txtName ?? ""}
+            txtValue={claim?.txtValue ?? ""}
+            dnsProvider={claim?.dnsProvider ?? null}
+            dnsNameservers={claim?.dnsNameservers ?? null}
+          />
 
           {step === "verified" ? (
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
@@ -230,7 +251,7 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
                 {step === "verifying" ? "Verificando…" : "Ya agregué el TXT, verificar"}
               </Button>
               {onCancel && (
-                <Button variant="ghost" onClick={onCancel} disabled={step === "verifying"}>
+                <Button variant="secondary" onClick={onCancel} disabled={step === "verifying"}>
                   <IconArrowLeft className="size-4" />
                   Volver
                 </Button>

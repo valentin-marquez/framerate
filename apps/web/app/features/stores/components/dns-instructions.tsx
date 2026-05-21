@@ -1,26 +1,130 @@
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconExternalLink, IconWorld } from "@tabler/icons-react";
 import { useState } from "react";
 import { Button } from "~/shared/components/primitives/button";
+import { type DnsProviderUi, getDnsProviderUi } from "../lib/dns-providers";
 
 interface DnsInstructionsProps {
   txtName: string;
   txtValue: string;
+  /** Id de provider detectado por la API. null = desconocido o falló DoH. */
+  dnsProvider?: string | null;
+  /** NS records resueltos al crear el claim. Se muestran como evidencia. */
+  dnsNameservers?: string[] | null;
 }
 
-export function DnsInstructions({ txtName, txtValue }: DnsInstructionsProps) {
+export function DnsInstructions({ txtName, txtValue, dnsProvider, dnsNameservers }: DnsInstructionsProps) {
+  const provider = getDnsProviderUi(dnsProvider);
+  const [forceGeneric, setForceGeneric] = useState(false);
+  const showProvider = provider && !forceGeneric;
+
   return (
     <div className="rounded-xl border border-border bg-secondary/30 p-4">
-      <p className="text-muted-foreground text-sm">
-        Agregá el siguiente registro <code className="font-mono">TXT</code> en tu DNS para verificar la propiedad del
-        dominio.
-      </p>
+      {showProvider ? (
+        <ProviderHeader provider={provider} nameservers={dnsNameservers ?? []} />
+      ) : (
+        <p className="text-muted-foreground text-sm">
+          Agregá el siguiente registro <code className="font-mono">TXT</code> en tu DNS para verificar la propiedad del
+          dominio.
+        </p>
+      )}
+
+      {showProvider && <ProviderSteps steps={provider.steps} />}
+
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         <CopyField label="Nombre" value={txtName} />
         <CopyField label="Valor" value={txtValue} />
       </div>
+
       <p className="mt-3 text-muted-foreground text-xs">
         La propagación puede tardar entre 1 minuto y 24 horas según tu proveedor. El reclamo expira en 7 días.
       </p>
+
+      {provider && (
+        <div className="mt-2 text-xs">
+          {forceGeneric ? (
+            <button
+              type="button"
+              className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              onClick={() => setForceGeneric(false)}
+            >
+              Volver a ver la guía de {provider.name}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              onClick={() => setForceGeneric(true)}
+            >
+              ¿No es tu proveedor? Ver instrucciones genéricas
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProviderHeader({ provider, nameservers }: { provider: DnsProviderUi; nameservers: string[] }) {
+  return (
+    <div className="flex items-start gap-3">
+      <ProviderMonogram provider={provider} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+          <IconWorld className="size-3.5" />
+          Detectamos tu DNS
+        </div>
+        <div className="mt-0.5 truncate font-semibold text-sm">{provider.name}</div>
+        {nameservers.length > 0 && (
+          <div className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground" title={nameservers.join(", ")}>
+            {nameservers.slice(0, 2).join(", ")}
+            {nameservers.length > 2 && ` +${nameservers.length - 2}`}
+          </div>
+        )}
+      </div>
+      <Button
+        type="button"
+        size="sm"
+        variant="secondary"
+        nativeButton={false}
+        render={
+          <a
+            href={provider.dashboardUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Abrir el panel DNS de ${provider.name}`}
+          >
+            Abrir panel
+            <IconExternalLink className="size-3.5" />
+          </a>
+        }
+      />
+    </div>
+  );
+}
+
+function ProviderSteps({ steps }: { steps: string[] }) {
+  return (
+    <ol className="mt-3 space-y-1.5 text-sm">
+      {steps.map((step, i) => (
+        <li key={step} className="flex gap-2">
+          <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 font-semibold text-[11px] text-primary">
+            {i + 1}
+          </span>
+          <span className="text-muted-foreground">{step}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function ProviderMonogram({ provider }: { provider: DnsProviderUi }) {
+  return (
+    <div
+      className="flex size-10 shrink-0 items-center justify-center rounded-xl font-bold text-[11px] text-white"
+      style={{ backgroundColor: `#${provider.brandColor}` }}
+      aria-hidden
+    >
+      {provider.monogram}
     </div>
   );
 }
