@@ -381,7 +381,11 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             ) : null}
 
             {user ? (
-              <DropdownMenu open={userMenuOpen} onOpenChange={setUserMenuOpen}>
+              // `key` distinta por rama: ambas ramas del ternario renderizan
+              // <DropdownMenu> en la misma posición JSX. Sin keys, React reusa
+              // la misma instancia de MenuRoot al cambiar `user` y el prop
+              // `open` salta controlled↔uncontrolled (warning de Base UI).
+              <DropdownMenu key="user-menu" open={userMenuOpen} onOpenChange={setUserMenuOpen}>
                 <DropdownMenuTrigger
                   aria-label={t("user")}
                   className={cn(
@@ -474,7 +478,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <DropdownMenu>
+              <DropdownMenu key="guest-menu">
                 <DropdownMenuTrigger
                   aria-label={t("login")}
                   className={cn(
