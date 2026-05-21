@@ -3,7 +3,17 @@ import { createBrowserClient } from "@supabase/ssr";
 import { IconBrandGithub } from "@tabler/icons-react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { data, isRouteErrorResponse, Link, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import {
+  data,
+  isRouteErrorResponse,
+  Link,
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useLocation,
+} from "react-router";
 import { useAuthSync } from "~/features/auth/hooks/useAuth";
 import { getAuthUser } from "~/features/auth/services/auth.server";
 import { useAuthStore } from "~/features/auth/store/auth";
@@ -108,6 +118,8 @@ export async function loader({ request }: Route.LoaderArgs) {
         clientEnv,
         hints: getHints(request),
         userPrefs: { theme: getTheme(request), lang },
+        // Origin de la request — usado para construir la URL canónica en Layout.
+        origin: new URL(request.url).origin,
       },
     },
     {
@@ -122,11 +134,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const lang = requestInfo?.userPrefs.lang ?? "es";
   const [queryClient] = useState(() => getQueryClient());
 
+  // URL canónica self-referencing: origin + pathname, sin query params, para
+  // que las variantes con filtros (estado en search params) consoliden en una
+  // sola URL indexable. Ausente en error boundaries (sin requestInfo).
+  const { pathname } = useLocation();
+  const canonical = requestInfo?.origin ? requestInfo.origin + pathname : null;
+
   return (
     <html lang={lang} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {canonical && <link rel="canonical" href={canonical} />}
         <Meta />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />

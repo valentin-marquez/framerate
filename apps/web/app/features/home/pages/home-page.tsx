@@ -38,19 +38,34 @@ export function meta() {
   ];
 }
 
+// JSON-LD del home: WebSite (habilita el sitelinks searchbox) + Organization
+// (entidad de marca — nombre, logo, perfiles). Un array top-level es JSON-LD
+// válido; las URLs van al dominio de producción a propósito.
 function generateJsonLd() {
-  return {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "Framerate",
-    url: "https://framerate.cl",
-    description: "El mejor comparador de precios de hardware en Chile",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: "https://framerate.cl/buscar?q={search_term_string}",
-      "query-input": "required name=search_term_string",
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Framerate",
+      url: "https://framerate.cl",
+      description: "El mejor comparador de precios de hardware en Chile",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: "https://framerate.cl/buscar?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
     },
-  };
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Framerate",
+      url: "https://framerate.cl",
+      logo: "https://framerate.cl/favicon.svg",
+      description:
+        "Comparador de precios de hardware para PC en Chile: GPUs, CPUs, RAM y componentes de las principales tiendas chilenas.",
+      sameAs: ["https://github.com/valentin-marquez/framerate"],
+    },
+  ];
 }
 
 interface HomeRow {
