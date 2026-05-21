@@ -9,7 +9,9 @@
     "test": "bun test",
     "lint": "biome lint .",
     "check-types": "tsc --noEmit",
-    "cleanup:blocked-mpns": "bun run scripts/deactivate-blocked-mpns.ts"
+    "cleanup:blocked-mpns": "bun run scripts/deactivate-blocked-mpns.ts",
+    "backfill:og-cards": "bun run scripts/backfill-og-cards.ts",
+    "gen:static-og": "bun run scripts/gen-static-og.ts"
   },
   "dependencies": {
     "@framerate/db": "workspace:*",

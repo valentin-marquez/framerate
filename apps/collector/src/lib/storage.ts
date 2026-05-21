@@ -8,6 +8,7 @@ import {
 } from "@framerate/db";
 import sharp from "sharp";
 import { Logger } from "./logger";
+import { renderProductOgCard } from "./og-card";
 import { supabase } from "./supabase";
 
 const logger = new Logger("Storage");
@@ -88,9 +89,37 @@ async function downloadImage(imageUrl: string): Promise<{
   }
 }
 
+/**
+ * Compone y sube la tarjeta Open Graph del producto a `product-images/og/<mpn>.png`.
+ *
+ * Vive en el mismo bucket bajo el prefijo `og/` para evitar un bucket nuevo y
+ * su migración de RLS; el image-proxy del API la sirve tal cual con cache de
+ * 1 año. Nunca lanza: un fallo de OG no debe romper el upload de la imagen.
+ */
+async function uploadOgCard(sanitizedMpn: string, productName: string, photo: ArrayBuffer): Promise<void> {
+  try {
+    const card = await renderProductOgCard({ productName, photo: Buffer.from(photo) });
+    const ogPath = `og/${getProductImagePath(sanitizedMpn, "png")}`;
+
+    const { error } = await supabase.storage.from(StorageBuckets.PRODUCT_IMAGES).upload(ogPath, card, {
+      contentType: "image/png",
+      upsert: true,
+    });
+
+    if (error) {
+      logger.warn(`Failed to upload OG card for MPN ${sanitizedMpn}:`, error.message);
+    } else {
+      logger.info(`Uploaded OG card: ${ogPath}`);
+    }
+  } catch (err) {
+    logger.warn(`OG card generation failed for MPN ${sanitizedMpn}:`, String(err));
+  }
+}
+
 export async function uploadProductImage(
   mpn: string,
   externalImageUrl: string | undefined,
+  productName?: string,
 ): Promise<ImageUploadResult> {
   if (!externalImageUrl) {
     return { success: false, url: null, error: "No image URL provided" };
@@ -209,6 +238,12 @@ export async function uploadProductImage(
   uploadedMpnCache.add(sanitizedMpn);
 
   logger.info(`Uploaded image for MPN ${mpn}: ${filePath}`);
+
+  // Tarjeta OG: sólo en el alta de una imagen nueva (los productos ya
+  // existentes salen por los early-return de arriba; el backfill los cubre).
+  if (productName) {
+    await uploadOgCard(sanitizedMpn, productName, imageData.data);
+  }
 
   return { success: true, url: publicUrl };
 }

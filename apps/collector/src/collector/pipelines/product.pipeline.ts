@@ -313,7 +313,7 @@ export class ProductPipeline {
     let imageUrl: string | null = raw.imageUrl ?? null;
     if (imageUrl && raw.mpn) {
       try {
-        const uploaded = await uploadProductImage(raw.mpn, imageUrl);
+        const uploaded = await uploadProductImage(raw.mpn, imageUrl, seoTitle);
         if (uploaded.success && uploaded.url) imageUrl = uploaded.url;
       } catch (err) {
         this.logger.warn("Image upload failed", (err as Error).message || String(err));

@@ -91,6 +91,29 @@ export function getImageFilename(imageUrl: string | null | undefined): string {
 }
 
 /**
+ * Resuelve la URL de la tarjeta Open Graph de un producto.
+ *
+ * `collector` genera la tarjeta (1200×630, logo + foto + nombre) y la guarda
+ * en `product-images/og/<mpn>.png`. Derivamos la URL del `image_url` del
+ * producto reusando su filename ya sanitizado: basta cambiar la extensión a
+ * `.png` y anteponer el prefijo `og/`.
+ *
+ * @param imageUrl - El `image_url` del producto (URL Supabase, proxy o filename).
+ * @returns URL absoluta de la tarjeta OG, o el fallback estático si no hay imagen.
+ *
+ * @example
+ * getProductOgImage("https://xyz.supabase.co/storage/v1/object/public/product-images/RTX4070.avif")
+ * // "https://api.framerate.cl/v1/images/product-images/og/RTX4070.png"
+ */
+export function getProductOgImage(imageUrl: string | null | undefined): string {
+  const filename = getImageFilename(imageUrl);
+  if (!filename) return "/og-image.png";
+
+  const pngName = filename.replace(/\.[a-z0-9]+$/i, ".png");
+  return `${API_URL}/v1/images/product-images/og/${pngName}`;
+}
+
+/**
  * Checks if an image URL is valid (not empty and not a placeholder)
  */
 export function isValidImageUrl(imageUrl: string | null | undefined): boolean {

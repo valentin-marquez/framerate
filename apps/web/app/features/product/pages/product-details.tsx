@@ -27,7 +27,7 @@ import { isRateLimitError } from "~/shared/lib/api";
 import { getTranslation } from "~/shared/lib/translations";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
-import { getImageUrl } from "~/shared/utils/images";
+import { getImageUrl, getProductOgImage } from "~/shared/utils/images";
 import type { Route } from "./+types/product-details";
 
 type Translator = (key: string, params?: Record<string, string | number>) => string;
@@ -98,6 +98,10 @@ export function meta({ data }: Route.MetaArgs) {
   const bestPrice = data.prices?.cash || 0;
   const description = `Compra ${data.name} desde ${formatCLP(bestPrice)} en Chile. Compara precios en ${data.listings_count} tiendas.`;
   const categoryConfig = getCategoryConfig(data.category?.slug);
+  // Tarjeta OG dinámica (logo + foto + nombre) generada por collector. El precio
+  // y el stock NO van en la imagen — viajan por la descripción, que se renderiza
+  // fresca en cada SSR, así la imagen queda estable y cacheable por producto.
+  const ogImage = getProductOgImage(data.image_url);
 
   return [
     { title: `${data.name} | Precios en Chile - Framerate` },
@@ -107,11 +111,15 @@ export function meta({ data }: Route.MetaArgs) {
     { property: "og:type", content: "product" },
     { property: "og:title", content: data.name },
     { property: "og:description", content: description },
-    { property: "og:image", content: data.image_url || "/og-image.png" },
+    { property: "og:image", content: ogImage },
+    { property: "og:image:width", content: "1200" },
+    { property: "og:image:height", content: "630" },
+    { property: "og:image:alt", content: `${data.name} — Framerate` },
     { property: "product:price:amount", content: String(bestPrice) },
     { property: "product:price:currency", content: "CLP" },
     { property: "product:category", content: categoryConfig.label },
     { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:image", content: ogImage },
   ];
 }
 
