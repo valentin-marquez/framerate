@@ -26,6 +26,7 @@ export default [
     index("features/settings/pages/account.tsx", { id: "settings-index" }),
     route("account", "features/settings/pages/account.tsx", { id: "settings-account" }),
     route("preferences", "features/settings/pages/preferences.tsx"),
+    route("tickets", "features/support/pages/my-tickets.tsx"),
   ]),
 
   // Fase 1: tiendas + flujo de reclamo (URLs en español — el sitio sirve audiencia chilena).
@@ -48,6 +49,8 @@ export default [
   // Fase 4: moderation
   route("admin/moderation", "features/moderation/pages/moderation-dashboard.tsx"),
   route("admin/users", "features/moderation/pages/users-admin.tsx"),
+  // Soporte
+  route("admin/support", "features/support/pages/admin-support-page.tsx"),
 
   route("theme-switcher", "shared/components/theme/theme-switcher.ts"),
   route("lang-switcher", "shared/components/lang/lang-switcher.ts"),

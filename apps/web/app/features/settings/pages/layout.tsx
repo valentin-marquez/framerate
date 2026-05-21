@@ -1,4 +1,4 @@
-import { IconSettings, IconUser } from "@tabler/icons-react";
+import { IconLifebuoy, IconSettings, IconUser } from "@tabler/icons-react";
 import { NavLink, Outlet, useLocation } from "react-router";
 import { requireAuth } from "~/features/auth/services/auth.server";
 import { Separator } from "~/shared/components/primitives/separator";
@@ -30,6 +30,11 @@ export default function SettingsLayout() {
       title: t("preferences"),
       href: "/settings/preferences",
       icon: IconSettings,
+    },
+    {
+      title: "Mis tickets",
+      href: "/settings/tickets",
+      icon: IconLifebuoy,
     },
   ];
 

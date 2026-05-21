@@ -1510,6 +1510,89 @@ export type Database = {
           },
         ];
       };
+      support_ticket_messages: {
+        Row: {
+          author_id: string | null;
+          author_role: string;
+          body: string;
+          created_at: string;
+          id: string;
+          is_internal_note: boolean;
+          ticket_id: string;
+        };
+        Insert: {
+          author_id?: string | null;
+          author_role: string;
+          body: string;
+          created_at?: string;
+          id?: string;
+          is_internal_note?: boolean;
+          ticket_id: string;
+        };
+        Update: {
+          author_id?: string | null;
+          author_role?: string;
+          body?: string;
+          created_at?: string;
+          id?: string;
+          is_internal_note?: boolean;
+          ticket_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "support_tickets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      support_tickets: {
+        Row: {
+          assigned_to: string | null;
+          body: string;
+          category: Database["public"]["Enums"]["support_category"];
+          created_at: string;
+          email: string;
+          id: string;
+          last_message_at: string;
+          source: string;
+          status: Database["public"]["Enums"]["support_status"];
+          subject: string;
+          updated_at: string;
+          user_id: string | null;
+        };
+        Insert: {
+          assigned_to?: string | null;
+          body: string;
+          category: Database["public"]["Enums"]["support_category"];
+          created_at?: string;
+          email: string;
+          id?: string;
+          last_message_at?: string;
+          source?: string;
+          status?: Database["public"]["Enums"]["support_status"];
+          subject: string;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          assigned_to?: string | null;
+          body?: string;
+          category?: Database["public"]["Enums"]["support_category"];
+          created_at?: string;
+          email?: string;
+          id?: string;
+          last_message_at?: string;
+          source?: string;
+          status?: Database["public"]["Enums"]["support_status"];
+          subject?: string;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       translation_feedback: {
         Row: {
           comment: string | null;
@@ -1744,6 +1827,15 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      create_support_ticket_anonymous: {
+        Args: {
+          p_body: string;
+          p_category: Database["public"]["Enums"]["support_category"];
+          p_email: string;
+          p_subject: string;
+        };
+        Returns: string;
       };
       custom_access_token_hook: { Args: { event: Json }; Returns: Json };
       enqueue_review_item: { Args: { p_raw_feed_id: string }; Returns: number };
@@ -2044,6 +2136,8 @@ export type Database = {
         | "other";
       report_status: "open" | "reviewing" | "resolved" | "dismissed";
       report_target_type: "product" | "comment" | "store_review" | "store";
+      support_category: "privacy" | "data_request" | "abuse_report" | "store_issue" | "bug" | "feature" | "other";
+      support_status: "open" | "in_progress" | "waiting_user" | "resolved" | "closed";
       user_role: "user" | "moderator" | "admin";
     };
     CompositeTypes: {
@@ -2182,6 +2276,8 @@ export const Constants = {
       ],
       report_status: ["open", "reviewing", "resolved", "dismissed"],
       report_target_type: ["product", "comment", "store_review", "store"],
+      support_category: ["privacy", "data_request", "abuse_report", "store_issue", "bug", "feature", "other"],
+      support_status: ["open", "in_progress", "waiting_user", "resolved", "closed"],
       user_role: ["user", "moderator", "admin"],
     },
   },

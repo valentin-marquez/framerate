@@ -3,6 +3,14 @@ import type { User } from "@supabase/supabase-js";
 export type Bindings = {
   SUPABASE_URL: string;
   SUPABASE_PUBLISHABLE_KEY: string;
+  /** Service role key — sólo usado por flujos acotados como insert de tickets anónimos. */
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  /** Cloudflare Turnstile secret para validar tokens del widget en server. Opcional en dev. */
+  TURNSTILE_SECRET_KEY?: string;
+  /** Webhook de Discord donde se notifican nuevos tickets de soporte. Opcional en dev. */
+  DISCORD_SUPPORT_WEBHOOK_URL?: string;
+  /** User ID en Discord al que mencionar en los embeds de soporte. */
+  DISCORD_SUPPORT_PING_USER_ID?: string;
   STRICT_RATE_LIMITER: RateLimit;
   MODERATE_RATE_LIMITER: RateLimit;
   LENIENT_RATE_LIMITER: RateLimit;

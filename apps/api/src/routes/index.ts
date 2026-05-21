@@ -2,6 +2,8 @@
 import adminClaims from "@/routes/admin-claims";
 // Fase 4: moderation
 import adminModeration from "@/routes/admin-moderation";
+// Soporte (formulario integrado + admin)
+import adminSupport from "@/routes/admin-support";
 import auth from "@/routes/auth";
 import categories from "@/routes/categories";
 // Fase 1: claims + stores
@@ -16,6 +18,7 @@ import reports from "@/routes/reports";
 // Fase 2: store-reviews (sub-apps por slug y por id)
 import { storeReviewsById, storeReviewsByStore } from "@/routes/store-reviews";
 import stores from "@/routes/stores";
+import support from "@/routes/support";
 import translationFeedback from "@/routes/translation-feedback";
 
 const API_VERSION = "v1";
@@ -88,5 +91,14 @@ export const routes = [
   {
     path: `/${API_VERSION}/admin/claims`,
     route: adminClaims,
+  },
+  // Soporte
+  {
+    path: `/${API_VERSION}/support`,
+    route: support,
+  },
+  {
+    path: `/${API_VERSION}/admin/support`,
+    route: adminSupport,
   },
 ];

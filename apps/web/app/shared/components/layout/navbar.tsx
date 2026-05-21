@@ -11,6 +11,7 @@ import { Apple } from "~/shared/components/icons/apple";
 import { Discord } from "~/shared/components/icons/discord";
 import { Facebook } from "~/shared/components/icons/facebook";
 import { Google } from "~/shared/components/icons/google";
+import { AdminMenu } from "~/shared/components/layout/admin-menu";
 import { Logo } from "~/shared/components/layout/logo";
 import { navTargetWidth } from "~/shared/components/layout/morph-search";
 import { useMediaQuery } from "~/shared/hooks/use-media-query";
@@ -458,6 +459,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     {/* Sólo se monta cuando el dropdown está abierto: evita un */}
                     {/* fetch innecesario al cargar la navbar para users sin tiendas. */}
                     {userMenuOpen && <MyStoresMenu enabled={userMenuOpen} />}
+                    {userMenuOpen && <AdminMenu enabled={userMenuOpen} />}
 
                     <form method="post" action="/action/auth">
                       <input type="hidden" name="action" value="logout" />
