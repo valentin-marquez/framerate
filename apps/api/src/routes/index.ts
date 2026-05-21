@@ -15,6 +15,7 @@ import products from "@/routes/products";
 import profiles from "@/routes/profiles";
 import quotes from "@/routes/quotes";
 import reports from "@/routes/reports";
+import sitemap from "@/routes/sitemap";
 // Fase 2: store-reviews (sub-apps por slug y por id)
 import { storeReviewsById, storeReviewsByStore } from "@/routes/store-reviews";
 import stores from "@/routes/stores";
@@ -52,6 +53,10 @@ export const routes = [
   {
     path: `/${API_VERSION}/translation-feedback`,
     route: translationFeedback,
+  },
+  {
+    path: `/${API_VERSION}/sitemap`,
+    route: sitemap,
   },
   // Fase 1: claims + stores
   {
