@@ -108,7 +108,7 @@ export function ReviewForm({ storeSlug, existing, onDone }: ReviewFormProps) {
 
           <div className="flex justify-end gap-2">
             {onDone && (
-              <Button type="button" variant="ghost" onClick={() => onDone()} disabled={submitting}>
+              <Button type="button" variant="secondary" onClick={() => onDone()} disabled={submitting}>
                 Cancelar
               </Button>
             )}

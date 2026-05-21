@@ -199,7 +199,7 @@ export function CommentForm({
                 </span>
                 <div className="flex items-center gap-1">
                   {(onCancel || compact) && (
-                    <Button variant="ghost" size="sm" onClick={handleCancel} disabled={submitting || busy}>
+                    <Button variant="secondary" size="sm" onClick={handleCancel} disabled={submitting || busy}>
                       Cancelar
                     </Button>
                   )}

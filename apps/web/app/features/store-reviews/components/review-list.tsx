@@ -5,6 +5,7 @@ import {
   useStoreReviews,
 } from "~/features/store-reviews/services/store-reviews";
 import { Button } from "~/shared/components/primitives/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/shared/components/primitives/select";
 import { Skeleton } from "~/shared/components/primitives/skeleton";
 import { ReviewCard } from "./review-card";
 
@@ -49,24 +50,27 @@ export function ReviewList({ storeSlug, canManage = false, helpfulReviewIds }: R
           Reseñas {total > 0 && <span className="text-muted-foreground">({total})</span>}
         </h3>
         <div className="flex items-center gap-2">
-          <label htmlFor="review-sort" className="text-sm text-muted-foreground">
-            Ordenar:
-          </label>
-          <select
-            id="review-sort"
+          <span className="text-muted-foreground text-sm">Ordenar:</span>
+          <Select
             value={sort}
-            onChange={(e) => {
-              setSort(e.target.value as ReviewSort);
+            onValueChange={(value) => {
+              setSort(value as ReviewSort);
               setPage(0);
             }}
-            className="rounded-md border border-input bg-input/30 px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger size="sm" aria-label="Ordenar reseñas">
+              <SelectValue>
+                {(value: string) => SORT_OPTIONS.find((o) => o.value === value)?.label ?? value}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

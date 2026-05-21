@@ -57,7 +57,7 @@ export function OwnerResponseForm({ storeSlug, review, onDone }: OwnerResponseFo
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex justify-end gap-2">
         {onDone && (
-          <Button type="button" variant="ghost" size="sm" onClick={() => onDone()} disabled={updateMut.isPending}>
+          <Button type="button" variant="secondary" size="sm" onClick={() => onDone()} disabled={updateMut.isPending}>
             Cancelar
           </Button>
         )}
