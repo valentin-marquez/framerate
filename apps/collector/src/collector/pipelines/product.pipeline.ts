@@ -343,13 +343,20 @@ export class ProductPipeline {
         hasExistingSpecs: !!similarProduct.specs,
       });
 
-      // Use existing MPN if we don't have one
-      if (!finalMpn && similarProduct.mpn) {
+      // Adoptar el MPN del producto matcheado. `findSimilarProduct` ya validó
+      // el match (incluye los safeguards de identificador), así que su MPN es
+      // el canónico. El upsert resuelve el listing por MPN exacto — si NO lo
+      // adoptamos, una tienda cuyo identificador no resuelve (p. ej. dust2
+      // publica EAN, no MPN) crearía un duplicado pese a haber matcheado por
+      // título. Antes esto sólo corría con `!finalMpn` y por eso dust2 duplicaba.
+      if (similarProduct.mpn) {
+        if (similarProduct.mpn !== finalMpn) {
+          this.logger.info(`Using MPN from similar product: ${similarProduct.mpn} (scraped: ${raw.mpn ?? "none"})`);
+        }
         finalMpn = similarProduct.mpn;
-        this.logger.info(`Using MPN from similar product: ${finalMpn}`);
 
-        // Re-normalize with the found MPN if we didn't have one before
-        if (!raw.mpn && finalMpn) {
+        // Si no teníamos MPN propio, re-normalizar specs con el adoptado.
+        if (!raw.mpn) {
           const reNormalizedSpecs = await this.normalizeSpecs(
             ctx.category,
             rawSpecs,

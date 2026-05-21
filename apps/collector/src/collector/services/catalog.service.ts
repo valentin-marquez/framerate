@@ -30,6 +30,81 @@ export function normalizeMpnKey(mpn: string | null | undefined): string {
 }
 
 /**
+ * Clasifica un identificador de producto. Un código de 12-14 dígitos puros es
+ * un EAN/UPC/GTIN (código de barras); cualquier otra cosa se trata como MPN.
+ * Distintas tiendas publican distinto: dust2 expone EAN en `sku`, pc-express
+ * expone MPN o códigos internos. EAN y MPN NO son comparables entre sí.
+ */
+export function identifierType(id: string | null | undefined): "ean" | "mpn" | null {
+  const key = normalizeMpnKey(id);
+  if (!key) return null;
+  return /^\d{12,14}$/.test(key) ? "ean" : "mpn";
+}
+
+/**
+ * ¿Dos identificadores están en conflicto? Sólo cuando son del MISMO tipo y
+ * difieren (dos MPN distintos, o dos EAN distintos). Un EAN frente a un MPN no
+ * es conflicto: son clases distintas, no comparables — ahí decide el título.
+ */
+export function identifiersConflict(a: string | null | undefined, b: string | null | undefined): boolean {
+  const ta = identifierType(a);
+  const tb = identifierType(b);
+  if (!ta || !tb || ta !== tb) return false;
+  return normalizeMpnKey(a) !== normalizeMpnKey(b);
+}
+
+/**
+ * Quita ruido del título antes de extraer keywords de matching: sustantivos de
+ * categoría (la query ya filtra por `category_id`, no discriminan), frases de
+ * marketing ("hasta X GHz") y tokens de socket (derivados del modelo). Lo que
+ * discrimina —marca, número de modelo, capacidad— se conserva.
+ */
+const MATCH_NOISE_PATTERNS: RegExp[] = [
+  /\bhasta\s*[\d.,]+\s*[gm]hz\b/gi, // "hasta 5.8Ghz" — claim de marketing, no spec
+  /\b(procesador(?:es)?|tarjetas?|gr[aá]ficas?|memorias?|placas?|madres?|fuentes?|gabinetes?|discos?|s[oó]lidos?|cooler|disipador|ventiladores?|refrigeraci[oó]n|l[ií]quida|almacenamiento|unidad|m[oó]dulo)\b/gi,
+  /\b(lga\s?\d{3,4}|am[2-5]\+?)\b/gi, // sockets — el número de modelo ya discrimina
+  /\b(para|hasta|gamer|nuev[oa]|original)\b/gi, // filler de ≥4 chars que sobrevive al filtro de largo
+];
+export function stripMatchingNoise(title: string): string {
+  let out = title;
+  for (const re of MATCH_NOISE_PATTERNS) out = out.replace(re, " ");
+  return out.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * ¿Aparece `keyword` en `name` sin un alfanumérico inmediatamente a la derecha?
+ * Evita el falso positivo de substring: "14900" NO debe matchear dentro de
+ * "14900K" (otra CPU), pero "5070" SÍ dentro de "RTX5070".
+ */
+export function keywordInName(keyword: string, name: string): boolean {
+  return new RegExp(`${keyword}(?![A-Z0-9])`).test(name);
+}
+
+/**
+ * Extrae los números "discriminantes" de un texto: secuencias de 3+ dígitos
+ * (velocidad de RAM, número de modelo, wattage de PSU…). Quita primero el MPN
+ * entre corchetes para no capturar sus dígitos.
+ */
+export function significantNumbers(text: string): Set<string> {
+  return new Set(text.replace(/\[.*?\]/g, " ").match(/\d{3,}/g) ?? []);
+}
+
+/**
+ * ¿Dos conjuntos de números discriminantes están en conflicto? Sólo si CADA
+ * lado tiene al menos un número que el otro no tiene — eso indica variantes
+ * distintas (p. ej. RAM "DDR5 6000" vs "DDR5 4800"). Si uno es subconjunto del
+ * otro (título verbose vs terse), NO hay conflicto.
+ */
+export function numbersConflict(a: Set<string>, b: Set<string>): boolean {
+  if (a.size === 0 || b.size === 0) return false;
+  let aUnique = false;
+  let bUnique = false;
+  for (const n of a) if (!b.has(n)) aUnique = true;
+  for (const n of b) if (!a.has(n)) bUnique = true;
+  return aUnique && bUnique;
+}
+
+/**
  * Extrae el primer token "<digits>GB" del nombre del producto.
  * Devuelve el número (e.g., 12) o null si no hay match.
  * El nombre típicamente tiene la forma:
@@ -396,15 +471,11 @@ export class CatalogService {
           .limit(5);
 
         if (nameDuplicates && nameDuplicates.length > 0) {
-          // Si la consulta trae MPN, exigir que el MPN normalizado coincida.
-          // Esto bloquea fusiones erróneas tipo "B850 GAMING PLUS WIFI" vs "B860 TOMAHAWK WIFI"
-          // que sólo comparten brand+form factor en el título.
-          const scrapedKey = mpn ? normalizeMpnKey(mpn) : "";
-          const compatible = nameDuplicates.find((d) => {
-            if (!scrapedKey) return true;
-            const existingKey = normalizeMpnKey(d.mpn);
-            return !existingKey || existingKey === scrapedKey;
-          });
+          // Bloquea fusiones erróneas tipo "B850 GAMING PLUS WIFI" vs
+          // "B860 TOMAHAWK WIFI" (sólo comparten brand+form factor): exige que
+          // los identificadores no estén en conflicto. Un EAN frente a un MPN
+          // no es conflicto — son clases distintas.
+          const compatible = nameDuplicates.find((d) => !identifiersConflict(mpn, d.mpn));
 
           if (!compatible) {
             this.logger.warn(
@@ -420,7 +491,8 @@ export class CatalogService {
 
       // 2. Search by title similarity within same category and brand
       // Use title keywords to find potential matches
-      const titleKeywords = title
+      const cleanTitle = stripMatchingNoise(title);
+      const titleKeywords = cleanTitle
         .toUpperCase()
         .replace(/[^A-Z0-9\s]/g, " ")
         .split(/\s+/)
@@ -436,16 +508,17 @@ export class CatalogService {
           .limit(50);
 
         if (candidates && candidates.length > 0) {
-          const scrapedKey = mpn ? normalizeMpnKey(mpn) : "";
           let bestMatch: { id: string; mpn: string | null; specs: Json | null } | null = null;
+          let bestMatchName = "";
           let bestScore = 0;
 
           for (const candidate of candidates) {
             const candidateName = (candidate.name || "").toUpperCase();
-            const matchCount = titleKeywords.filter((keyword) => candidateName.includes(keyword)).length;
+            const matchCount = titleKeywords.filter((keyword) => keywordInName(keyword, candidateName)).length;
             const score = matchCount / titleKeywords.length;
             if (score > bestScore && score >= 0.9) {
               bestScore = score;
+              bestMatchName = candidate.name || "";
               bestMatch = {
                 id: candidate.id,
                 mpn: candidate.mpn,
@@ -455,18 +528,26 @@ export class CatalogService {
           }
 
           if (bestMatch) {
-            // Safeguard: si el candidato tiene MPN y nosotros también, exigir que sus
-            // formas normalizadas coincidan. Sin esto, productos como
-            // "Gigabyte B550M K" y "Gigabyte H610M K V2" se mergean por sus keywords
-            // ("Gigabyte"/marca y forma común).
-            if (scrapedKey && bestMatch.mpn) {
-              const matchKey = normalizeMpnKey(bestMatch.mpn);
-              if (matchKey && matchKey !== scrapedKey) {
-                this.logger.warn(
-                  `Title match (score=${bestScore.toFixed(2)}) rejected — MPN incompatible: scraped="${mpn}" vs existing="${bestMatch.mpn}"`,
-                );
-                bestMatch = null;
-              }
+            // Safeguard 1: rechazar si los identificadores están en conflicto
+            // (dos MPN distintos). Sin esto "Gigabyte B550M K" y "Gigabyte
+            // H610M K V2" se mergean por keywords comunes. Un EAN frente a un
+            // MPN no es conflicto — ahí el título ya decidió.
+            if (identifiersConflict(mpn, bestMatch.mpn)) {
+              this.logger.warn(
+                `Title match (score=${bestScore.toFixed(2)}) rejected — identificadores en conflicto: scraped="${mpn}" vs existing="${bestMatch.mpn}"`,
+              );
+              bestMatch = null;
+            }
+            // Safeguard 2: rechazar si hay números discriminantes en conflicto
+            // (velocidad / modelo / wattage). Evita mergear "RAM ... DDR5 6000"
+            // con "RAM ... DDR5 4800" — comparten marca+capacidad pero NO son el
+            // mismo producto. Sólo bloquea si AMBOS lados tienen un número que
+            // el otro no — el caso verbose-vs-terse (subconjunto) sigue OK.
+            if (bestMatch && numbersConflict(significantNumbers(cleanTitle), significantNumbers(bestMatchName))) {
+              this.logger.warn(
+                `Title match (score=${bestScore.toFixed(2)}) rejected — números discriminantes en conflicto: "${title}" vs "${bestMatchName}"`,
+              );
+              bestMatch = null;
             }
             if (bestMatch) {
               this.logger.info(
