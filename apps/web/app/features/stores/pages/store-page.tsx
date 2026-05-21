@@ -5,7 +5,8 @@ import { getSession } from "~/features/auth/services/auth.server";
 import { StoreReviewsSection } from "~/features/store-reviews/components/store-reviews-section";
 import { ApiError } from "~/shared/lib/api";
 import { StoreHeader } from "../components/store-header";
-import { storesService, type ViewerStoreRole } from "../services/stores";
+import { StoreProductsSection } from "../components/store-products-section";
+import { type StoreProductsResponse, storesService, type ViewerStoreRole } from "../services/stores";
 import type { Route } from "./+types/store-page";
 
 export function meta({ data }: Route.MetaArgs) {
@@ -16,9 +17,20 @@ export function meta({ data }: Route.MetaArgs) {
   ];
 }
 
+// Fallback cuando el endpoint de productos falla: la página igual renderiza.
+const emptyProducts = (slug: string): StoreProductsResponse => ({
+  store: { slug, name: "" },
+  total: 0,
+  categories: [],
+});
+
 export async function loader({ request, params }: Route.LoaderArgs) {
   try {
-    const [store, { session }] = await Promise.all([storesService.get(params.slug), getSession(request)]);
+    const [store, { session }, products] = await Promise.all([
+      storesService.get(params.slug),
+      getSession(request),
+      storesService.getProducts(params.slug).catch(() => emptyProducts(params.slug)),
+    ]);
 
     let viewerRole: ViewerStoreRole | null = null;
     const isAuthenticated = !!session?.access_token;
@@ -31,7 +43,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
       }
     }
 
-    return { store, viewerRole, isAuthenticated };
+    return { store, viewerRole, isAuthenticated, products };
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       throw new Response("Not found", { status: 404 });
@@ -41,7 +53,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export default function StorePage({ loaderData }: Route.ComponentProps) {
-  const { store, viewerRole, isAuthenticated } = loaderData;
+  const { store, viewerRole, isAuthenticated, products } = loaderData;
   const canManage = viewerRole !== null;
   // Banner público de "reclamala" mientras la tienda no tenga dueño. Se muestra
   // a todos (incluidos anónimos): si está logueado va directo a /reclamar; si no,
@@ -50,8 +62,8 @@ export default function StorePage({ loaderData }: Route.ComponentProps) {
   const claimHref = `/reclamar?store=${store.slug}`;
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 p-4 pt-8">
-      <StoreHeader store={store} />
+    <main className="mx-auto max-w-5xl space-y-8 p-4 pt-8">
+      <StoreHeader store={store} productCount={products.total} />
 
       {canManage && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3">
@@ -114,7 +126,12 @@ export default function StorePage({ loaderData }: Route.ComponentProps) {
         </section>
       )}
 
-      <StoreReviewsSection storeSlug={store.slug} canManage={canManage} />
+      <StoreProductsSection categories={products.categories} total={products.total} />
+
+      <div className="space-y-4">
+        <h2 className="font-semibold text-foreground text-xl tracking-tight">Reseñas</h2>
+        <StoreReviewsSection storeSlug={store.slug} canManage={canManage} />
+      </div>
     </main>
   );
 }

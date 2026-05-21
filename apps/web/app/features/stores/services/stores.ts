@@ -1,3 +1,4 @@
+import type { Product } from "~/features/product/services/products";
 import { api } from "~/shared/lib/api";
 
 export interface StoreAccount {
@@ -33,7 +34,12 @@ export interface StoreDetail {
   created_at: string;
   updated_at: string;
   member_count: number;
-  rating: { average: number | null; count: number };
+  /** Stats de rating: general + ventana reciente (últimos 30 días), estilo Steam. */
+  rating: {
+    average: number | null;
+    count: number;
+    recent: { average: number | null; count: number };
+  };
 }
 
 export type StoreMemberRole = "owner" | "admin" | "editor";
@@ -77,8 +83,26 @@ export interface ClaimableStore {
   is_claimed: boolean;
 }
 
+/** Una categoría de productos que la tienda tiene listados. */
+export interface StoreProductCategory {
+  slug: string;
+  name: string;
+  /** Total de productos de la tienda en esta categoría. */
+  count: number;
+  /** Subconjunto destacado (orden: popularidad) para el carrusel. */
+  products: Product[];
+}
+
+export interface StoreProductsResponse {
+  store: { slug: string; name: string };
+  /** Total de productos distintos que la tienda tiene listados. */
+  total: number;
+  categories: StoreProductCategory[];
+}
+
 export const storesService = {
   get: (slug: string) => api.get<StoreDetail>(`/v1/stores/${slug}`),
+  getProducts: (slug: string) => api.get<StoreProductsResponse>(`/v1/stores/${slug}/products`),
   listClaimable: (q?: string) => api.get<{ stores: ClaimableStore[] }>("/v1/stores", q ? { params: { q } } : undefined),
   getMyRole: (slug: string, token: string) =>
     api.get<{ role: ViewerStoreRole | null }>(`/v1/stores/${slug}/me`, { token }),

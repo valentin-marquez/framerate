@@ -73,11 +73,31 @@ function bust(url: string | null, updatedAt: string | null | undefined): string 
  * dato canónico/legacy. Assets se resuelven a URL pública del bucket
  * store-assets (el front la proxia vía getImageUrl).
  */
-function composeStore(
-  row: StoreRow,
-  supabaseUrl: string,
-  extra: { member_count: number; rating: { average: number | null; count: number } },
-) {
+/** Stats de rating estilo Steam: total + ventana reciente (últimos 30 días). */
+interface StoreRating {
+  average: number | null;
+  count: number;
+  recent: { average: number | null; count: number };
+}
+
+const EMPTY_RATING: StoreRating = { average: null, count: 0, recent: { average: null, count: 0 } };
+const RECENT_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** Calcula rating general + reciente a partir de las reseñas activas. */
+function computeRating(rows: { rating: number; created_at: string }[]): StoreRating {
+  if (rows.length === 0) return EMPTY_RATING;
+  const avg = (list: { rating: number }[]) =>
+    list.length === 0 ? null : list.reduce((s, r) => s + r.rating, 0) / list.length;
+  const cutoff = Date.now() - RECENT_WINDOW_MS;
+  const recent = rows.filter((r) => new Date(r.created_at).getTime() >= cutoff);
+  return {
+    average: avg(rows),
+    count: rows.length,
+    recent: { average: avg(recent), count: recent.length },
+  };
+}
+
+function composeStore(row: StoreRow, supabaseUrl: string, extra: { member_count: number; rating: StoreRating }) {
   const profile = toOne(row.profile);
   const account = toOne(row.account);
 
@@ -217,25 +237,129 @@ stores.get(
       return c.json({ error: "Store not found" }, 404);
     }
 
-    const [memberCount, { data: ratingRow }] = await Promise.all([
+    const [memberCount, reviews] = await Promise.all([
       memberCountForAccount(supabase, store.account_id),
+      // Sólo reseñas activas (deleted_at IS NULL): las soft-deleted no cuentan.
       supabase
         .from("store_reviews")
-        .select("rating")
+        .select("rating, created_at")
         .eq("store_id", store.id)
-        .then((res: { data: { rating: number }[] | null }) => {
-          if (!res.data || res.data.length === 0) return { data: null };
-          const avg = res.data.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / res.data.length;
-          return { data: { average: avg, count: res.data.length } };
-        }),
+        .is("deleted_at", null),
     ]);
 
     return c.json(
       composeStore(store as StoreRow, supabaseUrl, {
         member_count: memberCount,
-        rating: ratingRow ?? { average: null, count: 0 },
+        rating: computeRating(reviews.data ?? []),
       }),
     );
+  },
+);
+
+/**
+ * GET /v1/stores/:slug/products
+ * Público. Productos que esta tienda tiene listados (listing activo), agrupados
+ * por categoría. Cada producto trae el shape de `api_products` (mejor precio de
+ * mercado) para reutilizar las cards del catálogo. Categorías ordenadas por
+ * cantidad; hasta `PER_CATEGORY` productos por categoría (orden: popularidad).
+ */
+stores.get(
+  "/:slug/products",
+  Cache({ mode: "public", ttl: CACHE_TTL.MEDIUM, name: "store-products" }),
+  Limit("moderate"),
+  async (c) => {
+    const slug = c.req.param("slug");
+    const supabase = createSupabase(c.env);
+
+    const { data: store, error: storeErr } = await supabase
+      .from("stores")
+      .select("id, name, slug")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (storeErr || !store) {
+      return c.json({ error: "Store not found" }, 404);
+    }
+
+    // product_ids con al menos un listing activo en esta tienda (paginado:
+    // PostgREST corta en 1000 filas y una tienda grande supera ese tope).
+    const productIds = new Set<string>();
+    const PAGE = 1000;
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("product_id")
+        .eq("store_id", store.id)
+        .eq("is_active", true)
+        .range(from, from + PAGE - 1);
+
+      if (error) {
+        logger.error(`Store products listings ${slug}: ${error.message}`);
+        return c.json({ error: "No se pudieron cargar los productos" }, 500);
+      }
+      if (!data || data.length === 0) break;
+      for (const row of data) productIds.add(row.product_id);
+      if (data.length < PAGE) break;
+    }
+
+    if (productIds.size === 0) {
+      return c.json({ store: { slug: store.slug, name: store.name }, total: 0, categories: [] });
+    }
+
+    // Resolvemos los productos desde la vista `api_products` en lotes (el
+    // filtro .in() con cientos de UUIDs reventaría el largo de la URL).
+    const ids = [...productIds];
+    const CHUNK = 120;
+    type ApiProduct = {
+      id: string | null;
+      category_slug: string | null;
+      category: unknown;
+      popularity_score: number | null;
+    };
+    const rows: ApiProduct[] = [];
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const { data, error } = await supabase
+        .from("api_products")
+        .select("*")
+        .in("id", ids.slice(i, i + CHUNK));
+
+      if (error) {
+        logger.error(`Store products fetch ${slug}: ${error.message}`);
+        return c.json({ error: "No se pudieron cargar los productos" }, 500);
+      }
+      if (data) rows.push(...(data as ApiProduct[]));
+    }
+
+    // Agrupamos por categoría; el nombre sale del json `category` de la vista.
+    const byCategory = new Map<string, { slug: string; name: string; products: ApiProduct[] }>();
+    for (const product of rows) {
+      const catSlug = product.category_slug;
+      if (!catSlug) continue;
+      const catName =
+        (product.category && typeof product.category === "object"
+          ? (product.category as { name?: string }).name
+          : null) ?? catSlug;
+      let group = byCategory.get(catSlug);
+      if (!group) {
+        group = { slug: catSlug, name: catName, products: [] };
+        byCategory.set(catSlug, group);
+      }
+      group.products.push(product);
+    }
+
+    const PER_CATEGORY = 18;
+    const categories = [...byCategory.values()]
+      .map((group) => ({
+        slug: group.slug,
+        name: group.name,
+        count: group.products.length,
+        products: group.products
+          .sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0))
+          .slice(0, PER_CATEGORY),
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    return c.json({ store: { slug: store.slug, name: store.name }, total: rows.length, categories });
   },
 );
 
@@ -297,9 +421,9 @@ stores.patch("/:slug", Limit("moderate"), authMiddleware, requireStoreRoleBySlug
   if (!store) return c.json({ error: "Store not found" }, 404);
 
   const memberCount = await memberCountForAccount(supabase, store.account_id);
-  return c.json(
-    composeStore(store as StoreRow, supabaseUrl, { member_count: memberCount, rating: { average: null, count: 0 } }),
-  );
+  // El PATCH sólo toca el perfil; el rating real lo recalcula el GET. Aquí no
+  // re-consultamos reseñas — devolvemos EMPTY_RATING como placeholder.
+  return c.json(composeStore(store as StoreRow, supabaseUrl, { member_count: memberCount, rating: EMPTY_RATING }));
 });
 
 function slugFrom(c: { req: { param: (k: string) => string } }): string {
