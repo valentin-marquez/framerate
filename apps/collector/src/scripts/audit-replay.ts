@@ -5,6 +5,7 @@
  * Run: bun run apps/collector/src/scripts/audit-replay.ts
  */
 
+import { createMpnFinder } from "@framerate/mpn-finder";
 import { ProductPipeline } from "@/collector/pipelines/product.pipeline";
 import { BrandService } from "@/collector/services/brand.service";
 import { CatalogService } from "@/collector/services/catalog.service";
@@ -31,7 +32,7 @@ async function main() {
 
   const catalogService = new CatalogService();
   const brandService = new BrandService();
-  const pipeline = new ProductPipeline(catalogService, brandService);
+  const pipeline = new ProductPipeline(catalogService, brandService, createMpnFinder(supabase));
 
   // Resolve storeId from source slug
   const storeId = await catalogService.getStoreId(data.source);

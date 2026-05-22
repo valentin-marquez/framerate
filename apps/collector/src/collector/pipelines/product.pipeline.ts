@@ -1,8 +1,9 @@
 import { ProductSpecsSchema, toJson } from "@framerate/db";
+import type { MpnFinder } from "@framerate/mpn-finder";
 import { isAllowedForCategory, isMpnBlocked } from "@/collector/domain/category-filters";
 import { type ScrapedProduct, ScrapedProductSchema } from "@/collector/domain/schemas";
 import type { BrandService } from "@/collector/services/brand.service";
-import type { CatalogService, CategorySlug } from "@/collector/services/catalog.service";
+import { type CatalogService, type CategorySlug, identifierType } from "@/collector/services/catalog.service";
 import { Logger } from "@/lib/logger";
 import { uploadProductImage } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
@@ -123,6 +124,14 @@ const GLOBAL_INVALID_TERMS = [
   "BASE PARA SILLA",
 ];
 
+/**
+ * Confianza mínima del MPN candidato (auto-reportada por el LLM) para aceptarlo.
+ * El grounding del extractor ya descarta alucinaciones; este umbral filtra los
+ * casos de baja certeza. El reintento de `findSimilarProduct` con el MPN
+ * resuelto igual aplica sus propios safeguards.
+ */
+const MPN_RESOLUTION_MIN_CONFIDENCE = 0.7;
+
 export class ProductPipeline {
   private logger = new Logger("ProductPipeline");
   private iaTimeMs = 0;
@@ -132,6 +141,7 @@ export class ProductPipeline {
   constructor(
     private catalogService: CatalogService,
     private brandService: BrandService,
+    private mpnFinder: MpnFinder,
   ) {}
 
   public getCatalogService(): CatalogService {
@@ -324,7 +334,7 @@ export class ProductPipeline {
     if (!categoryId) return { success: false, error: `Could not resolve category: ${ctx.category}` };
 
     // Search for similar products before creating a new one
-    const similarProduct = await this.catalogService.findSimilarProduct(
+    let similarProduct = await this.catalogService.findSimilarProduct(
       raw.title ?? "",
       categoryId,
       brandId,
@@ -332,8 +342,32 @@ export class ProductPipeline {
       toJson(normalizedSpecs),
     );
 
-    // If we found a similar product, use its MPN and merge specs if needed
-    let finalMpn = raw.mpn ?? null;
+    // Fase 2 — resolución de MPN. Si NO hubo match y el identificador scrapeado
+    // es un EAN (código de barras: no resuelve contra el catálogo, keyed por
+    // MPN), pedimos a mpn-finder el MPN canónico (búsqueda web + LLM) y
+    // reintentamos el match con él. Acotado a EAN + dedup-miss para no meter la
+    // llamada lenta en el hot-path de productos que ya deduplicaron.
+    let resolvedMpn: string | null = null;
+    if (!similarProduct && raw.title && identifierType(raw.mpn) === "ean") {
+      const found = await this.mpnFinder.findMpn(raw.title);
+      const best = found.mpns[0]; // ordenados por confianza desc
+      if (best && best.confidence >= MPN_RESOLUTION_MIN_CONFIDENCE) {
+        resolvedMpn = best.value;
+        this.logger.info(`MPN resuelto: "${raw.mpn}" (EAN) → "${resolvedMpn}" [${found.source}]`);
+        similarProduct = await this.catalogService.findSimilarProduct(
+          raw.title,
+          categoryId,
+          brandId,
+          resolvedMpn,
+          toJson(normalizedSpecs),
+        );
+      }
+    }
+
+    // El MPN final parte del resuelto (si lo hay) — así el producto queda keyed
+    // por el MPN canónico aunque todavía no exista otro igual en el catálogo.
+    // Si hubo `similarProduct`, el bloque de abajo adopta el MPN de ese match.
+    let finalMpn = resolvedMpn ?? raw.mpn ?? null;
     let finalSpecs = toJson(normalizedSpecs);
 
     if (similarProduct) {

@@ -1,3 +1,4 @@
+import { createMpnFinder } from "@framerate/mpn-finder";
 import { type PipelineContext, ProductPipeline } from "@/collector/pipelines/product.pipeline";
 import { BrandService } from "@/collector/services/brand.service";
 import { CatalogService } from "@/collector/services/catalog.service";
@@ -11,7 +12,7 @@ async function main() {
   const catalogService = new CatalogService();
   // BrandService might depend on DB
   const brandService = new BrandService();
-  const pipeline = new ProductPipeline(catalogService, brandService);
+  const pipeline = new ProductPipeline(catalogService, brandService, createMpnFinder(supabase));
 
   const mockProduct = {
     url: "https://example.com/products/test-gpu-123",

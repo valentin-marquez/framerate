@@ -1,3 +1,4 @@
+import { createMpnFinder } from "@framerate/mpn-finder";
 import { ProductPipeline } from "@/collector/pipelines/product.pipeline";
 import { BrandService } from "@/collector/services/brand.service";
 import { CatalogService } from "@/collector/services/catalog.service";
@@ -13,6 +14,7 @@ import { NOTEBOOKSYA_CATEGORIES, NotebooksYaCrawler } from "@/crawlers/notebooks
 import { PC_EXPRESS_CATEGORIES, PcExpressCrawler } from "@/crawlers/pc-express";
 import { SP_DIGITAL_CATEGORIES, SpDigitalCrawler } from "@/crawlers/sp-digital";
 import { TECTEC_CATEGORIES, TectecCrawler } from "@/crawlers/tectec";
+import { supabase } from "@/lib/supabase";
 
 /**
  * Función de fábrica para crear una instancia de JobStrategy basada en el tipo de crawler.
@@ -24,7 +26,8 @@ import { TECTEC_CATEGORIES, TectecCrawler } from "@/crawlers/tectec";
 export function createStrategy(crawlerType: string): JobStrategy {
   const catalog = new CatalogService();
   const brandService = new BrandService();
-  const pipeline = new ProductPipeline(catalog, brandService);
+  const mpnFinder = createMpnFinder(supabase);
+  const pipeline = new ProductPipeline(catalog, brandService, mpnFinder);
 
   switch (crawlerType) {
     case "pc-express": {

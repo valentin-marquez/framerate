@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@framerate/db": "workspace:*",
+    "@framerate/mpn-finder": "workspace:*",
     "@framerate/utils": "workspace:*",
     "@supabase/supabase-js": "^2.84.0",
     "cheerio": "^1.1.2",
