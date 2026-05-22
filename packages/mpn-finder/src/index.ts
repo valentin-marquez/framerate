@@ -13,7 +13,7 @@ import { Logger } from "@framerate/utils";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SupabaseMpnCache } from "./cache/mpn-cache";
 import { DeepSeekExtractor } from "./extractors/deepseek-extractor";
-import { DuckDuckGoProvider } from "./providers";
+import { BraveSearchProvider, DuckDuckGoProvider } from "./providers";
 import { cleanSearchQuery } from "./query";
 import {
   emptyMpnResult,
@@ -26,7 +26,7 @@ import {
 
 export { SupabaseMpnCache } from "./cache/mpn-cache";
 export { DeepSeekExtractor } from "./extractors/deepseek-extractor";
-export { DuckDuckGoProvider, parseResults } from "./providers";
+export { BraveSearchProvider, DuckDuckGoProvider, parseResults } from "./providers";
 export { cleanSearchQuery } from "./query";
 export * from "./types";
 
@@ -114,13 +114,16 @@ export class MpnFinder {
 }
 
 /**
- * Construye un `MpnFinder` con el stack por defecto: búsqueda DuckDuckGo,
- * extracción DeepSeek y caché en Supabase. El cliente Supabase (service role)
- * lo provee el consumidor — este package no resuelve credenciales.
+ * Construye un `MpnFinder` con el stack por defecto: búsqueda (Brave primero,
+ * con DuckDuckGo de respaldo), extracción DeepSeek y caché en Supabase.
+ *
+ * Brave va primero por ser una API estable; si no hay `BRAVE_SEARCH_API_KEY`
+ * devuelve `[]` y el orquestador cae a DuckDuckGo automáticamente. El cliente
+ * Supabase (service role) lo provee el consumidor.
  */
 export function createMpnFinder(supabase: SupabaseClient): MpnFinder {
   return new MpnFinder({
-    providers: [new DuckDuckGoProvider()],
+    providers: [new BraveSearchProvider(), new DuckDuckGoProvider()],
     extractor: new DeepSeekExtractor(),
     cache: new SupabaseMpnCache(supabase),
   });
