@@ -349,7 +349,7 @@ export class ProductPipeline {
     // llamada lenta en el hot-path de productos que ya deduplicaron.
     let resolvedMpn: string | null = null;
     if (!similarProduct && raw.title && identifierType(raw.mpn) === "ean") {
-      const found = await this.mpnFinder.findMpn(raw.title);
+      const found = await this.mpnFinder.findMpn(raw.title, { category: ctx.category });
       const best = found.mpns[0]; // ordenados por confianza desc
       if (best && best.confidence >= MPN_RESOLUTION_MIN_CONFIDENCE) {
         resolvedMpn = best.value;
