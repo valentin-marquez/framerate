@@ -89,10 +89,12 @@ async function sync(repo: OpenDBRepo) {
     const content = await repo.getFileContent(file);
     const blobHash = await repo.getBlobHash(file);
 
-    // Derived ID from filename (remove .json) or content?
-    // User said "matches OpenDB JSON filename/UUID".
-    // Assuming filename is the UUID.json
-    const id = file.replace(".json", "").split("/").pop();
+    // El id es el UUID del filename. La categoría es la carpeta
+    // (`open-db/<Categoria>/<id>.json`) — la estructura real de OpenDB no la
+    // trae adentro del JSON, así que se inyecta desde el path.
+    const segments = file.split("/");
+    const id = segments[segments.length - 1].replace(".json", "");
+    const category = segments.length > 1 ? segments[1] : undefined;
 
     if (!id) continue;
 
@@ -112,7 +114,7 @@ async function sync(repo: OpenDBRepo) {
       // Upsert
       batch.push({
         id: id,
-        specifications: content,
+        specifications: { ...content, category },
         git_commit_hash: currentHead,
         git_blob_hash: blobHash,
         last_synced_at: new Date().toISOString(),
