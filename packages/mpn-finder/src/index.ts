@@ -14,6 +14,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { SupabaseMpnCache } from "./cache/mpn-cache";
 import { DeepSeekExtractor } from "./extractors/deepseek-extractor";
 import { DuckDuckGoProvider } from "./providers";
+import { cleanSearchQuery } from "./query";
 import {
   emptyMpnResult,
   type LlmExtractor,
@@ -26,6 +27,7 @@ import {
 export { SupabaseMpnCache } from "./cache/mpn-cache";
 export { DeepSeekExtractor } from "./extractors/deepseek-extractor";
 export { DuckDuckGoProvider, parseResults } from "./providers";
+export { cleanSearchQuery } from "./query";
 export * from "./types";
 
 export interface MpnFinderOptions {
@@ -74,10 +76,15 @@ export class MpnFinder {
         return { ...cached, query, source: "cache" };
       }
 
+      // La búsqueda usa el título limpio (sin "Procesador", "hasta X GHz",
+      // etc.) — el ruido degrada la calidad de los resultados. El extractor y
+      // la caché siguen usando la query original.
+      const searchQuery = cleanSearchQuery(trimmed);
+
       let results: SearchResult[] = [];
       let usedProvider = "";
       for (const provider of this.providers) {
-        results = await provider.search(trimmed, this.searchLimit);
+        results = await provider.search(searchQuery, this.searchLimit);
         if (results.length > 0) {
           usedProvider = provider.name;
           break;
