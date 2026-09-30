@@ -1,21 +1,16 @@
-import type { AuthProviders } from "@framerate/contracts";
-import { useRouteLoaderData } from "react-router";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { unstable_useRoute as useRoute } from "react-router";
 
-export function useAuth() {
-  return useAuthStore();
-}
-
+// La sesión sale del loader raíz: ya está en el HTML del servidor y en el primer render, y se actualiza sola cuando
+// el root revalida (login, logout, editar perfil).
 export function useUser() {
-  return useAuthStore((state) => state.user);
+  return useRoute("root")?.loaderData?.user ?? null;
 }
 
 export function useProfile() {
-  return useAuthStore((state) => state.profile);
+  return useRoute("root")?.loaderData?.profile ?? null;
 }
 
 /** Proveedores de login habilitados en la API (los carga el loader raíz). */
-export function useAuthProviders(): AuthProviders["items"] {
-  const root = useRouteLoaderData("root") as { providers?: AuthProviders["items"] } | undefined;
-  return root?.providers ?? [];
+export function useAuthProviders() {
+  return useRoute("root")?.loaderData?.providers ?? [];
 }

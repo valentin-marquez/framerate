@@ -1,7 +1,7 @@
 import { IconArrowBackUp, IconHeart, IconHeartFilled, IconPencil, IconTrash, IconUser } from "@tabler/icons-react";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useState } from "react";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { useUser } from "~/features/auth/hooks/useAuth";
 import { CommentBody } from "~/features/comments/components/comment-body";
 import { CommentForm } from "~/features/comments/components/comment-form";
 import type { CommentNode as CommentNodeT } from "~/features/comments/services/comments";
@@ -61,7 +61,7 @@ export function CommentNode({
   canReply = true,
   children,
 }: CommentNodeProps) {
-  const user = useAuthStore((s) => s.user);
+  const user = useUser();
   const isAuthor = !!user && user.id === node.author_id;
   const isDeleted = !!node.deleted_at;
   const isWithinEditWindow = isAuthor && !isDeleted && Date.now() - new Date(node.created_at).getTime() < 5 * 60 * 1000;
