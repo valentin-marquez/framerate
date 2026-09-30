@@ -9,6 +9,7 @@ coverage
 # Production
 build
 dist
+storybook-static
 
 # Misc
 .DS_Store
