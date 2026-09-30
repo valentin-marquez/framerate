@@ -10,6 +10,7 @@ interface AuthProvidersListProps {
   className?: string;
 }
 
+/** Un botón por proveedor habilitado; el primero es la acción principal. */
 export function AuthProvidersList({ returnTo, className }: AuthProvidersListProps) {
   const { t } = useTranslation();
   const providers = useAuthProviders();
@@ -24,8 +25,8 @@ export function AuthProvidersList({ returnTo, className }: AuthProvidersListProp
   }, [returnTo]);
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      {providers.map(({ id, label }) => (
+    <div className={cn("flex flex-col gap-2", className)}>
+      {providers.map(({ id, label }, i) => (
         <form key={id} method="post" action="/action/auth" className="w-full">
           <input type="hidden" name="action" value="login" />
           <input type="hidden" name="provider" value={id} />
@@ -33,9 +34,11 @@ export function AuthProvidersList({ returnTo, className }: AuthProvidersListProp
           <button
             type="submit"
             className={cn(
-              "flex items-center gap-2.5 w-full px-3 py-2 text-sm rounded-md cursor-pointer",
-              "text-foreground hover:bg-secondary transition-colors",
+              "flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl px-4 font-medium text-sm transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              i === 0
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-secondary text-foreground/70 hover:bg-secondary/70 hover:text-foreground",
             )}
           >
             <ProviderIcon id={id} />

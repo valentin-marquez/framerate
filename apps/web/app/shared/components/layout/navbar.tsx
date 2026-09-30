@@ -1,9 +1,9 @@
-import { IconCompass, IconCpu, IconLogin, IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react";
+import { IconCompass, IconCpu, IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react";
 import { domAnimation, LazyMotion, m, useTransform } from "motion/react";
-import { useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { ProviderIcon } from "~/features/auth/components/provider-icons";
-import { useAuthProviders, useProfile, useUser } from "~/features/auth/hooks/useAuth";
+import { LoginDialog } from "~/features/auth/components/login-dialog";
+import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
 import type { Category } from "~/features/category/services/categories";
 import { getCategoryConfig } from "~/features/category/utils/categories";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
@@ -11,18 +11,18 @@ import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { AdminMenu } from "~/shared/components/layout/admin-menu";
 import { Logo } from "~/shared/components/layout/logo";
 import { navTargetWidth } from "~/shared/components/layout/morph-search";
+import { NavClock, NavTab, navTabClass } from "~/shared/components/layout/nav-parts";
 import { useMediaQuery } from "~/shared/hooks/use-media-query";
 import { useMorphState } from "~/shared/hooks/use-morph-state";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { AsyncImage } from "../primitives/async-image";
-import { Button, buttonVariants } from "../primitives/button";
+import { buttonVariants } from "../primitives/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../primitives/dropdown-menu";
@@ -100,28 +100,13 @@ function navReducer(state: NavState, action: NavAction): NavState {
   }
 }
 
-// --- useSyncExternalStore: leemos location.pathname + search sin un useEffect
-// que cause flicker. Server snapshot devuelve "/" (placeholder estable); el
-// cliente lo reemplaza inmediatamente al hidratar.
-function subscribeToLocation(callback: () => void) {
-  window.addEventListener("popstate", callback);
-  return () => window.removeEventListener("popstate", callback);
-}
-
-function getLocationSnapshot() {
-  return window.location.pathname + window.location.search;
-}
-
-function getServerLocationSnapshot() {
-  return "/";
-}
-
 export function Navbar({ categories, blurred }: NavbarProps) {
   const user = useUser();
   const profile = useProfile();
-  const providers = useAuthProviders();
   const { t } = useTranslation();
   const location = useLocation();
+  const onExplore = location.pathname.startsWith("/explorar");
+  const onCategory = location.pathname.startsWith("/categoria");
 
   // El ancla del buscador sólo existe en la landing (donde está el hero que lo
   // origina). ≥1024px: ancla inline que crece su ancho con el scroll y separa
@@ -142,10 +127,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [state, dispatch] = useReducer(navReducer, initialNavState);
   const { timeOfDay, greetingMessage, showGreeting, visibleGradient, gradientVisible } = state;
-
-  // currentPath se lee desde window de forma reactiva; suppressHydrationWarning
-  // en el <input> donde se pinta evita warning durante el primer paint.
-  const currentPath = useSyncExternalStore(subscribeToLocation, getLocationSnapshot, getServerLocationSnapshot);
 
   // mantenemos en ref el `t` actual para que el setInterval no se recree en cada
   // cambio de idioma sin perder el último traductor disponible.
@@ -278,16 +259,12 @@ export function Navbar({ categories, blurred }: NavbarProps) {
               </TooltipContent>
             </Tooltip>
 
-            <div className="flex items-center gap-1 md:hidden">
-              <Button variant="link" className="p-0 m-0">
-                <Link to="/explorar" className="flex items-center gap-1.5" prefetch="intent">
-                  <IconCompass className="size-4" />
-                </Link>
-              </Button>
+            <div className="flex items-center gap-3 md:hidden">
+              <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} iconOnly />
 
               <DropdownMenu>
-                <DropdownMenuTrigger className={cn(buttonVariants({ variant: "link" }), "p-0 m-0")}>
-                  <IconCpu className="size-4" />
+                <DropdownMenuTrigger aria-label={t("hardware")} className={navTabClass(onCategory)}>
+                  <IconCpu className="size-4" stroke={1.75} />
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="start" className="w-56 mt-2">
@@ -321,12 +298,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
               (MorphSearch) flota encima e interpola su caja de forma continua. */}
           <LazyMotion features={domAnimation}>
             <div className="hidden md:flex items-center gap-6 absolute inset-x-0 mx-auto w-max">
-              <Button variant="link" className="p-0 m-0">
-                <Link to="/explorar" className="flex items-center gap-1.5" prefetch="intent">
-                  <IconCompass className="size-4" />
-                  <span>{t("explore")}</span>
-                </Link>
-              </Button>
+              <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} />
 
               {showAnchor && (
                 // Existe ya en el HTML del servidor (se oculta con CSS bajo lg): si apareciera tras hidratar
@@ -340,8 +312,8 @@ export function Navbar({ categories, blurred }: NavbarProps) {
               )}
 
               <DropdownMenu>
-                <DropdownMenuTrigger className={cn(buttonVariants({ variant: "link" }))}>
-                  <IconCpu className="size-4" />
+                <DropdownMenuTrigger className={navTabClass(onCategory)}>
+                  <IconCpu className="size-4" stroke={1.75} />
                   <span>{t("hardware")}</span>
                 </DropdownMenuTrigger>
 
@@ -370,17 +342,17 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             </div>
           </LazyMotion>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <NavClock className="hidden lg:inline-block" />
             {user ? (
               <CreateQuoteDialog
                 trigger={
-                  <Button
-                    variant={"link"}
-                    className={"hidden sm:flex p-0 m-0 outline-offset-4 cursor-pointer"}
-                    size={"sm"}
+                  <button
+                    type="button"
+                    className="hidden cursor-pointer font-medium text-foreground/60 text-sm transition-colors hover:text-foreground sm:block"
                   >
                     {t("create_quote")}
-                  </Button>
+                  </button>
                 }
               />
             ) : null}
@@ -455,7 +427,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Link to="/settings" className="flex items-center gap-2.5 w-full" prefetch="intent">
+                      <Link to="/ajustes" className="flex items-center gap-2.5 w-full" prefetch="intent">
                         <IconSettings className="size-5" />
                         <span>{t("settings")}</span>
                       </Link>
@@ -479,63 +451,16 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <DropdownMenu key="guest-menu">
-                <DropdownMenuTrigger
-                  aria-label={t("login")}
-                  className={cn(
-                    buttonVariants({
-                      variant: "default",
-                      size: "sm",
-                    }),
-                    "md:px-6 md:h-8",
-                  )}
-                >
-                  <IconLogin className="size-4 mr-2" />
-                  {t("login")}
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end" className="w-64 mt-2 bg-card ">
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel className={"text-primary"}>{t("login")}</DropdownMenuLabel>
-                  </DropdownMenuGroup>
-                  <div className="px-3 pb-2">
-                    <p className="text-xs text-muted-foreground">{t("login_desc")}</p>
-                  </div>
-
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuGroup>
-                    {providers.map(({ id, label }) => (
-                      <form key={id} method="post" action="/action/auth" className="w-full">
-                        <input type="hidden" name="action" value="login" />
-                        <input type="hidden" name="provider" value={id} />
-                        <input type="hidden" name="returnTo" value={currentPath} />
-                        <DropdownMenuItem className={"cursor-pointer"}>
-                          <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
-                            <ProviderIcon id={id} />
-                            <span>{t("continue_with", { provider: label })}</span>
-                          </button>
-                        </DropdownMenuItem>
-                      </form>
-                    ))}
-                  </DropdownMenuGroup>
-
-                  <DropdownMenuSeparator />
-
-                  <div className="px-3 py-2">
-                    <p className="text-xs text-muted-foreground">
-                      Al continuar, aceptas nuestros{" "}
-                      <Link to="/terms" className="underline hover:text-foreground" prefetch="intent">
-                        {t("terms")}
-                      </Link>{" "}
-                      y{" "}
-                      <Link to="/privacy" className="underline hover:text-foreground" prefetch="intent">
-                        {t("privacy")}
-                      </Link>
-                    </p>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <LoginDialog
+                trigger={
+                  <button
+                    type="button"
+                    className="inline-flex h-8 cursor-pointer items-center rounded-full bg-secondary px-3.5 font-medium text-foreground text-sm transition-colors hover:bg-primary hover:text-primary-foreground"
+                  >
+                    {t("login")}
+                  </button>
+                }
+              />
             )}
           </div>
         </div>

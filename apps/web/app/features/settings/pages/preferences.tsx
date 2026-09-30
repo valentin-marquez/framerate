@@ -1,4 +1,12 @@
-import { IconCheck, IconDeviceLaptop, IconFlask, IconMessage, IconMoon, IconSun } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconDeviceLaptop,
+  IconFlask,
+  IconLanguage,
+  IconMessage,
+  IconMoon,
+  IconSun,
+} from "@tabler/icons-react";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useState } from "react";
 import { useFetcher } from "react-router";
@@ -6,11 +14,11 @@ import { requireAuth } from "~/features/auth/services/auth.server";
 import { FeedbackDialog } from "~/features/translation-feedback/components/feedback-dialog";
 import { Button } from "~/shared/components/primitives/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/shared/components/primitives/select";
-import { Separator } from "~/shared/components/primitives/separator";
 import { useRequestInfo } from "~/shared/hooks/use-request-info";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { type Theme, useOptimisticThemeMode } from "~/shared/lib/client";
 import { cn } from "~/shared/lib/utils";
+import { SettingsBadge, SettingsGroup, SettingsRow, SettingsSection } from "../components/settings-parts";
 import type { Route } from "./+types/preferences";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -44,20 +52,8 @@ export default function PreferencesSettings() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-lg font-medium tracking-tight">{t("preferences")}</h2>
-        <p className="text-sm text-muted-foreground">{t("preferences_desc")}</p>
-      </div>
-
-      <Separator />
-
-      <div className="space-y-4">
-        <div>
-          <h3 className="font-medium tracking-tight">{t("visualization")}</h3>
-          <p className="text-sm text-muted-foreground">{t("choose_theme")}</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <SettingsSection title={t("visualization")} description={t("choose_theme")}>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <ThemeCard
             label={t("system")}
             icon={<IconDeviceLaptop className="size-4" />}
@@ -88,52 +84,49 @@ export default function PreferencesSettings() {
             <ThemePreview variant="dark" />
           </ThemeCard>
         </div>
-      </div>
+      </SettingsSection>
 
-      <Separator />
-
-      <div className="space-y-4">
-        <div>
-          <h3 className="font-medium tracking-tight">{t("language")}</h3>
-          <p className="text-sm text-muted-foreground">{t("select_language")}</p>
-        </div>
-
-        <div className="w-full sm:max-w-xs">
-          <Select value={lang} onValueChange={(v) => setLanguage(v as Parameters<typeof setLanguage>[0])}>
-            <SelectTrigger className="h-10 w-full">
-              <SelectValue>{(value: string) => LANG_LABELS[value as keyof typeof LANG_LABELS] ?? value}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(LANG_LABELS) as (keyof typeof LANG_LABELS)[]).map((code) => (
-                <SelectItem key={code} value={code}>
-                  {LANG_LABELS[code]}
-                  {BETA_LANGS.has(code) && (
-                    <span className="ml-2 text-[10px] uppercase text-muted-foreground">beta</span>
-                  )}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {isBeta && (
-          <div className="rounded-2xl border border-border/60 bg-secondary/30 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-start gap-3 flex-1">
-              <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <IconFlask className="size-4" />
-              </span>
-              <div>
-                <p className="text-sm font-medium">{t("translation_beta_title")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("translation_beta_desc")}</p>
-              </div>
-            </div>
-            <Button variant="secondary" className="gap-2 shrink-0" onClick={() => setFeedbackOpen(true)}>
-              <IconMessage className="size-4" />
-              {t("suggest_correction")}
-            </Button>
-          </div>
-        )}
-      </div>
+      <SettingsSection title={t("language")} description={t("select_language")}>
+        <SettingsGroup>
+          <SettingsRow
+            icon={IconLanguage}
+            title={t("language")}
+            description={isBeta ? t("translation_beta_desc") : undefined}
+            badge={isBeta ? <SettingsBadge>beta</SettingsBadge> : undefined}
+            action={
+              <Select value={lang} onValueChange={(v) => setLanguage(v as Parameters<typeof setLanguage>[0])}>
+                <SelectTrigger className="h-9 w-full sm:w-44">
+                  <SelectValue>
+                    {(value: string) => LANG_LABELS[value as keyof typeof LANG_LABELS] ?? value}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(LANG_LABELS) as (keyof typeof LANG_LABELS)[]).map((code) => (
+                    <SelectItem key={code} value={code}>
+                      {LANG_LABELS[code]}
+                      {BETA_LANGS.has(code) && (
+                        <span className="ml-2 text-[10px] text-muted-foreground uppercase">beta</span>
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            }
+          />
+          {isBeta && (
+            <SettingsRow
+              icon={IconFlask}
+              title={t("translation_beta_title")}
+              action={
+                <Button variant="secondary" size="sm" className="gap-1.5" onClick={() => setFeedbackOpen(true)}>
+                  <IconMessage className="size-4" />
+                  {t("suggest_correction")}
+                </Button>
+              }
+            />
+          )}
+        </SettingsGroup>
+      </SettingsSection>
 
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} lang={lang} />
     </div>
@@ -190,22 +183,23 @@ function ThemeCard({
   );
 }
 
+// Copia fija de los tokens de cada tema (app.css): la vista previa debe verse igual sin importar el tema activo.
 const PREVIEW_TOKENS = {
   light: {
-    background: "oklch(0.9787 0.0017 247.84)",
-    card: "oklch(0.9963 0.0011 197.14)",
-    secondary: "oklch(0.9516 0.0017 247.84)",
-    border: "oklch(0.145 0 0 / 0.1)",
-    foreground: "oklch(0.145 0 0)",
-    muted: "oklch(0.556 0 0)",
+    background: "oklch(0.978 0 0)",
+    card: "oklch(1 0 0)",
+    secondary: "oklch(0.948 0 0)",
+    border: "oklch(0.2 0 0 / 0.08)",
+    foreground: "oklch(0.2 0 0)",
+    muted: "oklch(0.52 0 0)",
   },
   dark: {
-    background: "oklch(0.1944 0.0051 248.09)",
-    card: "oklch(0.2337 0.0049 248.04)",
-    secondary: "oklch(0.27 0.005 248)",
-    border: "oklch(0.27 0.005 248)",
-    foreground: "oklch(0.985 0 0)",
-    muted: "oklch(0.70 0 0)",
+    background: "oklch(0.175 0 0)",
+    card: "oklch(0.215 0 0)",
+    secondary: "oklch(0.26 0 0)",
+    border: "oklch(1 0 0 / 0.09)",
+    foreground: "oklch(0.97 0 0)",
+    muted: "oklch(0.68 0 0)",
   },
 } as const;
 

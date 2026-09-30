@@ -1,4 +1,4 @@
-import { IconLoader2 } from "@tabler/icons-react";
+import { IconCircleCheck, IconLoader2, IconMail } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { Form, useNavigation } from "react-router";
 import { toast } from "sonner";
@@ -10,10 +10,10 @@ import { ButtonGroup, ButtonGroupText } from "~/shared/components/primitives/but
 import { Input } from "~/shared/components/primitives/input";
 import { InputGroup, InputGroupInput } from "~/shared/components/primitives/input-group";
 import { Label } from "~/shared/components/primitives/label";
-import { Separator } from "~/shared/components/primitives/separator";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { ApiError } from "~/shared/lib/api";
+import { SettingsBadge, SettingsGroup, SettingsRow, SettingsSection } from "../components/settings-parts";
 import type { Route } from "./+types/account";
 
 const BIO_MAX = 280;
@@ -22,7 +22,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await getAuthUser(request);
   if (!user) throw new Response("Unauthorized", { status: 401 });
 
-  return { profile: meToProfile(user) };
+  return { profile: meToProfile(user), email: user.email };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -55,7 +55,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function AccountSettings({ loaderData, actionData }: Route.ComponentProps) {
-  const { profile } = loaderData;
+  const { profile, email } = loaderData;
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const toastIdRef = useRef<string | number | null>(null);
@@ -93,17 +93,10 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
   }, [actionData, isSubmitting, profile, setProfile, t]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-medium">{t("your_profile")}</h2>
-        <p className="text-sm text-muted-foreground">{t("profile_desc")}</p>
-      </div>
-
-      <Separator />
-
-      <Form method="post" className="space-y-8">
-        <div className="flex flex-col md:flex-row-reverse gap-8">
-          <div className="flex-1 space-y-4 w-full">
+    <div className="space-y-8">
+      <SettingsSection title={t("your_profile")} description={t("profile_desc")}>
+        <Form method="post" className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="fullName">{t("full_name")}</Label>
               <Input
@@ -121,7 +114,7 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
                 <ButtonGroupText>
                   <Label htmlFor="username">@</Label>
                 </ButtonGroupText>
-                <InputGroup className="w-full h-10">
+                <InputGroup className="h-10 w-full">
                   <InputGroupInput
                     id="username"
                     name="username"
@@ -131,36 +124,27 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
                 </InputGroup>
               </ButtonGroup>
             </div>
-
-            <BioField defaultValue={profile.bio ?? ""} placeholder={t("bio_placeholder")} label={t("bio_label")} />
           </div>
-        </div>
 
-        <div className="flex items-center gap-4">
+          <BioField defaultValue={profile.bio ?? ""} placeholder={t("bio_placeholder")} label={t("bio_label")} />
+
           <Button type="submit" disabled={isSubmitting} size="lg" className="w-full sm:w-auto">
-            {isSubmitting && <IconLoader2 className="mr-2 size-4 animate-spin" />}
+            {isSubmitting ? <IconLoader2 className="size-4 animate-spin" /> : <IconCircleCheck className="size-4" />}
             {isSubmitting ? t("saving") : t("save_changes")}
           </Button>
-        </div>
-      </Form>
+        </Form>
+      </SettingsSection>
 
-      <div className="space-y-4 pt-6">
-        <div>
-          <h3 className="text-lg font-medium">{t("emails")}</h3>
-          <p className="text-sm text-muted-foreground">{t("emails_desc")}</p>
-        </div>
-        <Separator />
-
-        <div className="p-4 rounded-lg border bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <p className="font-medium">{t("primary_email")}</p>
-            <p className="text-sm text-muted-foreground">{t("managed_by_provider")}</p>
-          </div>
-          <Button variant="outline" disabled size="lg" className="w-full sm:w-auto hover:cursor-not-allowed!">
-            {t("manage")}
-          </Button>
-        </div>
-      </div>
+      <SettingsSection title={t("emails")} description={t("emails_desc")}>
+        <SettingsGroup>
+          <SettingsRow
+            icon={IconMail}
+            title={email}
+            badge={<SettingsBadge>{t("primary_email")}</SettingsBadge>}
+            description={t("managed_by_provider")}
+          />
+        </SettingsGroup>
+      </SettingsSection>
     </div>
   );
 }

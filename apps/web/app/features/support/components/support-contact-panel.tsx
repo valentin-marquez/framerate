@@ -423,7 +423,7 @@ export function SupportContactPanel({
                   <div className="flex flex-wrap gap-2 pt-2">
                     {isAuthed && (
                       <Link
-                        to="/settings/tickets"
+                        to="/ajustes/tickets"
                         className="inline-flex h-8 items-center justify-center gap-1 rounded-xl bg-secondary/70 px-3 text-sm font-medium text-secondary-foreground/80 transition-colors hover:bg-primary hover:text-primary-foreground"
                       >
                         Ver mis tickets
