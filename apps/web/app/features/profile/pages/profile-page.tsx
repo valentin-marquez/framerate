@@ -6,10 +6,10 @@ import {
   IconPencil,
   IconShare3,
 } from "@tabler/icons-react";
-import { isRouteErrorResponse, Link, redirect, useRouteError } from "react-router";
+import { isRouteErrorResponse, Link, useRouteError } from "react-router";
 import { toast } from "sonner";
 import { getAuthUser, requireAuth } from "~/features/auth/services/auth.server";
-import { profilesService } from "~/features/profile/services/profiles";
+import { meToProfile, profilesService } from "~/features/profile/services/profiles";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
 import { useQuotes } from "~/features/quote/hooks/useQuotes";
 import { quotesService } from "~/features/quote/services/quotes";
@@ -47,51 +47,27 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const { username } = params;
 
   if (username) {
-    const { user: currentUser, supabase } = await getAuthUser(request);
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
+    const { user: currentUser } = await getAuthUser(request);
     try {
-      const response = await quotesService.getByUsername(username, 1, 100, session?.access_token);
-      const isOwner = currentUser?.id === response.user.id;
-
-      return {
-        profileUser: response.user,
-        quotes: response.data,
-        isOwner,
-        currentUser,
-      };
+      const profileUser = await profilesService.getByUsername(username);
+      // Las cotizaciones aún no existen en la API nueva: sin ellas el perfil igual se muestra.
+      const quotes = await quotesService
+        .getByUsername(username, 1, 100)
+        .then((response) => response.data)
+        .catch(() => []);
+      return { profileUser, quotes, isOwner: currentUser?.username === profileUser.username, currentUser };
     } catch (_error) {
       throw new Response("User not found", { status: 404 });
     }
   }
 
-  const { user, supabase } = await requireAuth(request);
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { user } = await requireAuth(request);
+  const quotes = await quotesService
+    .getAll(1, 100)
+    .then((response) => response.data)
+    .catch(() => []);
 
-  if (!session?.access_token) {
-    throw redirect("/");
-  }
-
-  try {
-    const [profile, quotes] = await Promise.all([
-      profilesService.getMe(session.access_token),
-      quotesService.getAll(1, 100, session.access_token),
-    ]);
-
-    return {
-      profileUser: profile,
-      quotes: quotes.data,
-      isOwner: true,
-      currentUser: user,
-    };
-  } catch (error) {
-    console.error("Error loading profile data:", error);
-    throw new Response("Error loading profile", { status: 500 });
-  }
+  return { profileUser: meToProfile(user), quotes, isOwner: true, currentUser: user };
 }
 
 export default function Profile({ loaderData }: Route.ComponentProps) {

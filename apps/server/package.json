@@ -10,7 +10,8 @@
     "check-types": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply framerate --local",
     "db:migrate:remote": "wrangler d1 migrations apply framerate --remote",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "dev:session": "bun scripts/dev-session.ts"
   },
   "dependencies": {
     "@framerate/contracts": "workspace:*",
@@ -20,7 +21,7 @@
     "better-auth": "^1.7.6",
     "hono": "^4.13.12",
     "kysely": "^0.29.6",
-    "zod": "^4.3.6"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260930.2",

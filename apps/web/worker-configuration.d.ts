@@ -9,6 +9,8 @@ declare namespace Cloudflare {
     VITE_SUPABASE_URL: string;
     VITE_SUPABASE_ANON_KEY: string;
     VITE_API_URL: string;
+    /** Service binding hacia el Worker de la API (framerate-server). */
+    API: Fetcher;
   }
 }
 interface Env extends Cloudflare.Env {}

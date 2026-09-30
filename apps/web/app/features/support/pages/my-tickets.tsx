@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { getAuthUser } from "~/features/auth/services/auth.server";
+import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
@@ -68,17 +69,12 @@ export function meta() {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { supabase } = await getAuthUser(request);
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { user } = await getAuthUser(request);
+  if (!user) throw new Response("Unauthorized", { status: 401 });
 
-  if (!session?.access_token) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-
-  const { tickets } = await supportClient.listMine(session.access_token);
-  return { tickets, token: session.access_token };
+  // El soporte aún no existe en la API nueva: sin él la página igual carga, vacía.
+  const { tickets } = await supportClient.listMine(SESSION_TOKEN).catch(() => ({ tickets: [] }));
+  return { tickets, token: SESSION_TOKEN };
 }
 
 export default function MyTicketsSettings({ loaderData }: Route.ComponentProps) {

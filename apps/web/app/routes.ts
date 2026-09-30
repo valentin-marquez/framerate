@@ -5,7 +5,6 @@ export default [
 
   // Auth
   route("action/auth", "features/auth/pages/auth-action.tsx"),
-  route("auth/callback", "features/auth/pages/auth-callback.tsx"),
 
   // Info
   route("privacy", "features/legal/pages/privacy-page.tsx"),

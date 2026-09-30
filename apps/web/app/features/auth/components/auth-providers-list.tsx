@@ -1,17 +1,8 @@
 import { useEffect, useState } from "react";
-import { Apple } from "~/shared/components/icons/apple";
-import { Discord } from "~/shared/components/icons/discord";
-import { Facebook } from "~/shared/components/icons/facebook";
-import { Google } from "~/shared/components/icons/google";
+import { ProviderIcon } from "~/features/auth/components/provider-icons";
+import { useAuthProviders } from "~/features/auth/hooks/useAuth";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
-
-const PROVIDERS = [
-  { id: "discord", label: "Discord", Icon: Discord, iconClass: "size-4" },
-  { id: "google", label: "Google", Icon: Google, iconClass: "size-4" },
-  { id: "apple", label: "Apple", Icon: Apple, iconClass: "size-4 invert dark:invert-0" },
-  { id: "facebook", label: "Facebook", Icon: Facebook, iconClass: "size-4" },
-] as const;
 
 interface AuthProvidersListProps {
   /** Path to return to after login. Defaults to current location at mount time. */
@@ -21,6 +12,7 @@ interface AuthProvidersListProps {
 
 export function AuthProvidersList({ returnTo, className }: AuthProvidersListProps) {
   const { t } = useTranslation();
+  const providers = useAuthProviders();
   // returnTo cae en window.location en cliente. SSR-safe: si no hay window, "/".
   const [path, setPath] = useState<string>(returnTo || "/");
 
@@ -33,7 +25,7 @@ export function AuthProvidersList({ returnTo, className }: AuthProvidersListProp
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      {PROVIDERS.map(({ id, label, Icon, iconClass }) => (
+      {providers.map(({ id, label }) => (
         <form key={id} method="post" action="/action/auth" className="w-full">
           <input type="hidden" name="action" value="login" />
           <input type="hidden" name="provider" value={id} />
@@ -46,7 +38,7 @@ export function AuthProvidersList({ returnTo, className }: AuthProvidersListProp
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             )}
           >
-            <Icon className={iconClass} />
+            <ProviderIcon id={id} />
             <span>{t("continue_with", { provider: label })}</span>
           </button>
         </form>

@@ -1,6 +1,13 @@
+import {
+  type ProductDetail as ApiProductDetail,
+  categoryFromSlug,
+  type PricePoint,
+  type ProductPage,
+} from "@framerate/contracts";
 import type { ProductSpecs } from "@framerate/db";
 import { api } from "~/shared/lib/api";
 import type { Product, ProductDetail } from "~/shared/utils/db-types";
+import { toPriceHistory, toProduct, toProductDetail, toQuickResult } from "./adapters";
 
 export type { Product, ProductDetail };
 
@@ -69,66 +76,80 @@ export interface QuickSearchResult {
   rank: number;
 }
 
+const SORTS: Record<NonNullable<ProductFilters["sort"]>, string> = {
+  price_asc: "price_asc",
+  price_desc: "price_desc",
+  popularity: "popularity",
+  name: "name",
+  // Sin precio de referencia todavía: mientras tanto se ordena por relevancia.
+  discount: "relevance",
+};
+
+/** La API no acepta búsquedas de menos de 2 caracteres. */
+const searchable = (q: string | undefined) => (q && q.trim().length >= 2 ? q.trim() : undefined);
+
+function listParams(filters: ProductFilters): Record<string, string> {
+  const params: Record<string, string> = {};
+  if (filters.page) params.page = String(filters.page);
+  if (filters.limit) params.pageSize = String(filters.limit);
+  if (filters.category) params.category = categoryFromSlug(filters.category) ?? filters.category;
+  if (filters.brand) params.brand = filters.brand;
+  const q = searchable(filters.search);
+  if (q) params.q = q;
+  if (filters.min_price) params.minPrice = String(filters.min_price);
+  if (filters.max_price) params.maxPrice = String(filters.max_price);
+  if (filters.sort) params.sort = SORTS[filters.sort];
+  return params;
+}
+
+async function fetchList(filters: ProductFilters): Promise<ProductsResponse> {
+  const page = await api.get<ProductPage>("/v1/products", { params: listParams(filters) });
+  return {
+    data: page.items.map(toProduct),
+    meta: {
+      page: page.page,
+      limit: page.pageSize,
+      total: page.total,
+      totalPages: Math.ceil(page.total / page.pageSize),
+    },
+  };
+}
+
 export const productsService = {
   // Búsqueda rápida optimizada para live search / autocomplete
-  quickSearch: (query: string, limit = 10) =>
-    api.get<{ data: QuickSearchResult[] }>(`/v1/products/search/quick`, {
-      params: { q: query, limit: limit.toString() },
-    }),
+  quickSearch: async (query: string, limit = 10) => {
+    const q = searchable(query);
+    if (!q) return { data: [] as QuickSearchResult[] };
+    const page = await api.get<ProductPage>("/v1/products", { params: { q, pageSize: String(limit) } });
+    return { data: page.items.map(toQuickResult) };
+  },
 
   // Búsqueda completa para resultados detallados
-  search: (query: string, limit = 50, offset = 0) =>
-    api.get<Product[]>(`/v1/products/search`, {
-      params: { q: query, limit: limit.toString(), offset: offset.toString() },
-    }),
+  search: async (query: string, limit = 50, offset = 0): Promise<Product[]> => {
+    const { data } = await fetchList({ search: query, limit, page: Math.floor(offset / limit) + 1 });
+    return data;
+  },
 
-  getDrops: (limit = 20, minDiscount = 10) =>
-    api.get<ProductDrop[]>(`/v1/products/drops`, {
-      params: { limit: limit.toString(), minDiscount: minDiscount.toString() },
-    }),
+  // Aún no hay precio de referencia, así que no hay bajas de precio que mostrar.
+  getDrops: async (_limit?: number, _minDiscount?: number): Promise<ProductDrop[]> => [],
 
-  // Ids de productos en tendencia (ranking de vistas, cacheado en el edge).
-  // El badge "Tendencia" se pinta solo para estos ids; no es tiempo real.
-  getTrending: (limit = 24) =>
-    api.get<{ ids: string[] }>(`/v1/products/trending`, { params: { limit: limit.toString() } }),
+  // Aún no hay ranking de tendencia.
+  getTrending: async (_limit?: number): Promise<{ ids: string[] }> => ({ ids: [] }),
 
   trackView: (slug: string) => api.post(`/v1/products/${slug}/view`, {}),
 
-  getBySlug: (slug: string) => api.get<ProductDetail>(`/v1/products/${slug}`),
+  getBySlug: async (slug: string): Promise<ProductDetail> =>
+    toProductDetail(await api.get<ApiProductDetail>(`/v1/products/${slug}`)),
 
   // Si `slug` fue renombrado, devuelve el slug canónico. 404 si no hay redirect.
   resolveRedirect: (slug: string) => api.get<{ slug: string }>(`/v1/products/redirects/${slug}`),
 
-  getPriceHistory: (slug: string, days = 30) =>
-    api.get<PriceHistoryResponse>(`/v1/products/${slug}/price-history`, {
-      params: { days: days.toString() },
-    }),
-
-  getAll: (filters: ProductFilters = {}) => {
-    const params: Record<string, string | string[]> = {};
-
-    if (filters.page) params.page = filters.page.toString();
-    if (filters.limit) params.limit = filters.limit.toString();
-    if (filters.category) params.category = filters.category;
-    if (filters.brand) params.brand = filters.brand;
-    if (filters.search) params.search = filters.search;
-    if (filters.min_price) params.min_price = filters.min_price.toString();
-    if (filters.max_price) params.max_price = filters.max_price.toString();
-    if (filters.sort) params.sort = filters.sort;
-
-    if (filters.specs) {
-      Object.entries(filters.specs).forEach(([key, value]) => {
-        if (typeof value === "object" && !Array.isArray(value)) {
-          if (value.min) params[`specs[${key}][min]`] = value.min;
-          if (value.max) params[`specs[${key}][max]`] = value.max;
-        } else if (Array.isArray(value)) {
-          params[`specs[${key}]`] = value;
-        } else {
-          params[`specs[${key}]`] = value;
-        }
-      });
-    }
-
-    return api.get<ProductsResponse>(`/v1/products`, { params });
+  getPriceHistory: async (slug: string, days = 30): Promise<PriceHistoryResponse> => {
+    const { items } = await api.get<{ items: PricePoint[] }>(`/v1/products/${slug}/price-history`, {
+      params: { days: String(days) },
+    });
+    return toPriceHistory(items, days);
   },
+
+  getAll: (filters: ProductFilters = {}) => fetchList(filters),
 };

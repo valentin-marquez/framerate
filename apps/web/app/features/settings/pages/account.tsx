@@ -4,7 +4,7 @@ import { Form, useNavigation } from "react-router";
 import { toast } from "sonner";
 import { getAuthUser, requireAuth } from "~/features/auth/services/auth.server";
 import { useAuthStore } from "~/features/auth/store/auth";
-import { profilesService } from "~/features/profile/services/profiles";
+import { meToProfile, profilesService } from "~/features/profile/services/profiles";
 import { Button } from "~/shared/components/primitives/button";
 import { ButtonGroup, ButtonGroupText } from "~/shared/components/primitives/button-group";
 import { Input } from "~/shared/components/primitives/input";
@@ -19,28 +19,14 @@ import type { Route } from "./+types/account";
 const BIO_MAX = 280;
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { supabase } = await getAuthUser(request);
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { user } = await getAuthUser(request);
+  if (!user) throw new Response("Unauthorized", { status: 401 });
 
-  if (!session?.access_token) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-
-  const profile = await profilesService.getMe(session.access_token);
-  return { profile };
+  return { profile: meToProfile(user) };
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const { supabase } = await requireAuth(request);
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.access_token) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
+  await requireAuth(request);
 
   const formData = await request.formData();
   const fullName = formData.get("fullName") as string;
@@ -53,14 +39,11 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   try {
-    const updatedProfile = await profilesService.updateMe(
-      {
-        full_name: fullName,
-        username: username,
-        bio: bio.length === 0 ? null : bio,
-      },
-      session.access_token,
-    );
+    const updatedProfile = await profilesService.updateMe({
+      full_name: fullName,
+      username: username,
+      bio: bio.length === 0 ? null : bio,
+    });
 
     return { success: true, profile: updatedProfile };
   } catch (error) {

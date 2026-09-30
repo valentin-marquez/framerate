@@ -20,7 +20,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRevalidator, useSearchParams } from "react-router";
 import useMeasure from "react-use-measure";
 import { toast } from "sonner";
-import { requireAuth, requireRole } from "~/features/auth/services/auth.server";
+import { requireRole } from "~/features/auth/services/auth.server";
+import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { Switch } from "~/shared/components/primitives/switch";
 import { Textarea } from "~/shared/components/primitives/textarea";
@@ -92,23 +93,14 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const [, { supabase }] = await Promise.all([requireRole(request, "moderator"), requireAuth(request)]);
-  // react-doctor-disable-next-line server-sequential-independent-await -- getSession depende del supabase resuelto en el Promise.all anterior
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.access_token) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-
-  const token = session.access_token;
+  const { user } = await requireRole(request, "moderator");
+  const token = SESSION_TOKEN;
   const url = new URL(request.url);
   const statusFilter = (url.searchParams.get("status") as SupportStatus | null) ?? null;
 
   const { tickets } = await adminSupportClient.list({ status: statusFilter ?? undefined, limit: 100 }, token);
 
-  return { tickets, token, currentUserId: session.user.id };
+  return { tickets, token, currentUserId: user.id };
 }
 
 export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {

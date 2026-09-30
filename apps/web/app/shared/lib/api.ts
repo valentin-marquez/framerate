@@ -8,19 +8,47 @@ if (!API_URL) {
 
 const BASE_URL = API_URL || "http://127.0.0.1:8787";
 
+export const API_BASE_URL = BASE_URL;
+
 type FetchOptions = RequestInit & {
   params?: Record<string, string | string[]>;
-  token?: string; // Para requests autenticados
+  /** Obsoleto e ignorado: la sesión es una cookie. Se elimina cuando cada feature migre a la API nueva. */
+  token?: string;
 };
+
+/**
+ * La sesión es una cookie de la API. En el navegador `credentials: "include"` la envía sola; en el SSR el
+ * Worker registra aquí la cookie de la petición en curso y, en producción, el service binding hacia la API
+ * (un Worker no puede llamar por HTTP público a otro Worker de su misma zona). Ver workers/app.ts.
+ */
+interface ServerContext {
+  cookie?: string | null;
+  fetch?: typeof fetch;
+}
+
+let serverContext: () => ServerContext | undefined = () => undefined;
+
+export function setServerContext(provider: () => ServerContext | undefined) {
+  serverContext = provider;
+}
+
+/** `fetch` hacia la API: por el service binding en el SSR de producción, `fetch` normal en el resto. */
+export function apiFetch(input: string, init?: RequestInit): Promise<Response> {
+  const send = typeof window === "undefined" ? (serverContext()?.fetch ?? fetch) : fetch;
+  return send(input, init);
+}
 
 export class ApiError extends Error {
   status: number;
   data: unknown;
+  /** Código estable de la API (`username_taken`, `banned`…), si vino. */
+  code?: string;
 
-  constructor(status: number, message: string, data?: unknown) {
+  constructor(status: number, message: string, data?: unknown, code?: string) {
     super(message);
     this.status = status;
     this.data = data;
+    this.code = code;
   }
 
   /**
@@ -43,7 +71,7 @@ export function isRateLimitError(error: unknown): error is ApiError {
 }
 
 async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-  const { params, token, ...init } = options;
+  const { params, token: _token, ...init } = options;
 
   const url = new URL(`${BASE_URL}${endpoint}`);
 
@@ -70,31 +98,46 @@ async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise
     headers.set("Content-Type", "application/json");
   }
 
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
+  const isBrowser = typeof window !== "undefined";
+  if (!isBrowser) {
+    const cookie = serverContext()?.cookie;
+    if (cookie && !headers.has("cookie")) headers.set("cookie", cookie);
   }
 
-  const response = await fetch(url.toString(), {
+  const response = await apiFetch(url.toString(), {
     ...init,
     headers,
+    ...(isBrowser && { credentials: "include" as const }),
   });
 
   if (!response.ok) {
-    let errorData: { message?: string; error?: string } | Record<string, unknown>;
+    let errorData: Record<string, unknown>;
     try {
       errorData = await response.json();
     } catch {
       errorData = { message: response.statusText };
     }
 
+    // Formato de la API: { error: { code, message } }. Se acepta también { message } / { error: "texto" }.
+    const nested =
+      typeof errorData.error === "object" && errorData.error !== null
+        ? (errorData.error as Record<string, unknown>)
+        : null;
     const errorMessage =
-      typeof errorData.message === "string"
-        ? errorData.message
-        : typeof errorData.error === "string"
-          ? errorData.error
-          : "An error occurred";
+      typeof nested?.message === "string"
+        ? nested.message
+        : typeof errorData.message === "string"
+          ? errorData.message
+          : typeof errorData.error === "string"
+            ? errorData.error
+            : "An error occurred";
 
-    throw new ApiError(response.status, errorMessage, errorData);
+    throw new ApiError(
+      response.status,
+      errorMessage,
+      errorData,
+      typeof nested?.code === "string" ? nested.code : undefined,
+    );
   }
 
   // Algunas respuestas DELETE no tienen body

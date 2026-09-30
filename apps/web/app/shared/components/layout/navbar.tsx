@@ -2,15 +2,12 @@ import { IconCompass, IconCpu, IconLogin, IconLogout, IconSettings, IconUserCirc
 import { domAnimation, LazyMotion, m, useTransform } from "motion/react";
 import { useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { Link, useLocation } from "react-router";
-import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
+import { ProviderIcon } from "~/features/auth/components/provider-icons";
+import { useAuthProviders, useProfile, useUser } from "~/features/auth/hooks/useAuth";
 import type { Category } from "~/features/category/services/categories";
 import { getCategoryConfig } from "~/features/category/utils/categories";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
-import { Apple } from "~/shared/components/icons/apple";
-import { Discord } from "~/shared/components/icons/discord";
-import { Facebook } from "~/shared/components/icons/facebook";
-import { Google } from "~/shared/components/icons/google";
 import { AdminMenu } from "~/shared/components/layout/admin-menu";
 import { Logo } from "~/shared/components/layout/logo";
 import { navTargetWidth } from "~/shared/components/layout/morph-search";
@@ -122,6 +119,7 @@ function getServerLocationSnapshot() {
 export function Navbar({ categories, blurred }: NavbarProps) {
   const user = useUser();
   const profile = useProfile();
+  const providers = useAuthProviders();
   const { t } = useTranslation();
   const location = useLocation();
 
@@ -396,10 +394,10 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     "focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-transparent",
                   )}
                 >
-                  {profile?.avatar_url || user.user_metadata?.avatar_url ? (
+                  {profile?.avatar_url ? (
                     <AsyncImage
-                      src={profile?.avatar_url || user.user_metadata?.avatar_url}
-                      alt={profile?.full_name || user.user_metadata?.name || user.email || "avatar"}
+                      src={profile?.avatar_url}
+                      alt={profile?.full_name || user.email || "avatar"}
                       className="size-6 rounded-full object-cover"
                     />
                   ) : (
@@ -415,10 +413,10 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                       prefetch="intent"
                     >
                       <div className="flex items-center gap-3 p-3">
-                        {profile?.avatar_url || user.user_metadata?.avatar_url ? (
+                        {profile?.avatar_url ? (
                           <AsyncImage
-                            src={profile?.avatar_url || user.user_metadata?.avatar_url}
-                            alt={profile?.full_name || user.user_metadata?.name || user.email || "avatar"}
+                            src={profile?.avatar_url}
+                            alt={profile?.full_name || user.email || "avatar"}
                             className="size-12 rounded-full object-cover shrink-0"
                           />
                         ) : (
@@ -428,11 +426,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                         )}
                         <div className="flex flex-col min-w-0 flex-1">
                           <p className="text-base font-medium truncate">
-                            {profile?.full_name ||
-                              profile?.username ||
-                              user.user_metadata?.full_name ||
-                              user.user_metadata?.name ||
-                              t("user")}
+                            {profile?.full_name || profile?.username || t("user")}
                           </p>
                           {user.email && <p className="text-sm text-muted-foreground truncate">{user.email}</p>}
                         </div>
@@ -504,53 +498,19 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   <DropdownMenuSeparator />
 
                   <DropdownMenuGroup>
-                    <form method="post" action="/action/auth" className="w-full">
-                      <input type="hidden" name="action" value="login" />
-                      <input type="hidden" name="provider" value="discord" />
-                      <input type="hidden" name="returnTo" value={currentPath} />
-                      <DropdownMenuItem className={"cursor-pointer"}>
-                        <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
-                          <Discord className="size-4" />
-                          <span>{t("continue_with", { provider: "Discord" })}</span>
-                        </button>
-                      </DropdownMenuItem>
-                    </form>
-
-                    <form method="post" action="/action/auth" className="w-full">
-                      <input type="hidden" name="action" value="login" />
-                      <input type="hidden" name="provider" value="google" />
-                      <input type="hidden" name="returnTo" value={currentPath} />
-                      <DropdownMenuItem className={"cursor-pointer"}>
-                        <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
-                          <Google className="size-4" />
-                          <span>{t("continue_with", { provider: "Google" })}</span>
-                        </button>
-                      </DropdownMenuItem>
-                    </form>
-
-                    <form method="post" action="/action/auth" className="w-full">
-                      <input type="hidden" name="action" value="login" />
-                      <input type="hidden" name="provider" value="apple" />
-                      <input type="hidden" name="returnTo" value={currentPath} />
-                      <DropdownMenuItem className={"cursor-pointer"}>
-                        <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
-                          <Apple className="size-4 invert dark:invert-0" />
-                          <span>{t("continue_with", { provider: "Apple" })}</span>
-                        </button>
-                      </DropdownMenuItem>
-                    </form>
-
-                    <form method="post" action="/action/auth" className="w-full">
-                      <input type="hidden" name="action" value="login" />
-                      <input type="hidden" name="provider" value="facebook" />
-                      <input type="hidden" name="returnTo" value={currentPath} />
-                      <DropdownMenuItem className={"cursor-pointer"}>
-                        <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
-                          <Facebook className="size-4" />
-                          <span>{t("continue_with", { provider: "Facebook" })}</span>
-                        </button>
-                      </DropdownMenuItem>
-                    </form>
+                    {providers.map(({ id, label }) => (
+                      <form key={id} method="post" action="/action/auth" className="w-full">
+                        <input type="hidden" name="action" value="login" />
+                        <input type="hidden" name="provider" value={id} />
+                        <input type="hidden" name="returnTo" value={currentPath} />
+                        <DropdownMenuItem className={"cursor-pointer"}>
+                          <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
+                            <ProviderIcon id={id} />
+                            <span>{t("continue_with", { provider: label })}</span>
+                          </button>
+                        </DropdownMenuItem>
+                      </form>
+                    ))}
                   </DropdownMenuGroup>
 
                   <DropdownMenuSeparator />

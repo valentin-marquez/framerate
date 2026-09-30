@@ -1,151 +1,49 @@
-import type { Database } from "@framerate/db";
-import { createServerClient, parseCookieHeader, serializeCookieHeader } from "@supabase/ssr";
+import type { MatchReviewsResponse } from "@framerate/contracts";
 import { data, useFetcher } from "react-router";
-import { requireRole } from "@/features/auth/services/auth.server";
+import { requireRole } from "~/features/auth/services/auth.server";
+import { ApiError, api } from "~/shared/lib/api";
 import type { Route } from "./+types/review-dashboard";
 
-// Helper to get supabase client (assuming shared utility or simple construction)
-function getSupabase(request: Request) {
-  const headers = new Headers();
-  const supabase = createServerClient<Database>(process.env.SUPABASE_URL || "", process.env.SUPABASE_ANON_KEY || "", {
-    cookies: {
-      getAll() {
-        const cookies = parseCookieHeader(request.headers.get("Cookie") ?? "");
-        // Ensure value is string (it should be from parseCookieHeader but type definition might have optional)
-        return cookies.map((c) => ({ name: c.name, value: c.value ?? "" }));
-      },
-      setAll(cookiesToSet) {
-        for (const { name, value, options } of cookiesToSet) {
-          headers.append("Set-Cookie", serializeCookieHeader(name, value, options));
-        }
-      },
-    },
-  });
-  return { supabase, headers };
-}
+const PAGE_SIZE = 50;
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "Gatekeeper | Framerate Admin" }, { name: "description", content: "Data Review Dashboard" }];
-}
-
-interface ScrapedData {
-  title?: string;
-  price?: number | string;
-  source?: string;
-  image?: string;
-}
-
-interface CandidateData {
-  manufacturer?: string;
-  model?: string;
-  mpn?: string;
-  [key: string]: unknown;
-}
-
-interface ReviewDashboardData {
-  queueDepth: string;
-  currentItem: {
-    id: string;
-    msgId: string;
-    scraped: {
-      title: string;
-      price: number;
-      retailer: string;
-      image: string;
-    };
-    candidate: {
-      id: string;
-      manufacturer: string;
-      model: string;
-      mpn: string;
-      specifications: CandidateData;
-    };
-    score: number;
-    reasons: unknown[];
-  } | null;
+  return [{ title: "Gatekeeper | Framerate Admin" }, { name: "description", content: "Revisión de matches dudosos" }];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  // Sólo moderadores y admins pueden ver el dashboard de gatekeeper.
   await requireRole(request, "moderator");
 
-  const { supabase, headers } = getSupabase(request);
-
-  // Call the robust RPC function we created
-  const { data: item, error } = await supabase.rpc("get_next_review_item");
-
-  if (error) {
-    console.error("Error fetching review item:", error);
-    // Fail gracefully, possibly specific error UI
-    return data<ReviewDashboardData>({ queueDepth: "?", currentItem: null }, { headers });
+  try {
+    const { items } = await api.get<MatchReviewsResponse>("/v1/admin/reviews", {
+      params: { limit: String(PAGE_SIZE) },
+    });
+    return {
+      queueDepth: items.length >= PAGE_SIZE ? `${PAGE_SIZE}+` : String(items.length),
+      currentItem: items[0] ?? null,
+    };
+  } catch (error) {
+    console.error("Error fetching review queue:", error);
+    return { queueDepth: "?", currentItem: null };
   }
-
-  if (!item || !item[0]) {
-    // Queue empty
-    return data<ReviewDashboardData>({ queueDepth: "0", currentItem: null }, { headers });
-  }
-
-  const result = item[0];
-  const scraped = (result.scraped_data ?? {}) as ScrapedData;
-  const candidate = (result.candidate_data ?? {}) as CandidateData;
-  const reasons = Array.isArray(result.match_reasons) ? result.match_reasons : [];
-
-  // Transform to UI format
-  const currentItem: ReviewDashboardData["currentItem"] = {
-    id: result.raw_feed_id,
-    msgId: String(result.msg_id),
-    scraped: {
-      title: scraped.title || "Unknown Title",
-      price: Number(scraped.price) || 0,
-      retailer: scraped.source || "Unknown Retailer",
-      image: scraped.image || "",
-    },
-    candidate: {
-      id: result.candidate_id,
-      manufacturer: candidate.manufacturer || "",
-      model: candidate.model || "Unknown Model",
-      mpn: candidate.mpn || "",
-      specifications: candidate,
-    },
-    score: result.match_score,
-    reasons,
-  };
-
-  const queueDepth = "?";
-
-  return data<ReviewDashboardData>({ queueDepth, currentItem }, { headers });
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  // Reforzamos el chequeo en el action: un POST directo también debe pasar.
   await requireRole(request, "moderator");
 
-  const { supabase, headers } = getSupabase(request);
   const formData = await request.formData();
-  const intent = formData.get("intent") as string;
-  const itemId = formData.get("itemId") as string;
-  const msgId = formData.get("msgId") as string;
+  const reviewId = Number(formData.get("reviewId"));
+  const decision = formData.get("intent") === "reject" ? "reject" : "accept";
+  if (!Number.isInteger(reviewId) || reviewId <= 0) return data({ success: false, error: "Missing ID" });
 
-  if (!itemId || !msgId) {
-    return data({ success: false, error: "Missing ID" }, { headers });
+  try {
+    await api.post(`/v1/admin/reviews/${reviewId}/${decision}`, {});
+    return data({ success: true });
+  } catch (error) {
+    return data({ success: false, error: error instanceof ApiError ? error.message : "Error" });
   }
-
-  let decision = "MATCH"; // Default
-  if (intent === "reject") decision = "REJECT";
-
-  const { error } = await supabase.rpc("resolve_review_item", {
-    p_msg_id: Number(msgId),
-    p_decision: decision,
-    p_raw_feed_id: itemId,
-  });
-
-  if (error) {
-    console.error("Error resolving item:", error);
-    return data({ success: false, error: error.message }, { headers });
-  }
-
-  return data({ success: true }, { headers });
 }
+
+const money = (value: number) => `$${value.toLocaleString("es-CL")}`;
 
 export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
   const { queueDepth, currentItem } = loaderData;
@@ -154,111 +52,112 @@ export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
   if (!currentItem) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
-        <h1 className="text-3xl font-semibold text-foreground mb-4">All Caught Up! 🎉</h1>
-        <p className="text-muted-foreground">The review queue is empty.</p>
-        <div className="mt-8 bg-card px-4 py-2 rounded-lg shadow-sm border border-border">
-          <span className="text-muted-foreground text-sm">Queue Depth:</span>
-          <span className="ml-2 font-mono font-semibold text-primary">0</span>
-        </div>
+        <h1 className="text-3xl font-semibold text-foreground mb-4">Todo al día 🎉</h1>
+        <p className="text-muted-foreground">No hay matches pendientes de revisión.</p>
       </div>
     );
   }
 
+  const { listing, candidate } = currentItem;
+
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-8 pb-28">
       <header className="mb-8 flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-foreground">Gatekeeper</h1>
         <div className="bg-card px-4 py-2 rounded-lg shadow-sm">
-          <span className="text-muted-foreground text-sm">Queue estimate:</span>
+          <span className="text-muted-foreground text-sm">Pendientes:</span>
           <span className="ml-2 font-mono font-semibold text-primary">{queueDepth}</span>
         </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-        {/* Scraped Item */}
         <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
-            Incoming (Scraped)
-          </h2>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">Oferta entrante</h2>
           <div className="space-y-4">
             <div>
-              <span className="text-xs text-muted-foreground">Title</span>
-              <p className="text-lg font-medium text-foreground">{currentItem.scraped.title}</p>
+              <span className="text-xs text-muted-foreground">Título en la tienda</span>
+              <p className="text-lg font-medium text-foreground">{listing.title}</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-6">
               <div>
-                <span className="text-xs text-muted-foreground">Retailer</span>
-                <p className="font-mono text-sm">{currentItem.scraped.retailer}</p>
+                <span className="text-xs text-muted-foreground">Tienda</span>
+                <p className="font-mono text-sm">{listing.store.name}</p>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground">Price</span>
-                <p className="font-mono text-sm">${Number(currentItem.scraped.price).toLocaleString()}</p>
+                <span className="text-xs text-muted-foreground">Precio</span>
+                <p className="font-mono text-sm">{money(listing.priceCash)}</p>
               </div>
+              {listing.mpn ? (
+                <div>
+                  <span className="text-xs text-muted-foreground">MPN</span>
+                  <p className="font-mono text-sm">{listing.mpn}</p>
+                </div>
+              ) : null}
             </div>
-            {/* Visual Diff Placeholder */}
+            <a
+              href={listing.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-primary underline underline-offset-2"
+            >
+              Ver en la tienda
+            </a>
             <div className="p-4 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-sm rounded-md border border-amber-500/20">
-              ⚠ Ambiguous Match (Score: {currentItem.score})
+              ⚠ Coincidencia dudosa (similitud: {currentItem.score})
             </div>
           </div>
         </div>
 
-        {/* Candidate Item */}
         <div className="bg-card p-6 rounded-xl shadow-sm border border-border ring-2 ring-primary/10">
-          <h2 className="text-sm font-semibold text-primary uppercase tracking-wide mb-4">Suggested Match (OpenDB)</h2>
+          <h2 className="text-sm font-semibold text-primary uppercase tracking-wide mb-4">Producto sugerido</h2>
           <div className="space-y-4">
             <div>
-              <span className="text-xs text-muted-foreground">Canonical Title</span>
-              <p className="text-lg font-medium text-foreground">{currentItem.candidate.model}</p>
+              <span className="text-xs text-muted-foreground">Nombre</span>
+              <p className="text-lg font-medium text-foreground">{candidate.name}</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-6">
               <div>
-                <span className="text-xs text-muted-foreground">MPN</span>
-                <p className="font-mono text-sm">{currentItem.candidate.mpn}</p>
+                <span className="text-xs text-muted-foreground">Marca</span>
+                <p className="text-sm">{candidate.brand ?? "—"}</p>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground">Manufacturer</span>
-                <p className="text-sm">{currentItem.candidate.manufacturer}</p>
+                <span className="text-xs text-muted-foreground">Categoría</span>
+                <p className="text-sm">{candidate.category}</p>
               </div>
             </div>
             <div>
-              <span className="text-xs text-muted-foreground">Specs</span>
+              <span className="text-xs text-muted-foreground">Evidencia</span>
               <pre className="text-xs bg-secondary p-2 rounded border border-border mt-1 overflow-x-auto">
-                {JSON.stringify(currentItem.candidate.specifications, null, 2)}
+                {JSON.stringify(currentItem.evidence, null, 2)}
               </pre>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 flex justify-center gap-4 shadow-lg">
-        <fetcher.Form method="post">
-          <input type="hidden" name="itemId" value={currentItem.id} />
-          <input type="hidden" name="msgId" value={String(currentItem.msgId)} />
-          <button
-            name="intent"
-            value="reject"
-            className="px-8 py-3 bg-destructive/10 text-destructive font-medium rounded-lg hover:bg-destructive/15 transition-colors"
-            type="submit"
-            disabled={fetcher.state !== "idle"}
-          >
-            {fetcher.state !== "idle" ? "Processing..." : "Reject & Create New"}
-          </button>
-        </fetcher.Form>
-
-        <fetcher.Form method="post">
-          <input type="hidden" name="itemId" value={currentItem.id} />
-          <input type="hidden" name="msgId" value={String(currentItem.msgId)} />
-          <button
-            name="intent"
-            value="confirm"
-            className="px-8 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 shadow-md transition-colors"
-            type="submit"
-            disabled={fetcher.state !== "idle"}
-          >
-            {fetcher.state !== "idle" ? "Processing..." : "Confirm Match (Space)"}
-          </button>
-        </fetcher.Form>
+        {(["reject", "accept"] as const).map((intent) => (
+          <fetcher.Form key={intent} method="post">
+            <input type="hidden" name="reviewId" value={currentItem.id} />
+            <button
+              name="intent"
+              value={intent}
+              type="submit"
+              disabled={fetcher.state !== "idle"}
+              className={
+                intent === "accept"
+                  ? "px-8 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 shadow-md transition-colors"
+                  : "px-8 py-3 bg-destructive/10 text-destructive font-medium rounded-lg hover:bg-destructive/15 transition-colors"
+              }
+            >
+              {fetcher.state !== "idle"
+                ? "Procesando..."
+                : intent === "accept"
+                  ? "Es el mismo producto"
+                  : "Son productos distintos"}
+            </button>
+          </fetcher.Form>
+        ))}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { getSessionToken } from "~/features/auth/services/session";
 import { api } from "~/shared/lib/api";
 
 export type ReviewSort = "recent" | "helpful" | "rating-desc";
@@ -75,10 +75,7 @@ export interface UpdateReviewPayload {
 }
 
 async function getToken() {
-  const supabase = useAuthStore.getState().supabase;
-  if (!supabase) return undefined;
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token;
+  return getSessionToken();
 }
 
 export const storeReviewsService = {

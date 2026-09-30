@@ -412,3 +412,23 @@ describe("sanciones", () => {
     expect(() => assertNotBanned(user)).not.toThrow();
   });
 });
+
+describe("CORS de la API", () => {
+  test("la lectura pública y el panel de admin también aceptan cookies desde la web (y sólo desde ella)", async () => {
+    for (const path of ["/v1/products", "/v1/categories", "/v1/admin/users"]) {
+      const ok = await request(path, {
+        method: "OPTIONS",
+        headers: { origin: WEB_ORIGIN, "access-control-request-method": "GET" },
+      });
+      expect(ok.headers.get("access-control-allow-origin")).toBe(WEB_ORIGIN);
+      expect(ok.headers.get("access-control-allow-credentials")).toBe("true");
+
+      const other = await request(path, {
+        method: "OPTIONS",
+        headers: { origin: "https://evil.example", "access-control-request-method": "GET" },
+      });
+      expect(other.headers.get("access-control-allow-origin")).not.toBe("https://evil.example");
+      expect(other.headers.get("access-control-allow-origin")).not.toBe("*");
+    }
+  });
+});

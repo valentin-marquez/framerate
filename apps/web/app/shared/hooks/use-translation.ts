@@ -17,7 +17,7 @@ export function useOptimisticLang(): Lang | undefined {
 export function useTranslation() {
   const requestInfo = useRequestInfo();
   const optimistic = useOptimisticLang();
-  const { setProfile, supabase } = useAuthStore();
+  const { setProfile } = useAuthStore();
   // requestInfo.userPrefs.lang is the source of truth (root loader keeps cookie
   // and profile.lang in sync per request). Optimistic value flips it instantly.
   const lang: Lang = optimistic ?? requestInfo.userPrefs.lang ?? "es";
@@ -41,15 +41,13 @@ export function useTranslation() {
       if (currentProfile) {
         setProfile({ ...currentProfile, lang: next });
         try {
-          const { data } = (await supabase?.auth.getSession()) ?? {};
-          const token = data?.session?.access_token;
-          if (token) await profilesService.updateMe({ lang: next }, token);
+          await profilesService.updateMe({ lang: next });
         } catch (e) {
           console.error("Failed to sync language to profile", e);
         }
       }
     },
-    [fetcher, setProfile, supabase],
+    [fetcher, setProfile],
   );
 
   return { t, lang, setLanguage };

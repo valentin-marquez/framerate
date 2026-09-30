@@ -16,6 +16,7 @@ import { domAnimation, LazyMotion, MotionConfig, m, type Transition } from "moti
 import { type FormEvent, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
+import { getSessionToken } from "~/features/auth/services/session";
 import { useAuthStore } from "~/features/auth/store/auth";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
@@ -74,7 +75,7 @@ export function SupportContactPanel({
   triggerLabel = "Contactar a soporte",
 }: SupportContactPanelProps) {
   const formId = useId();
-  const { user, supabase } = useAuthStore();
+  const { user } = useAuthStore();
   const isAuthed = Boolean(user);
 
   const [view, setView] = useState<ViewKind>("idle");
@@ -161,11 +162,7 @@ export function SupportContactPanel({
 
     setSubmitting(true);
     try {
-      let token: string | undefined;
-      if (isAuthed && supabase) {
-        const { data } = await supabase.auth.getSession();
-        token = data.session?.access_token;
-      }
+      const token = isAuthed ? getSessionToken() : undefined;
 
       const payload: CreateTicketPayload = {
         category,

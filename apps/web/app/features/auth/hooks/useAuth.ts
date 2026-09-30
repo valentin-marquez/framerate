@@ -1,6 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { useEffect } from "react";
-import { useRevalidator } from "react-router";
+import type { AuthProviders } from "@framerate/contracts";
+import { useRouteLoaderData } from "react-router";
 import { useAuthStore } from "~/features/auth/store/auth";
 
 export function useAuth() {
@@ -15,34 +14,8 @@ export function useProfile() {
   return useAuthStore((state) => state.profile);
 }
 
-export function useSupabase() {
-  return useAuthStore((state) => state.supabase);
-}
-
-/**
- * Hook para revalidar automáticamente cuando cambia la sesión
- * Úsalo en el componente root o en componentes que necesiten
- * actualizarse cuando el usuario hace login/logout
- */
-export function useAuthSync(supabaseClient?: SupabaseClient) {
-  const supabaseFromHook = useSupabase();
-  const client = supabaseClient ?? supabaseFromHook;
-  const { revalidate } = useRevalidator();
-
-  useEffect(() => {
-    if (!client) return;
-
-    const {
-      data: { subscription },
-    } = client.auth.onAuthStateChange((event) => {
-      // Revalidar cuando hay cambios en la autenticación
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
-        revalidate();
-      }
-    });
-
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, [client, revalidate]);
+/** Proveedores de login habilitados en la API (los carga el loader raíz). */
+export function useAuthProviders(): AuthProviders["items"] {
+  const root = useRouteLoaderData("root") as { providers?: AuthProviders["items"] } | undefined;
+  return root?.providers ?? [];
 }

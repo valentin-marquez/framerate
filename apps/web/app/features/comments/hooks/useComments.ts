@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { getSessionToken } from "~/features/auth/services/session";
 import {
   type CommentRoot,
   type CommentSort,
@@ -10,10 +10,7 @@ import {
 import { commentKeys } from "~/shared/lib/query-keys";
 
 async function getToken() {
-  const supabase = useAuthStore.getState().supabase;
-  if (!supabase) return undefined;
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token;
+  return getSessionToken();
 }
 
 export function useProductComments(productId: string, sort: CommentSort = "best") {

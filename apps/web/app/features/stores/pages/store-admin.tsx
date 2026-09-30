@@ -1,8 +1,9 @@
 import { IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
-import { Link, redirect, useFetcher } from "react-router";
+import { Link, useFetcher } from "react-router";
 import { toast } from "sonner";
 import { requireAuth } from "~/features/auth/services/auth.server";
+import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
 import { Label } from "~/shared/components/primitives/label";
@@ -15,25 +16,19 @@ import { type StoreMember, storesService } from "../services/stores";
 import type { Route } from "./+types/store-admin";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  const { supabase } = await requireAuth(request);
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.access_token) throw redirect("/");
+  const { user } = await requireAuth(request);
 
   const store = await storesService.get(params.slug);
 
   // Pedir miembros: si responde 403, no es editor.
   try {
-    const { members } = await storesService.listMembers(params.slug, session.access_token);
-    const me = session.user;
-    const meMembership = members.find((m: StoreMember) => m.user_id === me.id) ?? null;
+    const { members } = await storesService.listMembers(params.slug, SESSION_TOKEN);
+    const meMembership = members.find((m: StoreMember) => m.user_id === user.id) ?? null;
     return {
       store,
       members,
       meMembership,
-      token: session.access_token,
+      token: SESSION_TOKEN,
     };
   } catch (err) {
     if (err instanceof ApiError && (err.status === 403 || err.status === 401)) {
@@ -44,12 +39,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
-  const { supabase } = await requireAuth(request);
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) throw redirect("/");
-  const token = session.access_token;
+  await requireAuth(request);
+  const token = SESSION_TOKEN;
 
   const form = await request.formData();
   const intent = form.get("intent");

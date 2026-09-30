@@ -1,8 +1,7 @@
 import { IconBuildingStore, IconLoader2 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { useAuthStore } from "~/features/auth/store/auth";
-import { type MyStore, type MyStoreRole, profilesService } from "~/features/profile/services/profiles";
+import { type MyStoreRole, profilesService } from "~/features/profile/services/profiles";
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -15,13 +14,6 @@ const ROLE_LABEL: Record<MyStoreRole, string> = {
   admin: "Admin",
   editor: "Editor",
 };
-
-async function getToken(): Promise<string | undefined> {
-  const supabase = useAuthStore.getState().supabase;
-  if (!supabase) return undefined;
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? undefined;
-}
 
 interface MyStoresMenuProps {
   /** Si false, no monta la query (skip cuando el usuario no está logueado). */
@@ -40,11 +32,7 @@ interface MyStoresMenuProps {
 export function MyStoresMenu({ enabled }: MyStoresMenuProps) {
   const query = useQuery({
     queryKey: ["profile", "me", "stores"],
-    queryFn: async () => {
-      const token = await getToken();
-      if (!token) return { stores: [] as MyStore[] };
-      return profilesService.listMyStores(token);
-    },
+    queryFn: () => profilesService.listMyStores(),
     enabled,
     staleTime: 60_000,
   });

@@ -1,7 +1,7 @@
 import { IconCheck, IconSearch, IconSend, IconX } from "@tabler/icons-react";
 import { useMemo, useReducer } from "react";
 import { toast } from "sonner";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { getSessionToken } from "~/features/auth/services/session";
 import { translationFeedbackService } from "~/features/translation-feedback/services/translation-feedback";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
@@ -75,7 +75,6 @@ function feedbackReducer(state: FeedbackState, action: FeedbackAction): Feedback
 }
 
 export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps) {
-  const { supabase } = useAuthStore();
   const { t } = useTranslation();
   const [state, dispatch] = useReducer(feedbackReducer, initialFeedbackState);
   const { query, selectedKey, suggestion, comment, submitting } = state;
@@ -125,8 +124,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
 
     dispatch({ type: "submit-start" });
     try {
-      const session = await supabase?.auth.getSession();
-      const token = session?.data.session?.access_token;
+      const token = getSessionToken();
       await translationFeedbackService.submit(
         {
           lang,
