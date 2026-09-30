@@ -48,7 +48,9 @@ export const catalogRoutes = new Hono<AppEnv>()
   .get("/categories/:slug/price-range", edgeCache(3600), async (c) => {
     return c.json(await priceRange(c.var.db, categoryParam(c.req.param("slug"))));
   })
-  .get("/stores", edgeCache(3600), async (c) => c.json({ items: await listStores(c.var.db) }))
+  .get("/stores", edgeCache(60), async (c) =>
+    c.json({ items: await listStores(c.var.db, c.req.query("q")?.trim() || undefined) }),
+  )
   .get("/sitemap", edgeCache(3600), async (c) => c.json(await sitemap(c.var.db)))
   .get("/products", edgeCache(300), async (c) => {
     const query = ProductListQuerySchema.parse(c.req.query());

@@ -1,3 +1,4 @@
+import type { Claim, ClaimStatus, CreatedClaim, DnsCheck, VerifyResult } from "@framerate/contracts";
 import { api } from "~/shared/lib/api";
 
 export type DnsProviderId =
@@ -17,11 +18,12 @@ export type DnsProviderId =
 
 export interface ClaimRequest {
   id: string;
-  store_id: string | null;
+  /** Slug de la tienda. */
+  store_id: string;
   claimed_domain: string;
   txt_record_name: string;
   txt_record_value: string;
-  status: "pending" | "verified" | "failed" | "expired" | "revoked" | "stale";
+  status: ClaimStatus;
   attempts: number;
   last_checked_at: string | null;
   verified_at: string | null;
@@ -40,7 +42,6 @@ export interface ClaimCreateResponse {
   expires_at: string;
   dns_provider: DnsProviderId | string | null;
   dns_nameservers: string[];
-  instructions: { es: string; en: string };
 }
 
 /** Lo que cada resolver DoH vio para el TXT durante la verificación. */
@@ -61,21 +62,49 @@ export interface ClaimVerifyResponse {
   };
 }
 
-/** Resultado del peek read-only de DNS (no toca la DB). */
-export interface DnsCheckResponse {
-  matched: boolean;
-  status: "verified" | "pending" | "mismatch" | "error";
-  /** Valor TXT que esperamos encontrar. */
-  expected: string;
-  /** Registros TXT que realmente hay en ese nombre (ambos resolvers, dedup). */
-  found: string[];
-}
+export type DnsCheckResponse = DnsCheck;
+
+const toRequest = (c: Claim): ClaimRequest => ({
+  id: String(c.id),
+  store_id: c.storeSlug,
+  claimed_domain: c.domain,
+  txt_record_name: c.txtName,
+  txt_record_value: c.txtValue,
+  status: c.status,
+  attempts: c.attempts,
+  last_checked_at: c.lastCheckedAt,
+  verified_at: c.verifiedAt,
+  expires_at: c.expiresAt,
+  created_at: c.createdAt,
+  dns_provider: c.dnsProvider,
+  dns_nameservers: null,
+});
 
 export const claimsService = {
-  create: (storeId: string, token: string) =>
-    api.post<ClaimCreateResponse>("/v1/claims", { store_id: storeId }, { token }),
-  verify: (id: string, token: string) => api.post<ClaimVerifyResponse>(`/v1/claims/${id}/verify`, {}, { token }),
-  dnsCheck: (id: string, token: string) => api.get<DnsCheckResponse>(`/v1/claims/${id}/dns-check`, { token }),
-  confirm: (id: string, token: string) => api.post<{ store: unknown }>(`/v1/claims/${id}/confirm`, {}, { token }),
-  listMine: (token: string) => api.get<{ claims: ClaimRequest[] }>("/v1/claims/my", { token }),
+  create: async (storeSlug: string, _token?: string): Promise<ClaimCreateResponse> => {
+    const c = await api.post<CreatedClaim>("/v1/claims", { storeSlug });
+    return {
+      id: String(c.id),
+      domain: c.domain,
+      txt_name: c.txtName,
+      txt_value: c.txtValue,
+      status: c.status,
+      expires_at: c.expiresAt,
+      dns_provider: c.dnsProvider,
+      dns_nameservers: c.nameservers,
+    };
+  },
+
+  verify: async (id: string, _token?: string): Promise<ClaimVerifyResponse> => {
+    const r = await api.post<VerifyResult>(`/v1/claims/${id}/verify`, {});
+    return { id, status: r.claimStatus, matched: r.matched, attempts: r.attempts, dns: r.resolvers };
+  },
+
+  dnsCheck: (id: string, _token?: string) => api.get<DnsCheckResponse>(`/v1/claims/${id}/dns-check`),
+
+  confirm: (id: string, _token?: string) => api.post<{ storeSlug: string }>(`/v1/claims/${id}/confirm`, {}),
+
+  listMine: async (_token?: string): Promise<{ claims: ClaimRequest[] }> => ({
+    claims: (await api.get<{ items: Claim[] }>("/v1/claims/mine")).items.map(toRequest),
+  }),
 };

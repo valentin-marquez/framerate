@@ -5,8 +5,10 @@ import {
   type EnqueueCrawlsResult,
   type IngestService,
 } from "@framerate/contracts";
+import { createDb } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import type { Env } from "@/env";
+import { recheckClaims } from "@/features/claims/recheck";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
 import { enqueueAllCrawls, requestCrawls, runCrawlMessage } from "@/features/ingestion/runtime";
 
@@ -30,6 +32,7 @@ export default {
   async scheduled(controller, env) {
     const enqueued = await enqueueAllCrawls(env, `cron:${controller.cron}`);
     log.info("cron.enqueued", { enqueued, cron: controller.cron });
+    log.info("claims.rechecked", await recheckClaims(createDb(env.DB), new Date().toISOString()));
   },
 
   async queue(batch, env) {

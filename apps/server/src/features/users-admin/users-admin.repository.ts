@@ -2,11 +2,9 @@ import type { AdminUser, Role } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { sql } from "kysely";
 import type { ActiveBan } from "@/features/identity/types";
+import { likePattern } from "@/shared/sql";
 
 /** Acceso a datos de la administración de usuarios (búsqueda, sanciones, roles). */
-
-/** Escapa `%`, `_` y `\` para usar el texto del admin como patrón LIKE literal. */
-const likePattern = (text: string) => `%${text.replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
 
 export async function searchUsers(db: Db, q: string, limit: number, now: string): Promise<AdminUser[]> {
   const pattern = likePattern(q);

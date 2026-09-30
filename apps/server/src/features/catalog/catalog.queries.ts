@@ -15,6 +15,7 @@ import { type Db, parseJson, toBool } from "@framerate/database";
 import { slugify } from "@framerate/kit";
 import { titleTokens } from "@framerate/matching";
 import { sql } from "kysely";
+import { likePattern } from "@/shared/sql";
 
 /**
  * Consultas de lectura del catálogo público. Sólo se muestran productos con
@@ -237,16 +238,33 @@ export async function getPriceHistory(db: Db, slug: string, days: number): Promi
   }));
 }
 
-export async function listStores(db: Db) {
-  const rows = await db.query
+export async function listStores(db: Db, q?: string) {
+  let query = db.query
     .selectFrom("stores as s")
+    .leftJoin("store_profiles as p", "p.store_id", "s.id")
     .leftJoin("listings as l", (join) => join.onRef("l.store_id", "=", "s.id").on("l.is_active", "=", 1))
-    .select((eb) => ["s.slug", "s.name", "s.url", eb.fn.count<number>("l.id").as("offerCount")])
-    .where("s.is_active", "=", 1)
-    .groupBy("s.id")
-    .orderBy("s.name")
-    .execute();
-  return rows.map((r) => ({ ...r, offerCount: Number(r.offerCount) }));
+    .select((eb) => [
+      "s.slug",
+      "s.name",
+      "s.url",
+      "s.domain",
+      "s.scraped_icon_url as iconUrl",
+      "s.organization_id",
+      eb.fn.count<number>("l.id").as("offerCount"),
+    ])
+    .where("s.is_active", "=", 1);
+  if (q) {
+    const pattern = likePattern(q);
+    query = query.where(
+      sql<boolean>`(s.name LIKE ${pattern} ESCAPE '\\' OR s.domain LIKE ${pattern} ESCAPE '\\' OR p.display_name LIKE ${pattern} ESCAPE '\\')`,
+    );
+  }
+  const rows = await query.groupBy("s.id").orderBy("s.name").execute();
+  return rows.map(({ organization_id, ...r }) => ({
+    ...r,
+    isClaimed: organization_id !== null,
+    offerCount: Number(r.offerCount),
+  }));
 }
 
 export async function categoryCounts(db: Db) {

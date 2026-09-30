@@ -3,12 +3,15 @@ import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 import type { Env } from "@/env";
 import { catalogRoutes } from "@/features/catalog/catalog.routes";
+import { claimsRoutes } from "@/features/claims/claims.routes";
+import { claimsAdminRoutes } from "@/features/claims/claims-admin.routes";
 import { crawlAdminRoutes } from "@/features/crawl-admin/crawl-admin.routes";
 import { getAuth } from "@/features/identity/auth";
 import { authProvidersRoutes, meRoutes, publicProfileRoutes } from "@/features/identity/identity.routes";
 import { credentialedCors, requireStaff, requireUser } from "@/features/identity/middleware";
 import type { Actor, SessionUser } from "@/features/identity/types";
 import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
+import { storeManagementRoutes } from "@/features/stores/store-management.routes";
 import { storesRoutes } from "@/features/stores/stores.routes";
 import { usersAdminRoutes } from "@/features/users-admin/users-admin.routes";
 import { handleError, notFound } from "@/shared/http/errors";
@@ -61,11 +64,18 @@ export function createApp() {
   meApi.use("*", requireUser);
   meApi.route("/", meRoutes);
 
+  const claimsApi = new Hono<AppEnv>();
+  claimsApi.use("*", credentialedCors);
+  claimsApi.use("*", rateLimit);
+  claimsApi.use("*", requireUser);
+  claimsApi.route("/", claimsRoutes);
+
   const publicApi = new Hono<AppEnv>();
   publicApi.use("*", credentialedCors);
   publicApi.use("*", rateLimit);
   publicApi.route("/", catalogRoutes);
   publicApi.route("/", storesRoutes);
+  publicApi.route("/", storeManagementRoutes);
   publicApi.route("/users", publicProfileRoutes);
 
   const adminApi = new Hono<AppEnv>();
@@ -73,10 +83,12 @@ export function createApp() {
   adminApi.use("*", requireStaff("moderator"));
   adminApi.route("/", crawlAdminRoutes);
   adminApi.route("/", matchReviewRoutes);
+  adminApi.route("/", claimsAdminRoutes);
   adminApi.route("/users", usersAdminRoutes);
 
   app.route("/v1/auth", authApi);
   app.route("/v1/me", meApi);
+  app.route("/v1/claims", claimsApi);
   app.route("/v1/admin", adminApi);
   app.route("/v1", publicApi);
 
