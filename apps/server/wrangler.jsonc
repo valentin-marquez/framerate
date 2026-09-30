@@ -1,0 +1,53 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "framerate-server",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "keep_vars": true,
+  "observability": { "enabled": true },
+
+  // Crawl completo cada 6 horas (UTC). Encola un mensaje por (tienda, categoría).
+  "triggers": { "crons": ["17 */6 * * *"] },
+
+  // Los crawls consumen CPU parseando JSON; subir el límite por invocación.
+  "limits": { "cpu_ms": 120000 },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "framerate",
+      // Crear con: bunx wrangler d1 create framerate  → pegar el id aquí.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "r2_buckets": [
+    // Crear con: bunx wrangler r2 bucket create framerate-snapshots
+    // Retención: bunx wrangler r2 bucket lifecycle add framerate-snapshots snapshots-14d snapshots/ --expire-days 14
+    { "binding": "SNAPSHOTS", "bucket_name": "framerate-snapshots" }
+  ],
+
+  "queues": {
+    "producers": [{ "binding": "CRAWL_QUEUE", "queue": "framerate-crawl" }],
+    "consumers": [
+      {
+        "queue": "framerate-crawl",
+        // Un crawl por invocación: cada uno tiene su propio presupuesto de CPU y tiempo.
+        "max_batch_size": 1,
+        // Pocos crawls en paralelo: no saturar tiendas ni D1 (un solo escritor).
+        "max_concurrency": 2,
+        "max_retries": 2,
+        "dead_letter_queue": "framerate-crawl-dlq"
+      }
+    ]
+  },
+
+  "ratelimits": [
+    { "name": "PUBLIC_RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 120, "period": 60 } }
+  ]
+
+  // Secretos (no van aquí): bunx wrangler secret put ADMIN_TOKEN
+}

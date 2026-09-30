@@ -1,0 +1,21 @@
+{
+  "name": "@framerate/contracts",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@framerate/config": "workspace:*",
+    "@types/bun": "^1.4.2",
+    "typescript": "5.9.3"
+  }
+}

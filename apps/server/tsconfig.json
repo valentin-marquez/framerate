@@ -1,0 +1,14 @@
+{
+  "extends": "@framerate/config/tsconfig",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ESNext"],
+    "types": ["@cloudflare/workers-types", "bun"],
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "test"]
+}

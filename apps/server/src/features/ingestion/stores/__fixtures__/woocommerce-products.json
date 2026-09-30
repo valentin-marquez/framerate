@@ -1,0 +1,43 @@
+[
+  {
+    "id": 5011,
+    "name": "Tarjeta de Video ASUS Dual GeForce RTX 4070 SUPER OC 12GB",
+    "slug": "tarjeta-de-video-asus-dual-rtx-4070-super-oc-12gb",
+    "permalink": "https://tienda.example/producto/tarjeta-de-video-asus-dual-rtx-4070-super-oc-12gb/",
+    "sku": "DUAL-RTX4070S-O12G",
+    "is_in_stock": true,
+    "low_stock_remaining": 3,
+    "prices": {
+      "price": "649990",
+      "regular_price": "689990",
+      "sale_price": "649990",
+      "currency_code": "CLP",
+      "currency_minor_unit": 0
+    },
+    "images": [{ "src": "https://tienda.example/wp-content/uploads/asus-dual-4070s.jpg" }],
+    "brands": [],
+    "attributes": [{ "name": "Marca", "taxonomy": "pa_marca", "terms": [{ "name": "Asus" }] }]
+  },
+  {
+    "id": 5012,
+    "name": "Procesador AMD Ryzen 7 7800X3D &#8211; AM5",
+    "slug": "procesador-amd-ryzen-7-7800x3d",
+    "permalink": "https://tienda.example/producto/procesador-amd-ryzen-7-7800x3d/",
+    "sku": "0730143314930",
+    "is_in_stock": false,
+    "low_stock_remaining": null,
+    "prices": { "price": "41999000", "regular_price": "43999000", "currency_code": "CLP", "currency_minor_unit": 2 },
+    "images": [],
+    "attributes": []
+  },
+  {
+    "id": 5013,
+    "name": "Producto roto sin precio",
+    "permalink": "https://tienda.example/producto/roto/",
+    "sku": "",
+    "is_in_stock": true,
+    "prices": { "price": "", "regular_price": "", "currency_minor_unit": 0 },
+    "images": [],
+    "attributes": []
+  }
+]

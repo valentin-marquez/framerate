@@ -1,0 +1,28 @@
+{
+  "name": "server",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "bun test",
+    "check-types": "tsc --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply framerate --local",
+    "db:migrate:remote": "wrangler d1 migrations apply framerate --remote",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@framerate/contracts": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "hono": "^4.13.12",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260930.2",
+    "@framerate/config": "workspace:*",
+    "@types/bun": "^1.4.2",
+    "miniflare": "4.20260205.0",
+    "typescript": "5.9.3"
+  }
+}

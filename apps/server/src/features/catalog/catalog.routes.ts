@@ -1,0 +1,37 @@
+import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SLUGS, ProductListQuerySchema } from "@framerate/contracts";
+import { Hono } from "hono";
+import { z } from "zod";
+import type { AppEnv } from "@/app";
+import { AppError } from "@/shared/http/errors";
+import { edgeCache } from "@/shared/http/middleware";
+import { categoryCounts, getPriceHistory, getProduct, listProducts, listStores } from "./catalog.queries";
+
+/** API pública de lectura (montada bajo `/v1`). */
+export const catalogRoutes = new Hono<AppEnv>()
+  .get("/categories", edgeCache(3600), async (c) => {
+    const counts = new Map((await categoryCounts(c.var.db)).map((r) => [r.category, r.products]));
+    return c.json({
+      items: CATEGORIES.map((id) => ({
+        id,
+        slug: CATEGORY_SLUGS[id],
+        label: CATEGORY_LABELS[id],
+        productCount: counts.get(id) ?? 0,
+      })),
+    });
+  })
+  .get("/stores", edgeCache(3600), async (c) => c.json({ items: await listStores(c.var.db) }))
+  .get("/products", edgeCache(300), async (c) => {
+    const query = ProductListQuerySchema.parse(c.req.query());
+    return c.json(await listProducts(c.var.db, query));
+  })
+  .get("/products/:slug", edgeCache(300), async (c) => {
+    const product = await getProduct(c.var.db, c.req.param("slug"));
+    if (!product) throw new AppError(404, "product_not_found", "Producto no encontrado");
+    return c.json(product);
+  })
+  .get("/products/:slug/price-history", edgeCache(1800), async (c) => {
+    const { days } = z.object({ days: z.coerce.number().int().min(1).max(365).default(90) }).parse(c.req.query());
+    const points = await getPriceHistory(c.var.db, c.req.param("slug"), days);
+    if (!points) throw new AppError(404, "product_not_found", "Producto no encontrado");
+    return c.json({ items: points });
+  });
