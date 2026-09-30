@@ -4,12 +4,8 @@ Reconstrucción desde cero del backend. Objetivo: **datos correctos antes que
 datos completos**, despliegue barato en Cloudflare (tope US$10/mes) y código
 organizado por *feature*, no por tipo de archivo.
 
-> Estado: `apps/server`, `apps/ingest` y los paquetes `contracts`, `database`,
-> `matching` y `kit` son la nueva base. Las apps `api`, `collector`, `tracker`,
-> `cortex`, `janitor` y los paquetes `core`, `matcher`, `mpn-finder`, `opendb`,
-> `utils`, `db` son **legado** y se retiran cuando `apps/web` consuma la API
-> nueva (ver [Plan](#plan)). El nombre `apps/api` está ocupado por el legado (y
-> por un Worker en producción), por eso la API nueva se llama `apps/server`.
+> Estado: en producción desde septiembre de 2026. El sistema anterior (Supabase, seis servicios en Bun y Docker)
+> se retiró del repo el 30-09-2026 y sólo queda en el historial de git.
 
 ---
 
@@ -89,6 +85,8 @@ apps/
       features/
         catalog/                lectura pública: listado, búsqueda, detalle, historial
         identity/               login (Better Auth), sesión, perfil, roles y sanciones
+        stores/                 perfil de tienda, miembros y reseñas
+        claims/                 reclamo de tiendas por DNS (ver stores.md)
         users-admin/            admin: buscar usuarios, suspender, cambiar rol
         crawl-admin/            admin: historial de corridas y cuarentena, "crawlear ahora"
         match-review/           admin: cola de revisión humana de matches
@@ -179,10 +177,54 @@ de una categoría = mejorar su extractor + agregar casos al test.
 dentro de la zona gris (nunca decide sola, porque variantes distintas comparten
 foto del fabricante).
 
+### Hacia la huella multicapa (próxima fase)
+
+Es un concepto interno: el usuario nunca lo ve. La huella evalúa señales por capas, de la más confiable a la más
+difusa, para decidir si ofertas de tiendas distintas son el mismo producto:
+
+| Capa | Señales | Qué existe hoy |
+|---|---|---|
+| 1. Identificadores exactos | UPC, EAN, MPN | `product_identifiers` (PK `(kind, value)`). UPC y EAN se guardan como **GTIN-14**: son el mismo espacio de códigos, así un UPC y su EAN coinciden solos. `listings.mpn`/`gtin` guardan lo que publicó cada tienda |
+| 2. Texto normalizado | Marca, modelo, variante, capacidad | `fingerprint.ts` (tokens, marca canónica) y `attributes.ts` (atributos por categoría); `listings.raw_title` conserva el título crudo para volver a extraer |
+| 3. Especificaciones | Chip, VRAM, frecuencia, conectividad | Atributos discriminantes = vetos duros. `products.specs` / `product_spec_values` existen pero todavía no se llenan |
+| 4. Imágenes | pHash/dHash (Hamming), similitud visual | `listings.image_urls` guarda todas las fotos; falta el hash |
+| 5. Evidencia contextual | Categoría, fabricante, historial | Bloqueo por categoría + marca (veto); historial append-only en `match_decisions` |
+
+Reglas (ya decididas):
+
+- La capa 1 manda: un identificador igual es vínculo casi seguro, salvo veto de la capa 3.
+- Sólo se comparan ofertas de la misma categoría y marca (bloqueo), no todo contra todo.
+- Un atributo crítico distinto (VRAM, capacidad, velocidad, chip…) es veto, aunque el texto o la imagen coincidan.
+- La imagen sólo suma o resta puntaje; nunca decide sola.
+- Score combinado con dos umbrales: alto = fusión automática, intermedio = revisión humana, bajo = distintos.
+  Precisión antes que recall.
+- Trazabilidad: cada vínculo guarda score, capa o método que decidió, y fecha (`match_decisions`).
+- Overrides manuales persistentes (forzar o prohibir) que el siguiente crawl no pise.
+- Fusiones reversibles.
+
+**Huecos respecto del modelo actual** (ninguno bloquea lo construido; se resuelven al implementar la huella):
+
+1. **Overrides persistentes.** Rechazar una revisión no impide que el mismo par se vuelva a proponer, o que se
+   fusione solo si mejora un extractor. Y un vínculo manual se deshace si aparece un veto cuando la tienda cambia el
+   título. Falta una tabla `match_overrides (listing_id, product_id, kind: force | forbid)` que `decide` respete.
+2. **Fusiones reversibles.** Hoy "fusionar" es mover ofertas de un producto a otro (`accept` mueve la oferta y sus
+   identificadores), así que revertir es devolverlas. `match_decisions` guarda el `previousProductId`, pero falta
+   la operación "separar" en el admin.
+3. **Recalcular huellas.** Los productos guardan la clave y los atributos calculados con el extractor de su momento.
+   Cuando un extractor mejora, hace falta un job que recalcule `attribute_key`/`attributes` y vuelva a matchear.
+4. **Umbrales por categoría.** `THRESHOLDS` es global; el score configurable probablemente necesite perfiles por
+   categoría (junto con `PROFILES` en `attributes.ts`).
+5. **Procedencia de los identificadores.** `product_identifiers` no dice qué oferta aportó cada código; se deduce
+   de `listings.mpn`/`gtin`. Alcanza mientras cada oferta guarde lo que publicó.
+6. **Política de MPN en el título** (`[GV-N5060WF2OC-8GD]`, `p/n …`) y de SKU con prefijo: decidir en `normalize`,
+   no por tienda (ver [store-candidates.md](./store-candidates.md)).
+
 ## 6. Agregar una tienda
 
 1. Identificar la plataforma (WooCommerce → `createWooCommerceAdapter`; si no,
-   escribir un adaptador que implemente `StoreAdapter`).
+   escribir un adaptador que implemente `StoreAdapter`). Revisar primero
+   [store-candidates.md](./store-candidates.md): qué significa cada precio en esa
+   tienda (`cardMarkup`) y si su SKU es del fabricante (`sku`).
 2. Agregar la entrada en `apps/ingest/src/features/ingestion/stores/registry.ts`.
 3. Guardar respuestas reales como fixture y testear el mapeo.
 4. Verificar en producción: `POST /v1/admin/crawls {"store":"x","category":"gpu"}`,
@@ -208,7 +250,7 @@ bunx wrangler queues create framerate-crawl-dlq
 # Cada cambio de esquema (afecta a ambos Workers)
 bun run db:migrate:remote
 
-# Deploy — ingest primero: server lo referencia por service binding.
+# Deploy (sin CI: desde la máquina del desarrollador) — ingest primero: server lo referencia por service binding.
 # server queda en https://api.framerate.cl (custom domain en su wrangler.jsonc).
 bun run --cwd apps/ingest deploy
 bun run --cwd apps/server deploy
@@ -263,26 +305,23 @@ asistida.
 
 ## Plan
 
-1. ✅ Base: esquema D1, contrato de tienda, pipeline de ingesta, matching con
-   revisión, API de catálogo, tests contra D1 real.
-1b. ✅ Modelo de datos completo basado en las features de la web (migraciones
-   0001–0008, tipos Kysely, specs por categoría, tests de invariantes).
-   Pendiente: implementar las features `stores`,
-   `quotes`, `comments`, `moderation`, `support` y `analytics` sobre él.
-1d. ✅ Identidad: Better Auth + Discord, registro de proveedores, perfil, roles,
-   sanciones y administración de usuarios (ver [identity.md](./identity.md)).
-   Pendiente: integrar `apps/web`, copiar avatares a R2, eliminar cuenta.
-1c. ✅ Separación en `apps/server` (API) + `apps/ingest` (scraping) con paquetes
-   compartidos (`database`, `matching`, `kit`, `contracts`) y RPC entre ambos.
-   Pendiente: recalcular el resumen de precios de `products` tras cada corrida
-   (hoy el catálogo agrega desde `listings` en cada request).
-2. Verificar TecTec y Dust2 en vivo (slugs de categoría, significado del SKU) y
-   ajustar extractores con la cuarentena real.
-3. Portar las demás tiendas (PC Express, MyShop, SP Digital, Centrale, Central
-   Gamer, NotebooksYa), priorizando APIs JSON sobre navegador.
-4. ✅ (parcial) `apps/web` migrada a la API nueva: login, perfil, catálogo (home, categorías, explorar, producto,
-   buscador) y las pantallas de admin de usuarios y de revisión de matches. **Pendiente en la web** (siguen en la API
-   vieja, hoy sin endpoint): cotizaciones, comentarios, tiendas y reseñas, soporte, reportes/moderación, filtros por
-   especificación, "mejores ofertas" y tendencias (necesitan precio de referencia y popularidad calculados).
-5. Retirar las apps y paquetes legado.
-6. Features de usuario (cuentas, cotizaciones, alertas de precio) sobre la base nueva.
+1. ✅ Base: esquema D1, contrato de tienda, pipeline de ingesta, matching con revisión, API de catálogo, tests
+   contra D1 real.
+2. ✅ Modelo de datos completo (migraciones 0001–0008) e identidad (Better Auth + Discord, perfil, roles,
+   sanciones; ver [identity.md](./identity.md)).
+3. ✅ Separación en `apps/server` + `apps/ingest` con paquetes compartidos y RPC entre ambos.
+4. ✅ Tiendas: reclamo por DNS, perfil, miembros y reseñas (ver [stores.md](./stores.md)).
+5. ✅ `apps/web` sobre la API v2: login, perfil, catálogo, tiendas, admin de usuarios y revisión de matches.
+6. ✅ Legado retirado del repo (30-09-2026).
+7. ✅ TecTec y Dust2 verificadas con datos reales: precio tarjeta por recargo verificado, SKU correcto, extractores
+   ajustados con la cuarentena real. Las listas sólo muestran productos con stock.
+8. **Resumen de precios** tras cada corrida: `products.best_price`, `offer_count`, `reference_price` y
+   `product_price_daily`. Hoy el catálogo agrega desde `listings` en cada request, y sin esto no hay "mejores
+   ofertas" ni descuento real.
+9. **Más tiendas**, en el orden de [store-candidates.md](./store-candidates.md) (MyShop y Sandos primero).
+10. **Huella multicapa** (§5): overrides persistentes, separar fusiones, recalcular huellas, hash de imagen.
+11. **Refresco liviano** de precio y stock de URLs conocidas (hoy hay hasta 6 h de atraso).
+12. Features de usuario sin backend todavía (el esquema existe): cotizaciones, comentarios, soporte, reportes y
+    moderación, alertas de precio. La web aún tiene pantallas de cotización con tipos heredados
+    (`shared/utils/db-types.ts`, `features/quote/services/quotes.ts`) que se reemplazan por `@framerate/contracts`
+    al construirlas.

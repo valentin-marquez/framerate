@@ -1,147 +1,98 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guía para Claude Code (y cualquier persona) que trabaje en este repo. Framerate.cl compara precios de componentes
+de PC en tiendas chilenas. Este archivo va versionado: es la forma de mantener las mismas reglas entre máquinas.
 
-## ⚠️ Reconstrucción en curso (v2)
+## Arquitectura (v2)
 
-El backend se está reconstruyendo desde cero. **Todo trabajo nuevo va en la arquitectura v2**; lee `docs/architecture.md` antes de tocar código.
+Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Cloudflare (Workers, D1, Queues, R2).
 
-- **`apps/server`** — Worker de la API HTTP (Hono + D1), por feature: `catalog`, `identity` (Better Auth + Discord; ver `docs/identity.md`), `users-admin`, `crawl-admin`, `match-review`. Sin Cron ni colas. (Se llama `server` porque `apps/api` es el legado.)
-- **`apps/ingest`** — Worker de scraping (Cron + Queues + R2 + RPC): adaptadores de tienda, normalización, matching. Sin HTTP público. `server` le pide crawls por RPC tipado.
-- **`packages/contracts`** — esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.
-- **`packages/database`** — dueño del esquema: migraciones SQL, tipos Kysely, cliente D1 y utilidades de test (`@framerate/database/testing`).
-- **`packages/matching`** — huella de producto y decisión de matching (dominio puro) + repositorio.
-- **`packages/kit`** — texto, reloj y logger sin dependencias.
+- **`apps/server`**: Worker de la API HTTP (`api.framerate.cl`, Hono + D1), organizado por feature: `catalog`,
+  `identity` (Better Auth + Discord; ver `docs/identity.md`), `stores`, `claims` (ver `docs/stores.md`),
+  `users-admin`, `crawl-admin` y `match-review`. No tiene Cron ni colas.
+- **`apps/ingest`**: Worker de scraping (Cron + Queues + R2 + RPC): adaptadores de tienda, normalización y
+  matching. No tiene HTTP público; `server` le pide crawls por RPC tipado.
+- **`apps/web`**: React Router v7 (SSR) en Workers. Sólo habla con la API (`/v1/*`), nunca con la base.
+- **`packages/contracts`**: esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.
+- **`packages/database`**: dueño del esquema: migraciones SQL, tipos Kysely, cliente D1 y utilidades de test
+  (`@framerate/database/testing`).
+- **`packages/matching`**: huella de producto y decisión de matching (dominio puro) + repositorio.
+- **`packages/kit`**: texto, reloj, logger y DNS, sin dependencias.
 - Las apps **no se importan entre sí**; lo compartido va en `packages/`.
-- **Legado (no extender, se retira en la fase 5 del plan):** `apps/api`, `apps/collector`, `apps/tracker`, `apps/cortex`, `apps/janitor`, `packages/core`, `packages/matcher`, `packages/mpn-finder`, `packages/opendb`, `packages/utils`, y `packages/db` (Supabase; `apps/web` aún depende de él hasta migrar a `/v1`). Las secciones de abajo que describen esas apps documentan el sistema viejo.
 
-Comandos v2:
+Reglas:
+
+- El esquema es SQL a mano en `packages/database/migrations/`. Kysely sólo tipa y arma consultas; los tipos viven
+  en `packages/database/src/database.ts` y se actualizan a mano junto con la migración.
+- Ninguna oferta entra a `listings` sin pasar `normalizeOffer`; lo inválido va a `quarantine` con su motivo.
+- Los adaptadores de tienda nunca inventan identificadores. Si el SKU no es del fabricante, `sku: "internal"`.
+  El precio tarjeta sólo se configura si está verificado en la ficha (`cardMarkup`).
+- El matching prefiere duplicados antes que fusiones erróneas (vetos duros por atributo). La evolución prevista
+  es la huella multicapa: `docs/architecture.md` §5.
+- Las listas del catálogo sólo muestran productos con stock; la ficha y el sitemap no filtran.
+
+## Comandos
 
 ```bash
-bun run db:migrate:local                  # aplica packages/database/migrations con wrangler
-bun run dev:server                        # API (wrangler dev)
-bun run dev:ingest                        # scraping
-bunx turbo run check-types test --filter=server --filter=ingest \
-  --filter=@framerate/kit --filter=@framerate/database \
-  --filter=@framerate/matching --filter=@framerate/contracts
+bun install
+bun run db:migrate:local      # aplica packages/database/migrations en D1 local
+bun run dev:server            # API (wrangler dev)
+bun run dev:ingest            # scraping (Cron/Queue/RPC)
+bun run dev:web               # frontend
+bun run test                  # check-types + tests de todo el monorepo (red de seguridad antes de desplegar)
+bun test path/to/file.test.ts # un archivo (dentro de la app)
+bun run biome                 # lint + formato con escritura
 ```
 
-Reglas v2: esquema = SQL a mano en `packages/database/migrations/` (Kysely sólo tipa y arma consultas; tipos en `packages/database/src/database.ts`); ninguna oferta entra a `listings` sin pasar `normalizeOffer`; los adaptadores de tienda nunca inventan identificadores; el matching prefiere duplicados antes que fusiones erróneas (vetos duros por atributo).
+Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`, `category`, `runId`). En vivo:
+`bunx wrangler tail framerate-ingest` o `framerate-server`. Salud del scraping: `GET /v1/admin/crawls` y
+`GET /v1/admin/quarantine`.
+
+## Push y deploy
+
+- **No hay CI.** Todo sale de la máquina del desarrollador con `wrangler`. El procedimiento completo, con sus trampas,
+  está en la skill `/deploy`.
+- **Nunca desplegar sin que el dueño lo pida explícitamente**, ni para "probar". Commit y push sí se hacen tras cada
+  tanda. Push: `git push https://git.nozz.skin/valentin/framerate.git <rama>:refs/heads/<rama>` (`origin` es GitHub
+  y no se usa); nunca usar credenciales pegadas en el chat.
+- Salud de producción (consultas D1 de sólo lectura): skill `/prod-health`.
+
+## En un PC nuevo
+
+1. `bun install` (instala también los hooks de git).
+2. `bunx wrangler login` con la cuenta de Cloudflare del proyecto.
+3. Crear los `.dev.vars` de `apps/server` (`BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, `DISCORD_CLIENT_ID`,
+   `DISCORD_CLIENT_SECRET`) y de `apps/web` si hace falta. No están en el repo.
+4. `bun run db:migrate:local` y `bun run test`.
+5. Aceptar la confianza del espacio de trabajo en Claude Code: `.claude/settings.json` ofrece los plugins
+   `ponytail` y `playwright`. Las skills del proyecto (`deploy`, `prod-health`, `referencias-composicion`) están en
+   `.claude/skills/`.
 
 ## Cómo trabajar aquí
 
 - **Skills por defecto:** casi siempre usar `/ponytail:ponytail` (la solución más simple que funcione) y sus subskills: `/ponytail:ponytail-review` (revisar sobreingeniería), `/ponytail:ponytail-audit` (auditar el repo entero), `/ponytail:ponytail-debt`, `/ponytail:ponytail-gain`, `/ponytail:ponytail-help`.
 - **Maquetación y UI nueva:** usar `/referencias-composicion` antes de maquetar una página, sección o componente (busca referencias reales y propone 2–3 layouts).
 - **Comentarios: los mínimos.** Sólo el porqué no obvio (una restricción, una trampa, una decisión). Nada que repita lo que dice el código ni bloques de documentación largos. No agregar comentarios de cabecera por costumbre.
+- **Criticar lo heredado contra v2.** La web todavía arrastra supuestos del sistema anterior (Supabase, proxies de
+  imágenes, tipos de la vista `api_products` en `shared/utils/db-types.ts`). Antes de extender algo heredado, decir qué
+  sobra, qué resuelve Cloudflare de forma nativa y qué conviene rehacer.
+- **Sin " · " como separador** en textos visibles ("MSI · Tendencia"): al dueño le parece "estilo IA". Separar con
+  espacio o `gap`, chips, líneas propias o jerarquía tipográfica.
 
-## Animaciones y rendimiento del hilo principal
+## Runtime y convenciones
 
-Queremos una web con mucho movimiento, pero que no le cueste al hilo principal (base: [The Expensive Main Thread](https://kciter.so/posts/the-expensive-main-thread/en/)). Un frame en 60 Hz dura ~16 ms y el navegador se lleva parte: nuestro presupuesto es **~10 ms por frame** (la mitad en 120 Hz). Una tarea de más de 50 ms es una *long task* y congela la pantalla.
+- **Bun exclusivo**: `bun install`, `bun add`, `bun run`, `bunx`. Nunca `node`, `npm`, `yarn` ni `pnpm`.
+- Monorepo Turborepo (`apps/*`, `packages/*`). TypeScript estricto, ESM, dependencias internas con `workspace:*`,
+  alias `@/...` por app.
+- Biome para lint y formato (`biome.json` extiende `@framerate/config/biome`). Hooks (`simple-git-hooks`):
+  pre-commit `bun run biome:check`; pre-push `bun run biome:check && bun run build`.
+- **Commits en Conventional Commits, en español**: `tipo(scope): descripción` (`feat`, `fix`, `refactor`, `chore`,
+  `docs`, `style`, `test`, `perf`). **No agregar** la línea `Co-Authored-By: Claude ...`.
+- Secretos sólo con `bunx wrangler secret put <NOMBRE>`; nunca en el repo.
 
-- **Sólo se anima `transform` y `opacity`**: las procesa el compositor y siguen fluidas aunque el hilo principal esté ocupado. Nunca animar `width`, `height`, `top/left`, `margin`, `padding`, `border` ni `box-shadow`/`filter` (gatillan layout o paint). Tampoco hacer aparecer con fundido un elemento con `backdrop-filter` (p. ej. el velo de un diálogo): el desenfoque se aplica de golpe y se ve un salto; el velo va sin desenfoque (`bg-black/50`). Entradas/salidas de modales con CSS (`animate-in`/`animate-out` + `fill-mode-forwards`, desmontar en `onAnimationEnd`), no con `motion`: en un elemento que sólo anima opacidad, `motion` aplica el valor final un cuadro tarde y parpadea al terminar. Un tamaño que cambia se resuelve con `scale` o `clip-path`, no con `width`.
-- **CSS antes que JS**: `@keyframes`/`transition`, o `motion` con `transform`/`opacity` (WAAPI). Nada de `setState` por frame ni de leer layout (`offsetHeight`, `getBoundingClientRect`) dentro de un bucle de animación.
-- **La entrada escalonada es sólo para la carga inicial**: lo que se ve al abrir la página entra en cascada; lo que queda bajo el pliegue **no** aparece al hacer scroll ni al navegar, porque animar mientras se recorre el contenido estorba. Se usa `.enter-up` con `enterClass()`/`enterStyle(ms)` de `shared/lib/initial-load.ts` (CSS puro: no depende de que hidrate el JS ni retrasa el LCP; tras ~1,6 s dejan de aplicarse).
-- **Nada de `whileInView` ni listeners de `scroll` para mostrar contenido.** Un listener de scroll/resize/input va con `passive`, `requestAnimationFrame` o throttle/debounce.
-- **Cascadas cortas**: entrada de 0,4–0,7 s, escalonado de 50 ms y máximo ~6 elementos por grupo. Movimiento corto (≤ 16 px), con la curva ya usada (`cubic-bezier(0.22, 1, 0.36, 1)`).
-- **El layout no puede cambiar al hidratar**: lo que depende del cliente (`matchMedia`, `localStorage`, tema) se resuelve con CSS o con un valor que el servidor ya conoce; un elemento que aparece o cambia de tamaño tras hidratar es un salto visible.
-- **`prefers-reduced-motion`** se respeta siempre (hay una regla global en `app.css`). Todo efecto nuevo debe degradar a estático.
-- **`will-change` sólo mientras dura la animación** y en pocos elementos; abusar de él consume memoria de GPU. Excepción: la foto de la tarjeta de producto (`.stage-image`), que sin capa fija salta 1 px al terminar de asentarse.
-- **Trabajo pesado fuera del hilo principal**: si una tarea puede pasar de ~10 ms (parsear, filtrar, ordenar listas grandes) se divide en trozos de ~5 ms cediendo el control (`scheduler.yield()`, o `requestAnimationFrame` + `performance.now()`), o se mueve a un Web Worker. Listas largas: `content-visibility: auto` o virtualización.
-- **Se mide, no se supone**: antes de dar por buena una animación nueva, Performance de DevTools con CPU ×4 y mirar INP/TBT. "El código es lento" no es lo mismo que "el código bloquea".
+## Dónde mirar
 
-## Runtime & Tooling
-
-- **Runtime:** Bun (exclusive). Do not use `node`, `npm`, `yarn`, or `pnpm`. Use `bun install`, `bun add`, `bun run`, `bunx`.
-- **Monorepo:** Turborepo. Tasks declared in `turbo.json`; workspaces in `apps/*` and `packages/*`.
-- **Lint/Format:** Biome (`@biomejs/biome`) — single tool for both. Config at root `biome.json` extends `@framerate/config/biome`.
-- **Git hooks** (`simple-git-hooks`): pre-commit runs `bun run biome && bun run generate:types`; pre-push runs `bun run biome:check && bun run build`.
-
-## Common Commands
-
-Run from repo root unless noted.
-
-```bash
-# Dev (per app)
-bun run dev:web         # apps/web (React Router v7)
-bun run dev:api         # apps/api (Hono on Workers via wrangler dev)
-bun run dev:collector   # apps/collector (Bun + Hono, scraper service)
-bun run dev:tracker     # apps/tracker (Bun + Elysia, price tracker)
-bun run dev             # all apps via turbo
-
-# Build / type-check
-bun run build
-bun run check-types
-
-# Lint / format
-bun run biome           # write fixes (lint + format, --unsafe)
-bun run biome:check     # CI-mode check
-bun run lint            # turbo: biome:lint per package
-
-# Tests
-bun run test            # turbo run test
-bun test path/to/file.test.ts             # single file (run inside the app dir)
-bun test --filter "regex pattern"          # filter
-
-# Database (packages/db) — Supabase, NO local instance, applied directly to production
-bun run --cwd packages/db migration:new <description>
-bun run db:push          # supabase db push (applies migrations to remote)
-bun run generate:types   # regenerates packages/db/src/types.ts from remote schema
-```
-
-The `cortex` and `janitor` apps are background services started with `bun run --cwd apps/<name> dev`.
-
-### Logs (consultar la terminal)
-
-The shared `Logger` (`@framerate/utils`, `packages/utils/src/logger.ts`) mirrors every `info/warn/error/http` print to a file **in addition to the console**, so you can review what a running process/worker printed without having its terminal. In Bun apps it writes to `LOG_FILE` (if set) or `logs/dev.log` relative to the process cwd — with turbo that's the app dir, e.g. **`apps/collector/logs/dev.log`** (crawler/pipeline output), `apps/tracker/logs/dev.log`, etc. To inspect: `tail -f apps/collector/logs/dev.log` or `grep -E "\[ERROR\]|product_renamed" apps/collector/logs/dev.log`. Append mode, truncated past ~10 MB; disabled in tests (`NODE_ENV=test`) and with `LOG_TO_FILE=0`. Cloudflare Workers (api, web SSR) have no filesystem → console only. `logs/` is gitignored.
-
-## Architecture
-
-Framerate.cl is a PC-component price comparison platform for Chile. The system enforces strict separation between scraping, storage, API, and presentation. See `README.md` for the full design doc.
-
-### Apps
-
-- **`apps/web`** — React Router v7 (framework mode, SSR), Tailwind v4, deployed to Cloudflare via `@cloudflare/vite-plugin`. **Never** accesses Supabase directly; always goes through `apps/api`. Filter state lives in URL search params.
-- **`apps/api`** — Hono on Cloudflare Workers. API gateway: read-only Supabase access via anon key + RLS. Routes under `/v1/*`. Per-route rate limit tiers applied in `src/index.ts` (`search`, `strict`, `moderate`, `lenient`). Uses Cloudflare Cache API (not KV) for response caching: listings 5m, details 1h, image proxy 1y. Cache disables automatically in local Bun dev since Cache API is unavailable.
-- **`apps/collector`** — Bun + Hono service. **Only** writer to Supabase (service role key). Scrapes stores, normalizes data, extracts specs (regex + LLM), uploads images to Supabase Storage. Crawlers in `src/crawlers/` extend `BaseCrawler`; current implementations: PC Express (HTMLRewriter), SP Digital, Central Gamer, Centrale, MyShop, NotebooksYa, TecTec (most use Puppeteer with stealth). Pipelines/strategies/processors live under `src/collector/` and `src/processors/`. Runs in Docker (see `base.Dockerfile` — bundles Chromium for Puppeteer).
-- **`apps/tracker`** — Bun + Elysia HTTP service. **High-frequency**, lightweight price/stock checks for *existing* listings only. **No browsers** — `fetch` + `cheerio`/`HTMLRewriter` only. Triggered via `POST /track/batch`. Anything that needs JS rendering belongs in `collector`, not here.
-- **`apps/cortex`** — Bun background workers. Polls `ai_extraction_jobs` in Postgres (Postgres is used as the queue — there is no Redis), runs LLM matchers/syncers (DeepSeek via OpenAI SDK), uses `@framerate/matcher` for product matching. Entry: `src/index.ts` starts poller + matcher + syncer + janitor in parallel.
-- **`apps/janitor`** — Bun service. Watches an `OpenDB` git repo (synced into a volume by `git-sync` in `docker-compose.yml`), diffs commits, and upserts canonical product specs into `products_canonical` keyed by filename UUID. Tracks `git_commit_hash` per row.
-
-### Packages
-
-- **`@framerate/db`** — Supabase schema authority. Owns `supabase/migrations/`, generated `src/types.ts` (`Database`, `Tables`, `TablesInsert`), per-category spec interfaces (`GpuSpecs`, `CpuSpecs`, …), Storage helpers. **Never edit `types.ts` manually** — regenerate. Migrations are applied directly to production; review carefully and keep them non-destructive.
-- **`@framerate/core`** — Shared business logic (e.g., PC builder under `src/builder`).
-- **`@framerate/matcher`** — Product matching (Orama + Jaro-Winkler).
-- **`@framerate/opendb`** — Schemas/types for the external OpenDB hardware spec repo.
-- **`@framerate/utils`** — Shared logger and helpers.
-- **`@framerate/config`** — Shared `biome.json` and `tsconfig.base.json`.
-
-### Credential & Trust Boundary
-
-| Layer | Key | Permissions |
-|-------|-----|-------------|
-| `collector`, `cortex`, `janitor`, `tracker` | `SUPABASE_SERVICE_ROLE_KEY` | Read/write |
-| `api` | `SUPABASE_PUBLISHABLE_KEY` (anon) | Read-only via RLS |
-| `web` | none | Goes through `api` only |
-
-All tables have RLS enabled with public read; writes restricted to service role.
-
-### Product Matching
-
-Matching across stores currently uses **MPN (Manufacturer Part Number)** as the unique key (`findExistingProduct` in collector). The `EAN` field was removed. Spec extraction has a regex-first pipeline with an LLM fallback (DeepSeek); LLM extractions are cached in `extraction_jobs` keyed by MPN.
-
-## Conventions
-
-- TypeScript strict, ESM throughout.
-- Workspace deps use `workspace:*`. Path aliases use `@/...` (per-app `tsconfig.json`).
-- **URLs públicas en español.** El sitio sirve audiencia chilena. Las rutas visibles del frontend (`apps/web` route segments y los `<Link>` que las consumen) deben estar en español: `/tiendas/:slug`, `/reclamar`, `/explorar`, `/categoria/:slug`, `/producto/:slug`, `/cotizacion/:slug`. Cuando renombres una ruta existente, mantén la versión en inglés como redirect 301 (ver `apps/web/app/features/stores/pages/redirect-old-*.tsx`) hasta que expiren los caches públicos y enlaces externos. Las APIs internas (`/v1/*` de `apps/api`), nombres de workspaces (`apps/api`, `apps/web`, `packages/*`), tablas SQL, y código en general se mantienen en inglés.
-- Los mensajes de commit siguen **Conventional Commits en español**. Formato: `tipo(scope): descripción en español`. Tipos válidos: `feat`, `fix`, `refactor`, `chore`, `docs`, `style`, `test`, `perf`. Ejemplos: `feat(web): agregar filtro por marca`, `fix(api): corregir límite de rate limiting`, `chore: actualizar dependencias`. El scope es opcional pero recomendado cuando el cambio es acotado a un app o package.
-- **No agregar** la línea `Co-Authored-By: Claude ...` en ningún commit.
-- `apps/web` UI follows the macOS-inspired design system documented in `.github/instructions/web.instructions.md` (layered surfaces `bg-background` / `bg-card` / `bg-secondary`, secondary buttons that promote to primary on hover, `backdrop-blur-md` for floating elements, squircle radii — `rounded-md` for inputs, `rounded-xl`/`rounded-2xl` for cards, `rounded-3xl` for modals).
-
-## Pointers
-
-- `.github/instructions/<area>.instructions.md` — per-area rules (api, collector, db, tracker, web).
-- `.agents/skills/` — additional guideline docs (Wrangler, React Router framework mode, TanStack Query, Tailwind, Supabase, Biome, TypeScript).
-- `README.md` — full architecture doc (Spanish), current state vs pending items.
-- `FUTURE.md` — roadmap notes.
+- `apps/web/CLAUDE.md`: animaciones, rendimiento, diseño y rutas de la web.
+- `docs/architecture.md` (arquitectura, operación, plan), `docs/data-model.md`, `docs/identity.md`,
+  `docs/stores.md` (reclamo de tiendas), `docs/store-candidates.md` (qué tiendas integrar y cómo).
+- `TODO.md`: pendientes concretos. `FUTURE.md`: visión de producto.
