@@ -199,6 +199,27 @@
   animation-delay: var(--delay, 0ms);
 }
 
+/* Parallax de la foto de cabecera con el scroll: lo resuelve el compositor (transform), sin JS ni listeners. */
+@keyframes parallax-y {
+  to {
+    transform: translateY(10%) scale(1.06);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .parallax-y {
+    animation: parallax-y linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 480px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parallax-y {
+    animation: none;
+  }
+}
+
 /* Animaciones personalizadas para el search dialog */
 @keyframes fadeInUp {
   from {

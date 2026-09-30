@@ -2,6 +2,7 @@ import { IconMoodEmpty } from "@tabler/icons-react";
 import { ProductGridSkeleton } from "~/features/explore/components/product-grid-skeleton";
 import { ProductCard } from "~/features/product/components/card-product";
 import type { Product } from "~/features/product/services/products";
+import { Reveal } from "~/shared/components/motion/reveal";
 import { cn } from "~/shared/lib/utils";
 
 interface ProductGridProps {
@@ -30,14 +31,16 @@ export function ProductGrid({ products, isLoading, className, trendingIds }: Pro
   }
 
   return (
-    <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", className)}>
+    <div className={cn("grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4", className)}>
       {products.map((product, index) => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          priority={index < 8}
-          trending={product.id ? trendingIds?.has(product.id) : false}
-        />
+        <Reveal key={product.id} delay={Math.min(index, 6) * 0.05} className="h-full">
+          <ProductCard
+            product={product}
+            priority={index < 8}
+            trending={product.id ? trendingIds?.has(product.id) : false}
+            className="h-full"
+          />
+        </Reveal>
       ))}
     </div>
   );
@@ -142,27 +145,5 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
         Siguiente
       </button>
     </div>
-  );
-}
-
-interface ResultsSummaryProps {
-  total: number;
-  currentPage: number;
-  limit: number;
-  className?: string;
-}
-
-export function ResultsSummary({ total, currentPage, limit, className }: ResultsSummaryProps) {
-  const start = (currentPage - 1) * limit + 1;
-  const end = Math.min(currentPage * limit, total);
-
-  return (
-    <p className={cn("text-sm text-muted-foreground", className)}>
-      Mostrando{" "}
-      <span className="font-medium text-foreground">
-        {start}-{end}
-      </span>{" "}
-      de <span className="font-medium text-foreground">{total.toLocaleString("es-CL")}</span> productos
-    </p>
   );
 }

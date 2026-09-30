@@ -29,6 +29,7 @@ export interface ProductFilters {
   search?: string;
   min_price?: number;
   max_price?: number;
+  in_stock?: boolean;
   sort?: "price_asc" | "price_desc" | "popularity" | "discount" | "name";
   specs?: Record<string, string | string[] | { min?: string; max?: string }>;
 }
@@ -98,6 +99,7 @@ function listParams(filters: ProductFilters): Record<string, string> {
   if (q) params.q = q;
   if (filters.min_price) params.minPrice = String(filters.min_price);
   if (filters.max_price) params.maxPrice = String(filters.max_price);
+  if (filters.in_stock) params.inStock = "true";
   if (filters.sort) params.sort = SORTS[filters.sort];
   return params;
 }
