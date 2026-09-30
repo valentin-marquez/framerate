@@ -2,39 +2,42 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* fonts — Bricolage Grotesque (display + body) + JetBrains Mono (precios, MPN, kbd).
-   Bricolage es variable con axes weight/width/opsz; activamos optical-sizing en body. */
-@import "@fontsource-variable/bricolage-grotesque";
+/* Inter (SIL OFL): alternativa libre a SF Pro, cuya licencia no permite servirla en la web. JetBrains Mono para código. */
+@import "@fontsource-variable/inter";
 @import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Paleta neutra: una sola tinta casi negra (el texto) y grises sin tinte que salen de ella por opacidad.
+ * Jerarquía de texto: foreground (100 %), muted-foreground (~64 %). Separadores y bordes: tinta al 8 %.
+ */
 :root {
-  --background: oklch(0.9787 0.0017 247.84);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(0.9963 0.0011 197.14);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(0.9963 0.0011 197.14);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.3278 0.0045 247.96);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.9516 0.0017 247.84);
-  --secondary-foreground: oklch(0.7267 0.0023 197.11);
-  --muted: oklch(0.9516 0.0017 247.84);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.9516 0.0017 247.84);
-  --accent-foreground: oklch(0.3278 0.0045 247.96);
+  --background: oklch(0.978 0 0);
+  --foreground: oklch(0.2 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0 0);
+  --primary: oklch(0.2 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.948 0 0);
+  --secondary-foreground: oklch(0.48 0 0);
+  --muted: oklch(0.948 0 0);
+  --muted-foreground: oklch(0.52 0 0);
+  --accent: oklch(0.948 0 0);
+  --accent-foreground: oklch(0.2 0 0);
   --destructive: oklch(0.6119 0.2261 25.77);
   --destructive-foreground: oklch(82.559% 0.05205 18.163);
-  --border: oklch(0.145 0 0 / 10%);
-  --input: oklch(0.145 0 0 / 10%);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.2 0 0 / 8%);
+  --input: oklch(0.2 0 0 / 12%);
+  --ring: oklch(0.2 0 0 / 30%);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.45rem;
+  --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.3278 0.0045 247.96);
@@ -52,33 +55,33 @@
 }
 
 .dark {
-  --background: oklch(0.1944 0.0051 248.09);
-  --foreground: oklch(0.985 0 0);
+  --background: oklch(0.175 0 0);
+  --foreground: oklch(0.97 0 0);
 
-  --card: oklch(0.2337 0.0049 248.04);
-  --card-foreground: oklch(0.985 0 0);
+  --card: oklch(0.215 0 0);
+  --card-foreground: oklch(0.97 0 0);
 
-  --popover: oklch(0.2337 0.0049 248.04);
-  --popover-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.235 0 0);
+  --popover-foreground: oklch(0.97 0 0);
 
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.97 0 0);
+  --primary-foreground: oklch(0.2 0 0);
 
-  --secondary: oklch(0.27 0.005 248);
-  --secondary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.26 0 0);
+  --secondary-foreground: oklch(0.72 0 0);
 
-  --muted: oklch(0.27 0.005 248);
-  --muted-foreground: oklch(0.7 0 0);
+  --muted: oklch(0.26 0 0);
+  --muted-foreground: oklch(0.68 0 0);
 
-  --accent: oklch(0.27 0.005 248);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.26 0 0);
+  --accent-foreground: oklch(0.97 0 0);
 
   --destructive: oklch(0.6119 0.2261 25.77);
   --destructive-foreground: oklch(82.559% 0.05205 18.163);
 
-  --border: oklch(0.27 0.005 248);
-  --input: oklch(0.27 0.005 248);
-  --ring: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(1 0 0 / 35%);
 
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.424 0.199 265.638);
@@ -101,9 +104,8 @@
 }
 
 @theme inline {
-  --font-sans:
-    "Bricolage Grotesque Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Bricolage Grotesque Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-sans);
   --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -163,22 +165,12 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply font-sans bg-background text-foreground;
+    @apply font-sans bg-background text-foreground antialiased;
     font-optical-sizing: auto;
-    font-feature-settings: "ss01", "cv11";
   }
   html {
     @apply font-sans;
     scrollbar-gutter: stable;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
 
