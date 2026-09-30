@@ -98,6 +98,52 @@ describe("atributos por categoría", () => {
       wifi: true,
     });
   });
+
+  // Títulos reales de Dust2 que caían en cuarentena.
+  test("PSU: watts tras coma o dentro del modelo", () => {
+    const watts = (title: string) => PROFILES.psu.extract(title).wattage;
+    expect(watts("Fuente de Poder Cooler Master Elite Gold 850W, 80PLUS Gold")).toBe(850);
+    expect(watts("Fuente de Poder Cougar ATLAS 600 - 600 W, 80Plus Bronze, ATX")).toBe(600);
+    expect(watts("Fuente de Poder MSI MAG A750GLS PCIE5 80 Plus Gold")).toBe(750);
+    expect(watts("Fuente de Poder Gigabyte AORUS AE1000PM PG5 80Plus Platinum")).toBe(1000);
+    expect(watts("Fuente de Poder ESGAMING ES-RGB750W 80Plus Gold, ATX")).toBe(750);
+    expect(watts("Fuente de Poder Corsair HX1500i F. Modular UltraLow Platinum")).toBe(1500);
+    expect(watts("Fuente de Poder Corsair CX Series CX750 2023")).toBe(750);
+    expect(watts("Fuente de Poder Cooler Master MWE Gold 850 V2 ATX")).toBe(850);
+  });
+
+  test("RAM: sin DDR en el título se deduce por velocidad", () => {
+    expect(PROFILES.ram.extract("Memoria RAM Corsair Vengeance RGB 32GB (2×16) 6000MHz CL38")).toEqual({
+      type: "ddr5",
+      modules: 2,
+      capacity: 32,
+      speed: 6000,
+      formFactor: "dimm",
+    });
+    expect(PROFILES.ram.extract("Memoria RAM Kingston Fury Beast Black RGB EXPO 8G 6000M CL30")).toMatchObject({
+      type: "ddr5",
+      capacity: 8,
+      speed: 6000,
+    });
+    expect(PROFILES.ram.extract("Memoria RAM Kingston Fury Beast White 8gbx3200mhz")).toMatchObject({
+      type: "ddr4",
+      capacity: 8,
+      speed: 3200,
+    });
+    expect(PROFILES.ram.extract("Pack Memorias RAM Corsair Dominator Platinum RGB 2x8GB 3200")).toMatchObject({
+      type: "ddr4",
+      modules: 2,
+      capacity: 16,
+    });
+    // Sin DDR ni velocidad no hay cómo saberlo: sigue sin tipo (cuarentena).
+    expect(PROFILES.ram.extract("Memoria RAM XPG Spectrix D35G RGB 8GB").type).toBeUndefined();
+  });
+
+  test("una coma pegada al valor no esconde el atributo", () => {
+    expect(PROFILES.gpu.extract("MSI RTX 5060 Ti 16GB, Ventus 2X").vram).toBe(16);
+    expect(PROFILES.motherboard.extract("Placa Madre ASUS B650M, WiFi").chipset).toBe("b650");
+    expect(PROFILES.hdd.extract('Disco Duro WD Blue 2,5" 1TB').formFactor).toBe("2.5");
+  });
 });
 
 describe("decisión de matching", () => {

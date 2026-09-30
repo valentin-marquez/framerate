@@ -25,7 +25,8 @@ export interface CategoryProfile {
 /** Texto comparable: minúsculas, sin tildes, separadores → espacio (conserva `+` y `.`). */
 function prep(title: string): string {
   return ` ${fold(title)
-    .replace(/,/g, ".")
+    .replace(/(\d),(\d)/g, "$1.$2")
+    .replace(/×/g, "x")
     .replace(/[^a-z0-9+.]+/g, " ")
     .replace(/\s+/g, " ")
     .trim()} `;
@@ -157,19 +158,22 @@ const ram: CategoryProfile = {
   extract(title) {
     const t = prep(title);
     const a: Attributes = {};
-    const type = t.match(/ ddr([345])/);
-    if (type) a.type = `ddr${type[1]}`;
-    const kit = t.match(/ (\d) ?x ?(\d{1,3}) ?gb/);
+    const kit = t.match(/ (\d) ?x ?(\d{1,3}) ?(?:gb?)?(?= )/);
     if (kit?.[1] && kit[2]) {
       a.modules = Number(kit[1]);
       a.capacity = Number(kit[1]) * Number(kit[2]);
     } else {
-      const cap = t.match(/ (\d{1,3}) ?gb/);
+      const cap = t.match(/ (\d{1,3}) ?gb?(?=[ x])/);
       if (cap?.[1]) a.capacity = Number(cap[1]);
       a.modules = 1;
     }
-    const speed = t.match(/ (\d{4,5}) ?(?:mhz|mt s|mts)(?= )/) ?? t.match(/ ddr[45] ?(\d{4,5})(?= )/);
-    if (speed?.[1]) a.speed = Number(speed[1]);
+    const speed = Number(t.match(/[ x](\d{4,5}) ?(?:mhz|mt s|mts|m)?(?= )/)?.[1] ?? 0);
+    if (speed) a.speed = speed;
+    const type = t.match(/ ddr([345])/);
+    if (type) a.type = `ddr${type[1]}`;
+    // Sin "DDR" en el título: DDR5 parte en 4800 (JEDEC) y la DDR4 que se vende rara vez pasa de 4000.
+    else if (speed >= 4800) a.type = "ddr5";
+    else if (speed >= 2400 && speed <= 4000) a.type = "ddr4";
     a.formFactor = /so ?dimm|notebook|laptop/.test(t) ? "sodimm" : "dimm";
     return a;
   },
@@ -229,6 +233,15 @@ const psu: CategoryProfile = {
     if (w?.[1]) {
       const watts = Number(w[1]);
       if (watts >= 200 && watts <= 2500) a.wattage = watts;
+    } else {
+      // Watts dentro del modelo (A750GLS, CX750, HX1500i). Múltiplo de 50 para no tomar años ni otros números.
+      for (const m of t.matchAll(/ [a-z]{0,3}(\d{3,4})[a-z]{0,3}(?= )/g)) {
+        const watts = Number(m[1]);
+        if (watts >= 300 && watts <= 2500 && watts % 50 === 0) {
+          a.wattage = watts;
+          break;
+        }
+      }
     }
     const eff = t.match(/ (white|bronze|silver|gold|platinum|titanium)(?= )/);
     if (eff?.[1]) a.efficiency = eff[1];
