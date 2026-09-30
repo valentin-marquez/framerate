@@ -69,6 +69,7 @@ export type ProductSort = z.infer<typeof ProductSortSchema>;
 export const ProductListQuerySchema = z.object({
   category: CategorySchema.optional(),
   brand: z.string().min(1).max(64).optional(),
+  store: z.string().min(1).max(64).optional(),
   q: z.string().trim().min(2).max(100).optional(),
   minPrice: z.coerce.number().int().min(0).optional(),
   maxPrice: z.coerce.number().int().min(0).optional(),

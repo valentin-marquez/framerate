@@ -33,7 +33,7 @@ export function StoreReviewsSection({ storeSlug, canManage = false }: StoreRevie
   const myReview: StoreReview | null = useMemo(() => {
     if (!user || !firstPage) return null;
     const candidate = firstPage.data.find((r: StoreReviewItem): r is StoreReview => {
-      return r.deleted === false && r.user_id === user.id;
+      return r.deleted === false && r.mine;
     });
     return candidate ?? null;
   }, [firstPage, user]);

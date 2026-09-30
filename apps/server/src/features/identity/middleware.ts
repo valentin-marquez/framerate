@@ -43,6 +43,13 @@ export const requireUser: MiddlewareHandler<AppEnv> = async (c, next) => {
   await next();
 };
 
+/** Identifica al visitante si trae sesión, sin exigirla (lecturas públicas que cambian según quién mira). */
+export const optionalUser: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const user = await sessionUser(c);
+  if (user) c.set("user", user);
+  await next();
+};
+
 async function resolveActor(c: Context<AppEnv>): Promise<Actor | null> {
   const header = c.req.header("authorization");
   if (header?.startsWith("Bearer ")) {

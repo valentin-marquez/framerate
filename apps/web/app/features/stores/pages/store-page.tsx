@@ -30,7 +30,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     const [store, { user }, products] = await Promise.all([
       storesService.get(params.slug),
       getAuthUser(request),
-      storesService.getProducts(params.slug).catch(() => emptyProducts(params.slug)),
+      storesService.getProducts(params.slug, params.slug).catch(() => emptyProducts(params.slug)),
     ]);
 
     let viewerRole: ViewerStoreRole | null = null;
