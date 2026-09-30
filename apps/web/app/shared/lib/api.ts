@@ -23,6 +23,8 @@ type FetchOptions = RequestInit & {
  */
 interface ServerContext {
   cookie?: string | null;
+  /** IP del visitante: por el service binding la API no la ve, y sin ella todos comparten un límite. */
+  ip?: string | null;
   fetch?: typeof fetch;
 }
 
@@ -34,8 +36,12 @@ export function setServerContext(provider: () => ServerContext | undefined) {
 
 /** `fetch` hacia la API: por el service binding en el SSR de producción, `fetch` normal en el resto. */
 export function apiFetch(input: string, init?: RequestInit): Promise<Response> {
-  const send = typeof window === "undefined" ? (serverContext()?.fetch ?? fetch) : fetch;
-  return send(input, init);
+  if (typeof window !== "undefined") return fetch(input, init);
+  const context = serverContext();
+  if (!context?.fetch) return fetch(input, init);
+  const headers = new Headers(init?.headers);
+  if (context.ip) headers.set("x-client-ip", context.ip);
+  return context.fetch(input, { ...init, headers });
 }
 
 export class ApiError extends Error {
