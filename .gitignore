@@ -71,3 +71,6 @@ apps/janitor/opendb/
 
 # Dev logs (scripts/dev-logged.ts)
 logs/
+
+# Estado local de wrangler (D1/R2/Queues simulados)
+.wrangler/

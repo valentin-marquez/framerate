@@ -6,20 +6,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 El backend se está reconstruyendo desde cero. **Todo trabajo nuevo va en la arquitectura v2**; lee `docs/architecture.md` antes de tocar código.
 
-- **`apps/server`** — un solo Cloudflare Worker (Hono + D1 + Queues + R2 + Cron) con código organizado por feature: `catalog`, `ingestion`, `matching`. Dominio puro en `features/*/domain/`.
-- **`packages/contracts`** — esquemas Zod de la API compartidos con `apps/web`.
+- **`apps/server`** — Worker de la API HTTP (Hono + D1), por feature: `catalog`, `crawl-admin`, `match-review`. Sin Cron ni colas. (Se llama `server` porque `apps/api` es el legado.)
+- **`apps/ingest`** — Worker de scraping (Cron + Queues + R2 + RPC): adaptadores de tienda, normalización, matching. Sin HTTP público. `server` le pide crawls por RPC tipado.
+- **`packages/contracts`** — esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.
+- **`packages/database`** — dueño del esquema: migraciones SQL, tipos Kysely, cliente D1 y utilidades de test (`@framerate/database/testing`).
+- **`packages/matching`** — huella de producto y decisión de matching (dominio puro) + repositorio.
+- **`packages/kit`** — texto, reloj y logger sin dependencias.
+- Las apps **no se importan entre sí**; lo compartido va en `packages/`.
 - **Legado (no extender, se retira en la fase 5 del plan):** `apps/api`, `apps/collector`, `apps/tracker`, `apps/cortex`, `apps/janitor`, `packages/core`, `packages/matcher`, `packages/mpn-finder`, `packages/opendb`, `packages/utils`, y `packages/db` (Supabase; `apps/web` aún depende de él hasta migrar a `/v1`). Las secciones de abajo que describen esas apps documentan el sistema viejo.
 
 Comandos v2:
 
 ```bash
-bun run --cwd apps/server test           # unit + integración contra D1 real (Miniflare)
-bun run --cwd apps/server check-types
-bun run --cwd apps/server dev            # wrangler dev
-bun run --cwd apps/server db:migrate:local
+bun run db:migrate:local                  # aplica packages/database/migrations con wrangler
+bun run dev:server                        # API (wrangler dev)
+bun run dev:ingest                        # scraping
+bunx turbo run check-types test --filter=server --filter=ingest \
+  --filter=@framerate/kit --filter=@framerate/database \
+  --filter=@framerate/matching --filter=@framerate/contracts
 ```
 
-Reglas v2: esquema = SQL a mano en `apps/server/migrations/` (Kysely sólo tipa y arma consultas; tipos en `src/shared/db/database.ts`); ninguna oferta entra a `listings` sin pasar `normalizeOffer`; los adaptadores de tienda nunca inventan identificadores; el matching prefiere duplicados antes que fusiones erróneas (vetos duros por atributo).
+Reglas v2: esquema = SQL a mano en `packages/database/migrations/` (Kysely sólo tipa y arma consultas; tipos en `packages/database/src/database.ts`); ninguna oferta entra a `listings` sin pasar `normalizeOffer`; los adaptadores de tienda nunca inventan identificadores; el matching prefiere duplicados antes que fusiones erróneas (vetos duros por atributo).
 
 ## Runtime & Tooling
 

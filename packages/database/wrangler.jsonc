@@ -1,0 +1,16 @@
+{
+  // Sólo se usa para aplicar migraciones (`bun run db:migrate:*`). Los Workers
+  // (apps/server y apps/ingest) declaran su propio binding a la MISMA base.
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "framerate-database",
+  "compatibility_date": "2026-01-05",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "framerate",
+      // bunx wrangler d1 create framerate  → pegar el mismo id en los 3 wrangler.jsonc
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

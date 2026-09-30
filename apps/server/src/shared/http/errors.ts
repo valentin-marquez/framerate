@@ -1,8 +1,8 @@
 import type { ApiError } from "@framerate/contracts";
+import { createLogger } from "@framerate/kit";
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { ZodError } from "zod";
-import { createLogger } from "@/shared/logger";
 
 /** Error esperado de la aplicación: se responde tal cual al cliente. */
 export class AppError extends Error {
