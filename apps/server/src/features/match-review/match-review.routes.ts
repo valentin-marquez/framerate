@@ -2,6 +2,8 @@ import { listPendingReviews } from "@framerate/matching";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
+import { currentActor } from "@/features/identity/middleware";
+import { actorLabel } from "@/features/identity/types";
 import { resolveMatchReview } from "./reviews";
 
 /** Cola de revisión humana del matching (montado bajo `/v1/admin`, protegido). */
@@ -14,6 +16,11 @@ export const matchReviewRoutes = new Hono<AppEnv>()
     const { id, action } = z
       .object({ id: z.coerce.number().int().positive(), action: z.enum(["accept", "reject"]) })
       .parse(c.req.param());
-    await resolveMatchReview(c.var.db, { reviewId: id, action, decidedBy: "admin", now: new Date().toISOString() });
+    await resolveMatchReview(c.var.db, {
+      reviewId: id,
+      action,
+      decidedBy: actorLabel(currentActor(c)),
+      now: new Date().toISOString(),
+    });
     return c.body(null, 204);
   });

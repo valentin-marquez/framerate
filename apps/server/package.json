@@ -17,6 +17,7 @@
     "@framerate/database": "workspace:*",
     "@framerate/kit": "workspace:*",
     "@framerate/matching": "workspace:*",
+    "better-auth": "^1.7.6",
     "hono": "^4.13.12",
     "kysely": "^0.29.6",
     "zod": "^4.3.6"

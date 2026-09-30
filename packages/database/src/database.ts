@@ -27,6 +27,7 @@ export interface UsersTable {
   username: string;
   display_name: string;
   avatar_key: string | null;
+  avatar_source_url: string | null;
   bio: string | null;
   lang: Defaulted<Lang>;
   theme: Defaulted<"system" | "light" | "dark">;

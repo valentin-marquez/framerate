@@ -15,9 +15,11 @@ CREATE TABLE users (
                     AND username NOT GLOB '*[^a-z0-9_]*'
                   ),
   display_name    TEXT    NOT NULL CHECK (length(trim(display_name)) BETWEEN 1 AND 60),
-  -- Clave en R2 del avatar (se sincroniza desde el proveedor). Nunca una URL
-  -- arbitraria enviada por el cliente.
-  avatar_key      TEXT,
+  -- Avatar: copia propia en R2 (`avatar_key`, lo que se sirve) y la URL de origen
+  -- que entrega el proveedor OAuth (`avatar_source_url`, de la que se copia). Ninguna
+  -- la escribe el cliente: la API no acepta URLs de avatar arbitrarias.
+  avatar_key         TEXT,
+  avatar_source_url  TEXT,
   bio             TEXT    CHECK (bio IS NULL OR length(bio) <= 280),
   lang            TEXT    NOT NULL DEFAULT 'es' CHECK (lang IN ('es', 'en', 'arn')),
   theme           TEXT    NOT NULL DEFAULT 'system' CHECK (theme IN ('system', 'light', 'dark')),

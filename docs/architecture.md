@@ -88,6 +88,8 @@ apps/
       env.ts                    bindings del Worker
       features/
         catalog/                lectura pública: listado, búsqueda, detalle, historial
+        identity/               login (Better Auth), sesión, perfil, roles y sanciones
+        users-admin/            admin: buscar usuarios, suspender, cambiar rol
         crawl-admin/            admin: historial de corridas y cuarentena, "crawlear ahora"
         match-review/           admin: cola de revisión humana de matches
       shared/http/              errores, auth de admin, rate limit, cache
@@ -261,8 +263,11 @@ asistida.
    revisión, API de catálogo, tests contra D1 real.
 1b. ✅ Modelo de datos completo basado en las features de la web (migraciones
    0001–0008, tipos Kysely, specs por categoría, tests de invariantes).
-   Pendiente: implementar las features `identity` (Better Auth), `stores`,
+   Pendiente: implementar las features `stores`,
    `quotes`, `comments`, `moderation`, `support` y `analytics` sobre él.
+1d. ✅ Identidad: Better Auth + Discord, registro de proveedores, perfil, roles,
+   sanciones y administración de usuarios (ver [identity.md](./identity.md)).
+   Pendiente: integrar `apps/web`, copiar avatares a R2, eliminar cuenta.
 1c. ✅ Separación en `apps/server` (API) + `apps/ingest` (scraping) con paquetes
    compartidos (`database`, `matching`, `kit`, `contracts`) y RPC entre ambos.
    Pendiente: recalcular el resumen de precios de `products` tras cada corrida

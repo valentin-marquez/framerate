@@ -7,6 +7,8 @@ ver el [`README.md`](../README.md) de la raíz.
 
 - **[architecture.md](./architecture.md)** — Arquitectura v2 (reconstrucción): principios,
   estructura por feature, modelo de datos, matching, operación, costos y plan.
+- **[identity.md](./identity.md)** — Login con Better Auth, perfil, roles, sanciones, endpoints,
+  configuración y cómo agregar un proveedor OAuth.
 - **[data-model.md](./data-model.md)** — Modelo de datos v2 completo por feature,
   reglas de negocio en la base y qué problema del sistema anterior corrige cada una.
 - **[scraping.md](./scraping.md)** — *(legado, sistema anterior)* Guía de scraping: cómo se integran tiendas

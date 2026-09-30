@@ -3,20 +3,9 @@ import type { AppEnv } from "@/app";
 import { AppError } from "./errors";
 
 /**
- * Protege `/v1/admin/*` con un token Bearer (secreto `ADMIN_TOKEN`).
- * Comparación en tiempo constante para no filtrar el token por timing.
+ * Comparación en tiempo constante (hash + XOR) para no filtrar un secreto por timing.
  */
-export const requireAdmin: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const expected = c.env.ADMIN_TOKEN;
-  const header = c.req.header("authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  if (!expected || !(await timingSafeEqual(token, expected))) {
-    throw new AppError(401, "unauthorized", "Token de administrador inválido");
-  }
-  await next();
-};
-
-async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+export async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   const enc = new TextEncoder();
   const [ha, hb] = await Promise.all([
     crypto.subtle.digest("SHA-256", enc.encode(a)),

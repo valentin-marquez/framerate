@@ -2,6 +2,8 @@ import { CategorySchema } from "@framerate/contracts";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
+import { currentActor } from "@/features/identity/middleware";
+import { actorLabel } from "@/features/identity/types";
 import { AppError } from "@/shared/http/errors";
 import { listQuarantine, listRuns } from "./crawl-admin.queries";
 
@@ -12,7 +14,7 @@ export const crawlAdminRoutes = new Hono<AppEnv>()
       .object({ store: z.string().optional(), category: CategorySchema.optional() })
       .parse(await c.req.json().catch(() => ({})));
     // La API no conoce las tiendas ni la cola: `ingest` valida y encola.
-    const result = await c.env.INGEST.enqueueCrawls({ ...body, requestedBy: "admin" });
+    const result = await c.env.INGEST.enqueueCrawls({ ...body, requestedBy: actorLabel(currentActor(c)) });
     if (!result.ok) throw new AppError(400, result.error, `Tienda desconocida: ${body.store}`);
     return c.json({ enqueued: result.enqueued }, 202);
   })
