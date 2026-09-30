@@ -46,7 +46,7 @@ function formatDate(iso: string): string {
   }
 }
 
-export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelpful = false }: ReviewCardProps) {
+export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelpful: markedProp }: ReviewCardProps) {
   const user = useAuthStore((s) => s.user);
   const [showResponseForm, setShowResponseForm] = useState(false);
 
@@ -67,7 +67,8 @@ export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelp
   }
 
   const full = review as StoreReview;
-  const isAuthor = user?.id === full.user_id;
+  const hasMarkedHelpful = markedProp ?? full.voted_by_me;
+  const isAuthor = full.mine;
   const authorName = full.author?.username || full.author?.full_name || "Usuario";
 
   async function handleHelpful() {
@@ -76,7 +77,7 @@ export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelp
   }
 
   async function handlePin() {
-    await pinMut.mutateAsync(full.id);
+    await pinMut.mutateAsync({ id: full.id, pinned: !full.is_pinned });
   }
 
   async function handleDelete() {

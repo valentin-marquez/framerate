@@ -9,6 +9,7 @@ import { authProvidersRoutes, meRoutes, publicProfileRoutes } from "@/features/i
 import { credentialedCors, requireStaff, requireUser } from "@/features/identity/middleware";
 import type { Actor, SessionUser } from "@/features/identity/types";
 import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
+import { storesRoutes } from "@/features/stores/stores.routes";
 import { usersAdminRoutes } from "@/features/users-admin/users-admin.routes";
 import { handleError, notFound } from "@/shared/http/errors";
 import { rateLimit } from "@/shared/http/middleware";
@@ -64,6 +65,7 @@ export function createApp() {
   publicApi.use("*", credentialedCors);
   publicApi.use("*", rateLimit);
   publicApi.route("/", catalogRoutes);
+  publicApi.route("/", storesRoutes);
   publicApi.route("/users", publicProfileRoutes);
 
   const adminApi = new Hono<AppEnv>();

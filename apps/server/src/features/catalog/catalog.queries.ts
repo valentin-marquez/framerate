@@ -75,6 +75,11 @@ export async function listProducts(db: Db, query: ProductListQuery): Promise<Pro
   let base = db.query.selectFrom("products as p").innerJoin(offerAggregate(db), "agg.product_id", "p.id");
   if (query.category) base = base.where("p.category", "=", query.category);
   if (brand) base = base.where(sql<boolean>`lower(p.brand) = lower(${brand})`);
+  if (query.store) {
+    base = base.where(
+      sql<boolean>`p.id IN (SELECT l.product_id FROM listings l JOIN stores st ON st.id = l.store_id WHERE l.is_active = 1 AND st.slug = ${query.store})`,
+    );
+  }
   if (query.inStock) base = base.where("agg.best_price", "is not", null);
   if (query.minPrice !== undefined) base = base.where(sql<boolean>`${displayPrice} >= ${query.minPrice}`);
   if (query.maxPrice !== undefined) base = base.where(sql<boolean>`${displayPrice} <= ${query.maxPrice}`);

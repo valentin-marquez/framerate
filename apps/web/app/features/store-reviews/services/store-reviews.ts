@@ -1,17 +1,16 @@
-/**
- * @module features/store-reviews/services/store-reviews
- *
- * Cliente del API para reseñas de tiendas. Hooks de TanStack Query.
- */
-
+import type {
+  ReviewSort as ApiReviewSort,
+  StoreReview as ApiStoreReview,
+  RatingStats,
+  ReviewItem,
+  ReviewList,
+} from "@framerate/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getSessionToken } from "~/features/auth/services/session";
 import { api } from "~/shared/lib/api";
 
 export type ReviewSort = "recent" | "helpful" | "rating-desc";
 
 export interface ReviewAuthor {
-  id: string;
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
@@ -19,20 +18,18 @@ export interface ReviewAuthor {
 
 export interface StoreReview {
   id: string;
-  store_id: string;
-  user_id: string;
   rating: number;
   comment: string | null;
   helpful_count: number;
   is_pinned: boolean;
   owner_response: string | null;
   owner_response_at: string | null;
-  owner_response_by: string | null;
-  deleted_at: string | null;
-  deleted_reason: string | null;
   created_at: string;
-  updated_at: string;
+  edited_at: string | null;
   author: ReviewAuthor | null;
+  /** Reseña del usuario que mira. */
+  mine: boolean;
+  voted_by_me: boolean;
   deleted: false;
 }
 
@@ -48,12 +45,7 @@ export type StoreReviewItem = StoreReview | DeletedStoreReview;
 
 export interface StoreReviewsListResponse {
   data: StoreReviewItem[];
-  meta: {
-    limit: number;
-    offset: number;
-    total: number;
-    sort: ReviewSort;
-  };
+  meta: { limit: number; offset: number; total: number; sort: ReviewSort };
 }
 
 export interface StoreRatingStats {
@@ -74,41 +66,87 @@ export interface UpdateReviewPayload {
   is_pinned?: boolean;
 }
 
-async function getToken() {
-  return getSessionToken();
-}
-
-export const storeReviewsService = {
-  list: (slug: string, sort: ReviewSort = "recent", limit = 20, offset = 0) =>
-    api.get<StoreReviewsListResponse>(`/v1/stores/${encodeURIComponent(slug)}/reviews`, {
-      params: { sort, limit: String(limit), offset: String(offset) },
-    }),
-
-  stats: (slug: string) => api.get<StoreRatingStats>(`/v1/stores/${encodeURIComponent(slug)}/reviews/stats`),
-
-  create: (slug: string, payload: CreateReviewPayload, token?: string) =>
-    api.post<StoreReview>(`/v1/stores/${encodeURIComponent(slug)}/reviews`, payload, { token }),
-
-  update: (id: string, payload: UpdateReviewPayload, token?: string) =>
-    api.patch<StoreReview>(`/v1/reviews/${id}`, payload, { token }),
-
-  remove: (id: string, reason?: string, token?: string) =>
-    api.delete<{ ok: true }>(`/v1/reviews/${id}`, {
-      token,
-      body: reason ? JSON.stringify({ reason }) : undefined,
-    }),
-
-  markHelpful: (id: string, token?: string) =>
-    api.post<{ ok: true; already: boolean }>(`/v1/reviews/${id}/helpful`, {}, { token }),
-
-  unmarkHelpful: (id: string, token?: string) => api.delete<{ ok: true }>(`/v1/reviews/${id}/helpful`, { token }),
-
-  pin: (id: string, token?: string) => api.post<StoreReview>(`/v1/reviews/${id}/pin`, {}, { token }),
+const SORTS: Record<ReviewSort, ApiReviewSort> = { recent: "recent", helpful: "helpful", "rating-desc": "rating_desc" };
+const SORTS_BACK: Record<ApiReviewSort, ReviewSort> = {
+  recent: "recent",
+  helpful: "helpful",
+  rating_desc: "rating-desc",
 };
 
-// =============================================================================
-// Query keys
-// =============================================================================
+function toReview(r: ApiStoreReview): StoreReview {
+  return {
+    id: String(r.id),
+    rating: r.rating,
+    comment: r.comment,
+    helpful_count: r.helpfulCount,
+    is_pinned: r.isPinned,
+    owner_response: r.ownerResponse,
+    owner_response_at: r.ownerResponseAt,
+    created_at: r.createdAt,
+    edited_at: r.editedAt,
+    author: r.author
+      ? { username: r.author.username, full_name: r.author.displayName, avatar_url: r.author.avatarUrl }
+      : null,
+    mine: r.mine,
+    voted_by_me: r.votedByMe,
+    deleted: false,
+  };
+}
+
+const toItem = (r: ReviewItem): StoreReviewItem =>
+  r.deleted
+    ? { id: String(r.id), deleted: true, deleted_reason: r.reason, created_at: r.createdAt, is_pinned: r.isPinned }
+    : toReview(r);
+
+const base = (slug: string) => `/v1/stores/${encodeURIComponent(slug)}`;
+
+export const storeReviewsService = {
+  list: async (
+    slug: string,
+    sort: ReviewSort = "recent",
+    limit = 20,
+    offset = 0,
+  ): Promise<StoreReviewsListResponse> => {
+    const page = await api.get<ReviewList>(`${base(slug)}/reviews`, {
+      params: { sort: SORTS[sort], limit: String(limit), offset: String(offset) },
+    });
+    return {
+      data: page.items.map(toItem),
+      meta: { limit: page.limit, offset: page.offset, total: page.total, sort: SORTS_BACK[page.sort] },
+    };
+  },
+
+  stats: async (slug: string): Promise<StoreRatingStats> => {
+    const s = await api.get<RatingStats>(`${base(slug)}/reviews/stats`);
+    return {
+      avg_rating: s.average,
+      total_reviews: s.total,
+      distribution: {
+        "1": s.distribution[1],
+        "2": s.distribution[2],
+        "3": s.distribution[3],
+        "4": s.distribution[4],
+        "5": s.distribution[5],
+      },
+    };
+  },
+
+  create: (slug: string, payload: CreateReviewPayload) => api.post<{ id: number }>(`${base(slug)}/reviews`, payload),
+
+  update: (id: string, payload: UpdateReviewPayload) =>
+    api.patch<null>(`/v1/reviews/${id}`, {
+      rating: payload.rating,
+      comment: payload.comment,
+      ownerResponse: payload.owner_response,
+      isPinned: payload.is_pinned,
+    }),
+
+  remove: (id: string) => api.delete<null>(`/v1/reviews/${id}`),
+
+  markHelpful: (id: string) => api.put<null>(`/v1/reviews/${id}/helpful`, {}),
+
+  unmarkHelpful: (id: string) => api.delete<null>(`/v1/reviews/${id}/helpful`),
+};
 
 export const storeReviewKeys = {
   all: ["store-reviews"] as const,
@@ -117,10 +155,6 @@ export const storeReviewKeys = {
     [...storeReviewKeys.byStore(slug), "list", sort, limit, offset] as const,
   stats: (slug: string) => [...storeReviewKeys.byStore(slug), "stats"] as const,
 };
-
-// =============================================================================
-// Hooks
-// =============================================================================
 
 export function useStoreReviews(slug: string, sort: ReviewSort = "recent", limit = 20, offset = 0) {
   return useQuery({
@@ -138,72 +172,32 @@ export function useStoreRatingStats(slug: string) {
   });
 }
 
-export function useCreateStoreReview(slug: string) {
+/** Mutación que refresca todo lo de la tienda al terminar. */
+function useStoreMutation<TVars>(slug: string, fn: (vars: TVars) => Promise<unknown>) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: CreateReviewPayload) => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return storeReviewsService.create(slug, payload, token);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: storeReviewKeys.byStore(slug) });
-    },
+    mutationFn: fn,
+    onSuccess: () => qc.invalidateQueries({ queryKey: storeReviewKeys.byStore(slug) }),
   });
 }
 
-export function useUpdateStoreReview(slug: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: UpdateReviewPayload }) => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return storeReviewsService.update(id, payload, token);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: storeReviewKeys.byStore(slug) });
-    },
-  });
-}
+export const useCreateStoreReview = (slug: string) =>
+  useStoreMutation(slug, (payload: CreateReviewPayload) => storeReviewsService.create(slug, payload));
 
-export function useDeleteStoreReview(slug: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return storeReviewsService.remove(id, reason, token);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: storeReviewKeys.byStore(slug) });
-    },
-  });
-}
+export const useUpdateStoreReview = (slug: string) =>
+  useStoreMutation(slug, ({ id, payload }: { id: string; payload: UpdateReviewPayload }) =>
+    storeReviewsService.update(id, payload),
+  );
 
-export function useMarkReviewHelpful(slug: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, helpful }: { id: string; helpful: boolean }) => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return helpful ? storeReviewsService.markHelpful(id, token) : storeReviewsService.unmarkHelpful(id, token);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: storeReviewKeys.byStore(slug) });
-    },
-  });
-}
+export const useDeleteStoreReview = (slug: string) =>
+  useStoreMutation(slug, ({ id }: { id: string; reason?: string }) => storeReviewsService.remove(id));
 
-export function usePinReview(slug: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return storeReviewsService.pin(id, token);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: storeReviewKeys.byStore(slug) });
-    },
-  });
-}
+export const useMarkReviewHelpful = (slug: string) =>
+  useStoreMutation(slug, ({ id, helpful }: { id: string; helpful: boolean }) =>
+    helpful ? storeReviewsService.markHelpful(id) : storeReviewsService.unmarkHelpful(id),
+  );
+
+export const usePinReview = (slug: string) =>
+  useStoreMutation(slug, ({ id, pinned }: { id: string; pinned: boolean }) =>
+    storeReviewsService.update(id, { is_pinned: pinned }),
+  );

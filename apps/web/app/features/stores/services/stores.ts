@@ -1,3 +1,10 @@
+import {
+  type StoreDetail as ApiStoreDetail,
+  CATEGORY_LABELS,
+  CATEGORY_SLUGS,
+  type StoreProducts,
+} from "@framerate/contracts";
+import { toProduct } from "~/features/product/services/adapters";
 import type { Product } from "~/features/product/services/products";
 import { api } from "~/shared/lib/api";
 
@@ -100,12 +107,52 @@ export interface StoreProductsResponse {
   categories: StoreProductCategory[];
 }
 
+function toStoreDetail(s: ApiStoreDetail): StoreDetail {
+  return {
+    id: s.slug,
+    slug: s.slug,
+    name: s.name,
+    canonical_name: s.canonicalName,
+    display_name: s.displayName,
+    url: s.url,
+    website: s.website,
+    logo_url: s.iconUrl,
+    icon_url: s.iconUrl,
+    banner_url: s.bannerUrl,
+    description: s.description,
+    social: s.social as Record<string, string>,
+    is_active: s.isActive,
+    appearance: "light",
+    is_claimed: s.isClaimed,
+    account: null,
+    owner_user_id: null,
+    verified_at: s.verifiedAt,
+    created_at: s.createdAt,
+    updated_at: s.createdAt,
+    member_count: 0,
+    rating: s.rating,
+  };
+}
+
+async function getProducts(slug: string, name: string): Promise<StoreProductsResponse> {
+  const res = await api.get<StoreProducts>(`/v1/stores/${slug}/products`);
+  return {
+    store: { slug, name },
+    total: res.total,
+    categories: res.categories.map((c) => ({
+      slug: CATEGORY_SLUGS[c.category],
+      name: CATEGORY_LABELS[c.category],
+      count: c.count,
+      products: c.items.map(toProduct),
+    })),
+  };
+}
+
 export const storesService = {
-  get: (slug: string) => api.get<StoreDetail>(`/v1/stores/${slug}`),
-  getProducts: (slug: string) => api.get<StoreProductsResponse>(`/v1/stores/${slug}/products`),
+  get: async (slug: string) => toStoreDetail(await api.get<ApiStoreDetail>(`/v1/stores/${slug}`)),
+  getProducts,
   listClaimable: (q?: string) => api.get<{ stores: ClaimableStore[] }>("/v1/stores", q ? { params: { q } } : undefined),
-  getMyRole: (slug: string, token: string) =>
-    api.get<{ role: ViewerStoreRole | null }>(`/v1/stores/${slug}/me`, { token }),
+  getMyRole: (slug: string, _token?: string) => api.get<{ role: ViewerStoreRole | null }>(`/v1/stores/${slug}/me`),
   update: (slug: string, data: StoreUpdate, token: string) =>
     api.patch<StoreDetail>(`/v1/stores/${slug}`, data, { token }),
   uploadAsset: (slug: string, kind: "icon" | "banner", file: File, token: string) => {

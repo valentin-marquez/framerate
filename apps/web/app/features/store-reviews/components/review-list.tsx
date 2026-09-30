@@ -15,10 +15,6 @@ interface ReviewListProps {
    * Si el viewer es store member (editor/owner) o admin, permite responder/pinear.
    */
   canManage?: boolean;
-  /**
-   * IDs de reviews que el viewer ya marcó como útil (lo decide el padre).
-   */
-  helpfulReviewIds?: Set<string>;
 }
 
 const PAGE_SIZE = 20;
@@ -29,7 +25,7 @@ const SORT_OPTIONS: { value: ReviewSort; label: string }[] = [
   { value: "rating-desc", label: "Mejor calificadas" },
 ];
 
-export function ReviewList({ storeSlug, canManage = false, helpfulReviewIds }: ReviewListProps) {
+export function ReviewList({ storeSlug, canManage = false }: ReviewListProps) {
   const [sort, setSort] = useState<ReviewSort>("recent");
   const [page, setPage] = useState(0);
 
@@ -86,12 +82,7 @@ export function ReviewList({ storeSlug, canManage = false, helpfulReviewIds }: R
       <ul className="flex flex-col gap-3">
         {data?.data.map((review: StoreReviewItem) => (
           <li key={review.id}>
-            <ReviewCard
-              storeSlug={storeSlug}
-              review={review}
-              canManage={canManage}
-              hasMarkedHelpful={helpfulReviewIds?.has(review.id) ?? false}
-            />
+            <ReviewCard storeSlug={storeSlug} review={review} canManage={canManage} />
           </li>
         ))}
       </ul>
