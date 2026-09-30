@@ -179,7 +179,7 @@ export function ProductCard({ product, className, priority = false, trending = f
           <AsyncImage
             src={getImageUrl(product.image_url)}
             alt={product.name || "Imagen del producto"}
-            className="size-full object-cover"
+            className="size-full object-contain sm:object-cover"
             priority={priority}
           />
         ) : (

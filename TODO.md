@@ -9,7 +9,9 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 
 ## Web: vistas y diseño
 - [x] **Home**: se eligió v1 (mosaico de categorías con fotos, aparición escalonada). Sin desplegar aún.
-- [ ] **`/categoria/:slug` y `/explorar`**: rediseñarlas como una sola experiencia con `/referencias-composicion`, más motion (referencia: los efectos de `nozz.skin` y publicaciones de X/Twitter).
+- [x] **`/categoria/:slug` y `/explorar`**: una sola vista de catálogo (opción C: cabecera con foto o buscador con fichas, barra de filtros fija con marca/precio/stock/orden). `/explorar?category=` redirige a `/categoria/:slug`. Sin desplegar.
+- [ ] Catálogo: referencias de motion desde X/Twitter (exige login: hay que pasar links o capturas) y pulir la cabecera (parallax, transiciones de página con View Transitions).
+- [ ] Catálogo: filtros por especificación (chipset, VRAM, capacidad…) — se quitó el panel lateral porque la API v2 no los soporta; volver a agregarlos como chips cuando existan.
 - [x] Reglas de animación y rendimiento del hilo principal en `CLAUDE.md` (base: artículo "The Expensive Main Thread").
 - [ ] Auditar `MorphSearch` (interpola con el scroll en JS): ¿cabe en el presupuesto de ~10 ms/frame? Idealmente pasarlo a CSS scroll-driven animations.
 - [ ] Transiciones de página con View Transitions (`<Link viewTransition>` en React Router v7): las resuelve el compositor.
