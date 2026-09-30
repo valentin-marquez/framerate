@@ -3,9 +3,21 @@
 Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (Workers `framerate`, `framerate-server`, `framerate-ingest`, D1 `framerate`).
 
 ## Para probar en producción
-- [ ] **Prueba real de reclamo por DNS con `nozz.skin`** (dominio propio en la misma cuenta de Cloudflare): sembrar una tienda con `domain = 'nozz.skin'`, reclamarla desde la web, crear el TXT `_framerate-verify.nozz.skin`, verificar, confirmar, editar perfil, sumar un miembro, quitar el TXT y ver que el Cron la pase a `stale`/congelada.
-- [ ] Flujo completo con sesión en el navegador (nunca se probó con Discord real): login, perfil, ajustes, publicar/votar/responder/eliminar una reseña.
-- [ ] Registrar `https://api.framerate.cl/v1/auth/callback/discord` en el portal de Discord (si falta).
+- [x] Reclamo por DNS con `nozz.skin` (30-09-2026): tienda `nozz` (id 3) sembrada, reclamo 2 verificado y confirmado (organización 1, owner `nozztutos`), perfil editado, error de usuario inexistente al sumar miembro OK. TXT quitado a las 22:46 UTC.
+- [ ] Ver que el Cron pase el reclamo 2 a `stale` y congele `nozz` (3 fallas: ~12:17 UTC del 01-10-2026). Después borrar la tienda de prueba, su organización y el reclamo.
+- [ ] Sumar un miembro, votar y responder una reseña: hace falta una segunda cuenta de Discord.
+- [x] Login con Discord real y `/perfil` funcionan (callback registrado).
+- [ ] Revocar el reclamo `pending` 1 de `tectec.cl` (prueba vieja; vence el 07-10-2026 y bloquea reclamos reales de TecTec).
+- [ ] El usuario `nozztutos` tiene rol `user`: darle `admin` para usar `/admin`.
+
+## Bugs vistos en producción (web `bb66fe3`, 30-09-2026)
+- [ ] **Todo 404 responde 500** (`/login`, `/favicon.ico`): `Error: Request info is not available` (`shared/hooks/use-request-info.ts`) al renderizar el ErrorBoundary sin loader del root. Falta además el favicon.
+- [ ] En la primera carga con sesión (`/perfil`) el navbar muestra "Entrar"; tras navegar muestra el usuario.
+- [ ] CSP `font-src` bloquea una fuente `data:` que Vite incrusta en el CSS.
+- [ ] Con sesión, la web pide `/v1/quotes` (404) dos veces por página.
+- [ ] Reclamo: el éxito dice "desde su panel de administración" sin enlace; un reclamo confirmado sigue mostrando "expira"; "Verificamos solos cada unos segundos"; el auto-verify choca con el enfriamiento (429 en consola).
+- [ ] Redacción en voseo argentino ("Reclamá", "Verificá", "vas a poder", "Ya podés") en reclamo y tienda: pasar a español de Chile neutro.
+- [ ] La URL de login de Discord pide `identify email` duplicado.
 
 ## Web: vistas y diseño
 - [x] **Home**: se eligió v1 (mosaico de categorías con fotos, aparición escalonada). Sin desplegar aún.
@@ -52,7 +64,8 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 
 ## Último deploy
 - [x] Desplegado el 30-09-2026 (`17adce0`): migraciones 0009 y 0010, `framerate-ingest` y `framerate-server`. La web no cambió de comportamiento y sigue en `bb66fe3`.
-- [ ] Tras el primer crawl con el código nuevo (Cron 00:17 UTC o `POST /v1/admin/crawls`): revisar que las ~50 ofertas de Dust2 que estaban en cuarentena (fuentes y RAM) entraron, y los precios tarjeta de TecTec y Dust2.
+- [x] Crawl posterior revisado: fuentes y RAM de Dust2 entraron, precio tarjeta en todas las ofertas (Dust2 +7 %, TecTec +4 % promedio).
+- [x] Desplegado `framerate-ingest` con `11ffecb` (extractores de chipset/capacidad): +7 ofertas de Dust2 fuera de cuarentena. `ADMIN_TOKEN` rotado (copia local en `~/.config/framerate/admin-token`).
 
 ## Scraping / catálogo
 - [ ] Revisar las 56 revisiones pendientes de matching (`match_reviews`) con datos reales y ajustar vetos.
