@@ -13,6 +13,8 @@ export interface ProductPrices {
    * hubo movimiento real de precio → no hay descuento que mostrar.
    */
   reference: number | null;
+  /** Alguna tienda lo tiene con stock. Ausente = desconocido (se asume que sí). */
+  in_stock?: boolean;
 }
 
 export interface ProductBrand {
