@@ -139,6 +139,47 @@ describe("atributos por categoría", () => {
     expect(PROFILES.ram.extract("Memoria RAM XPG Spectrix D35G RGB 8GB").type).toBeUndefined();
   });
 
+  test("GPU: Radeon sin RX, 'RT' por RTX y MPN de Gigabyte como título", () => {
+    expect(PROFILES.gpu.extract("Tarjeta de Video Gigabyte Radeon 9070 XT Elite 16G Aorus")).toMatchObject({
+      chipset: "rx 9070 xt",
+      vram: 16,
+    });
+    expect(PROFILES.gpu.extract("Tarjeta de Video GeForce RT 5080 16G VANGUARD SOC LAUNCH EDITION")).toMatchObject({
+      chipset: "rtx 5080",
+      vram: 16,
+      line: "vanguard",
+    });
+    expect(PROFILES.gpu.extract("Tarjeta de Video Gigabyte GV-N507TEagleOC ICE-16GD")).toMatchObject({
+      chipset: "rtx 5070 ti",
+      vram: 16,
+    });
+    expect(PROFILES.gpu.extract("Gigabyte GV-N5060WF2OC-8GD").chipset).toBe("rtx 5060");
+    expect(PROFILES.gpu.extract("Gigabyte GV-N407SWF3OC-12GD").chipset).toBe("rtx 4070 super");
+  });
+
+  test("placa madre: sufijo del chipset (A620AM, X870I) y mITX", () => {
+    expect(PROFILES.motherboard.extract("Placa Madre MSI PRO A620AM-B EVO, Micro-ATX, AM5, DDR5")).toMatchObject({
+      chipset: "a620",
+      formFactor: "matx",
+    });
+    expect(PROFILES.motherboard.extract("Placa Madre ASRock A620AM-X WIFI, mATX, AM5")).toEqual({
+      chipset: "a620",
+      formFactor: "matx",
+      wifi: true,
+    });
+    expect(PROFILES.motherboard.extract("Placa Madre Gigabyte X870I AORUS PRO ICE, AM5, DDR5, mITX")).toMatchObject({
+      chipset: "x870",
+      formFactor: "itx",
+    });
+  });
+
+  test("SSD: capacidad con 'G' sin B e interfaz 'PCI'", () => {
+    expect(PROFILES.ssd.extract("Disco Duro SSD M.2 Kingston PCI 4.0 KC3000 1024G")).toEqual({
+      capacity: 1024,
+      interface: "nvme",
+    });
+  });
+
   test("una coma pegada al valor no esconde el atributo", () => {
     expect(PROFILES.gpu.extract("MSI RTX 5060 Ti 16GB, Ventus 2X").vram).toBe(16);
     expect(PROFILES.motherboard.extract("Placa Madre ASUS B650M, WiFi").chipset).toBe("b650");
