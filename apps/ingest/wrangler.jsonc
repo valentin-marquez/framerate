@@ -21,7 +21,7 @@
       "binding": "DB",
       "database_name": "framerate",
       // Debe ser el MISMO id que en packages/database y apps/server.
-      "database_id": "00000000-0000-0000-0000-000000000000"
+      "database_id": "6537cc10-7e7b-4dba-9c01-ce80e6a840eb"
     }
   ],
 

@@ -194,6 +194,9 @@ inventa identificadores, siempre guarda snapshot.
 ## 7. Operación
 
 ```bash
+# Requisitos: plan Workers Paid (los crawls superan los 10 ms de CPU del plan Free) y R2 activado.
+# Usar wrangler >= 4.144 (`bunx wrangler@latest`): la 4.63 falla al crear colas.
+
 # Una vez
 bunx wrangler d1 create framerate          # pegar database_id en los 3 wrangler.jsonc:
                                            #   packages/database, apps/server, apps/ingest
@@ -205,7 +208,8 @@ bunx wrangler queues create framerate-crawl-dlq
 # Cada cambio de esquema (afecta a ambos Workers)
 bun run db:migrate:remote
 
-# Deploy — ingest primero: server lo referencia por service binding
+# Deploy — ingest primero: server lo referencia por service binding.
+# server queda en https://api-v2.framerate.cl (custom domain en su wrangler.jsonc).
 bun run --cwd apps/ingest deploy
 bun run --cwd apps/server deploy
 cd apps/server && bunx wrangler secret put ADMIN_TOKEN

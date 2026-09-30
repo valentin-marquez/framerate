@@ -9,7 +9,7 @@
       "binding": "DB",
       "database_name": "framerate",
       // bunx wrangler d1 create framerate  → pegar el mismo id en los 3 wrangler.jsonc
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "6537cc10-7e7b-4dba-9c01-ce80e6a840eb",
       "migrations_dir": "migrations"
     }
   ]
