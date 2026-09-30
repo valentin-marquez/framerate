@@ -1,17 +1,19 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { Selectable } from "kysely";
 import { Miniflare } from "miniflare";
 import type { Env } from "@/env";
 import type { CrawlCategoryDeps } from "@/features/ingestion/crawl-category";
 import type { RawOffer } from "@/features/ingestion/domain/normalize";
 import type { CrawlMessage } from "@/features/ingestion/messages";
 import type { CrawlContext, StoreDefinition } from "@/features/ingestion/stores/adapter";
-import { createDb } from "@/shared/db/client";
+import { createDb, type Db } from "@/shared/db/client";
+import type { Database } from "@/shared/db/database";
 import { silentLogger } from "@/shared/logger";
 
 /**
  * D1 real (workerd vía Miniflare) con las migraciones SQL reales aplicadas.
- * Si el esquema de drizzle se desfasa de las migraciones, estos tests fallan.
+ * Si los tipos de `database.ts` se desfasan de las migraciones, estos tests fallan.
  */
 export async function createTestD1() {
   const mf = new Miniflare({ modules: true, script: "export default {}", d1Databases: ["DB"] });
@@ -155,4 +157,12 @@ export function testEnv(d1: D1Database) {
     } as unknown as Queue<CrawlMessage>,
   };
   return { env, sent };
+}
+
+/** Todas las filas de una tabla (para aserciones en tests). */
+export function all<T extends keyof Database>(deps: { db: Db }, table: T): Promise<Selectable<Database[T]>[]> {
+  return deps.db.query
+    .selectFrom(table as keyof Database)
+    .selectAll()
+    .execute() as Promise<Selectable<Database[T]>[]>;
 }

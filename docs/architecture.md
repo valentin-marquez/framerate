@@ -194,7 +194,7 @@ asistida.
 - **ADR-2 · Un Worker, tres disparadores.** Menos piezas que desplegar y
   monitorear. Las features siguen separadas en el código; si una crece, se
   extrae a su propio Worker sin reescribir (ya tiene sus límites claros).
-- **ADR-3 · SQL a mano + Drizzle sólo como query builder.** Las migraciones son
+- **ADR-3 · SQL a mano + Kysely como query builder tipado.** Las migraciones son
   revisables y aplican con `wrangler`. Los tests corren esas migraciones en D1
   real, así el esquema TS no puede desfasarse sin romper CI.
 - **ADR-4 · Hash de imagen como evidencia secundaria**, no como llave. Pendiente

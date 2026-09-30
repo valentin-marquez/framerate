@@ -1,17 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { eq } from "drizzle-orm";
 import { crawlCategory } from "@/features/ingestion/crawl-category";
 import { resolveMatchReview } from "@/features/matching/reviews";
-import {
-  listings,
-  matchDecisions,
-  matchReviews,
-  pricePoints,
-  productIdentifiers,
-  products,
-  quarantine,
-} from "@/shared/db/schema";
-import { createTestD1, fakeStore, offer, resetD1, steppingClock, testDeps } from "./helpers";
+import { all, createTestD1, fakeStore, offer, resetD1, steppingClock, testDeps } from "./helpers";
 
 /**
  * Pipeline completo contra D1 real: tienda → normalización → oferta →
@@ -44,9 +34,9 @@ describe("ingesta", () => {
 
     expect(result.status).toBe("succeeded");
     expect(result.stats).toMatchObject({ seen: 3, valid: 2, quarantined: 1, created: 2, newProducts: 2 });
-    expect(await deps.db.select().from(products)).toHaveLength(2);
-    expect(await deps.db.select().from(pricePoints)).toHaveLength(2);
-    const [q] = await deps.db.select().from(quarantine);
+    expect(await all(deps, "products")).toHaveLength(2);
+    expect(await all(deps, "price_points")).toHaveLength(2);
+    const [q] = await all(deps, "quarantine");
     expect(q?.reason).toBe("price:out_of_range");
   });
 
@@ -64,9 +54,9 @@ describe("ingesta", () => {
     const result = await crawlCategory(deps, tienda.store, "gpu");
 
     expect(result.stats).toMatchObject({ valid: 2, updated: 2, priceChanges: 1, deactivated: 1 });
-    expect(await deps.db.select().from(pricePoints)).toHaveLength(4);
-    const gone = await deps.db.select().from(listings).where(eq(listings.externalId, "3")).get();
-    expect(gone?.isActive).toBe(false);
+    expect(await all(deps, "price_points")).toHaveLength(4);
+    const gone = await all(deps, "listings").then((r) => r.find((l) => l.external_id === "3"));
+    expect(gone?.is_active).toBe(0);
   });
 
   test("guardia de salud: una corrida incompleta no vacía el catálogo de la tienda", async () => {
@@ -89,7 +79,7 @@ describe("ingesta", () => {
     tienda.setOffers([]);
     const empty = await crawlCategory(deps, tienda.store, "cpu");
     expect(empty.status).toBe("failed");
-    const active = await deps.db.select().from(listings).where(eq(listings.isActive, true));
+    const active = await all(deps, "listings").then((r) => r.filter((l) => l.is_active === 1));
     expect(active).toHaveLength(models.length);
   });
 
@@ -120,8 +110,8 @@ describe("matching entre tiendas", () => {
     const result = await crawlCategory(deps, beta.store, "gpu");
 
     expect(result.stats.linked).toBe(1);
-    expect(await deps.db.select().from(products)).toHaveLength(1);
-    const decisions = await deps.db.select().from(matchDecisions);
+    expect(await all(deps, "products")).toHaveLength(1);
+    const decisions = await all(deps, "match_decisions");
     expect(decisions.map((d) => d.method).sort()).toEqual(["identifier", "new_product"]);
   });
 
@@ -137,7 +127,7 @@ describe("matching entre tiendas", () => {
     ]);
     await crawlCategory(deps, alfa.store, "cpu");
     await crawlCategory(deps, beta.store, "cpu");
-    expect(await deps.db.select().from(products)).toHaveLength(1);
+    expect(await all(deps, "products")).toHaveLength(1);
   });
 
   test("mismo MPN pero distinta VRAM → productos distintos, sin robar el identificador", async () => {
@@ -163,12 +153,12 @@ describe("matching entre tiendas", () => {
     await crawlCategory(deps, alfa.store, "gpu");
     await crawlCategory(deps, beta.store, "gpu");
 
-    const all = await deps.db.select().from(products);
-    expect(all).toHaveLength(2);
-    const ids = await deps.db.select().from(productIdentifiers);
+    const allProducts = await all(deps, "products");
+    expect(allProducts).toHaveLength(2);
+    const ids = await all(deps, "product_identifiers");
     expect(ids).toHaveLength(1);
-    const conflict = await deps.db.select().from(matchDecisions).where(eq(matchDecisions.method, "new_product"));
-    expect(conflict.some((d) => JSON.stringify(d.evidence).includes("identifierConflicts"))).toBe(true);
+    const conflict = await all(deps, "match_decisions").then((r) => r.filter((d) => d.method === "new_product"));
+    expect(conflict.some((d) => d.evidence.includes("identifierConflicts"))).toBe(true);
   });
 
   test("si la tienda corrige el título y el vínculo ya no es válido, se desvincula y re-decide", async () => {
@@ -180,13 +170,13 @@ describe("matching entre tiendas", () => {
     beta.setOffers([offer("beta", "2", { ...GPU_A, mpn: "DUAL-RTX4070S-O12G" })]);
     await crawlCategory(deps, alfa.store, "gpu");
     await crawlCategory(deps, beta.store, "gpu");
-    expect(await deps.db.select().from(products)).toHaveLength(1);
+    expect(await all(deps, "products")).toHaveLength(1);
 
     // Beta tenía mal el título: en realidad es la versión de 16GB (otro producto).
     beta.setOffers([offer("beta", "2", { ...GPU_A, title: "ASUS Dual RTX 4070 Ti SUPER OC 16GB", mpn: null })]);
     const result = await crawlCategory(deps, beta.store, "gpu");
     expect(result.stats).toMatchObject({ unlinked: 1, newProducts: 1 });
-    expect(await deps.db.select().from(products)).toHaveLength(2);
+    expect(await all(deps, "products")).toHaveLength(2);
   });
 });
 
@@ -212,7 +202,7 @@ describe("revisión humana", () => {
     ]);
     await crawlCategory(deps, alfa.store, "ram");
     const result = await crawlCategory(deps, beta.store, "ram");
-    const [review] = await deps.db.select().from(matchReviews);
+    const [review] = await all(deps, "match_reviews");
     return { deps, result, review };
   }
 
@@ -220,7 +210,7 @@ describe("revisión humana", () => {
     const { deps, result, review } = await setupReview();
     expect(result.stats).toMatchObject({ reviews: 1, newProducts: 1 });
     expect(review?.status).toBe("pending");
-    expect(await deps.db.select().from(products)).toHaveLength(2);
+    expect(await all(deps, "products")).toHaveLength(2);
   });
 
   test("aceptar mueve la oferta al candidato y le traslada sus identificadores", async () => {
@@ -233,10 +223,10 @@ describe("revisión humana", () => {
       now: new Date().toISOString(),
     });
 
-    const listing = await deps.db.select().from(listings).where(eq(listings.id, review.listingId)).get();
-    expect(listing?.productId).toBe(review.candidateProductId);
-    const ids = await deps.db.select().from(productIdentifiers);
-    expect(ids).toEqual([{ kind: "gtin", value: "00840006600008", productId: review.candidateProductId }]);
+    const listing = await all(deps, "listings").then((r) => r.find((l) => l.id === review.listing_id));
+    expect(listing?.product_id).toBe(review.candidate_product_id);
+    const ids = await all(deps, "product_identifiers");
+    expect(ids).toEqual([{ kind: "gtin", value: "00840006600008", product_id: review.candidate_product_id }]);
     await expect(
       resolveMatchReview(deps.db, { reviewId: review.id, action: "reject", decidedBy: "test", now: "" }),
     ).rejects.toMatchObject({ code: "review_already_resolved" });

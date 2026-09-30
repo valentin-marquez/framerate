@@ -7,30 +7,16 @@ import type {
   ProductPage,
   ProductSummary,
 } from "@framerate/contracts";
-import { and, asc, count, desc, eq, gte, isNotNull, type SQL, sql } from "drizzle-orm";
+import { type ExpressionBuilder, sql } from "kysely";
 import { titleTokens } from "@/features/matching/domain/fingerprint";
 import type { Db } from "@/shared/db/client";
-import { listings, pricePoints, products, stores } from "@/shared/db/schema";
+import { parseJson, toBool } from "@/shared/db/codecs";
+import type { Database } from "@/shared/db/database";
 
 /**
  * Consultas de lectura del catálogo público. Sólo se muestran productos con
  * al menos una oferta activa; precios agregados sobre ofertas activas.
  */
-
-function offerAggregate(db: Db) {
-  return db
-    .select({
-      productId: sql<number>`${listings.productId}`.as("agg_product_id"),
-      bestPrice: sql<number | null>`min(case when ${listings.inStock} = 1 then ${listings.priceCash} end)`.as(
-        "best_price",
-      ),
-      offerCount: count().as("offer_count"),
-    })
-    .from(listings)
-    .where(and(eq(listings.isActive, true), isNotNull(listings.productId)))
-    .groupBy(listings.productId)
-    .as("agg");
-}
 
 /** Convierte texto libre en una consulta FTS5 segura: cada palabra como prefijo literal. */
 export function ftsQuery(q: string): string | null {
@@ -39,126 +25,173 @@ export function ftsQuery(q: string): string | null {
   return tokens.map((t) => `"${t}"*`).join(" ");
 }
 
-export async function listProducts(db: Db, query: ProductListQuery): Promise<ProductPage> {
-  const agg = offerAggregate(db);
-  const filters: SQL[] = [];
-  if (query.category) filters.push(eq(products.category, query.category));
-  if (query.brand) filters.push(sql`lower(${products.brand}) = lower(${query.brand})`);
-  if (query.inStock) filters.push(isNotNull(agg.bestPrice));
-  if (query.q) {
-    const match = ftsQuery(query.q);
-    if (!match) return { items: [], page: query.page, pageSize: query.pageSize, total: 0 };
-    filters.push(sql`${products.id} IN (SELECT rowid FROM products_fts WHERE products_fts MATCH ${match})`);
-  }
-  const where = filters.length > 0 ? and(...filters) : undefined;
+/** Agregado por producto sobre ofertas activas: mejor precio con stock y cantidad de ofertas. */
+function offerAggregate(db: Db) {
+  return db.query
+    .selectFrom("listings")
+    .select((eb) => [
+      "product_id",
+      sql<number | null>`min(case when in_stock = 1 then price_cash end)`.as("best_price"),
+      eb.fn.countAll<number>().as("offer_count"),
+    ])
+    .where("is_active", "=", 1)
+    .where("product_id", "is not", null)
+    .groupBy("product_id")
+    .as("agg");
+}
 
-  const priceNullsLast = sql`${agg.bestPrice} IS NULL`;
-  const orderBy = {
-    relevance: [desc(agg.offerCount), asc(priceNullsLast), asc(agg.bestPrice), asc(products.name)],
-    price_asc: [asc(priceNullsLast), asc(agg.bestPrice), asc(products.name)],
-    price_desc: [asc(priceNullsLast), desc(agg.bestPrice), asc(products.name)],
-    newest: [desc(products.createdAt), asc(products.id)],
-  }[query.sort];
+export async function listProducts(db: Db, query: ProductListQuery): Promise<ProductPage> {
+  let match: string | null = null;
+  if (query.q) {
+    match = ftsQuery(query.q);
+    if (!match) return { items: [], page: query.page, pageSize: query.pageSize, total: 0 };
+  }
+
+  let base = db.query.selectFrom("products as p").innerJoin(offerAggregate(db), "agg.product_id", "p.id");
+  if (query.category) base = base.where("p.category", "=", query.category);
+  if (query.brand) base = base.where(sql<boolean>`lower(p.brand) = lower(${query.brand})`);
+  if (query.inStock) base = base.where("agg.best_price", "is not", null);
+  if (match)
+    base = base.where(sql<boolean>`p.id IN (SELECT rowid FROM products_fts WHERE products_fts MATCH ${match})`);
+
+  const nullsLast = sql`agg.best_price IS NULL`;
+  let page = base.select([
+    "p.slug",
+    "p.name",
+    "p.brand",
+    "p.category",
+    "p.image_url as imageUrl",
+    "agg.best_price as bestPrice",
+    "agg.offer_count as offerCount",
+  ]);
+  switch (query.sort) {
+    case "relevance":
+      page = page.orderBy("agg.offer_count", "desc").orderBy(nullsLast).orderBy("agg.best_price").orderBy("p.name");
+      break;
+    case "price_asc":
+      page = page.orderBy(nullsLast).orderBy("agg.best_price").orderBy("p.name");
+      break;
+    case "price_desc":
+      page = page.orderBy(nullsLast).orderBy("agg.best_price", "desc").orderBy("p.name");
+      break;
+    case "newest":
+      page = page.orderBy("p.created_at", "desc").orderBy("p.id");
+      break;
+  }
 
   const [rows, totalRow] = await Promise.all([
-    db
-      .select({
-        slug: products.slug,
-        name: products.name,
-        brand: products.brand,
-        category: products.category,
-        imageUrl: products.imageUrl,
-        bestPrice: agg.bestPrice,
-        offerCount: agg.offerCount,
-      })
-      .from(products)
-      .innerJoin(agg, eq(agg.productId, products.id))
-      .where(where)
-      .orderBy(...orderBy)
+    page
       .limit(query.pageSize)
-      .offset((query.page - 1) * query.pageSize),
-    db.select({ total: count() }).from(products).innerJoin(agg, eq(agg.productId, products.id)).where(where).get(),
+      .offset((query.page - 1) * query.pageSize)
+      .execute(),
+    base.select((eb) => eb.fn.countAll<number>().as("total")).executeTakeFirst(),
   ]);
 
   return {
-    items: rows.map((r) => ({ ...r, category: r.category as Category })),
+    items: rows.map((r) => ({ ...r, category: r.category as Category, offerCount: Number(r.offerCount) })),
     page: query.page,
     pageSize: query.pageSize,
-    total: totalRow?.total ?? 0,
+    total: Number(totalRow?.total ?? 0),
   };
 }
 
+const productBySlug = (slug: string) => (eb: ExpressionBuilder<Database, "products">) => eb("slug", "=", slug);
+
 export async function getProduct(db: Db, slug: string): Promise<ProductDetail | null> {
-  const product = await db.select().from(products).where(eq(products.slug, slug)).get();
+  const product = await db.query.selectFrom("products").selectAll().where(productBySlug(slug)).executeTakeFirst();
   if (!product) return null;
 
-  const offerRows = await db
-    .select({
-      store: { slug: stores.slug, name: stores.name, url: stores.url },
-      url: listings.url,
-      title: listings.title,
-      priceCash: listings.priceCash,
-      priceCard: listings.priceCard,
-      inStock: listings.inStock,
-      stockQuantity: listings.stockQuantity,
-      lastSeenAt: listings.lastSeenAt,
-      isActive: listings.isActive,
-    })
-    .from(listings)
-    .innerJoin(stores, eq(stores.id, listings.storeId))
-    .where(eq(listings.productId, product.id))
-    .orderBy(desc(listings.inStock), asc(listings.priceCash));
+  const offerRows = await db.query
+    .selectFrom("listings as l")
+    .innerJoin("stores as s", "s.id", "l.store_id")
+    .select([
+      "s.slug as storeSlug",
+      "s.name as storeName",
+      "s.url as storeUrl",
+      "l.url",
+      "l.title",
+      "l.price_cash",
+      "l.price_card",
+      "l.in_stock",
+      "l.stock_quantity",
+      "l.last_seen_at",
+      "l.is_active",
+    ])
+    .where("l.product_id", "=", product.id)
+    .orderBy("l.in_stock", "desc")
+    .orderBy("l.price_cash")
+    .execute();
 
   // Un producto sin ninguna oferta (ej. provisional fusionado por revisión) no existe públicamente.
   if (offerRows.length === 0) return null;
 
-  const offers: Offer[] = offerRows.filter((o) => o.isActive).map(({ isActive: _, ...o }) => o);
+  const offers: Offer[] = offerRows
+    .filter((o) => toBool(o.is_active))
+    .map((o) => ({
+      store: { slug: o.storeSlug, name: o.storeName, url: o.storeUrl },
+      url: o.url,
+      title: o.title,
+      priceCash: o.price_cash,
+      priceCard: o.price_card,
+      inStock: toBool(o.in_stock),
+      stockQuantity: o.stock_quantity,
+      lastSeenAt: o.last_seen_at,
+    }));
   const inStock = offers.filter((o) => o.inStock);
   const summary: ProductSummary = {
     slug: product.slug,
     name: product.name,
     brand: product.brand,
     category: product.category as Category,
-    imageUrl: product.imageUrl,
+    imageUrl: product.image_url,
     bestPrice: inStock.length > 0 ? Math.min(...inStock.map((o) => o.priceCash)) : null,
     offerCount: offers.length,
   };
-  return { ...summary, attributes: product.attributes as ProductDetail["attributes"], offers };
+  return { ...summary, attributes: parseJson<ProductDetail["attributes"]>(product.attributes, {}), offers };
 }
 
 export async function getPriceHistory(db: Db, slug: string, days: number): Promise<PricePoint[] | null> {
-  const product = await db.select({ id: products.id }).from(products).where(eq(products.slug, slug)).get();
+  const product = await db.query.selectFrom("products").select("id").where(productBySlug(slug)).executeTakeFirst();
   if (!product) return null;
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
-  return db
-    .select({
-      store: stores.slug,
-      priceCash: pricePoints.priceCash,
-      priceCard: pricePoints.priceCard,
-      inStock: pricePoints.inStock,
-      observedAt: pricePoints.observedAt,
-    })
-    .from(pricePoints)
-    .innerJoin(listings, eq(listings.id, pricePoints.listingId))
-    .innerJoin(stores, eq(stores.id, listings.storeId))
-    .where(and(eq(listings.productId, product.id), gte(pricePoints.observedAt, since)))
-    .orderBy(asc(pricePoints.observedAt));
+  const rows = await db.query
+    .selectFrom("price_points as pp")
+    .innerJoin("listings as l", "l.id", "pp.listing_id")
+    .innerJoin("stores as s", "s.id", "l.store_id")
+    .select(["s.slug as store", "pp.price_cash", "pp.price_card", "pp.in_stock", "pp.observed_at"])
+    .where("l.product_id", "=", product.id)
+    .where("pp.observed_at", ">=", since)
+    .orderBy("pp.observed_at")
+    .orderBy("pp.id")
+    .execute();
+  return rows.map((r) => ({
+    store: r.store,
+    priceCash: r.price_cash,
+    priceCard: r.price_card,
+    inStock: toBool(r.in_stock),
+    observedAt: r.observed_at,
+  }));
 }
 
 export async function listStores(db: Db) {
-  return db
-    .select({ slug: stores.slug, name: stores.name, url: stores.url, offerCount: count(listings.id) })
-    .from(stores)
-    .leftJoin(listings, and(eq(listings.storeId, stores.id), eq(listings.isActive, true)))
-    .where(eq(stores.isActive, true))
-    .groupBy(stores.id)
-    .orderBy(asc(stores.name));
+  const rows = await db.query
+    .selectFrom("stores as s")
+    .leftJoin("listings as l", (join) => join.onRef("l.store_id", "=", "s.id").on("l.is_active", "=", 1))
+    .select((eb) => ["s.slug", "s.name", "s.url", eb.fn.count<number>("l.id").as("offerCount")])
+    .where("s.is_active", "=", 1)
+    .groupBy("s.id")
+    .orderBy("s.name")
+    .execute();
+  return rows.map((r) => ({ ...r, offerCount: Number(r.offerCount) }));
 }
 
 export async function categoryCounts(db: Db) {
-  return db
-    .select({ category: listings.category, products: sql<number>`count(distinct ${listings.productId})` })
-    .from(listings)
-    .where(and(eq(listings.isActive, true), isNotNull(listings.productId)))
-    .groupBy(listings.category);
+  const rows = await db.query
+    .selectFrom("listings")
+    .select(["category", sql<number>`count(distinct product_id)`.as("products")])
+    .where("is_active", "=", 1)
+    .where("product_id", "is not", null)
+    .groupBy("category")
+    .execute();
+  return rows.map((r) => ({ category: r.category, products: Number(r.products) }));
 }
