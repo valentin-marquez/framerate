@@ -157,7 +157,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50" />
 
       <div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-3xl border border-border bg-background shadow-2xl">
         <div className="flex items-start justify-between p-5 border-b border-border/60">
