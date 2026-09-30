@@ -1,8 +1,6 @@
-import { IconBuildingStore, IconChartLine, IconListCheck } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { getCategoryConfig, getCategoryImage } from "~/features/category/utils/categories";
 import { StoreLogo } from "~/shared/components/store-logo";
-import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 import type { HomeData } from "../types";
 
@@ -20,43 +18,6 @@ const countLabel = (category: Category) =>
     : category.product_count === 1
       ? "1 producto"
       : `${category.product_count} productos`;
-
-/** Tres promesas del sitio en una franja pegada al hero. Entran en cascada justo después del buscador. */
-export function ValueProps({ storeCount }: { storeCount: number }) {
-  const items = [
-    {
-      icon: IconBuildingStore,
-      title:
-        storeCount === 1
-          ? "1 tienda comparada"
-          : storeCount > 1
-            ? `${storeCount} tiendas comparadas`
-            : "Tiendas chilenas",
-      text: "Precio y stock de cada tienda en un solo lugar",
-    },
-    { icon: IconChartLine, title: "Historial de precios", text: "Mira cuánto costó antes de comprar" },
-    { icon: IconListCheck, title: "Arma tu cotización", text: "Junta tus componentes y compara el total" },
-  ];
-  return (
-    <ul className="grid gap-3 sm:grid-cols-3">
-      {items.map(({ icon: Icon, title, text }, i) => (
-        <li
-          key={title}
-          className={cn("flex items-start gap-3 rounded-2xl border border-border/40 bg-card p-4", enterClass())}
-          style={enterStyle(260 + i * 90)}
-        >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Icon className="size-5" />
-          </span>
-          <div className="min-w-0">
-            <p className="font-medium text-foreground text-sm">{title}</p>
-            <p className="text-muted-foreground text-xs">{text}</p>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 const MD_SPAN = { 1: "md:col-span-1", 2: "md:col-span-2", 3: "md:col-span-3", 4: "md:col-span-4" } as const;
 
