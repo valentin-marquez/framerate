@@ -1,6 +1,7 @@
 import type { PsuSpecs } from "@framerate/db";
 import { IconPhotoOff, IconTrendingUp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link } from "react-router";
 import type { Product } from "~/features/product/services/products";
 import { productsService } from "~/features/product/services/products";
@@ -11,7 +12,6 @@ import { Skeleton } from "~/shared/components/primitives/skeleton";
 import { productKeys } from "~/shared/lib/query-keys";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
-import { getImageUrl } from "~/shared/utils/images";
 import { AddToQuote } from "./add-to-quote";
 import { PsuBadge } from "./psu-badge";
 
@@ -28,6 +28,67 @@ function availabilityText(inStock: boolean, stores: number) {
   if (!inStock) return "Sin stock";
   if (stores > 1) return `En ${stores} tiendas`;
   return stores === 1 ? "En 1 tienda" : "Disponible";
+}
+
+/**
+ * Panel derecho de la tarjeta: la foto es el fondo y se funde hacia la izquierda con un velo suavizado (la capa tiene
+ * el tono de la foto: blanco, o gris claro en oscuro vía `--product-stage` + multiply, así nunca se ve su borde).
+ * Mientras carga sólo se ve el color de la tarjeta y un orbe; al llegar la foto, el panel se abre desde el orbe.
+ */
+function ProductStage({ product, priority, psu }: { product: Product; priority: boolean; psu: string | null }) {
+  const [stage, setStage] = useState<"loading" | "opening" | "open">("loading");
+
+  if (!product.image_url) {
+    return (
+      <div className="absolute inset-y-0 right-0 flex w-[58%] items-center justify-end pr-8 text-foreground/20">
+        <IconPhotoOff className="size-8" stroke={1.25} role="img" aria-label="Sin imagen" />
+        {psu && (
+          <div className="absolute top-2 right-2">
+            <PsuBadge certification={psu} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="absolute inset-y-0 right-0 isolate w-[58%] overflow-hidden bg-[var(--product-stage)]"
+      // El producto va alineado a la derecha: el orbe y la apertura nacen ahí, no en el centro del panel.
+      style={{ "--reveal-x": "68%" } as React.CSSProperties}
+    >
+      <AsyncImage
+        src={product.image_url}
+        alt={product.name ?? "Producto"}
+        priority={priority}
+        reveal="none"
+        onReady={(fromCache) => setStage(fromCache ? "open" : "opening")}
+        className="size-full object-contain object-right p-3 pl-0 mix-blend-multiply"
+      />
+      <div aria-hidden className="scrim-card-to-r absolute inset-y-0 left-0 w-3/5" />
+      {/* En oscuro el panel es más claro que el pie: se funde también hacia abajo para no cortar en seco. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 hidden h-2/5 bg-gradient-to-t from-card to-transparent dark:block"
+      />
+      {stage !== "open" && (
+        <>
+          <div
+            aria-hidden
+            className="stage-cover"
+            data-state={stage === "opening" ? "open" : "closed"}
+            onAnimationEnd={() => setStage("open")}
+          />
+          <span aria-hidden className="image-orb" data-state={stage === "opening" ? "splash" : "loading"} />
+        </>
+      )}
+      {psu && (
+        <div className="absolute top-2 right-2">
+          <PsuBadge certification={psu} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -62,41 +123,7 @@ export function ProductCard({ product, priority = false, trending = false, class
       )}
     >
       <div className="relative flex min-h-36">
-        {/* La foto es el fondo del lado derecho y se funde hacia la izquierda con un velo suavizado. La capa tiene el
-            tono de la foto (blanco; gris claro en oscuro vía `--product-stage` + multiply), así nunca se ve su borde. */}
-        <div
-          className={cn("absolute inset-y-0 right-0 isolate w-[58%]", product.image_url && "bg-[var(--product-stage)]")}
-        >
-          {product.image_url ? (
-            <>
-              <AsyncImage
-                src={getImageUrl(product.image_url)}
-                alt={product.name ?? "Producto"}
-                priority={priority}
-                className="size-full object-contain object-right p-3 pl-0 mix-blend-multiply"
-              />
-              <div aria-hidden className="scrim-card-to-r absolute inset-y-0 left-0 w-3/5" />
-              {/* En oscuro el panel es más claro que el pie: se funde también hacia abajo para no cortar en seco. */}
-              <div
-                aria-hidden
-                className="absolute inset-x-0 bottom-0 hidden h-2/5 bg-gradient-to-t from-card to-transparent dark:block"
-              />
-            </>
-          ) : (
-            <div
-              className="flex size-full items-center justify-end pr-8 text-foreground/20"
-              role="img"
-              aria-label="Sin imagen"
-            >
-              <IconPhotoOff className="size-8" stroke={1.25} />
-            </div>
-          )}
-          {psu && (
-            <div className="absolute top-2 right-2">
-              <PsuBadge certification={psu} />
-            </div>
-          )}
-        </div>
+        <ProductStage product={product} priority={priority} psu={psu} />
 
         <div className="relative flex w-[58%] min-w-0 flex-col gap-1.5 p-3 pt-3.5 pb-2.5">
           <div className="flex h-5 items-center gap-2">
