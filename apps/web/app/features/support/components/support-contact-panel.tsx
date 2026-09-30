@@ -155,7 +155,7 @@ export function SupportContactPanel({
         return;
       }
       if (TURNSTILE_CONFIGURED && !turnstileToken) {
-        toast.error("Esperá a que termine la verificación anti-spam.");
+        toast.error("Espera a que termine la verificación anti-spam.");
         return;
       }
     }
@@ -180,7 +180,7 @@ export function SupportContactPanel({
     } catch (error) {
       setTurnstileResetKey((k) => k + 1);
       setTurnstileToken(null);
-      const message = error instanceof ApiError ? error.message : "No pudimos enviar tu mensaje. Probá de nuevo.";
+      const message = error instanceof ApiError ? error.message : "No pudimos enviar tu mensaje. Inténtalo de nuevo.";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -225,8 +225,8 @@ export function SupportContactPanel({
                   <h3 className="font-semibold tracking-tight text-lg">Contactar a soporte</h3>
                   <p className="text-sm text-muted-foreground">
                     {isAuthed
-                      ? "Te respondemos dentro de la plataforma. Vas a recibir las respuestas en tu cuenta."
-                      : "Te respondemos al email que nos dejes. Si tenés cuenta, iniciá sesión para ver la conversación dentro del sitio."}
+                      ? "Te respondemos dentro de la plataforma. Recibirás las respuestas en tu cuenta."
+                      : "Te respondemos al email que nos dejes. Si tienes cuenta, inicia sesión para ver la conversación dentro del sitio."}
                   </p>
                 </div>
                 <Button
@@ -338,7 +338,7 @@ export function SupportContactPanel({
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     disabled={submitting}
-                    placeholder="Contanos qué pasa con el detalle que tengas (links, capturas mentales, lo que sea útil)."
+                    placeholder="Cuéntanos qué pasa con el detalle que tengas (links, capturas mentales, lo que sea útil)."
                     minLength={10}
                     maxLength={5000}
                   />
@@ -391,7 +391,7 @@ export function SupportContactPanel({
           {view === "idle" && (
             <div className="absolute inset-0 grid place-items-center bg-card p-6 text-center" inert={wipe !== null}>
               <div>
-                <p className="text-sm text-muted-foreground mb-4">¿Tenés dudas sobre cómo manejamos tu información?</p>
+                <p className="text-sm text-muted-foreground mb-4">¿Tienes dudas sobre cómo manejamos tu información?</p>
                 <Button
                   type="button"
                   onClick={() => transitionTo("form")}

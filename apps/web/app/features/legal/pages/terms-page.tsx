@@ -74,13 +74,13 @@ export default function Terms() {
           </div>
           <div className="space-y-4">
             <p>
-              Podés navegar Framerate sin cuenta. Si te registrás (vía Discord, Google, Apple o Facebook), pasás a poder
+              Puedes navegar Framerate sin cuenta. Si te registras (vía Discord, Google, Apple o Facebook), podrás
               guardar favoritos, armar cotizaciones, dejar reseñas a tiendas, comentar productos y reclamar la ficha de
               una tienda que administres.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
               <li>
-                Sos responsable de mantener la seguridad de la cuenta del proveedor con que iniciás sesión. No usamos
+                Eres responsable de mantener la seguridad de la cuenta del proveedor con que inicias sesión. No usamos
                 contraseñas propias.
               </li>
               <li>
@@ -105,13 +105,13 @@ export default function Terms() {
           </div>
           <div className="space-y-4">
             <p>
-              Si representás una tienda listada, podés <span className="font-bold">reclamar</span> su perfil verificando
-              el dominio mediante un registro DNS TXT. Una vez verificada, vos y tu equipo pueden editar el perfil
-              público (logo, descripción, redes), pero no los datos de catálogo, precios ni reseñas de usuarios.
+              Si representas una tienda listada, puedes <span className="font-bold">reclamar</span> su perfil
+              verificando el dominio mediante un registro DNS TXT. Una vez verificada, tú y tu equipo pueden editar el
+              perfil público (logo, descripción, redes), pero no los datos de catálogo, precios ni reseñas de usuarios.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
               <li>
-                Reclamar una tienda implica que tenés autorización para representarla. Reclamos fraudulentos pueden ser
+                Reclamar una tienda implica que tienes autorización para representarla. Reclamos fraudulentos pueden ser
                 revocados sin aviso y el responsable suspendido.
               </li>
               <li>
@@ -120,7 +120,7 @@ export default function Terms() {
               </li>
               <li>
                 Las reseñas que dejan los usuarios sobre tu tienda no se editan ni se borran a pedido del dueño. Si una
-                reseña viola las normas, podés reportarla desde la propia ficha.
+                reseña viola las normas, puedes reportarla desde la propia ficha.
               </li>
             </ul>
           </div>
@@ -149,17 +149,17 @@ export default function Terms() {
             </p>
             <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
               <li>
-                <span className="text-foreground font-medium">Sí podés:</span> leer, hacer fork, estudiar, modificar y
+                <span className="text-foreground font-medium">Sí puedes:</span> leer, hacer fork, estudiar, modificar y
                 self-hostear para estudio personal, hobby, investigación u organizaciones sin fines de lucro.
               </li>
               <li>
-                <span className="text-foreground font-medium">No podés:</span> usarlo dentro de un producto o servicio
+                <span className="text-foreground font-medium">No puedes:</span> usarlo dentro de un producto o servicio
                 comercial, cobrar acceso, monetizar el catálogo curado ni operar una alternativa comercial competitiva
                 basada en este código.
               </li>
             </ul>
             <p className="text-sm text-muted-foreground">
-              Para uso comercial, escribí a{" "}
+              Para uso comercial, escribe a{" "}
               <a href="mailto:valentin13.mail@gmail.com" className="font-medium text-foreground underline">
                 valentin13.mail@gmail.com
               </a>{" "}
@@ -187,8 +187,8 @@ export default function Terms() {
               infraestructura de Framerate y se reserva el derecho de uso comercial.
             </p>
             <p className="text-sm text-muted-foreground">
-              Si self-hosteás el código bajo la licencia no comercial, tenés que reemplazar el nombre, el logo y usar un
-              dominio que no se confunda con framerate.cl.
+              Si alojas el código por tu cuenta bajo la licencia no comercial, tienes que reemplazar el nombre, el logo
+              y usar un dominio que no se confunda con framerate.cl.
             </p>
           </div>
         </section>
@@ -198,16 +198,16 @@ export default function Terms() {
         <section className="grid gap-6 md:grid-cols-[200px_1fr]">
           <div className="flex items-start gap-2 pt-1 text-primary">
             <IconDatabase className="size-5" />
-            <h2 className="font-semibold uppercase tracking-wider text-xs pt-1">Contenido que publicás</h2>
+            <h2 className="font-semibold uppercase tracking-wider text-xs pt-1">Contenido que publicas</h2>
           </div>
           <div className="space-y-4">
             <p>
               Reseñas, comentarios, cotizaciones públicas y demás contenido que publiques siguen siendo tuyos. Al
-              publicarlos en Framerate nos concedés una licencia mundial, no exclusiva y libre de regalías para
+              publicarlos en Framerate nos concedes una licencia mundial, no exclusiva y libre de regalías para
               mostrarlos en la plataforma mientras tu cuenta esté activa.
             </p>
             <p className="text-sm text-muted-foreground">
-              Si borrás tu cuenta, despublicamos tu contenido público asociado. Conservamos copias mínimas si una ley
+              Si borras tu cuenta, despublicamos tu contenido público asociado. Conservamos copias mínimas si una ley
               chilena nos obliga o si son evidencia de una infracción a estos términos.
             </p>
           </div>
@@ -217,7 +217,7 @@ export default function Terms() {
 
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-muted-foreground max-w-xl italic">
-            Al navegar Framerate aceptás estos términos. Pueden cambiar; cuando lo hagamos, actualizamos la fecha de
+            Al navegar Framerate aceptas estos términos. Pueden cambiar; cuando lo hagamos, actualizamos la fecha de
             arriba y, para cambios materiales, lo avisamos en el sitio.
           </p>
         </div>

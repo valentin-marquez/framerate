@@ -11,9 +11,9 @@ import { type StoreProductsResponse, storesService, type ViewerStoreRole } from 
 import type { Route } from "./+types/store-page";
 
 export function meta({ data }: Route.MetaArgs) {
-  if (!data?.store) return [{ title: "Tienda no encontrada · Framerate" }];
+  if (!data?.store) return [{ title: "Tienda no encontrada - Framerate" }];
   return [
-    { title: `${data.store.name} · Framerate` },
+    { title: `${data.store.name} - Framerate` },
     { name: "description", content: data.store.description ?? `Tienda ${data.store.name} en Framerate.cl` },
   ];
 }
@@ -56,7 +56,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 export default function StorePage({ loaderData }: Route.ComponentProps) {
   const { store, viewerRole, isAuthenticated, products } = loaderData;
   const canManage = viewerRole !== null;
-  // Banner público de "reclamala" mientras la tienda no tenga dueño. Se muestra
+  // Banner público de "reclámala" mientras la tienda no tenga dueño. Se muestra
   // a todos (incluidos anónimos): si está logueado va directo a /reclamar; si no,
   // abre un modal de OAuth con returnTo para que vuelva al wizard tras el login.
   const showClaimCta = !store.is_claimed;
@@ -98,7 +98,7 @@ export default function StorePage({ loaderData }: Route.ComponentProps) {
             <div className="space-y-1">
               <h2 className="font-semibold text-base text-foreground">¿Esta tienda es tuya?</h2>
               <p className="max-w-xl text-muted-foreground text-sm">
-                Verificá la propiedad por DNS y vas a poder editar su perfil, responder reseñas y más.
+                Verifica la propiedad por DNS y podrás editar su perfil, responder reseñas y más.
               </p>
             </div>
           </div>
@@ -112,8 +112,8 @@ export default function StorePage({ loaderData }: Route.ComponentProps) {
           ) : (
             <LoginDialog
               returnTo={claimHref}
-              title="Iniciá sesión para reclamar"
-              description="Verificá la propiedad usando una cuenta para gestionar la tienda después."
+              title="Inicia sesión para reclamar"
+              description="Necesitas una cuenta para verificar la propiedad y gestionar la tienda después."
               trigger={
                 <button
                   type="button"

@@ -94,7 +94,7 @@ export function ReportModal({ open, onOpenChange, targetType, targetId, token, c
             Reportar contenido
           </DialogTitle>
           <DialogDescription>
-            {contextLabel ? `Reportar: ${contextLabel}` : "Contanos por que este contenido viola las reglas."}
+            {contextLabel ? `Reportar: ${contextLabel}` : "Cuéntanos por qué este contenido viola las reglas."}
           </DialogDescription>
         </DialogHeader>
 

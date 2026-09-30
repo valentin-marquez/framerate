@@ -3,8 +3,8 @@
  *
  * El backend (apps/api/src/lib/dns-provider.ts) sólo devuelve el `id` del
  * provider detectado; este archivo mapea ese id a lo que la UI necesita
- * (nombre, link al panel, logo, pasos). Si agregás un provider en la API,
- * agregalo acá también con el mismo id.
+ * (nombre, link al panel, logo, pasos). Si se agrega un provider en la API,
+ * hay que agregarlo acá también con el mismo id.
  */
 
 import type { DnsProviderId } from "../services/claims";
@@ -39,10 +39,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "CF",
     logo: "cloudflare.png",
     steps: [
-      "Entrá a tu zona en el dashboard de Cloudflare.",
-      "Andá a DNS → Records y hacé click en Add record.",
-      "Elegí Type: TXT, pegá el Name y el Content de abajo.",
-      "Guardá. La propagación en Cloudflare suele ser instantánea.",
+      "Entra a tu zona en el panel de Cloudflare.",
+      "Ve a DNS → Records y haz clic en Add record.",
+      "Elige Type: TXT y pega el Name y el Content de abajo.",
+      "Guarda. En Cloudflare la propagación suele ser instantánea.",
     ],
   },
   route53: {
@@ -54,10 +54,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "R53",
     logo: "route53.svg",
     steps: [
-      "Abrí Route 53 → Hosted zones y entrá a la zona del dominio.",
+      "Abre Route 53 → Hosted zones y entra a la zona del dominio.",
       "Create record → Record type TXT.",
-      "Copiá el Name y el Value de abajo en el formulario.",
-      "Create records y esperá ~1 minuto.",
+      "Copia el Name y el Value de abajo en el formulario.",
+      "Haz clic en Create records y espera ~1 minuto.",
     ],
   },
   gcdns: {
@@ -69,10 +69,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "GC",
     logo: "gcdns.svg",
     steps: [
-      "Entrá a Cloud DNS → Zones y elegí tu zona.",
+      "Entra a Cloud DNS → Zones y elige tu zona.",
       "Add Standard → Resource record type: TXT.",
-      "Pegá el DNS Name y el TXT data de abajo.",
-      "Create. Propaga en segundos.",
+      "Pega el DNS Name y el TXT data de abajo.",
+      "Haz clic en Create. Propaga en segundos.",
     ],
   },
   vercel: {
@@ -84,10 +84,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "VC",
     logo: "vercel.svg",
     steps: [
-      "Abrí Vercel → Domains y elegí tu dominio.",
+      "Abre Vercel → Domains y elige tu dominio.",
       "DNS Records → Add → Type TXT.",
-      "Pegá el Name y el Value de abajo.",
-      "Save. Propaga en segundos.",
+      "Pega el Name y el Value de abajo.",
+      "Haz clic en Save. Propaga en segundos.",
     ],
   },
   digitalocean: {
@@ -99,10 +99,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "DO",
     logo: "digitalocean.svg",
     steps: [
-      "Entrá a Networking → Domains y abrí tu dominio.",
-      "En Create new record elegí TXT.",
-      "Pegá el Hostname y el Value de abajo.",
-      "Create Record.",
+      "Entra a Networking → Domains y abre tu dominio.",
+      "En Create new record elige TXT.",
+      "Pega el Hostname y el Value de abajo.",
+      "Haz clic en Create Record.",
     ],
   },
   godaddy: {
@@ -114,10 +114,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "GD",
     logo: "godaddy.svg",
     steps: [
-      "Entrá a My Products → DNS del dominio.",
+      "Entra a My Products → DNS del dominio.",
       "Add → Type: TXT.",
-      "Copiá el Host y el TXT Value de abajo (en Host usá lo que va antes del dominio).",
-      "Save. Puede tardar hasta 1 hora.",
+      "Copia el Host y el TXT Value de abajo (en Host usa lo que va antes del dominio).",
+      "Haz clic en Save. Puede tardar hasta 1 hora.",
     ],
   },
   namecheap: {
@@ -130,10 +130,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "NC",
     logo: "namecheap.svg",
     steps: [
-      "Entrá a Domain List → Manage → Advanced DNS.",
+      "Entra a Domain List → Manage → Advanced DNS.",
       "Add New Record → Type: TXT Record.",
-      "Copiá el Host y el Value de abajo.",
-      "Guardá con el tilde verde.",
+      "Copia el Host y el Value de abajo.",
+      "Guarda con el check verde.",
     ],
   },
   hostinger: {
@@ -145,10 +145,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "HG",
     logo: "hostinger.svg",
     steps: [
-      "Entrá a hPanel → Domains → tu dominio → DNS / Nameservers.",
+      "Entra a hPanel → Domains → tu dominio → DNS / Nameservers.",
       "Add new record → Type TXT.",
-      "Pegá el Name y el TXT Value de abajo.",
-      "Save.",
+      "Pega el Name y el TXT Value de abajo.",
+      "Haz clic en Save.",
     ],
   },
   azure: {
@@ -161,10 +161,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "AZ",
     logo: "azure.svg",
     steps: [
-      "Abrí el portal de Azure → DNS zones → tu zona.",
+      "Abre el portal de Azure → DNS zones → tu zona.",
       "+ Record set → Type TXT.",
-      "Pegá el Name y el Value de abajo.",
-      "OK.",
+      "Pega el Name y el Value de abajo.",
+      "Haz clic en OK.",
     ],
   },
   nic_cl: {
@@ -176,10 +176,10 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "CL",
     logo: "nic_cl.png",
     steps: [
-      "Entrá a NIC Chile → ingresá con tu RUT y clave.",
+      "Entra a NIC Chile con tu RUT y clave.",
       "Modificar datos → DNS del dominio.",
-      "Ojo: NIC.cl es sólo registrador, no provee TXT. Tenés que apuntar a un DNS externo (Cloudflare es gratis) y agregar el TXT ahí.",
-      "Si ya usás un DNS externo, agregá el TXT ahí y no en NIC.",
+      "Ojo: NIC.cl es sólo registrador, no provee TXT. Tienes que apuntar a un DNS externo (Cloudflare es gratis) y agregar el TXT ahí.",
+      "Si ya usas un DNS externo, agrega el TXT ahí y no en NIC.",
     ],
   },
   hostingplus_cl: {
@@ -189,9 +189,9 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     brandColor: "1E8FCD",
     monogram: "HP",
     steps: [
-      "Entrá al Área de Clientes de HostingPlus.",
+      "Entra al Área de Clientes de HostingPlus.",
       "Mis dominios → Administrar → DNS.",
-      "Agregá un registro TXT con el Name y Value de abajo.",
+      "Agrega un registro TXT con el Name y el Value de abajo.",
       "Guardar cambios.",
     ],
   },
@@ -203,9 +203,9 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "SR",
     logo: "sered_cl.ico",
     steps: [
-      "Entrá al Área de Clientes de Sered.",
+      "Entra al Área de Clientes de Sered.",
       "Mis dominios → Administrar → Gestión DNS.",
-      "Añadir registro TXT con el Name y Value de abajo.",
+      "Agrega un registro TXT con el Name y el Value de abajo.",
       "Guardar.",
     ],
   },
@@ -217,9 +217,9 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
     monogram: "BH",
     logo: "bluehosting_cl.png",
     steps: [
-      "Entrá al Área de Cliente de BlueHosting.",
+      "Entra al Área de Cliente de BlueHosting.",
       "Mis dominios → Administrar → Gestionar DNS.",
-      "Agregá un TXT con el Name y Value de abajo.",
+      "Agrega un TXT con el Name y el Value de abajo.",
       "Guardar.",
     ],
   },

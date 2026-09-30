@@ -25,7 +25,7 @@ export function DnsInstructions({ txtName, txtValue, domain, dnsProvider, dnsNam
         <ProviderHeader provider={provider} nameservers={dnsNameservers ?? []} domain={domain} />
       ) : (
         <p className="text-muted-foreground text-sm">
-          Agregá el siguiente registro <code className="font-mono">TXT</code> en tu DNS para verificar la propiedad del
+          Agrega el siguiente registro <code className="font-mono">TXT</code> en tu DNS para verificar la propiedad del
           dominio.
         </p>
       )}

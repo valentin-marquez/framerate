@@ -235,7 +235,7 @@ export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
             <TicketThread ticketId={selectedId} token={token} currentUserId={currentUserId} />
           ) : (
             <div className="rounded-2xl border border-border bg-card p-12 text-center">
-              <p className="text-sm text-muted-foreground">Seleccioná un ticket para verlo.</p>
+              <p className="text-sm text-muted-foreground">Selecciona un ticket para verlo.</p>
             </div>
           )}
         </section>
@@ -328,7 +328,7 @@ function TicketThread({ ticketId, token, currentUserId }: TicketThreadProps) {
     try {
       await adminSupportClient.update(ticketId, { assign_to_self: true }, token);
       setTicket((prev) => (prev ? { ...prev, assigned_to: currentUserId } : prev));
-      toast.success("Asignado a vos");
+      toast.success("Asignado a ti");
       revalidator.revalidate();
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : "No pudimos asignar";
@@ -377,14 +377,14 @@ function TicketThread({ ticketId, token, currentUserId }: TicketThreadProps) {
                       </span>
                       <span className="text-xs text-muted-foreground">{CATEGORY_LABELS[ticket.category]}</span>
                       {ticket.source !== "web" && (
-                        <span className="text-xs text-muted-foreground">· {ticket.source}</span>
+                        <span className="text-xs text-muted-foreground">{ticket.source}</span>
                       )}
                     </div>
                     <h2 className="text-lg font-semibold mt-1">{ticket.subject}</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {ticket.email}
-                      {ticket.user_id ? " · cuenta" : " · anónimo"} ·{" "}
-                      {new Date(ticket.created_at).toLocaleString("es-CL")}
+                    <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground mt-0.5">
+                      <span>{ticket.email}</span>
+                      <span>{ticket.user_id ? "Con cuenta" : "Anónimo"}</span>
+                      <span>{new Date(ticket.created_at).toLocaleString("es-CL")}</span>
                     </p>
                   </div>
                 </div>
@@ -463,7 +463,7 @@ function TicketThread({ ticketId, token, currentUserId }: TicketThreadProps) {
                       )}
                     >
                       {isInternal && <IconLock className="size-3.5" />}
-                      {isInternal ? "Nota interna · no la ve el usuario" : "Nota interna"}
+                      {isInternal ? "Nota interna (no la ve el usuario)" : "Nota interna"}
                     </button>
                   </div>
                   <Button size="sm" onClick={sendReply} disabled={sending || reply.trim().length === 0}>
@@ -501,7 +501,8 @@ function MessageBubble({ authorRole, body, createdAt, isInternalNote, isOriginal
         <div className="flex items-center gap-1.5 mb-1">
           <IconLock className="size-3.5 text-warn" />
           <span className="text-[11px] uppercase tracking-wider font-semibold text-warn">Nota interna</span>
-          <span className="text-[11px] text-muted-foreground">· sólo staff · {timestamp}</span>
+          <span className="text-[11px] text-muted-foreground">Sólo staff</span>
+          <span className="text-[11px] text-muted-foreground">{timestamp}</span>
         </div>
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{body}</p>
       </div>
@@ -521,7 +522,7 @@ function MessageBubble({ authorRole, body, createdAt, isInternalNote, isOriginal
         <div className="flex items-center gap-2 mb-1">
           <span className="text-[11px] uppercase tracking-wider font-medium opacity-80">
             {authorRole === "user" ? "Usuario" : authorRole === "staff" ? "Staff" : "Sistema"}
-            {isOriginalMessage && " · original"}
+            {isOriginalMessage && <span className="ml-2 opacity-70">original</span>}
           </span>
           <span className="text-[11px] opacity-60">{timestamp}</span>
         </div>
