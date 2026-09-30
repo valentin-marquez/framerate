@@ -50,7 +50,7 @@ export function ProductRow({ title, href, products, priority = false, trendingId
               <CarouselItem key={product.id} className="basis-[88%] pl-3 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 <div
                   className={cn("h-full", priority && index < 4 && enterClass())}
-                  style={priority && index < 4 ? enterStyle(420 + index * 50) : undefined}
+                  style={priority && index < 4 ? enterStyle(260 + index * 50) : undefined}
                 >
                   <ProductCard
                     product={product}

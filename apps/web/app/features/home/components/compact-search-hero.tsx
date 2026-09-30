@@ -26,7 +26,7 @@ export function CompactSearchHero({ categories }: CompactSearchHeroProps) {
           Encuentra tu hardware al <span className="text-primary">mejor precio</span>
         </h1>
         <p className="text-sm md:text-base text-muted-foreground">
-          Compara precios de las principales tiendas de Chile en tiempo real.
+          Precios de tiendas de Chile, actualizados cada 6 horas.
         </p>
       </div>
 
