@@ -1,23 +1,13 @@
-import { redirect } from "react-router";
-import { API_BASE_URL, apiFetch } from "~/shared/lib/api";
+import { data, redirect } from "react-router";
+import { callApi } from "~/features/auth/services/auth.server";
+import { mergeApi } from "~/features/auth/services/merge.server";
 import { safeRedirectPath } from "~/shared/lib/safe-redirect";
 import type { Route } from "./+types/auth-action";
 
-/** Llama a la API de sesión y devuelve las cookies que estableció, para que el navegador las reciba. */
-async function callAuth(request: Request, path: string, body: unknown) {
-  const response = await apiFetch(`${API_BASE_URL}/v1/auth/${path}`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      origin: new URL(request.url).origin,
-      cookie: request.headers.get("cookie") ?? "",
-    },
-    body: JSON.stringify(body),
-  });
-  const cookies = new Headers();
-  for (const cookie of response.headers.getSetCookie()) cookies.append("set-cookie", cookie);
-  return { response, cookies };
-}
+const callAuth = (request: Request, path: string, body: unknown) => callApi(request, "POST", `/v1/auth/${path}`, body);
+
+// Con 4xx React Router no revalida la página: un error no cambió nada. `error` es una clave de traducción.
+const fail = (error: string) => data({ error }, { status: 400 });
 
 async function providerUrl(response: Response) {
   if (!response.ok) return undefined;
@@ -53,7 +43,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   if (action === "link") {
-    if (typeof provider !== "string" || !provider) return { error: "account_link_error" };
+    if (typeof provider !== "string" || !provider) return fail("account_link_error");
 
     const settings = `${site}/ajustes/cuenta`;
     const id = encodeURIComponent(provider);
@@ -64,18 +54,36 @@ export async function action({ request }: Route.ActionArgs) {
     });
     const url = await providerUrl(response);
     if (url) return redirect(url, { headers: cookies });
-    return { error: "account_link_error" };
+    return fail("account_link_error");
   }
 
   if (action === "unlink") {
     const accountId = formData.get("accountId");
-    if (typeof accountId !== "string" || !accountId) return { error: "account_unlink_error" };
+    if (typeof accountId !== "string" || !accountId) return fail("account_unlink_error");
 
     const { response } = await callAuth(request, "unlink-account", { accountId });
     if (response.ok) return { ok: true };
     // Better Auth exige una sesión de menos de un día (`freshAge`) para soltar una cuenta.
     const { code } = (await response.json().catch(() => ({}))) as { code?: string };
-    return { error: code === "SESSION_NOT_FRESH" ? "account_unlink_not_fresh" : "account_unlink_error" };
+    return fail(code === "SESSION_NOT_FRESH" ? "account_unlink_not_fresh" : "account_unlink_error");
+  }
+
+  // Unir con otro usuario: la API recuerda a quién te unes (cookie) y entras con la otra cuenta; al volver, con esa
+  // sesión, /ajustes/cuenta/unir muestra el resumen.
+  if (action === "merge") {
+    if (typeof provider !== "string" || !provider) return fail("merge_start_error");
+
+    const start = await mergeApi.start(request);
+    if (start.error) return fail("merge_start_error");
+    const { response, cookies } = await callAuth(request, "sign-in/social", {
+      provider,
+      callbackURL: `${site}/ajustes/cuenta/unir`,
+      errorCallbackURL: `${site}/ajustes/cuenta?conectar=${encodeURIComponent(provider)}`,
+    });
+    const url = await providerUrl(response);
+    if (!url) return fail("merge_start_error");
+    for (const cookie of start.cookies.getSetCookie()) cookies.append("set-cookie", cookie);
+    return redirect(url, { headers: cookies });
   }
 
   return { error: "Invalid action" };
