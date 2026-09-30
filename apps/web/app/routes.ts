@@ -46,6 +46,7 @@ export default [
   route("settings/*", "features/settings/pages/redirect-old-settings.tsx"),
 
   // Admin
+  route("admin", "routes/admin.tsx"),
   route("admin/gatekeeper", "features/gatekeeper/pages/review-dashboard.tsx"),
   // Fase 4: moderation
   route("admin/moderation", "features/moderation/pages/moderation-dashboard.tsx"),
