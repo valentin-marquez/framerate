@@ -10,6 +10,9 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 ## Web: vistas y diseño
 - [x] **Home**: se eligió v1 (mosaico de categorías con fotos, aparición escalonada). Sin desplegar aún.
 - [ ] **`/categoria/:slug` y `/explorar`**: rediseñarlas como una sola experiencia con `/referencias-composicion`, más motion (referencia: los efectos de `nozz.skin` y publicaciones de X/Twitter).
+- [x] Reglas de animación y rendimiento del hilo principal en `CLAUDE.md` (base: artículo "The Expensive Main Thread").
+- [ ] Auditar `MorphSearch` (interpola con el scroll en JS): ¿cabe en el presupuesto de ~10 ms/frame? Idealmente pasarlo a CSS scroll-driven animations.
+- [ ] Transiciones de página con View Transitions (`<Link viewTransition>` en React Router v7): las resuelve el compositor.
 - [ ] Dirección gráfica: definir lenguaje de motion (easing, duraciones, entradas escalonadas) y documentarlo; reutilizar `Reveal` (`shared/components/motion`) y `.enter-up`.
 - [ ] Imágenes de stock: hay 10 de categoría y un banner de tienda (`public/img`, créditos en `CREDITS.md`). Falta usarlas en `/categoria/*`, `/explorar` y el fallback de banner; evaluar copiarlas a R2.
 - [ ] URLs en español pendientes (convención del proyecto): `/settings` → `/ajustes`, `/privacy` → `/privacidad`, `/terms` → `/terminos`, con redirect 301 desde las inglesas. `/perfil` ya está (con 301 desde `/profile`).
