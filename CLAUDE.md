@@ -34,6 +34,20 @@ Reglas v2: esquema = SQL a mano en `packages/database/migrations/` (Kysely sólo
 - **Maquetación y UI nueva:** usar `/referencias-composicion` antes de maquetar una página, sección o componente (busca referencias reales y propone 2–3 layouts).
 - **Comentarios: los mínimos.** Sólo el porqué no obvio (una restricción, una trampa, una decisión). Nada que repita lo que dice el código ni bloques de documentación largos. No agregar comentarios de cabecera por costumbre.
 
+## Animaciones y rendimiento del hilo principal
+
+Queremos una web con mucho movimiento, pero que no le cueste al hilo principal (base: [The Expensive Main Thread](https://kciter.so/posts/the-expensive-main-thread/en/)). Un frame en 60 Hz dura ~16 ms y el navegador se lleva parte: nuestro presupuesto es **~10 ms por frame** (la mitad en 120 Hz). Una tarea de más de 50 ms es una *long task* y congela la pantalla.
+
+- **Sólo se anima `transform` y `opacity`**: las procesa el compositor y siguen fluidas aunque el hilo principal esté ocupado. Nunca animar `width`, `height`, `top/left`, `margin`, `padding`, `border` ni `box-shadow`/`filter` (gatillan layout o paint). Un tamaño que cambia se resuelve con `scale` o `clip-path`, no con `width`.
+- **CSS antes que JS**: `@keyframes`/`transition`, o `motion` con `transform`/`opacity` (WAAPI). Nada de `setState` por frame ni de leer layout (`offsetHeight`, `getBoundingClientRect`) dentro de un bucle de animación.
+- **Aparecer al entrar en pantalla** con `whileInView`/`IntersectionObserver` (`Reveal`), nunca con un listener de `scroll`. Un listener de scroll/resize/input va con `passive`, `requestAnimationFrame` o throttle/debounce.
+- **Lo que se ve al cargar es CSS puro** (`.enter-up`): no depende de que hidrate el JS ni retrasa el LCP. Lo que está bajo el pliegue usa `Reveal`.
+- **Cascadas cortas**: entrada de 0,4–0,7 s, `once`, escalonado de 50 ms y máximo ~6 elementos por grupo. Movimiento corto (≤ 16 px), con la curva ya usada (`cubic-bezier(0.22, 1, 0.36, 1)`).
+- **`prefers-reduced-motion`** se respeta siempre (hay una regla global en `app.css`; `Reveal` ya la considera). Todo efecto nuevo debe degradar a estático.
+- **`will-change` sólo mientras dura la animación** y en pocos elementos; abusar de él consume memoria de GPU.
+- **Trabajo pesado fuera del hilo principal**: si una tarea puede pasar de ~10 ms (parsear, filtrar, ordenar listas grandes) se divide en trozos de ~5 ms cediendo el control (`scheduler.yield()`, o `requestAnimationFrame` + `performance.now()`), o se mueve a un Web Worker. Listas largas: `content-visibility: auto` o virtualización.
+- **Se mide, no se supone**: antes de dar por buena una animación nueva, Performance de DevTools con CPU ×4 y mirar INP/TBT. "El código es lento" no es lo mismo que "el código bloquea".
+
 ## Runtime & Tooling
 
 - **Runtime:** Bun (exclusive). Do not use `node`, `npm`, `yarn`, or `pnpm`. Use `bun install`, `bun add`, `bun run`, `bunx`.
