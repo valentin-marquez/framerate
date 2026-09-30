@@ -22,6 +22,7 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
 
 Reglas:
 
+- Las migraciones commiteadas no se editan (un hook de `.claude/settings.json` lo bloquea): se crea una nueva.
 - El esquema es SQL a mano en `packages/database/migrations/`. Kysely sólo tipa y arma consultas; los tipos viven
   en `packages/database/src/database.ts` y se actualizan a mano junto con la migración.
 - Ninguna oferta entra a `listings` sin pasar `normalizeOffer`; lo inválido va a `quarantine` con su motivo.
@@ -66,7 +67,8 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
 4. `bun run db:migrate:local` y `bun run test`.
 5. Aceptar la confianza del espacio de trabajo en Claude Code: `.claude/settings.json` ofrece los plugins
    `ponytail` y `playwright`. Las skills del proyecto (`deploy`, `prod-health`, `referencias-composicion`) están en
-   `.claude/skills/`.
+   `.claude/skills/`; los hooks (formateo con Biome, migraciones protegidas) en `.claude/hooks/`. Correr
+   `/doctor prompt-audit` para detectar referencias rotas entre CLAUDE.md y las skills.
 
 ## Cómo trabajar aquí
 
