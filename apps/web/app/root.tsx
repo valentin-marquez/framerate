@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   data,
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -19,9 +20,11 @@ import { useAuthStore } from "~/features/auth/store/auth";
 import { useCategories } from "~/features/category/hooks/useCategories";
 import { categoriesService } from "~/features/category/services/categories";
 import { meToProfile } from "~/features/profile/services/profiles";
+import { Logo } from "~/shared/components/layout/logo";
 import { MorphSearch } from "~/shared/components/layout/morph-search";
 import { Navbar } from "~/shared/components/layout/navbar";
 import { SiteFooter } from "~/shared/components/layout/site-footer";
+import { Button } from "~/shared/components/primitives/button";
 import { Toaster } from "~/shared/components/primitives/sonner";
 import { useNonce } from "~/shared/hooks/use-nonce";
 import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
@@ -37,7 +40,11 @@ import type { Route } from "./+types/root";
 
 export const links: Route.LinksFunction = () => [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }];
 
-export function meta(_: Route.MetaArgs) {
+export function meta({ error }: Route.MetaArgs) {
+  if (error) {
+    const notFound = isRouteErrorResponse(error) && error.status === 404;
+    return [{ title: notFound ? "Página no encontrada - Framerate" : "Error - Framerate" }];
+  }
   return [
     { title: "Framerate - Comparador de Precios de Hardware en Chile" },
     {
@@ -235,25 +242,44 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
+const ERROR_COPY: Record<number, { title: string; details: string }> = {
+  401: { title: "Inicia sesión para continuar", details: "Esta página necesita que entres con tu cuenta." },
+  403: { title: "No tienes acceso", details: "Tu cuenta no tiene permiso para ver esta página." },
+  404: {
+    title: "No encontramos esta página",
+    details: "Puede que el enlace esté roto o que la página ya no exista.",
+  },
+};
 
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details = error.status === 404 ? "The requested page could not be found." : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
-  }
+const GENERIC_ERROR = {
+  title: "Algo salió mal",
+  details: "Tuvimos un problema al cargar esta página. Intenta de nuevo en unos minutos.",
+};
+
+// Se renderiza dentro de Layout pero sin App (sin navbar ni footer) y, si falló el root, sin datos del loader.
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  const status = isRouteErrorResponse(error) ? error.status : 500;
+  const { title, details } = ERROR_COPY[status] ?? GENERIC_ERROR;
+  const stack = import.meta.env.DEV && error instanceof Error ? error.stack : undefined;
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="container mx-auto flex min-h-screen flex-col items-center justify-center px-4 py-16 text-center">
+      <Link to="/" aria-label="Framerate, ir al inicio" className="mb-10">
+        <Logo className="size-9" />
+      </Link>
+      <p className="font-mono text-sm tabular-nums text-muted-foreground">{status}</p>
+      <h1 className="mt-2 text-balance text-3xl font-semibold tracking-tight">{title}</h1>
+      <p className="mt-3 max-w-md text-balance text-muted-foreground">{details}</p>
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <Button size="lg" nativeButton={false} render={<Link to="/" />}>
+          Ir al inicio
+        </Button>
+        <Button size="lg" variant="outline" nativeButton={false} render={<Link to="/explorar" />}>
+          Explorar productos
+        </Button>
+      </div>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="mt-10 w-full overflow-x-auto rounded-xl bg-secondary p-4 text-left text-xs">
           <code>{stack}</code>
         </pre>
       )}

@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useFetcher } from "react-router";
 import { useAuthStore } from "~/features/auth/store/auth";
 import { profilesService } from "~/features/profile/services/profiles";
-import { useRequestInfo } from "~/shared/hooks/use-request-info";
+import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
 import { getTranslation, type Lang } from "~/shared/lib/translations";
 
 export function useOptimisticLang(): Lang | undefined {
@@ -15,12 +15,12 @@ export function useOptimisticLang(): Lang | undefined {
 }
 
 export function useTranslation() {
-  const requestInfo = useRequestInfo();
+  const requestInfo = useOptionalRequestInfo();
   const optimistic = useOptimisticLang();
   const { setProfile } = useAuthStore();
   // requestInfo.userPrefs.lang is the source of truth (root loader keeps cookie
   // and profile.lang in sync per request). Optimistic value flips it instantly.
-  const lang: Lang = optimistic ?? requestInfo.userPrefs.lang ?? "es";
+  const lang: Lang = optimistic ?? requestInfo?.userPrefs.lang ?? "es";
 
   const fetcher = useFetcher({ key: "lang-fetcher" });
 

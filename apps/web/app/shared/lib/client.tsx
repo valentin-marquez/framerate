@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useFetcher, useRevalidator } from "react-router";
-import { useOptionalRequestInfo, useRequestInfo } from "~/shared/hooks/use-request-info";
+import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
 import { cookiePrefix } from "./config";
 
 export type Theme = "system" | "light" | "dark";
@@ -154,42 +154,22 @@ export function getLocale(request: Request): string {
 }
 
 /**
- * Get client hints in React components
- * @returns Object with all client hint values
- * @public
- */
-export function useHints() {
-  const requestInfo = useRequestInfo();
-  return requestInfo.hints;
-}
-
-/**
- * Get client hints in React components
- * @returns Object with all client hint values or undefined if no request info available
- * @public
- */
-export function useOptionalHints() {
-  const requestInfo = useOptionalRequestInfo();
-  return requestInfo?.hints;
-}
-
-/**
  * Get current theme with optimistic updates support
  * @returns Current theme: "light" | "dark"
  * @public
  */
 export function useTheme() {
-  const hints = useHints();
-  const requestInfo = useRequestInfo();
+  // Opcional: el Toaster de Layout también se monta en el ErrorBoundary del root, donde no hay datos del loader.
+  const requestInfo = useOptionalRequestInfo();
   const optimisticMode = useOptimisticThemeMode();
   // Sin preferencia guardada manda el sistema: se lee en el cliente (el servidor no lo sabe y caería en "light").
-  const system = useSystemTheme(hints.theme);
+  const system = useSystemTheme(requestInfo?.hints.theme ?? "light");
 
   if (optimisticMode) {
     return optimisticMode === "system" ? system : optimisticMode;
   }
 
-  return requestInfo.userPrefs.theme ?? system;
+  return requestInfo?.userPrefs.theme ?? system;
 }
 
 function subscribeToSystemTheme(onChange: () => void) {
@@ -204,35 +184,6 @@ function useSystemTheme(serverFallback: string): "light" | "dark" {
     () => (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
     () => (serverFallback === "dark" ? "dark" : "light"),
   );
-}
-
-/**
- * Get current theme with optional request info
- * @returns Current theme or undefined if no request info available
- * @public
- */
-export function useOptionalTheme(): Theme | undefined {
-  const hints = useOptionalHints();
-  const optionalRequestInfo = useOptionalRequestInfo();
-  const optimisticMode = useOptimisticThemeMode();
-
-  if (optimisticMode) {
-    if (optimisticMode === "system") {
-      // hints.theme is "light" | "dark" (system preference)
-      const systemTheme = hints?.theme;
-      return systemTheme === "light" || systemTheme === "dark" ? systemTheme : undefined;
-    }
-    return optimisticMode;
-  }
-
-  const userPrefTheme = optionalRequestInfo?.userPrefs.theme;
-  if (userPrefTheme) {
-    return userPrefTheme;
-  }
-
-  // hints.theme is "light" | "dark" (system preference), not "system"
-  const systemTheme = hints?.theme;
-  return systemTheme === "light" || systemTheme === "dark" ? systemTheme : undefined;
 }
 
 /**
