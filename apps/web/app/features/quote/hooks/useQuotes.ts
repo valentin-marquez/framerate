@@ -3,6 +3,7 @@ import { getSessionToken } from "~/features/auth/services/session";
 import {
   type AddItemRequest,
   type CreateQuoteRequest,
+  QUOTES_API_ENABLED,
   type QuotesListResponse,
   quotesService,
   type UpdateItemRequest,
@@ -22,7 +23,7 @@ export function useQuotes(page = 1, limit = 10, options?: { enabled?: boolean })
       if (!token) throw new Error("Not authenticated");
       return quotesService.getAll(page, limit, token);
     },
-    enabled: options?.enabled ?? true,
+    enabled: QUOTES_API_ENABLED && (options?.enabled ?? true),
   });
 }
 
@@ -33,7 +34,7 @@ export function useQuote(id: string) {
       const token = await getToken();
       return quotesService.getById(id, token);
     },
-    enabled: !!id,
+    enabled: QUOTES_API_ENABLED && !!id,
   });
 }
 

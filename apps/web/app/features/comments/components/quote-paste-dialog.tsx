@@ -1,11 +1,11 @@
 import { IconLock, IconLockOpen } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { useUser } from "~/features/auth/hooks/useAuth";
 import { getSessionToken } from "~/features/auth/services/session";
-import { useAuthStore } from "~/features/auth/store/auth";
 import { findQuoteUrls } from "~/features/comments/lib/quote-url";
 import { useUpdateQuote } from "~/features/quote/hooks/useQuotes";
-import { quotesService } from "~/features/quote/services/quotes";
+import { QUOTES_API_ENABLED, quotesService } from "~/features/quote/services/quotes";
 import { Button } from "~/shared/components/primitives/button";
 import {
   Dialog,
@@ -35,7 +35,7 @@ interface QuotePasteDialogState {
  * plain links at render time.
  */
 export function useQuotePasteWatcher() {
-  const user = useAuthStore((s) => s.user);
+  const user = useUser();
   const updateQuote = useUpdateQuote();
 
   const [state, setState] = useState<QuotePasteDialogState>(() => ({
@@ -53,7 +53,7 @@ export function useQuotePasteWatcher() {
 
   const handlePasteText = useCallback(
     async (text: string) => {
-      if (!user) return;
+      if (!user || !QUOTES_API_ENABLED) return;
       if (!text) return;
       const hits = findQuoteUrls(text);
       if (hits.length === 0) return;
