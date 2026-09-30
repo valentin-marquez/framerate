@@ -56,12 +56,15 @@ function specsFromAttributes(category: ProductSummary["category"], a: ProductSum
   }
 }
 
+/** Los productos creados antes de que `ingest` limpiara los títulos traen las barras de la tienda ("RTX 3050 | MSI"). */
+const cleanName = (name: string) => name.replace(/\s*[|｜]\s*/g, " ").trim();
+
 export function toProduct(p: ProductSummary): Product {
   const cash = p.bestPrice ?? p.lowestPrice ?? 0;
   return {
     id: String(p.id),
     slug: p.slug,
-    name: p.name,
+    name: cleanName(p.name),
     mpn: p.mpn,
     image_url: p.imageUrl,
     brand: p.brand ? { name: p.brand, slug: slugifyBrand(p.brand) } : { name: "", slug: "" },
@@ -108,7 +111,7 @@ export function toProductDetail(d: ApiProductDetail): ProductDetail {
 export function toQuickResult(p: ProductSummary): QuickSearchResult {
   return {
     id: String(p.id),
-    name: p.name,
+    name: cleanName(p.name),
     slug: p.slug,
     brand_name: p.brand ?? "",
     category_name: CATEGORY_LABELS[p.category],

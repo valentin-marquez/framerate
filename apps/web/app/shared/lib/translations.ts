@@ -232,6 +232,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
 
     // Add to quote
     add_to_quote: "Agregar a cotización",
+    quote_short: "Cotizar",
     login_to_save_quote_title: "Inicia sesión para guardar",
     login_to_save_quote_desc: "Crea cotizaciones para comparar PCs y guardar tus armados favoritos.",
     select_quote: "Seleccionar cotización",
@@ -519,6 +520,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
 
     // Add to quote
     add_to_quote: "Add to quote",
+    quote_short: "Quote",
     login_to_save_quote_title: "Sign in to save",
     login_to_save_quote_desc: "Create quotes to compare PC builds and save your favorite setups.",
     select_quote: "Select quote",
@@ -810,6 +812,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
 
     // Add to quote
     add_to_quote: "Yengen cotización mew", // add to quote
+    quote_short: "Cotización",
     login_to_save_quote_title: "Konunge tami elkayal", // konunge = enter, elkayal = save
     login_to_save_quote_desc: "Dewmayal cotizaciones tami müñetuyal PCs ka elkayal tami doy küme armado.", // make to compare and save
     select_quote: "Dullinge cotización",
