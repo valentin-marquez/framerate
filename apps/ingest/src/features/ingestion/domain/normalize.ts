@@ -147,8 +147,11 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
   };
 }
 
+/** Barras que algunas tiendas usan para separar partes del título ("RTX 3050 | MSI Ventus 2X | 6GB"). */
+const TITLE_SEPARATORS = /\s*[|｜]\s*/g;
+
 export function cleanTitle(title: string): string {
-  return collapseWhitespace(decodeEntities(title).replace(TITLE_NOISE, " "));
+  return collapseWhitespace(decodeEntities(title).replace(TITLE_NOISE, " ").replace(TITLE_SEPARATORS, " "));
 }
 
 function extractExternalId(input: unknown): string | null {

@@ -338,7 +338,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                         <IconExternalLink className="size-4" />
                       </OutboundLink>
                     )}
-                    <AddToQuote product={product} className="w-full" />
+                    <AddToQuote product={product} className="w-full" label="long" />
                   </div>
                 </div>
               </div>

@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { normalizeOffer, type RawOffer } from "./normalize";
+import { cleanTitle, normalizeOffer, type RawOffer } from "./normalize";
+
+test("cleanTitle quita las barras separadoras y el ruido comercial", () => {
+  expect(cleanTitle("Nvidia RTX 3050 | MSI Ventus 2X | 6GB GDDR6")).toBe("Nvidia RTX 3050 MSI Ventus 2X 6GB GDDR6");
+  expect(cleanTitle("¡OFERTA! SSD Kingston NV3 1TB")).toBe("SSD Kingston NV3 1TB");
+});
 
 const base: RawOffer = {
   externalId: "123",

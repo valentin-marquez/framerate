@@ -18,6 +18,8 @@ interface AddToQuoteProps {
   /** Sólo necesitamos el `id` para enviar al endpoint de items. */
   product: Pick<Product, "id">;
   className?: string;
+  /** Texto junto al ícono: "Agregar a cotización" (`long`) o "Cotizar" (`short`). Sin él, sólo ícono con tooltip. */
+  label?: "long" | "short";
 }
 
 // useSyncExternalStore para detectar cliente sin flicker durante hidratación.
@@ -25,7 +27,7 @@ const subscribeNoop = () => () => {};
 const getDocumentSnapshot = () => true;
 const getServerDocumentSnapshot = () => false;
 
-export function AddToQuote({ product, className }: AddToQuoteProps) {
+export function AddToQuote({ product, className, label }: AddToQuoteProps) {
   const [isOpen, setIsOpen] = useState(false);
   const mounted = useSyncExternalStore(subscribeNoop, getDocumentSnapshot, getServerDocumentSnapshot);
   const { lastSelectedQuoteId, setLastSelectedQuoteId } = useQuoteInteractionStore();
@@ -88,8 +90,8 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
             render={
               <Button
                 variant="secondary"
-                size={className?.includes("w-full") ? "default" : "icon"}
-                className={cn(className?.includes("w-full") ? "w-full gap-2" : "", "transition-all")}
+                size={label ? "sm" : "icon"}
+                className={cn(label ? "w-full gap-1.5 px-3 text-foreground" : "", "transition-all")}
                 onClick={() => setIsOpen(true)}
                 aria-label={t("add_to_quote")}
                 type="button"
@@ -97,10 +99,12 @@ export function AddToQuote({ product, className }: AddToQuoteProps) {
             }
           >
             <IconReceipt className="size-4" />
-            {className?.includes("w-full") && <span className="text-xs font-medium">{t("add_to_quote")}</span>}
+            {label && (
+              <span className="font-medium text-sm">{label === "short" ? t("quote_short") : t("add_to_quote")}</span>
+            )}
           </TooltipTrigger>
 
-          <TooltipContent side="top">{t("add_to_quote")}</TooltipContent>
+          {!label && <TooltipContent side="top">{t("add_to_quote")}</TooltipContent>}
         </Tooltip>
       </div>
 
