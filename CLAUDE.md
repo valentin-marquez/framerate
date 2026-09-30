@@ -28,6 +28,12 @@ bunx turbo run check-types test --filter=server --filter=ingest \
 
 Reglas v2: esquema = SQL a mano en `packages/database/migrations/` (Kysely sólo tipa y arma consultas; tipos en `packages/database/src/database.ts`); ninguna oferta entra a `listings` sin pasar `normalizeOffer`; los adaptadores de tienda nunca inventan identificadores; el matching prefiere duplicados antes que fusiones erróneas (vetos duros por atributo).
 
+## Cómo trabajar aquí
+
+- **Skills por defecto:** casi siempre usar `/ponytail:ponytail` (la solución más simple que funcione) y sus subskills: `/ponytail:ponytail-review` (revisar sobreingeniería), `/ponytail:ponytail-audit` (auditar el repo entero), `/ponytail:ponytail-debt`, `/ponytail:ponytail-gain`, `/ponytail:ponytail-help`.
+- **Maquetación y UI nueva:** usar `/referencias-composicion` antes de maquetar una página, sección o componente (busca referencias reales y propone 2–3 layouts).
+- **Comentarios: los mínimos.** Sólo el porqué no obvio (una restricción, una trampa, una decisión). Nada que repita lo que dice el código ni bloques de documentación largos. No agregar comentarios de cabecera por costumbre.
+
 ## Runtime & Tooling
 
 - **Runtime:** Bun (exclusive). Do not use `node`, `npm`, `yarn`, or `pnpm`. Use `bun install`, `bun add`, `bun run`, `bunx`.
