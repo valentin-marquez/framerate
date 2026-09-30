@@ -4,9 +4,8 @@ import {
   type PricePoint,
   type ProductPage,
 } from "@framerate/contracts";
-import type { ProductSpecs } from "@framerate/db";
 import { api } from "~/shared/lib/api";
-import type { Product, ProductDetail } from "~/shared/utils/db-types";
+import type { Product, ProductDetail, ProductSpecs } from "~/shared/utils/db-types";
 import { toPriceHistory, toProduct, toProductDetail, toQuickResult } from "./adapters";
 
 export type { Product, ProductDetail };

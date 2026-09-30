@@ -1,16 +1,15 @@
+import type { Product } from "~/features/product/services/products";
 import type {
   CaseFanSpecs,
   CaseSpecs,
   CpuCoolerSpecs,
   CpuSpecs,
   GpuSpecs,
-  HddSpecs,
   MotherboardSpecs,
   PsuSpecs,
   RamSpecs,
-  SsdSpecs,
-} from "@framerate/db";
-import type { Product } from "~/features/product/services/products";
+  StorageSpecs,
+} from "~/shared/utils/db-types";
 
 /** Hasta tres especificaciones que identifican el producto dentro de su categoría (para tarjetas). */
 export function getSpecsSummary(product: Product): string[] {
@@ -44,12 +43,12 @@ export function getSpecsSummary(product: Product): string[] {
       break;
     }
     case "ssd": {
-      const s = specs as SsdSpecs;
+      const s = specs as StorageSpecs;
       summary = [s.capacity_gb ? `${s.capacity_gb}GB` : null, s.form_factor, s.interface];
       break;
     }
     case "discos-duros": {
-      const s = specs as HddSpecs;
+      const s = specs as StorageSpecs;
       summary = [
         s.capacity_gb ? `${s.capacity_gb}GB` : null,
         s.rpm ? `${s.rpm} RPM` : null,

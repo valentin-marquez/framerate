@@ -1,4 +1,3 @@
-import type { ValidationIssue, ValidationSeverity } from "@framerate/db";
 import {
   IconAlertTriangle,
   IconChevronDown,
@@ -7,6 +6,7 @@ import {
   IconInfoCircle,
 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
+import type { ValidationIssue, ValidationSeverity } from "~/features/quote/services/quotes";
 import { cn } from "~/shared/lib/utils";
 
 interface QuoteValidationStatusProps {

@@ -5,11 +5,11 @@ import type {
   CpuSpecs,
   GpuSpecs,
   MotherboardSpecs,
+  Product,
   PsuSpecs,
   RamSpecs,
   StorageSpecs,
-} from "@framerate/db";
-import type { Product } from "~/shared/utils/db-types";
+} from "~/shared/utils/db-types";
 
 export function ProductSpecs({ product }: { product: Product }) {
   if (!product.specs || !product.category) return null;
