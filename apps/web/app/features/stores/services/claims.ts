@@ -20,6 +20,7 @@ export interface ClaimRequest {
   id: string;
   /** Slug de la tienda. */
   store_id: string;
+  store_name: string;
   claimed_domain: string;
   txt_record_name: string;
   txt_record_value: string;
@@ -67,6 +68,7 @@ export type DnsCheckResponse = DnsCheck;
 const toRequest = (c: Claim): ClaimRequest => ({
   id: String(c.id),
   store_id: c.storeSlug,
+  store_name: c.storeName,
   claimed_domain: c.domain,
   txt_record_name: c.txtName,
   txt_record_value: c.txtValue,
