@@ -79,10 +79,14 @@ export function AsyncImage({
           fade && status === "loading" && "opacity-0",
           fade && status === "loaded" && "transition-opacity duration-300",
         )}
-        onLoad={() => {
+        onLoad={(e) => {
           if (status !== "loading") return;
           setStatus("loaded");
-          onReadyRef.current?.(false);
+          // `load` llega antes de decodificar: sin esperar, la animación arranca y la foto se pinta un cuadro tarde.
+          e.currentTarget
+            .decode()
+            .catch(() => {})
+            .then(() => onReadyRef.current?.(false));
         }}
         onError={() => setStatus("error")}
         {...props}
