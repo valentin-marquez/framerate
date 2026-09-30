@@ -24,6 +24,7 @@ export default [
   route("ajustes", "features/settings/pages/layout.tsx", [
     index("features/settings/pages/account.tsx", { id: "settings-index" }),
     route("cuenta", "features/settings/pages/account.tsx", { id: "settings-account" }),
+    route("cuenta/unir", "features/settings/pages/merge.tsx"),
     route("preferencias", "features/settings/pages/preferences.tsx"),
     route("tickets", "features/support/pages/my-tickets.tsx"),
   ]),
