@@ -43,7 +43,7 @@ export const PROVIDERS: readonly ProviderDefinition[] = [
     options: (clientId, clientSecret) => ({
       clientId,
       clientSecret,
-      scope: ["identify", "email"],
+      // Sin `scope`: Better Auth ya pide `identify` y `email` por defecto y `scope` se suma a esos (se duplicaban).
       // El handle de Discord es el mejor candidato de username (la API lo normaliza y lo hace único).
       mapProfileToUser: (profile: { username?: string }) => ({ username: profile.username }),
     }),

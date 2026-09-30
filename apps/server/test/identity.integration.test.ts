@@ -107,6 +107,10 @@ describe("configuración de Better Auth", () => {
       expect(new URL(body.url).searchParams.get("redirect_uri")).toBe(
         `http://localhost:8787/v1/auth/callback/${provider}`,
       );
+      // Better Auth suma `scope` a sus scopes por defecto: repetirlos en `providers.ts` los duplica en la URL.
+      const scopes = new URL(body.url).searchParams.get("scope")?.split(/[\s,]+/) ?? [];
+      expect(new Set(scopes).size).toBe(scopes.length);
+      if (provider === "discord") expect(scopes).toEqual(["identify", "email"]);
     }
     // El estado OAuth se guardó en nuestra tabla (prueba el mapeo de columnas de verificaciones).
     expect((await all(db, "auth_verifications")).length).toBeGreaterThanOrEqual(3);
