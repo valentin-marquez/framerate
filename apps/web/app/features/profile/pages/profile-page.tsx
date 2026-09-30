@@ -167,7 +167,7 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
                   size="sm"
                   className="gap-1.5"
                   nativeButton={false}
-                  render={<Link to="/settings/account" />}
+                  render={<Link to="/ajustes/cuenta" />}
                 >
                   <IconPencil className="size-4" />
                   <span className="hidden sm:inline">{t("profile_edit")}</span>

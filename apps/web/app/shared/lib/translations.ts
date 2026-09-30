@@ -180,7 +180,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     // Navbar
     explore: "Explorar",
     hardware: "Hardware",
-    create_quote: "Crear Cotización",
+    create_quote: "Crear cotización",
     search: "Buscador",
     user: "Usuario",
     profile: "Perfil",

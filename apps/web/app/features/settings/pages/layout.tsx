@@ -1,7 +1,5 @@
-import { IconLifebuoy, IconSettings, IconUser } from "@tabler/icons-react";
 import { NavLink, Outlet, useLocation } from "react-router";
 import { requireAuth } from "~/features/auth/services/auth.server";
-import { Separator } from "~/shared/components/primitives/separator";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import type { Route } from "./+types/layout";
@@ -15,67 +13,46 @@ export async function loader({ request }: Route.LoaderArgs) {
   return null;
 }
 
+/** Ajustes: título, pestañas subrayadas y el contenido en una sola columna. */
 export default function SettingsLayout() {
-  const location = useLocation();
-  const isDefaultRoute = location.pathname === "/settings";
+  const { pathname } = useLocation();
   const { t } = useTranslation();
 
-  const sidebarItems = [
-    {
-      title: t("account"),
-      href: "/settings/account",
-      icon: IconUser,
-    },
-    {
-      title: t("preferences"),
-      href: "/settings/preferences",
-      icon: IconSettings,
-    },
-    {
-      title: "Mis tickets",
-      href: "/settings/tickets",
-      icon: IconLifebuoy,
-    },
+  const tabs = [
+    { title: t("account"), href: "/ajustes/cuenta" },
+    { title: t("preferences"), href: "/ajustes/preferencias" },
+    { title: "Mis tickets", href: "/ajustes/tickets" },
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8 max-w-5xl">
-      <div className="flex flex-col md:flex-row gap-6 md:gap-8">
-        <aside className="w-full md:w-64 shrink-0 space-y-6 md:space-y-8">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4 md:mb-6">{t("settings")}</h1>
-            <nav className="flex flex-row md:flex-col gap-2 md:gap-0 md:space-y-1 overflow-x-auto pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
-              {sidebarItems.map((item, index) => {
-                const isDefaultActive = isDefaultRoute && index === 0;
-
-                return (
-                  <NavLink
-                    key={item.href}
-                    to={item.href}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
-                        isActive || isDefaultActive
-                          ? "text-primary bg-secondary/50 md:bg-transparent md:border-r-2 md:border-primary md:rounded-none"
-                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                      )
-                    }
-                    prefetch="render"
-                  >
-                    <item.icon className="size-4" />
-                    {item.title}
-                  </NavLink>
-                );
-              })}
-            </nav>
-          </div>
-        </aside>
-
-        <Separator orientation="vertical" className="hidden md:block" />
-
-        <main className="flex-1 min-w-0">
-          <Outlet />
-        </main>
+    <div className="mx-auto max-w-3xl pb-16">
+      <header className="space-y-5 pt-2">
+        <h1 className="font-semibold text-3xl text-foreground">{t("settings")}</h1>
+        <nav
+          aria-label="Secciones de ajustes"
+          className="-mx-4 flex gap-6 overflow-x-auto border-border border-b px-4 sm:mx-0 sm:px-0"
+        >
+          {tabs.map((tab, i) => (
+            <NavLink
+              key={tab.href}
+              to={tab.href}
+              prefetch="intent"
+              className={({ isActive }) =>
+                cn(
+                  "-mb-px whitespace-nowrap border-b-2 pb-2.5 font-medium text-sm transition-colors",
+                  isActive || (i === 0 && pathname === "/ajustes")
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-foreground/40 hover:text-foreground",
+                )
+              }
+            >
+              {tab.title}
+            </NavLink>
+          ))}
+        </nav>
+      </header>
+      <div className="pt-8">
+        <Outlet />
       </div>
     </div>
   );

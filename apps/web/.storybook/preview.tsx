@@ -29,7 +29,7 @@ const preview: Preview = {
     controls: { expanded: true },
   },
   decorators: [
-    (Story, { globals }) => {
+    (Story, { globals, parameters }) => {
       // Mismo mecanismo que el sitio: la clase del <html> decide el tema.
       useEffect(() => {
         document.documentElement.classList.toggle("dark", globals.theme === "dark");
@@ -48,7 +48,16 @@ const preview: Preview = {
         [{ id: "root", element: <Outlet />, children: [{ path: "*", element: <Story /> }] }],
         {
           hydrationData: {
-            loaderData: { root: { requestInfo, user: null, profile: null, providers: [], categories: [] } },
+            loaderData: {
+              root: {
+                requestInfo,
+                user: null,
+                profile: null,
+                // Una historia puede cambiarlos con `parameters.providers`.
+                providers: parameters.providers ?? [{ id: "discord", label: "Discord" }],
+                categories: [],
+              },
+            },
           },
         },
       );

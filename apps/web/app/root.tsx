@@ -1,12 +1,10 @@
 import "~/shared/styles/app.css";
 import type { AuthProviders } from "@framerate/contracts";
-import { IconBrandGithub } from "@tabler/icons-react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   data,
   isRouteErrorResponse,
-  Link,
   Links,
   Meta,
   Outlet,
@@ -21,10 +19,9 @@ import { useAuthStore } from "~/features/auth/store/auth";
 import { useCategories } from "~/features/category/hooks/useCategories";
 import { categoriesService } from "~/features/category/services/categories";
 import { meToProfile } from "~/features/profile/services/profiles";
-import { Logo } from "~/shared/components/layout/logo";
 import { MorphSearch } from "~/shared/components/layout/morph-search";
 import { Navbar } from "~/shared/components/layout/navbar";
-import { Button } from "~/shared/components/primitives/button";
+import { SiteFooter } from "~/shared/components/layout/site-footer";
 import { Toaster } from "~/shared/components/primitives/sonner";
 import { useNonce } from "~/shared/hooks/use-nonce";
 import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
@@ -233,31 +230,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Outlet />
       </main>
 
-      <footer className="container mx-auto border-t border-border/60 py-4 md:py-0 max-w-4xl">
-        <div className="flex flex-col items-center justify-between gap-4 md:h-20 md:flex-row px-4">
-          <div className="flex items-center ">
-            <Logo className="size-6 text-muted-foreground mr-4" />
-            <Button variant="link">
-              <Link to="/terms">Términos</Link>
-            </Button>
-            <Button variant="link">
-              <Link to="/privacy">Privacidad</Link>
-            </Button>
-          </div>
-          <div className="flex items-center gap-2 ">
-            <Button variant="ghost" size="icon">
-              <a
-                href="https://github.com/valentin-marquez/framerate/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="GitHub Repository"
-              >
-                <IconBrandGithub className=" text-secondary-foreground" />
-              </a>
-            </Button>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -21,10 +21,10 @@ export default [
   route("cotizacion/:slug", "features/quote/pages/quote-details.tsx"),
 
   // rutas privadas (requerir inicio de sesión)
-  route("settings", "features/settings/pages/layout.tsx", [
+  route("ajustes", "features/settings/pages/layout.tsx", [
     index("features/settings/pages/account.tsx", { id: "settings-index" }),
-    route("account", "features/settings/pages/account.tsx", { id: "settings-account" }),
-    route("preferences", "features/settings/pages/preferences.tsx"),
+    route("cuenta", "features/settings/pages/account.tsx", { id: "settings-account" }),
+    route("preferencias", "features/settings/pages/preferences.tsx"),
     route("tickets", "features/support/pages/my-tickets.tsx"),
   ]),
 
@@ -43,6 +43,7 @@ export default [
   route("stores/:slug/admin", "features/stores/pages/redirect-old-store-admin.tsx"),
   route("claim", "features/stores/pages/redirect-old-claim.tsx"),
   route("profile", "features/profile/pages/redirect-old-profile.tsx"),
+  route("settings/*", "features/settings/pages/redirect-old-settings.tsx"),
 
   // Admin
   route("admin/gatekeeper", "features/gatekeeper/pages/review-dashboard.tsx"),
