@@ -1,3 +1,4 @@
+import type { Me, PublicProfile } from "@framerate/contracts";
 import { api } from "~/shared/lib/api";
 
 export type MyStoreRole = "owner" | "admin" | "editor";
@@ -10,6 +11,7 @@ export interface MyStore {
   role: MyStoreRole | null;
 }
 
+/** Forma de perfil que usa la UI. Se arma desde los contratos de la API (`Me` / `PublicProfile`). */
 export interface Profile {
   id: string;
   username: string | null;
@@ -24,37 +26,51 @@ export interface Profile {
 export interface UpdateProfileRequest {
   username?: string;
   full_name?: string;
-  avatar_url?: string;
   bio?: string | null;
   lang?: "es" | "en" | "arn";
 }
 
+export function meToProfile(me: Me): Profile {
+  return {
+    id: me.id,
+    username: me.username,
+    full_name: me.displayName,
+    avatar_url: me.avatarUrl,
+    bio: me.bio,
+    lang: me.lang,
+    created_at: me.createdAt,
+    updated_at: me.createdAt,
+  };
+}
+
+export function publicToProfile(profile: PublicProfile): Profile {
+  return {
+    id: profile.username,
+    username: profile.username,
+    full_name: profile.displayName,
+    avatar_url: profile.avatarUrl,
+    bio: profile.bio,
+    lang: null,
+    created_at: profile.createdAt,
+    updated_at: profile.createdAt,
+  };
+}
+
 export const profilesService = {
-  /**
-   * Obtiene el perfil público de un usuario por username.
-   */
-  getByUsername: (username: string) => api.get<Profile>(`/v1/profiles/${username}`),
+  getByUsername: async (username: string) => publicToProfile(await api.get<PublicProfile>(`/v1/users/${username}`)),
 
-  /**
-   * Obtiene el perfil del usuario autenticado.
-   */
-  getMe: (token: string) => api.get<Profile>("/v1/profiles/me", { token }),
+  getMe: async () => meToProfile(await api.get<Me>("/v1/me")),
 
-  /**
-   * Actualiza el perfil del usuario autenticado.
-   */
-  updateMe: (data: UpdateProfileRequest, token: string) => api.patch<Profile>("/v1/profiles/me", data, { token }),
+  updateMe: async (data: UpdateProfileRequest) =>
+    meToProfile(
+      await api.patch<Me>("/v1/me", {
+        displayName: data.full_name,
+        username: data.username,
+        bio: data.bio,
+        lang: data.lang,
+      }),
+    ),
 
-  /**
-   * Sincroniza el avatar del provider OAuth al bucket `user-avatars`.
-   * Idempotente: si el avatar ya está en el bucket no hace nada.
-   */
-  syncAvatar: (token: string) =>
-    api.post<{ synced: boolean; profile: Profile; reason?: string }>("/v1/auth/sync-avatar", {}, { token }),
-
-  /**
-   * Lista las tiendas donde el usuario autenticado es miembro de la account
-   * dueña (owner/admin/editor). Devuelve una lista posiblemente vacía.
-   */
-  listMyStores: (token: string) => api.get<{ stores: MyStore[] }>("/v1/profiles/me/stores", { token }),
+  // Pendiente: las tiendas y sus miembros aún no existen en la API nueva.
+  listMyStores: async (): Promise<{ stores: MyStore[] }> => ({ stores: [] }),
 };

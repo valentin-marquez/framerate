@@ -14,17 +14,15 @@ Frontend principal de Framerate.cl. Una aplicación moderna `SSR` (Server-Side R
 - **Rendering**: SSR en Cloudflare Pages.
 - **Seguridad**:
   - NO conecta directamente a la base de datos (Postgres).
-  - Consume datos exclusivamente a través de la API Gateway (`apps/api`).
-  - Utiliza `VITE_SUPABASE_ANON_KEY` solo para auth client-side limitado si es necesario.
+  - Consume datos exclusivamente a través de la API (`apps/server`, en `https://api.framerate.cl`).
+  - La sesión es una cookie de la API (ver `docs/identity.md`); la web no guarda credenciales.
 
 ## Variables de Entorno
 
 Crear un archivo `.env` basado en `.env.example`:
 
 ```bash
-VITE_API_URL=http://127.0.0.1:8787   # URL local del Worker API (o producción)
-VITE_SUPABASE_URL=...                # URL de proyecto Supabase
-VITE_SUPABASE_ANON_KEY=...           # Key pública (anon)
+VITE_API_URL=http://127.0.0.1:8787   # URL del Worker API; en producción https://api.framerate.cl (se fija al compilar)
 ```
 
 ## Desarrollo Local

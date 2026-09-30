@@ -1,8 +1,8 @@
 import "~/shared/styles/app.css";
-import { createBrowserClient } from "@supabase/ssr";
+import type { AuthProviders } from "@framerate/contracts";
 import { IconBrandGithub } from "@tabler/icons-react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   data,
   isRouteErrorResponse,
@@ -14,12 +14,11 @@ import {
   ScrollRestoration,
   useLocation,
 } from "react-router";
-import { useAuthSync } from "~/features/auth/hooks/useAuth";
 import { getAuthUser } from "~/features/auth/services/auth.server";
 import { useAuthStore } from "~/features/auth/store/auth";
 import { useCategories } from "~/features/category/hooks/useCategories";
 import { categoriesService } from "~/features/category/services/categories";
-import { profilesService } from "~/features/profile/services/profiles";
+import { meToProfile } from "~/features/profile/services/profiles";
 import { Logo } from "~/shared/components/layout/logo";
 import { MorphSearch } from "~/shared/components/layout/morph-search";
 import { Navbar } from "~/shared/components/layout/navbar";
@@ -27,7 +26,7 @@ import { Button } from "~/shared/components/primitives/button";
 import { Toaster } from "~/shared/components/primitives/sonner";
 import { useNonce } from "~/shared/hooks/use-nonce";
 import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
-import { isRateLimitError } from "~/shared/lib/api";
+import { api, isRateLimitError } from "~/shared/lib/api";
 import { getHints, useTheme } from "~/shared/lib/client";
 import { getQueryClient } from "~/shared/lib/query-client";
 import type { Lang } from "~/shared/lib/translations";
@@ -54,7 +53,7 @@ export function meta(_: Route.MetaArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const clientEnv = getClientEnv();
-  const { user, supabase, headers: authHeaders } = await getAuthUser(request);
+  const { user, headers: authHeaders } = await getAuthUser(request);
 
   let categories: Awaited<ReturnType<typeof categoriesService.getAll>> = [];
   try {
@@ -67,26 +66,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
   }
 
-  let profile = null;
-  if (user) {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      try {
-        profile = await profilesService.getMe(session.access_token);
-      } catch (e) {
-        if (!isRateLimitError(e)) {
-          console.error("Failed to fetch profile", e);
-        }
-      }
-    }
-  }
-
-  const env = {
-    SUPABASE_URL: process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "",
-    SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY ?? "",
-  };
+  const profile = user ? meToProfile(user) : null;
+  const providers = await api
+    .get<AuthProviders>("/v1/auth/providers")
+    .then((response) => response.items)
+    .catch(() => []);
 
   const headers = new Headers(authHeaders);
 
@@ -110,9 +94,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   return data(
     {
-      env,
       user,
       profile,
+      providers,
       categories,
       requestInfo: {
         clientEnv,
@@ -186,8 +170,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { env, user, profile, categories: initialCategories } = loaderData;
-  const { setUser, setProfile, setSupabase } = useAuthStore();
+  const { user, profile, categories: initialCategories } = loaderData;
+  const { setUser, setProfile } = useAuthStore();
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
@@ -206,15 +190,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
     }
   }, [theme]);
 
-  const supabase = useMemo(
-    () => createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY),
-    [env.SUPABASE_URL, env.SUPABASE_ANON_KEY],
-  );
-
-  useEffect(() => {
-    setSupabase(supabase);
-  }, [supabase, setSupabase]);
-
   useEffect(() => {
     setUser(user);
   }, [user, setUser]);
@@ -222,8 +197,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
   useEffect(() => {
     setProfile(profile);
   }, [profile, setProfile]);
-
-  useAuthSync(supabase);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);

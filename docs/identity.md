@@ -107,18 +107,26 @@ genera su URL de autorización, así una entrada mal armada falla en CI.
 Si el mismo correo (verificado) entra por dos proveedores, se vincula a la misma
 cuenta (`accountLinking`).
 
-## Integrar la web (pendiente)
+## Cómo la usa la web
 
-`apps/web` todavía usa Supabase Auth. Al migrarla:
+`apps/web` no guarda sesión: la cookie es de la API (`framerate.session_token`, compartida con `COOKIE_DOMAIN`).
 
-- **Botones de login:** leer `GET /v1/auth/providers`; una sola lista, sin duplicarla en el navbar.
-- **Iniciar sesión:** `POST /v1/auth/sign-in/social { provider, callbackURL }` → redirigir a `url`.
-  Si se llama desde el SSR de la web, reenviar al navegador las cabeceras `Set-Cookie` de la respuesta.
-- **Cookies:** con `COOKIE_DOMAIN` compartido, la web y la API ven la misma sesión. Desde el SSR, reenviar
-  la cabecera `cookie` del navegador a la API.
-- **Sanitizar `callbackURL`/`returnTo`** (`apps/web/app/shared/lib/safe-redirect.ts`): el sistema anterior
-  tenía un open redirect por no hacerlo. Better Auth además exige que esté en `trustedOrigins`.
-- El rol para mostrar el menú de admin sale de `GET /v1/me` (`role`), no de decodificar el JWT.
+- **SSR:** `workers/app.ts` guarda la cookie de la petición y `app/shared/lib/api.ts` la reenvía en cada llamada. En
+  producción va por *service binding* (`API` → `framerate-server`): un Worker no puede llamar por HTTP público a otro
+  de su misma zona. En local usa HTTP normal.
+- **Navegador:** `fetch` con `credentials: "include"`; por eso todo CORS de la API es sólo para `WEB_ORIGIN` y con cookies.
+- **Login/logout:** `POST /action/auth` (web) → `POST /v1/auth/sign-in/social` o `/sign-out` de la API, reenviando
+  al navegador sus `Set-Cookie` (el estado OAuth). `returnTo` pasa por `safeRedirectPath`.
+- **Usuario y rol:** el loader raíz lee `GET /v1/me` (una consulta por petición, memoizada). El menú de admin usa
+  `me.role`; ya no se decodifica ningún JWT.
+- **Botones de login:** salen de `GET /v1/auth/providers` (`useAuthProviders`), no de una lista fija.
+- **Datos:** `features/*/services` traducen los contratos de la API a los tipos que usa la UI
+  (`features/product/services/adapters.ts`); los componentes no cambian.
+
+### Herramienta de desarrollo
+
+`bun run dev:session <nombre> [rol]` (en `apps/server`) crea un usuario en la D1 local e imprime la cabecera `Cookie`
+de una sesión válida, para probar la web y la API sin pasar por Discord.
 
 ## Pendiente
 

@@ -1,3 +1,4 @@
+import type { AdminUser } from "@framerate/contracts";
 import { api } from "~/shared/lib/api";
 import type { Report, ReportStatus } from "./reports";
 
@@ -64,9 +65,13 @@ export const moderationClient = {
   flagProduct: (payload: { product_id: string; reason?: string }, token: string) =>
     api.post<{ recheck_id: string }>("/v1/admin/moderation/flag-product", payload, { token }),
 
-  ban: (payload: { user_id: string; reason?: string; expires_at?: string | null }, token: string) =>
-    api.post<{ ban_id: string }>("/v1/admin/moderation/ban", payload, { token }),
+  searchUsers: (q: string) => api.get<{ items: AdminUser[] }>("/v1/admin/users", { params: { q } }),
 
-  unban: (payload: { user_id: string }, token: string) =>
-    api.post<{ success: boolean }>("/v1/admin/moderation/unban", payload, { token }),
+  ban: (payload: { user_id: string; reason?: string; expires_at?: string | null }) =>
+    api.post(`/v1/admin/users/${payload.user_id}/ban`, {
+      reason: payload.reason,
+      expiresAt: payload.expires_at ?? undefined,
+    }),
+
+  unban: (payload: { user_id: string }) => api.post(`/v1/admin/users/${payload.user_id}/unban`, {}),
 };

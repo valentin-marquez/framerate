@@ -2,7 +2,7 @@ import { IconBan, IconLoader2, IconUserCheck, IconUserShield } from "@tabler/ico
 import { useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { requireAuth, requireRole } from "~/features/auth/services/auth.server";
+import { requireRole } from "~/features/auth/services/auth.server";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
 import { Label } from "~/shared/components/primitives/label";
@@ -28,61 +28,29 @@ interface ProfileSearchResult {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const [, { supabase }] = await Promise.all([requireRole(request, "admin"), requireAuth(request)]);
-  // react-doctor-disable-next-line server-sequential-independent-await -- getSession depende del supabase resuelto en el Promise.all anterior
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  await requireRole(request, "admin");
 
-  if (!session?.access_token) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-
-  const url = new URL(request.url);
-  const q = url.searchParams.get("q")?.trim();
-
+  const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";
   let results: ProfileSearchResult[] = [];
-  if (q && q.length >= 2) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, username, full_name, avatar_url")
-      .ilike("username", `%${q}%`)
-      .limit(20);
-
-    if (profiles && profiles.length > 0) {
-      const ids = profiles.map((p) => p.id);
-      const [{ data: bans }, { data: roles }] = await Promise.all([
-        supabase.from("user_bans").select("user_id, reason, expires_at, lifted_at").in("user_id", ids),
-        supabase.from("user_roles").select("user_id, role").in("user_id", ids),
-      ]);
-
-      const banMap = new Map<string, NonNullable<typeof bans>[number]>();
-      for (const b of bans ?? []) {
-        if (b.lifted_at === null) banMap.set(b.user_id, b);
-      }
-      const roleMap = new Map((roles ?? []).map((r) => [r.user_id, r.role]));
-
-      results = profiles.map((p) => {
-        const ban = banMap.get(p.id);
-        return {
-          id: p.id,
-          username: p.username,
-          full_name: p.full_name,
-          avatar_url: p.avatar_url,
-          banned: !!ban,
-          ban_reason: ban?.reason ?? null,
-          ban_expires_at: ban?.expires_at ?? null,
-          role: (roleMap.get(p.id) ?? "user") as ProfileSearchResult["role"],
-        };
-      });
-    }
+  if (q.length >= 2) {
+    const { items } = await moderationClient.searchUsers(q);
+    results = items.map((u) => ({
+      id: u.id,
+      username: u.username,
+      full_name: u.displayName,
+      avatar_url: null,
+      banned: u.ban !== null,
+      ban_reason: u.ban?.reason ?? null,
+      ban_expires_at: u.ban?.expiresAt ?? null,
+      role: u.role,
+    }));
   }
 
-  return { q: q ?? "", results, token: session.access_token };
+  return { q, results };
 }
 
 export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
-  const { q, results, token } = loaderData;
+  const { q, results } = loaderData;
   const revalidator = useRevalidator();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [banReason, setBanReason] = useState("");
@@ -90,7 +58,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
   async function handleBan(userId: string) {
     setBusyId(userId);
     try {
-      await moderationClient.ban({ user_id: userId, reason: banReason.trim() || undefined }, token);
+      await moderationClient.ban({ user_id: userId, reason: banReason.trim() || undefined });
       toast.success("Usuario baneado");
       setBanReason("");
       revalidator.revalidate();
@@ -104,7 +72,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
   async function handleUnban(userId: string) {
     setBusyId(userId);
     try {
-      await moderationClient.unban({ user_id: userId }, token);
+      await moderationClient.unban({ user_id: userId });
       toast.success("Ban levantado");
       revalidator.revalidate();
     } catch (error) {

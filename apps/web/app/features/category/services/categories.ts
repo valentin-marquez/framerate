@@ -1,3 +1,5 @@
+import type { PriceRange as ApiPriceRange, BrandCount, CategoryItem } from "@framerate/contracts";
+import { toCategory } from "~/features/product/services/adapters";
 import { api } from "~/shared/lib/api";
 import type { Category } from "~/shared/utils/db-types";
 
@@ -29,13 +31,20 @@ export interface CategoryWithCount extends Category {
 }
 
 export const categoriesService = {
-  getAll: () => api.get<Category[]>("/v1/categories"),
+  getAll: async (): Promise<CategoryWithCount[]> =>
+    (await api.get<{ items: CategoryItem[] }>("/v1/categories")).items.map(toCategory),
 
-  getFilters: (slug: string) => api.get<Record<string, string[]>>(`/v1/categories/${slug}/filters`),
+  // Los filtros por especificación aún no existen en la API nueva.
+  getFilters: async (_slug: string): Promise<Record<string, string[]>> => ({}),
 
-  getBrands: (slug: string) => api.get<BrandWithCount[]>(`/v1/categories/${slug}/brands`),
+  getBrands: async (slug: string): Promise<BrandWithCount[]> =>
+    (await api.get<{ items: BrandCount[] }>(`/v1/categories/${slug}/brands`)).items,
 
-  getPriceRange: (slug: string) => api.get<PriceRange>(`/v1/categories/${slug}/price-range`),
+  getPriceRange: async (slug: string): Promise<PriceRange> => {
+    const range = await api.get<ApiPriceRange>(`/v1/categories/${slug}/price-range`);
+    return { min: range.min ?? 0, max: range.max ?? 0 };
+  },
 
-  getWithCounts: () => api.get<CategoryWithCount[]>("/v1/categories?with_counts=true"),
+  getWithCounts: async (): Promise<CategoryWithCount[]> =>
+    (await api.get<{ items: CategoryItem[] }>("/v1/categories")).items.map(toCategory),
 };

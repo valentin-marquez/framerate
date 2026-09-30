@@ -1,6 +1,5 @@
 import { createDb, type Db } from "@framerate/database";
 import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import type { Env } from "@/env";
 import { catalogRoutes } from "@/features/catalog/catalog.routes";
@@ -33,6 +32,9 @@ export type AppEnv = {
  *   /v1/me        perfil propio (requiere sesión).
  *   /v1/*         lectura pública (catálogo, perfiles públicos), con caché en el edge.
  *   /v1/admin/*   personal: moderador o superior (sesión), o el token de servicio.
+ *
+ * Todo CORS es sólo para el origen de la web y con cookies: el navegador envía la sesión en cada llamada y no
+ * la acepta junto a `Access-Control-Allow-Origin: *`.
  */
 export function createApp() {
   const app = new Hono<AppEnv>();
@@ -59,12 +61,13 @@ export function createApp() {
   meApi.route("/", meRoutes);
 
   const publicApi = new Hono<AppEnv>();
-  publicApi.use("*", cors({ origin: "*", allowMethods: ["GET"] }));
+  publicApi.use("*", credentialedCors);
   publicApi.use("*", rateLimit);
   publicApi.route("/", catalogRoutes);
   publicApi.route("/users", publicProfileRoutes);
 
   const adminApi = new Hono<AppEnv>();
+  adminApi.use("*", credentialedCors);
   adminApi.use("*", requireStaff("moderator"));
   adminApi.route("/", crawlAdminRoutes);
   adminApi.route("/", matchReviewRoutes);

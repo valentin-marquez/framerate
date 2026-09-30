@@ -280,6 +280,9 @@ asistida.
    ajustar extractores con la cuarentena real.
 3. Portar las demás tiendas (PC Express, MyShop, SP Digital, Centrale, Central
    Gamer, NotebooksYa), priorizando APIs JSON sobre navegador.
-4. Migrar `apps/web` a `/v1` + `@framerate/contracts`; UI de revisión para admin.
+4. ✅ (parcial) `apps/web` migrada a la API nueva: login, perfil, catálogo (home, categorías, explorar, producto,
+   buscador) y las pantallas de admin de usuarios y de revisión de matches. **Pendiente en la web** (siguen en la API
+   vieja, hoy sin endpoint): cotizaciones, comentarios, tiendas y reseñas, soporte, reportes/moderación, filtros por
+   especificación, "mejores ofertas" y tendencias (necesitan precio de referencia y popularidad calculados).
 5. Retirar las apps y paquetes legado.
 6. Features de usuario (cuentas, cotizaciones, alertas de precio) sobre la base nueva.

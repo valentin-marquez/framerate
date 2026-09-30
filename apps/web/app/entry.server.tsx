@@ -17,7 +17,6 @@ export default async function handleRequest(
   let shellRendered = false;
   const userAgent = request.headers.get("user-agent");
   const nonce = crypto.randomBytes(16).toString("hex");
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? env.VITE_SUPABASE_URL ?? "";
   const oauthProviders = [
     "https://discord.com",
     "https://accounts.google.com",
@@ -51,8 +50,8 @@ export default async function handleRequest(
     ],
     fontSrc: ["'self'", "https://fonts.gstatic.com"],
     frameSrc: ["'self'"],
-    // Form actions hop through Supabase Auth and OAuth providers during login.
-    formAction: ["'self'", supabaseUrl, ...oauthProviders],
+    // El formulario de login redirige al proveedor OAuth.
+    formAction: ["'self'", ...oauthProviders],
   });
 
   const body = await renderToReadableStream(

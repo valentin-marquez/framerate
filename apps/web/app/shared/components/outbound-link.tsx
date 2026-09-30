@@ -1,5 +1,4 @@
 import { forwardRef } from "react";
-import { useAuthStore } from "~/features/auth/store/auth";
 import { recordOutboundClick } from "~/shared/services/clicks";
 import { buildOutboundUrl, type OutboundSource } from "~/shared/utils/outbound";
 
@@ -33,33 +32,14 @@ export const OutboundLink = forwardRef<HTMLAnchorElement, OutboundLinkProps>(
       const referrerPath =
         typeof window !== "undefined" ? window.location.pathname + window.location.search : undefined;
 
-      const dispatch = (accessToken: string | null | undefined) => {
-        recordOutboundClick(
-          {
-            source,
-            target_url: decoratedHref,
-            referrer_path: referrerPath,
-            listing_id: listingId ?? null,
-            store_id: storeId ?? null,
-            product_id: productId ?? null,
-          },
-          accessToken,
-        );
-      };
-
-      const supabase = useAuthStore.getState().supabase;
-      if (!supabase) {
-        dispatch(null);
-        return;
-      }
-
-      // getSession() devuelve inmediatamente si hay caché en memoria; la promesa
-      // resuelve en microsegundos. El tab nuevo ya se abrió en paralelo via
-      // target=_blank, así que esto no afecta la UX.
-      supabase.auth
-        .getSession()
-        .then(({ data }) => dispatch(data.session?.access_token))
-        .catch(() => dispatch(null));
+      recordOutboundClick({
+        source,
+        target_url: decoratedHref,
+        referrer_path: referrerPath,
+        listing_id: listingId ?? null,
+        store_id: storeId ?? null,
+        product_id: productId ?? null,
+      });
     };
 
     return (

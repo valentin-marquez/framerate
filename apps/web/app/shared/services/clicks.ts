@@ -20,18 +20,16 @@ export interface OutboundClickPayload {
  * el usuario navega/cierra la pestaña antes de que termine. Las excepciones se
  * silencian — analítica no debe romper la UX.
  */
-export function recordOutboundClick(payload: OutboundClickPayload, accessToken?: string | null): void {
+export function recordOutboundClick(payload: OutboundClickPayload): void {
   if (typeof window === "undefined") return;
 
   try {
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-
     void fetch(`${API_URL}/v1/clicks`, {
       method: "POST",
-      headers,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       keepalive: true,
+      credentials: "include",
     }).catch(() => {});
   } catch {
     // ignore

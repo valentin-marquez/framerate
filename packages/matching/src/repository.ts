@@ -222,6 +222,7 @@ export async function listPendingReviews(db: Db, limit: number) {
   const rows = await db.query
     .selectFrom("match_reviews as r")
     .innerJoin("listings as l", "l.id", "r.listing_id")
+    .innerJoin("stores as s", "s.id", "l.store_id")
     .innerJoin("products as p", "p.id", "r.candidate_product_id")
     .select([
       "r.id",
@@ -231,10 +232,21 @@ export async function listPendingReviews(db: Db, limit: number) {
       "l.id as listingId",
       "l.title as listingTitle",
       "l.url as listingUrl",
+      "l.price_cash as listingPriceCash",
+      "l.price_card as listingPriceCard",
+      "l.in_stock as listingInStock",
+      "l.image_url as listingImageUrl",
+      "l.mpn as listingMpn",
+      "l.gtin as listingGtin",
       "l.product_id as listingProductId",
+      "s.slug as storeSlug",
+      "s.name as storeName",
       "p.id as candidateId",
       "p.slug as candidateSlug",
       "p.name as candidateName",
+      "p.brand as candidateBrand",
+      "p.category as candidateCategory",
+      "p.image_url as candidateImageUrl",
     ])
     .where("r.status", "=", "pending")
     .orderBy("r.score", "desc")
@@ -245,8 +257,27 @@ export async function listPendingReviews(db: Db, limit: number) {
     score: r.score,
     evidence: parseJson<Record<string, unknown>>(r.evidence, {}),
     createdAt: r.createdAt,
-    listing: { id: r.listingId, title: r.listingTitle, url: r.listingUrl, productId: r.listingProductId },
-    candidate: { id: r.candidateId, slug: r.candidateSlug, name: r.candidateName },
+    listing: {
+      id: r.listingId,
+      title: r.listingTitle,
+      url: r.listingUrl,
+      priceCash: r.listingPriceCash,
+      priceCard: r.listingPriceCard,
+      inStock: r.listingInStock === 1,
+      imageUrl: r.listingImageUrl,
+      mpn: r.listingMpn,
+      gtin: r.listingGtin,
+      productId: r.listingProductId,
+      store: { slug: r.storeSlug, name: r.storeName },
+    },
+    candidate: {
+      id: r.candidateId,
+      slug: r.candidateSlug,
+      name: r.candidateName,
+      brand: r.candidateBrand,
+      category: r.candidateCategory,
+      imageUrl: r.candidateImageUrl,
+    },
   }));
 }
 

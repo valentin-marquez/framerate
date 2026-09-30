@@ -1,7 +1,8 @@
 import { IconShieldCheck, IconSparkles } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { LoginDialog } from "~/features/auth/components/login-dialog";
-import { getSession } from "~/features/auth/services/auth.server";
+import { getAuthUser } from "~/features/auth/services/auth.server";
+import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { StoreReviewsSection } from "~/features/store-reviews/components/store-reviews-section";
 import { ApiError } from "~/shared/lib/api";
 import { StoreHeader } from "../components/store-header";
@@ -26,17 +27,17 @@ const emptyProducts = (slug: string): StoreProductsResponse => ({
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   try {
-    const [store, { session }, products] = await Promise.all([
+    const [store, { user }, products] = await Promise.all([
       storesService.get(params.slug),
-      getSession(request),
+      getAuthUser(request),
       storesService.getProducts(params.slug).catch(() => emptyProducts(params.slug)),
     ]);
 
     let viewerRole: ViewerStoreRole | null = null;
-    const isAuthenticated = !!session?.access_token;
-    if (session?.access_token) {
+    const isAuthenticated = !!user;
+    if (user) {
       try {
-        const me = await storesService.getMyRole(params.slug, session.access_token);
+        const me = await storesService.getMyRole(params.slug, SESSION_TOKEN);
         viewerRole = me.role;
       } catch {
         viewerRole = null;

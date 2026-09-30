@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { ApiErrorSchema } from "@framerate/contracts";
+import { ApiErrorSchema, MatchReviewsResponseSchema } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { createApp } from "@/app";
@@ -79,12 +79,24 @@ async function seedReview() {
 }
 
 describe("revisión de matches", () => {
-  test("lista las pendientes con el candidato y la oferta", async () => {
+  test("lista las pendientes con la oferta (tienda, precio) y el candidato, según el contrato", async () => {
     const s = await seedReview();
     const res = await send("/v1/admin/reviews");
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { items: { id: number; score: number; candidate: { id: number } }[] };
-    expect(body.items).toMatchObject([{ id: s.review, score: 0.72, candidate: { id: s.candidate } }]);
+    const { items } = MatchReviewsResponseSchema.parse(await res.json());
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      id: s.review,
+      score: 0.72,
+      listing: {
+        id: s.listing,
+        priceCash: 150_000,
+        inStock: true,
+        gtin: "00840006600008",
+        store: { slug: "beta", name: "beta" },
+      },
+      candidate: { id: s.candidate, brand: "Corsair", category: "ram" },
+    });
   });
 
   test("aceptar mueve la oferta al candidato y le traslada sus identificadores", async () => {

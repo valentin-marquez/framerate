@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
-import { getAuthUser } from "~/features/auth/services/auth.server";
 import { QuoteActions } from "~/features/quote/components/quote-actions";
 import { QuoteHeader } from "~/features/quote/components/quote-header";
 import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
@@ -41,16 +40,9 @@ export function meta({ data }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   try {
-    const { supabase } = await getAuthUser(request);
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const token = session?.access_token;
-
-    const quote = await quotesService.getById(params.slug, token);
+    const quote = await quotesService.getById(params.slug);
     return { quote };
   } catch (_error) {
     throw new Response("cotizacion no encontrada", { status: 404 });
@@ -453,7 +445,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
       <div className="w-full max-w-6xl space-y-8">
         <QuoteHeader
           quoteName={quote.name}
-          userName={user?.user_metadata?.name}
+          userName={user?.displayName}
           updatedAt={quote.updated_at}
           compatibilityStatus={compatibilityStatus}
           estimatedWattage={estimatedWattage || 0}

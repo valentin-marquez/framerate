@@ -1,8 +1,9 @@
 import { IconChevronRight } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { redirect, useRevalidator } from "react-router";
+import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { requireAuth } from "~/features/auth/services/auth.server";
+import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { ApiError } from "~/shared/lib/api";
 import { ClaimWizard } from "../components/claim-wizard";
@@ -15,11 +16,7 @@ export function meta() {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { supabase } = await requireAuth(request);
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) throw redirect("/");
+  await requireAuth(request);
 
   // Deep-link: /reclamar?store=<slug> preselecciona la tienda en el wizard.
   // Si el slug no existe o la tienda ya tiene dueño, caemos al picker normal
@@ -55,8 +52,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
   }
 
-  const { claims } = await claimsService.listMine(session.access_token);
-  return { claims, token: session.access_token, preselectStore, preselectError };
+  const { claims } = await claimsService.listMine(SESSION_TOKEN);
+  return { claims, token: SESSION_TOKEN, preselectStore, preselectError };
 }
 
 const STATUS_LABEL: Record<ClaimRequest["status"], string> = {

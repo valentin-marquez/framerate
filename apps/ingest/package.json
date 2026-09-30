@@ -15,7 +15,7 @@
     "@framerate/database": "workspace:*",
     "@framerate/kit": "workspace:*",
     "@framerate/matching": "workspace:*",
-    "zod": "^4.3.6"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260930.2",

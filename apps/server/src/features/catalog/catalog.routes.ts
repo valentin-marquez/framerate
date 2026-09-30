@@ -1,10 +1,33 @@
-import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SLUGS, ProductListQuerySchema } from "@framerate/contracts";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  CATEGORY_SLUGS,
+  categoryFromSlug,
+  ProductListQuerySchema,
+} from "@framerate/contracts";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
 import { AppError } from "@/shared/http/errors";
 import { edgeCache } from "@/shared/http/middleware";
-import { categoryCounts, getPriceHistory, getProduct, listProducts, listStores } from "./catalog.queries";
+import {
+  categoryCounts,
+  getPriceHistory,
+  getProduct,
+  listBrands,
+  listProducts,
+  listStores,
+  priceRange,
+  resolveRedirect,
+  sitemap,
+  trackView,
+} from "./catalog.queries";
+
+function categoryParam(slug: string | undefined) {
+  const category = categoryFromSlug(slug ?? "");
+  if (!category) throw new AppError(404, "category_not_found", "Categoría no encontrada");
+  return category;
+}
 
 /** API pública de lectura (montada bajo `/v1`). */
 export const catalogRoutes = new Hono<AppEnv>()
@@ -19,10 +42,22 @@ export const catalogRoutes = new Hono<AppEnv>()
       })),
     });
   })
+  .get("/categories/:slug/brands", edgeCache(3600), async (c) => {
+    return c.json({ items: await listBrands(c.var.db, categoryParam(c.req.param("slug"))) });
+  })
+  .get("/categories/:slug/price-range", edgeCache(3600), async (c) => {
+    return c.json(await priceRange(c.var.db, categoryParam(c.req.param("slug"))));
+  })
   .get("/stores", edgeCache(3600), async (c) => c.json({ items: await listStores(c.var.db) }))
+  .get("/sitemap", edgeCache(3600), async (c) => c.json(await sitemap(c.var.db)))
   .get("/products", edgeCache(300), async (c) => {
     const query = ProductListQuerySchema.parse(c.req.query());
     return c.json(await listProducts(c.var.db, query));
+  })
+  .get("/products/redirects/:slug", edgeCache(3600), async (c) => {
+    const slug = await resolveRedirect(c.var.db, c.req.param("slug"));
+    if (!slug) throw new AppError(404, "redirect_not_found", "Sin redirección");
+    return c.json({ slug });
   })
   .get("/products/:slug", edgeCache(300), async (c) => {
     const product = await getProduct(c.var.db, c.req.param("slug"));
@@ -34,4 +69,10 @@ export const catalogRoutes = new Hono<AppEnv>()
     const points = await getPriceHistory(c.var.db, c.req.param("slug"), days);
     if (!points) throw new AppError(404, "product_not_found", "Producto no encontrado");
     return c.json({ items: points });
+  })
+  .post("/products/:slug/view", async (c) => {
+    if (!(await trackView(c.var.db, c.req.param("slug")))) {
+      throw new AppError(404, "product_not_found", "Producto no encontrado");
+    }
+    return c.body(null, 204);
   });

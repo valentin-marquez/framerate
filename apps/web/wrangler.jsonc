@@ -6,6 +6,8 @@
   "compatibility_date": "2026-01-05",
   "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
   "main": "./workers/app.ts",
+  // SSR → API por service binding (no por HTTP público: mismo zone). Requiere framerate-server desplegado.
+  "services": [{ "binding": "API", "service": "framerate-server" }],
   "observability": {
     "enabled": true
   },

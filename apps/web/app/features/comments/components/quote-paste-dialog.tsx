@@ -1,6 +1,7 @@
 import { IconLock, IconLockOpen } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { getSessionToken } from "~/features/auth/services/session";
 import { useAuthStore } from "~/features/auth/store/auth";
 import { findQuoteUrls } from "~/features/comments/lib/quote-url";
 import { useUpdateQuote } from "~/features/quote/hooks/useQuotes";
@@ -35,7 +36,6 @@ interface QuotePasteDialogState {
  */
 export function useQuotePasteWatcher() {
   const user = useAuthStore((s) => s.user);
-  const supabase = useAuthStore((s) => s.supabase);
   const updateQuote = useUpdateQuote();
 
   const [state, setState] = useState<QuotePasteDialogState>(() => ({
@@ -53,7 +53,7 @@ export function useQuotePasteWatcher() {
 
   const handlePasteText = useCallback(
     async (text: string) => {
-      if (!user || !supabase) return;
+      if (!user) return;
       if (!text) return;
       const hits = findQuoteUrls(text);
       if (hits.length === 0) return;
@@ -61,8 +61,7 @@ export function useQuotePasteWatcher() {
       const seen = new Set<string>();
       const toQueue: PendingQuote[] = [];
 
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
+      const token = getSessionToken();
       if (!token) return;
 
       for (const hit of hits) {
@@ -91,7 +90,7 @@ export function useQuotePasteWatcher() {
         return { pending: first, queue: rest, asked: newAsked };
       });
     },
-    [user, supabase, state.asked],
+    [user, state.asked],
   );
 
   const handlePaste = useCallback(

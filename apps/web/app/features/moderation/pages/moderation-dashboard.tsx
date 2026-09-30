@@ -2,7 +2,8 @@ import { IconChecks, IconLoader2, IconRefresh, IconShieldCheck, IconX } from "@t
 import { useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { requireAuth, requireRole } from "~/features/auth/services/auth.server";
+import { requireRole } from "~/features/auth/services/auth.server";
+import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
@@ -46,17 +47,8 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const [, { supabase }] = await Promise.all([requireRole(request, "moderator"), requireAuth(request)]);
-  // react-doctor-disable-next-line server-sequential-independent-await -- getSession depende del supabase resuelto en el Promise.all anterior
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.access_token) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-
-  const token = session.access_token;
+  await requireRole(request, "moderator");
+  const token = SESSION_TOKEN;
 
   // Cargamos en paralelo: queue item, lista de reports y mod actions.
   const [queueRes, reportsRes, actionsRes] = await Promise.allSettled([
