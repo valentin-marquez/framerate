@@ -36,20 +36,20 @@ export function StoreMemberList({ slug, members, currentUserIsOwner, token, onCh
   return (
     <ul className="divide-y divide-border rounded-xl border border-border">
       {members.map((m) => (
-        <li key={m.id} className="flex items-center justify-between p-3">
+        <li key={m.userId} className="flex items-center justify-between p-3">
           <div className="flex items-center gap-3">
-            {m.profiles?.avatar_url ? (
-              <img src={m.profiles.avatar_url} alt="" className="size-8 rounded-full" />
+            {m.avatarUrl ? (
+              <img src={m.avatarUrl} alt="" className="size-8 rounded-full" />
             ) : (
               <div className="size-8 rounded-full bg-secondary" />
             )}
             <div>
-              <div className="font-medium text-sm">{m.profiles?.full_name || m.profiles?.username || m.user_id}</div>
+              <div className="font-medium text-sm">{m.displayName}</div>
               <div className="text-muted-foreground text-xs">{m.role}</div>
             </div>
           </div>
           {currentUserIsOwner && m.role !== "owner" && (
-            <Button variant="ghost" size="icon-sm" onClick={() => remove(m.user_id)} disabled={removing === m.user_id}>
+            <Button variant="ghost" size="icon-sm" onClick={() => remove(m.userId)} disabled={removing === m.userId}>
               <IconTrash className="size-4" />
             </Button>
           )}

@@ -1,8 +1,11 @@
 import {
   type StoreDetail as ApiStoreDetail,
+  type StoreMember as ApiStoreMember,
   CATEGORY_LABELS,
   CATEGORY_SLUGS,
+  type StoreListItem,
   type StoreProducts,
+  type UpdateStoreRequest,
 } from "@framerate/contracts";
 import { toProduct } from "~/features/product/services/adapters";
 import type { Product } from "~/features/product/services/products";
@@ -51,30 +54,13 @@ export interface StoreDetail {
 
 export type StoreMemberRole = "owner" | "admin" | "editor";
 
-export interface StoreMember {
-  id: string;
-  user_id: string;
-  role: StoreMemberRole;
-  invited_by: string | null;
-  created_at: string;
-  profiles?: {
-    username: string | null;
-    full_name: string | null;
-    avatar_url: string | null;
-  } | null;
-}
+export type StoreMember = ApiStoreMember;
 
 export interface StoreUpdate {
   display_name?: string | null;
   description?: string | null;
   website?: string | null;
   social?: Record<string, string>;
-}
-
-export interface StoreAssetResult {
-  kind: "icon" | "banner";
-  path: string;
-  url: string;
 }
 
 export type ViewerStoreRole = "owner" | "editor" | "admin";
@@ -151,20 +137,35 @@ async function getProducts(slug: string, name: string): Promise<StoreProductsRes
 export const storesService = {
   get: async (slug: string) => toStoreDetail(await api.get<ApiStoreDetail>(`/v1/stores/${slug}`)),
   getProducts,
-  listClaimable: (q?: string) => api.get<{ stores: ClaimableStore[] }>("/v1/stores", q ? { params: { q } } : undefined),
-  getMyRole: (slug: string, _token?: string) => api.get<{ role: ViewerStoreRole | null }>(`/v1/stores/${slug}/me`),
-  update: (slug: string, data: StoreUpdate, token: string) =>
-    api.patch<StoreDetail>(`/v1/stores/${slug}`, data, { token }),
-  uploadAsset: (slug: string, kind: "icon" | "banner", file: File, token: string) => {
-    const form = new FormData();
-    form.set("kind", kind);
-    form.set("file", file);
-    return api.upload<StoreAssetResult>(`/v1/stores/${slug}/assets`, form, { token });
+  listClaimable: async (q?: string): Promise<{ stores: ClaimableStore[] }> => {
+    const { items } = await api.get<{ items: StoreListItem[] }>("/v1/stores", q ? { params: { q } } : undefined);
+    return {
+      stores: items.map((s) => ({
+        id: s.slug,
+        slug: s.slug,
+        name: s.name,
+        icon_url: s.iconUrl,
+        domain: s.domain,
+        is_claimed: s.isClaimed,
+      })),
+    };
   },
-  listMembers: (slug: string, token: string) =>
-    api.get<{ members: StoreMember[] }>(`/v1/stores/${slug}/members`, { token }),
-  addMember: (slug: string, userId: string, role: StoreMemberRole, token: string) =>
-    api.post<StoreMember>(`/v1/stores/${slug}/members`, { user_id: userId, role }, { token }),
-  removeMember: (slug: string, userId: string, token: string) =>
-    api.delete<{ ok: boolean }>(`/v1/stores/${slug}/members/${userId}`, { token }),
+  getMyRole: (slug: string, _token?: string) => api.get<{ role: ViewerStoreRole | null }>(`/v1/stores/${slug}/me`),
+  update: async (slug: string, data: StoreUpdate, _token?: string) => {
+    const body: UpdateStoreRequest = {
+      ...(data.display_name !== undefined && { displayName: data.display_name }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.website !== undefined && { website: data.website }),
+      ...(data.social !== undefined && { social: data.social }),
+    };
+    await api.patch(`/v1/stores/${slug}`, body);
+    return storesService.get(slug);
+  },
+  listMembers: async (slug: string, _token?: string) => ({
+    members: (await api.get<{ items: StoreMember[] }>(`/v1/stores/${slug}/members`)).items,
+  }),
+  addMember: (slug: string, username: string, role: Exclude<StoreMemberRole, "owner">) =>
+    api.post<null>(`/v1/stores/${slug}/members`, { username, role }),
+  removeMember: (slug: string, userId: string, _token?: string) =>
+    api.delete<null>(`/v1/stores/${slug}/members/${userId}`),
 };

@@ -16,6 +16,7 @@ export async function findStore(db: Db, slug: string) {
       "s.slug",
       "s.name",
       "s.url",
+      "s.domain",
       "s.is_active",
       "s.scraped_icon_url",
       "s.organization_id",

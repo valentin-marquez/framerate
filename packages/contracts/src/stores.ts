@@ -147,3 +147,57 @@ export const StoreProductsSchema = z.object({
   ),
 });
 export type StoreProducts = z.infer<typeof StoreProductsSchema>;
+
+// ─── Gestión por la organización dueña ───────────────────────────────────────
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .transform((v) => v || null)
+    .nullable();
+
+/** Los campos ausentes no se tocan; `null` (o vacío) borra el override y vuelve al dato canónico. */
+export const UpdateStoreRequestSchema = z
+  .object({
+    displayName: optionalText(120),
+    description: optionalText(500),
+    website: z
+      .url({ protocol: /^https?$/ })
+      .max(300)
+      .nullable(),
+    social: SocialSchema,
+  })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, "Nada que actualizar");
+export type UpdateStoreRequest = z.infer<typeof UpdateStoreRequestSchema>;
+
+export const StoreMemberSchema = z.object({
+  userId: z.string(),
+  username: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  role: StoreRoleSchema,
+  createdAt: z.string(),
+});
+export type StoreMember = z.infer<typeof StoreMemberSchema>;
+
+/** `owner` sólo se obtiene reclamando la tienda; se suma a otras personas como administrador o editor. */
+export const AddStoreMemberRequestSchema = z.object({
+  username: z.string().trim().min(3).max(24),
+  role: z.enum(["admin", "editor"]),
+});
+export type AddStoreMemberRequest = z.infer<typeof AddStoreMemberRequestSchema>;
+
+/** Tienda del catálogo para el selector de "reclamar". */
+export const StoreListItemSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  url: z.string(),
+  iconUrl: z.string().nullable(),
+  domain: z.string().nullable(),
+  isClaimed: z.boolean(),
+  offerCount: z.number().int(),
+});
+export type StoreListItem = z.infer<typeof StoreListItemSchema>;

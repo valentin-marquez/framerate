@@ -59,7 +59,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 const STATUS_LABEL: Record<ClaimRequest["status"], string> = {
   pending: "Pendiente",
   verified: "Verificado",
-  failed: "Falló",
+  confirmed: "Confirmado",
   expired: "Expirado",
   revoked: "Revocado",
   stale: "Sin revalidar",
