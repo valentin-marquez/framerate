@@ -24,11 +24,11 @@ export async function resolveMatchReview(
   if (review.status !== "pending") throw new AppError(409, "review_already_resolved", "La revisión ya fue resuelta");
 
   if (input.action === "accept") {
-    const listing = await getListingIdentity(db, review.listingId);
+    const listing = await getListingIdentity(db, review.listing_id);
     if (!listing) throw new AppError(404, "listing_not_found", "La oferta ya no existe");
     await setListingProduct(db, {
       listingId: listing.id,
-      productId: review.candidateProductId,
+      productId: review.candidate_product_id,
       method: "manual",
       confidence: 1,
       evidence: { reviewId: review.id, previousProductId: listing.productId },
@@ -37,9 +37,9 @@ export async function resolveMatchReview(
     });
     const identifiers = { mpn: listing.mpn, gtin: listing.gtin };
     if (listing.productId !== null) {
-      await moveIdentifiers(db, listing.productId, review.candidateProductId, identifiers);
+      await moveIdentifiers(db, listing.productId, review.candidate_product_id, identifiers);
     }
-    await attachIdentifiers(db, review.candidateProductId, identifiers);
+    await attachIdentifiers(db, review.candidate_product_id, identifiers);
   }
 
   await resolveReview(db, review.id, input.action === "accept" ? "accepted" : "rejected", input.now);

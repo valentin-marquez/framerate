@@ -19,7 +19,7 @@ bun run --cwd apps/server dev            # wrangler dev
 bun run --cwd apps/server db:migrate:local
 ```
 
-Reglas v2: esquema = SQL a mano en `apps/server/migrations/` (drizzle sólo tipa); ninguna oferta entra a `listings` sin pasar `normalizeOffer`; los adaptadores de tienda nunca inventan identificadores; el matching prefiere duplicados antes que fusiones erróneas (vetos duros por atributo).
+Reglas v2: esquema = SQL a mano en `apps/server/migrations/` (Kysely sólo tipa y arma consultas; tipos en `src/shared/db/database.ts`); ninguna oferta entra a `listings` sin pasar `normalizeOffer`; los adaptadores de tienda nunca inventan identificadores; el matching prefiere duplicados antes que fusiones erróneas (vetos duros por atributo).
 
 ## Runtime & Tooling
 
