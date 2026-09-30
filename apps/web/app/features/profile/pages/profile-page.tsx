@@ -66,7 +66,7 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
   const { profileUser, isOwner } = loaderData;
   const { t, lang } = useTranslation();
 
-  const { data: quotesData } = useQuotes(1, 100, { enabled: false });
+  const { data: quotesData } = useQuotes(1, 100, { enabled: isOwner });
   const quotes = (isOwner && quotesData?.data) || loaderData.quotes;
 
   const locale = lang === "en" ? "en-US" : "es-CL";
