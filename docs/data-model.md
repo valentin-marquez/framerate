@@ -4,7 +4,7 @@ Diseñado a partir de las funcionalidades que hoy tiene `apps/web` (rutas en
 `apps/web/app/routes.ts`). Cada tabla pertenece a **una** feature del servidor,
 que es la única que la escribe.
 
-- Migraciones (autoridad del esquema): `packages/database/migrations/0001…0008`.
+- Migraciones (autoridad del esquema): `packages/database/migrations/0001…0011`.
 - Tipos para Kysely: `packages/database/src/database.ts`.
 - Specs técnicas por categoría: `packages/contracts/src/specs.ts`.
 - Invariantes verificadas contra D1 real: `packages/database/test/schema.integration.test.ts`.
@@ -48,7 +48,7 @@ erDiagram
 
 | Feature | Tablas | Web que la usa |
 |---|---|---|
-| **identity** | `users`, `auth_accounts`, `auth_sessions`, `auth_verifications`, `user_bans` | login, `/profile`, `/u/:username`, `/settings/*`, `/admin/users` |
+| **identity** | `users`, `auth_accounts`, `auth_sessions`, `auth_verifications`, `user_bans`, `account_merges` | login, `/profile`, `/u/:username`, `/settings/*`, `/admin/users` |
 | **organizations** | `organizations`, `organization_members`, `organization_invitations` | `/tiendas/:slug/admin` (miembros), menú "mis tiendas" |
 | **catalog** (lectura) + **ingestion** + **matching** (escritura) | `stores`, `products`, `product_identifiers`, `product_spec_values`, `product_variant_groups`, `product_slug_redirects`, `listings`, `price_points`, `product_price_daily`, `match_decisions`, `match_reviews`, `crawl_runs`, `quarantine` | home, `/explorar`, `/categoria/:slug`, `/producto/:slug`, búsqueda, `/admin/gatekeeper` |
 | **stores** | `store_profiles`, `store_claims`, `store_claim_events`, `store_reviews`, `store_review_votes` | `/tiendas/:slug`, `/tiendas/:slug/admin`, `/reclamar`, `/tiendas/:slug/resenas` |
@@ -87,6 +87,9 @@ erDiagram
   sanción está activa si `lifted_at IS NULL AND (expires_at IS NULL OR
   expires_at > now)`. **La API la verifica en toda escritura de contenido**;
   antes sólo lo hacían algunas políticas RLS.
+- **`account_merges`**: unión de dos usuarios (B → A). `pending` guarda el hash del
+  token de la cookie `framerate.merge`; `done` guarda quién era B (sin FK: B se
+  borra). Reglas en [identity.md](./identity.md#fusión-de-usuarios).
 
 ## organizations
 
