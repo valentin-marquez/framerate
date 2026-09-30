@@ -86,6 +86,22 @@ export interface UserBansTable {
 
 // ─── Organizaciones (0002) ───────────────────────────────────────────────────
 
+// ─── Fusión de usuarios (0011) ───────────────────────────────────────────────
+
+export interface AccountMergesTable {
+  id: Generated<number>;
+  survivor_id: string;
+  token_hash: string;
+  status: Defaulted<"pending" | "done">;
+  absorbed_id: string | null;
+  absorbed_username: string | null;
+  absorbed_email: string | null;
+  summary: string | null;
+  created_at: string;
+  expires_at: string;
+  completed_at: string | null;
+}
+
 export type OrgRole = "owner" | "admin" | "editor";
 
 export interface OrganizationsTable {
@@ -554,6 +570,7 @@ export interface Database {
   auth_sessions: AuthSessionsTable;
   auth_verifications: AuthVerificationsTable;
   user_bans: UserBansTable;
+  account_merges: AccountMergesTable;
   organizations: OrganizationsTable;
   organization_members: OrganizationMembersTable;
   organization_invitations: OrganizationInvitationsTable;

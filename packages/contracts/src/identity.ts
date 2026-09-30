@@ -151,6 +151,31 @@ export const LinkedAccountsSchema = z.array(
 );
 export type LinkedAccounts = z.infer<typeof LinkedAccountsSchema>;
 
+// ─── Fusión de usuarios ──────────────────────────────────────────────────────
+
+const MergeUserSchema = z.object({
+  username: UsernameSchema,
+  displayName: z.string(),
+  avatarUrl: z.url().nullable(),
+  /** Ids de proveedor vinculados (`["discord", "google"]`). */
+  providers: z.array(z.string()),
+});
+
+/** `GET /v1/me/merge`: quién se queda (`survivor`, el que inició), quién se absorbe (la sesión actual) y qué se mueve. */
+export const MergePreviewSchema = z.object({
+  survivor: MergeUserSchema,
+  absorbed: MergeUserSchema,
+  counts: z.object({
+    reviews: z.number().int(),
+    comments: z.number().int(),
+    organizations: z.number().int(),
+    claims: z.number().int(),
+    quotes: z.number().int(),
+    tickets: z.number().int(),
+  }),
+});
+export type MergePreview = z.infer<typeof MergePreviewSchema>;
+
 // ─── Administración de usuarios ──────────────────────────────────────────────
 
 export const AdminUserSchema = z.object({
