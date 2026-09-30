@@ -50,9 +50,9 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] Verificación alternativa por archivo `/.well-known/framerate-verify` para tiendas sin acceso a su DNS.
 - [ ] Reseñas: reportar reseña desde la UI contra la API v2; paginación "cargar más".
 
-## Pendiente de desplegar (30-09-2026)
-- [ ] Commits de hoy sin desplegar: extractores, precio tarjeta, TecTec `internal`, GPU en Dust2, purga de cuarentena, título crudo y fotos, listas sólo con stock. Orden: `bun run test` → `bun run db:migrate:remote` (0009 y 0010) → deploy de `ingest` → deploy de `server`. La web no cambió.
-- [ ] Tras el primer Cron: revisar que las ~50 ofertas de Dust2 que estaban en cuarentena (fuentes y RAM) entraron, y los precios tarjeta de TecTec y Dust2.
+## Último deploy
+- [x] Desplegado el 30-09-2026 (`17adce0`): migraciones 0009 y 0010, `framerate-ingest` y `framerate-server`. La web no cambió de comportamiento y sigue en `bb66fe3`.
+- [ ] Tras el primer crawl con el código nuevo (Cron 00:17 UTC o `POST /v1/admin/crawls`): revisar que las ~50 ofertas de Dust2 que estaban en cuarentena (fuentes y RAM) entraron, y los precios tarjeta de TecTec y Dust2.
 
 ## Scraping / catálogo
 - [ ] Revisar las 56 revisiones pendientes de matching (`match_reviews`) con datos reales y ajustar vetos.
