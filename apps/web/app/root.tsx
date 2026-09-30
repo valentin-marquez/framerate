@@ -15,6 +15,7 @@ import {
   useLocation,
   useNavigation,
 } from "react-router";
+import { AuthFlash } from "~/features/auth/components/auth-flash";
 import { getAuthUser } from "~/features/auth/services/auth.server";
 import { useAuthStore } from "~/features/auth/store/auth";
 import { useCategories } from "~/features/category/hooks/useCategories";
@@ -168,6 +169,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
           {children}
           <Toaster position="bottom-center" />
+          {/* Después del Toaster: su efecto corre cuando el Toaster ya escucha y el aviso de la primera carga no se pierde. */}
+          <AuthFlash />
         </QueryClientProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
