@@ -38,7 +38,11 @@ import { getCookieLang, resolveLang, setLangCookie } from "~/shared/services/lan
 import { getTheme } from "~/shared/services/theme.server";
 import type { Route } from "./+types/root";
 
-export const links: Route.LinksFunction = () => [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }];
+// `sizes` en el .ico hace que los navegadores con soporte de SVG prefieran el SVG.
+export const links: Route.LinksFunction = () => [
+  { rel: "icon", href: "/favicon.ico", sizes: "32x32" },
+  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+];
 
 export function meta({ error }: Route.MetaArgs) {
   if (error) {
