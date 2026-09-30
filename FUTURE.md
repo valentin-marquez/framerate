@@ -13,22 +13,21 @@ sprint plan.
 
 ## Estado actual (resumen)
 
-Lo que ya funciona y no necesita planificación:
+Lo que ya funciona sobre la arquitectura v2 (Workers + D1):
 
-- **Catálogo y comparación** — 7 crawlers, ~10 categorías, histórico de
-  precios, normalización con regex + LLM (DeepSeek), cache en Edge.
-- **Cotizaciones** — armado, validación básica de compatibilidad,
-  totalización, links públicos/privados, embeds inline en comentarios
-  tipo Notion.
-- **Comentarios** — threaded por producto, slash commands
-  (`/cotizacion`), renderer con embeds, soft-delete.
-- **Tiendas** — perfiles públicos, reseñas con voting "útil", flujo de
-  reclamo verificado, panel de admin para dueños.
-- **Identidad** — OAuth con sync de avatars, perfiles públicos con
-  builds del usuario.
-- **Moderación** — reportes, gatekeeper, bans, RLS-gated dashboards.
-- **Tracking** — clicks outbound a tiendas con UTM (cobertura inicial
-  en cards y product details).
+- **Catálogo y comparación**: 2 tiendas (TecTec, Dust2), 10 categorías,
+  historial de precios, matching por huella con revisión humana.
+  Candidatas para crecer en `docs/store-candidates.md`.
+- **Tiendas**: perfiles públicos, reseñas con voto "útil", reclamo
+  verificado por DNS, miembros de la organización.
+- **Identidad**: login con Discord (Better Auth), perfiles públicos,
+  roles y sanciones.
+- **Moderación**: usuarios, sanciones, revisión de matches, corridas y
+  cuarentena del scraping.
+
+Con el esquema listo pero **sin backend todavía**: cotizaciones,
+comentarios, reportes de contenido, soporte y tracking de clicks
+salientes. El sistema anterior las tenía; hay que reconstruirlas en v2.
 
 ---
 
@@ -126,16 +125,16 @@ copilot.
 - Más tiendas chilenas (objetivo: 12+ crawlers).
 - Más categorías: periféricos (mouse/teclado/audio), monitores,
   notebooks pre-armados.
-- Mejor matching cross-store: ir más allá de MPN exacto con
-  fingerprinting de specs normalizadas.
+- Mejor matching cross-store: la huella multicapa (ver
+  `docs/architecture.md` §5).
 
 ### Self-hosted friendly
 
 Como la licencia explícitamente permite self-hosting no comercial,
 vale la pena documentar el camino:
 
-- Docker compose mínimo para `collector` + `tracker` + Postgres
-  (Supabase self-hosted o Neon).
+- Guía de despliegue en una cuenta propia de Cloudflare (D1, Queues,
+  R2 y los tres Workers; ver `docs/architecture.md` §7).
 - Variables de entorno bien documentadas con defaults sensatos.
 - Guía de "cómo cambiar el branding" antes de desplegar (per LICENSE).
 
@@ -154,17 +153,16 @@ una conversación comercial con tiendas más adelante.
   estado, autor visible, votos, forks, contexto declarado.
 - **Sistema de votos genérico** reusable (votes en comentarios ya
   existe; extender a builds y reseñas con la misma infra).
-- **Notificaciones**: tabla `notifications` + worker en `cortex` que
-  procesa eventos (insert en `comments`, `votes`, `price_history`,
-  etc.) y crea filas. Render in-app + envío email opt-in.
-- **Score / reputation** calculado periódicamente por `cortex`
-  (materialized view o tabla cacheada con refresh cada 1-6h).
+- **Notificaciones**: tabla `notifications` + un consumidor de Queues
+  que procesa eventos (comentarios, votos, cambios de precio) y crea
+  filas. Render in-app + envío email opt-in.
+- **Score / reputation** calculado periódicamente por un Cron
+  (tabla cacheada con refresh cada 1-6h).
 - **Feed**: fan-out vs fan-in; probablemente fan-in (calcular el feed
   on-read con queries indexadas, sin tabla de timeline) hasta que el
   volumen lo justifique.
-- **Postgres como queue** ya está en uso para extracción IA
-  (`ai_extraction_jobs`) — extender al worker de notificaciones en
-  vez de meter Redis.
+- **Cloudflare Queues** ya mueve los crawls — reusarla para
+  notificaciones en vez de sumar otra infraestructura.
 
 ---
 
@@ -222,10 +220,11 @@ sugerido: token-paste como puente → Domain Connect como destino.
 Este roadmap es iterativo. Cada feature se implementa cuando:
 
 1. Hay señal de demanda (uso de la pieza adyacente que la habilita).
-2. La validación técnica está hecha (no introducir Redis sin
-   demostrar que Postgres no alcanza).
+2. La validación técnica está hecha (no sumar infraestructura sin
+   demostrar que D1 + Queues no alcanza).
 3. Encaja con los principios del repo: separación de responsabilidades
-   (web → api → db), URLs en español, RLS para todo, edge-first.
+   (web → server → D1), URLs en español, autorización en la API,
+   edge-first.
 
 Lo que **no** está en este documento, intencionalmente:
 

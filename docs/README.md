@@ -11,9 +11,8 @@ ver el [`README.md`](../README.md) de la raíz.
   configuración y cómo agregar un proveedor OAuth.
 - **[data-model.md](./data-model.md)** — Modelo de datos v2 completo por feature,
   reglas de negocio en la base y qué problema del sistema anterior corrige cada una.
-- **[scraping.md](./scraping.md)** — *(legado, sistema anterior)* Guía de scraping: cómo se integran tiendas
-  nuevas, qué vías de scraping usar y en qué orden, anatomía de un crawler y
-  convenciones obligatorias.
+- **[stores.md](./stores.md)** — Reclamo de tiendas por DNS, perfil, miembros y reseñas.
+- **[store-candidates.md](./store-candidates.md)** — Qué tiendas integrar al scraper, cómo se scrapea cada una y en qué orden.
 
 ## Convenciones de estos docs
 

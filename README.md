@@ -6,7 +6,7 @@
 ![React Router v7](https://img.shields.io/badge/React%20Router-v7-CA4245?style=flat&logo=reactrouter&logoColor=white)
 ![Hono](https://img.shields.io/badge/Hono-API-E36002?style=flat&logo=hono&logoColor=white)
 ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=flat&logo=cloudflare&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?style=flat&logo=supabase&logoColor=white)
+![Cloudflare D1](https://img.shields.io/badge/Cloudflare-D1-F38020?style=flat&logo=cloudflare&logoColor=white)
 ![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-blueviolet)
 
 **Framerate.cl** es un comparador de precios de componentes PC para
@@ -31,7 +31,7 @@ comunidad armar, validar y discutir builds.
 | **Tiendas** (`/tiendas/:slug`, `/tiendas/:slug/resenas`) | Ver perfil, reseñas y datos de cada tienda; los dueños pueden reclamar y administrar la suya. |
 | **Reclamos** (`/reclamar`) | Que el dueño verificado de una tienda tome control de su perfil oficial. |
 | **Perfiles** (`/u/:username`, `/profile`) | Avatar OAuth, cotizaciones públicas del usuario, historial de aportes. |
-| **Moderación** (`/admin/*`) | Reportes, bans, gatekeeper de contenido — interno, RLS-gated. |
+| **Moderación** (`/admin/*`) | Usuarios, sanciones, revisión de matches, corridas y cuarentena del scraping. |
 
 URLs públicas siempre en español (`/tiendas`, `/reclamar`, `/categoria`, `/producto`, `/cotizacion`). APIs internas y nombres de paquetes en inglés.
 
@@ -39,64 +39,31 @@ URLs públicas siempre en español (`/tiendas`, `/reclamar`, `/categoria`, `/pro
 
 ## Cómo está construido
 
-Monorepo Bun + Turborepo. Workspaces en `apps/*` y `packages/*`.
+Monorepo Bun + Turborepo sobre Cloudflare (Workers, D1, Queues, R2). Detalle en
+[`docs/architecture.md`](./docs/architecture.md).
 
-### Apps
-
-| App | Stack | Rol |
-|---|---|---|
-| `apps/web` | React Router v7 (framework mode, SSR), Tailwind v4, Cloudflare Workers | Frontend público. Nunca habla con Supabase directo, todo pasa por `apps/api`. |
-| `apps/api` | Hono sobre Cloudflare Workers, Supabase anon key + RLS | API gateway de sólo lectura. Cache (Cloudflare Cache API) y rate limit per-handler. |
-| `apps/collector` | Bun + Hono, Puppeteer (con stealth) o HTMLRewriter, Docker | Único escritor a Supabase (service role). Crawlea, normaliza, extrae specs (regex + LLM), sube imágenes. |
-| `apps/tracker` | Bun + Elysia | Re-chequeo liviano y de alta frecuencia de precio/stock para listings ya conocidos. Sin browser — sólo `fetch` + `cheerio`. |
-| `apps/cortex` | Bun, OpenAI SDK contra DeepSeek | Worker de fondo: pollea `ai_extraction_jobs` en Postgres (Postgres como queue), corre matchers/syncers/janitor. |
-| `apps/janitor` | Bun + git-sync | Sincroniza specs canónicas de un repo OpenDB externo a `products_canonical`. |
-
-### Packages
-
-| Package | Para qué |
+| Workspace | Rol |
 |---|---|
-| `@framerate/db` | Migraciones Supabase, types autogenerados (`Database`, `Tables`), specs por categoría, helpers de Storage. |
-| `@framerate/core` | Lógica de negocio (motor de PC builder, validaciones de compatibilidad). |
-| `@framerate/matcher` | Matching de productos cross-store con Orama + Jaro-Winkler. |
-| `@framerate/opendb` | Schemas para integrar el repo OpenDB de specs de hardware. |
-| `@framerate/utils` | Logger compartido y helpers. |
-| `@framerate/config` | `biome.json` y `tsconfig.base.json` compartidos. |
-
-### Flujo de datos
+| `apps/web` | Frontend público: React Router v7 (SSR) en Workers, Tailwind v4. Todo pasa por la API. |
+| `apps/server` | API HTTP (`api.framerate.cl`, Hono + D1): catálogo, identidad (Better Auth + Discord), tiendas, reclamos, reseñas y admin. |
+| `apps/ingest` | Scraping (Cron + Queues + R2, sin HTTP público): adaptadores de tienda, normalización y matching. |
+| `packages/contracts` | Esquemas Zod de la API y contrato RPC `server` ↔ `ingest`. |
+| `packages/database` | Migraciones SQL de D1, tipos Kysely y utilidades de test. |
+| `packages/matching` | Huella de producto y decisión de matching. |
+| `packages/kit` | Texto, reloj, logger y DNS, sin dependencias. |
+| `packages/config` | `biome.json` y `tsconfig.base.json` compartidos. |
 
 ```
-┌──────────────┐   crawl + LLM      ┌────────────┐
-│  collector   │ ─────────────────► │  Supabase  │
-│  (Docker)    │   service role     │ (Postgres) │
-└──────────────┘                    └─────┬──────┘
-                                          │ anon key + RLS
-┌──────────────┐                          │
-│   tracker    │ ─── precio/stock ────────┤
-└──────────────┘                          │
-┌──────────────┐                          │
-│   cortex     │ ─── jobs LLM ────────────┤
-└──────────────┘                          │
-┌──────────────┐                          ▼
-│   janitor    │ ─── OpenDB sync ───►  ┌─────┐
-└──────────────┘                       │ api │ ──► web (SSR)
-                                       └─────┘
+tiendas ──fetch──► ingest ──► D1 ◄── server ◄── web
+            (Cron 6 h → cola → adaptador → normalizar → matching)
 ```
-
-Lectura: `web → api → Supabase (RLS, anon key)`.
-Escritura: sólo los workers del lado izquierdo, con service role.
 
 ---
 
 ## Tiendas integradas
 
-7 crawlers en `apps/collector/src/crawlers/`:
-**PC Express**, **SP Digital**, **Central Gamer**, **Centrale**,
-**MyShop**, **NotebooksYa**, **TecTec**. La mayoría usa Puppeteer con
-stealth; PC Express usa HTMLRewriter de Bun por velocidad.
-
-Categorías cubiertas: GPU, CPU, PSU, motherboard, gabinete, RAM, HDD,
-SSD, case fan, CPU cooler.
+TecTec y Dust2 (WooCommerce, Store API). Las candidatas y su orden de integración están en
+[`docs/store-candidates.md`](./docs/store-candidates.md).
 
 ---
 
@@ -104,49 +71,18 @@ SSD, case fan, CPU cooler.
 
 ```bash
 bun install
-
-# Por app
-bun run dev:web         # apps/web
-bun run dev:api         # apps/api (wrangler dev)
-bun run dev:collector   # apps/collector
-bun run dev:tracker     # apps/tracker
-
-# Todo a la vez
-bun run dev
-
-# Build / type-check
-bun run build
-bun run check-types
-
-# Lint + format (Biome, single tool)
-bun run biome           # con --write
-bun run biome:check     # CI mode
-
-# Tests
-bun run test
+bun run db:migrate:local   # migraciones D1 locales
+bun run dev:server         # API
+bun run dev:ingest         # scraping
+bun run dev:web            # frontend
+bun run test               # check-types + tests de todo el monorepo
 ```
 
-`apps/cortex` y `apps/janitor` se levantan con `bun run --cwd apps/<name> dev`.
-
-### Base de datos
-
-`packages/db` es la fuente de verdad del schema.
-
-```bash
-bun run --cwd packages/db migration:new <descripcion>
-bun run db:push          # supabase db push (aplica al remote)
-bun run generate:types   # regenera packages/db/src/types.ts
-```
-
-> No hay instancia local de Supabase: las migraciones se aplican
-> directo a producción. Revísalas con cuidado y mantenlas no
-> destructivas.
+Deploy con `wrangler` desde la máquina del desarrollador (no hay CI): ver [`CLAUDE.md`](./CLAUDE.md).
 
 ### Hooks de git
 
-`simple-git-hooks`:
-- **pre-commit**: `bun run biome` + `bun run generate:types`.
-- **pre-push**: `bun run biome:check` + `bun run build`.
+`simple-git-hooks`: **pre-commit** `bun run biome:check`; **pre-push** `bun run biome:check` + `bun run build`.
 
 ---
 
@@ -163,9 +99,9 @@ bun run generate:types   # regenera packages/db/src/types.ts
 
 ## Documentación adicional
 
-- [`CLAUDE.md`](./CLAUDE.md) — guía operativa para asistentes / contribuidores nuevos.
-- [`.github/instructions/<area>.instructions.md`](./.github/instructions/) — reglas por área (api, collector, db, tracker, web).
-- [`.agents/skills/`](./.agents/skills/) — guidelines por tooling (Wrangler, RR framework mode, TanStack Query, Tailwind, Supabase, Biome, TypeScript).
+- [`CLAUDE.md`](./CLAUDE.md) — guía operativa (reglas, comandos, deploy).
+- [`docs/`](./docs/) — arquitectura, modelo de datos, identidad, tiendas.
+- [`.github/instructions/web.instructions.md`](./.github/instructions/web.instructions.md) — sistema de diseño de la web.
 - [`FUTURE.md`](./FUTURE.md) — roadmap.
 - [`LICENSE`](./LICENSE) — términos legales (PolyForm Noncommercial 1.0.0 + trademark/brand notice).
 
@@ -180,7 +116,7 @@ licencia (uso no comercial). Revisa `CLAUDE.md` y los archivos en
 Por favor mantén:
 - Mensajes de commit en español, formato Conventional Commits.
 - Sin línea `Co-Authored-By: Claude ...` en commits.
-- Migraciones no destructivas y revisadas (van directo a producción).
+- Migraciones SQL a mano en `packages/database/migrations/`, no destructivas y revisadas.
 - Cambios en URLs públicas con redirect 301 desde la versión vieja.
 
 ---

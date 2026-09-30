@@ -50,17 +50,33 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] Verificación alternativa por archivo `/.well-known/framerate-verify` para tiendas sin acceso a su DNS.
 - [ ] Reseñas: reportar reseña desde la UI contra la API v2; paginación "cargar más".
 
+## Pendiente de desplegar (30-09-2026)
+- [ ] Commits de hoy sin desplegar: extractores, precio tarjeta, TecTec `internal`, GPU en Dust2, purga de cuarentena, título crudo y fotos, listas sólo con stock. Orden: `bun run test` → `bun run db:migrate:remote` (0009 y 0010) → deploy de `ingest` → deploy de `server`. La web no cambió.
+- [ ] Tras el primer Cron: revisar que las ~50 ofertas de Dust2 que estaban en cuarentena (fuentes y RAM) entraron, y los precios tarjeta de TecTec y Dust2.
+
 ## Scraping / catálogo
-- [ ] Solo hay 8 productos (todos GPU de TecTec). Probar Dust2 y otras categorías; documentar qué tiendas se pueden hacer sin navegador.
-- [ ] Tiendas que exigen navegador (PC Express, SP Digital, Central Gamer, Centrale, MyShop, NotebooksYa): decidir estrategia (Browser Rendering de Cloudflare vs. descartar).
+- [ ] Revisar las 56 revisiones pendientes de matching (`match_reviews`) con datos reales y ajustar vetos.
+- [ ] Integrar tiendas en el orden de `docs/store-candidates.md` (MyShop y Sandos primero, misma API).
+- [ ] Opciones de precio de WooCommerce que faltan: "`regular_price` = tarjeta" (Infor-Ingen) y "`price` = tarjeta" (Central Gamer, Globalbox, Nuevatec, Tecno Shopping).
+- [ ] Decidir la política de MPN dentro del título y de SKU con prefijo (en `normalize`, no por tienda).
+- [ ] Probar Winpy desde el Worker (bloquea desde red local); si bloquea, evaluar Browser Rendering.
+- [ ] Resumen de precios de `products` y `product_price_daily` tras cada corrida (habilita "mejores ofertas" y descuento real).
+- [ ] Huella multicapa (`docs/architecture.md` §5): overrides persistentes, separar fusiones, recalcular huellas, hash de imagen.
+- [ ] Refresco liviano de precio y stock (hoy hasta 6 h de atraso).
 - [ ] Imágenes: hoy se enlazan (hotlink) desde la tienda; copiarlas a R2.
-- [ ] Revisar la cola de matching (`match_reviews`) con datos reales y ajustar vetos.
+- [ ] "Usado certificado" y "open box" hoy van a cuarentena; decidir si se muestran como condición aparte.
+
+## Web (cuando se retome)
+- [ ] El chip "Con stock" de `filter-bar.tsx` sobra: la API ya sólo lista productos con stock.
+- [ ] La política de privacidad (`features/legal/pages/privacy-page.tsx`) todavía nombra a Supabase como proveedor.
+- [ ] Quedan menciones al sistema anterior en `comments/services/comments.ts`, `product/services/adapters.ts` y `shared/utils/images.ts`.
+- [ ] Tipos heredados (`shared/utils/db-types.ts`, tipos del cotizador en `quote/services/quotes.ts`): reemplazarlos por `@framerate/contracts` al construir cada API.
 
 ## Infra y deuda técnica
 - [ ] **Cambiar la contraseña de git.nozz.skin** (se pegó en el chat) y usar un token.
-- [ ] Retirar el legado (fase 5): `apps/api`, `collector`, `tracker`, `cortex`, `janitor`, `packages/core`, `matcher`, `mpn-finder`, `opendb`, `utils`, `db` (Supabase). `apps/web` ya no depende de Supabase.
-- [ ] `apps/web` no tiene `check-types` en Turbo y `knip.config.ts` falla al tipar (falta `knip` instalado).
-- [ ] Biome: 24 avisos heredados (`noNonNullAssertion`, `noExplicitAny`) en legado y `use-prevent-scroll.tsx`.
-- [ ] Reglas de alerta/observabilidad del Cron y de la DLQ; retención de snapshots en R2 (14 días).
+- [ ] Recursos del sistema anterior que siguen vivos fuera del repo: proyecto de Supabase y cualquier Worker viejo en Cloudflare. Borrarlos cuando el dueño lo decida.
+- [ ] Tests de server intermitentes: el primer test de `claims` y el de `users-admin` a veces pasan los 5 s de timeout en la suite completa (solos pasan). Subir el timeout de esos `beforeAll` o del archivo.
+- [ ] `apps/web` no tiene `check-types` en Turbo y `knip.config.ts` falla al tipar (`knip` no está instalado; lo usa `react-doctor`).
+- [ ] Alertas: nadie avisa si una corrida falla o cae a la DLQ (`framerate-crawl-dlq`); hoy sólo logs y `GET /v1/admin/crawls`.
 - [ ] Rotar/definir secretos: `BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, credenciales de Discord (solo por `wrangler secret put`).
 - [ ] Agregar más proveedores de login (el registro está en `features/identity/providers.ts`).
