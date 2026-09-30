@@ -275,6 +275,24 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     saving_changes_toast: "Guardando cambios...",
     profile_updated_toast: "Perfil actualizado correctamente",
     profile_update_error_toast: "Error al actualizar el perfil",
+    connected_accounts: "Cuentas conectadas",
+    connected_accounts_desc: "Entra con cualquiera de estas cuentas y sigues siendo la misma persona en Framerate.",
+    connected_accounts_load_error:
+      "No pudimos cargar tus cuentas conectadas. Recarga la página para intentarlo de nuevo.",
+    account_connected: "Conectada",
+    connect: "Conectar",
+    disconnect: "Desconectar",
+    connect_provider: "Conectar {provider}",
+    disconnect_provider: "Desconectar {provider}",
+    account_connected_toast: "Conectaste tu cuenta de {provider}",
+    account_disconnected_toast: "Desconectaste tu cuenta de {provider}",
+    account_link_error: "No pudimos conectar la cuenta. Inténtalo de nuevo.",
+    account_unlink_error: "No pudimos desconectar la cuenta. Inténtalo de nuevo.",
+    account_unlink_not_fresh: "Por seguridad, cierra sesión y vuelve a entrar antes de desconectar una cuenta.",
+    auth_error_login: "No se pudo iniciar sesión. Inténtalo de nuevo.",
+    auth_error_account_not_linked:
+      "Ya hay una cuenta con ese correo. Entra con el método que usaste antes y conecta este desde Ajustes, en Cuenta.",
+    auth_error_already_linked: "Esa cuenta ya está conectada a otro usuario de Framerate.",
 
     // Quote Details
     by: "Por {name}",
@@ -563,6 +581,23 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     saving_changes_toast: "Saving changes...",
     profile_updated_toast: "Profile updated successfully",
     profile_update_error_toast: "Error updating profile",
+    connected_accounts: "Connected accounts",
+    connected_accounts_desc: "Sign in with any of these accounts and you're still the same person on Framerate.",
+    connected_accounts_load_error: "We couldn't load your connected accounts. Reload the page to try again.",
+    account_connected: "Connected",
+    connect: "Connect",
+    disconnect: "Disconnect",
+    connect_provider: "Connect {provider}",
+    disconnect_provider: "Disconnect {provider}",
+    account_connected_toast: "You connected your {provider} account",
+    account_disconnected_toast: "You disconnected your {provider} account",
+    account_link_error: "We couldn't connect the account. Please try again.",
+    account_unlink_error: "We couldn't disconnect the account. Please try again.",
+    account_unlink_not_fresh: "For security, sign out and sign back in before disconnecting an account.",
+    auth_error_login: "We couldn't sign you in. Please try again.",
+    auth_error_account_not_linked:
+      "There's already an account with that email. Sign in with the method you used before and connect this one from Settings, under Account.",
+    auth_error_already_linked: "That account is already connected to another Framerate user.",
 
     // Quote Details
     by: "By {name}",

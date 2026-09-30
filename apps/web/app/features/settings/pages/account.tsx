@@ -12,7 +12,8 @@ import { InputGroup, InputGroupInput } from "~/shared/components/primitives/inpu
 import { Label } from "~/shared/components/primitives/label";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { useTranslation } from "~/shared/hooks/use-translation";
-import { ApiError } from "~/shared/lib/api";
+import { ApiError, api } from "~/shared/lib/api";
+import { ConnectedAccounts, type LinkedAccount } from "../components/connected-accounts";
 import { SettingsBadge, SettingsGroup, SettingsRow, SettingsSection } from "../components/settings-parts";
 import type { Route } from "./+types/account";
 
@@ -22,7 +23,15 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await getAuthUser(request);
   if (!user) throw new Response("Unauthorized", { status: 401 });
 
-  return { profile: meToProfile(user), email: user.email };
+  const accounts = await api
+    .get<LinkedAccount[]>("/v1/auth/list-accounts", { headers: { cookie: request.headers.get("cookie") ?? "" } })
+    .then((list) => list.map(({ id, providerId }) => ({ id, providerId })))
+    .catch((error) => {
+      console.error("No se pudieron listar las cuentas conectadas", error);
+      return null;
+    });
+
+  return { profile: meToProfile(user), email: user.email, accounts };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -55,7 +64,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function AccountSettings({ loaderData, actionData }: Route.ComponentProps) {
-  const { profile, email } = loaderData;
+  const { profile, email, accounts } = loaderData;
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const toastIdRef = useRef<string | number | null>(null);
@@ -145,6 +154,8 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
           />
         </SettingsGroup>
       </SettingsSection>
+
+      <ConnectedAccounts accounts={accounts} />
     </div>
   );
 }
