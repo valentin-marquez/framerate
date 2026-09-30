@@ -57,7 +57,12 @@ function initState(initialClaim?: ClaimRequest): WizardState {
   if (initialClaim) {
     return {
       step: initialClaim.status === "verified" ? "verified" : "dns",
-      identity: { name: null, slug: null, iconUrl: null, domain: initialClaim.claimed_domain },
+      identity: {
+        name: initialClaim.store_name,
+        slug: initialClaim.store_id,
+        iconUrl: null,
+        domain: initialClaim.claimed_domain,
+      },
       claim: {
         id: initialClaim.id,
         txtName: initialClaim.txt_record_name,
@@ -88,7 +93,7 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-const STEPS = ["Elegí tu tienda", "Verificá el dominio", "Confirmá"] as const;
+const STEPS = ["Elige tu tienda", "Verifica el dominio", "Confirma"] as const;
 
 function stepIndex(step: Step): number {
   if (step === "pick") return 0;
@@ -211,7 +216,7 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
     try {
       await claimsService.confirm(claim.id, token);
       dispatch({ type: "confirmed" });
-      toast.success("Listo, ya sos dueño de esta tienda");
+      toast.success("Listo, la tienda ya es tuya");
       onDone?.();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "No se pudo confirmar la propiedad");
@@ -278,7 +283,7 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
                         Dominio verificado
                       </div>
                       <p className="mt-1 text-muted-foreground text-sm">
-                        Confirmá para tomar la propiedad y poder gestionar la tienda.
+                        Confirma para tomar la propiedad y poder gestionar la tienda.
                       </p>
                       <Button className="mt-3" onClick={confirmClaim} disabled={submitting}>
                         {submitting && <IconLoader2 className="size-4 animate-spin" />}
@@ -327,7 +332,7 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
                   <IconCircleCheckFilled className="mx-auto size-8 text-primary" />
                   <p className="mt-2 font-medium">¡Propiedad confirmada!</p>
                   <p className="mt-1 text-muted-foreground text-sm">
-                    Ya podés editar la tienda desde su panel de administración.
+                    Ya puedes editar la tienda desde su panel de administración.
                   </p>
                   {identity?.slug && (
                     <Button

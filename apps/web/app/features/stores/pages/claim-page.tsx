@@ -12,7 +12,7 @@ import { type ClaimableStore, storesService } from "../services/stores";
 import type { Route } from "./+types/claim-page";
 
 export function meta() {
-  return [{ title: "Reclamar tienda · Framerate" }];
+  return [{ title: "Reclamar tienda - Framerate" }];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -114,9 +114,9 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-4 pt-8">
       <header>
-        <h1 className="font-semibold text-2xl tracking-tight">Reclamá tu tienda</h1>
+        <h1 className="font-semibold text-2xl tracking-tight">Reclama tu tienda</h1>
         <p className="mt-1 text-muted-foreground text-sm">
-          Elegí tu tienda del catálogo y verificá que el dominio es tuyo. Una vez verificado, vas a poder gestionar su
+          Elige tu tienda del catálogo y verifica que el dominio es tuyo. Una vez verificado, podrás gestionar su
           perfil, responder reseñas y más.
         </p>
       </header>
@@ -141,18 +141,11 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
               return (
                 <li key={c.id} className="flex items-center gap-3 p-4">
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-sm">{c.claimed_domain}</div>
-                    <div className="text-muted-foreground text-xs">
-                      Creado{" "}
-                      {
-                        // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-                        new Date(c.created_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
-                      }{" "}
-                      · expira{" "}
-                      {
-                        // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-                        new Date(c.expires_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
-                      }
+                    <div className="truncate font-medium text-sm">{c.store_name}</div>
+                    <div className="flex flex-wrap gap-x-3 text-muted-foreground text-xs">
+                      <span>{c.claimed_domain}</span>
+                      <span>Creado el {formatDate(c.created_at)}</span>
+                      {resumable && <span>Vence el {formatDate(c.expires_at)}</span>}
                     </div>
                   </div>
                   <StatusBadge status={c.status} />
@@ -171,6 +164,9 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
     </main>
   );
 }
+
+// react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString("es-CL", { timeZone: "America/Santiago" });
 
 function StatusBadge({ status }: { status: ClaimRequest["status"] }) {
   const tone =
