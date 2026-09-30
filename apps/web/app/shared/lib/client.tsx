@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useFetcher, useRevalidator } from "react-router";
 import { useOptionalRequestInfo, useRequestInfo } from "~/shared/hooks/use-request-info";
 import { cookiePrefix } from "./config";
@@ -182,12 +182,28 @@ export function useTheme() {
   const hints = useHints();
   const requestInfo = useRequestInfo();
   const optimisticMode = useOptimisticThemeMode();
+  // Sin preferencia guardada manda el sistema: se lee en el cliente (el servidor no lo sabe y caería en "light").
+  const system = useSystemTheme(hints.theme);
 
   if (optimisticMode) {
-    return optimisticMode === "system" ? hints.theme : optimisticMode;
+    return optimisticMode === "system" ? system : optimisticMode;
   }
 
-  return requestInfo.userPrefs.theme ?? hints.theme;
+  return requestInfo.userPrefs.theme ?? system;
+}
+
+function subscribeToSystemTheme(onChange: () => void) {
+  const query = window.matchMedia("(prefers-color-scheme: dark)");
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function useSystemTheme(serverFallback: string): "light" | "dark" {
+  return useSyncExternalStore(
+    subscribeToSystemTheme,
+    () => (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
+    () => (serverFallback === "dark" ? "dark" : "light"),
+  );
 }
 
 /**

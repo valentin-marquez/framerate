@@ -3,11 +3,10 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { CategoryWithCount } from "~/features/category/services/categories";
 import { getCategoryConfig, getCategoryImage } from "~/features/category/utils/categories";
+import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import type { CatalogData } from "../load-catalog";
-
-const delay = (ms: number) => ({ "--delay": `${ms}ms` }) as React.CSSProperties;
 
 /** Cabecera de una categoría: foto con los bordes difuminados y tres datos rápidos. */
 export function CategoryHeader({
@@ -37,10 +36,13 @@ export function CategoryHeader({
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/60 to-transparent md:via-background/40" />
       <div className="flex min-h-56 flex-col justify-end gap-3 p-6 pt-24 md:min-h-72 md:p-10 md:pt-32">
-        <h1 className="enter-up font-semibold text-3xl text-foreground tracking-tight md:text-5xl">
+        <h1 className={cn("font-semibold text-3xl text-foreground tracking-tight md:text-5xl", enterClass())}>
           {getCategoryConfig(category).label}
         </h1>
-        <ul className="enter-up flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm" style={delay(90)}>
+        <ul
+          className={cn("flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm", enterClass())}
+          style={enterStyle(90)}
+        >
           {stats.map((s) => (
             <li key={String(s)}>{s}</li>
           ))}
@@ -73,7 +75,7 @@ export function ExploreHeader({
 
   return (
     <header className="flex flex-col gap-6 pt-2">
-      <div className="enter-up space-y-1">
+      <div className={cn("space-y-1", enterClass())}>
         <h1 className="font-semibold text-3xl text-foreground tracking-tight md:text-4xl">Explorar</h1>
         <p className="text-muted-foreground text-sm">
           {total > 0
@@ -83,8 +85,8 @@ export function ExploreHeader({
       </div>
 
       <form
-        className="enter-up relative w-full max-w-2xl"
-        style={delay(80)}
+        className={cn("relative w-full max-w-2xl", enterClass())}
+        style={enterStyle(80)}
         onSubmit={(e) => {
           e.preventDefault();
           submit(value);
@@ -121,7 +123,7 @@ export function ExploreHeader({
               const config = getCategoryConfig(category.slug);
               const empty = !category.product_count;
               return (
-                <li key={category.id} className="enter-up" style={delay(160 + Math.min(i, 6) * 50)}>
+                <li key={category.id} className={enterClass()} style={enterStyle(160 + Math.min(i, 6) * 50)}>
                   <Link
                     to={`/categoria/${config.urlSlug}`}
                     prefetch="intent"
