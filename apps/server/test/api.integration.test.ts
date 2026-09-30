@@ -52,21 +52,24 @@ describe("API pública", () => {
     expect((await (await get("/health")).json()) as object).toEqual({ status: "ok" });
   });
 
-  test("listado por categoría con mejor precio y cantidad de ofertas", async () => {
+  test("el listado sólo muestra productos con stock, con su mejor precio y ofertas", async () => {
     const res = await get("/v1/products?category=gpu&sort=price_asc");
     expect(res.status).toBe(200);
     const page = ProductPageSchema.parse(await res.json());
-    expect(page.total).toBe(2);
+    // La MSI no tiene stock en ninguna tienda: fuera de las listas (su ficha sigue, ver abajo).
+    expect(page.total).toBe(1);
     expect(page.items.map((p) => [p.name, p.bestPrice, p.offerCount])).toEqual([
       ["ASUS Dual RTX 4070 SUPER OC 12GB", 599_990, 2],
-      // Sin stock: sin mejor precio, va al final aunque sea más barata.
-      ["MSI RTX 4060 Ventus 2X 8GB", null, 1],
     ]);
   });
 
-  test("filtro inStock y búsqueda por texto (con prefijos)", async () => {
-    const inStock = ProductPageSchema.parse(await (await get("/v1/products?category=gpu&inStock=true")).json());
-    expect(inStock.items).toHaveLength(1);
+  test("la ficha de un producto sin stock sigue accesible (enlaces y SEO)", async () => {
+    const res = await get("/v1/products/msi-rtx-4060-ventus-2x-8gb");
+    expect(res.status).toBe(200);
+    expect(ProductDetailSchema.parse(await res.json()).offers.map((o) => o.inStock)).toEqual([false]);
+  });
+
+  test("búsqueda por texto (con prefijos)", async () => {
     const search = ProductPageSchema.parse(await (await get("/v1/products?q=ryz 7800")).json());
     expect(search.items.map((p) => p.category)).toEqual(["cpu"]);
   });
@@ -105,7 +108,7 @@ describe("API pública", () => {
     const categories = (await (await get("/v1/categories")).json()) as {
       items: { id: string; productCount: number }[];
     };
-    expect(categories.items.find((c) => c.id === "gpu")?.productCount).toBe(2);
+    expect(categories.items.find((c) => c.id === "gpu")?.productCount).toBe(1);
     const stores = (await (await get("/v1/stores")).json()) as { items: { slug: string; offerCount: number }[] };
     expect(stores.items.map((s) => [s.slug, s.offerCount])).toEqual([
       ["alfa", 3],
@@ -118,42 +121,35 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
   const list = async (qs: string) => ProductPageSchema.parse(await (await get(`/v1/products?${qs}`)).json());
   const names = (page: { items: { name: string }[] }) => page.items.map((p) => p.name);
 
-  test("cada producto trae id, MPN y el precio más bajo aunque nadie tenga stock", async () => {
-    const page = await list("category=gpu&sort=name");
-    const [asus, msi] = page.items;
+  test("cada producto trae id, MPN y su mejor precio", async () => {
+    const [asus, ...rest] = (await list("category=gpu&sort=name")).items;
     expect(asus).toMatchObject({ mpn: "DUALRTX4070SO12G", bestPrice: 599_990, lowestPrice: 599_990 });
     expect(asus?.id).toBeGreaterThan(0);
-    expect(msi).toMatchObject({ mpn: null, bestPrice: null, lowestPrice: 320_000 });
+    expect(rest).toEqual([]);
   });
 
   test("filtra por marca (por slug o por nombre) y por rango de precio", async () => {
     expect(names(await list("category=gpu&brand=asus"))).toEqual(["ASUS Dual RTX 4070 SUPER OC 12GB"]);
     expect(names(await list("category=gpu&brand=ASUS"))).toEqual(["ASUS Dual RTX 4070 SUPER OC 12GB"]);
-    expect(names(await list("category=gpu&minPrice=400000"))).toEqual(["ASUS Dual RTX 4070 SUPER OC 12GB"]);
-    expect(names(await list("category=gpu&maxPrice=400000"))).toEqual(["MSI RTX 4060 Ventus 2X 8GB"]);
-    expect((await list("category=gpu&minPrice=1000000")).total).toBe(0);
+    expect(names(await list("category=gpu&maxPrice=600000"))).toEqual(["ASUS Dual RTX 4070 SUPER OC 12GB"]);
+    expect((await list("category=gpu&maxPrice=500000")).total).toBe(0);
+    expect((await list("category=gpu&brand=msi")).total).toBe(0);
   });
 
   test("ordena por nombre y por popularidad (vistas de los últimos 7 días)", async () => {
-    expect(names(await list("category=gpu&sort=name"))).toEqual([
-      "ASUS Dual RTX 4070 SUPER OC 12GB",
-      "MSI RTX 4060 Ventus 2X 8GB",
-    ]);
+    expect(names(await list("sort=name"))).toEqual(["AMD Ryzen 7 7800X3D", "ASUS Dual RTX 4070 SUPER OC 12GB"]);
     for (let i = 0; i < 3; i++) {
-      expect((await get("/v1/products/msi-rtx-4060-ventus-2x-8gb/view", { method: "POST" })).status).toBe(204);
+      expect((await get("/v1/products/amd-ryzen-7-7800x3d/view", { method: "POST" })).status).toBe(204);
     }
-    expect(names(await list("category=gpu&sort=popularity"))[0]).toBe("MSI RTX 4060 Ventus 2X 8GB");
+    expect(names(await list("sort=popularity"))[0]).toBe("AMD Ryzen 7 7800X3D");
     expect((await get("/v1/products/no-existe/view", { method: "POST" })).status).toBe(404);
   });
 
-  test("marcas con conteo y rango de precios de una categoría", async () => {
+  test("marcas con conteo y rango de precios de una categoría, sólo con stock", async () => {
     const brands = (await (await get("/v1/categories/tarjetas-de-video/brands")).json()) as { items: BrandCount[] };
-    expect(brands.items).toEqual([
-      { name: "ASUS", slug: "asus", count: 1 },
-      { name: "MSI", slug: "msi", count: 1 },
-    ]);
+    expect(brands.items).toEqual([{ name: "ASUS", slug: "asus", count: 1 }]);
     expect(PriceRangeSchema.parse(await (await get("/v1/categories/tarjetas-de-video/price-range")).json())).toEqual({
-      min: 320_000,
+      min: 599_990,
       max: 599_990,
     });
     const unknown = await get("/v1/categories/tostadoras/brands");
