@@ -1,5 +1,4 @@
 import { IconCheck, IconLoader2, IconLogin, IconPlus, IconReceipt, IconX } from "@tabler/icons-react";
-import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
@@ -28,7 +27,11 @@ const getDocumentSnapshot = () => true;
 const getServerDocumentSnapshot = () => false;
 
 export function AddToQuote({ product, className, label }: AddToQuoteProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  // Entrada y salida con animaciones CSS: `motion` aplicaba el valor final de la opacidad del velo un cuadro tarde y
+  // se veía un parpadeo al terminar de abrir y de cerrar. "closing" mantiene el modal montado mientras anima la salida.
+  const [phase, setPhase] = useState<"closed" | "open" | "closing">("closed");
+  const open = () => setPhase("open");
+  const close = () => setPhase((p) => (p === "open" ? "closing" : p));
   const mounted = useSyncExternalStore(subscribeNoop, getDocumentSnapshot, getServerDocumentSnapshot);
   const { lastSelectedQuoteId, setLastSelectedQuoteId } = useQuoteInteractionStore();
   // userOverride: si el usuario eligió manualmente en este dialog, esto lo refleja.
@@ -74,7 +77,7 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
       },
       {
         onSuccess: () => {
-          setIsOpen(false);
+          close();
           toast.success(t("product_added", { name: quoteName }));
           // TODO: Show toast
         },
@@ -92,7 +95,7 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
                 variant="secondary"
                 size={label ? "sm" : "icon"}
                 className={cn(label ? "w-full gap-1.5 px-3 text-foreground" : "", "transition-all")}
-                onClick={() => setIsOpen(true)}
+                onClick={open}
                 aria-label={t("add_to_quote")}
                 type="button"
               />
@@ -109,110 +112,108 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
       </div>
 
       {mounted &&
+        phase !== "closed" &&
         createPortal(
-          <LazyMotion features={domAnimation}>
-            <AnimatePresence>
-              {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                  <m.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/50"
-                    onClick={() => setIsOpen(false)}
-                  />
-                  <m.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="relative w-full max-w-md rounded-xl border border-border bg-card shadow-2xl overflow-hidden"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
-                      <span className="text-sm font-medium text-foreground">{t("add_to_quote")}</span>
-                      <button
-                        type="button"
-                        className={cn(
-                          "flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors",
-                          "hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] cursor-pointer",
-                        )}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <IconX className="size-4" />
-                      </button>
-                    </div>
-
-                    <div className="p-4 space-y-4">
-                      {!isAuthed ? (
-                        <div className="space-y-3">
-                          <div className="flex flex-col items-center text-center gap-2 py-2">
-                            <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                              <IconLogin className="size-5" />
-                            </div>
-                            <p className="text-sm font-medium text-foreground">{t("login_to_save_quote_title")}</p>
-                            <p className="text-xs text-muted-foreground max-w-[260px]">
-                              {t("login_to_save_quote_desc")}
-                            </p>
-                          </div>
-                          <AuthProvidersList />
-                        </div>
-                      ) : isLoadingQuotes ? (
-                        <div className="flex justify-center py-4">
-                          <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
-                        </div>
-                      ) : quotes && quotes.data.length > 0 ? (
-                        <div className="space-y-2">
-                          <label
-                            htmlFor={`quote-select-${product.id}`}
-                            className="text-sm font-medium text-muted-foreground"
-                          >
-                            {t("select_quote")}
-                          </label>
-                          <select
-                            id={`quote-select-${product.id}`}
-                            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            value={selectedQuoteId}
-                            onChange={(e) => handleSelectQuote(e.target.value)}
-                          >
-                            <option value="">{t("select_option")}</option>
-                            {quotes.data.map((quote) => (
-                              <option key={quote.id} value={quote.id}>
-                                {quote.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <div className="text-center py-2">
-                          <p className="text-sm text-muted-foreground mb-3">{t("no_quotes")}</p>
-                          <CreateQuoteDialog
-                            trigger={
-                              <Button variant="outline" size="sm" className="w-full">
-                                <IconPlus className="mr-2 size-4" /> {t("create_new")}
-                              </Button>
-                            }
-                            onSuccess={(id) => handleSelectQuote(id)}
-                          />
-                        </div>
-                      )}
-
-                      {quotes && quotes.data.length > 0 && (
-                        <Button className="w-full" onClick={handleAdd} disabled={!selectedQuoteId || addItem.isPending}>
-                          {addItem.isPending ? (
-                            <IconLoader2 className="mr-2 size-4 animate-spin" />
-                          ) : (
-                            <IconCheck className="mr-2 size-4" />
-                          )}
-                          {t("confirm")}
-                        </Button>
-                      )}
-                    </div>
-                  </m.div>
-                </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              aria-hidden
+              className={cn(
+                "absolute inset-0 bg-black/50 duration-200 fill-mode-forwards",
+                phase === "open" ? "animate-in fade-in-0" : "animate-out fade-out-0",
               )}
-            </AnimatePresence>
-          </LazyMotion>,
+              onClick={close}
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("add_to_quote")}
+              className={cn(
+                "relative w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl duration-200 ease-out fill-mode-forwards",
+                phase === "open"
+                  ? "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2"
+                  : "animate-out fade-out-0 zoom-out-95 slide-out-to-bottom-2",
+              )}
+              onAnimationEnd={(e) => {
+                if (e.target === e.currentTarget && phase === "closing") setPhase("closed");
+              }}
+              onKeyDown={(e) => e.key === "Escape" && close()}
+            >
+              <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
+                <span className="text-sm font-medium text-foreground">{t("add_to_quote")}</span>
+                <button
+                  type="button"
+                  className={cn(
+                    "flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors",
+                    "hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] cursor-pointer",
+                  )}
+                  onClick={close}
+                >
+                  <IconX className="size-4" />
+                </button>
+              </div>
+
+              <div className="p-4 space-y-4">
+                {!isAuthed ? (
+                  <div className="space-y-3">
+                    <div className="flex flex-col items-center text-center gap-2 py-2">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <IconLogin className="size-5" />
+                      </div>
+                      <p className="text-sm font-medium text-foreground">{t("login_to_save_quote_title")}</p>
+                      <p className="text-xs text-muted-foreground max-w-[260px]">{t("login_to_save_quote_desc")}</p>
+                    </div>
+                    <AuthProvidersList />
+                  </div>
+                ) : isLoadingQuotes ? (
+                  <div className="flex justify-center py-4">
+                    <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : quotes && quotes.data.length > 0 ? (
+                  <div className="space-y-2">
+                    <label htmlFor={`quote-select-${product.id}`} className="text-sm font-medium text-muted-foreground">
+                      {t("select_quote")}
+                    </label>
+                    <select
+                      id={`quote-select-${product.id}`}
+                      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={selectedQuoteId}
+                      onChange={(e) => handleSelectQuote(e.target.value)}
+                    >
+                      <option value="">{t("select_option")}</option>
+                      {quotes.data.map((quote) => (
+                        <option key={quote.id} value={quote.id}>
+                          {quote.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="text-center py-2">
+                    <p className="text-sm text-muted-foreground mb-3">{t("no_quotes")}</p>
+                    <CreateQuoteDialog
+                      trigger={
+                        <Button variant="outline" size="sm" className="w-full">
+                          <IconPlus className="mr-2 size-4" /> {t("create_new")}
+                        </Button>
+                      }
+                      onSuccess={(id) => handleSelectQuote(id)}
+                    />
+                  </div>
+                )}
+
+                {quotes && quotes.data.length > 0 && (
+                  <Button className="w-full" onClick={handleAdd} disabled={!selectedQuoteId || addItem.isPending}>
+                    {addItem.isPending ? (
+                      <IconLoader2 className="mr-2 size-4 animate-spin" />
+                    ) : (
+                      <IconCheck className="mr-2 size-4" />
+                    )}
+                    {t("confirm")}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>,
           document.body,
         )}
     </>

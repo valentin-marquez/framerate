@@ -21,6 +21,7 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [x] Sistema de diseño en Storybook (`bun run --cwd apps/web storybook`, puerto 6006), Inter y paleta neutra inspirada en Luma; navbar, pie, login y ajustes rehechos.
 - [ ] Redacción: muchas etiquetas en español usan mayúsculas de título en inglés ("Precio Normal", "Ver Oferta", "Especificaciones Técnicas"…). Pasar a mayúscula sólo inicial (`shared/lib/translations.ts`).
 - [x] Tarjeta de producto única (v3, horizontal) en catálogo, home y tiendas; historia en Storybook "Producto/Tarjeta".
+- [ ] Modales con el mismo parpadeo que tenía "Agregar a cotización" (velo animado sólo en opacidad con `motion`): `quote/components/store-selector.tsx` y `comments/components/quote-embed.tsx`. Pasarlos a CSS como `add-to-quote.tsx` cuando se retomen cotizaciones y comentarios.
 - [ ] Quitar " · " como separador en el resto de la UI (el dueño lo ve "estilo IA"): comentarios, cotizaciones embebidas, reseñas, tickets, reclamo, admin de tiendas y soporte, y títulos de pestaña ("Tienda · Framerate").
 - [ ] Nombres de producto con " | " de la tienda ("RTX 3050 | MSI Ventus 2X | 6GB GDDR6"): limpiarlos en la normalización de `ingest` para mostrar un nombre legible.
 - [ ] **Rehacer los sellos de certificación** (80 Plus Bronze/Silver/Gold/Platinum/Titanium y los demás, p. ej. Cybenetics): hoy `PsuBadge` es un dibujo propio que no coincide con los sellos reales ni con el estilo nuevo. Diseñarlos bien, con su historia en Storybook.
