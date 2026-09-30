@@ -49,6 +49,9 @@ avatar o correo. El perfil se edita con nuestro `PATCH /v1/me`.
 | `POST /v1/auth/sign-in/social` | público | Inicia el login. Devuelve `{ url, redirect }` (Better Auth). |
 | `GET /v1/auth/callback/:provider` | público | Vuelta del proveedor. Crea el usuario la primera vez. |
 | `POST /v1/auth/sign-out` | sesión | Cierra sesión. |
+| `GET /v1/auth/list-accounts` | sesión | Cuentas de proveedor propias, sin tokens (`LinkedAccountsSchema`). |
+| `POST /v1/auth/link-social` | sesión | `{provider, callbackURL, errorCallbackURL}` → `{ url, redirect }`: conecta otro proveedor al usuario actual. |
+| `POST /v1/auth/unlink-account` | sesión de < 24 h | `{accountId}` (el `id` de `list-accounts`) → `{ status: true }`. |
 | `GET /v1/me` | sesión | Perfil propio (con correo y sanción vigente). |
 | `PATCH /v1/me` | sesión | Edita perfil. 409 si el handle está tomado o reservado. |
 | `GET /v1/users/:username` | público | Perfil público (sin correo, rol ni sanciones). |
@@ -104,8 +107,42 @@ Todo pasa por el registro `apps/server/src/features/identity/providers.ts`
 Los tests recorren todos los proveedores habilitados y comprueban que cada uno
 genera su URL de autorización, así una entrada mal armada falla en CI.
 
-Si el mismo correo (verificado) entra por dos proveedores, se vincula a la misma
-cuenta (`accountLinking`).
+## Cuentas vinculadas
+
+Una persona es un usuario aunque entre por varios proveedores (`auth_accounts` tiene una fila por proveedor).
+
+- **Implícita (mismo correo):** al entrar con un proveedor nuevo cuyo correo ya tiene un usuario, se vincula a ese
+  usuario sólo si el proveedor marca el correo como verificado **y** el usuario tiene `email_verified = 1`. Si no,
+  no se vincula ni se crea otro usuario (`?error=account_not_linked`). No hay `trustedProviders`.
+- **Manual (con sesión):** `link-social` conecta un proveedor con **otro** correo (`allowDifferentEmails`): el
+  usuario prueba ambas identidades en el mismo flujo. El proveedor igual debe marcar su correo como verificado.
+- Vincular no cambia `email`, `username`, `display_name` ni avatar del usuario.
+- Una cuenta de proveedor que ya es de otro usuario no se mueve (`account_already_linked_to_different_user`).
+  No hay fusión de dos usuarios ya existentes.
+- No se puede quitar la última cuenta. Desvincular pide una sesión de menos de 24 h (`freshAge` de Better Auth).
+
+`callbackURL` y `errorCallbackURL` deben ser de `WEB_ORIGIN` (o de la propia API) y todo `POST` con cookie a
+`/v1/auth/*` debe traer `Origin: WEB_ORIGIN`: el SSR de la web lo reenvía (`auth-action.tsx`).
+
+**Errores del callback** (redirige a `errorCallbackURL?error=<código>&error_description=…`):
+
+| Código | Cuándo |
+|---|---|
+| `account_not_linked` | Login con un correo que ya tiene usuario, sin verificar en algún lado. |
+| `account_already_linked_to_different_user` | `link-social` con una cuenta que es de otro usuario. |
+| `unable_to_link_account` | `link-social` con un correo que el proveedor no verificó (o falla al guardar). |
+| `email_not_found` | El proveedor no entregó correo (login). |
+| `state_mismatch`, `state_not_found` | Estado OAuth vencido (10 min) o sin su cookie. |
+| `invalid_code`, `unable_to_get_user_info` | Falló el canje con el proveedor. |
+| `access_denied` (u otro del proveedor) | El usuario canceló en el proveedor. |
+
+**Errores JSON** de `link-social` / `unlink-account` (`{ code, message }`, formato de Better Auth, no el
+`{ error }` de la API): `401 UNAUTHORIZED`, `403 INVALID_ORIGIN`, `403 MISSING_OR_NULL_ORIGIN`,
+`403 INVALID_CALLBACK_URL`, `403 INVALID_ERROR_CALLBACK_URL`, `404 PROVIDER_NOT_FOUND`,
+`400 FAILED_TO_UNLINK_LAST_ACCOUNT`, `400 ACCOUNT_NOT_FOUND`, `403 SESSION_NOT_FRESH` (volver a iniciar sesión).
+
+Los tests (`apps/server/test/account-linking.integration.test.ts`) recorren el callback OAuth real con la red del
+proveedor falseada.
 
 ## Cómo la usa la web
 
