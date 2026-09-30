@@ -35,7 +35,7 @@ interface ProductCardProps {
   trending?: boolean;
 }
 
-function getSpecsSummary(product: Product): string[] {
+export function getSpecsSummary(product: Product): string[] {
   const { category, specs } = product;
   if (!category || !specs) return [];
 

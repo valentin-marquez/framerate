@@ -69,7 +69,7 @@ export function toProduct(p: ProductSummary): Product {
     category: { name: CATEGORY_LABELS[p.category], slug: categorySlug(p.category) },
     category_slug: categorySlug(p.category),
     specs: specsFromAttributes(p.category, p.attributes) as unknown as Product["specs"],
-    prices: { cash, normal: cash, reference: null },
+    prices: { cash, normal: cash, reference: null, in_stock: p.bestPrice !== null },
     popularity_score: 0,
     listings_count: p.offerCount,
     group_id: null,

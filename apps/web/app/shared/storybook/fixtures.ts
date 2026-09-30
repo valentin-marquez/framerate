@@ -66,6 +66,45 @@ export const products = [
   ),
 ].map(toProduct);
 
+const [base0, base1, base2, base3] = products;
+
+/**
+ * Un producto por cada caso que la tarjeta debe resolver. Parten de los reales y se les cambia lo mínimo
+ * (la API aún no entrega precio de referencia ni precio tarjeta distinto, pero la tarjeta los soporta).
+ */
+export const productStates = {
+  descuento: { ...base2, prices: { ...base2.prices, reference: 519_990 }, listings_count: 3 },
+  tarjetaDistinta: { ...base3, prices: { ...base3.prices, normal: 489_990 }, listings_count: 2 },
+  sinStock: { ...base1, prices: { ...base1.prices, in_stock: false } },
+  normal: base0,
+  fuenteDePoder: toProduct({
+    id: 90,
+    slug: "corsair-rm850e",
+    name: "Fuente de poder Corsair RM850e 850W 80 Plus Gold Full Modular ATX 3.1",
+    brand: "Corsair",
+    category: "psu",
+    imageUrl: null,
+    attributes: { wattage: 850, efficiency: "80 Plus Gold" },
+    bestPrice: 124_990,
+    lowestPrice: 124_990,
+    offerCount: 4,
+    mpn: null,
+  }),
+  nombreLargo: {
+    ...base0,
+    name: "Tarjeta de video Nvidia GeForce RTX 3050 MSI Ventus 2X OC Edition 6GB GDDR6 128-bit PCIe 4.0 con ventilación doble",
+  },
+};
+
+export const cardCases: { label: string; product: (typeof products)[number]; trending?: boolean }[] = [
+  { label: "Con descuento", product: productStates.descuento, trending: true },
+  { label: "Precio tarjeta distinto", product: productStates.tarjetaDistinta },
+  { label: "Sin stock", product: productStates.sinStock },
+  { label: "Normal", product: productStates.normal },
+  { label: "Fuente, sin imagen", product: productStates.fuenteDePoder },
+  { label: "Nombre largo", product: productStates.nombreLargo },
+];
+
 const category = (id: string, slug: string, name: string, count: number): CategoryWithCount => ({
   id,
   slug,
