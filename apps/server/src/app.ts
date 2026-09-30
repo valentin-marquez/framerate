@@ -1,11 +1,11 @@
+import { createDb, type Db } from "@framerate/database";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import type { Env } from "@/env";
 import { catalogRoutes } from "@/features/catalog/catalog.routes";
-import { ingestionAdminRoutes } from "@/features/ingestion/ingestion.routes";
-import { matchingAdminRoutes } from "@/features/matching/matching.routes";
-import { createDb, type Db } from "@/shared/db/client";
+import { crawlAdminRoutes } from "@/features/crawl-admin/crawl-admin.routes";
+import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
 import { handleError, notFound } from "@/shared/http/errors";
 import { rateLimit, requireAdmin } from "@/shared/http/middleware";
 
@@ -36,8 +36,8 @@ export function createApp() {
 
   const adminApi = new Hono<AppEnv>();
   adminApi.use("*", requireAdmin);
-  adminApi.route("/", ingestionAdminRoutes);
-  adminApi.route("/", matchingAdminRoutes);
+  adminApi.route("/", crawlAdminRoutes);
+  adminApi.route("/", matchReviewRoutes);
 
   app.route("/v1/admin", adminApi);
   app.route("/v1", publicApi);

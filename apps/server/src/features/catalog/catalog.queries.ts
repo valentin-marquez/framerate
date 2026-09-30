@@ -7,11 +7,10 @@ import type {
   ProductPage,
   ProductSummary,
 } from "@framerate/contracts";
+import type { Database, Db } from "@framerate/database";
+import { parseJson, toBool } from "@framerate/database";
+import { titleTokens } from "@framerate/matching";
 import { type ExpressionBuilder, sql } from "kysely";
-import { titleTokens } from "@/features/matching/domain/fingerprint";
-import type { Db } from "@/shared/db/client";
-import { parseJson, toBool } from "@/shared/db/codecs";
-import type { Database } from "@/shared/db/database";
 
 /**
  * Consultas de lectura del catálogo público. Sólo se muestran productos con

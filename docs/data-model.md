@@ -4,10 +4,10 @@ Diseñado a partir de las funcionalidades que hoy tiene `apps/web` (rutas en
 `apps/web/app/routes.ts`). Cada tabla pertenece a **una** feature del servidor,
 que es la única que la escribe.
 
-- Migraciones (autoridad del esquema): `apps/server/migrations/0001…0008`.
-- Tipos para Kysely: `apps/server/src/shared/db/database.ts`.
+- Migraciones (autoridad del esquema): `packages/database/migrations/0001…0008`.
+- Tipos para Kysely: `packages/database/src/database.ts`.
 - Specs técnicas por categoría: `packages/contracts/src/specs.ts`.
-- Invariantes verificadas contra D1 real: `apps/server/test/schema.integration.test.ts`.
+- Invariantes verificadas contra D1 real: `packages/database/test/schema.integration.test.ts`.
 
 ## Convenciones
 

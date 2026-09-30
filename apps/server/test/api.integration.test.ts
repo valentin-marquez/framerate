@@ -1,59 +1,32 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { ApiErrorSchema, PricePointSchema, ProductDetailSchema, ProductPageSchema } from "@framerate/contracts";
+import type { Db } from "@framerate/database";
+import { createTestD1 } from "@framerate/database/testing";
 import { z } from "zod";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { crawlCategory } from "@/features/ingestion/crawl-category";
-import { createTestD1, fakeStore, offer, steppingClock, testDeps, testEnv } from "./helpers";
+import { daysAgo, seedCatalog, testEnv } from "./helpers";
 
 /** API HTTP de punta a punta; las respuestas se validan contra `@framerate/contracts`. */
 
-let d1: D1Database;
+let db: Db;
 let dispose: () => Promise<void>;
 let env: Env;
-let sent: ReturnType<typeof testEnv>["sent"];
+const crawlRequests: Parameters<Env["INGEST"]["enqueueCrawls"]>[0][] = [];
+let refuseUnknownStore = false;
 const app = createApp();
 const get = (path: string, init?: RequestInit) => app.request(path, init, env);
 
 beforeAll(async () => {
-  ({ d1, dispose } = await createTestD1());
-  ({ env, sent } = testEnv(d1));
-
-  const clock = steppingClock();
-  const deps = testDeps(d1, clock);
-  const alfa = fakeStore("alfa", { gpu: ["gpu"], cpu: ["cpu"] });
-  const beta = fakeStore("beta", { gpu: ["gpu"] });
-  alfa.setOffers([
-    offer("alfa", "1", {
-      category: "gpu",
-      title: "ASUS Dual RTX 4070 SUPER OC 12GB",
-      priceCash: 650_000,
-      mpn: "DUAL-RTX4070S-O12G",
-    }),
-    offer("alfa", "2", { category: "gpu", title: "MSI RTX 4060 Ventus 2X 8GB", priceCash: 320_000, inStock: false }),
-    offer("alfa", "3", { category: "cpu", title: "AMD Ryzen 7 7800X3D", priceCash: 420_000 }),
-  ]);
-  beta.setOffers([
-    offer("beta", "9", {
-      category: "gpu",
-      title: "Asus Dual RTX4070 Super O12G",
-      priceCash: 639_990,
-      mpn: "DUAL-RTX4070S-O12G",
-    }),
-  ]);
-  await crawlCategory(deps, alfa.store, "gpu");
-  await crawlCategory(deps, alfa.store, "cpu");
-  await crawlCategory(deps, beta.store, "gpu");
-  clock.advance(3600_000);
-  beta.setOffers([
-    offer("beta", "9", {
-      category: "gpu",
-      title: "Asus Dual RTX4070 Super O12G",
-      priceCash: 599_990,
-      mpn: "DUAL-RTX4070S-O12G",
-    }),
-  ]);
-  await crawlCategory(deps, beta.store, "gpu");
+  let d1: D1Database;
+  ({ d1, db, dispose } = await createTestD1());
+  ({ env } = testEnv(d1, {
+    enqueueCrawls: async (request) => {
+      crawlRequests.push(request);
+      return refuseUnknownStore ? { ok: false, error: "unknown_store" } : { ok: true, enqueued: 1 };
+    },
+  }));
+  await seedCatalog(db);
 });
 afterAll(() => dispose());
 
@@ -132,8 +105,8 @@ describe("API admin", () => {
     expect((await get("/v1/admin/crawls", { headers: { authorization: "Bearer otro" } })).status).toBe(401);
   });
 
-  test("encola crawls filtrados por tienda y categoría", async () => {
-    sent.length = 0;
+  test("pide a ingest que encole (la API no toca la cola ni conoce las tiendas)", async () => {
+    crawlRequests.length = 0;
     const res = await get("/v1/admin/crawls", {
       ...auth,
       method: "POST",
@@ -141,14 +114,49 @@ describe("API admin", () => {
     });
     expect(res.status).toBe(202);
     expect((await res.json()) as object).toEqual({ enqueued: 1 });
-    expect(sent[0]).toMatchObject({ type: "crawl.category", store: "tectec", category: "gpu", requestedBy: "admin" });
+    expect(crawlRequests).toEqual([{ store: "tectec", category: "gpu", requestedBy: "admin" }]);
+  });
+
+  test("tienda desconocida según ingest → 400 con código", async () => {
+    refuseUnknownStore = true;
+    const res = await get("/v1/admin/crawls", { ...auth, method: "POST", body: JSON.stringify({ store: "nada" }) });
+    refuseUnknownStore = false;
+    expect(res.status).toBe(400);
+    expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("unknown_store");
   });
 
   test("historial de corridas y cuarentena", async () => {
-    const runs = (await (await get("/v1/admin/crawls", auth)).json()) as { items: { status: string }[] };
-    expect(runs.items).toHaveLength(4);
-    expect(runs.items.every((r) => r.status === "succeeded")).toBe(true);
-    const quarantine = (await (await get("/v1/admin/quarantine", auth)).json()) as { items: unknown[] };
-    expect(quarantine.items).toEqual([]);
+    const store = await db.query.selectFrom("stores").select("id").where("slug", "=", "alfa").executeTakeFirstOrThrow();
+    await db.query
+      .insertInto("crawl_runs")
+      .values({
+        id: "run-1",
+        store_id: store.id,
+        category: "gpu",
+        status: "succeeded",
+        started_at: daysAgo(1),
+        stats: JSON.stringify({ seen: 3, valid: 2, quarantined: 1 }),
+      })
+      .execute();
+    await db.query
+      .insertInto("quarantine")
+      .values({
+        run_id: "run-1",
+        store_id: store.id,
+        external_id: "77",
+        reason: "price:out_of_range",
+        payload: JSON.stringify({ title: "Soporte" }),
+        created_at: daysAgo(1),
+      })
+      .execute();
+
+    const runs = (await (await get("/v1/admin/crawls", auth)).json()) as {
+      items: { id: string; store: string; status: string; stats: { seen: number } }[];
+    };
+    expect(runs.items).toMatchObject([{ id: "run-1", store: "alfa", status: "succeeded", stats: { seen: 3 } }]);
+    const quarantine = (await (await get("/v1/admin/quarantine?runId=run-1", auth)).json()) as {
+      items: { reason: string; payload: { title: string } }[];
+    };
+    expect(quarantine.items).toMatchObject([{ reason: "price:out_of_range", payload: { title: "Soporte" } }]);
   });
 });
