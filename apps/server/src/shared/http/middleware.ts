@@ -22,7 +22,10 @@ export async function timingSafeEqual(a: string, b: string): Promise<boolean> {
 export const rateLimit: MiddlewareHandler<AppEnv> = async (c, next) => {
   const limiter = c.env.PUBLIC_RATE_LIMITER;
   if (limiter) {
-    const key = c.req.header("cf-connecting-ip") ?? "anonymous";
+    // Las llamadas del SSR de la web llegan por service binding, sin `cf-connecting-ip`: la web reenvía la IP del
+    // visitante en `x-client-ip`. Una petición pública siempre trae `cf-connecting-ip` (lo pone Cloudflare), así
+    // que nadie puede usar `x-client-ip` para esquivar el límite.
+    const key = c.req.header("cf-connecting-ip") ?? c.req.header("x-client-ip") ?? "anonymous";
     const { success } = await limiter.limit({ key });
     if (!success) throw new AppError(429, "rate_limited", "Demasiadas solicitudes, intenta en un minuto");
   }

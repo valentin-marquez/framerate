@@ -38,7 +38,7 @@ export function CategoryLinks({ categories }: CategoryLinksProps) {
           prefetch="intent"
           className="text-sm font-medium text-foreground hover:text-primary transition-colors py-1"
         >
-          Ver todos los productos →
+          Ver todos los productos
         </Link>
       </div>
     </section>

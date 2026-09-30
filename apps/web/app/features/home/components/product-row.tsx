@@ -1,4 +1,3 @@
-import { IconArrowRight } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { ProductCardCompact } from "~/features/product/components/card-product-compact";
 import type { Product } from "~/features/product/services/products";
@@ -31,7 +30,6 @@ export function ProductRow({ title, href, products, priority = false, trendingId
           <h2 className="text-lg md:text-xl font-semibold tracking-tight text-foreground truncate group-hover:text-primary transition-colors">
             {title}
           </h2>
-          <IconArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
         </Link>
 
         <Link

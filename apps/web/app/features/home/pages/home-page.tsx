@@ -1,10 +1,13 @@
+import { useSearchParams } from "react-router";
 import { categoriesService } from "@/features/category/services/categories";
 import { productsService } from "@/features/product/services/products";
 import { getCategoryConfig } from "~/features/category/utils/categories";
 import { CategoryLinks } from "~/features/home/components/category-links";
 import { CompactSearchHero } from "~/features/home/components/compact-search-hero";
+import { HomeVersion, isVersion, VersionSwitcher } from "~/features/home/components/home-versions";
 import { ProductRow } from "~/features/home/components/product-row";
-import type { Product } from "~/features/product/services/products";
+import type { HomeData, HomeRow } from "~/features/home/types";
+import { storesService } from "~/features/stores/services/stores";
 import { isRateLimitError } from "~/shared/lib/api";
 import type { Route } from "./+types/home-page";
 
@@ -68,13 +71,6 @@ function generateJsonLd() {
   ];
 }
 
-interface HomeRow {
-  key: string;
-  title: string;
-  href: string;
-  products: Product[];
-}
-
 // Mínimo de productos para que una fila/carrusel valga la pena mostrarse.
 const MIN_ROW_PRODUCTS = 4;
 
@@ -88,28 +84,32 @@ export async function loader() {
     }
   }
 
-  // Filas curadas + una por categoría. allSettled aísla fallos/rate-limit:
-  // una fila que falla simplemente no se renderiza, sin tirar al error boundary.
+  // No se piden filas de categorías que no llenarían el carrusel: cada una es una llamada a la API.
+  const rowCategories = categories.filter((c) => (c.product_count ?? 0) >= MIN_ROW_PRODUCTS);
+
+  // "Mejores ofertas" vuelve cuando exista precio de referencia (hoy repetiría "Lo más popular").
   const rowDefs: { key: string; title: string; href: string }[] = [
-    { key: "discount", title: "Mejores ofertas", href: "/explorar?sort=discount" },
     { key: "popular", title: "Lo más popular", href: "/explorar" },
-    ...categories.map((c) => {
+    ...rowCategories.map((c) => {
       const config = getCategoryConfig(c.slug);
       return { key: c.slug, title: config.label, href: `/categoria/${config.urlSlug}` };
     }),
   ];
 
   const fetches = [
-    productsService.getAll({ sort: "discount", limit: 15 }),
     productsService.getAll({ sort: "popularity", limit: 15 }),
-    ...categories.map((c) => productsService.getAll({ category: c.slug, sort: "popularity", limit: 12 })),
+    ...rowCategories.map((c) => productsService.getAll({ category: c.slug, sort: "popularity", limit: 12 })),
   ];
 
-  const [settled, trending] = await Promise.all([
+  // allSettled aísla fallos/rate-limit: una fila que falla simplemente no se renderiza.
+  const [settled, trending, stores] = await Promise.all([
     Promise.allSettled(fetches),
     productsService.getTrending(40).catch(() => ({ ids: [] as string[] })),
+    storesService.listClaimable().then(
+      (r) => r.stores,
+      () => [],
+    ),
   ]);
-  const trendingIds = trending.ids;
 
   const rows: HomeRow[] = [];
   settled.forEach((result, i) => {
@@ -125,12 +125,12 @@ export async function loader() {
     }
   });
 
-  return { categories, rows, trendingIds };
+  return { categories, rows, trendingIds: trending.ids, stores } satisfies HomeData;
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { categories, rows, trendingIds } = loaderData;
-  const trendingSet = new Set(trendingIds);
+  const [params] = useSearchParams();
+  const version = params.get("v");
 
   return (
     <>
@@ -141,24 +141,32 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateJsonLd()) }}
       />
 
-      <div className="flex flex-col min-h-screen">
-        <CompactSearchHero categories={categories} />
+      <div className="flex min-h-screen flex-col">
+        {isVersion(version) ? <HomeVersion version={version} data={loaderData} /> : <CurrentHome {...loaderData} />}
+      </div>
+      {version !== null && <VersionSwitcher current={isVersion(version) ? version : ""} />}
+    </>
+  );
+}
 
-        <div className="flex flex-col gap-10 md:gap-12 pb-16">
-          {rows.map((row, index) => (
-            <ProductRow
-              key={row.key}
-              title={row.title}
-              href={row.href}
-              products={row.products}
-              priority={index === 0}
-              // En "Lo más popular" todo sería tendencia → ruido; ahí no.
-              trendingIds={row.key === "popular" ? undefined : trendingSet}
-            />
-          ))}
-
-          <CategoryLinks categories={categories} />
-        </div>
+/** La home de hoy, sin cambios, mientras se elige entre v1, v2 y v3. */
+function CurrentHome({ categories, rows, trendingIds }: HomeData) {
+  const trendingSet = new Set(trendingIds);
+  return (
+    <>
+      <CompactSearchHero categories={categories} />
+      <div className="flex flex-col gap-10 pb-16 md:gap-12">
+        {rows.map((row, index) => (
+          <ProductRow
+            key={row.key}
+            title={row.title}
+            href={row.href}
+            products={row.products}
+            priority={index === 0}
+            trendingIds={row.key === "popular" ? undefined : trendingSet}
+          />
+        ))}
+        <CategoryLinks categories={categories} />
       </div>
     </>
   );

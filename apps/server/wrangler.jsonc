@@ -33,7 +33,7 @@
   "services": [{ "binding": "INGEST", "service": "framerate-ingest", "entrypoint": "IngestRpc" }],
 
   "ratelimits": [
-    { "name": "PUBLIC_RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 120, "period": 60 } }
+    { "name": "PUBLIC_RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 600, "period": 60 } }
   ]
 
   // Secretos (no van aquí): BETTER_AUTH_SECRET, ADMIN_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET
