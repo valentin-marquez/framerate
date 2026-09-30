@@ -1,11 +1,7 @@
-import { useSearchParams } from "react-router";
 import { categoriesService } from "@/features/category/services/categories";
 import { productsService } from "@/features/product/services/products";
 import { getCategoryConfig } from "~/features/category/utils/categories";
-import { CategoryLinks } from "~/features/home/components/category-links";
-import { CompactSearchHero } from "~/features/home/components/compact-search-hero";
-import { HomeVersion, isVersion, VersionSwitcher } from "~/features/home/components/home-versions";
-import { ProductRow } from "~/features/home/components/product-row";
+import { HomeContent } from "~/features/home/components/home-content";
 import type { HomeData, HomeRow } from "~/features/home/types";
 import { storesService } from "~/features/stores/services/stores";
 import { isRateLimitError } from "~/shared/lib/api";
@@ -129,9 +125,6 @@ export async function loader() {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const [params] = useSearchParams();
-  const version = params.get("v");
-
   return (
     <>
       {/* JSON-LD Structured Data */}
@@ -140,33 +133,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD injection
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateJsonLd()) }}
       />
-
       <div className="flex min-h-screen flex-col">
-        {isVersion(version) ? <HomeVersion version={version} data={loaderData} /> : <CurrentHome {...loaderData} />}
-      </div>
-      {version !== null && <VersionSwitcher current={isVersion(version) ? version : ""} />}
-    </>
-  );
-}
-
-/** La home de hoy, sin cambios, mientras se elige entre v1, v2 y v3. */
-function CurrentHome({ categories, rows, trendingIds }: HomeData) {
-  const trendingSet = new Set(trendingIds);
-  return (
-    <>
-      <CompactSearchHero categories={categories} />
-      <div className="flex flex-col gap-10 pb-16 md:gap-12">
-        {rows.map((row, index) => (
-          <ProductRow
-            key={row.key}
-            title={row.title}
-            href={row.href}
-            products={row.products}
-            priority={index === 0}
-            trendingIds={row.key === "popular" ? undefined : trendingSet}
-          />
-        ))}
-        <CategoryLinks categories={categories} />
+        <HomeContent {...loaderData} />
       </div>
     </>
   );

@@ -408,7 +408,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 <DropdownMenuContent align="end" className="w-69 mt-2 text-base rounded-xl">
                   <DropdownMenuItem className="cursor-default select-none p-0">
                     <Link
-                      to={profile?.username ? `/u/${profile.username}` : "/profile"}
+                      to={profile?.username ? `/u/${profile.username}` : "/perfil"}
                       className="block"
                       prefetch="intent"
                     >
@@ -439,7 +439,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   <DropdownMenuGroup>
                     <DropdownMenuItem>
                       <Link
-                        to={profile?.username ? `/u/${profile.username}` : "/profile"}
+                        to={profile?.username ? `/u/${profile.username}` : "/perfil"}
                         className="flex items-center gap-2.5 w-full"
                         prefetch="intent"
                       >

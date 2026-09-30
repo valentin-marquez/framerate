@@ -16,7 +16,7 @@ export default [
   route("producto/:slug", "features/product/pages/product-details.tsx"),
 
   // rutas protegidas (opcionales)
-  route("profile", "features/profile/pages/profile-page.tsx", { id: "profile-me" }),
+  route("perfil", "features/profile/pages/profile-page.tsx", { id: "profile-me" }),
   route("u/:username", "features/profile/pages/profile-page.tsx", { id: "profile-user" }),
   route("cotizacion/:slug", "features/quote/pages/quote-details.tsx"),
 
@@ -42,6 +42,7 @@ export default [
   route("stores/:slug", "features/stores/pages/redirect-old-store.tsx"),
   route("stores/:slug/admin", "features/stores/pages/redirect-old-store-admin.tsx"),
   route("claim", "features/stores/pages/redirect-old-claim.tsx"),
+  route("profile", "features/profile/pages/redirect-old-profile.tsx"),
 
   // Admin
   route("admin/gatekeeper", "features/gatekeeper/pages/review-dashboard.tsx"),

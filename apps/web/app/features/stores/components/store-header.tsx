@@ -86,7 +86,10 @@ export function StoreHeader({ store, productCount }: StoreHeaderProps) {
           aria-hidden
         />
       ) : (
-        <div className="h-24 w-full bg-gradient-to-br from-primary/10 via-secondary/30 to-transparent" aria-hidden />
+        <div className="relative h-28 w-full overflow-hidden" aria-hidden>
+          <img src="/img/stores/default-banner.jpg" alt="" className="size-full object-cover opacity-70" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+        </div>
       )}
       <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">

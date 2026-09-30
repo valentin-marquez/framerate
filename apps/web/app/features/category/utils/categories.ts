@@ -19,3 +19,8 @@ export function getApiSlugFromUrl(urlSlug: string) {
   const entry = Object.entries(CATEGORY_CONFIG).find(([_, config]) => config.urlSlug === urlSlug);
   return entry ? entry[0] : null;
 }
+
+/** Foto de stock de la categoría (ver public/img/CREDITS.md). */
+export function getCategoryImage(apiSlug: string) {
+  return `/img/categories/${getCategoryConfig(apiSlug).urlSlug}.jpg`;
+}
