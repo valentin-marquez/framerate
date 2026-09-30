@@ -48,7 +48,9 @@ export default async function handleRequest(
       "https:",
       import.meta.env.VITE_API_URL ?? env.VITE_API_URL ?? (isDevelopment ? "http://127.0.0.1:8787" : ""),
     ],
-    fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    // Las fuentes son de @fontsource (propias). `data:` porque Vite incrusta en el CSS los subsets de menos de 4 KB
+    // (assetsInlineLimit), p. ej. jetbrains-mono cyrillic-ext.
+    fontSrc: ["'self'", "data:"],
     frameSrc: ["'self'"],
     // El formulario de login redirige al proveedor OAuth.
     formAction: ["'self'", ...oauthProviders],

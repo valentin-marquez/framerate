@@ -148,9 +148,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {canonical && <link rel="canonical" href={canonical} />}
         <Meta />
 
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-
         <script
           nonce={nonce}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: Script necesario para evitar el flash de color antes de la hidratación
