@@ -10,12 +10,12 @@
 
   // Este Worker sólo atiende HTTP. Ni Cron ni colas ni R2 de scraping: eso es de apps/ingest.
 
-  // Dominio propio: Cloudflare crea el DNS y el certificado. Al retirar la API vieja puede pasar a api.framerate.cl.
-  "routes": [{ "pattern": "api-v2.framerate.cl", "custom_domain": true }],
+  // Dominio propio: Cloudflare crea el DNS y el certificado.
+  "routes": [{ "pattern": "api.framerate.cl", "custom_domain": true }],
 
   // Públicas y fijas por despliegue. En local mandan las de .dev.vars.
   "vars": {
-    "BETTER_AUTH_URL": "https://api-v2.framerate.cl",
+    "BETTER_AUTH_URL": "https://api.framerate.cl",
     "WEB_ORIGIN": "https://framerate.cl",
     "COOKIE_DOMAIN": "framerate.cl"
   },

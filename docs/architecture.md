@@ -209,7 +209,7 @@ bunx wrangler queues create framerate-crawl-dlq
 bun run db:migrate:remote
 
 # Deploy — ingest primero: server lo referencia por service binding.
-# server queda en https://api-v2.framerate.cl (custom domain en su wrangler.jsonc).
+# server queda en https://api.framerate.cl (custom domain en su wrangler.jsonc).
 bun run --cwd apps/ingest deploy
 bun run --cwd apps/server deploy
 cd apps/server && bunx wrangler secret put ADMIN_TOKEN
