@@ -1,6 +1,30 @@
-import type { BuildAnalysis, ValidationIssue } from "@framerate/db";
 import type { Product } from "~/features/product/services/products";
 import { api } from "~/shared/lib/api";
+
+export type ValidationSeverity = "info" | "warning" | "error";
+
+export interface ValidationIssue {
+  code: string;
+  severity: ValidationSeverity;
+  message: string;
+  componentA?: string;
+  componentB?: string;
+  details?: string;
+}
+
+export interface PerformanceEstimation {
+  cpuScore: number;
+  gpuScore: number;
+  totalScore: number;
+  tier: string;
+}
+
+export interface BuildAnalysis {
+  status: "valid" | "warning" | "incompatible";
+  estimatedWattage: number;
+  performance?: PerformanceEstimation;
+  issues: ValidationIssue[];
+}
 
 // Quote types
 export interface Quote {

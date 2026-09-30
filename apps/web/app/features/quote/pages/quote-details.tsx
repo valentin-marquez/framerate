@@ -1,4 +1,3 @@
-import type { PerformanceEstimation, ValidationIssue } from "@framerate/db";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { toast } from "sonner";
@@ -15,7 +14,12 @@ import {
   useQuoteRemoveItem,
   useQuoteUpdateItem,
 } from "~/features/quote/hooks/useQuotes";
-import { quotesService, type VirtualQuoteItem } from "~/features/quote/services/quotes";
+import {
+  type PerformanceEstimation,
+  quotesService,
+  type ValidationIssue,
+  type VirtualQuoteItem,
+} from "~/features/quote/services/quotes";
 import { copyToClipboard, exportToExcel } from "~/features/quote/utils/quote-export";
 import { SearchDialog } from "~/features/search/components/search-dialog";
 import { useTranslation } from "~/shared/hooks/use-translation";

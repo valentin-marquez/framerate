@@ -51,18 +51,12 @@ logs
 *.log
 tmp
 
-# AI / agent local config
+# AI / agent local config (.claude/ se versiona: skills y settings del proyecto viajan con el repo)
 .agent
 .agents
-.claude
+.claude/settings.local.json
+.claude/worktrees
 .playwright-mcp
-
-# Carpeta local-only de packages/db: dumps de prod, scripts de dev con
-# claves locales, etc. Nada de acá se versiona.
-packages/db/local/
-
-# OpenDB local clone for janitor dev (synced via git-sync container in prod)
-apps/janitor/opendb/
 
 # Debug artifacts
 *.stackdump

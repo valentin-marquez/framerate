@@ -1,4 +1,4 @@
-import type { PerformanceEstimation } from "@framerate/db";
+import type { PerformanceEstimation } from "~/features/quote/services/quotes";
 
 interface QuotePerformanceCardProps {
   performance: PerformanceEstimation;

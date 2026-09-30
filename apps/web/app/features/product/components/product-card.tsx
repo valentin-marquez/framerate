@@ -1,4 +1,3 @@
-import type { PsuSpecs } from "@framerate/db";
 import { IconPhotoOff, IconTrendingUp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -11,6 +10,7 @@ import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Skeleton } from "~/shared/components/primitives/skeleton";
 import { productKeys } from "~/shared/lib/query-keys";
 import { cn } from "~/shared/lib/utils";
+import type { PsuSpecs } from "~/shared/utils/db-types";
 import { formatCLP } from "~/shared/utils/format";
 import { AddToQuote } from "./add-to-quote";
 import { PsuBadge } from "./psu-badge";

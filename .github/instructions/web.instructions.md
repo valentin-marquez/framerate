@@ -15,8 +15,8 @@ This document outlines the architectural principles and coding standards for the
 ## 2. Data Access & Security
 - **Data Fetching**: Use React Router `loaders` for server-side data fetching.
 - **Mutations**: Use React Router `actions` for form submissions and data mutations.
-- **No Direct Database Access**: The frontend MUST NEVER access the Supabase database directly.
-- **API Gateway**: All data fetching must go through the public API exposed by Cloudflare Workers (`apps/api`).
+- **No Direct Database Access**: The frontend MUST NEVER access the database (D1) directly.
+- **API Gateway**: All data fetching must go through the v2 API (`apps/server`, `/v1/*`), typed with `@framerate/contracts`.
 - **Credentials**: Do not store any secrets or API keys with write access in the frontend code.
 
 ## 3. Project Structure & Modularization

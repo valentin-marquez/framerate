@@ -7,9 +7,6 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".wrangler/**"]
     },
-    "tracker#build": {
-      "outputs": ["dist/**"]
-    },
     "web#build": {
       "outputs": ["dist/**"]
     },
@@ -23,16 +20,6 @@
     "check-types": {
       "dependsOn": ["^check-types"],
       "outputs": []
-    },
-    "generate:types": {
-      "cache": false
-    },
-    "db:push": {
-      "cache": false,
-      "interactive": true
-    },
-    "group-variants": {
-      "cache": false
     },
     "lint": {
       "outputs": []

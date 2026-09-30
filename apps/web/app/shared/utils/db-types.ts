@@ -1,7 +1,3 @@
-import type { Database as DatabaseGenerated, ProductSpecs } from "@framerate/db";
-import type { MergeDeep, Simplify } from "type-fest";
-
-// Typed JSON structures
 export interface ProductPrices {
   /** Precio efectivo/transferencia (el más bajo entre listings activos). */
   cash: number;
@@ -17,75 +13,118 @@ export interface ProductPrices {
   in_stock?: boolean;
 }
 
-export interface ProductBrand {
+// Sólo los campos que la web lee; el objeto trae más y la ficha los recorre todos con Object.entries.
+export interface GpuSpecs {
+  chipset?: string | null;
+  memory_gb?: number | null;
+  memory_type?: string | null;
+}
+
+export interface CpuSpecs {
+  socket?: string | null;
+  cores?: { total?: number | null } | null;
+  clocks?: { boost_ghz?: number | null } | null;
+}
+
+export interface MotherboardSpecs {
+  socket?: string | null;
+  chipset?: string | null;
+  form_factor?: string | null;
+}
+
+export interface RamSpecs {
+  type?: string | null;
+  total_capacity_gb?: number | null;
+  speed_mt_s?: number | null;
+  cas_latency?: number | null;
+}
+
+export interface StorageSpecs {
+  capacity_gb?: number | null;
+  form_factor?: string | null;
+  interface?: string | null;
+  rpm?: number | null;
+  cache_mb?: number | null;
+}
+
+export interface PsuSpecs {
+  wattage?: number | null;
+  efficiency_rating?: string | null;
+  modular?: "Full" | "Semi" | "No" | "Unknown" | null;
+}
+
+export interface CaseSpecs {
+  form_factor?: string | null;
+  side_panel?: string | null;
+}
+
+export interface CpuCoolerSpecs {
+  type?: "Air" | "AIO" | "Custom Loop" | "Fanless" | null;
+  height_mm?: number | null;
+  radiator_size_mm?: number | null;
+  fan_size_mm?: number | null;
+}
+
+export interface CaseFanSpecs {
+  size_mm?: number | null;
+  rpm?: { max?: number | null } | null;
+  rgb?: boolean | null;
+}
+
+export type ProductSpecs =
+  | GpuSpecs
+  | CpuSpecs
+  | MotherboardSpecs
+  | RamSpecs
+  | StorageSpecs
+  | PsuSpecs
+  | CaseSpecs
+  | CpuCoolerSpecs
+  | CaseFanSpecs;
+
+export interface Product {
+  id: string | null;
+  slug: string | null;
+  name: string | null;
+  mpn: string | null;
+  image_url: string | null;
+  brand: { name: string; slug: string };
+  brand_slug: string | null;
+  category: { name: string; slug: string };
+  category_slug: string | null;
+  specs: ProductSpecs;
+  prices: ProductPrices;
+  popularity_score: number;
+  listings_count: number | null;
+  group_id: string | null;
+  created_at: string | null;
+}
+
+export interface Category {
+  id: string;
   name: string;
   slug: string;
+  code: string;
+  created_at: string;
 }
 
-export interface ProductCategory {
-  name: string;
-  slug: string;
+export interface Listing {
+  id: string;
+  product_id: string;
+  price_cash: number;
+  price_normal: number;
+  url: string;
+  is_active: boolean;
+  stock_quantity: number | null;
+  last_scraped_at: string | null;
+  external_id: string | null;
+  currency: string;
+  created_at: string;
+  updated_at: string;
+  store: { name: string; slug: string; icon_url: string | null };
 }
 
-// Patch the Database type using MergeDeep
-export type Database = MergeDeep<
-  DatabaseGenerated,
-  {
-    public: {
-      Views: {
-        api_products: {
-          Row: {
-            brand: ProductBrand;
-            category: ProductCategory;
-            specs: ProductSpecs;
-            prices: ProductPrices;
-            popularity_score: number;
-          };
-        };
-      };
-    };
-  }
->;
-
-// Export enhanced types derived from the patched Database
-export type Product = Simplify<Database["public"]["Views"]["api_products"]["Row"]>;
-export type Category = Simplify<Database["public"]["Tables"]["categories"]["Row"]>;
-export type Brand = Simplify<Database["public"]["Tables"]["brands"]["Row"]>;
-export type Store = Simplify<Database["public"]["Tables"]["stores"]["Row"]>;
-export type ListingRow = Simplify<Database["public"]["Tables"]["listings"]["Row"]>;
-export type Quote = Simplify<Database["public"]["Tables"]["quotes"]["Row"]>;
-export type QuoteItem = Simplify<Database["public"]["Tables"]["quote_items"]["Row"]>;
-
-// For joins that are not in the generated types (like listings with store)
-export type Listing = Simplify<
-  Omit<ListingRow, "store_id"> & {
-    // icon_url NO es columna: la API lo resuelve al asset del bucket
-    // store-assets (store_profiles.icon_path ?? stores.scraped_icon_path).
-    store: { name: string; slug: string; icon_url: string | null };
-  }
->;
-
-export type ProductDetail = Simplify<
-  Product & {
-    variants: Product[];
-    listings: Listing[];
-  }
->;
-
-/**
- * Type guard to check if a product has specific specs
- */
-export function hasSpecs<T extends ProductSpecs>(product: Product): product is Product & { specs: T } {
-  return product.specs !== null && typeof product.specs === "object";
+export interface ProductDetail extends Product {
+  variants: Product[];
+  listings: Listing[];
 }
-
-/**
- * Re-export builder types for convenience
- */
-export type {
-  BuildAnalysis,
-  BuildComponentCategory,
-  CompatibilityStatus,
-  ValidationIssue,
-  ValidationSeverity,
-} from "@framerate/db";
