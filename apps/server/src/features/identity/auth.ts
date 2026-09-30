@@ -88,8 +88,13 @@ export function createAuth(env: Env, options: CreateAuthOptions = {}) {
       },
       // No usamos los tokens del proveedor después del login: si se guardan, van cifrados.
       encryptOAuthTokens: true,
-      // Un mismo correo verificado en otro proveedor se vincula a la cuenta existente.
-      accountLinking: { enabled: true },
+      accountLinking: {
+        // Implícita: un correo verificado en el proveedor Y en el usuario existente se vincula a ese usuario.
+        enabled: true,
+        // Manual (`link-social` con sesión): el usuario prueba ambas identidades en el mismo flujo, así que el
+        // correo puede ser otro. No afecta la implícita, que sigue buscando por correo verificado.
+        allowDifferentEmails: true,
+      },
     },
     verification: {
       modelName: "auth_verifications",
@@ -97,6 +102,8 @@ export function createAuth(env: Env, options: CreateAuthOptions = {}) {
     },
 
     advanced: {
+      // Better Auth apaga el control de Origin/callbackURL con NODE_ENV=test; así los tests ven el de producción.
+      disableOriginCheck: false,
       cookiePrefix: "framerate",
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
       crossSubDomainCookies: env.COOKIE_DOMAIN ? { enabled: true, domain: env.COOKIE_DOMAIN } : { enabled: false },

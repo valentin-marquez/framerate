@@ -135,6 +135,22 @@ export const AuthProvidersSchema = z.object({
 });
 export type AuthProviders = z.infer<typeof AuthProvidersSchema>;
 
+/** `GET /v1/auth/list-accounts` (Better Auth): cuentas de proveedor del usuario, sin tokens. */
+export const LinkedAccountsSchema = z.array(
+  z.object({
+    /** Id de la fila: es el `accountId` que pide `POST /v1/auth/unlink-account`. */
+    id: z.string(),
+    providerId: z.string(),
+    /** Id del usuario en el proveedor (no sirve para desvincular). */
+    accountId: z.string(),
+    userId: z.string(),
+    scopes: z.array(z.string()),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  }),
+);
+export type LinkedAccounts = z.infer<typeof LinkedAccountsSchema>;
+
 // ─── Administración de usuarios ──────────────────────────────────────────────
 
 export const AdminUserSchema = z.object({
