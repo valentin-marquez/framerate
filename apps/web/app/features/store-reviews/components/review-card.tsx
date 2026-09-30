@@ -111,7 +111,6 @@ export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelp
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <RatingStars value={full.rating} size="sm" />
-                  <span>·</span>
                   <span>{formatDate(full.created_at)}</span>
                 </div>
               </div>
@@ -190,7 +189,7 @@ export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelp
                 <IconShieldCheck className="size-4" />
                 <span>Respuesta de la tienda</span>
                 {full.owner_response_at && (
-                  <span className="text-muted-foreground">· {formatDate(full.owner_response_at)}</span>
+                  <span className="text-muted-foreground">{formatDate(full.owner_response_at)}</span>
                 )}
                 {canManage && (
                   <Button

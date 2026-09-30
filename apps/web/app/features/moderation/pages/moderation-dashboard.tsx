@@ -178,11 +178,13 @@ function QueueTab({ item, token }: { item: QueueItem | null; token: string }) {
           <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", STATUS_COLORS[item.status])}>
             {STATUS_LABELS[item.status]}
           </span>
-          <h2 className="text-xl font-semibold mt-2">
-            {item.target_type.toUpperCase()} · {REASON_LABELS[item.reason]}
+          <h2 className="flex gap-3 text-xl font-semibold mt-2">
+            <span>{item.target_type.toUpperCase()}</span>
+            <span>{REASON_LABELS[item.reason]}</span>
           </h2>
-          <p className="text-xs text-muted-foreground mt-1 font-mono">
-            target_id: {item.target_id} · report_id: {item.report_id}
+          <p className="flex gap-3 text-xs text-muted-foreground mt-1 font-mono">
+            <span>target_id: {item.target_id}</span>
+            <span>report_id: {item.report_id}</span>
           </p>
         </div>
       </div>
