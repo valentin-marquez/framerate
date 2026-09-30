@@ -92,6 +92,7 @@ const GPU_LINES = [
   "mech",
   "xc",
   "ftw",
+  "vanguard",
   "founders edition",
 ] as const;
 
@@ -102,18 +103,24 @@ const gpu: CategoryProfile = {
   extract(title) {
     const t = prep(title);
     const a: Attributes = {};
-    const nv = t.match(/ (rtx|gtx|gt) ?(\d{3,4}) ?(ti super|ti|super|s)?(?= )/);
-    const amd = t.match(/ rx ?(\d{4}) ?(xtx|xt|gre)?(?= )/);
+    // "rt" es un error de tipeo frecuente de "rtx".
+    const nv = t.match(/ (rtx?|gtx|gt) ?(\d{3,4}) ?(ti super|ti|super|s)?(?= )/);
+    const amd = t.match(/ (?:rx|radeon) ?(\d{4}) ?(xtx|xt|gre)?(?= )/);
     const arc = t.match(/ arc ?([ab]\d{3})(?= )/);
+    // MPN de Gigabyte usado como título: GV-N507T… = 5070 Ti, GV-N407S… = 4070 Super, GV-N5060… = 5060.
+    const gv = t.match(/ gv ?n([2-9]\d{2})(ts|t|s|0)/);
     if (nv?.[1] && nv[2]) {
       const suffix = nv[3] === "s" ? "super" : nv[3];
-      a.chipset = [nv[1], nv[2], suffix].filter(Boolean).join(" ");
+      a.chipset = [nv[1] === "rt" ? "rtx" : nv[1], nv[2], suffix].filter(Boolean).join(" ");
     } else if (amd?.[1]) {
       a.chipset = ["rx", amd[1], amd[2]].filter(Boolean).join(" ");
     } else if (arc?.[1]) {
       a.chipset = `arc ${arc[1]}`;
+    } else if (gv?.[1] && gv[2]) {
+      const suffix = { ts: "ti super", t: "ti", s: "super", "0": "" }[gv[2]];
+      a.chipset = ["rtx", `${gv[1]}0`, suffix].filter(Boolean).join(" ");
     }
-    const vram = t.match(/ (\d{1,2}) ?gb?(?= |ddr|gddr)/);
+    const vram = t.match(/ (\d{1,2}) ?gb?(?= |d)/);
     if (vram?.[1]) {
       const gb = Number(vram[1]);
       if (gb >= 2 && gb <= 48) a.vram = gb;
@@ -182,10 +189,10 @@ const ram: CategoryProfile = {
 // ─── Almacenamiento ──────────────────────────────────────────────────────────
 
 function capacityGb(t: string): number | undefined {
-  const m = t.match(/ (\d+(?:\.\d+)?) ?(tb|gb)(?= )/);
+  const m = t.match(/ (\d+(?:\.\d+)?) ?([tg])b?(?= )/);
   if (!m?.[1] || !m[2]) return undefined;
   const n = Number(m[1]);
-  return m[2] === "tb" ? Math.round(n * 1000) : Math.round(n);
+  return m[2] === "t" ? Math.round(n * 1000) : Math.round(n);
 }
 
 const ssd: CategoryProfile = {
@@ -197,7 +204,7 @@ const ssd: CategoryProfile = {
     const a: Attributes = {};
     const cap = capacityGb(t);
     if (cap) a.capacity = cap;
-    if (/ nvme | pcie/.test(t)) a.interface = "nvme";
+    if (/ nvme | pci/.test(t)) a.interface = "nvme";
     else if (/ sata /.test(t)) a.interface = "sata";
     return a;
   },
@@ -259,10 +266,11 @@ const motherboard: CategoryProfile = {
   extract(title) {
     const t = prep(title);
     const a: Attributes = {};
-    const chip = t.match(/ ([abhxz]\d{3})(e)?(m)?(?=[ -])/);
+    // Sufijo de formato pegado al chipset: B650M/A620AM = mATX, X870I = ITX.
+    const chip = t.match(/ ([abhxz]\d{3})(e)?(m|am|i)?(?=[ -])/);
     if (chip?.[1]) a.chipset = `${chip[1]}${chip[2] ?? ""}`;
     if (/ e ?atx /.test(t)) a.formFactor = "eatx";
-    else if (/ mini ?itx | itx /.test(t)) a.formFactor = "itx";
+    else if (/ (?:mini ?|m)?itx /.test(t) || chip?.[3] === "i") a.formFactor = "itx";
     else if (/ micro ?atx | m ?atx | matx /.test(t) || chip?.[3]) a.formFactor = "matx";
     else if (/ atx /.test(t)) a.formFactor = "atx";
     a.wifi = / wi ?fi| wifi/.test(t);
