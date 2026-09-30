@@ -54,7 +54,7 @@ export default function Privacy() {
             <p className="leading-relaxed">
               Framerate.cl agrega y compara precios de componentes de PC en Chile. Recopilamos los datos mínimos para
               que el servicio funcione, no vendemos información a terceros y queremos que sepas qué pasa con lo que
-              compartís acá.
+              compartes aquí.
             </p>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -63,7 +63,7 @@ export default function Privacy() {
                   <IconUserShield className="size-4" /> Cuenta y perfil
                 </h3>
                 <p className="text-sm">
-                  Iniciás sesión vía <span className="font-bold">Discord, Google, Apple o Facebook</span> usando
+                  Inicias sesión vía <span className="font-bold">Discord, Google, Apple o Facebook</span> usando
                   Supabase Auth. Guardamos tu ID de usuario, email, nombre público, username y avatar para que puedas
                   comentar, dejar reseñas y armar cotizaciones. Tu username y avatar son visibles en{" "}
                   <code className="bg-muted/10 px-1 rounded">/u/:username</code>.
@@ -102,7 +102,7 @@ export default function Privacy() {
               <IconUserCheck className="size-5 text-primary" /> Tiendas reclamadas
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Si reclamás una tienda mediante verificación DNS, asociamos tu cuenta a un{" "}
+              Si reclamas una tienda mediante verificación DNS, asociamos tu cuenta a un{" "}
               <code className="bg-muted/10 px-1 rounded">account</code> y a un perfil editable de la tienda
               (descripción, redes, logo). Otras personas del equipo pueden ser invitadas vía{" "}
               <code className="bg-muted/10 px-1 rounded">account_members</code>. Esa relación es{" "}
@@ -137,9 +137,9 @@ export default function Privacy() {
               <IconShield className="size-5 text-primary" /> Moderación
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Cuando reportás contenido o un mod toma una decisión, queda registrado en{" "}
+              Cuando reportas contenido o un mod toma una decisión, queda registrado en{" "}
               <code className="bg-muted/10 px-1 rounded">reports</code> y{" "}
-              <code className="bg-muted/10 px-1 rounded">mod_actions</code> como bitácora interna. Vos podés ver tus
+              <code className="bg-muted/10 px-1 rounded">mod_actions</code> como bitácora interna. Tú puedes ver tus
               propios reportes; los mods y admins ven la totalidad para coordinar la moderación.
             </p>
           </div>
@@ -149,9 +149,9 @@ export default function Privacy() {
               <IconUserShield className="size-5 text-primary" /> Tus derechos
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Tenés derecho de{" "}
+              Tienes derecho de{" "}
               <span className="font-medium text-foreground">acceso, rectificación, cancelación y oposición</span> sobre
-              tus datos personales (Ley 19.628 y, a partir de su entrada en vigencia, Ley 21.719). Para ejercerlos, abrí
+              tus datos personales (Ley 19.628 y, a partir de su entrada en vigencia, Ley 21.719). Para ejercerlos, abre
               un ticket desde el formulario de soporte de abajo con la categoría{" "}
               <span className="font-medium text-foreground">Privacidad</span> o{" "}
               <span className="font-medium text-foreground">Mis datos</span>. Atendemos cada solicitud dentro de la

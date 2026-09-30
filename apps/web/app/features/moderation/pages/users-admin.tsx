@@ -13,7 +13,7 @@ import { moderationClient } from "../services/moderation";
 import type { Route } from "./+types/users-admin";
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "Users admin | Framerate" }, { name: "robots", content: "noindex" }];
+  return [{ title: "Usuarios | Framerate Admin" }, { name: "robots", content: "noindex" }];
 }
 
 interface ProfileSearchResult {
@@ -90,7 +90,9 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
         </div>
         <div>
           <h1 className="text-2xl font-semibold">Usuarios</h1>
-          <p className="text-sm text-muted-foreground">Admin only. Busca un user por username y gestiona su ban.</p>
+          <p className="text-sm text-muted-foreground">
+            Sólo para administradores. Busca a un usuario por su nombre de usuario y gestiona su baneo.
+          </p>
         </div>
       </header>
 
@@ -98,7 +100,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
         <Input
           type="search"
           name="q"
-          placeholder="Buscar por username (min 2 caracteres)"
+          placeholder="Buscar por nombre de usuario (mín. 2 caracteres)"
           defaultValue={q}
           className="flex-1"
         />
@@ -108,7 +110,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
       <main className="mx-auto max-w-4xl">
         {results.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
-            {q ? "Ningun resultado." : "Escribi un username para buscar."}
+            {q ? "Ningún resultado." : "Escribe un nombre de usuario para buscar."}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -140,7 +142,8 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
                     ) : null}
                   </div>
                   <p className="text-xs text-muted-foreground font-mono truncate">
-                    @{u.username} · {u.id.slice(0, 8)}
+                    @{u.username}
+                    <span className="ml-2">{u.id.slice(0, 8)}</span>
                   </p>
                   {u.banned && u.ban_reason ? (
                     <p className="text-xs text-destructive mt-1">Motivo: {u.ban_reason}</p>

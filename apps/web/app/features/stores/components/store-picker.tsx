@@ -48,7 +48,7 @@ export function StorePicker({ onSelect, busy }: StorePickerProps) {
         <IconSearch className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
         <Input
           autoFocus
-          placeholder="Buscá tu tienda… (ej: PC Express)"
+          placeholder="Busca tu tienda… (ej: PC Express)"
           value={query}
           disabled={busy}
           onChange={(e) => setQuery(e.target.value)}
@@ -64,7 +64,7 @@ export function StorePicker({ onSelect, busy }: StorePickerProps) {
           </div>
         ) : error ? (
           <div className="p-8 text-center text-muted-foreground text-sm">
-            No se pudieron cargar las tiendas. Reintentá en unos segundos.
+            No se pudieron cargar las tiendas. Vuelve a intentarlo en unos segundos.
           </div>
         ) : stores.length === 0 ? (
           <EmptyState query={query} />
@@ -78,7 +78,7 @@ export function StorePicker({ onSelect, busy }: StorePickerProps) {
       </div>
 
       <p className="text-muted-foreground text-xs">
-        Elegí la tienda que te pertenece. Verificamos la propiedad con un registro DNS de su dominio.
+        Elige la tienda que te pertenece. Verificamos la propiedad con un registro DNS de su dominio.
       </p>
     </div>
   );
@@ -134,7 +134,7 @@ function EmptyState({ query }: { query: string }) {
         {query ? `Sin resultados para "${query}"` : "No hay tiendas en el catálogo"}
       </p>
       <p className="text-muted-foreground text-xs">
-        ¿Tu tienda todavía no está en Framerate? Escribinos a{" "}
+        ¿Tu tienda todavía no está en Framerate? Escríbenos a{" "}
         <a
           href="mailto:soporte@framerate.com?subject=Quiero%20sumar%20mi%20tienda"
           className="text-primary hover:underline"

@@ -92,7 +92,7 @@ export default function StoreAdmin({ loaderData }: Route.ComponentProps) {
     <main className="mx-auto max-w-3xl space-y-6 p-4 pt-8">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="font-semibold text-2xl">Admin · {store.name}</h1>
+          <h1 className="font-semibold text-2xl">Administrar {store.name}</h1>
           <p className="text-muted-foreground text-sm">
             <Link to={`/tiendas/${store.slug}`} className="hover:text-foreground">
               ← Volver a la tienda pública
@@ -102,7 +102,7 @@ export default function StoreAdmin({ loaderData }: Route.ComponentProps) {
       </header>
 
       <section className="rounded-xl border border-border bg-card p-5">
-        <h2 className="font-medium">Metadata</h2>
+        <h2 className="font-medium">Perfil público</h2>
         <fetcher.Form method="post" className="mt-4 space-y-4">
           <input type="hidden" name="intent" value="update-metadata" />
           <div className="space-y-2">
@@ -154,7 +154,7 @@ export default function StoreAdmin({ loaderData }: Route.ComponentProps) {
           </div>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <IconLoader2 className="size-4 animate-spin" />}
-            Guardar metadata
+            Guardar perfil
           </Button>
         </fetcher.Form>
       </section>

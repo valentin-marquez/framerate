@@ -92,7 +92,7 @@ export default function MyTicketsSettings({ loaderData }: Route.ComponentProps) 
         <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center">
           <IconLifebuoy className="mx-auto size-8 text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">
-            Todavía no abriste ningún ticket. Podés contactar soporte desde la página de privacidad.
+            Todavía no abriste ningún ticket. Puedes contactar a soporte desde la página de privacidad.
           </p>
         </div>
       ) : (
@@ -132,8 +132,9 @@ function TicketRow({ ticket, token, expanded, onToggle }: TicketRowProps) {
         <Icon className="size-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{ticket.subject}</p>
-          <p className="text-xs text-muted-foreground">
-            {CATEGORY_LABELS[ticket.category]} · {new Date(ticket.created_at).toLocaleDateString("es-CL")}
+          <p className="flex gap-3 text-xs text-muted-foreground">
+            <span>{CATEGORY_LABELS[ticket.category]}</span>
+            <span>{new Date(ticket.created_at).toLocaleDateString("es-CL")}</span>
           </p>
         </div>
         <span
@@ -245,7 +246,7 @@ function TicketThread({ ticketId, ticketStatus, token }: TicketThreadProps) {
         </div>
       ) : (
         <p className="border-t border-border/60 px-4 py-3 text-xs text-muted-foreground">
-          Este ticket está {STATUS_LABELS[ticketStatus].toLowerCase()}. Si necesitás algo más, abrí uno nuevo.
+          Este ticket está {STATUS_LABELS[ticketStatus].toLowerCase()}. Si necesitas algo más, abre uno nuevo.
         </p>
       )}
     </div>
@@ -273,8 +274,8 @@ function Bubble({ authorRole, body, createdAt, isOriginal }: BubbleProps) {
       >
         <div className="flex items-center gap-2 mb-1">
           <span className="text-[11px] uppercase tracking-wider font-medium opacity-80">
-            {isStaff ? "Soporte" : authorRole === "system" ? "Sistema" : "Vos"}
-            {isOriginal && " · consulta"}
+            {isStaff ? "Soporte" : authorRole === "system" ? "Sistema" : "Tú"}
+            {isOriginal && <span className="ml-2 opacity-70">consulta</span>}
           </span>
           {createdAt && <span className="text-[11px] opacity-60">{new Date(createdAt).toLocaleString("es-CL")}</span>}
         </div>
