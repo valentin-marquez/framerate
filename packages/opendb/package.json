@@ -7,7 +7,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "zod": "^4.2.1"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@framerate/config": "workspace:*",
