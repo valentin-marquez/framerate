@@ -179,7 +179,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     deleteQuote.mutate(quote.id, {
       onSuccess: () => {
         toast.success(t("quote_deleted"));
-        navigate("/profile");
+        navigate("/perfil");
       },
       onError: () => {
         toast.error(t("quote_delete_error"));

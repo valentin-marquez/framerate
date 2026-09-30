@@ -12,7 +12,7 @@ import { getAuthUser, requireAuth } from "~/features/auth/services/auth.server";
 import { meToProfile, profilesService } from "~/features/profile/services/profiles";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
 import { useQuotes } from "~/features/quote/hooks/useQuotes";
-import { quotesService } from "~/features/quote/services/quotes";
+import type { QuoteListItem as Quote } from "~/features/quote/services/quotes";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Button } from "~/shared/components/primitives/button";
 import { Separator } from "~/shared/components/primitives/separator";
@@ -50,11 +50,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     const { user: currentUser } = await getAuthUser(request);
     try {
       const profileUser = await profilesService.getByUsername(username);
-      // Las cotizaciones aún no existen en la API nueva: sin ellas el perfil igual se muestra.
-      const quotes = await quotesService
-        .getByUsername(username, 1, 100)
-        .then((response) => response.data)
-        .catch(() => []);
+      // Las cotizaciones aún no existen en la API nueva (/v1/quotes da 404): no se pide, cuesta un viaje entero.
+      const quotes: Quote[] = [];
       return { profileUser, quotes, isOwner: currentUser?.username === profileUser.username, currentUser };
     } catch (_error) {
       throw new Response("User not found", { status: 404 });
@@ -62,19 +59,14 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   }
 
   const { user } = await requireAuth(request);
-  const quotes = await quotesService
-    .getAll(1, 100)
-    .then((response) => response.data)
-    .catch(() => []);
-
-  return { profileUser: meToProfile(user), quotes, isOwner: true, currentUser: user };
+  return { profileUser: meToProfile(user), quotes: [] as Quote[], isOwner: true, currentUser: user };
 }
 
 export default function Profile({ loaderData }: Route.ComponentProps) {
   const { profileUser, isOwner } = loaderData;
   const { t, lang } = useTranslation();
 
-  const { data: quotesData } = useQuotes(1, 100);
+  const { data: quotesData } = useQuotes(1, 100, { enabled: false });
   const quotes = (isOwner && quotesData?.data) || loaderData.quotes;
 
   const locale = lang === "en" ? "en-US" : "es-CL";

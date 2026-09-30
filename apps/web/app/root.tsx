@@ -12,7 +12,9 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  type ShouldRevalidateFunctionArgs,
   useLocation,
+  useNavigation,
 } from "react-router";
 import { getAuthUser } from "~/features/auth/services/auth.server";
 import { useAuthStore } from "~/features/auth/store/auth";
@@ -51,26 +53,27 @@ export function meta(_: Route.MetaArgs) {
   ];
 }
 
+// El root sólo se vuelve a pedir tras un envío (login/logout, idioma...), no en cada navegación.
+export function shouldRevalidate({ formMethod, defaultShouldRevalidate }: ShouldRevalidateFunctionArgs) {
+  return formMethod && formMethod !== "GET" ? defaultShouldRevalidate : false;
+}
+
 export async function loader({ request }: Route.LoaderArgs) {
   const clientEnv = getClientEnv();
-  const { user, headers: authHeaders } = await getAuthUser(request);
-
-  let categories: Awaited<ReturnType<typeof categoriesService.getAll>> = [];
-  try {
-    categories = await categoriesService.getAll();
-  } catch (error) {
-    // 429 (rate limit) es esperado bajo carga; degradamos a lista vacía y
-    // dejamos que el cliente revalide. No es worth de console.error spam.
-    if (!isRateLimitError(error)) {
-      console.error("Failed to fetch categories in root loader:", error);
-    }
-  }
+  const [{ user, headers: authHeaders }, categories, providers] = await Promise.all([
+    getAuthUser(request),
+    categoriesService.getAll().catch((error) => {
+      // 429 (rate limit) es esperado bajo carga; degradamos a lista vacía y el cliente revalida.
+      if (!isRateLimitError(error)) console.error("Failed to fetch categories in root loader:", error);
+      return [] as Awaited<ReturnType<typeof categoriesService.getAll>>;
+    }),
+    api
+      .get<AuthProviders>("/v1/auth/providers")
+      .then((response) => response.items)
+      .catch(() => []),
+  ]);
 
   const profile = user ? meToProfile(user) : null;
-  const providers = await api
-    .get<AuthProviders>("/v1/auth/providers")
-    .then((response) => response.items)
-    .catch(() => []);
 
   const headers = new Headers(authHeaders);
 
@@ -176,6 +179,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
 
   const { data: categories } = useCategories({ initialData: initialCategories });
 
+  const navigating = useNavigation().state !== "idle";
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -207,6 +211,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="flex flex-col min-h-screen pb-16">
+      <div
+        aria-hidden="true"
+        className={`fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary transition-[opacity,transform] ${
+          navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300"
+        }`}
+      />
       <header className="sticky top-0 z-50 w-full">
         <Navbar categories={categories ?? []} blurred={scrolled} />
       </header>

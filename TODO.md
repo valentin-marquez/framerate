@@ -8,10 +8,20 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] Registrar `https://api.framerate.cl/v1/auth/callback/discord` en el portal de Discord (si falta).
 
 ## Web: vistas y diseño
-- [ ] **Home**: 3 versiones (v1/v2/v3) con `/referencias-composicion`, elegir una y dejarla como definitiva.
+- [x] **Home**: se eligió v1 (mosaico de categorías con fotos, aparición escalonada). Sin desplegar aún.
+- [ ] **`/categoria/:slug` y `/explorar`**: rediseñarlas como una sola experiencia con `/referencias-composicion`, más motion (referencia: los efectos de `nozz.skin` y publicaciones de X/Twitter).
+- [ ] Dirección gráfica: definir lenguaje de motion (easing, duraciones, entradas escalonadas) y documentarlo; reutilizar `Reveal` (`shared/components/motion`) y `.enter-up`.
+- [ ] Imágenes de stock: hay 10 de categoría y un banner de tienda (`public/img`, créditos en `CREDITS.md`). Falta usarlas en `/categoria/*`, `/explorar` y el fallback de banner; evaluar copiarlas a R2.
+- [ ] URLs en español pendientes (convención del proyecto): `/settings` → `/ajustes`, `/privacy` → `/privacidad`, `/terms` → `/terminos`, con redirect 301 desde las inglesas. `/perfil` ya está (con 301 desde `/profile`).
 - [ ] **Vista pública de producto**: 3 versiones (v1/v2/v3) con `/referencias-composicion`.
 - [ ] "Mejores ofertas" y "tendencias" del home salen vacías: falta precio de referencia y ranking de popularidad (columnas derivadas de `products` sin recalcular tras los crawls).
 - [ ] Filtros por especificación en categoría (hoy `getFilters` devuelve `{}`).
+
+## Rendimiento de navegación
+- [x] Root loader en paralelo y sin revalidar en cada navegación; barra de progreso de navegación; `/profile` ya no pide `/v1/quotes` (inexistente).
+- [ ] Cada llamada a la API tarda ~0,37 s desde el cliente: medir por service binding en producción y cachear datos casi estáticos (categorías, proveedores de login).
+- [ ] `prefetch="intent"` en los enlaces del navbar y de las tarjetas de producto.
+- [ ] Reactivar la carga de cotizaciones en `/perfil` cuando exista la API de cotizaciones.
 
 ## API v2 pendiente (la web degrada vacío / 404)
 - [ ] **Comentarios** (`0006_comments.sql`): API + adaptar `features/comments`.
