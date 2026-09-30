@@ -69,8 +69,9 @@ erDiagram
     en caso de colisión el perfil no se creaba.
   - `display_name` es obligatorio: se acaba la cadena de fallbacks
     `full_name → username → metadata` repetida en la web.
-  - `avatar_key`: el avatar se copia a R2. Antes la API aceptaba cualquier
-    `avatar_url` del cliente.
+  - `avatar_key` (copia propia en R2) y `avatar_source_url` (la URL que entrega
+    el proveedor OAuth, de la que se copia): ninguna la escribe el cliente.
+    Antes la API aceptaba cualquier `avatar_url` del cliente.
   - `role` es **una sola columna** (`user` < `moderator` < `admin`). Antes
     había varias filas en `user_roles`, tres definiciones incompatibles y
     funciones SQL que fallaban con más de una fila.

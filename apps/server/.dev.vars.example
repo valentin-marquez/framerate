@@ -1,0 +1,24 @@
+# Variables para desarrollo local. Copia este archivo a `.dev.vars` (ignorado por git)
+# y corre `bun run dev:server`. En producción son secretos/variables de Cloudflare
+# (ver docs/identity.md), nunca van en el repositorio.
+
+# Firma cookies y cifra tokens OAuth. Mínimo 32 caracteres:  openssl rand -base64 32
+BETTER_AUTH_SECRET=cambia-esto-por-un-secreto-largo-de-al-menos-32-caracteres
+
+# URL de esta API (base de los callbacks OAuth) y origen de la web (único con CORS + cookies).
+BETTER_AUTH_URL=http://localhost:8787
+WEB_ORIGIN=http://localhost:5173
+
+# Token de servicio para scripts contra /v1/admin/* (equivale a rol admin).
+ADMIN_TOKEN=dev-admin-token
+
+# Discord: https://discord.com/developers/applications → OAuth2.
+# Redirect: http://localhost:8787/v1/auth/callback/discord
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+
+# Otros proveedores (opcionales): se habilitan solos al definir las DOS variables.
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+# FACEBOOK_CLIENT_ID=
+# FACEBOOK_CLIENT_SECRET=

@@ -26,5 +26,8 @@
     { "name": "PUBLIC_RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 120, "period": 60 } }
   ]
 
-  // Secretos (no van aquí): bunx wrangler secret put ADMIN_TOKEN
+  // Secretos (no van aquí): BETTER_AUTH_SECRET, ADMIN_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET
+  //   → bunx wrangler secret put <NOMBRE>
+  // Variables (dashboard de Cloudflare; keep_vars las conserva): BETTER_AUTH_URL, WEB_ORIGIN, COOKIE_DOMAIN
+  // Detalle en docs/identity.md
 }

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 El backend se está reconstruyendo desde cero. **Todo trabajo nuevo va en la arquitectura v2**; lee `docs/architecture.md` antes de tocar código.
 
-- **`apps/server`** — Worker de la API HTTP (Hono + D1), por feature: `catalog`, `crawl-admin`, `match-review`. Sin Cron ni colas. (Se llama `server` porque `apps/api` es el legado.)
+- **`apps/server`** — Worker de la API HTTP (Hono + D1), por feature: `catalog`, `identity` (Better Auth + Discord; ver `docs/identity.md`), `users-admin`, `crawl-admin`, `match-review`. Sin Cron ni colas. (Se llama `server` porque `apps/api` es el legado.)
 - **`apps/ingest`** — Worker de scraping (Cron + Queues + R2 + RPC): adaptadores de tienda, normalización, matching. Sin HTTP público. `server` le pide crawls por RPC tipado.
 - **`packages/contracts`** — esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.
 - **`packages/database`** — dueño del esquema: migraciones SQL, tipos Kysely, cliente D1 y utilidades de test (`@framerate/database/testing`).

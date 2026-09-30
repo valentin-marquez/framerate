@@ -114,7 +114,7 @@ describe("API admin", () => {
     });
     expect(res.status).toBe(202);
     expect((await res.json()) as object).toEqual({ enqueued: 1 });
-    expect(crawlRequests).toEqual([{ store: "tectec", category: "gpu", requestedBy: "admin" }]);
+    expect(crawlRequests).toEqual([{ store: "tectec", category: "gpu", requestedBy: "admin-token" }]);
   });
 
   test("tienda desconocida según ingest → 400 con código", async () => {

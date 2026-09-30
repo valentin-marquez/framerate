@@ -1,9 +1,16 @@
-import type { EnqueueCrawlsRequest, IngestService } from "@framerate/contracts";
+import type { EnqueueCrawlsRequest, IngestService, Role } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
+import { testUtils } from "better-auth/plugins";
 import type { Env } from "@/env";
+import { createAuth } from "@/features/identity/auth";
 
-/** Env de la API con `ingest` falso: registra los pedidos de crawl y permite fijar la respuesta. */
-export function testEnv(d1: D1Database, ingest: Partial<IngestService> = {}) {
+export const WEB_ORIGIN = "http://localhost:5173";
+
+/**
+ * Env de la API para tests: `ingest` falso (registra los pedidos de crawl y permite
+ * fijar la respuesta) y credenciales de Discord de mentira. `overrides` pisa cualquier binding.
+ */
+export function testEnv(d1: D1Database, ingest: Partial<IngestService> = {}, overrides: Partial<Env> = {}) {
   const crawlRequests: EnqueueCrawlsRequest[] = [];
   const service: IngestService = {
     enqueueCrawls: async (request) => {
@@ -16,8 +23,47 @@ export function testEnv(d1: D1Database, ingest: Partial<IngestService> = {}) {
     DB: d1,
     ADMIN_TOKEN: "test-admin-token",
     INGEST: service as unknown as Env["INGEST"],
+    BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret-123456",
+    BETTER_AUTH_URL: "http://localhost:8787",
+    WEB_ORIGIN,
+    DISCORD_CLIENT_ID: "discord-test-id",
+    DISCORD_CLIENT_SECRET: "discord-test-secret",
+    ...overrides,
   };
   return { env, crawlRequests };
+}
+
+/**
+ * Cabeceras de una sesión válida para `userId`, sin pasar por el proveedor OAuth.
+ * Usa el plugin oficial `testUtils` de Better Auth (sólo existe en tests) y firma
+ * la cookie con el mismo secreto, así la instancia de la app la acepta.
+ */
+export async function sessionHeaders(env: Env, userId: string): Promise<Headers> {
+  const auth = createAuth(env, { plugins: [testUtils()] });
+  const ctx = (await auth.$context) as unknown as { test: { getAuthHeaders(o: { userId: string }): Promise<Headers> } };
+  return ctx.test.getAuthHeaders({ userId });
+}
+
+/**
+ * Crea un usuario como lo hace un login OAuth real (pasa por los mismos hooks:
+ * username generado, rol por defecto) y, opcionalmente, le fija un rol.
+ */
+export async function createUser(
+  env: Env,
+  db: Db,
+  input: { name: string; email?: string; username?: string; role?: Role; image?: string | null },
+) {
+  const auth = createAuth(env);
+  const ctx = await auth.$context;
+  const email = input.email ?? `${input.name.toLowerCase().replace(/\W+/g, "")}@example.com`;
+  const { user } = await ctx.internalAdapter.createOAuthUser(
+    { email, name: input.name, emailVerified: true, image: input.image ?? null, username: input.username } as never,
+    { providerId: "discord", accountId: crypto.randomUUID() } as never,
+  );
+  if (input.role && input.role !== "user") {
+    await db.query.updateTable("users").set({ role: input.role }).where("id", "=", user.id).execute();
+  }
+  return user.id as string;
 }
 
 export const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
