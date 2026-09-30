@@ -8,6 +8,7 @@ import { claimsAdminRoutes } from "@/features/claims/claims-admin.routes";
 import { crawlAdminRoutes } from "@/features/crawl-admin/crawl-admin.routes";
 import { getAuth } from "@/features/identity/auth";
 import { authProvidersRoutes, meRoutes, publicProfileRoutes } from "@/features/identity/identity.routes";
+import { mergeRoutes } from "@/features/identity/merge.routes";
 import { credentialedCors, requireStaff, requireUser } from "@/features/identity/middleware";
 import type { Actor, SessionUser } from "@/features/identity/types";
 import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
@@ -33,7 +34,7 @@ export type AppEnv = {
  * aplican las políticas transversales (errores, CORS, auth, rate limit).
  *
  *   /v1/auth/*    login/logout (Better Auth) + lista de proveedores. CORS con cookies sólo desde la web.
- *   /v1/me        perfil propio (requiere sesión).
+ *   /v1/me        perfil propio y unión de usuarios (`/v1/me/merge`). Requiere sesión.
  *   /v1/*         lectura pública (catálogo, perfiles públicos), con caché en el edge.
  *   /v1/admin/*   personal: moderador o superior (sesión), o el token de servicio.
  *
@@ -62,6 +63,7 @@ export function createApp() {
   meApi.use("*", credentialedCors);
   meApi.use("*", rateLimit);
   meApi.use("*", requireUser);
+  meApi.route("/merge", mergeRoutes);
   meApi.route("/", meRoutes);
 
   const claimsApi = new Hono<AppEnv>();
