@@ -461,7 +461,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                             </span>
                             {hasCardGap && (
                               <span className="text-[11px] text-muted-foreground tabular-nums">
-                                Transferencia · tarjeta {formatCLP(listing.price_normal ?? 0)}
+                                Con tarjeta {formatCLP(listing.price_normal ?? 0)}
                               </span>
                             )}
                           </div>

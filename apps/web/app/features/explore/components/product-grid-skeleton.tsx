@@ -1,12 +1,10 @@
-import { ProductCardSkeleton } from "~/features/product/components/card-product-skeleton";
+import { ProductCardSkeleton } from "~/features/product/components/product-card";
 
-interface ProductGridSkeletonProps {
-  count?: number;
-}
+export const PRODUCT_GRID_CLASS = "grid gap-3 md:grid-cols-2 xl:grid-cols-3";
 
-export function ProductGridSkeleton({ count = 12 }: ProductGridSkeletonProps) {
+export function ProductGridSkeleton({ count = 12 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className={PRODUCT_GRID_CLASS}>
       {Array.from({ length: count }).map((_, i) => {
         // biome-ignore lint/suspicious/noArrayIndexKey: skeleton estático sin reordenamiento
         return <ProductCardSkeleton key={`skeleton-${i}`} />;
