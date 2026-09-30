@@ -35,16 +35,19 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   case_fan: "Ventiladores",
 };
 
-/** Slug público en español para URLs (`/categoria/:slug`). */
+/**
+ * Slug público en español para URLs (`/categoria/:slug`). Son los mismos que la
+ * web ya publica: cambiarlos rompe enlaces indexados.
+ */
 export const CATEGORY_SLUGS: Record<Category, string> = {
   gpu: "tarjetas-de-video",
   cpu: "procesadores",
   motherboard: "placas-madre",
-  ram: "memoria-ram",
+  ram: "memorias-ram",
   psu: "fuentes-de-poder",
-  ssd: "discos-ssd",
+  ssd: "ssd",
   hdd: "discos-duros",
-  cpu_cooler: "refrigeracion-cpu",
+  cpu_cooler: "coolers-cpu",
   case: "gabinetes",
   case_fan: "ventiladores",
 };

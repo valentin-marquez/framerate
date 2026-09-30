@@ -48,20 +48,17 @@ function splitSql(source: string): string[] {
   return statements;
 }
 
-const TABLES = [
-  "quarantine",
-  "match_reviews",
-  "match_decisions",
-  "price_points",
-  "listings",
-  "product_identifiers",
-  "products",
-  "crawl_runs",
-  "stores",
-];
-
+/** Vacía todas las tablas (respetando FKs al final de la transacción). */
 export async function resetD1(d1: D1Database) {
-  await d1.batch(TABLES.map((t) => d1.prepare(`DELETE FROM ${t}`)));
+  const { results } = await d1
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE '%_fts%'",
+    )
+    .all<{ name: string }>();
+  await d1.batch([
+    d1.prepare("PRAGMA defer_foreign_keys = ON"),
+    ...results.map((t) => d1.prepare(`DELETE FROM "${t.name}"`)),
+  ]);
 }
 
 /** Tienda falsa cuyo catálogo se controla desde el test. */

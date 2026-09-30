@@ -41,11 +41,18 @@ export const emptyStats = (): CrawlStats => ({
   deactivationSkipped: false,
 });
 
+/** Dominio de la tienda sin "www." (base del reclamo por DNS). */
+export function domainOf(url: string): string {
+  return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+}
+
 export async function ensureStore(db: Db, store: { slug: string; name: string; url: string }, now: string) {
   const row = await db.query
     .insertInto("stores")
-    .values({ slug: store.slug, name: store.name, url: store.url, created_at: now })
-    .onConflict((oc) => oc.column("slug").doUpdateSet({ name: store.name, url: store.url }))
+    .values({ slug: store.slug, name: store.name, url: store.url, domain: domainOf(store.url), created_at: now })
+    .onConflict((oc) =>
+      oc.column("slug").doUpdateSet({ name: store.name, url: store.url, domain: domainOf(store.url) }),
+    )
     .returning(["id", "is_active"])
     .executeTakeFirstOrThrow();
   return { id: row.id, isActive: toBool(row.is_active) };
