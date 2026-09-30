@@ -83,15 +83,11 @@ describe("detalle de tienda", () => {
   test("productos de la tienda agrupados por categoría", async () => {
     await seedCatalog(db);
     const res = StoreProductsSchema.parse(await (await call("anon", "/v1/stores/alfa/products")).json());
-    expect(res.total).toBe(3);
-    expect(res.categories.map((c) => [c.category, c.count])).toEqual([
-      ["gpu", 2],
-      ["cpu", 1],
-    ]);
-    expect(res.categories[0]?.items.map((p) => p.slug).sort()).toEqual([
-      "asus-dual-rtx-4070-super-oc-12gb",
-      "msi-rtx-4060-ventus-2x-8gb",
-    ]);
+    // La MSI de alfa está sin stock: no cuenta ni se lista.
+    expect(res.total).toBe(2);
+    const gpu = res.categories.find((c) => c.category === "gpu");
+    expect(gpu?.count).toBe(1);
+    expect(gpu?.items.map((p) => p.slug)).toEqual(["asus-dual-rtx-4070-super-oc-12gb"]);
   });
 
   test("tienda inexistente → 404", async () => {

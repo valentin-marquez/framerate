@@ -18,8 +18,9 @@ import { sql } from "kysely";
 import { likePattern } from "@/shared/sql";
 
 /**
- * Consultas de lectura del catálogo público. Sólo se muestran productos con
- * al menos una oferta activa; precios agregados sobre ofertas activas.
+ * Consultas de lectura del catálogo público. Las listas (catálogo, búsqueda, marcas, rangos, conteos) sólo
+ * muestran productos con al menos una oferta activa CON STOCK. La ficha y el sitemap no filtran por stock:
+ * el producto sigue accesible por enlace y para SEO.
  */
 
 /** Convierte texto libre en una consulta FTS5 segura: cada palabra como prefijo literal. */
@@ -29,17 +30,17 @@ export function ftsQuery(q: string): string | null {
   return tokens.map((t) => `"${t}"*`).join(" ");
 }
 
-/** Agregado por producto sobre ofertas activas. */
+/** Agregado por producto sobre ofertas visibles (activas y con stock). */
 function offerAggregate(db: Db) {
   return db.query
     .selectFrom("listings")
     .select((eb) => [
       "product_id",
-      sql<number | null>`min(case when in_stock = 1 then price_cash end)`.as("best_price"),
-      sql<number | null>`min(price_cash)`.as("lowest_price"),
+      eb.fn.min("price_cash").as("best_price"),
       eb.fn.countAll<number>().as("offer_count"),
     ])
     .where("is_active", "=", 1)
+    .where("in_stock", "=", 1)
     .where("product_id", "is not", null)
     .groupBy("product_id")
     .as("agg");
@@ -72,22 +73,19 @@ export async function listProducts(db: Db, query: ProductListQuery): Promise<Pro
   }
   const brand = query.brand ? await resolveBrand(db, query.brand, query.category) : null;
 
-  const displayPrice = sql<number | null>`coalesce(agg.best_price, agg.lowest_price)`;
   let base = db.query.selectFrom("products as p").innerJoin(offerAggregate(db), "agg.product_id", "p.id");
   if (query.category) base = base.where("p.category", "=", query.category);
   if (brand) base = base.where(sql<boolean>`lower(p.brand) = lower(${brand})`);
   if (query.store) {
     base = base.where(
-      sql<boolean>`p.id IN (SELECT l.product_id FROM listings l JOIN stores st ON st.id = l.store_id WHERE l.is_active = 1 AND st.slug = ${query.store})`,
+      sql<boolean>`p.id IN (SELECT l.product_id FROM listings l JOIN stores st ON st.id = l.store_id WHERE l.is_active = 1 AND l.in_stock = 1 AND st.slug = ${query.store})`,
     );
   }
-  if (query.inStock) base = base.where("agg.best_price", "is not", null);
-  if (query.minPrice !== undefined) base = base.where(sql<boolean>`${displayPrice} >= ${query.minPrice}`);
-  if (query.maxPrice !== undefined) base = base.where(sql<boolean>`${displayPrice} <= ${query.maxPrice}`);
+  if (query.minPrice !== undefined) base = base.where("agg.best_price", ">=", query.minPrice);
+  if (query.maxPrice !== undefined) base = base.where("agg.best_price", "<=", query.maxPrice);
   if (match)
     base = base.where(sql<boolean>`p.id IN (SELECT rowid FROM products_fts WHERE products_fts MATCH ${match})`);
 
-  const nullsLast = sql`agg.best_price IS NULL`;
   let page = base.select([
     "p.id",
     "p.slug",
@@ -97,19 +95,20 @@ export async function listProducts(db: Db, query: ProductListQuery): Promise<Pro
     "p.image_url as imageUrl",
     "p.attributes",
     "agg.best_price as bestPrice",
-    "agg.lowest_price as lowestPrice",
+    // ponytail: igual a bestPrice desde que las listas sólo muestran stock; se quita del contrato al migrar la web.
+    "agg.best_price as lowestPrice",
     "agg.offer_count as offerCount",
     mpnOf.as("mpn"),
   ]);
   switch (query.sort) {
     case "relevance":
-      page = page.orderBy("agg.offer_count", "desc").orderBy(nullsLast).orderBy(displayPrice).orderBy("p.name");
+      page = page.orderBy("agg.offer_count", "desc").orderBy("agg.best_price").orderBy("p.name");
       break;
     case "price_asc":
-      page = page.orderBy(nullsLast).orderBy(displayPrice).orderBy("p.name");
+      page = page.orderBy("agg.best_price").orderBy("p.name");
       break;
     case "price_desc":
-      page = page.orderBy(nullsLast).orderBy(displayPrice, "desc").orderBy("p.name");
+      page = page.orderBy("agg.best_price", "desc").orderBy("p.name");
       break;
     case "newest":
       page = page.orderBy("p.created_at", "desc").orderBy("p.id");
@@ -272,6 +271,7 @@ export async function categoryCounts(db: Db) {
     .selectFrom("listings")
     .select(["category", sql<number>`count(distinct product_id)`.as("products")])
     .where("is_active", "=", 1)
+    .where("in_stock", "=", 1)
     .where("product_id", "is not", null)
     .groupBy("category")
     .execute();
@@ -297,10 +297,7 @@ export async function priceRange(db: Db, category: Category): Promise<PriceRange
   const row = await db.query
     .selectFrom("products as p")
     .innerJoin(offerAggregate(db), "agg.product_id", "p.id")
-    .select([
-      sql<number | null>`min(coalesce(agg.best_price, agg.lowest_price))`.as("min"),
-      sql<number | null>`max(coalesce(agg.best_price, agg.lowest_price))`.as("max"),
-    ])
+    .select((eb) => [eb.fn.min("agg.best_price").as("min"), eb.fn.max("agg.best_price").as("max")])
     .where("p.category", "=", category)
     .executeTakeFirst();
   return { min: row?.min ?? null, max: row?.max ?? null };

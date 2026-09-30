@@ -315,6 +315,7 @@ export async function storeCategoryCounts(db: Db, storeId: number) {
     .select(["category", sql<number>`count(distinct product_id)`.as("n")])
     .where("store_id", "=", storeId)
     .where("is_active", "=", 1)
+    .where("in_stock", "=", 1)
     .where("product_id", "is not", null)
     .groupBy("category")
     .orderBy("n", "desc")
