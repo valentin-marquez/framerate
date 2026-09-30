@@ -73,8 +73,7 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] Tipos heredados (`shared/utils/db-types.ts`, tipos del cotizador en `quote/services/quotes.ts`): reemplazarlos por `@framerate/contracts` al construir cada API.
 
 ## Infra y deuda técnica
-- [ ] **Cambiar la contraseña de git.nozz.skin** (se pegó en el chat) y usar un token.
-- [ ] Recursos del sistema anterior que siguen vivos fuera del repo: proyecto de Supabase y cualquier Worker viejo en Cloudflare. Borrarlos cuando el dueño lo decida.
+- [ ] Borrar el proyecto de Supabase del sistema anterior (`qkvqtkrsmrzegckrakwb`): dashboard → Project Settings → General → Delete project. El Worker viejo `framerate-api` ya se borró (30-09-2026).
 - [ ] Tests de server intermitentes: el primer test de `claims` y el de `users-admin` a veces pasan los 5 s de timeout en la suite completa (solos pasan). Subir el timeout de esos `beforeAll` o del archivo.
 - [ ] `apps/web` no tiene `check-types` en Turbo y `knip.config.ts` falla al tipar (`knip` no está instalado; lo usa `react-doctor`).
 - [ ] Alertas: nadie avisa si una corrida falla o cae a la DLQ (`framerate-crawl-dlq`); hoy sólo logs y `GET /v1/admin/crawls`.
