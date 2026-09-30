@@ -30,6 +30,7 @@ import { useNonce } from "~/shared/hooks/use-nonce";
 import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
 import { api, isRateLimitError } from "~/shared/lib/api";
 import { getHints, useTheme } from "~/shared/lib/client";
+import { markInitialLoadDone } from "~/shared/lib/initial-load";
 import { getQueryClient } from "~/shared/lib/query-client";
 import type { Lang } from "~/shared/lib/translations";
 import { getClientEnv } from "~/shared/services/env.server";
@@ -120,6 +121,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const requestInfo = useOptionalRequestInfo();
   const lang = requestInfo?.userPrefs.lang ?? "es";
   const [queryClient] = useState(() => getQueryClient());
+  // Tema guardado (cookie) para pintar el <html> ya correcto en el HTML del servidor. Se fija una sola vez: después
+  // la clase la maneja el efecto de App, y así React no la pisa al cambiar de tema.
+  const [savedTheme] = useState(() => requestInfo?.userPrefs.theme ?? null);
 
   // URL canónica self-referencing: origin + pathname, sin query params, para
   // que las variantes con filtros (estado en search params) consoliden en una
@@ -128,10 +132,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const canonical = requestInfo?.origin ? requestInfo.origin + pathname : null;
 
   return (
-    <html lang={lang} suppressHydrationWarning>
+    <html lang={lang} className={savedTheme ?? undefined} data-theme={savedTheme ?? "system"} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="light dark" />
         {canonical && <link rel="canonical" href={canonical} />}
         <Meta />
 
@@ -144,16 +149,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                try {
-                  var theme = localStorage.getItem('theme');
-                  var isDark = false;
-                  if (theme === 'dark') {
-                    isDark = true;
-                  } else if ((!theme || theme === 'system') && window.matchMedia) {
-                    isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  }
-                  document.documentElement.classList.toggle('dark', isDark);
-                } catch (e) {}
+                var root = document.documentElement;
+                var saved = root.dataset.theme;
+                var dark = saved === 'dark' || (saved !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                root.classList.toggle('dark', dark);
               })();
             `,
           }}
@@ -193,6 +192,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
       root.classList.add(theme);
     }
   }, [theme]);
+
+  useEffect(() => {
+    const timer = setTimeout(markInitialLoadDone, 1600);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     setUser(user);

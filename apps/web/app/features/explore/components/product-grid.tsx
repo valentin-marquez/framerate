@@ -2,7 +2,7 @@ import { IconMoodEmpty } from "@tabler/icons-react";
 import { ProductGridSkeleton } from "~/features/explore/components/product-grid-skeleton";
 import { ProductCard } from "~/features/product/components/card-product";
 import type { Product } from "~/features/product/services/products";
-import { Reveal } from "~/shared/components/motion/reveal";
+import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 
 interface ProductGridProps {
@@ -33,14 +33,18 @@ export function ProductGrid({ products, isLoading, className, trendingIds }: Pro
   return (
     <div className={cn("grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4", className)}>
       {products.map((product, index) => (
-        <Reveal key={product.id} delay={Math.min(index, 6) * 0.05} className="h-full">
+        <div
+          key={product.id}
+          className={cn("h-full", index < 8 && enterClass())}
+          style={index < 8 ? enterStyle(240 + Math.min(index, 6) * 50) : undefined}
+        >
           <ProductCard
             product={product}
             priority={index < 8}
             trending={product.id ? trendingIds?.has(product.id) : false}
             className="h-full"
           />
-        </Reveal>
+        </div>
       ))}
     </div>
   );

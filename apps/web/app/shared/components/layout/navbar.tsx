@@ -328,8 +328,15 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 </Link>
               </Button>
 
-              {showAnchor && isDesktop && (
-                <m.div id="nav-search-anchor" aria-hidden style={{ width: navAnchorW }} className="h-9 shrink-0" />
+              {showAnchor && (
+                // Existe ya en el HTML del servidor (se oculta con CSS bajo lg): si apareciera tras hidratar
+                // empujaría a Explorar/Hardware. Los márgenes negativos descuentan el hueco extra del `gap`.
+                <m.div
+                  id="nav-search-anchor"
+                  aria-hidden
+                  style={{ width: navAnchorW }}
+                  className="hidden h-9 shrink-0 lg:-mx-3 lg:block"
+                />
               )}
 
               <DropdownMenu>
@@ -543,7 +550,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             style={{ height: mobileBarH }}
             className="lg:hidden w-full overflow-hidden bg-background/90 backdrop-blur-md"
           >
-            <div id="nav-search-anchor" aria-hidden className="mx-4 my-[10px] h-9" />
+            <div id="nav-search-anchor-mobile" aria-hidden className="mx-4 my-[10px] h-9" />
           </m.div>
         </LazyMotion>
       )}

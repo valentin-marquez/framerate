@@ -6,7 +6,7 @@ const THEME_COOKIE_KEY = `${cookiePrefix}.theme`;
 
 export function getTheme(request: Request): Theme | null {
   const cookieHeader = request.headers.get("Cookie");
-  const parsed = cookieHeader ? cookie.parse(cookieHeader)[THEME_COOKIE_KEY] : "light";
+  const parsed = cookieHeader ? cookie.parse(cookieHeader)[THEME_COOKIE_KEY] : undefined;
 
   if (parsed === "light" || parsed === "dark") {
     return parsed;

@@ -1,8 +1,8 @@
 import { IconBuildingStore, IconChartLine, IconListCheck } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { getCategoryConfig, getCategoryImage } from "~/features/category/utils/categories";
-import { Reveal } from "~/shared/components/motion/reveal";
 import { StoreLogo } from "~/shared/components/store-logo";
+import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 import type { HomeData } from "../types";
 
@@ -42,8 +42,8 @@ export function ValueProps({ storeCount }: { storeCount: number }) {
       {items.map(({ icon: Icon, title, text }, i) => (
         <li
           key={title}
-          className="enter-up flex items-start gap-3 rounded-2xl border border-border/40 bg-card p-4"
-          style={{ "--delay": `${260 + i * 90}ms` } as React.CSSProperties}
+          className={cn("flex items-start gap-3 rounded-2xl border border-border/40 bg-card p-4", enterClass())}
+          style={enterStyle(260 + i * 90)}
         >
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Icon className="size-5" />
@@ -58,9 +58,9 @@ export function ValueProps({ storeCount }: { storeCount: number }) {
   );
 }
 
-/** Mosaico asimétrico de fotos: la primera categoría con productos ocupa 2x2. Las vacías se ven desaturadas. */
 const MD_SPAN = { 1: "md:col-span-1", 2: "md:col-span-2", 3: "md:col-span-3", 4: "md:col-span-4" } as const;
 
+/** Mosaico asimétrico de fotos: la primera categoría con productos ocupa 2x2. Las vacías se ven desaturadas. */
 export function CategoryMosaic({ categories }: Pick<HomeData, "categories">) {
   if (categories.length === 0) return null;
   const sorted = withProductsFirst(categories);
@@ -70,48 +70,42 @@ export function CategoryMosaic({ categories }: Pick<HomeData, "categories">) {
   const lastSmSpan = cellsBefore % 2 === 0 ? "col-span-2" : "";
   return (
     <section className="space-y-3">
-      <Reveal>
-        <h2 className="font-semibold text-foreground text-lg tracking-tight md:text-xl">Explora por categoría</h2>
-      </Reveal>
+      <h2 className="font-semibold text-foreground text-lg tracking-tight md:text-xl">Explora por categoría</h2>
       <div className="grid auto-rows-[7.5rem] grid-cols-2 gap-3 md:grid-cols-4 md:auto-rows-[8.5rem]">
         {sorted.map((category, i) => {
           const config = getCategoryConfig(category.slug);
           const big = i === 0 && !isEmpty(category);
           const last = i === sorted.length - 1 && sorted.length > 1;
           return (
-            <Reveal
+            <Link
               key={category.id}
-              delay={i * 0.05}
-              className={cn("h-full", big && "col-span-2 row-span-2", last && [lastSmSpan, lastMdSpan])}
+              to={`/categoria/${config.urlSlug}`}
+              prefetch="intent"
+              className={cn(
+                "group relative flex h-full flex-col justify-end overflow-hidden rounded-2xl bg-secondary p-4",
+                big && "col-span-2 row-span-2",
+                last && [lastSmSpan, lastMdSpan],
+              )}
             >
-              <Link
-                to={`/categoria/${config.urlSlug}`}
-                prefetch="intent"
-                className="group relative flex h-full flex-col justify-end overflow-hidden rounded-2xl bg-secondary p-4"
-              >
-                <img
-                  src={getCategoryImage(category.slug)}
-                  alt=""
-                  loading="lazy"
-                  className={cn(
-                    "absolute inset-0 size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105",
-                    isEmpty(category) && "grayscale",
-                  )}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-                <div className="relative text-white">
-                  <p
-                    className={cn(
-                      "font-semibold tracking-tight",
-                      big ? "text-2xl md:text-3xl" : "text-sm md:text-base",
-                    )}
-                  >
-                    {config.label}
-                  </p>
-                  <p className="text-white/70 text-xs">{countLabel(category)}</p>
-                </div>
-              </Link>
-            </Reveal>
+              <img
+                src={getCategoryImage(category.slug)}
+                alt=""
+                loading="lazy"
+                className={cn(
+                  "absolute inset-0 size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105",
+                  isEmpty(category) && "grayscale",
+                )}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+              <div className="relative text-white">
+                <p
+                  className={cn("font-semibold tracking-tight", big ? "text-2xl md:text-3xl" : "text-sm md:text-base")}
+                >
+                  {config.label}
+                </p>
+                <p className="text-white/70 text-xs">{countLabel(category)}</p>
+              </div>
+            </Link>
           );
         })}
       </div>
@@ -123,24 +117,22 @@ export function CategoryMosaic({ categories }: Pick<HomeData, "categories">) {
 export function StoresStrip({ stores }: { stores: HomeData["stores"] }) {
   if (stores.length === 0) return null;
   return (
-    <Reveal>
-      <section className="space-y-3">
-        <h2 className="font-semibold text-foreground text-lg tracking-tight md:text-xl">Tiendas que comparamos</h2>
-        <ul className="flex flex-wrap gap-3">
-          {stores.map((store) => (
-            <li key={store.id}>
-              <Link
-                to={`/tiendas/${store.slug}`}
-                prefetch="intent"
-                className="flex items-center gap-2.5 rounded-2xl border border-border/40 bg-card py-2 pr-4 pl-2 transition-colors hover:border-primary/40"
-              >
-                <StoreLogo store={store} className="size-9" />
-                <span className="font-medium text-foreground text-sm">{store.name}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </Reveal>
+    <section className="space-y-3">
+      <h2 className="font-semibold text-foreground text-lg tracking-tight md:text-xl">Tiendas que comparamos</h2>
+      <ul className="flex flex-wrap gap-3">
+        {stores.map((store) => (
+          <li key={store.id}>
+            <Link
+              to={`/tiendas/${store.slug}`}
+              prefetch="intent"
+              className="flex items-center gap-2.5 rounded-2xl border border-border/40 bg-card py-2 pr-4 pl-2 transition-colors hover:border-primary/40"
+            >
+              <StoreLogo store={store} className="size-9" />
+              <span className="font-medium text-foreground text-sm">{store.name}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import type { Category } from "~/features/category/services/categories";
 import { getCategoryConfig } from "~/features/category/utils/categories";
+import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 
 interface CompactSearchHeroProps {
@@ -20,7 +21,7 @@ interface CompactSearchHeroProps {
 export function CompactSearchHero({ categories }: CompactSearchHeroProps) {
   return (
     <section className="flex flex-col items-center gap-6 pt-6 pb-8 md:pt-10 md:pb-10">
-      <div className="enter-up text-center space-y-2 max-w-2xl">
+      <div className={cn("text-center space-y-2 max-w-2xl", enterClass())}>
         <h1 className="text-2xl md:text-4xl font-semibold tracking-tight text-foreground">
           Encuentra tu hardware al <span className="text-primary">mejor precio</span>
         </h1>
@@ -35,8 +36,8 @@ export function CompactSearchHero({ categories }: CompactSearchHeroProps) {
 
       {categories.length > 0 && (
         <div
-          className="enter-up w-full min-w-0 max-w-full overflow-x-auto md:overflow-x-visible scrollbar-hide"
-          style={{ "--delay": "160ms" } as React.CSSProperties}
+          className={cn("w-full min-w-0 max-w-full overflow-x-auto md:overflow-x-visible scrollbar-hide", enterClass())}
+          style={enterStyle(160)}
         >
           <div className="flex items-center gap-2 w-max md:w-full md:flex-wrap md:justify-center">
             {categories.map((category) => {

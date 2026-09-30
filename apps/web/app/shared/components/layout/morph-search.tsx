@@ -48,7 +48,7 @@ export function MorphSearch() {
 
   const measure = useCallback(() => {
     const a = document.getElementById("hero-search-anchor");
-    const b = document.getElementById("nav-search-anchor");
+    const b = document.getElementById(isDesktop ? "nav-search-anchor" : "nav-search-anchor-mobile");
     if (!a || !b) return;
     const ra = a.getBoundingClientRect();
     const rb = b.getBoundingClientRect();
