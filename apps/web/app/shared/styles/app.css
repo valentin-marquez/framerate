@@ -212,6 +212,7 @@
  */
 .stage-cover,
 .image-orb,
+.stage-backdrop,
 .stage-image {
   --stage-duration: calc(1.35s * var(--stage-slowmo, 1));
 }
@@ -260,11 +261,11 @@
 @keyframes orb-breathe {
   0%,
   100% {
-    transform: translate(-50%, -50%) scale(0.82);
+    transform: scale(0.82);
     opacity: 0.55;
   }
   50% {
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
     opacity: 1;
   }
 }
@@ -290,29 +291,53 @@
   }
 }
 
+/*
+ * Excepción a la regla de will-change: si la foto sólo tuviera capa propia durante el asentamiento, al terminar se
+ * repintaría sin ella con otro redondeo (object-contain + multiply) y saltaría ~1 px.
+ */
+.stage-image {
+  will-change: transform;
+}
+
+.stage-backdrop[data-state="open"],
 .stage-image[data-state="open"] {
   transform-origin: var(--reveal-x, 50%) var(--reveal-y, 50%);
   animation: stage-image-settle var(--stage-duration) cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
+/*
+ * Foto y fondo del panel se funden mientras el agujero crece: si estuvieran enteros desde el inicio, se asomarían de
+ * golpe en él (en oscuro, un disco claro).
+ */
 @keyframes stage-image-settle {
   0%,
   14% {
     transform: scale(1.1);
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
   }
   100% {
     transform: scale(1);
   }
 }
 
+/* Dos capas: el hijo respira y el contenedor hace el splash, así el splash parte de donde iba la respiración. */
 .image-orb {
   position: absolute;
   top: var(--reveal-y, 50%);
   left: var(--reveal-x, 50%);
   width: 38%;
   aspect-ratio: 1;
-  border-radius: 9999px;
   pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.image-orb > span {
+  display: block;
+  height: 100%;
+  border-radius: 9999px;
   background: radial-gradient(
     closest-side,
     color-mix(in oklab, var(--foreground) 18%, transparent),
@@ -324,6 +349,10 @@
 
 .image-orb[data-state="splash"] {
   animation: orb-splash var(--stage-duration) linear forwards;
+}
+
+.image-orb[data-state="splash"] > span {
+  animation-play-state: paused;
 }
 
 /* Entrada escalonada de lo que se ve al cargar: CSS puro, no espera a que hidrate el JS. `--delay` ordena la cascada. */

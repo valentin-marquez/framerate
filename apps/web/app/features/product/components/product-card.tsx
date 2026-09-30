@@ -53,10 +53,15 @@ function ProductStage({ product, priority, psu }: { product: Product; priority: 
 
   return (
     <div
-      className="absolute inset-y-0 right-0 isolate w-[58%] overflow-hidden bg-[var(--product-stage)]"
+      className="absolute inset-y-0 right-0 isolate w-[58%] overflow-hidden"
       // El producto va alineado a la derecha: el orbe y la apertura nacen ahí, no en el centro del panel.
       style={{ "--reveal-x": "68%" } as React.CSSProperties}
     >
+      <div
+        aria-hidden
+        className="stage-backdrop absolute inset-0 bg-[var(--product-stage)]"
+        data-state={stage === "opening" ? "open" : undefined}
+      />
       <AsyncImage
         src={product.image_url}
         alt={product.name ?? "Producto"}
@@ -80,7 +85,9 @@ function ProductStage({ product, priority, psu }: { product: Product; priority: 
             data-state={stage === "opening" ? "open" : "closed"}
             onAnimationEnd={() => setStage("open")}
           />
-          <span aria-hidden className="image-orb" data-state={stage === "opening" ? "splash" : "loading"} />
+          <span aria-hidden className="image-orb" data-state={stage === "opening" ? "splash" : "loading"}>
+            <span />
+          </span>
         </>
       )}
       {psu && (
