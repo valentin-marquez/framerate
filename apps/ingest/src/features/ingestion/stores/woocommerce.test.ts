@@ -56,11 +56,13 @@ describe("adaptador WooCommerce", () => {
     expect(offers[0]).toMatchObject({
       externalId: "5011",
       priceCash: 649_990,
-      priceCard: 689_990,
+      // regular_price (689.990) es el precio "antes" tachado, no el de tarjeta.
+      priceCard: null,
       brand: "Asus",
       mpn: "DUAL-RTX4070S-O12G",
       gtin: null,
       stockQuantity: 3,
+      imageUrls: ["https://tienda.example/wp-content/uploads/asus-dual-4070s.jpg"],
     });
   });
 
@@ -70,7 +72,7 @@ describe("adaptador WooCommerce", () => {
     expect(offer).toMatchObject({
       title: "Procesador AMD Ryzen 7 7800X3D - AM5",
       priceCash: 419_990,
-      priceCard: 439_990,
+      priceCard: null,
       gtin: "0730143314930",
       mpn: null,
       inStock: false,
@@ -82,6 +84,19 @@ describe("adaptador WooCommerce", () => {
     const { ctx } = fakeContext({ [api("tarjetas-de-video", 1)]: { body: [products[2]] } });
     const [offer] = await Array.fromAsync(adapter.crawlCategory("gpu", ctx));
     expect(normalizeOffer(offer, "gpu")).toMatchObject({ ok: false, reason: "schema:priceCash:too_small" });
+  });
+
+  test("con recargo configurado, la tarjeta se calcula sobre el precio efectivo", async () => {
+    const withMarkup = createWooCommerceAdapter({
+      baseUrl: "https://tienda.example",
+      sku: "internal",
+      perPage: 2,
+      cardMarkup: 0.07,
+      categories: { gpu: ["tarjetas-de-video"] },
+    });
+    const { ctx } = fakeContext({ [api("tarjetas-de-video", 1)]: { body: [products[0]] } });
+    const [offer] = await Array.fromAsync(withMarkup.crawlCategory("gpu", ctx));
+    expect(offer).toMatchObject({ priceCash: 649_990, priceCard: 695_489 });
   });
 
   test("categoría no vendida por la tienda no hace requests", async () => {

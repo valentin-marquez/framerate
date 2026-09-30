@@ -201,11 +201,13 @@ export interface ListingsTable {
   external_id: string;
   url: string;
   title: string;
+  raw_title: string | null;
   category: string;
   brand: string | null;
   mpn: string | null;
   gtin: string | null;
   image_url: string | null;
+  image_urls: JsonText;
   attributes: JsonText;
   price_cash: number;
   price_card: number;

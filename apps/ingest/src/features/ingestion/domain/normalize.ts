@@ -26,7 +26,8 @@ export const RawOfferSchema = z.object({
   /** Sólo si la tienda publica el código del FABRICANTE (no su SKU interno). */
   mpn: z.string().trim().max(60).nullable(),
   gtin: z.string().trim().max(20).nullable(),
-  imageUrl: z.url().nullable(),
+  /** Todas las fotos, la principal primero. */
+  imageUrls: z.array(z.url()),
 });
 export type RawOffer = z.infer<typeof RawOfferSchema>;
 
@@ -34,11 +35,13 @@ export interface NormalizedOffer {
   externalId: string;
   url: string;
   title: string;
+  rawTitle: string;
   category: Category;
   brand: string | null;
   mpn: string | null;
   gtin: string | null;
   imageUrl: string | null;
+  imageUrls: string[];
   priceCash: number;
   priceCard: number;
   inStock: boolean;
@@ -132,11 +135,13 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
       externalId: raw.externalId,
       url: raw.url,
       title,
+      rawTitle: raw.title,
       category: raw.category,
       brand: fingerprint.brand,
       mpn: fingerprint.mpn,
       gtin: fingerprint.gtin,
-      imageUrl: raw.imageUrl,
+      imageUrl: raw.imageUrls[0] ?? null,
+      imageUrls: raw.imageUrls,
       priceCash,
       priceCard,
       inStock: raw.inStock,

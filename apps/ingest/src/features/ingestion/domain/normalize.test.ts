@@ -18,7 +18,7 @@ const base: RawOffer = {
   brand: null,
   mpn: "DUAL-RTX4070S-O12G",
   gtin: null,
-  imageUrl: "https://tienda.cl/img/1.jpg",
+  imageUrls: ["https://tienda.cl/img/1.jpg"],
 };
 
 describe("normalizeOffer", () => {

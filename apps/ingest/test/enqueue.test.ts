@@ -30,8 +30,8 @@ describe("requestCrawls", () => {
 
   test("una categoría que la tienda no vende no encola nada", async () => {
     const { env, sent } = testEnv({} as D1Database);
-    // Dust2 no vende tarjetas de video.
-    expect(await requestCrawls(env, { store: "dust2", category: "gpu", requestedBy: "admin" })).toEqual({
+    // Dust2 no vende discos duros.
+    expect(await requestCrawls(env, { store: "dust2", category: "hdd", requestedBy: "admin" })).toEqual({
       ok: true,
       enqueued: 0,
     });

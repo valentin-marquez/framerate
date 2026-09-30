@@ -17,8 +17,9 @@ export const STORES: readonly StoreDefinition[] = [
     url: "https://tectec.cl",
     adapter: createWooCommerceAdapter({
       baseUrl: "https://tectec.cl",
-      // PENDIENTE verificar: el sistema anterior asumía que el SKU es el MPN.
-      sku: "mpn",
+      // SKU interno ("0307002A03N-2"), no del fabricante. Tarjeta +4 % (verificado en la ficha, sept. 2026).
+      sku: "internal",
+      cardMarkup: 0.04,
       categories: {
         gpu: ["tarjetas-de-video"],
         cpu: ["procesadores"],
@@ -39,7 +40,10 @@ export const STORES: readonly StoreDefinition[] = [
       baseUrl: "https://dust2.gg",
       // En Dust2 el SKU suele ser el código de barras (EAN): se detecta como GTIN.
       sku: "internal",
+      // Tarjeta +7 % (verificado en la ficha, sept. 2026).
+      cardMarkup: 0.07,
       categories: {
+        gpu: ["tarjetas-de-video"],
         cpu: ["procesadores"],
         motherboard: ["placas-madres"],
         ram: ["memorias-ram"],
