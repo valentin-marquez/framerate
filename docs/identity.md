@@ -54,6 +54,10 @@ avatar o correo. El perfil se edita con nuestro `PATCH /v1/me`.
 | `POST /v1/auth/unlink-account` | sesión de < 24 h | `{accountId}` (el `id` de `list-accounts`) → `{ status: true }`. |
 | `GET /v1/me` | sesión | Perfil propio (con correo y sanción vigente). |
 | `PATCH /v1/me` | sesión | Edita perfil. 409 si el handle está tomado o reservado. |
+| `POST /v1/me/merge/start` | sesión (A) | Inicia la unión de usuarios: 204 + cookie `framerate.merge`. |
+| `GET /v1/me/merge` | sesión (B) + cookie | Previsualización (`MergePreviewSchema`). |
+| `POST /v1/me/merge/confirm` | sesión (B) + cookie | Absorbe B en A. 204. |
+| `DELETE /v1/me/merge` | sesión + cookie | Cancela. 204. |
 | `GET /v1/users/:username` | público | Perfil público (sin correo, rol ni sanciones). |
 | `GET /v1/admin/users?q=` | moderador+ | Busca por handle o nombre (fragmento) o por correo (exacto). |
 | `POST /v1/admin/users/:id/ban` | moderador+ | Suspende (`reason?`, `expiresAt?` futura). |
@@ -117,8 +121,8 @@ Una persona es un usuario aunque entre por varios proveedores (`auth_accounts` t
 - **Manual (con sesión):** `link-social` conecta un proveedor con **otro** correo (`allowDifferentEmails`): el
   usuario prueba ambas identidades en el mismo flujo. El proveedor igual debe marcar su correo como verificado.
 - Vincular no cambia `email`, `username`, `display_name` ni avatar del usuario.
-- Una cuenta de proveedor que ya es de otro usuario no se mueve (`account_already_linked_to_different_user`).
-  No hay fusión de dos usuarios ya existentes.
+- Una cuenta de proveedor que ya es de otro usuario no se mueve (`account_already_linked_to_different_user`):
+  para eso está la [fusión de usuarios](#fusión-de-usuarios).
 - No se puede quitar la última cuenta. Desvincular pide una sesión de menos de 24 h (`freshAge` de Better Auth).
 
 `callbackURL` y `errorCallbackURL` deben ser de `WEB_ORIGIN` (o de la propia API) y todo `POST` con cookie a
@@ -143,6 +147,45 @@ Una persona es un usuario aunque entre por varios proveedores (`auth_accounts` t
 
 Los tests (`apps/server/test/account-linking.integration.test.ts`) recorren el callback OAuth real con la red del
 proveedor falseada.
+
+## Fusión de usuarios
+
+Cuando la cuenta que alguien quiere conectar ya es **otro** usuario de Framerate (B), se unen en el que la inicia
+(A, el que se queda). Cada uno prueba ser dueño con su propio login y nadie recibe la sesión del otro.
+
+1. A, con sesión, llama `POST /v1/me/merge/start`: crea una fila `pending` en `account_merges` (sólo el hash del
+   token, vence en 10 min) y deja la cookie `framerate.merge` (httpOnly, Secure, SameSite=Lax, `Domain=COOKIE_DOMAIN`,
+   `Path=/`, 600 s). Empezar otra vez reemplaza la anterior.
+2. La web hace el `sign-in/social` normal con el proveedor de B (`callbackURL=/ajustes/cuenta/unir`). La sesión
+   queda como B.
+3. `GET /v1/me/merge` muestra quién se queda, quién se absorbe y qué se mueve.
+4. `POST /v1/me/merge/confirm` (sesión de B) absorbe B en A en un solo batch de D1, marca la fila `done` (guarda id,
+   handle, correo de B y un resumen, sin FK a B), borra la cookie y **revoca todas las sesiones de B**. No se abre
+   sesión de A: la persona vuelve a entrar con cualquiera de sus proveedores y cae en A.
+5. `DELETE /v1/me/merge` cancela (borra la fila pendiente y la cookie).
+
+Reglas (B → A):
+
+- A conserva correo, handle, nombre, bio, avatar, idioma y tema. `role` = el mayor de ambos (si B era el único
+  admin, A queda admin); `email_verified` = el de cualquiera; `created_at` = el más antiguo.
+- Toda columna con FK a `users(id)` pasa a A. La lista vive en `USER_REFERENCES`
+  (`features/identity/merge.repository.ts`) y un test la compara con `PRAGMA foreign_key_list` de todas las tablas:
+  una FK nueva sin cubrir hace fallar CI.
+- Choques por unicidad: si ambos reseñaron la misma tienda, queda la reseña más reciente y la otra se marca
+  eliminada (`deletion_reason = 'author'`; los triggers recalculan el promedio). Votos, likes y reportes vivos
+  repetidos quedan uno (los contadores bajan por trigger). En una organización compartida A queda con el rol mayor.
+- Las sanciones viajan: unir cuentas no sirve para esquivar un ban. Un usuario suspendido igual puede unir.
+- B se borra al final (hard delete, ya sin nada que apunte a él).
+
+Errores (formato `{ error: { code, message } }` de la API):
+
+| Código | Cuándo |
+|---|---|
+| `404 merge_not_found` | Sin cookie, token desconocido o ya usado, o A se eliminó. |
+| `410 merge_expired` | Pasaron los 10 minutos. |
+| `409 merge_same_user` | La sesión ya es A (el proveedor era de A o se vinculó solo por correo). |
+| `403 bad_origin` | `POST`/`DELETE` con un `Origin` que no es la web. |
+| `401 unauthorized` | Sin sesión. |
 
 ## Cómo la usa la web
 
