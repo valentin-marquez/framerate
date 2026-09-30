@@ -10,12 +10,22 @@
 
   // Este Worker sólo atiende HTTP. Ni Cron ni colas ni R2 de scraping: eso es de apps/ingest.
 
+  // Dominio propio: Cloudflare crea el DNS y el certificado. Al retirar la API vieja puede pasar a api.framerate.cl.
+  "routes": [{ "pattern": "api-v2.framerate.cl", "custom_domain": true }],
+
+  // Públicas y fijas por despliegue. En local mandan las de .dev.vars.
+  "vars": {
+    "BETTER_AUTH_URL": "https://api-v2.framerate.cl",
+    "WEB_ORIGIN": "https://framerate.cl",
+    "COOKIE_DOMAIN": "framerate.cl"
+  },
+
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "framerate",
       // Debe ser el MISMO id que en packages/database y apps/ingest.
-      "database_id": "00000000-0000-0000-0000-000000000000"
+      "database_id": "6537cc10-7e7b-4dba-9c01-ce80e6a840eb"
     }
   ],
 
@@ -27,7 +37,5 @@
   ]
 
   // Secretos (no van aquí): BETTER_AUTH_SECRET, ADMIN_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET
-  //   → bunx wrangler secret put <NOMBRE>
-  // Variables (dashboard de Cloudflare; keep_vars las conserva): BETTER_AUTH_URL, WEB_ORIGIN, COOKIE_DOMAIN
-  // Detalle en docs/identity.md
+  //   → bunx wrangler secret put <NOMBRE>. Detalle en docs/identity.md
 }

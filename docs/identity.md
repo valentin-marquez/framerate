@@ -66,9 +66,9 @@ Variables (ver `apps/server/.dev.vars.example`):
 | Variable | Tipo | Para qué |
 |---|---|---|
 | `BETTER_AUTH_SECRET` | secreto | Firma cookies y cifra tokens. ≥ 32 caracteres. |
-| `BETTER_AUTH_URL` | variable | URL pública de la API; base de los callbacks OAuth. |
-| `WEB_ORIGIN` | variable | Origen de la web (CORS con cookies y control de origen). |
-| `COOKIE_DOMAIN` | variable, opcional | p. ej. `framerate.cl`: comparte la sesión entre `framerate.cl` y `api.framerate.cl`. |
+| `BETTER_AUTH_URL` | `wrangler.jsonc` | URL pública de la API (`https://api-v2.framerate.cl`); base de los callbacks OAuth. |
+| `WEB_ORIGIN` | `wrangler.jsonc` | Origen de la web (`https://framerate.cl`): CORS con cookies y control de origen. |
+| `COOKIE_DOMAIN` | `wrangler.jsonc` | `framerate.cl`: comparte la sesión entre la web y `api-v2.framerate.cl`. |
 | `ADMIN_TOKEN` | secreto | Token de servicio para scripts. |
 | `ASSETS_BASE_URL` | variable, opcional | Base pública de los avatares copiados a R2. |
 | `<PROVEEDOR>_CLIENT_ID` / `_CLIENT_SECRET` | secretos | Credenciales OAuth; ambas habilitan el proveedor. |
@@ -79,12 +79,12 @@ bunx wrangler secret put BETTER_AUTH_SECRET     # openssl rand -base64 32
 bunx wrangler secret put ADMIN_TOKEN
 bunx wrangler secret put DISCORD_CLIENT_ID
 bunx wrangler secret put DISCORD_CLIENT_SECRET
-# BETTER_AUTH_URL, WEB_ORIGIN, COOKIE_DOMAIN: variables en el dashboard de Cloudflare
-# (el Worker usa keep_vars, no las pisa al desplegar).
+# BETTER_AUTH_URL, WEB_ORIGIN y COOKIE_DOMAIN ya van en wrangler.jsonc (son públicas).
 ```
 
-**Discord:** <https://discord.com/developers/applications> → OAuth2 → Redirect:
-`${BETTER_AUTH_URL}/v1/auth/callback/discord` (en local `http://localhost:8787/...`).
+**Discord:** <https://discord.com/developers/applications> → OAuth2 → Redirects. **Agregar** (sin quitar el de
+Supabase mientras la web siga usándolo): `https://api-v2.framerate.cl/v1/auth/callback/discord`
+(en local `http://localhost:8787/v1/auth/callback/discord`).
 Scopes: `identify` y `email` (ya configurados).
 
 ## Agregar un proveedor

@@ -53,6 +53,8 @@ const GPU_LINES = [
   "ventus 2x",
   "ventus",
   "inspire",
+  "shadow 3x",
+  "shadow 2x",
   "shadow",
   "aorus master",
   "aorus elite",

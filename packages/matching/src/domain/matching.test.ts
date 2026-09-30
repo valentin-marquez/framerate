@@ -131,6 +131,13 @@ describe("decisión de matching", () => {
     expect(decision).toEqual({ kind: "new_product" });
   });
 
+  test("GPU: mismo modelo con distinto cooler (Shadow 2X vs 3X) son productos distintos, sin pasar por revisión", () => {
+    const decision = decide(fp("gpu", "MSI RTX 5070 12GB GDDR7 Shadow 3X OC"), [
+      existing(1, "gpu", "MSI RTX 5070 12GB GDDR7 Shadow 2X OC"),
+    ]);
+    expect(decision).toEqual({ kind: "new_product" });
+  });
+
   test("GPU: OC vs no-OC no se fusionan automáticamente", () => {
     const decision = decide(fp("gpu", "ASUS Dual RTX 4070 Super 12GB"), [
       existing(1, "gpu", "ASUS Dual RTX 4070 Super OC 12GB"),
