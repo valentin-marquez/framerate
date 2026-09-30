@@ -2,6 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ Reconstrucción en curso (v2)
+
+El backend se está reconstruyendo desde cero. **Todo trabajo nuevo va en la arquitectura v2**; lee `docs/architecture.md` antes de tocar código.
+
+- **`apps/server`** — un solo Cloudflare Worker (Hono + D1 + Queues + R2 + Cron) con código organizado por feature: `catalog`, `ingestion`, `matching`. Dominio puro en `features/*/domain/`.
+- **`packages/contracts`** — esquemas Zod de la API compartidos con `apps/web`.
+- **Legado (no extender, se retira en la fase 5 del plan):** `apps/api`, `apps/collector`, `apps/tracker`, `apps/cortex`, `apps/janitor`, `packages/core`, `packages/matcher`, `packages/mpn-finder`, `packages/opendb`, `packages/utils`, y `packages/db` (Supabase; `apps/web` aún depende de él hasta migrar a `/v1`). Las secciones de abajo que describen esas apps documentan el sistema viejo.
+
+Comandos v2:
+
+```bash
+bun run --cwd apps/server test           # unit + integración contra D1 real (Miniflare)
+bun run --cwd apps/server check-types
+bun run --cwd apps/server dev            # wrangler dev
+bun run --cwd apps/server db:migrate:local
+```
+
+Reglas v2: esquema = SQL a mano en `apps/server/migrations/` (drizzle sólo tipa); ninguna oferta entra a `listings` sin pasar `normalizeOffer`; los adaptadores de tienda nunca inventan identificadores; el matching prefiere duplicados antes que fusiones erróneas (vetos duros por atributo).
+
 ## Runtime & Tooling
 
 - **Runtime:** Bun (exclusive). Do not use `node`, `npm`, `yarn`, or `pnpm`. Use `bun install`, `bun add`, `bun run`, `bunx`.

@@ -5,7 +5,9 @@ ver el [`README.md`](../README.md) de la raíz.
 
 ## Índice
 
-- **[scraping.md](./scraping.md)** — Guía de scraping: cómo se integran tiendas
+- **[architecture.md](./architecture.md)** — Arquitectura v2 (reconstrucción): principios,
+  estructura por feature, modelo de datos, matching, operación, costos y plan.
+- **[scraping.md](./scraping.md)** — *(legado, sistema anterior)* Guía de scraping: cómo se integran tiendas
   nuevas, qué vías de scraping usar y en qué orden, anatomía de un crawler y
   convenciones obligatorias.
 
