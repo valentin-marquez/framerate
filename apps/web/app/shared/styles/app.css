@@ -38,6 +38,8 @@
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
   --radius: 0.625rem;
+  /* Centro del halo detrás de las fotos de producto (ver ProductCard). */
+  --product-stage: oklch(1 0 0);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.3278 0.0045 247.96);
@@ -78,6 +80,8 @@
 
   --destructive: oklch(0.6119 0.2261 25.77);
   --destructive-foreground: oklch(82.559% 0.05205 18.163);
+
+  --product-stage: oklch(0.8 0 0);
 
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 14%);
