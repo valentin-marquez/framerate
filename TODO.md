@@ -7,17 +7,22 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] Ver que el Cron pase el reclamo 2 a `stale` y congele `nozz` (3 fallas: ~12:17 UTC del 01-10-2026). Después borrar la tienda de prueba, su organización y el reclamo.
 - [ ] Sumar un miembro, votar y responder una reseña: hace falta una segunda cuenta de Discord.
 - [x] Login con Discord real y `/perfil` funcionan (callback registrado).
+- [x] Google OAuth configurado (30-09-2026): proyecto de Google Cloud "Framerate" (`gen-lang-client-0491493857`), cliente web `framerate-server`, secretos `GOOGLE_CLIENT_ID`/`_SECRET` en `framerate-server` (copia local en `~/.config/framerate/`). `/v1/auth/providers` ya lista Google.
+- [ ] **Publicar la app de Google** (Google Auth Platform → Audience → "Publish app"): mientras esté en "Testing" sólo entran usuarios de prueba. Después, probar login con Google y que se vincule a la cuenta de Discord con el mismo email.
 - [x] Revocado el reclamo de prueba 1 de `tectec.cl` (30-09-2026).
 - [x] `nozztutos` (Discord del dueño) es `admin` (30-09-2026); `/admin/users` funciona.
 
-## Bugs vistos en producción (web `bb66fe3`, 30-09-2026)
-- [ ] **Todo 404 responde 500** (`/login`, `/favicon.ico`): `Error: Request info is not available` (`shared/hooks/use-request-info.ts`) al renderizar el ErrorBoundary sin loader del root. Falta además el favicon.
-- [ ] En la primera carga con sesión (`/perfil`) el navbar muestra "Entrar"; tras navegar muestra el usuario.
-- [ ] CSP `font-src` bloquea una fuente `data:` que Vite incrusta en el CSS.
-- [ ] Con sesión, la web pide `/v1/quotes` (404) dos veces por página.
-- [ ] Reclamo: el éxito dice "desde su panel de administración" sin enlace; un reclamo confirmado sigue mostrando "expira"; "Verificamos solos cada unos segundos"; el auto-verify choca con el enfriamiento (429 en consola).
-- [ ] Redacción en voseo argentino ("Reclamá", "Verificá", "vas a poder", "Ya podés") en reclamo y tienda: pasar a español de Chile neutro.
-- [ ] La URL de login de Discord pide `identify email` duplicado.
+## Bugs vistos en producción (web `bb66fe3`, 30-09-2026; arreglados el mismo día)
+- [x] **Todo 404 responde 500** (`/login`, `/favicon.ico`): `Error: Request info is not available` (`shared/hooks/use-request-info.ts`) al renderizar el ErrorBoundary sin loader del root. Falta además el favicon.
+- [x] En la primera carga con sesión (`/perfil`) el navbar muestra "Entrar"; tras navegar muestra el usuario.
+- [x] CSP `font-src` bloquea una fuente `data:` que Vite incrusta en el CSS.
+- [x] Con sesión, la web pide `/v1/quotes` (404) dos veces por página.
+- [x] Reclamo: el éxito dice "desde su panel de administración" sin enlace; un reclamo confirmado sigue mostrando "expira"; "Verificamos solos cada unos segundos"; el auto-verify choca con el enfriamiento (429 en consola).
+- [x] Redacción en voseo argentino ("Reclamá", "Verificá", "vas a poder", "Ya podés") en reclamo y tienda: pasar a español de Chile neutro.
+- [x] La URL de login de Discord pide `identify email` duplicado.
+- [ ] Quedan lectores de `useAuthStore` con el mismo vacío en el primer render: `store-reviews` (3 archivos), `support/support-contact-panel`, `settings/pages/account`, `product/pages/product-details`, `shared/hooks/use-translation`, `getSessionToken()`. Pasarlos a `useUser`/`useProfile` y borrar el store y el efecto de `App`.
+- [ ] "Crear cotización" hace POST a `/v1/quotes` (404) al enviar: ocultar el botón o construir la API (`QUOTES_API_ENABLED` en `quote/services/quotes.ts`).
+- [ ] `apps/web` no tiene tests ni `check-types` en Turbo: `bun run --cwd apps/web typecheck` hay que correrlo a mano.
 
 ## Web: vistas y diseño
 - [x] **Home**: se eligió v1 (mosaico de categorías con fotos, aparición escalonada). Sin desplegar aún.
@@ -36,6 +41,9 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] Modales con el mismo parpadeo que tenía "Agregar a cotización" (velo animado sólo en opacidad con `motion`): `quote/components/store-selector.tsx` y `comments/components/quote-embed.tsx`. Pasarlos a CSS como `add-to-quote.tsx` cuando se retomen cotizaciones y comentarios.
 - [ ] Quitar " · " como separador en el resto de la UI (el dueño lo ve "estilo IA"): comentarios, cotizaciones embebidas, reseñas, tickets, reclamo, admin de tiendas y soporte, y títulos de pestaña ("Tienda · Framerate").
 - [ ] Nombres de producto con " | " de la tienda ("RTX 3050 | MSI Ventus 2X | 6GB GDDR6"): limpiarlos en la normalización de `ingest` para mostrar un nombre legible.
+- [ ] **Rehacer el logo**: está mal construido y se ve mal (sobre todo en el pie). Al cambiarlo, regenerar `public/favicon.svg` y `public/favicon.ico` (hoy salen del logo actual) y agregar `apple-touch-icon.png`.
+- [ ] Quedan " · " visibles en `comments/components/quote-embed.tsx`, `slash-quote-picker.tsx`, `comment-node.tsx` y `quote/components/quote-performance-card.tsx`.
+- [ ] `moderation-dashboard.tsx` tiene el título de pestaña en inglés ("Moderation | Framerate Admin").
 - [ ] **Rehacer los sellos de certificación** (80 Plus Bronze/Silver/Gold/Platinum/Titanium y los demás, p. ej. Cybenetics): hoy `PsuBadge` es un dibujo propio que no coincide con los sellos reales ni con el estilo nuevo. Diseñarlos bien, con su historia en Storybook.
 - [ ] Llevar al estilo nuevo (y a Storybook): `/ajustes/tickets`, perfil público (`/u/:username`, `/perfil`), ficha de producto, tienda y reclamo.
 - [ ] **Vista pública de producto**: 3 versiones (v1/v2/v3) con `/referencias-composicion`.
@@ -81,7 +89,8 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 
 ## Web (cuando se retome)
 - [ ] El chip "Con stock" de `filter-bar.tsx` sobra: la API ya sólo lista productos con stock.
-- [ ] La política de privacidad (`features/legal/pages/privacy-page.tsx`) todavía nombra a Supabase como proveedor.
+- [ ] **Reescribir privacidad y términos para v2**: `privacy-page.tsx` describe Supabase (Auth, Postgres, RLS, buckets, tablas `account`) y login con Google/Apple/Facebook; `terms-page.tsx:77` también. v2 es D1 + Better Auth + Discord/Google. Google enlaza esta página en su pantalla de consentimiento.
+- [ ] Código muerto en `shared/lib/client.tsx`: `ClientHintCheck` (nunca se monta, así que la cookie de hints de tema nunca se escribe), `subscribeToSchemeChange`, `getLocale`, `parseAcceptLanguage`.
 - [ ] Quedan menciones al sistema anterior en `comments/services/comments.ts`, `product/services/adapters.ts` y `shared/utils/images.ts`.
 - [ ] Tipos heredados (`shared/utils/db-types.ts`, tipos del cotizador en `quote/services/quotes.ts`): reemplazarlos por `@framerate/contracts` al construir cada API.
 
