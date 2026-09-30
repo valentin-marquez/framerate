@@ -51,8 +51,9 @@ const preview: Preview = {
             loaderData: {
               root: {
                 requestInfo,
-                user: null,
-                profile: null,
+                // Una historia simula la sesión con `parameters.session` ({ user, profile }).
+                user: parameters.session?.user ?? null,
+                profile: parameters.session?.profile ?? null,
                 // Una historia puede cambiarlos con `parameters.providers`.
                 providers: parameters.providers ?? [{ id: "discord", label: "Discord" }],
                 categories: [],

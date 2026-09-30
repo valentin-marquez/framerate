@@ -178,7 +178,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const { user, profile, categories: initialCategories } = loaderData;
-  const { setUser, setProfile } = useAuthStore();
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
@@ -203,13 +202,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
     return () => clearTimeout(timer);
   }, []);
 
+  // Sólo alimenta el espejo heredado (`useAuthStore`); navbar y demás leen el loader con `useUser`/`useProfile`.
   useEffect(() => {
-    setUser(user);
-  }, [user, setUser]);
-
-  useEffect(() => {
-    setProfile(profile);
-  }, [profile, setProfile]);
+    useAuthStore.setState({ user, profile });
+  }, [user, profile]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);

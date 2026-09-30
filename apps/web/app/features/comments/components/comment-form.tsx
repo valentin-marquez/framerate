@@ -1,6 +1,6 @@
 import { domAnimation, LazyMotion, m } from "motion/react";
 import { useCallback, useId, useRef, useState } from "react";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { useUser } from "~/features/auth/hooks/useAuth";
 import { useQuotePasteWatcher } from "~/features/comments/components/quote-paste-dialog";
 import { RichCommentInput, type RichCommentInputHandle } from "~/features/comments/components/rich-comment-input";
 import {
@@ -38,7 +38,7 @@ export function CommentForm({
   className,
   compact = false,
 }: CommentFormProps) {
-  const user = useAuthStore((s) => s.user);
+  const user = useUser();
   // react-doctor-disable-next-line no-derived-useState -- prop re-seed via useRef es el patrón oficial de React docs
   const [value, setValue] = useState(initialValue);
   const prevInitialRef = useRef(initialValue);

@@ -1,6 +1,6 @@
 import { IconGavel, IconLifebuoy, IconShieldCheck, IconUsers } from "@tabler/icons-react";
 import { Link } from "react-router";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { useUser } from "~/features/auth/hooks/useAuth";
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -18,7 +18,7 @@ interface AdminMenuProps {
  * de otro modo no tienen entrada de navegación.
  */
 export function AdminMenu({ enabled }: AdminMenuProps) {
-  const role = useAuthStore((state) => state.user?.role ?? "user");
+  const role = useUser()?.role ?? "user";
 
   if (!enabled || role === "user") return null;
 
