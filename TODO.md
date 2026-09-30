@@ -20,6 +20,9 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] URLs en español pendientes (convención del proyecto): `/privacy` → `/privacidad`, `/terms` → `/terminos`, con redirect 301 desde las inglesas. Ya están `/perfil` (301 desde `/profile`) y `/ajustes/*` (301 desde `/settings/*`).
 - [x] Sistema de diseño en Storybook (`bun run --cwd apps/web storybook`, puerto 6006), Inter y paleta neutra inspirada en Luma; navbar, pie, login y ajustes rehechos.
 - [ ] Redacción: muchas etiquetas en español usan mayúsculas de título en inglés ("Precio Normal", "Ver Oferta", "Especificaciones Técnicas"…). Pasar a mayúscula sólo inicial (`shared/lib/translations.ts`).
+- [x] Tarjeta de producto única (v3, horizontal) en catálogo, home y tiendas; historia en Storybook "Producto/Tarjeta".
+- [ ] Quitar " · " como separador en el resto de la UI (el dueño lo ve "estilo IA"): comentarios, cotizaciones embebidas, reseñas, tickets, reclamo, admin de tiendas y soporte, y títulos de pestaña ("Tienda · Framerate").
+- [ ] Nombres de producto con " | " de la tienda ("RTX 3050 | MSI Ventus 2X | 6GB GDDR6"): limpiarlos en la normalización de `ingest` para mostrar un nombre legible.
 - [ ] **Rehacer los sellos de certificación** (80 Plus Bronze/Silver/Gold/Platinum/Titanium y los demás, p. ej. Cybenetics): hoy `PsuBadge` es un dibujo propio que no coincide con los sellos reales ni con el estilo nuevo. Diseñarlos bien, con su historia en Storybook.
 - [ ] Llevar al estilo nuevo (y a Storybook): `/ajustes/tickets`, perfil público (`/u/:username`, `/perfil`), ficha de producto, tienda y reclamo.
 - [ ] **Vista pública de producto**: 3 versiones (v1/v2/v3) con `/referencias-composicion`.

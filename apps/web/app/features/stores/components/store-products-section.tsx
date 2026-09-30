@@ -31,11 +31,13 @@ export function StoreProductsSection({ categories, total }: StoreProductsSection
 
   return (
     <section aria-label="Productos de la tienda" className="space-y-6">
-      <div className="flex items-baseline gap-2">
+      <div className="flex flex-wrap items-baseline gap-x-3">
         <h2 className="font-semibold text-foreground text-xl tracking-tight">Productos</h2>
         <span className="text-muted-foreground text-sm">
-          {total} {total === 1 ? "producto" : "productos"} · {categories.length}{" "}
-          {categories.length === 1 ? "categoría" : "categorías"}
+          {total} {total === 1 ? "producto" : "productos"}
+        </span>
+        <span className="text-muted-foreground text-sm">
+          {categories.length} {categories.length === 1 ? "categoría" : "categorías"}
         </span>
       </div>
 

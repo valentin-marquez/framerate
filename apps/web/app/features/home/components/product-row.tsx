@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { ProductCardCompact } from "~/features/product/components/card-product-compact";
+import { ProductCard } from "~/features/product/components/product-card";
 import type { Product } from "~/features/product/services/products";
 import { Carousel, CarouselContent, CarouselItem, CarouselNavigation } from "~/shared/components/primitives/carousel";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
@@ -47,15 +47,12 @@ export function ProductRow({ title, href, products, priority = false, trendingId
         <Carousel className="w-full">
           <CarouselContent className="-ml-3">
             {products.map((product, index) => (
-              <CarouselItem
-                key={product.id}
-                className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6"
-              >
+              <CarouselItem key={product.id} className="basis-[88%] pl-3 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 <div
-                  className={cn("h-full", priority && index < 6 && enterClass())}
-                  style={priority && index < 6 ? enterStyle(420 + index * 50) : undefined}
+                  className={cn("h-full", priority && index < 4 && enterClass())}
+                  style={priority && index < 4 ? enterStyle(420 + index * 50) : undefined}
                 >
-                  <ProductCardCompact
+                  <ProductCard
                     product={product}
                     priority={priority && index < 6}
                     trending={product.id ? trendingIds?.has(product.id) : false}

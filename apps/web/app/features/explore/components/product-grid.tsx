@@ -1,6 +1,6 @@
 import { IconMoodEmpty } from "@tabler/icons-react";
-import { ProductGridSkeleton } from "~/features/explore/components/product-grid-skeleton";
-import { ProductCard } from "~/features/product/components/card-product";
+import { PRODUCT_GRID_CLASS, ProductGridSkeleton } from "~/features/explore/components/product-grid-skeleton";
+import { ProductCard } from "~/features/product/components/product-card";
 import type { Product } from "~/features/product/services/products";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
@@ -31,7 +31,7 @@ export function ProductGrid({ products, isLoading, className, trendingIds }: Pro
   }
 
   return (
-    <div className={cn("grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4", className)}>
+    <div className={cn(PRODUCT_GRID_CLASS, className)}>
       {products.map((product, index) => (
         <div
           key={product.id}
