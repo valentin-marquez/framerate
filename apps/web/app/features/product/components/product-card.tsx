@@ -66,7 +66,7 @@ export function ProductCard({ product, priority = false, trending = false, class
         onClick={() => product.slug && productsService.trackView(product.slug).catch(() => {})}
         onMouseEnter={prefetch}
         onFocus={prefetch}
-        className="flex min-w-0 flex-1 gap-4 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group/link flex min-w-0 flex-1 gap-4 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <div className="flex min-w-0 flex-1 flex-col gap-1.5 py-0.5">
           <div className="flex min-h-5 items-center gap-2">
@@ -132,7 +132,7 @@ export function ProductCard({ product, priority = false, trending = false, class
                 src={getImageUrl(product.image_url)}
                 alt={product.name ?? "Producto"}
                 priority={priority}
-                className="size-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.05]"
+                className="size-full object-contain transition-transform duration-500 ease-out group-hover/link:scale-[1.05]"
               />
             ) : (
               <div
