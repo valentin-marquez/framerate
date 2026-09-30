@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { crawlCategory } from "@/features/ingestion/crawl-category";
+import { purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { fakeStore, offer, steppingClock, testDeps } from "./helpers";
 
 /**
@@ -211,5 +212,36 @@ describe("zona gris del matching", () => {
     expect(result.stats).toMatchObject({ reviews: 1, newProducts: 1 });
     expect(review?.status).toBe("pending");
     expect(await all(deps.db, "products")).toHaveLength(2);
+  });
+});
+
+describe("cuarentena", () => {
+  test("se purga lo de más de 14 días, lo reciente se conserva", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const tienda = fakeStore("alfa", { gpu: ["gpu"] });
+    tienda.setOffers([offer("alfa", "1", { category: "gpu", title: "Soporte anti-sag para GPU", priceCash: 15_000 })]);
+    await crawlCategory(deps, tienda.store, "gpu");
+    clock.advance(15 * 86_400_000);
+    await crawlCategory(deps, tienda.store, "gpu");
+
+    expect(await purgeQuarantine(deps.db, clock())).toBe(1);
+    expect(await all(deps.db, "quarantine")).toHaveLength(1);
+  });
+});
+
+describe("datos de origen para la huella", () => {
+  test("la oferta conserva el título crudo y todas las fotos", async () => {
+    const deps = testDeps(d1, steppingClock());
+    const tienda = fakeStore("alfa", { gpu: ["gpu"] });
+    const raw = "Nvidia RTX 3050 | MSI Ventus 2X | 6GB GDDR6";
+    const images = ["https://alfa.example/1.jpg", "https://alfa.example/2.jpg"];
+    tienda.setOffers([offer("alfa", "1", { category: "gpu", title: raw, priceCash: 250_000, imageUrls: images })]);
+    await crawlCategory(deps, tienda.store, "gpu");
+
+    const [listing] = await all(deps.db, "listings");
+    expect(listing).toMatchObject({ title: "Nvidia RTX 3050 MSI Ventus 2X 6GB GDDR6", raw_title: raw });
+    expect(listing?.image_url).toBe(images[0]);
+    expect(JSON.parse(listing?.image_urls ?? "[]")).toEqual(images);
   });
 });

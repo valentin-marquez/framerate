@@ -48,7 +48,7 @@ export function offer(storeSlug: string, externalId: string, patch: Partial<RawO
     brand: null,
     mpn: null,
     gtin: null,
-    imageUrl: null,
+    imageUrls: [],
     ...patch,
   };
 }

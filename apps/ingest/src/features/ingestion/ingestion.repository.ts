@@ -99,6 +99,16 @@ export async function addToQuarantine(
     .execute();
 }
 
+/** Mismo plazo que los snapshots en R2: pasado eso, el rechazo ya no se puede reproducir. */
+const QUARANTINE_DAYS = 14;
+
+/** Cada corrida vuelve a registrar sus rechazos: sin purga la tabla crece sin fin. */
+export async function purgeQuarantine(db: Db, now: Date): Promise<number> {
+  const before = new Date(now.getTime() - QUARANTINE_DAYS * 86_400_000).toISOString();
+  const result = await db.query.deleteFrom("quarantine").where("created_at", "<", before).executeTakeFirst();
+  return Number(result.numDeletedRows);
+}
+
 export interface UpsertResult {
   listingId: number;
   created: boolean;
@@ -130,11 +140,13 @@ export async function upsertListing(
   const fields = {
     url: offer.url,
     title: offer.title,
+    raw_title: offer.rawTitle,
     category: offer.category,
     brand: offer.brand,
     mpn: offer.mpn,
     gtin: offer.gtin,
     image_url: offer.imageUrl,
+    image_urls: toJson(offer.imageUrls),
     attributes: toJson(offer.attributes),
     price_cash: offer.priceCash,
     price_card: offer.priceCard,

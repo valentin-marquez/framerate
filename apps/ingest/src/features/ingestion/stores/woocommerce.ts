@@ -22,6 +22,12 @@ export interface WooCommerceConfig {
    * Un SKU que sea un GTIN válido (checksum) se usa como GTIN en ambos casos.
    */
   sku: "mpn" | "internal";
+  /**
+   * Recargo del precio con tarjeta sobre el de transferencia (0.07 = +7 %), verificado en la ficha de la tienda.
+   * La Store API no trae el precio tarjeta: `regular_price` suele ser el precio "antes" tachado. Sin recargo,
+   * tarjeta = transferencia.
+   */
+  cardMarkup?: number;
   perPage?: number;
   /** Tope de páginas por categoría (protección contra loops infinitos). */
   maxPages?: number;
@@ -92,14 +98,17 @@ function parseItems(text: string): unknown[] {
   return data;
 }
 
-export function toRawOffer(p: WcProduct, category: Category, config: Pick<WooCommerceConfig, "sku">): RawOffer {
+export function toRawOffer(
+  p: WcProduct,
+  category: Category,
+  config: Pick<WooCommerceConfig, "sku" | "cardMarkup">,
+): RawOffer {
   const divisor = 10 ** p.prices.currency_minor_unit;
   const toClp = (v: string | undefined) => {
     const n = Number(v);
     return v && Number.isFinite(n) && n > 0 ? Math.round(n / divisor) : null;
   };
-  const price = toClp(p.prices.price);
-  const regular = toClp(p.prices.regular_price);
+  const price = toClp(p.prices.price) ?? toClp(p.prices.regular_price);
   const sku = p.sku.trim();
   const gtin = normalizeGtin(sku) ? sku : null;
 
@@ -109,14 +118,14 @@ export function toRawOffer(p: WcProduct, category: Category, config: Pick<WooCom
     title: stripHtml(p.name),
     category,
     // Un precio inválido (0/NaN) deja un valor que `normalize` rechaza con motivo claro.
-    priceCash: price ?? regular ?? 0,
-    priceCard: regular,
+    priceCash: price ?? 0,
+    priceCard: price && config.cardMarkup ? Math.round(price * (1 + config.cardMarkup)) : null,
     inStock: p.is_in_stock,
     stockQuantity: p.is_in_stock ? (p.low_stock_remaining ?? null) : 0,
     brand: p.brands?.[0]?.name ?? brandFromAttributes(p) ?? null,
     mpn: !gtin && config.sku === "mpn" && sku ? sku : null,
     gtin,
-    imageUrl: p.images[0]?.src ?? null,
+    imageUrls: p.images.map((i) => i.src),
   };
 }
 
