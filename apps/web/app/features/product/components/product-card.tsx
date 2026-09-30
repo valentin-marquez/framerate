@@ -66,7 +66,7 @@ export function ProductCard({ product, priority = false, trending = false, class
         onClick={() => product.slug && productsService.trackView(product.slug).catch(() => {})}
         onMouseEnter={prefetch}
         onFocus={prefetch}
-        className="group/link flex min-w-0 flex-1 gap-4 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-w-0 flex-1 gap-4 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <div className="flex min-w-0 flex-1 flex-col gap-1.5 py-0.5">
           <div className="flex min-h-5 items-center gap-2">
@@ -125,14 +125,22 @@ export function ProductCard({ product, priority = false, trending = false, class
           </div>
         </div>
 
-        <div className="relative size-24 shrink-0 self-center overflow-hidden rounded-2xl bg-white sm:size-28">
-          <div className="absolute inset-0 p-2">
+        {/* La foto se funde con la tarjeta en vez de ir en un recuadro: se multiplica sobre un halo que va de
+            `--product-stage` al color de la tarjeta, así el fondo blanco de las fotos de tienda toma el color del halo
+            y se desvanece sin bordes (en oscuro queda como un foco suave detrás del producto). */}
+        <div className="relative w-28 shrink-0 self-stretch sm:w-32">
+          <div
+            className={cn(
+              "absolute inset-0 isolate p-2",
+              product.image_url && "bg-[radial-gradient(circle_closest-side,var(--product-stage)_55%,var(--card))]",
+            )}
+          >
             {product.image_url ? (
               <AsyncImage
                 src={getImageUrl(product.image_url)}
                 alt={product.name ?? "Producto"}
                 priority={priority}
-                className="size-full object-contain transition-transform duration-500 ease-out group-hover/link:scale-[1.05]"
+                className="size-full object-contain mix-blend-multiply"
               />
             ) : (
               <div
@@ -145,7 +153,7 @@ export function ProductCard({ product, priority = false, trending = false, class
             )}
           </div>
           {psu && (
-            <div className="absolute top-1.5 left-1.5">
+            <div className="absolute top-0 left-0">
               <PsuBadge certification={psu} />
             </div>
           )}
