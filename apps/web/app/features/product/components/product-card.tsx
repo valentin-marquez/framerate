@@ -57,12 +57,48 @@ export function ProductCard({ product, priority = false, trending = false, class
   return (
     <article
       className={cn(
-        "group @container relative flex h-full flex-col rounded-3xl border border-border bg-card transition-colors hover:border-foreground/15",
+        "group @container relative flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card transition-colors hover:border-foreground/15",
         className,
       )}
     >
-      <div className="flex gap-3 p-3 pb-2.5">
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5 pt-0.5">
+      <div className="relative flex min-h-36">
+        {/* La foto es el fondo del lado derecho y se funde hacia la izquierda con un velo suavizado. La capa tiene el
+            tono de la foto (blanco; gris claro en oscuro vía `--product-stage` + multiply), así nunca se ve su borde. */}
+        <div
+          className={cn("absolute inset-y-0 right-0 isolate w-[58%]", product.image_url && "bg-[var(--product-stage)]")}
+        >
+          {product.image_url ? (
+            <>
+              <AsyncImage
+                src={getImageUrl(product.image_url)}
+                alt={product.name ?? "Producto"}
+                priority={priority}
+                className="size-full object-contain object-right p-3 pl-0 mix-blend-multiply"
+              />
+              <div aria-hidden className="scrim-card-to-r absolute inset-y-0 left-0 w-3/5" />
+              {/* En oscuro el panel es más claro que el pie: se funde también hacia abajo para no cortar en seco. */}
+              <div
+                aria-hidden
+                className="absolute inset-x-0 bottom-0 hidden h-2/5 bg-gradient-to-t from-card to-transparent dark:block"
+              />
+            </>
+          ) : (
+            <div
+              className="flex size-full items-center justify-end pr-8 text-foreground/20"
+              role="img"
+              aria-label="Sin imagen"
+            >
+              <IconPhotoOff className="size-8" stroke={1.25} />
+            </div>
+          )}
+          {psu && (
+            <div className="absolute top-2 right-2">
+              <PsuBadge certification={psu} />
+            </div>
+          )}
+        </div>
+
+        <div className="relative flex w-[58%] min-w-0 flex-col gap-1.5 p-3 pt-3.5 pb-2.5">
           <div className="flex h-5 items-center gap-2">
             {product.brand?.name && (
               <span className="truncate text-muted-foreground text-xs">{product.brand.name}</span>
@@ -97,40 +133,6 @@ export function ProductCard({ product, priority = false, trending = false, class
                 </li>
               ))}
             </ul>
-          )}
-        </div>
-
-        {/* La foto se funde con la tarjeta en vez de ir en un recuadro: se multiplica sobre un halo que va de
-            `--product-stage` al color de la tarjeta, así el fondo blanco de las fotos de tienda toma el color del halo
-            y se desvanece sin bordes (en oscuro queda como un foco suave detrás del producto). */}
-        <div className="relative size-24 shrink-0 sm:size-28">
-          <div
-            className={cn(
-              "absolute inset-0 isolate p-2",
-              product.image_url && "bg-[radial-gradient(circle_closest-side,var(--product-stage)_55%,var(--card))]",
-            )}
-          >
-            {product.image_url ? (
-              <AsyncImage
-                src={getImageUrl(product.image_url)}
-                alt={product.name ?? "Producto"}
-                priority={priority}
-                className="size-full object-contain mix-blend-multiply"
-              />
-            ) : (
-              <div
-                className="flex size-full items-center justify-center text-foreground/20"
-                role="img"
-                aria-label="Sin imagen"
-              >
-                <IconPhotoOff className="size-7" stroke={1.25} />
-              </div>
-            )}
-          </div>
-          {psu && (
-            <div className="absolute top-0 left-0">
-              <PsuBadge certification={psu} />
-            </div>
           )}
         </div>
       </div>
