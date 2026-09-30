@@ -7,8 +7,8 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] Ver que el Cron pase el reclamo 2 a `stale` y congele `nozz` (3 fallas: ~12:17 UTC del 01-10-2026). Después borrar la tienda de prueba, su organización y el reclamo.
 - [ ] Sumar un miembro, votar y responder una reseña: hace falta una segunda cuenta de Discord.
 - [x] Login con Discord real y `/perfil` funcionan (callback registrado).
-- [ ] Revocar el reclamo `pending` 1 de `tectec.cl` (prueba vieja; vence el 07-10-2026 y bloquea reclamos reales de TecTec).
-- [ ] El usuario `nozztutos` tiene rol `user`: darle `admin` para usar `/admin`.
+- [x] Revocado el reclamo de prueba 1 de `tectec.cl` (30-09-2026).
+- [x] `nozztutos` (Discord del dueño) es `admin` (30-09-2026); `/admin/users` funciona.
 
 ## Bugs vistos en producción (web `bb66fe3`, 30-09-2026)
 - [ ] **Todo 404 responde 500** (`/login`, `/favicon.ico`): `Error: Request info is not available` (`shared/hooks/use-request-info.ts`) al renderizar el ErrorBoundary sin loader del root. Falta además el favicon.
