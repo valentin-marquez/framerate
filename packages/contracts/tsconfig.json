@@ -1,0 +1,9 @@
+{
+  "extends": "@framerate/config/tsconfig",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["bun"],
+    "noUncheckedIndexedAccess": true
+  },
+  "include": ["src"]
+}

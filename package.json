@@ -10,24 +10,25 @@
   "packageManager": "^bun@1.2.9",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
     "biome": "biome check --write --unsafe",
     "biome:check": "biome check .",
     "biome:format": "biome format --write .",
     "biome:format:check": "biome format .",
     "biome:lint": "biome lint --write .",
     "biome:lint:check": "biome lint .",
+    "build": "turbo run build",
     "check-types": "turbo run check-types --skipLibCheck",
     "db:push": "turbo run db:push",
     "dev": "turbo run dev",
     "dev:api": "turbo run dev --filter=api",
     "dev:collector": "turbo run dev --filter=collector",
+    "dev:server": "turbo run dev --filter=server",
     "dev:tracker": "turbo run dev --filter=tracker",
     "dev:web": "turbo run dev --filter=web",
     "generate:types": "turbo run generate:types",
+    "lint": "turbo run biome:lint",
     "prepare": "simple-git-hooks || true",
-    "test": "turbo run test",
-    "lint": "turbo run biome:lint"
+    "test": "turbo run test"
   },
   "simple-git-hooks": {
     "pre-commit": "bun run biome:check",
