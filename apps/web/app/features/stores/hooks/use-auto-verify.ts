@@ -5,12 +5,23 @@ import { claimsService, type DnsCheckResponse } from "../services/claims";
  * Verificación pasiva del claim: en vez de que el usuario apriete un botón,
  * polleamos solos el peek de DNS (`dns-check`, read-only, sin cooldown del
  * RPC) con backoff exponencial. Apenas detectamos el TXT, hacemos el commit
- * real (`verify`) UNA vez y avisamos. El botón manual queda como atajo.
+ * real (`verify`) y avisamos. El botón manual queda como atajo.
  */
 const BACKOFF_MS = [5_000, 10_000, 20_000, 30_000, 60_000];
 const FIRST_CHECK_DELAY_MS = 1_500;
+// Igual a VERIFY_COOLDOWN_MS del servidor (claims.routes.ts): antes de eso `verify` responde 429 too_soon.
+const VERIFY_COOLDOWN_MS = 10_000;
+const COOLDOWN_MARGIN_MS = 500;
 
-export type AutoVerifyStatus = "idle" | "waiting" | "mismatch" | "error" | "verified";
+/** `found`: el DNS ya muestra el TXT y falta que `verify` lo confirme. */
+export type AutoVerifyStatus = "idle" | "waiting" | "found" | "mismatch" | "error" | "verified";
+
+const STATUS_OF_CHECK: Record<DnsCheckResponse["status"], AutoVerifyStatus> = {
+  verified: "found",
+  pending: "waiting",
+  mismatch: "mismatch",
+  error: "error",
+};
 
 export interface AutoVerifyState {
   status: AutoVerifyStatus;
@@ -58,6 +69,7 @@ export function useAutoVerify(opts: {
     let cancelled = false;
     let running = false;
     let attempt = 0;
+    let lastVerifyAt = Number.NEGATIVE_INFINITY;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const clearTimer = () => {
@@ -87,37 +99,40 @@ export function useAutoVerify(opts: {
       setChecking(false);
       setLastCheckedAt(Date.now());
 
+      let delay = BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)];
       if (res) {
         setExpected(res.expected);
         setFound(res.found);
         if (res.matched) {
-          // Commit real: una sola llamada al RPC, al detectar el match.
-          try {
-            const commit = await claimsService.verify(claimId, token);
-            if (cancelled) {
-              running = false;
-              return;
+          // Si `verify` todavía no lo ve (la caché de un resolver puede ir atrasada), se reintenta al
+          // terminar el enfriamiento, nunca antes.
+          if (Date.now() - lastVerifyAt >= VERIFY_COOLDOWN_MS) {
+            lastVerifyAt = Date.now();
+            try {
+              const commit = await claimsService.verify(claimId, token);
+              if (cancelled) {
+                running = false;
+                return;
+              }
+              if (commit.matched || commit.status === "verified") {
+                setStatus("verified");
+                running = false;
+                onVerifiedRef.current();
+                return;
+              }
+            } catch {
+              // Red, o 429 too_soon por un verify desde otra pestaña: no es un error para el usuario.
             }
-            if (commit.matched || commit.status === "verified") {
-              setStatus("verified");
-              running = false;
-              onVerifiedRef.current();
-              return; // detenemos el loop
-            }
-          } catch {
-            // commit falló (cooldown del RPC, red) — seguimos polleando.
           }
+          delay = Math.max(lastVerifyAt + VERIFY_COOLDOWN_MS - Date.now(), 0) + COOLDOWN_MARGIN_MS;
         }
-        if (!cancelled) {
-          setStatus(res.status === "mismatch" ? "mismatch" : res.status === "error" ? "error" : "waiting");
-        }
+        if (!cancelled) setStatus(STATUS_OF_CHECK[res.status]);
       } else {
         setStatus("error");
       }
 
       running = false;
       if (cancelled) return;
-      const delay = BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)];
       attempt += 1;
       timer = setTimeout(tick, delay);
     };

@@ -55,13 +55,13 @@ export function VerifyStatus({ status, found, expected, lastCheckedAt, checking,
         </div>
         {hint && <p className="mt-2 text-muted-foreground text-xs">{hint}</p>}
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Seguimos chequeando solos{lastText ? ` · último intento ${lastText}` : ""}.
+          Lo seguimos revisando cada pocos segundos.{lastText ? ` Último intento: ${lastText}.` : ""}
         </p>
       </div>
     );
   }
 
-  // waiting / error — mismo bloque, distinto texto.
+  // waiting / found / error: mismo bloque, distinto texto.
   return (
     <div className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-secondary/30 px-4 py-3">
       <span className="relative flex size-2.5 shrink-0" aria-hidden>
@@ -71,11 +71,13 @@ export function VerifyStatus({ status, found, expected, lastCheckedAt, checking,
       <div className="min-w-0 flex-1">
         <div className="font-medium text-sm">
           {status === "error"
-            ? "No pudimos chequear el DNS — reintentando…"
-            : `Esperando que aparezca el TXT en ${domain}…`}
+            ? "No pudimos revisar el DNS. Reintentando…"
+            : status === "found"
+              ? `Encontramos el TXT en ${domain}. Terminando de verificar…`
+              : `Esperando que aparezca el TXT en ${domain}…`}
         </div>
         <div className="text-[11px] text-muted-foreground">
-          Verificamos solos cada unos segundos{lastText ? ` · último intento ${lastText}` : ""}.
+          Lo revisamos cada pocos segundos.{lastText ? ` Último intento: ${lastText}.` : ""}
         </div>
       </div>
       {checking && <IconLoader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />}
@@ -124,7 +126,7 @@ function splitDiff(expected: string, found: string): { prefix: string; diff: str
 function diffHint(expected: string, found: string): string {
   if (found === expected) return "";
   if (found.trimEnd() === expected) {
-    return "Parece que quedó un espacio (u otro carácter invisible) de más al final. Borralo.";
+    return "Parece que quedó un espacio (u otro carácter invisible) de más al final. Bórralo.";
   }
   if (found.trimStart() === expected) return "Parece que quedó un espacio al principio del valor.";
   if (found.replace(/\s+/g, "") === expected.replace(/\s+/g, "")) {
@@ -133,7 +135,7 @@ function diffHint(expected: string, found: string): string {
   if (found.toLowerCase() === expected.toLowerCase()) {
     return "Hay una diferencia de mayúsculas/minúsculas.";
   }
-  if (expected.startsWith(found)) return "El valor quedó cortado — copialo completo de nuevo.";
+  if (expected.startsWith(found)) return "El valor quedó cortado. Cópialo completo de nuevo.";
   if (found.startsWith(expected)) return "El valor tiene texto de más al final.";
-  return "Revisá que coincida carácter por carácter — lo más simple es copiarlo de nuevo con el botón.";
+  return "Revisa que coincida carácter por carácter. Lo más simple es copiarlo de nuevo con el botón.";
 }
