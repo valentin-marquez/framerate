@@ -125,7 +125,7 @@ function QuoteQuickViewPortal({ layoutId, open, onClose, quote, quoteId }: Quote
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50"
             onClick={onClose}
           />
           <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">

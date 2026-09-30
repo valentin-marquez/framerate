@@ -118,7 +118,7 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                    className="absolute inset-0 bg-black/50"
                     onClick={() => setIsOpen(false)}
                   />
                   <m.div
