@@ -89,6 +89,10 @@ Reglas:
 
 ## 4. Modelo de datos (D1)
 
+El modelo completo (identidad, organizaciones, tiendas y reseñas, cotizaciones,
+comentarios, moderación, soporte y analítica), derivado de las funcionalidades
+de la web, está en **[data-model.md](./data-model.md)**. Resumen del núcleo de catálogo:
+
 | Tabla | Qué es | Invariantes clave |
 |---|---|---|
 | `stores` | Tiendas (se crean solas desde el registro en código). | `slug` único. |
@@ -207,6 +211,10 @@ asistida.
 
 1. ✅ Base: esquema D1, contrato de tienda, pipeline de ingesta, matching con
    revisión, API de catálogo, tests contra D1 real.
+1b. ✅ Modelo de datos completo basado en las features de la web (migraciones
+   0001–0008, tipos Kysely, specs por categoría, tests de invariantes).
+   Pendiente: implementar las features `identity` (Better Auth), `stores`,
+   `quotes`, `comments`, `moderation`, `support` y `analytics` sobre él.
 2. Verificar TecTec y Dust2 en vivo (slugs de categoría, significado del SKU) y
    ajustar extractores con la cuarentena real.
 3. Portar las demás tiendas (PC Express, MyShop, SP Digital, Centrale, Central
