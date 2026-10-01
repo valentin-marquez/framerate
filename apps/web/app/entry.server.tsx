@@ -17,6 +17,7 @@ export default async function handleRequest(
   let shellRendered = false;
   const userAgent = request.headers.get("user-agent");
   const nonce = crypto.randomBytes(16).toString("hex");
+  const apiOrigin = import.meta.env.VITE_API_URL ?? env.VITE_API_URL ?? (isDevelopment ? "http://127.0.0.1:8787" : "");
   const oauthProviders = [
     "https://discord.com",
     "https://accounts.google.com",
@@ -26,12 +27,7 @@ export default async function handleRequest(
   const contentSecurityPolicy = buildContentSecurityPolicy({
     baseUri: ["'self'"],
     objectSrc: ["'none'"],
-    connectSrc: [
-      "'self'",
-      "data:",
-      isDevelopment ? "ws:" : "",
-      import.meta.env.VITE_API_URL ?? env.VITE_API_URL ?? (isDevelopment ? "http://127.0.0.1:8787" : ""),
-    ],
+    connectSrc: ["'self'", "data:", isDevelopment ? "ws:" : "", apiOrigin],
     scriptSrc: [
       "'self'",
       "'wasm-unsafe-eval'",
@@ -41,19 +37,14 @@ export default async function handleRequest(
     ],
     workerSrc: ["'self'", isDevelopment ? "blob:" : ""],
     scriptSrcAttr: [`'nonce-${nonce}'`],
-    imgSrc: [
-      "'self'",
-      "data:",
-      "blob:",
-      "https:",
-      import.meta.env.VITE_API_URL ?? env.VITE_API_URL ?? (isDevelopment ? "http://127.0.0.1:8787" : ""),
-    ],
+    imgSrc: ["'self'", "data:", "blob:", "https:", apiOrigin],
     // Las fuentes son de @fontsource (propias). `data:` porque Vite incrusta en el CSS los subsets de menos de 4 KB
     // (assetsInlineLimit), p. ej. jetbrains-mono cyrillic-ext.
     fontSrc: ["'self'", "data:"],
     frameSrc: ["'self'"],
-    // El formulario de login redirige al proveedor OAuth.
-    formAction: ["'self'", ...oauthProviders],
+    // El formulario de login redirige al proveedor OAuth, y el navegador aplica form-action a toda la cadena: si el
+    // proveedor ya tiene el consentimiento (Google) responde 302 directo al callback de la API.
+    formAction: ["'self'", ...oauthProviders, apiOrigin],
   });
 
   const body = await renderToReadableStream(
