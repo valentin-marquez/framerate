@@ -82,17 +82,18 @@ console.log(
   `Revisiones pendientes: ${(await rows<{ n: number }>("SELECT COUNT(*) AS n FROM match_reviews WHERE status = 'pending'"))[0]?.n}`,
 );
 
-// Precios muy distintos dentro de un producto suelen delatar una fusión errónea (o una oferta mal parseada).
-console.log("\n== Sospechosos: transferencia máxima / mínima > 1,5 dentro de un producto");
+// Precios muy distintos dentro de un producto suelen delatar una fusión errónea (o una oferta mal parseada). Sólo
+// ofertas con stock: las agotadas conservan precios viejos.
+console.log("\n== Sospechosos: transferencia máxima / mínima > 1,5 entre ofertas con stock de un producto");
 const suspects = await rows<{ id: number; name: string; ratio: number }>(`
   SELECT p.id, p.name, ROUND(1.0 * MAX(l.price_cash) / MIN(l.price_cash), 2) AS ratio
-  FROM products p JOIN listings l ON l.product_id = p.id AND l.is_active = 1
+  FROM products p JOIN listings l ON l.product_id = p.id AND l.is_active = 1 AND l.in_stock = 1
   GROUP BY p.id HAVING COUNT(DISTINCT l.store_id) >= 2 AND ratio > 1.5 ORDER BY ratio DESC LIMIT 15`);
 for (const s of suspects) {
   console.log(`\n#${s.id} ${s.name} (×${s.ratio})`);
   const offers = await rows<{ slug: string; title: string; price_cash: number; mpn: string | null }>(`
     SELECT st.slug, l.title, l.price_cash, l.mpn FROM listings l JOIN stores st ON st.id = l.store_id
-    WHERE l.product_id = ${s.id} AND l.is_active = 1`);
+    WHERE l.product_id = ${s.id} AND l.is_active = 1 AND l.in_stock = 1`);
   for (const o of offers)
     console.log(`   ${o.slug.padEnd(14)} ${String(o.price_cash).padStart(9)}  ${o.mpn ?? "-"}  ${o.title}`);
 }
