@@ -77,6 +77,11 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | Progaming | WooCommerce, `sku: "internal"` (EAN), tarjeta +5 % | Mezcla ventiladores en "Refrigeración": `normalize` los aparta (`category:case_fan`) |
 | Central Gamer | WooCommerce, `sku: "internal"`, `cashDiscount: 0.05` | Vende sobre todo PCs armados; ~55 componentes |
 | PC Factory | Adaptador `pcfactory` (API JSON de la SPA), `minIntervalMs: 1000` | Listado `api.pcfactory.cl/…/catalogo/productos/query?categorias=…` con `efectivo` (transferencia/débito), `normal` (otros medios) y `referencia` ("antes"); el `partNumber` sale de la ficha JSON, una petición por producto. ~300 válidas, MPN 85–100 %. Se saltan los `outlet` |
+| PC Express | Adaptador `pc-express` (OpenCart: listado + ficha por producto) | El robots.txt prohíbe `limit=`, `sort=` y `filter_*`: 20 por página con `page=N`. Tarjeta = transferencia / 0,94 ("valor normal" de tarjetas; contado −6 %). Stock de casa matriz + web. ~530 válidas, ~620 peticiones por ciclo |
+| Tecnomas | Adaptador `tecnomas` (listado `ItemList` + ficha JSON-LD) | Listado `/productos?categorias=[…]&condicion=[Nuevo]&mostrar=48`, sólo muestra con stock. Transferencia y "Precio Normal" (Webpay) en la ficha; un solo precio = "Todo medio de pago". Sin gabinetes ni fuentes: ahí la tienda mezcla racks, fuentes PoE y de riel DIN |
+| MyBox | Adaptador `prestashop` (JSON del listado con `X-Requested-With`), referencia = MPN, `cashDiscount: 0.05` | `price_amount` es tarjeta; transferencia = precio − round(precio × 5 %). Stock por `add_to_cart_url` |
+| Todoclick | Mismo adaptador, tarjeta +1,7 % ("Otros medios de pago") | `price_amount` = "Precio Khipu" (transferencia). Catálogo con mucho agotado y SSD mezclados con RAM y externos (`normalize` los aparta) |
+| TYT Gamer | Mismo adaptador, referencia interna, tarjeta +5 % | Sin marca en el JSON. SSD y HDD vienen de la raíz "Almacenamiento" |
 | MyShop | Adaptador `myshop` (`POST /servicio/producto`), `minIntervalMs: 2500` | Dry run del 30-09-2026: ~650 ofertas válidas, MPN 81–99 % según categoría, los dos precios en todas. Su Cloudflare corta con 429 (error 1015) a ~1,3 requests/s sostenidas |
 | Sandos | Mismo adaptador, otro mapa de `idFamilia` | Dry run: ~260 válidas, MPN 65–100 %. `api: 1` = entrega diferida por distribuidor: se puede comprar, cuenta como stock |
 
@@ -88,18 +93,18 @@ cuarentena por motivo.
 
 | # | Tienda | Ofertas | Trabajo | Por qué |
 |---|---|---|---|---|
-| 1 | MyShop | 548 | Adaptador nuevo (API JSON propia) | MPN o UPC, marca, los dos precios y stock en `POST /servicio/producto` |
-| 2 | Sandos | 295 | Mismo adaptador que MyShop | Sólo cambia el mapa de familias (`idFamilia`) |
+| 1 | ~~MyShop~~ | 548 | Integrada (adaptador `myshop`) | MPN o UPC, marca, los dos precios y stock en `POST /servicio/producto` |
+| 2 | ~~Sandos~~ | 295 | Integrada (mismo adaptador) | Sólo cambia el mapa de familias (`idFamilia`) |
 | 3 | ~~Infor-Ingen~~ | 578 | Integrada | `cardMarkup: 0.06`: su `regular_price` coincide con la tarjeta sólo a veces (ver abajo) |
-| 4 | ETChile | 120 | Configuración | La mejor huella de las WooCommerce: SKU = MPN, GTIN y marca |
+| 4 | ~~ETChile~~ | 120 | Integrada | La mejor huella de las WooCommerce: SKU = MPN, GTIN y marca |
 | 5 | ~~Centrale~~ | 593 | No integrar | Protege los precios con un plugin anti-scraping (`centrale-anti-scrape` + Turnstile): no quiere que la scrapeen. Candidata a la API abierta para tiendas |
-| 6 | KDTEC | 303 | Configuración (`internal`) | Atributos muy completos |
+| 6 | KDTEC | 303 | En pausa | Su Store API dejó de responder (timeout) durante el sondeo |
 | 7 | ~~PC Factory~~ | 321 | Integrada | Listado y precios en `catalogo/productos/query` (encontrado con las peticiones de la web) |
-| 8 | Tecnomas | 506 | Parser HTML | La mejor huella del lote: MPN, GTIN y marca en JSON-LD, los dos precios en el HTML |
-| 9 | PC Express | 519 | Parser HTML (OpenCart) | JSON-LD con MPN y marca |
+| 8 | ~~Tecnomas~~ | 506 | Integrada (7 categorías) | La mejor huella del lote: MPN, GTIN y marca en JSON-LD, los dos precios en el HTML |
+| 9 | ~~PC Express~~ | 519 | Integrada | JSON-LD con MPN y marca |
 | 10 | NotebookStore y otras Jumpseller | 389 + | Adaptador Jumpseller (JSON-LD + HTML) | Después sirve para Thundertech, Tecnocam, Valrod y V Gamers |
-| 11 | MyBox, Todoclick | 150 + 38 | Adaptador PrestaShop (búsqueda AJAX) | MPN y GTIN; probar si sirve para AllTec y TYT Gamer |
-| 12 | WooCommerce chicas con MPN | — | Configuración | Tecno Shopping, Nuevatec, CCLink, Tecno Master, Progaming, Notebooksya, DazBog |
+| 11 | ~~MyBox, Todoclick, TYT Gamer~~ | 150 + 38 + 28 | Integradas (adaptador `prestashop`) | AllTec descartada: PrestaShop 1.6 sin JSON y casi sin componentes |
+| 12 | WooCommerce chicas con MPN | — | Configuración | Integradas Nuevatec, CCLink y Progaming; quedan DazBog (vende usados), Tecno Shopping y Tecno Master (en pausa) |
 | 13 | Wei, Eylstore, Tecno Saga | 170 + 147 + 145 | Parsers HTML | MPN en la página (Tecno Saga, sólo en el título) |
 | 14 | El resto | — | — | SKU interno, títulos pobres o usados |
 
@@ -110,6 +115,7 @@ cuarentena por motivo.
 - Tecno Shopping: la Store API ahora devuelve HTML en vez de JSON.
 - Tecno Master: la ficha muestra la tarjeta más barata que la transferencia (4.495.621 contra 4.616.610); aclarar antes de integrar.
 - Notebooksya: casi todo son notebooks; pocos componentes.
+- AllTec: PrestaShop 1.6 (no devuelve JSON) y casi sin componentes.
 
 **Fuera de alcance mientras sólo haya `fetch`:** Winpy, SP Digital, CTMAN y Nice One. Winpy tiene el catálogo más
 grande: conviene probarla desde el Worker antes de descartarla, y si también bloquea, es la primera candidata para

@@ -108,7 +108,7 @@ const MISPLACED: Partial<Record<Category, Array<[misplaced: (title: string) => b
   case_fan: [[(t) => /\b(cpu|aio|disipador|heatpipes?)\b|^refrigeracion liquida/.test(t), "category:cpu_cooler"]],
   ssd: [
     [(t) => EXTERNAL_DRIVE.test(t), "category:external_drive"],
-    [(t) => /\bddr[345]\b/.test(t), "category:other_product"],
+    [(t) => /\bddr[345]\b|\b(pendrive|micro ?sd|sdxc|sdhc|tarjeta de memoria)\b/.test(t), "category:other_product"],
   ],
   hdd: [[(t) => EXTERNAL_DRIVE.test(t), "category:external_drive"]],
 };

@@ -54,6 +54,7 @@ describe("normalizeOffer", () => {
     ["ssd", "Disco Duro Externo SSD Kingston XS1000 1TB USB 3.2", "category:external_drive"],
     ["hdd", "Disco Duro LaCie Rugged Mini 2TB USB-C Portátil", "category:external_drive"],
     ["ssd", "SSD 32 GB DDR4 Kingston Fury Impact KF432S20IB/32", "category:other_product"],
+    ["ssd", "Tarjeta MicroSD Kingston Canvas Go Plus 256GB", "category:other_product"],
     ["case_fan", "Ventilador CPU Morpheus TJ400 ARGB", "category:cpu_cooler"],
     ["case_fan", "Refrigeración líquida MSI MAG CoreLiquid 360R", "category:cpu_cooler"],
     ["cpu_cooler", "Pasta Térmica CoolerMaster Cryofuze 5", "category:other_product"],
