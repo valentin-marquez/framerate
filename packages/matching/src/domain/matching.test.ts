@@ -83,6 +83,7 @@ describe("atributos por categoría", () => {
       capacity: 32,
       speed: 6000,
       formFactor: "dimm",
+      line: "beast",
     });
     expect(PROFILES.ram.extract("Memoria Notebook SO-DIMM 16GB DDR4 3200 MHz")).toMatchObject({
       modules: 1,
@@ -129,6 +130,7 @@ describe("atributos por categoría", () => {
       capacity: 32,
       speed: 6000,
       formFactor: "dimm",
+      line: "vengeance",
     });
     expect(PROFILES.ram.extract("Memoria RAM Kingston Fury Beast Black RGB EXPO 8G 6000M CL30")).toMatchObject({
       type: "ddr5",
@@ -235,6 +237,23 @@ describe("decisión de matching", () => {
     expect(ram.kind).not.toBe("link");
   });
 
+  test("códigos de modelo con distinto prefijo (P2 vs T500) también son conflicto; los de especificación no", () => {
+    const ssd = decide(fp("ssd", "SSD NVMe M.2 Crucial T500 500GB PCIe Gen4 x4"), [
+      existing(1, "ssd", "SSD NVME CRUCIAL P2 500GB M.2 2280 PCIE"),
+    ]);
+    expect(ssd.kind).not.toBe("link");
+    // "gen4" en un título y "am5" en el otro son especificaciones distintas, no modelos en conflicto.
+    const cpu = compare(fp("cpu", "Procesador AMD Ryzen 7 9700X AM5"), fp("cpu", "AMD Ryzen 7 9700X PCIe Gen5"));
+    expect(cpu.evidence.modelConflict).toBeUndefined();
+  });
+
+  test("RAM: la línea (Beast vs Renegade) es discriminante cuando ambos títulos la dicen", () => {
+    const decision = decide(fp("ram", "Memoria Ram DDR4 32GB 3600MHz Kingston Fury Beast, CL18, DIMM"), [
+      existing(1, "ram", "Memoria RAM Kingston FURY Renegade 32G 3600MT/s DDR4 CL18"),
+    ]);
+    expect(decision).toEqual({ kind: "new_product" });
+  });
+
   test("con el mismo modelo y atributos, el vínculo por atributos sigue funcionando", () => {
     const decision = decide(fp("ssd", "Unidad SSD Kingston NV3 500GB M.2 2230 PCIe 4.0 NVMe"), [
       existing(1, "ssd", "Kingston SSD 500GB NV3 M.2 2230 NVMe PCIe 4.0"),
@@ -285,10 +304,10 @@ describe("decisión de matching", () => {
     expect(decision).toMatchObject({ kind: "link", productId: 3, method: "attributes" });
   });
 
-  test("RAM: misma clave pero títulos distintos (otra línea/color) → revisión humana", () => {
+  test("RAM: misma clave pero otra línea (Vengeance vs Dominator) → producto distinto", () => {
     const offer = fp("ram", "Corsair Vengeance RGB 32GB (2x16GB) DDR5 6000MHz Blanca");
     const decision = decide(offer, [existing(4, "ram", "Corsair Dominator Titanium 32GB 2x16GB DDR5 6000MHz")]);
-    expect(decision.kind).toBe("review");
+    expect(decision).toEqual({ kind: "new_product" });
   });
 
   test("MPN en conflicto bloquea la fusión automática aunque la clave coincida", () => {

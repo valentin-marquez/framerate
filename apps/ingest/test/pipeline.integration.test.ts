@@ -210,7 +210,7 @@ describe("zona gris del matching", () => {
     alfa.setOffers([
       offer("alfa", "1", {
         category: "ram",
-        title: "Corsair Dominator Titanium 32GB 2x16GB DDR5 6000MHz",
+        title: "Corsair Vengeance LPX 32GB 2x16GB DDR5 6000MHz Black",
         priceCash: 180_000,
       }),
     ]);

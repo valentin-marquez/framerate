@@ -19,7 +19,7 @@ export interface Fingerprint {
   attributeKey: string | null;
   /**
    * Tokens que distinguen el modelo (línea, serie, color). Excluye la marca y,
-   * en categorías con atributos, los tokens numéricos (32gb, 6000mhz, 4070):
+   * en categorías con atributos, los tokens numéricos (32gb, 6000mhz, 4070) y de tipo de memoria (ddr5):
    * esos ya se comparan como atributos y contarlos de nuevo inflaría la similitud.
    */
   tokens: string[];
@@ -113,7 +113,8 @@ const STOPWORDS = new Set([
 function distinctiveTokens(category: Category, title: string, brand: string | null): string[] {
   const brandTokens = new Set(brand ? titleTokens(brand) : []);
   const hasAttributes = PROFILES[category].keyFields.length > 0;
-  return titleTokens(title).filter((t) => !brandTokens.has(t) && !(hasAttributes && /^\d/.test(t)));
+  // "ddr5"/"gddr7" también son atributos (tipo de memoria): contarlos inflaría la similitud igual que los números.
+  return titleTokens(title).filter((t) => !brandTokens.has(t) && !(hasAttributes && /^(\d|g?ddr\d)/.test(t)));
 }
 
 export function titleTokens(title: string): string[] {

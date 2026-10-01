@@ -115,12 +115,21 @@ export function decide(offer: Fingerprint, candidates: readonly Candidate[]): De
   return { kind: "new_product" };
 }
 
-/** Hay un código de modelo sólo en un lado y otro con el mismo prefijo sólo en el otro ("nv1" vs "nv3"). */
+/** Tokens con dígitos que describen especificaciones, no el modelo (una tienda los pone y otra no). */
+const SPEC_CODE = /^(g?ddr|pc|gen|pcie|sata|usb|x|m|lga|s?am|fm|s|v|cl|mt|rev)\d/;
+
+/**
+ * Hay un código de modelo sólo en un lado y otro sólo en el otro: "nv1" vs "nv3", "p2" vs "t500", "cl36" vs "cl28".
+ * Los de especificación sólo cuentan contra otro del mismo prefijo ("gen4" vs "gen5", pero no "gen4" vs "am5").
+ */
 function modelCodeConflict(a: readonly string[], b: readonly string[]): boolean {
-  const onlyIn = (xs: readonly string[], other: readonly string[]) =>
-    xs.filter((t) => /^[a-z]+\d/.test(t) && !other.includes(t)).map((t) => t.match(/^[a-z]+/)?.[0]);
-  const prefixesB = new Set(onlyIn(b, a));
-  return onlyIn(a, b).some((p) => prefixesB.has(p));
+  const codesOnlyIn = (xs: readonly string[], other: readonly string[]) =>
+    xs.filter((t) => /^[a-z]+\d/.test(t) && !other.includes(t));
+  const prefix = (t: string) => t.match(/^[a-z]+/)?.[0];
+  const onlyB = codesOnlyIn(b, a);
+  return codesOnlyIn(a, b).some((x) =>
+    onlyB.some((y) => prefix(x) === prefix(y) || (!SPEC_CODE.test(x) && !SPEC_CODE.test(y))),
+  );
 }
 
 /** Coeficiente de Dice sobre conjuntos de tokens (0..1). */
