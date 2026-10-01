@@ -1,0 +1,65 @@
+{
+  "mcp": {
+    "equipos/componentes-informaticos/tarjetas-de-video": [
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "[{\"product\":{\"name\":\"Tarjeta de Video Asis Dual Nvidia GeForce RTX 3060 V2 OC Edition - 12GB\",\"price\":435990,\"compare_at_price\":null,\"weight\":0.8,\"sku\":\"90YV0GB2-M0AA10\",\"brand\":\"ASUS\",\"barcode\":null,\"type\":\"physical\",\"shipping_required\":true,\"package_format\":\"box\",\"length\":4,\"width\":20,\"height\":14,\"diameter\":0,\"id\":\"gid://jumpseller/Product/27580929\",\"stock_available\":true,\"permalink\":\"dual-rtx3060-o12g-v2\",\"url\":\"https://notebookstore.cl/dual-rtx3060-o12g-v2\",\"add_to_cart_url\":\"https://notebookstore.cl/cart/add/27580929\",\"buy_now_url\":\"https://notebookstore.cl/cart/buy_now/27580929\",\"categories\":[\"Partes & Piezas\",\"Tarjetas de Video\",\"Componentes\",\"Tarjetas de Video\"],\"images\":[\"https://images.jumpseller.com/store/notebook-store/27580929/Captura_de_pantalla_2024-11-14_154918.png?1731610672\",\"https://images.jumpseller.com/store/notebook-store/27580929/Captura_de_pantalla_2024-11-14_154927.png?1731610672\",\"https://images.jumpseller.com/store/notebook-store/27580929/Captura_de_pantalla_2024-11-14_154932.png?1731610672\",\"https://images.jumpseller.com/store/notebook-store/27580929/Captura_de_pantalla_2024-11-14_154939.png?1731610672\"],\"variants\":[],\"currency\":\"CLP\"}},{\"product\":{\"name\":\"Tarjeta de Video MSI Nvidia GT 710 2GD3 2GB 64-Bit DDR3 PCI Express 2.0 Low Profile\",\"price\":67990,\"compare_at_price\":null,\"weight\":1,\"sku\":\"824142126905\",\"brand\":\"MSI\",\"barcode\":\"824142126905\",\"type\":\"physical\",\"shipping_required\":true,\"package_format\":\"box\",\"length\":5,\"width\":25,\"height\":10,\"diameter\":0,\"id\":\"gid://jumpseller/Product/24305096\",\"stock_available\":true,\"permalink\":\"msi-pci-express-nvidia-gt-710-2gd3\",\"url\":\"https://notebookstore.cl/msi-pci-express-nvidia-gt-710-2gd3\",\"add_to_cart_url\":\"https://notebookstore.cl/cart/add/24305096\",\"buy_now_url\":\"https://notebookstore.cl/cart/buy_now/24305096\",\"categories\":[\"Partes & Piezas\",\"Tarjetas de Video\",\"GAMING\",\"Componentes\",\"Tarjetas de Video\"],\"images\":[\"https://images.jumpseller.com/store/notebook-store/24305096/MSI_Nvidia_GT_710_2GD3.png?1710773300\",\"https://images.jumpseller.com/store/notebook-store/24305096/MSI_Nvidia_GT_710.png?1710773300\",\"https://images.jumpseller.com/store/notebook-store/24305096/MSI_Nvidia_GT_710_2GD3_plug.png?1710773300\"],\"variants\":[],\"currency\":\"CLP\"}}]"
+            }
+          ],
+          "isError": false
+        }
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "[]"
+            }
+          ],
+          "isError": false
+        }
+      }
+    ],
+    "hardware/fuentes-de-poder": [
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "[{\"product\":{\"name\":\"Fuente de poder Cougar ATLAS 600\",\"price\":79990,\"compare_at_price\":null,\"weight\":1.6,\"sku\":\"31AT060004P01\",\"brand\":\"Cougar\",\"barcode\":\"4710483775260\",\"type\":\"physical\",\"shipping_required\":true,\"package_format\":\"box\",\"length\":18,\"width\":16,\"height\":16,\"diameter\":0,\"id\":\"gid://jumpseller/Product/25054662\",\"stock_available\":true,\"permalink\":\"fuente-de-poder-cougar-atlas-600\",\"url\":\"https://valrod.cl/fuente-de-poder-cougar-atlas-600\",\"add_to_cart_url\":\"https://valrod.cl/cart/add/25054662\",\"buy_now_url\":\"https://valrod.cl/cart/buy_now/25054662\",\"categories\":[\"Cougar\",\"Hardware\",\"Fuentes de poder\"],\"images\":[\"https://images.jumpseller.com/store/valrod/25054662/atlas-1.jpg?1715882708\",\"https://images.jumpseller.com/store/valrod/25054662/ATLAS-02.png?1715882708\",\"https://images.jumpseller.com/store/valrod/25054662/ATLAS-03.png?1715882708\",\"https://images.jumpseller.com/store/valrod/25054662/ATLAS-05.png?1715882708\",\"https://images.jumpseller.com/store/valrod/25054662/ATLAS-06.png?1715882708\",\"https://images.jumpseller.com/store/valrod/25054662/parche-partner.png?1715882708\"],\"variants\":[],\"currency\":\"CLP\"}},{\"product\":{\"name\":\"Fuente de poder Cougar ATLAS 650\",\"price\":84990,\"compare_at_price\":null,\"weight\":1.6,\"sku\":\"31AT065006P01\",\"brand\":\"Cougar\",\"barcode\":\"4710483774874\",\"type\":\"physical\",\"shipping_required\":true,\"package_format\":\"box\",\"length\":18,\"width\":16,\"height\":16,\"diameter\":0,\"id\":\"gid://jumpseller/Product/25055159\",\"stock_available\":false,\"permalink\":\"fuente-de-poder-cougar-atlas-650\",\"url\":\"https://valrod.cl/fuente-de-poder-cougar-atlas-650\",\"add_to_cart_url\":\"https://valrod.cl/cart/add/25055159\",\"buy_now_url\":\"https://valrod.cl/cart/buy_now/25055159\",\"categories\":[\"Cougar\",\"Hardware\",\"Fuentes de poder\"],\"images\":[\"https://images.jumpseller.com/store/valrod/25055159/atlas-1.jpg?1715886330\",\"https://images.jumpseller.com/store/valrod/25055159/ATLAS-02.png?1715886330\",\"https://images.jumpseller.com/store/valrod/25055159/ATLAS-03.png?1715886330\",\"https://images.jumpseller.com/store/valrod/25055159/ATLAS-05.png?1715886330\",\"https://images.jumpseller.com/store/valrod/25055159/ATLAS-06.png?1715886330\",\"https://images.jumpseller.com/store/valrod/25055159/parche-partner.png?1715886331\"],\"variants\":[],\"currency\":\"CLP\"}}]"
+            }
+          ],
+          "isError": false
+        }
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "[{\"product\":{\"name\":\"Fuente de poder Cougar ATLAS 750\",\"price\":74990,\"compare_at_price\":null,\"weight\":1.6,\"sku\":\"31AT075001P01\",\"brand\":\"Cougar\",\"barcode\":\"4710483774881\",\"type\":\"physical\",\"shipping_required\":true,\"package_format\":\"box\",\"length\":18,\"width\":16,\"height\":16,\"diameter\":0,\"id\":\"gid://jumpseller/Product/25422286\",\"stock_available\":true,\"permalink\":\"fuente-de-poder-cougar-atlas-750\",\"url\":\"https://valrod.cl/fuente-de-poder-cougar-atlas-750\",\"add_to_cart_url\":\"https://valrod.cl/cart/add/25422286\",\"buy_now_url\":\"https://valrod.cl/cart/buy_now/25422286\",\"categories\":[\"Cougar\",\"Hardware\",\"Fuentes de poder\"],\"images\":[\"https://images.jumpseller.com/store/valrod/25422286/atlas-1.jpg?1718210087\",\"https://images.jumpseller.com/store/valrod/25422286/ATLAS-02.png?1718210087\",\"https://images.jumpseller.com/store/valrod/25422286/ATLAS-03.png?1718210088\",\"https://images.jumpseller.com/store/valrod/25422286/ATLAS-05.png?1718210088\",\"https://images.jumpseller.com/store/valrod/25422286/ATLAS-06.png?1718210088\",\"https://images.jumpseller.com/store/valrod/25422286/parche-partner.png?1718210088\"],\"variants\":[],\"currency\":\"CLP\"}}]"
+            }
+          ],
+          "isError": false
+        }
+      }
+    ]
+  },
+  "fichas": {
+    "https://notebookstore.cl/dual-rtx3060-o12g-v2": "<meta property=\"og:title\" content=\"Tarjeta de Video Asis Dual Nvidia GeForce RTX 3060 V2 OC Edition - 12GB\">\n<meta property=\"product:is_product_shareable\" content=\"1\">\n<meta property=\"product:original_price:amount\" content=\"435990.0\">\n<meta property=\"product:price:amount\" content=\"435990.0\">\n<meta property=\"product:availability\" content=\"instock\">\n<meta property=\"product:original_price:currency\" content=\"CLP\">\n<meta property=\"product:price:currency\" content=\"CLP\">",
+    "https://notebookstore.cl/msi-pci-express-nvidia-gt-710-2gd3": "<meta property=\"og:title\" content=\"Tarjeta de Video MSI Nvidia GT 710 2GD3 2GB 64-Bit DDR3 PCI Express 2.0 Low Profile\">\n<meta property=\"product:is_product_shareable\" content=\"1\">\n<meta property=\"product:original_price:amount\" content=\"67990.0\">\n<meta property=\"product:price:amount\" content=\"67990.0\">\n<meta property=\"product:availability\" content=\"instock\">\n<meta property=\"product:original_price:currency\" content=\"CLP\">\n<meta property=\"product:price:currency\" content=\"CLP\">",
+    "https://valrod.cl/fuente-de-poder-cougar-atlas-750": "<meta property=\"og:title\" content=\"Fuente de poder Cougar ATLAS 750\">\n<meta property=\"product:is_product_shareable\" content=\"1\">\n<meta property=\"product:original_price:amount\" content=\"74990.0\">\n<meta property=\"product:price:amount\" content=\"54990.0\">\n<meta property=\"product:availability\" content=\"instock\">\n<meta property=\"product:original_price:currency\" content=\"CLP\">\n<meta property=\"product:price:currency\" content=\"CLP\">"
+  }
+}
