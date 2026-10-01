@@ -47,17 +47,15 @@ export interface CreatedTicket {
 }
 
 export const supportClient = {
-  create: (payload: CreateTicketPayload, token?: string) =>
-    api.post<CreatedTicket>("/v1/support/tickets", payload, token ? { token } : undefined),
-  listMine: (token: string) => api.get<{ tickets: SupportTicket[] }>("/v1/support/tickets/mine", { token }),
-  get: (id: string, token: string) =>
-    api.get<{ ticket: SupportTicketDetail; messages: SupportTicketMessage[] }>(`/v1/support/tickets/${id}`, { token }),
-  reply: (id: string, body: string, token: string) =>
-    api.post<SupportTicketMessage>(`/v1/support/tickets/${id}/reply`, { body }, { token }),
+  create: (payload: CreateTicketPayload) => api.post<CreatedTicket>("/v1/support/tickets", payload),
+  listMine: () => api.get<{ tickets: SupportTicket[] }>("/v1/support/tickets/mine"),
+  get: (id: string) =>
+    api.get<{ ticket: SupportTicketDetail; messages: SupportTicketMessage[] }>(`/v1/support/tickets/${id}`),
+  reply: (id: string, body: string) => api.post<SupportTicketMessage>(`/v1/support/tickets/${id}/reply`, { body }),
 };
 
 export const adminSupportClient = {
-  list: (params: { status?: SupportStatus; limit?: number }, token: string) => {
+  list: (params: { status?: SupportStatus; limit?: number }) => {
     const q: Record<string, string> = {};
     if (params.status) q.status = params.status;
     if (params.limit) q.limit = String(params.limit);
@@ -75,23 +73,18 @@ export const adminSupportClient = {
         updated_at: string;
         last_message_at: string;
       }>;
-    }>("/v1/admin/support/tickets", { token, params: q });
+    }>("/v1/admin/support/tickets", { params: q });
   },
-  get: (id: string, token: string) =>
+  get: (id: string) =>
     api.get<{
       ticket: SupportTicketDetail & { email: string; assigned_to: string | null; source: string };
       messages: SupportTicketMessage[];
-    }>(`/v1/admin/support/tickets/${id}`, { token }),
-  reply: (id: string, body: string, isInternalNote: boolean, token: string) =>
-    api.post<SupportTicketMessage>(
-      `/v1/admin/support/tickets/${id}/reply`,
-      { body, is_internal_note: isInternalNote },
-      { token },
-    ),
-  update: (id: string, body: { status?: SupportStatus; assign_to_self?: boolean }, token: string) =>
+    }>(`/v1/admin/support/tickets/${id}`),
+  reply: (id: string, body: string, isInternalNote: boolean) =>
+    api.post<SupportTicketMessage>(`/v1/admin/support/tickets/${id}/reply`, { body, is_internal_note: isInternalNote }),
+  update: (id: string, body: { status?: SupportStatus; assign_to_self?: boolean }) =>
     api.patch<{ id: string; status: SupportStatus; assigned_to: string | null; updated_at: string }>(
       `/v1/admin/support/tickets/${id}`,
       body,
-      { token },
     ),
 };

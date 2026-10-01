@@ -67,36 +67,28 @@ export const commentsService = {
       params: { limit: String(limit) },
     }),
 
-  create: (productId: string, payload: { parent_id?: string | null; body: string }, token: string) =>
-    api.post<{ data: CommentNode }>(`/v1/products/${productId}/comments`, payload, { token }),
+  create: (productId: string, payload: { parent_id?: string | null; body: string }) =>
+    api.post<{ data: CommentNode }>(`/v1/products/${productId}/comments`, payload),
 
-  edit: (commentId: string, body: string, token: string) =>
-    api.patch<{ data: { id: string; body: string; edited_at: string; score: number } }>(
-      `/v1/comments/${commentId}`,
-      { body },
-      { token },
-    ),
+  edit: (commentId: string, body: string) =>
+    api.patch<{ data: { id: string; body: string; edited_at: string; score: number } }>(`/v1/comments/${commentId}`, {
+      body,
+    }),
 
-  softDelete: (commentId: string, reason: string | undefined, token: string) =>
+  softDelete: (commentId: string, reason: string | undefined) =>
     api.delete<{ data: { id: string; deleted_at: string; deleted_reason: string } }>(`/v1/comments/${commentId}`, {
-      token,
       // delete with body needs explicit body
       body: JSON.stringify(reason ? { reason } : {}),
       headers: { "Content-Type": "application/json" },
     }),
 
-  vote: (commentId: string, value: -1 | 0 | 1, token: string) =>
-    api.post<{ data: { id: string; value: number; score: number } }>(
-      `/v1/comments/${commentId}/vote`,
-      { value },
-      { token },
-    ),
+  vote: (commentId: string, value: -1 | 0 | 1) =>
+    api.post<{ data: { id: string; value: number; score: number } }>(`/v1/comments/${commentId}/vote`, { value }),
 
-  myVotes: (commentIds: string[], token: string) => {
+  myVotes: (commentIds: string[]) => {
     if (commentIds.length === 0) return Promise.resolve({ data: [] as MyVote[] });
     return api.get<{ data: MyVote[] }>(`/v1/comments/me/votes`, {
       params: { ids: commentIds.join(",") },
-      token,
     });
   },
 };

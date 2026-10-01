@@ -83,7 +83,7 @@ const toRequest = (c: Claim): ClaimRequest => ({
 });
 
 export const claimsService = {
-  create: async (storeSlug: string, _token?: string): Promise<ClaimCreateResponse> => {
+  create: async (storeSlug: string): Promise<ClaimCreateResponse> => {
     const c = await api.post<CreatedClaim>("/v1/claims", { storeSlug });
     return {
       id: String(c.id),
@@ -97,16 +97,16 @@ export const claimsService = {
     };
   },
 
-  verify: async (id: string, _token?: string): Promise<ClaimVerifyResponse> => {
+  verify: async (id: string): Promise<ClaimVerifyResponse> => {
     const r = await api.post<VerifyResult>(`/v1/claims/${id}/verify`, {});
     return { id, status: r.claimStatus, matched: r.matched, attempts: r.attempts, dns: r.resolvers };
   },
 
-  dnsCheck: (id: string, _token?: string) => api.get<DnsCheckResponse>(`/v1/claims/${id}/dns-check`),
+  dnsCheck: (id: string) => api.get<DnsCheckResponse>(`/v1/claims/${id}/dns-check`),
 
-  confirm: (id: string, _token?: string) => api.post<{ storeSlug: string }>(`/v1/claims/${id}/confirm`, {}),
+  confirm: (id: string) => api.post<{ storeSlug: string }>(`/v1/claims/${id}/confirm`, {}),
 
-  listMine: async (_token?: string): Promise<{ claims: ClaimRequest[] }> => ({
+  listMine: async (): Promise<{ claims: ClaimRequest[] }> => ({
     claims: (await api.get<{ items: Claim[] }>("/v1/claims/mine")).items.map(toRequest),
   }),
 };

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { requireRole } from "~/features/auth/services/auth.server";
-import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
@@ -48,26 +47,25 @@ export function meta(_: Route.MetaArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireRole(request, "moderator");
-  const token = SESSION_TOKEN;
 
   // Cargamos en paralelo: queue item, lista de reports y mod actions.
   const [queueRes, reportsRes, actionsRes] = await Promise.allSettled([
-    moderationClient.getQueueItem(token),
-    moderationClient.listReports({ limit: 50 }, token),
-    moderationClient.listModActions({ limit: 50 }, token),
+    moderationClient.getQueueItem(),
+    moderationClient.listReports({ limit: 50 }),
+    moderationClient.listModActions({ limit: 50 }),
   ]);
 
   const queueItem = queueRes.status === "fulfilled" ? queueRes.value.item : null;
   const reports = reportsRes.status === "fulfilled" ? reportsRes.value.reports : [];
   const actions = actionsRes.status === "fulfilled" ? actionsRes.value.actions : [];
 
-  return { queueItem, reports, actions, token };
+  return { queueItem, reports, actions };
 }
 
 type TabKey = "queue" | "reports" | "actions";
 
 export default function ModerationDashboard({ loaderData }: Route.ComponentProps) {
-  const { queueItem, reports, actions, token } = loaderData;
+  const { queueItem, reports, actions } = loaderData;
   const [tab, setTab] = useState<TabKey>("queue");
   const revalidator = useRevalidator();
 
@@ -107,7 +105,7 @@ export default function ModerationDashboard({ loaderData }: Route.ComponentProps
       </nav>
 
       <main className="mx-auto max-w-6xl">
-        {tab === "queue" ? <QueueTab item={queueItem} token={token} /> : null}
+        {tab === "queue" ? <QueueTab item={queueItem} /> : null}
         {tab === "reports" ? <ReportsTab reports={reports} /> : null}
         {tab === "actions" ? <ActionsTab actions={actions} /> : null}
       </main>
@@ -130,7 +128,7 @@ function TabButton({ active, children, onClick }: { active: boolean; children: R
   );
 }
 
-function QueueTab({ item, token }: { item: QueueItem | null; token: string }) {
+function QueueTab({ item }: { item: QueueItem | null }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState<"resolved" | "dismissed" | "reviewing" | null>(null);
   const revalidator = useRevalidator();
@@ -151,15 +149,12 @@ function QueueTab({ item, token }: { item: QueueItem | null; token: string }) {
       // item es non-null en este branch (early return arriba).
       const current = item;
       if (!current) return;
-      await moderationClient.resolve(
-        {
-          msg_id: current.msg_id,
-          report_id: current.report_id,
-          decision,
-          note: note.trim() ? note.trim() : undefined,
-        },
-        token,
-      );
+      await moderationClient.resolve({
+        msg_id: current.msg_id,
+        report_id: current.report_id,
+        decision,
+        note: note.trim() ? note.trim() : undefined,
+      });
       toast.success(`Report ${decision}`);
       setNote("");
       revalidator.revalidate();

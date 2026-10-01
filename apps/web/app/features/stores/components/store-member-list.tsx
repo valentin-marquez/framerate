@@ -9,17 +9,16 @@ interface StoreMemberListProps {
   slug: string;
   members: StoreMember[];
   currentUserIsOwner: boolean;
-  token: string;
   onChange?: () => void;
 }
 
-export function StoreMemberList({ slug, members, currentUserIsOwner, token, onChange }: StoreMemberListProps) {
+export function StoreMemberList({ slug, members, currentUserIsOwner, onChange }: StoreMemberListProps) {
   const [removing, setRemoving] = useState<string | null>(null);
 
   async function remove(userId: string) {
     setRemoving(userId);
     try {
-      await storesService.removeMember(slug, userId, token);
+      await storesService.removeMember(slug, userId);
       toast.success("Miembro removido");
       onChange?.();
     } catch (err) {

@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { Form, useNavigation } from "react-router";
 import { toast } from "sonner";
 import { getAuthUser, requireAuth } from "~/features/auth/services/auth.server";
-import { useAuthStore } from "~/features/auth/store/auth";
 import { meToProfile, profilesService } from "~/features/profile/services/profiles";
 import { Button } from "~/shared/components/primitives/button";
 import { ButtonGroup, ButtonGroupText } from "~/shared/components/primitives/button-group";
@@ -68,7 +67,6 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const toastIdRef = useRef<string | number | null>(null);
-  const setProfile = useAuthStore((state) => state.setProfile);
   const { t } = useTranslation();
 
   // Mostrar toast de loading cuando se está enviando
@@ -86,8 +84,6 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
           id: toastIdRef.current,
         });
 
-        // Actualizar el store con los nuevos datos del loader
-        setProfile(actionData.profile || profile);
         toastIdRef.current = null;
       } else if (actionData?.error) {
         toast.error(
@@ -99,7 +95,7 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
         toastIdRef.current = null;
       }
     }
-  }, [actionData, isSubmitting, profile, setProfile, t]);
+  }, [actionData, isSubmitting, t]);
 
   return (
     <div className="space-y-8">

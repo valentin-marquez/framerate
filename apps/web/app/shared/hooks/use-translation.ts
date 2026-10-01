@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useFetcher } from "react-router";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { useProfile } from "~/features/auth/hooks/useAuth";
 import { profilesService } from "~/features/profile/services/profiles";
 import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
 import { getTranslation, type Lang } from "~/shared/lib/translations";
@@ -17,7 +17,7 @@ export function useOptimisticLang(): Lang | undefined {
 export function useTranslation() {
   const requestInfo = useOptionalRequestInfo();
   const optimistic = useOptimisticLang();
-  const { setProfile } = useAuthStore();
+  const profile = useProfile();
   // requestInfo.userPrefs.lang is the source of truth (root loader keeps cookie
   // and profile.lang in sync per request). Optimistic value flips it instantly.
   const lang: Lang = optimistic ?? requestInfo?.userPrefs.lang ?? "es";
@@ -35,11 +35,7 @@ export function useTranslation() {
       fetcher.submit({ lang: next }, { method: "post", action: "/lang-switcher" });
 
       // For authed users, also sync to profile so it follows them across devices.
-      // Leemos el profile actual con getState() para evitar el patrón "spread from closure"
-      // (setProfile de zustand no soporta updater functions).
-      const currentProfile = useAuthStore.getState().profile;
-      if (currentProfile) {
-        setProfile({ ...currentProfile, lang: next });
+      if (profile) {
         try {
           await profilesService.updateMe({ lang: next });
         } catch (e) {
@@ -47,7 +43,7 @@ export function useTranslation() {
         }
       }
     },
-    [fetcher, setProfile],
+    [fetcher, profile],
   );
 
   return { t, lang, setLanguage };

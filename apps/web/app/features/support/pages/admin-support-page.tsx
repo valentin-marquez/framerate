@@ -21,7 +21,6 @@ import { useRevalidator, useSearchParams } from "react-router";
 import useMeasure from "react-use-measure";
 import { toast } from "sonner";
 import { requireRole } from "~/features/auth/services/auth.server";
-import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { Switch } from "~/shared/components/primitives/switch";
 import { Textarea } from "~/shared/components/primitives/textarea";
@@ -94,17 +93,16 @@ export function meta(_: Route.MetaArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await requireRole(request, "moderator");
-  const token = SESSION_TOKEN;
   const url = new URL(request.url);
   const statusFilter = (url.searchParams.get("status") as SupportStatus | null) ?? null;
 
-  const { tickets } = await adminSupportClient.list({ status: statusFilter ?? undefined, limit: 100 }, token);
+  const { tickets } = await adminSupportClient.list({ status: statusFilter ?? undefined, limit: 100 });
 
-  return { tickets, token, currentUserId: user.id };
+  return { tickets, currentUserId: user.id };
 }
 
 export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
-  const { tickets, token, currentUserId } = loaderData;
+  const { tickets, currentUserId } = loaderData;
   const revalidator = useRevalidator();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedId, setSelectedId] = useState<string | null>(tickets[0]?.id ?? null);
@@ -232,7 +230,7 @@ export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
 
         <section>
           {selectedId ? (
-            <TicketThread ticketId={selectedId} token={token} currentUserId={currentUserId} />
+            <TicketThread ticketId={selectedId} currentUserId={currentUserId} />
           ) : (
             <div className="rounded-2xl border border-border bg-card p-12 text-center">
               <p className="text-sm text-muted-foreground">Selecciona un ticket para verlo.</p>
@@ -246,11 +244,10 @@ export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
 
 interface TicketThreadProps {
   ticketId: string;
-  token: string;
   currentUserId: string;
 }
 
-function TicketThread({ ticketId, token, currentUserId }: TicketThreadProps) {
+function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
   const revalidator = useRevalidator();
   const [loading, setLoading] = useState(true);
   const [ticket, setTicket] = useState<Awaited<ReturnType<typeof adminSupportClient.get>>["ticket"] | null>(null);
@@ -269,7 +266,7 @@ function TicketThread({ ticketId, token, currentUserId }: TicketThreadProps) {
     let cancelled = false;
     setLoading(true);
     adminSupportClient
-      .get(ticketId, token)
+      .get(ticketId)
       .then((res) => {
         if (cancelled) return;
         setTicket(res.ticket);
@@ -285,7 +282,7 @@ function TicketThread({ ticketId, token, currentUserId }: TicketThreadProps) {
     return () => {
       cancelled = true;
     };
-  }, [ticketId, token]);
+  }, [ticketId]);
 
   // Auto-scroll al último mensaje al cargar el ticket o al sumar uno nuevo.
   // biome-ignore lint/correctness/useExhaustiveDependencies: messages.length basta como disparador
@@ -300,7 +297,7 @@ function TicketThread({ ticketId, token, currentUserId }: TicketThreadProps) {
     if (text.length < 1) return;
     setSending(true);
     try {
-      const created = await adminSupportClient.reply(ticketId, text, isInternal, token);
+      const created = await adminSupportClient.reply(ticketId, text, isInternal);
       setMessages((prev) => [...prev, created]);
       setReply("");
       revalidator.revalidate();
@@ -314,7 +311,7 @@ function TicketThread({ ticketId, token, currentUserId }: TicketThreadProps) {
 
   async function changeStatus(status: SupportStatus) {
     try {
-      const updated = await adminSupportClient.update(ticketId, { status }, token);
+      const updated = await adminSupportClient.update(ticketId, { status });
       setTicket((prev) => (prev ? { ...prev, status: updated.status } : prev));
       toast.success(`Status actualizado: ${STATUS_LABELS[updated.status]}`);
       revalidator.revalidate();
@@ -326,7 +323,7 @@ function TicketThread({ ticketId, token, currentUserId }: TicketThreadProps) {
 
   async function assignToMe() {
     try {
-      await adminSupportClient.update(ticketId, { assign_to_self: true }, token);
+      await adminSupportClient.update(ticketId, { assign_to_self: true });
       setTicket((prev) => (prev ? { ...prev, assigned_to: currentUserId } : prev));
       toast.success("Asignado a ti");
       revalidator.revalidate();

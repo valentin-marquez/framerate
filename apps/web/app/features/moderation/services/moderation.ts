@@ -38,23 +38,20 @@ export interface ResolvePayload {
 }
 
 export const moderationClient = {
-  getQueueItem: (token: string) => api.get<{ item: QueueItem | null }>("/v1/admin/moderation/queue", { token }),
+  getQueueItem: () => api.get<{ item: QueueItem | null }>("/v1/admin/moderation/queue"),
 
-  resolve: (payload: ResolvePayload, token: string) =>
-    api.post<{ success: boolean }>("/v1/admin/moderation/resolve", payload, { token }),
+  resolve: (payload: ResolvePayload) => api.post<{ success: boolean }>("/v1/admin/moderation/resolve", payload),
 
-  listReports: (params: { status?: ReportStatus; limit?: number }, token: string) =>
+  listReports: (params: { status?: ReportStatus; limit?: number }) =>
     api.get<{ reports: Report[] }>("/v1/admin/moderation/reports", {
-      token,
       params: {
         ...(params.status ? { status: params.status } : {}),
         ...(params.limit ? { limit: String(params.limit) } : {}),
       },
     }),
 
-  listModActions: (params: { actor_id?: string; target_type?: string; limit?: number }, token: string) =>
+  listModActions: (params: { actor_id?: string; target_type?: string; limit?: number }) =>
     api.get<{ actions: ModAction[] }>("/v1/admin/moderation/mod-actions", {
-      token,
       params: {
         ...(params.actor_id ? { actor_id: params.actor_id } : {}),
         ...(params.target_type ? { target_type: params.target_type } : {}),
@@ -62,8 +59,8 @@ export const moderationClient = {
       },
     }),
 
-  flagProduct: (payload: { product_id: string; reason?: string }, token: string) =>
-    api.post<{ recheck_id: string }>("/v1/admin/moderation/flag-product", payload, { token }),
+  flagProduct: (payload: { product_id: string; reason?: string }) =>
+    api.post<{ recheck_id: string }>("/v1/admin/moderation/flag-product", payload),
 
   searchUsers: (q: string) => api.get<{ items: AdminUser[] }>("/v1/admin/users", { params: { q } }),
 

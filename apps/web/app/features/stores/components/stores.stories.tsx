@@ -109,9 +109,9 @@ const members: StoreMember[] = [
 export const Miembros: Story = {
   render: () => (
     <div className="grid max-w-md gap-6">
-      <StoreMemberList slug="tectec" members={members} currentUserIsOwner token="" />
-      <StoreMemberList slug="tectec" members={members} currentUserIsOwner={false} token="" />
-      <StoreMemberList slug="tectec" members={[]} currentUserIsOwner token="" />
+      <StoreMemberList slug="tectec" members={members} currentUserIsOwner />
+      <StoreMemberList slug="tectec" members={members} currentUserIsOwner={false} />
+      <StoreMemberList slug="tectec" members={[]} currentUserIsOwner />
     </div>
   ),
 };
@@ -174,10 +174,10 @@ const claim = (status: ClaimRequest["status"]): ClaimRequest => ({
 export const ReclamoPasoDns: Story = {
   name: "Reclamo: paso DNS",
   // El wizard revisa el DNS contra la API cada pocos segundos; sin API muestra el aviso de reintento.
-  render: () => <ClaimWizard token="" initialClaim={claim("pending")} />,
+  render: () => <ClaimWizard initialClaim={claim("pending")} />,
 };
 
 export const ReclamoVerificado: Story = {
   name: "Reclamo: dominio verificado",
-  render: () => <ClaimWizard token="" initialClaim={claim("verified")} />,
+  render: () => <ClaimWizard initialClaim={claim("verified")} />,
 };

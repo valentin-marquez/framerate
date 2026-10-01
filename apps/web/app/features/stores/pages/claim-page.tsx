@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { requireAuth } from "~/features/auth/services/auth.server";
-import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { ApiError } from "~/shared/lib/api";
 import { ClaimWizard } from "../components/claim-wizard";
@@ -52,8 +51,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
   }
 
-  const { claims } = await claimsService.listMine(SESSION_TOKEN);
-  return { claims, token: SESSION_TOKEN, preselectStore, preselectError };
+  const { claims } = await claimsService.listMine();
+  return { claims, preselectStore, preselectError };
 }
 
 const STATUS_LABEL: Record<ClaimRequest["status"], string> = {
@@ -70,7 +69,7 @@ function isResumable(status: ClaimRequest["status"]) {
 }
 
 export default function ClaimPage({ loaderData }: Route.ComponentProps) {
-  const { claims, token, preselectStore, preselectError } = loaderData;
+  const { claims, preselectStore, preselectError } = loaderData;
   const { revalidate } = useRevalidator();
   // Si el usuario YA tiene un claim activo (pending/verified) para esta tienda,
   // saltamos directamente al modo "resume" en lugar de crear uno nuevo. Esto
@@ -124,7 +123,6 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
         <ClaimWizard
           key={wizardKey}
-          token={token}
           initialClaim={resume ?? undefined}
           initialStore={initialStore ?? undefined}
           onDone={revalidate}

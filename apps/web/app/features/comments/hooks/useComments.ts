@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getSessionToken } from "~/features/auth/services/session";
+import { useUser } from "~/features/auth/hooks/useAuth";
 import {
   type CommentRoot,
   type CommentSort,
@@ -8,10 +8,6 @@ import {
   commentsService,
 } from "~/features/comments/services/comments";
 import { commentKeys } from "~/shared/lib/query-keys";
-
-async function getToken() {
-  return getSessionToken();
-}
 
 export function useProductComments(productId: string, sort: CommentSort = "best") {
   return useQuery({
@@ -33,25 +29,18 @@ export function useCommentThread(rootId: string | null, enabled = true) {
 }
 
 export function useMyVotes(commentIds: string[]) {
+  const user = useUser();
   return useQuery({
     queryKey: commentKeys.myVotes(commentIds),
-    queryFn: async () => {
-      const token = await getToken();
-      if (!token) return { data: [] };
-      return commentsService.myVotes(commentIds, token);
-    },
-    enabled: commentIds.length > 0,
+    queryFn: () => commentsService.myVotes(commentIds),
+    enabled: !!user && commentIds.length > 0,
   });
 }
 
 export function useCreateComment(productId: string, sort: CommentSort) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { parent_id?: string | null; body: string }) => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return commentsService.create(productId, payload, token);
-    },
+    mutationFn: (payload: { parent_id?: string | null; body: string }) => commentsService.create(productId, payload),
     onSuccess: (result, vars) => {
       // Invalidate roots list if this is a top-level comment, otherwise the
       // affected thread.
@@ -69,11 +58,7 @@ export function useCreateComment(productId: string, sort: CommentSort) {
 export function useEditComment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, body }: { id: string; body: string }) => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return commentsService.edit(id, body, token);
-    },
+    mutationFn: ({ id, body }: { id: string; body: string }) => commentsService.edit(id, body),
     onSuccess: () => {
       // Invalidate all comment caches because we don't know which thread without an extra fetch.
       queryClient.invalidateQueries({ queryKey: commentKeys.all });
@@ -84,11 +69,7 @@ export function useEditComment() {
 export function useSoftDeleteComment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return commentsService.softDelete(id, reason, token);
-    },
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) => commentsService.softDelete(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: commentKeys.all });
     },
@@ -98,11 +79,8 @@ export function useSoftDeleteComment() {
 export function useVoteComment(productId: string, sort: CommentSort, rootId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ commentId, value }: { commentId: string; value: -1 | 0 | 1 }) => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return commentsService.vote(commentId, value, token);
-    },
+    mutationFn: ({ commentId, value }: { commentId: string; value: -1 | 0 | 1 }) =>
+      commentsService.vote(commentId, value),
     // Optimistic update: shift score by delta locally.
     onMutate: async ({ commentId, value }) => {
       // Cancel relevant queries.

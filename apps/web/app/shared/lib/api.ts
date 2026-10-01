@@ -12,8 +12,6 @@ export const API_BASE_URL = BASE_URL;
 
 type FetchOptions = RequestInit & {
   params?: Record<string, string | string[]>;
-  /** Obsoleto e ignorado: la sesión es una cookie. Se elimina cuando cada feature migre a la API nueva. */
-  token?: string;
 };
 
 /**
@@ -77,7 +75,7 @@ export function isRateLimitError(error: unknown): error is ApiError {
 }
 
 async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-  const { params, token: _token, ...init } = options;
+  const { params, ...init } = options;
 
   const url = new URL(`${BASE_URL}${endpoint}`);
 

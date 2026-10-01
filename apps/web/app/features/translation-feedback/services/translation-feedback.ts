@@ -11,6 +11,5 @@ export interface TranslationFeedbackPayload {
 }
 
 export const translationFeedbackService = {
-  submit: (payload: TranslationFeedbackPayload, token?: string) =>
-    api.post<{ result: "ok" }>("/v1/translation-feedback", payload, { token }),
+  submit: (payload: TranslationFeedbackPayload) => api.post<{ result: "ok" }>("/v1/translation-feedback", payload),
 };

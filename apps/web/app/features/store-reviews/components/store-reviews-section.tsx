@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { useUser } from "~/features/auth/hooks/useAuth";
 import {
   type StoreReview,
   type StoreReviewItem,
@@ -24,7 +24,7 @@ interface StoreReviewsSectionProps {
  * página de detalle de tienda de Fase 1. Punto de entrada exportable.
  */
 export function StoreReviewsSection({ storeSlug, canManage = false }: StoreReviewsSectionProps) {
-  const user = useAuthStore((s) => s.user);
+  const user = useUser();
   const [editingMyReview, setEditingMyReview] = useState(false);
 
   // Recuperamos la primera página para detectar si el viewer ya tiene una review activa.

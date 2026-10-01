@@ -15,7 +15,6 @@ import { StorePicker } from "./store-picker";
 import { VerifyStatus } from "./verify-status";
 
 interface ClaimWizardProps {
-  token: string;
   /** Si viene, el wizard arranca retomando este claim (sin pasar por el selector). */
   initialClaim?: ClaimRequest;
   /**
@@ -115,7 +114,7 @@ function screenKey(step: Step): "pick" | "claim" | "confirmed" {
 // que el panel de soporte.
 const WIZARD_RESIZE: Transition = { duration: 0.28, ease: [0.22, 0.61, 0.36, 1] };
 
-export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCancel }: ClaimWizardProps) {
+export function ClaimWizard({ initialClaim, initialStore, onDone, onCancel }: ClaimWizardProps) {
   const [state, dispatch] = useReducer(wizardReducer, initialClaim, initState);
   const { step, identity, claim, submitting } = state;
   const current = stepIndex(step);
@@ -128,7 +127,6 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
   // solos el TXT. El usuario no aprieta nada — apenas aparece, avanzamos.
   const auto = useAutoVerify({
     claimId: claim?.id ?? null,
-    token,
     enabled: step === "dns",
     onVerified: () => {
       dispatch({ type: "go-verified" });
@@ -136,67 +134,64 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
     },
   });
 
-  const selectStore = useCallback(
-    async (store: ClaimableStore) => {
-      dispatch({ type: "submitting", submitting: true });
-      try {
-        const res = await claimsService.create(store.id, token);
-        dispatch({
-          type: "go-dns",
-          identity: { name: store.name, slug: store.slug, iconUrl: store.icon_url, domain: res.domain },
-          claim: {
-            id: res.id,
-            txtName: res.txt_name,
-            txtValue: res.txt_value,
-            dnsProvider: res.dns_provider ?? null,
-            dnsNameservers: res.dns_nameservers ?? null,
-          },
-        });
-      } catch (err) {
-        // 409 -> ya existe un claim activo para este dominio (probablemente
-        // creado por este mismo usuario en otra sesión). Buscamos en listMine
-        // el claim pending/verified y resumimos el wizard ahí. Si no lo
-        // encontramos, mostramos el mensaje del API y caemos al picker.
-        if (err instanceof ApiError && err.status === 409) {
-          try {
-            const { claims: mine } = await claimsService.listMine(token);
-            const existing = mine.find(
-              (c) => c.store_id === store.id && (c.status === "pending" || c.status === "verified"),
-            );
-            if (existing) {
-              dispatch({
-                type: "go-dns",
-                identity: {
-                  name: store.name,
-                  slug: store.slug,
-                  iconUrl: store.icon_url,
-                  domain: existing.claimed_domain,
-                },
-                claim: {
-                  id: existing.id,
-                  txtName: existing.txt_record_name,
-                  txtValue: existing.txt_record_value,
-                  dnsProvider: existing.dns_provider ?? null,
-                  dnsNameservers: existing.dns_nameservers ?? null,
-                },
-              });
-              if (existing.status === "verified") {
-                dispatch({ type: "go-verified" });
-              }
-              toast.message("Retomamos tu reclamo en curso para esta tienda.");
-              return;
+  const selectStore = useCallback(async (store: ClaimableStore) => {
+    dispatch({ type: "submitting", submitting: true });
+    try {
+      const res = await claimsService.create(store.id);
+      dispatch({
+        type: "go-dns",
+        identity: { name: store.name, slug: store.slug, iconUrl: store.icon_url, domain: res.domain },
+        claim: {
+          id: res.id,
+          txtName: res.txt_name,
+          txtValue: res.txt_value,
+          dnsProvider: res.dns_provider ?? null,
+          dnsNameservers: res.dns_nameservers ?? null,
+        },
+      });
+    } catch (err) {
+      // 409 -> ya existe un claim activo para este dominio (probablemente
+      // creado por este mismo usuario en otra sesión). Buscamos en listMine
+      // el claim pending/verified y resumimos el wizard ahí. Si no lo
+      // encontramos, mostramos el mensaje del API y caemos al picker.
+      if (err instanceof ApiError && err.status === 409) {
+        try {
+          const { claims: mine } = await claimsService.listMine();
+          const existing = mine.find(
+            (c) => c.store_id === store.id && (c.status === "pending" || c.status === "verified"),
+          );
+          if (existing) {
+            dispatch({
+              type: "go-dns",
+              identity: {
+                name: store.name,
+                slug: store.slug,
+                iconUrl: store.icon_url,
+                domain: existing.claimed_domain,
+              },
+              claim: {
+                id: existing.id,
+                txtName: existing.txt_record_name,
+                txtValue: existing.txt_record_value,
+                dnsProvider: existing.dns_provider ?? null,
+                dnsNameservers: existing.dns_nameservers ?? null,
+              },
+            });
+            if (existing.status === "verified") {
+              dispatch({ type: "go-verified" });
             }
-          } catch {
-            // si listMine también falla, seguimos al toast genérico abajo
+            toast.message("Retomamos tu reclamo en curso para esta tienda.");
+            return;
           }
+        } catch {
+          // si listMine también falla, seguimos al toast genérico abajo
         }
-        const msg = err instanceof ApiError ? err.message : "No se pudo iniciar el reclamo";
-        toast.error(msg);
-        dispatch({ type: "submitting", submitting: false });
       }
-    },
-    [token],
-  );
+      const msg = err instanceof ApiError ? err.message : "No se pudo iniciar el reclamo";
+      toast.error(msg);
+      dispatch({ type: "submitting", submitting: false });
+    }
+  }, []);
 
   // Auto-seleccionar la tienda cuando llega vía deep-link (`/reclamar?store=`)
   // y no hay un claim previo que retomar. `autoSelectedRef` garantiza que
@@ -214,7 +209,7 @@ export function ClaimWizard({ token, initialClaim, initialStore, onDone, onCance
     if (!claim) return;
     dispatch({ type: "submitting", submitting: true });
     try {
-      await claimsService.confirm(claim.id, token);
+      await claimsService.confirm(claim.id);
       dispatch({ type: "confirmed" });
       toast.success("Listo, la tienda ya es tuya");
       onDone?.();

@@ -17,7 +17,6 @@ import {
 } from "react-router";
 import { AuthFlash } from "~/features/auth/components/auth-flash";
 import { getAuthUser } from "~/features/auth/services/auth.server";
-import { useAuthStore } from "~/features/auth/store/auth";
 import { useCategories } from "~/features/category/hooks/useCategories";
 import { categoriesService } from "~/features/category/services/categories";
 import { meToProfile } from "~/features/profile/services/profiles";
@@ -180,7 +179,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { user, profile, categories: initialCategories } = loaderData;
+  const { categories: initialCategories } = loaderData;
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
@@ -204,11 +203,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
     const timer = setTimeout(markInitialLoadDone, 1600);
     return () => clearTimeout(timer);
   }, []);
-
-  // Sólo alimenta el espejo heredado (`useAuthStore`); navbar y demás leen el loader con `useUser`/`useProfile`.
-  useEffect(() => {
-    useAuthStore.setState({ user, profile });
-  }, [user, profile]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);

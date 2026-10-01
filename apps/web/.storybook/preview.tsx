@@ -2,7 +2,6 @@ import type { Preview } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router";
-import { useAuthStore } from "../app/features/auth/store/auth";
 import "../app/shared/styles/app.css";
 
 const queryClient = new QueryClient({
@@ -38,10 +37,6 @@ const preview: Preview = {
       }, [globals.theme]);
       const user = parameters.session?.user ?? null;
       const profile = parameters.session?.profile ?? null;
-      // Igual que `root.tsx`: el espejo heredado (`useAuthStore`) lo leen todavía reseñas y soporte.
-      useEffect(() => {
-        useAuthStore.setState({ user, profile });
-      }, [user, profile]);
       // Router de datos en memoria: los componentes usan Link, useSearchParams, useNavigation y los datos del
       // loader raíz del sitio (`requestInfo`), que aquí se simulan.
       const theme = globals.theme === "dark" ? "dark" : "light";

@@ -39,12 +39,11 @@ export interface AutoVerifyState {
 
 export function useAutoVerify(opts: {
   claimId: string | null;
-  token: string;
   /** Sólo pollea cuando está habilitado (p.ej. el wizard en el paso DNS). */
   enabled: boolean;
   onVerified: () => void;
 }): AutoVerifyState {
-  const { claimId, token, enabled, onVerified } = opts;
+  const { claimId, enabled, onVerified } = opts;
 
   const [status, setStatus] = useState<AutoVerifyStatus>("idle");
   const [found, setFound] = useState<string[]>([]);
@@ -87,7 +86,7 @@ export function useAutoVerify(opts: {
 
       let res: DnsCheckResponse | null = null;
       try {
-        res = await claimsService.dnsCheck(claimId, token);
+        res = await claimsService.dnsCheck(claimId);
       } catch {
         res = null;
       }
@@ -109,7 +108,7 @@ export function useAutoVerify(opts: {
           if (Date.now() - lastVerifyAt >= VERIFY_COOLDOWN_MS) {
             lastVerifyAt = Date.now();
             try {
-              const commit = await claimsService.verify(claimId, token);
+              const commit = await claimsService.verify(claimId);
               if (cancelled) {
                 running = false;
                 return;
@@ -151,7 +150,7 @@ export function useAutoVerify(opts: {
       clearTimer();
       forceRef.current = () => {};
     };
-  }, [enabled, claimId, token]);
+  }, [enabled, claimId]);
 
   return { status, found, expected, lastCheckedAt, checking, checkNow };
 }

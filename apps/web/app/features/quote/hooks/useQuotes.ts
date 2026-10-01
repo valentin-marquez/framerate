@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getSessionToken } from "~/features/auth/services/session";
 import {
   type AddItemRequest,
   type CreateQuoteRequest,
@@ -11,18 +10,10 @@ import {
 } from "~/features/quote/services/quotes";
 import { quoteKeys } from "~/shared/lib/query-keys";
 
-async function getToken() {
-  return getSessionToken();
-}
-
 export function useQuotes(page = 1, limit = 10, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: quoteKeys.list(page, limit),
-    queryFn: async () => {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-      return quotesService.getAll(page, limit, token);
-    },
+    queryFn: () => quotesService.getAll(page, limit),
     enabled: QUOTES_API_ENABLED && (options?.enabled ?? true),
   });
 }
@@ -30,10 +21,7 @@ export function useQuotes(page = 1, limit = 10, options?: { enabled?: boolean })
 export function useQuote(id: string) {
   return useQuery({
     queryKey: quoteKeys.detail(id),
-    queryFn: async () => {
-      const token = await getToken();
-      return quotesService.getById(id, token);
-    },
+    queryFn: () => quotesService.getById(id),
     enabled: QUOTES_API_ENABLED && !!id,
   });
 }
@@ -41,10 +29,7 @@ export function useQuote(id: string) {
 export function useCreateQuote() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: CreateQuoteRequest) => {
-      const token = await getToken();
-      return quotesService.create(data, token);
-    },
+    mutationFn: (data: CreateQuoteRequest) => quotesService.create(data),
     onMutate: async (newQuote) => {
       await queryClient.cancelQueries({ queryKey: quoteKeys.all });
 
@@ -109,10 +94,7 @@ export function useCreateQuote() {
 export function useUpdateQuote() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateQuoteRequest }) => {
-      const token = await getToken();
-      return quotesService.update(id, data, token);
-    },
+    mutationFn: ({ id, data }: { id: string; data: UpdateQuoteRequest }) => quotesService.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: quoteKeys.all });
       queryClient.invalidateQueries({ queryKey: quoteKeys.detail(id) });
@@ -123,10 +105,7 @@ export function useUpdateQuote() {
 export function useDeleteQuote() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const token = await getToken();
-      return quotesService.delete(id, token);
-    },
+    mutationFn: (id: string) => quotesService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quoteKeys.all });
     },
@@ -136,10 +115,7 @@ export function useDeleteQuote() {
 export function useQuoteAddItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ quoteId, data }: { quoteId: string; data: AddItemRequest }) => {
-      const token = await getToken();
-      return quotesService.addItem(quoteId, data, token);
-    },
+    mutationFn: ({ quoteId, data }: { quoteId: string; data: AddItemRequest }) => quotesService.addItem(quoteId, data),
     onSuccess: (_, { quoteId }) => {
       queryClient.invalidateQueries({ queryKey: quoteKeys.detail(quoteId) });
     },
@@ -149,10 +125,8 @@ export function useQuoteAddItem() {
 export function useQuoteUpdateItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ quoteId, itemId, data }: { quoteId: string; itemId: string; data: UpdateItemRequest }) => {
-      const token = await getToken();
-      return quotesService.updateItem(quoteId, itemId, data, token);
-    },
+    mutationFn: ({ quoteId, itemId, data }: { quoteId: string; itemId: string; data: UpdateItemRequest }) =>
+      quotesService.updateItem(quoteId, itemId, data),
     onSuccess: (_, { quoteId }) => {
       queryClient.invalidateQueries({ queryKey: quoteKeys.detail(quoteId) });
     },
@@ -162,10 +136,7 @@ export function useQuoteUpdateItem() {
 export function useQuoteRemoveItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ quoteId, itemId }: { quoteId: string; itemId: string }) => {
-      const token = await getToken();
-      return quotesService.removeItem(quoteId, itemId, token);
-    },
+    mutationFn: ({ quoteId, itemId }: { quoteId: string; itemId: string }) => quotesService.removeItem(quoteId, itemId),
     onSuccess: (_, { quoteId }) => {
       queryClient.invalidateQueries({ queryKey: quoteKeys.detail(quoteId) });
     },
@@ -175,10 +146,7 @@ export function useQuoteRemoveItem() {
 export function useAnalyzeQuote() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const token = await getToken();
-      return quotesService.analyzeQuote(id, token);
-    },
+    mutationFn: (id: string) => quotesService.analyzeQuote(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: quoteKeys.detail(id) });
     },

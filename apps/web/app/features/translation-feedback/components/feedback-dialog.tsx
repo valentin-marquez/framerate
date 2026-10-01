@@ -1,7 +1,6 @@
 import { IconCheck, IconSearch, IconSend, IconX } from "@tabler/icons-react";
 import { useMemo, useReducer } from "react";
 import { toast } from "sonner";
-import { getSessionToken } from "~/features/auth/services/session";
 import { translationFeedbackService } from "~/features/translation-feedback/services/translation-feedback";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
@@ -124,18 +123,14 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
 
     dispatch({ type: "submit-start" });
     try {
-      const token = getSessionToken();
-      await translationFeedbackService.submit(
-        {
-          lang,
-          translation_key: selected.key,
-          current_text: selected.current,
-          suggested_text: trimmed,
-          comment: comment.trim() || undefined,
-          context_url: typeof window !== "undefined" ? window.location.href : undefined,
-        },
-        token,
-      );
+      await translationFeedbackService.submit({
+        lang,
+        translation_key: selected.key,
+        current_text: selected.current,
+        suggested_text: trimmed,
+        comment: comment.trim() || undefined,
+        context_url: typeof window !== "undefined" ? window.location.href : undefined,
+      });
       toast.success(t("feedback_sent"));
       close();
     } catch (e) {

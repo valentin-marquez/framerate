@@ -16,8 +16,7 @@ import { domAnimation, LazyMotion, MotionConfig, m, type Transition } from "moti
 import { type FormEvent, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
-import { getSessionToken } from "~/features/auth/services/session";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { useUser } from "~/features/auth/hooks/useAuth";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
 import { Label } from "~/shared/components/primitives/label";
@@ -75,7 +74,7 @@ export function SupportContactPanel({
   triggerLabel = "Contactar a soporte",
 }: SupportContactPanelProps) {
   const formId = useId();
-  const { user } = useAuthStore();
+  const user = useUser();
   const isAuthed = Boolean(user);
 
   const [view, setView] = useState<ViewKind>("idle");
@@ -162,8 +161,6 @@ export function SupportContactPanel({
 
     setSubmitting(true);
     try {
-      const token = isAuthed ? getSessionToken() : undefined;
-
       const payload: CreateTicketPayload = {
         category,
         subject: trimmedSubject,
@@ -174,7 +171,7 @@ export function SupportContactPanel({
         payload.turnstile_token = turnstileToken ?? undefined;
       }
 
-      const result = await supportClient.create(payload, token);
+      const result = await supportClient.create(payload);
       setDoneTicketId(result.id);
       transitionTo("done");
     } catch (error) {

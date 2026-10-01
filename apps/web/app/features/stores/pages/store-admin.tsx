@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Link, useFetcher } from "react-router";
 import { toast } from "sonner";
 import { requireAuth } from "~/features/auth/services/auth.server";
-import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
 import { Label } from "~/shared/components/primitives/label";
@@ -20,13 +19,12 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
   // Pedir miembros: si responde 403, no es editor.
   try {
-    const { members } = await storesService.listMembers(params.slug, SESSION_TOKEN);
+    const { members } = await storesService.listMembers(params.slug);
     const meMembership = members.find((m: StoreMember) => m.userId === user.id) ?? null;
     return {
       store,
       members,
       meMembership,
-      token: SESSION_TOKEN,
     };
   } catch (err) {
     if (err instanceof ApiError && (err.status === 403 || err.status === 401)) {
@@ -38,7 +36,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export async function action({ request, params }: Route.ActionArgs) {
   await requireAuth(request);
-  const token = SESSION_TOKEN;
 
   const form = await request.formData();
   const intent = form.get("intent");
@@ -56,7 +53,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       social,
     };
     try {
-      const updated = await storesService.update(params.slug, data, token);
+      const updated = await storesService.update(params.slug, data);
       return { ok: true, store: updated };
     } catch (err) {
       return { ok: false, error: err instanceof ApiError ? err.message : "Error" };
@@ -77,7 +74,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function StoreAdmin({ loaderData }: Route.ComponentProps) {
-  const { store, members, meMembership, token } = loaderData;
+  const { store, members, meMembership } = loaderData;
   const fetcher = useFetcher<typeof action>();
   const isSubmitting = fetcher.state !== "idle";
   const [newUsername, setNewUsername] = useState("");
@@ -162,7 +159,7 @@ export default function StoreAdmin({ loaderData }: Route.ComponentProps) {
       <section className="rounded-xl border border-border bg-card p-5">
         <h2 className="font-medium">Miembros</h2>
         <div className="mt-4">
-          <StoreMemberList slug={store.slug} members={members} currentUserIsOwner={isOwner} token={token} />
+          <StoreMemberList slug={store.slug} members={members} currentUserIsOwner={isOwner} />
         </div>
         {isOwner && (
           <fetcher.Form method="post" className="mt-4 flex items-end gap-2">

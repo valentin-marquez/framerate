@@ -2,7 +2,6 @@ import { IconLock, IconLockOpen } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
-import { getSessionToken } from "~/features/auth/services/session";
 import { findQuoteUrls } from "~/features/comments/lib/quote-url";
 import { useUpdateQuote } from "~/features/quote/hooks/useQuotes";
 import { QUOTES_API_ENABLED, quotesService } from "~/features/quote/services/quotes";
@@ -61,15 +60,12 @@ export function useQuotePasteWatcher() {
       const seen = new Set<string>();
       const toQueue: PendingQuote[] = [];
 
-      const token = getSessionToken();
-      if (!token) return;
-
       for (const hit of hits) {
         if (seen.has(hit.quoteId)) continue;
         seen.add(hit.quoteId);
         if (state.asked.has(hit.quoteId)) continue;
         try {
-          const quote = await quotesService.getById(hit.quoteId, token);
+          const quote = await quotesService.getById(hit.quoteId);
           if (quote.user_id === user.id && !quote.is_public) {
             toQueue.push({ id: hit.quoteId, name: quote.name });
           }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { useUser } from "~/features/auth/hooks/useAuth";
 import {
   type StoreReview,
   useCreateStoreReview,
@@ -22,7 +22,7 @@ const MAX_COMMENT = 2000;
  * Formulario para crear/editar una reseña. Si `existing` está presente, modo edit.
  */
 export function ReviewForm({ storeSlug, existing, onDone }: ReviewFormProps) {
-  const user = useAuthStore((s) => s.user);
+  const user = useUser();
   const [rating, setRating] = useState<number>(existing?.rating ?? 0);
   const [comment, setComment] = useState<string>(existing?.comment ?? "");
   const [error, setError] = useState<string | null>(null);

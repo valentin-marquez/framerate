@@ -12,7 +12,6 @@ import {
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { getAuthUser } from "~/features/auth/services/auth.server";
-import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { Button } from "~/shared/components/primitives/button";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
@@ -73,12 +72,12 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (!user) throw new Response("Unauthorized", { status: 401 });
 
   // El soporte aún no existe en la API nueva: sin él la página igual carga, vacía.
-  const { tickets } = await supportClient.listMine(SESSION_TOKEN).catch(() => ({ tickets: [] }));
-  return { tickets, token: SESSION_TOKEN };
+  const { tickets } = await supportClient.listMine().catch(() => ({ tickets: [] }));
+  return { tickets };
 }
 
 export default function MyTicketsSettings({ loaderData }: Route.ComponentProps) {
-  const { tickets, token } = loaderData;
+  const { tickets } = loaderData;
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   return (
@@ -101,7 +100,6 @@ export default function MyTicketsSettings({ loaderData }: Route.ComponentProps) 
             <TicketRow
               key={ticket.id}
               ticket={ticket}
-              token={token}
               expanded={selectedId === ticket.id}
               onToggle={() => setSelectedId((prev) => (prev === ticket.id ? null : ticket.id))}
             />
@@ -114,12 +112,11 @@ export default function MyTicketsSettings({ loaderData }: Route.ComponentProps) 
 
 interface TicketRowProps {
   ticket: SupportTicket;
-  token: string;
   expanded: boolean;
   onToggle: () => void;
 }
 
-function TicketRow({ ticket, token, expanded, onToggle }: TicketRowProps) {
+function TicketRow({ ticket, expanded, onToggle }: TicketRowProps) {
   const Icon = CATEGORY_ICONS[ticket.category];
 
   return (
@@ -147,7 +144,7 @@ function TicketRow({ ticket, token, expanded, onToggle }: TicketRowProps) {
         </span>
       </button>
 
-      {expanded && <TicketThread ticketId={ticket.id} ticketStatus={ticket.status} token={token} />}
+      {expanded && <TicketThread ticketId={ticket.id} ticketStatus={ticket.status} />}
     </li>
   );
 }
@@ -155,10 +152,9 @@ function TicketRow({ ticket, token, expanded, onToggle }: TicketRowProps) {
 interface TicketThreadProps {
   ticketId: string;
   ticketStatus: SupportStatus;
-  token: string;
 }
 
-function TicketThread({ ticketId, ticketStatus, token }: TicketThreadProps) {
+function TicketThread({ ticketId, ticketStatus }: TicketThreadProps) {
   const [loading, setLoading] = useState(true);
   const [ticketBody, setTicketBody] = useState<string | null>(null);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
@@ -170,7 +166,7 @@ function TicketThread({ ticketId, ticketStatus, token }: TicketThreadProps) {
     let cancelled = false;
     setLoading(true);
     supportClient
-      .get(ticketId, token)
+      .get(ticketId)
       .then((res) => {
         if (cancelled) return;
         setTicketBody(res.ticket.body);
@@ -188,7 +184,7 @@ function TicketThread({ ticketId, ticketStatus, token }: TicketThreadProps) {
     return () => {
       cancelled = true;
     };
-  }, [ticketId, token]);
+  }, [ticketId]);
 
   async function sendReply() {
     if (sending) return;
@@ -196,7 +192,7 @@ function TicketThread({ ticketId, ticketStatus, token }: TicketThreadProps) {
     if (text.length < 1) return;
     setSending(true);
     try {
-      const created = await supportClient.reply(ticketId, text, token);
+      const created = await supportClient.reply(ticketId, text);
       setMessages((prev) => [...prev, created]);
       setReply("");
     } catch (err) {

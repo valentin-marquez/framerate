@@ -7,7 +7,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useState } from "react";
-import { useAuthStore } from "~/features/auth/store/auth";
+import { useUser } from "~/features/auth/hooks/useAuth";
 import { REPORTS_API_ENABLED, ReportButton } from "~/features/moderation";
 import {
   type StoreReview,
@@ -47,7 +47,7 @@ function formatDate(iso: string): string {
 }
 
 export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelpful: markedProp }: ReviewCardProps) {
-  const user = useAuthStore((s) => s.user);
+  const user = useUser();
   const [showResponseForm, setShowResponseForm] = useState(false);
 
   const helpfulMut = useMarkReviewHelpful(storeSlug);

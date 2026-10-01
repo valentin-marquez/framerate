@@ -2,7 +2,6 @@ import { IconShieldCheck, IconSparkles } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { LoginDialog } from "~/features/auth/components/login-dialog";
 import { getAuthUser } from "~/features/auth/services/auth.server";
-import { SESSION_TOKEN } from "~/features/auth/services/session";
 import { StoreReviewsSection } from "~/features/store-reviews/components/store-reviews-section";
 import { ApiError } from "~/shared/lib/api";
 import { StoreHeader } from "../components/store-header";
@@ -37,7 +36,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     const isAuthenticated = !!user;
     if (user) {
       try {
-        const me = await storesService.getMyRole(params.slug, SESSION_TOKEN);
+        const me = await storesService.getMyRole(params.slug);
         viewerRole = me.role;
       } catch {
         viewerRole = null;

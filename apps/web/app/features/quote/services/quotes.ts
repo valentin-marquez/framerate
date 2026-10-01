@@ -155,64 +155,59 @@ export const quotesService = {
   /**
    * Obtiene todas las cotizaciones del usuario autenticado.
    */
-  getAll: (page = 1, limit = 10, token?: string) =>
+  getAll: (page = 1, limit = 10) =>
     api.get<QuotesListResponse>("/v1/quotes", {
       params: { page: page.toString(), limit: limit.toString() },
-      token,
     }),
 
   /**
    * Obtiene las cotizaciones de un usuario específico por username.
    */
-  getByUsername: (username: string, page = 1, limit = 10, token?: string) =>
+  getByUsername: (username: string, page = 1, limit = 10) =>
     api.get<UserProfileQuotesResponse>(`/v1/quotes/user/${username}`, {
       params: { page: page.toString(), limit: limit.toString() },
-      token,
     }),
 
   /**
    * Crea una nueva cotización.
    */
-  create: (data: CreateQuoteRequest, token?: string) => api.post<Quote>("/v1/quotes", data, { token }),
+  create: (data: CreateQuoteRequest) => api.post<Quote>("/v1/quotes", data),
 
   /**
    * Obtiene el detalle completo de una cotización con sus items y precios.
    */
-  getById: (id: string, token?: string) => api.get<QuoteDetail>(`/v1/quotes/${id}`, { token }),
+  getById: (id: string) => api.get<QuoteDetail>(`/v1/quotes/${id}`),
 
   /**
    * Actualiza información de una cotización.
    */
-  update: (id: string, data: UpdateQuoteRequest, token?: string) =>
-    api.patch<Quote>(`/v1/quotes/${id}`, data, { token }),
+  update: (id: string, data: UpdateQuoteRequest) => api.patch<Quote>(`/v1/quotes/${id}`, data),
 
   /**
    * Elimina una cotización.
    */
-  delete: (id: string, token?: string) =>
-    api.delete<{ success: boolean; message: string }>(`/v1/quotes/${id}`, { token }),
+  delete: (id: string) => api.delete<{ success: boolean; message: string }>(`/v1/quotes/${id}`),
 
   /**
    * Analiza una cotización existente y actualiza el cache en BD.
    */
-  analyzeQuote: (id: string, token?: string) => api.get<BuildAnalysis>(`/v1/quotes/${id}/analyze`, { token }),
+  analyzeQuote: (id: string) => api.get<BuildAnalysis>(`/v1/quotes/${id}/analyze`),
 
   /**
    * Agrega un producto a la cotización.
    * Si el producto ya existe, incrementa la cantidad.
    */
-  addItem: (quoteId: string, data: AddItemRequest, token?: string) =>
-    api.post<QuoteItem>(`/v1/quotes/${quoteId}/items`, data, { token }),
+  addItem: (quoteId: string, data: AddItemRequest) => api.post<QuoteItem>(`/v1/quotes/${quoteId}/items`, data),
 
   /**
    * Actualiza la cantidad de un item en la cotización.
    */
-  updateItem: (quoteId: string, itemId: string, data: UpdateItemRequest, token?: string) =>
-    api.patch<QuoteItem>(`/v1/quotes/${quoteId}/items/${itemId}`, data, { token }),
+  updateItem: (quoteId: string, itemId: string, data: UpdateItemRequest) =>
+    api.patch<QuoteItem>(`/v1/quotes/${quoteId}/items/${itemId}`, data),
 
   /**
    * Elimina un item de la cotización.
    */
-  removeItem: (quoteId: string, itemId: string, token?: string) =>
-    api.delete<{ success: boolean; message: string }>(`/v1/quotes/${quoteId}/items/${itemId}`, { token }),
+  removeItem: (quoteId: string, itemId: string) =>
+    api.delete<{ success: boolean; message: string }>(`/v1/quotes/${quoteId}/items/${itemId}`),
 };

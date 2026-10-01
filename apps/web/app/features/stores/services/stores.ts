@@ -150,8 +150,8 @@ export const storesService = {
       })),
     };
   },
-  getMyRole: (slug: string, _token?: string) => api.get<{ role: ViewerStoreRole | null }>(`/v1/stores/${slug}/me`),
-  update: async (slug: string, data: StoreUpdate, _token?: string) => {
+  getMyRole: (slug: string) => api.get<{ role: ViewerStoreRole | null }>(`/v1/stores/${slug}/me`),
+  update: async (slug: string, data: StoreUpdate) => {
     const body: UpdateStoreRequest = {
       ...(data.display_name !== undefined && { displayName: data.display_name }),
       ...(data.description !== undefined && { description: data.description }),
@@ -161,11 +161,10 @@ export const storesService = {
     await api.patch(`/v1/stores/${slug}`, body);
     return storesService.get(slug);
   },
-  listMembers: async (slug: string, _token?: string) => ({
+  listMembers: async (slug: string) => ({
     members: (await api.get<{ items: StoreMember[] }>(`/v1/stores/${slug}/members`)).items,
   }),
   addMember: (slug: string, username: string, role: Exclude<StoreMemberRole, "owner">) =>
     api.post<null>(`/v1/stores/${slug}/members`, { username, role }),
-  removeMember: (slug: string, userId: string, _token?: string) =>
-    api.delete<null>(`/v1/stores/${slug}/members/${userId}`),
+  removeMember: (slug: string, userId: string) => api.delete<null>(`/v1/stores/${slug}/members/${userId}`),
 };

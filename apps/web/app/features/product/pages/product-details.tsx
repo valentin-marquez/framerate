@@ -9,7 +9,6 @@ import {
   IconHome,
 } from "@tabler/icons-react";
 import { Link, redirect } from "react-router";
-import { useAuthStore } from "~/features/auth/store/auth";
 import { getCategoryConfig } from "~/features/category/utils/categories";
 import { CommentsSection } from "~/features/comments/components/comments-section";
 import { COMMENTS_API_ENABLED } from "~/features/comments/services/comments";
@@ -23,8 +22,8 @@ import { Badge } from "~/shared/components/primitives/badge";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import { Card } from "~/shared/components/primitives/card";
 import { StoreLogo } from "~/shared/components/store-logo";
+import { useTranslation } from "~/shared/hooks/use-translation";
 import { isRateLimitError } from "~/shared/lib/api";
-import { getTranslation } from "~/shared/lib/translations";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import type { Route } from "./+types/product-details";
@@ -159,9 +158,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 // react-doctor-disable-next-line no-giant-component -- breaking into focused components is a separate task, tracked
 export default function ProductPage({ loaderData }: Route.ComponentProps) {
-  const { profile } = useAuthStore();
-  const lang = profile?.lang || "es";
-  const t = (key: string, params?: Record<string, string | number>) => getTranslation(lang, key, params);
+  const { t } = useTranslation();
 
   const product = loaderData;
   const { data: priceHistory } = usePriceHistory(product.slug || "", 30);
