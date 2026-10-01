@@ -72,6 +72,13 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
 
 ## Cómo trabajar aquí
 
+- **Las tareas salen del tablero de Forgejo**, no de `TODO.md`: issues de `valentin/framerate` con milestones y labels,
+  en el orden del Roadmap fijado (#67). Listar: `tea issues --login valentin --repo valentin/framerate`; leer uno:
+  `tea api --login valentin /repos/valentin/framerate/issues/<n>`. Antes de empezar, verificar contra el código que el
+  issue siga vigente: sus `archivo:línea` son del día en que se escribió. El commit que lo resuelve lleva
+  `Closes #<n>` (Forgejo lo cierra al llegar a `main`) y se marca su casilla en el Roadmap. Lo que aparezca trabajando
+  va a un issue nuevo con el mismo estilo (qué pasa hoy con `archivo:línea`, qué se ve, qué debería pasar), con su
+  milestone, y se suma al Roadmap.
 - **Skills por defecto:** casi siempre usar `/ponytail:ponytail` (la solución más simple que funcione) y sus subskills: `/ponytail:ponytail-review` (revisar sobreingeniería), `/ponytail:ponytail-audit` (auditar el repo entero), `/ponytail:ponytail-debt`, `/ponytail:ponytail-gain`, `/ponytail:ponytail-help`.
 - **Maquetación y UI nueva:** usar `/referencias-composicion` antes de maquetar una página, sección o componente (busca referencias reales y propone 2–3 layouts).
 - **Comentarios: los mínimos.** Sólo el porqué no obvio (una restricción, una trampa, una decisión). Nada que repita lo que dice el código ni bloques de documentación largos. No agregar comentarios de cabecera por costumbre.
@@ -97,4 +104,5 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
 - `apps/web/CLAUDE.md`: animaciones, rendimiento, diseño y rutas de la web.
 - `docs/architecture.md` (arquitectura, operación, plan), `docs/data-model.md`, `docs/identity.md`,
   `docs/stores.md` (reclamo de tiendas), `docs/store-candidates.md` (qué tiendas integrar y cómo).
-- `TODO.md`: pendientes concretos. `FUTURE.md`: visión de producto.
+- [Issues de Forgejo](https://git.nozz.skin/valentin/framerate/issues) y su Roadmap (#67): pendientes concretos.
+  `TODO.md`: registro de deploys. `FUTURE.md`: visión de producto.
