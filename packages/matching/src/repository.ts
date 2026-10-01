@@ -67,6 +67,26 @@ export async function findCandidates(db: Db, fp: Fingerprint): Promise<Candidate
   return loadCandidates(db, [...ids].slice(0, MAX_CANDIDATES), fp);
 }
 
+/** Marca los candidatos que ya tienen otra oferta activa de la misma tienda que `listingId`. */
+export async function markSameStore(db: Db, listingId: number, candidates: Candidate[]): Promise<Candidate[]> {
+  if (candidates.length === 0) return candidates;
+  const rows = await db.query
+    .selectFrom("listings as l")
+    .innerJoin("listings as self", "self.store_id", "l.store_id")
+    .select("l.product_id")
+    .where("self.id", "=", listingId)
+    .where("l.id", "!=", listingId)
+    .where("l.is_active", "=", 1)
+    .where(
+      "l.product_id",
+      "in",
+      candidates.map((c) => c.productId),
+    )
+    .execute();
+  const same = new Set(rows.map((r) => r.product_id));
+  return candidates.map((c) => ({ ...c, sameStore: same.has(c.productId) }));
+}
+
 /** Reconstruye la huella de productos existentes. `offer` elige qué identificador comparar. */
 export async function loadCandidates(db: Db, productIds: number[], offer: Identifiers): Promise<Candidate[]> {
   if (productIds.length === 0) return [];

@@ -143,7 +143,7 @@ const cpu: CategoryProfile = {
     const t = prep(title);
     const a: Attributes = {};
     const ryzen = t.match(/ ryzen ?(threadripper )?(\d) ?(pro )?(\d{4}[a-z0-9]{0,4})(?= )/);
-    const ultra = t.match(/ ultra ?([3579]) ?(\d{3}[a-z]{0,2})(?= )/);
+    const ultra = t.match(/ ultra ?i?([3579]) ?(\d{3}[a-z]{0,2})(?= )/);
     const core = t.match(/ (?:core )?i([3579]) ?(\d{4,5}[a-z]{0,3})(?= )/);
     // Threadripper sin tier ("Threadripper 9970X"), Xeon con su serie y las gamas de entrada.
     const threadripper = t.match(/ threadripper ?(pro )?(\d{4}[a-z]{0,2})(?= )/);
@@ -199,7 +199,8 @@ const ram: CategoryProfile = {
 // ─── Almacenamiento ──────────────────────────────────────────────────────────
 
 function capacityGb(t: string): number | undefined {
-  const m = t.match(/ (\d+(?:\.\d+)?) ?([tg])b?(?= )/);
+  // "SATA 6Gb/s" es velocidad de interfaz, no capacidad ("/" ya es un espacio).
+  const m = t.replace(/ \d+ ?gb? s(?= )| \d+ ?gbps(?= )/g, " ").match(/ (\d+(?:\.\d+)?) ?([tg])b?(?= )/);
   if (!m?.[1] || !m[2]) return undefined;
   const n = Number(m[1]);
   return m[2] === "t" ? Math.round(n * 1000) : Math.round(n);
@@ -252,7 +253,9 @@ const psu: CategoryProfile = {
       if (watts >= 200 && watts <= 2500) a.wattage = watts;
     } else {
       // Watts dentro del modelo (A750GLS, CX750, HX1500i). Múltiplo de 50 para no tomar años ni otros números.
-      for (const m of t.matchAll(/ [a-z]{0,3}(\d{3,4})[a-z]{0,3}(?= )/g)) {
+      for (const m of t.matchAll(/ [a-z]{0,3}(\d{3,4})([a-z]{0,3})(?= )/g)) {
+        // "2050rpm" o "1000ma" no son watts.
+        if (/^(rpm|ma|mah|mm|hz|mhz|cfm|gb|tb|mb)$/.test(m[2] ?? "")) continue;
         const watts = Number(m[1]);
         if (watts >= 300 && watts <= 2500 && watts % 50 === 0) {
           a.wattage = watts;
@@ -277,7 +280,7 @@ const motherboard: CategoryProfile = {
     const t = prep(title);
     const a: Attributes = {};
     // Sufijo de formato pegado al chipset: B650M/A620AM = mATX, X870I = ITX. Biostar agrega letras: B650MT, H610MHP.
-    const chip = t.match(/ ([abhxz]\d{3})(e)?(m|am|i)?[a-z]{0,3}(?=[ -])/);
+    const chip = t.match(/ ([abhxz]\d{3})(e)?(m|am|i)?[a-z0-9]{0,3}(?=[ -])/);
     if (chip?.[1]) a.chipset = `${chip[1]}${chip[2] ?? ""}`;
     if (/ e ?atx /.test(t)) a.formFactor = "eatx";
     else if (/ (?:mini ?|m)?itx /.test(t) || chip?.[3] === "i") a.formFactor = "itx";

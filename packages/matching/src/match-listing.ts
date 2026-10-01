@@ -9,6 +9,7 @@ import {
   fillProductImage,
   findCandidates,
   loadCandidates,
+  markSameStore,
   setListingProduct,
 } from "./repository";
 
@@ -67,7 +68,7 @@ export async function matchListing(
     unlinked = true;
   }
 
-  const decision = decide(fp, await findCandidates(db, fp));
+  const decision = decide(fp, await markSameStore(db, listingId, await findCandidates(db, fp)));
 
   if (decision.kind === "link") {
     await setListingProduct(db, {

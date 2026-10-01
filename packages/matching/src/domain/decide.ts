@@ -16,6 +16,8 @@ export interface Comparison {
   evidence: {
     identifier?: "mpn" | "gtin";
     mpnConflict?: boolean;
+    /** Códigos de modelo con el mismo prefijo y distinto número ("nv1" vs "nv3", "cl36" vs "cl28"). */
+    modelConflict?: boolean;
     attributeKeyMatch?: boolean;
     titleSimilarity: number;
     brandMatch?: boolean;
@@ -42,6 +44,7 @@ export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison 
   if (offer.gtin && candidate.gtin && offer.gtin === candidate.gtin) evidence.identifier = "gtin";
   else if (offer.mpn && candidate.mpn && offer.mpn === candidate.mpn) evidence.identifier = "mpn";
   else if (offer.mpn && candidate.mpn) evidence.mpnConflict = true;
+  if (modelCodeConflict(offer.tokens, candidate.tokens)) evidence.modelConflict = true;
 
   if (offer.attributeKey && candidate.attributeKey) {
     evidence.attributeKeyMatch = offer.attributeKey === candidate.attributeKey;
@@ -53,9 +56,9 @@ export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison 
   let score = 0.35 * evidence.titleSimilarity;
   if (evidence.attributeKeyMatch) score += 0.55;
   if (evidence.brandMatch) score += 0.1;
-  // Dos MPN distintos es señal fuerte en contra (aunque las tiendas a veces
-  // publican códigos distintos del mismo producto): nunca fusión automática.
-  if (evidence.mpnConflict) score *= 0.6;
+  // Dos MPN o dos versiones de modelo distintas son señal fuerte en contra (aunque las tiendas a veces publican
+  // códigos distintos del mismo producto): nunca fusión automática.
+  if (evidence.mpnConflict || evidence.modelConflict) score *= 0.6;
 
   return { score: round(score), vetoes, evidence };
 }
@@ -75,6 +78,11 @@ export const THRESHOLDS = {
 export interface Candidate {
   productId: number;
   fingerprint: Fingerprint;
+  /**
+   * El producto ya tiene otra oferta activa de la misma tienda. Una tienda no publica dos veces el mismo producto:
+   * si los atributos coinciden, casi siempre es una variante (RGB, color, otra serie), así que va a revisión.
+   */
+  sameStore?: boolean;
 }
 
 /** Elige el mejor candidato y decide qué hacer con la oferta. */
@@ -95,7 +103,7 @@ export function decide(offer: Fingerprint, candidates: readonly Candidate[]): De
     return { kind: "link", productId: candidate.productId, method: "identifier", confidence: score, comparison };
   }
 
-  if (evidence.attributeKeyMatch && !evidence.mpnConflict) {
+  if (evidence.attributeKeyMatch && !evidence.mpnConflict && !evidence.modelConflict && !candidate.sameStore) {
     if (profile.keyIsUnique || score >= THRESHOLDS.autoAttributes) {
       return { kind: "link", productId: candidate.productId, method: "attributes", confidence: score, comparison };
     }
@@ -105,6 +113,14 @@ export function decide(offer: Fingerprint, candidates: readonly Candidate[]): De
     return { kind: "review", productId: candidate.productId, confidence: score, comparison };
   }
   return { kind: "new_product" };
+}
+
+/** Hay un código de modelo sólo en un lado y otro con el mismo prefijo sólo en el otro ("nv1" vs "nv3"). */
+function modelCodeConflict(a: readonly string[], b: readonly string[]): boolean {
+  const onlyIn = (xs: readonly string[], other: readonly string[]) =>
+    xs.filter((t) => /^[a-z]+\d/.test(t) && !other.includes(t)).map((t) => t.match(/^[a-z]+/)?.[0]);
+  const prefixesB = new Set(onlyIn(b, a));
+  return onlyIn(a, b).some((p) => prefixesB.has(p));
 }
 
 /** Coeficiente de Dice sobre conjuntos de tokens (0..1). */

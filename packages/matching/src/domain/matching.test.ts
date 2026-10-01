@@ -73,6 +73,7 @@ describe("atributos por categoría", () => {
     expect(PROFILES.cpu.extract("Intel Pentium Gold G7400 LGA1700").model).toBe("pentium g7400");
     expect(PROFILES.cpu.extract("CPU AMD ATHLON 3000G 3.5 GHz").model).toBe("athlon 3000g");
     expect(PROFILES.cpu.extract("CPU Intel Celeron® Processor G6900").model).toBe("celeron g6900");
+    expect(PROFILES.cpu.extract("Procesador Intel Core Ultra I7-265KF (LGA 1851)").model).toBe("core ultra 7 265kf");
   });
 
   test("RAM: kit vs módulo único", () => {
@@ -182,6 +183,7 @@ describe("atributos por categoría", () => {
     });
     expect(PROFILES.motherboard.extract("M/B BIOSTAR H610MHP")).toMatchObject({ chipset: "h610", formFactor: "matx" });
     expect(PROFILES.motherboard.extract("M/B BIOSTAR B650MT")).toMatchObject({ chipset: "b650", formFactor: "matx" });
+    expect(PROFILES.motherboard.extract("Placa Madre Biostar B850MT2-E DJ Socket AM5").chipset).toBe("b850");
   });
 
   test("SSD: capacidad con 'G' sin B e interfaz 'PCI'", () => {
@@ -195,6 +197,10 @@ describe("atributos por categoría", () => {
     expect(PROFILES.gpu.extract("MSI RTX 5060 Ti 16GB, Ventus 2X").vram).toBe(16);
     expect(PROFILES.motherboard.extract("Placa Madre ASUS B650M, WiFi").chipset).toBe("b650");
     expect(PROFILES.hdd.extract('Disco Duro WD Blue 2,5" 1TB').formFactor).toBe("2.5");
+    expect(PROFILES.ssd.extract('SSD Kingston A400 2.5" SATA 6Gb/s 480GB').capacity).toBe(480);
+    expect(PROFILES.ssd.extract("Cofre Vantec SATA 6Gb/s").capacity).toBeUndefined();
+    expect(PROFILES.psu.extract("Cooler Hyper 212 Black 2050rpm").wattage).toBeUndefined();
+    expect(PROFILES.psu.extract("Fuente Corsair CX750 80 Plus Bronze").wattage).toBe(750);
   });
 });
 
@@ -216,6 +222,35 @@ describe("decisión de matching", () => {
     const offer = fp("gpu", "MSI RTX 4060 Ti Ventus 2X 16GB", { mpn: "V517-001R" });
     const decision = decide(offer, [existing(1, "gpu", "MSI RTX 4060 Ti Ventus 2X 8GB", { mpn: "V517-001R" })]);
     expect(decision).toEqual({ kind: "new_product" });
+  });
+
+  test("versiones de modelo distintas (NV1 vs NV3, CL36 vs CL28) no se fusionan solas aunque coincidan atributos", () => {
+    const ssd = decide(fp("ssd", "DISCO DURO SSD NVMe KINGSTON NV3 500GB"), [
+      existing(1, "ssd", "DISCO DURO SSD NVMe KINGSTON NV1 500GB"),
+    ]);
+    expect(ssd.kind).not.toBe("link");
+    const ram = decide(fp("ram", "Memoria Ram DDR5 32GB 5600MT/s CL28 Kingston FURY Renegade Pro Black EXPO"), [
+      existing(1, "ram", "Memoria Ram 32GB DDR5 5600MT/s CL36 Kingston FURY Beast Black EXPO"),
+    ]);
+    expect(ram.kind).not.toBe("link");
+  });
+
+  test("con el mismo modelo y atributos, el vínculo por atributos sigue funcionando", () => {
+    const decision = decide(fp("ssd", "Unidad SSD Kingston NV3 500GB M.2 2230 PCIe 4.0 NVMe"), [
+      existing(1, "ssd", "Kingston SSD 500GB NV3 M.2 2230 NVMe PCIe 4.0"),
+    ]);
+    expect(decision).toMatchObject({ kind: "link", method: "attributes" });
+  });
+
+  test("un producto que ya tiene oferta de la misma tienda no recibe otra por atributos: va a revisión", () => {
+    const candidate = { ...existing(1, "ssd", "Kingston SSD 500GB NV3 M.2 2230 NVMe PCIe 4.0"), sameStore: true };
+    const decision = decide(fp("ssd", "Unidad SSD Kingston NV3 500GB M.2 2230 PCIe 4.0 NVMe"), [candidate]);
+    expect(decision).toMatchObject({ kind: "review", productId: 1 });
+    // Con el mismo MPN sí es el mismo producto, aunque la tienda lo publique dos veces.
+    const byId = decide(fp("ssd", "Kingston NV3 500GB", { mpn: "SNV3SM3/500G" }), [
+      { ...existing(1, "ssd", "Kingston SSD 500GB NV3", { mpn: "SNV3SM3/500G" }), sameStore: true },
+    ]);
+    expect(byId).toMatchObject({ kind: "link", method: "identifier" });
   });
 
   test("CPU: la clave es única → link por atributos aunque los títulos difieran", () => {

@@ -131,6 +131,27 @@ describe("matching entre tiendas", () => {
     expect(await all(deps.db, "products")).toHaveLength(1);
   });
 
+  test("dos variantes de la misma tienda con iguales atributos no se fusionan: la segunda va a revisión", async () => {
+    const deps = testDeps(d1, steppingClock());
+    const alfa = fakeStore("alfa", { ram: ["ram"] });
+    const ram = (id: string, title: string) => offer("alfa", id, { category: "ram", title, priceCash: 45_000 });
+    alfa.setOffers([
+      ram("1", "Memoria RAM Kingston FURY Beast 16GB DDR4 3200MHz"),
+      ram("2", "Memoria RAM Kingston FURY Beast RGB 16GB DDR4 3200MHz"),
+    ]);
+    await crawlCategory(deps, alfa.store, "ram");
+    expect(await all(deps.db, "products")).toHaveLength(2);
+    expect(await all(deps.db, "match_reviews")).toHaveLength(1);
+
+    // Otra tienda con el mismo producto sí se vincula por atributos.
+    const beta = fakeStore("beta", { ram: ["ram"] });
+    beta.setOffers([
+      offer("beta", "9", { category: "ram", title: "Kingston FURY Beast 16GB DDR4 3200MHz", priceCash: 44_000 }),
+    ]);
+    await crawlCategory(deps, beta.store, "ram");
+    expect(await all(deps.db, "products")).toHaveLength(2);
+  });
+
   test("mismo MPN pero distinta VRAM → productos distintos, sin robar el identificador", async () => {
     const deps = testDeps(d1, steppingClock());
     const alfa = fakeStore("alfa", { gpu: ["gpu"] });
