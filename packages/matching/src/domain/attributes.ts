@@ -168,9 +168,28 @@ const cpu: CategoryProfile = {
 
 // ─── RAM ─────────────────────────────────────────────────────────────────────
 
+// Líneas de RAM: Beast y Renegade comparten capacidad y velocidad pero son productos distintos.
+const RAM_LINES = [
+  "renegade",
+  "beast",
+  "impact",
+  "vengeance",
+  "dominator",
+  "trident",
+  "ripjaws",
+  "flare",
+  "lancer",
+  "gammix",
+  "spectrix",
+  "caliber",
+  "xlr8",
+  "valueram",
+] as const;
+
 const ram: CategoryProfile = {
   keyFields: ["type", "capacity", "modules", "speed", "formFactor"],
-  discriminators: ["type", "capacity", "modules", "speed", "formFactor"],
+  // `line` no va en la clave (muchas tiendas no la escriben), pero si ambos lados la dicen y difiere, es otro producto.
+  discriminators: ["type", "capacity", "modules", "speed", "formFactor", "line"],
   keyIsUnique: false,
   extract(title) {
     const t = prep(title);
@@ -192,6 +211,8 @@ const ram: CategoryProfile = {
     else if (speed >= 4800) a.type = "ddr5";
     else if (speed >= 2400 && speed <= 4000) a.type = "ddr4";
     a.formFactor = /so ?dimm|notebook|laptop/.test(t) ? "sodimm" : "dimm";
+    const line = firstMatch(RAM_LINES, t);
+    if (line) a.line = line;
     return a;
   },
 };
