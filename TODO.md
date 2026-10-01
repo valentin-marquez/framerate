@@ -85,11 +85,12 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] Tecnomas sin `case` ni `psu`: reactivarlas cuando `normalize` aparte racks, bandejas, rieles, IP66, fuentes PoE, de riel DIN y de servidor (o filtrar por marca en el listado).
 - [ ] Títulos con "(clone)" en Tecnomas (productos duplicados en la tienda).
 - [ ] Extractor: "INTEL ARC 6GB A380" (token entre Arc y el modelo), "Z 590" con espacio, APU "A6 X2 7400K", EPYC.
+- [ ] Matching: el sufijo de una letra tras un guion se pierde al tokenizar ("A520M-C" y "A520M-K" quedan iguales y se fusionaron en el reporte final). Unir sufijos de una letra al código anterior en `titleTokens`.
 - [ ] El extractor no reconoce GPU de estación de trabajo (RTX A400/A1000, Radeon PRO W7900, Radeon AI PRO R9700) ni la placa TRX50: van a cuarentena por atributo faltante. (Xeon, Threadripper, Celeron, Pentium, Athlon y Core Ultra "I7-265KF" ya se reconocen.)
 - [ ] La cola corre dos categorías a la vez y cada corrida tiene su propio cliente HTTP: dos categorías de la misma tienda duplican el ritmo. Si otra tienda corta por rate limit, serializar por tienda.
 - [ ] Decidir la política de MPN dentro del título y de SKU con prefijo (en `normalize`, no por tienda).
 - [ ] Probar Winpy desde el Worker (bloquea desde red local); si bloquea, evaluar Browser Rendering.
-- [ ] Resumen de precios de `products` y `product_price_daily` tras cada corrida (habilita "mejores ofertas" y descuento real).
+- [ ] Resumen de precios de `products` y `product_price_daily` tras cada corrida (habilita "mejores ofertas" y descuento real) El mejor precio sólo con ofertas en stock: las agotadas conservan precios viejos (Dust2 tiene RAM DDR5 de 8 GB agotada a $27.990 cuando hoy cuesta ~$150.000).
 - [ ] Huella multicapa (`docs/architecture.md` §5): overrides persistentes, separar fusiones, recalcular huellas, hash de imagen.
 - [ ] Refresco liviano de precio y stock (hoy hasta 6 h de atraso).
 - [ ] Imágenes: hoy se enlazan (hotlink) desde la tienda; copiarlas a R2.
