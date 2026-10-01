@@ -32,7 +32,8 @@ function cached(inner: HttpClient): HttpClient {
   }
   return {
     get: (url, init) => through(`GET ${url} ${JSON.stringify(init ?? {})}`, () => inner.get(url, init)),
-    post: (url, json) => through(`POST ${url} ${JSON.stringify(json)}`, () => inner.post(url, json)),
+    post: (url, json, init) =>
+      through(`POST ${url} ${JSON.stringify(json)} ${JSON.stringify(init ?? {})}`, () => inner.post(url, json, init)),
   };
 }
 
