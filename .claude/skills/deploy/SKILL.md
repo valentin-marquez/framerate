@@ -6,13 +6,15 @@ disable-model-invocation: true
 
 # Push y deploy
 
-No hay CI: todo sale de esta máquina con `wrangler`, para tener control y logs aquí. Desplegar sólo cuando el dueño
-lo pide en esta conversación; nunca para "probar" variantes.
+No hay CI: todo sale de esta máquina con `wrangler`, para tener control y logs aquí. Desplegar sólo cuando quien
+trabaja lo pide en esta conversación; nunca para "probar" variantes.
 
 ## Objetivo
 
 Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que comparten la base D1.
 
+0. Estar en `main`, con el árbol limpio y al día con git.nozz.skin (`git status`, `git pull`). Despliegan dos personas:
+   desplegar una rama o un `main` atrasado pisa en producción lo que subió el otro.
 1. `bun run test` en verde (check-types + tests de todo el monorepo). Si algo falla, no se despliega.
 2. Ver qué cambió desde el último deploy: `git diff --stat <último desplegado>..HEAD`. Así se sabe qué Workers
    tocar y si hay migraciones nuevas en `packages/database/migrations/`.

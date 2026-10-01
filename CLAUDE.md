@@ -53,8 +53,9 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
 
 - **No hay CI.** Todo sale de la máquina del desarrollador con `wrangler`. El procedimiento completo, con sus trampas,
   está en la skill `/deploy`.
-- **Nunca desplegar sin que el dueño lo pida explícitamente**, ni para "probar". Commit y push sí se hacen tras cada
-  tanda. Push: `git push https://git.nozz.skin/valentin/framerate.git <rama>:refs/heads/<rama>` (`origin` es GitHub
+- **Nunca desplegar sin que quien trabaja lo pida explícitamente**, ni para "probar". Commit y push sí se hacen tras
+  cada tanda. Los dos despliegan: **sólo desde `main` actualizado y con el árbol limpio**, si no se pisa lo que desplegó
+  el otro. Push: `git push https://git.nozz.skin/valentin/framerate.git <rama>:refs/heads/<rama>` (`origin` es GitHub
   y no se usa); nunca usar credenciales pegadas en el chat.
 - Salud de producción (consultas D1 de sólo lectura): skill `/prod-health`.
 
@@ -86,6 +87,10 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
 - **Las tareas salen del tablero de Forgejo**, no de `TODO.md`: issues de `valentin/framerate` con milestones y labels,
   en el orden del Roadmap fijado (#67). Desde la raíz del repo `tea` usa el login de quien lo corre. Listar:
   `tea issues --repo valentin/framerate`; leer uno: `tea api /repos/valentin/framerate/issues/<n>`.
+- **Dos frentes en paralelo** (detalle en "Cómo nos repartimos" del Roadmap). Valentín (`valentin`): web, diseño y lo
+  marcado `requiere-dueño` (cuentas personales: consola de Google, Supabase). Ignacio: backend e ingesta, es decir
+  issues con label `server`, `ingest` o `matching` sin `requiere-dueño`; diseño no. Si quien trabaja es Ignacio y el
+  issue es de diseño, decirlo y proponer otro del Roadmap.
 - **Reclamar el issue antes de tocarlo**, cada vez: trabajan dos personas, cada una con su Claude.
   1. Ver si alguien lo tiene: `tea api /repos/valentin/framerate/issues/<n> | jq '[.assignees[]?.login]'`. Si
      está asignado a otra persona, no se toca: elegir otro del Roadmap y decirlo.
