@@ -50,6 +50,29 @@ describe("normalizeOffer", () => {
     expect(cooler("Refrigeración Líquida CPU - Gamdias Aura GL240").ok).toBe(true);
   });
 
+  test.each([
+    ["ssd", "Disco Duro Externo SSD Kingston XS1000 1TB USB 3.2", "category:external_drive"],
+    ["hdd", "Disco Duro LaCie Rugged Mini 2TB USB-C Portátil", "category:external_drive"],
+    ["ssd", "SSD 32 GB DDR4 Kingston Fury Impact KF432S20IB/32", "category:other_product"],
+    ["case_fan", "Ventilador CPU Morpheus TJ400 ARGB", "category:cpu_cooler"],
+    ["case_fan", "Refrigeración líquida MSI MAG CoreLiquid 360R", "category:cpu_cooler"],
+    ["cpu_cooler", "Pasta Térmica CoolerMaster Cryofuze 5", "category:other_product"],
+    ["case", "Gabinete Casecom CM-01 ATX (caja mala)", "condition:not_new"],
+    ["ram", "Pack de Memoria RAM + Disco SSD Kingston 16GB DDR4", "bundle"],
+  ] as const)("cuarentena en %s: %s → %s", (category, title, reason) => {
+    const result = normalizeOffer({ ...base, category, title, priceCash: 49_990, priceCard: null }, category);
+    expect(result).toMatchObject({ ok: false, reason });
+  });
+
+  test("en ventiladores, un pack o un kit con controladora es un producto, no un bundle", () => {
+    for (const title of [
+      "PACK DE 3 VENTILADORES ANTEC C120 ARGB White",
+      "KIT DE VENTILADORES (X3) ANTEC FUSION 120MM ARGB + CONTROLADORA",
+    ]) {
+      expect(normalizeOffer({ ...base, category: "case_fan", title, priceCash: 29_990 }, "case_fan").ok).toBe(true);
+    }
+  });
+
   test("sin stock fuerza cantidad 0", () => {
     const result = normalizeOffer({ ...base, inStock: false, stockQuantity: 3 }, "gpu");
     expect(result.ok && result.offer.stockQuantity).toBe(0);
