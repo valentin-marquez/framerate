@@ -8,6 +8,7 @@
       "outputs": ["dist/**", ".wrangler/**"]
     },
     "web#build": {
+      "dependsOn": ["^build", "check-types"],
       "outputs": ["dist/**"]
     },
     "dev": {

@@ -1,5 +1,3 @@
-import type { KnipConfig } from "knip";
-
 /**
  * Knip configuration for the React Router v7 SSR app.
  *
@@ -23,7 +21,7 @@ import type { KnipConfig } from "knip";
  * `app/features/** /pages/*.tsx` glob captures all page modules. Top-level
  * `app/routes/*.{ts,tsx}` is also covered for legacy resource routes.
  */
-const config: KnipConfig = {
+const config = {
   entry: [
     // Vite + React Router framework-mode entries.
     "app/root.tsx",

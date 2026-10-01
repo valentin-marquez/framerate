@@ -9,7 +9,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "dev:wrangler": "bun run build && wrangler dev",
     "deploy": "wrangler deploy",
-    "typecheck": "react-router typegen && tsc",
+    "check-types": "react-router typegen && tsc",
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build -o storybook-static"
   },
