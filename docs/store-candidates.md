@@ -71,6 +71,12 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 |---|---|---|
 | TecTec | WooCommerce, `sku: "internal"`, tarjeta +4 % | Casi todo lo que vende es usado certificado: aporta poco. La migración 0009 limpió los MPN falsos que dejó |
 | Dust2 | WooCommerce, `sku: "internal"` (el SKU es EAN-13), tarjeta +7 %, con GPU | Probablemente la misma empresa que Progaming (mismos EAN y hosting) |
+| MyShop | Adaptador `myshop` (`POST /servicio/producto`), `minIntervalMs: 2500` | Dry run del 30-09-2026: ~650 ofertas válidas, MPN 81–99 % según categoría, los dos precios en todas. Su Cloudflare corta con 429 (error 1015) a ~1,3 requests/s sostenidas |
+| Sandos | Mismo adaptador, otro mapa de `idFamilia` | Dry run: ~260 válidas, MPN 65–100 %. `api: 1` = entrega diferida por distribuidor: se puede comprar, cuenta como stock |
+
+Para evaluar una tienda antes de activarla: `bun run --cwd apps/ingest dry-run <tienda> [categoría]` (crawl real +
+`normalizeOffer`, sin base): reporta cobertura de MPN, GTIN, marca y precios, marcas fuera del diccionario y la
+cuarentena por motivo.
 
 ## Orden de integración recomendado
 

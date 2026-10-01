@@ -69,6 +69,7 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] Invitaciones por correo a la organización (`organization_invitations` ya está en el esquema; falta el envío).
 - [ ] Verificación alternativa por archivo `/.well-known/framerate-verify` para tiendas sin acceso a su DNS.
 - [ ] Reseñas: reportar reseña desde la UI contra la API v2; paginación "cargar más".
+- [ ] **API abierta para tiendas**: que una tienda reclamada publique su catálogo (feed con MPN/GTIN, precios transferencia y tarjeta, stock) en vez de scrapearla. Token por organización, el feed pasa por `normalizeOffer` y la cuarentena como cualquier crawl, documentación pública y límites de uso.
 
 ## Último deploy
 - [x] Desplegado el 30-09-2026 (`17adce0`): migraciones 0009 y 0010, `framerate-ingest` y `framerate-server`. La web no cambió de comportamiento y sigue en `bb66fe3`.
@@ -78,7 +79,9 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 
 ## Scraping / catálogo
 - [ ] Revisar las 56 revisiones pendientes de matching (`match_reviews`) con datos reales y ajustar vetos.
-- [ ] Integrar tiendas en el orden de `docs/store-candidates.md` (MyShop y Sandos primero, misma API).
+- [ ] Integrar tiendas en el orden de `docs/store-candidates.md`. MyShop y Sandos integradas (sin desplegar).
+- [ ] El extractor no reconoce productos de estación de trabajo y servidor (Xeon, Threadripper, TRX50, RTX A400/A1000, Radeon PRO): hoy van a cuarentena por atributo faltante.
+- [ ] La cola corre dos categorías a la vez y cada corrida tiene su propio cliente HTTP: dos categorías de la misma tienda duplican el ritmo. Si otra tienda corta por rate limit, serializar por tienda.
 - [ ] Opciones de precio de WooCommerce que faltan: "`regular_price` = tarjeta" (Infor-Ingen) y "`price` = tarjeta" (Central Gamer, Globalbox, Nuevatec, Tecno Shopping).
 - [ ] Decidir la política de MPN dentro del título y de SKU con prefijo (en `normalize`, no por tienda).
 - [ ] Probar Winpy desde el Worker (bloquea desde red local); si bloquea, evaluar Browser Rendering.
@@ -89,6 +92,7 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 - [ ] "Usado certificado" y "open box" hoy van a cuarentena; decidir si se muestran como condición aparte.
 
 ## Web (cuando se retome)
+- [ ] **Publicidad suave**: espacios de anuncio discretos integrados al diseño (en listas y ficha), sin pop-ups, intersticiales ni anuncios que muevan el layout (reservar el alto). Sin rastreo invasivo; revisar la CSP y la página de privacidad al elegir proveedor.
 - [ ] El chip "Con stock" de `filter-bar.tsx` sobra: la API ya sólo lista productos con stock.
 - [ ] **Reescribir privacidad y términos para v2**: `privacy-page.tsx` describe Supabase (Auth, Postgres, RLS, buckets, tablas `account`) y login con Google/Apple/Facebook; `terms-page.tsx:77` también. v2 es D1 + Better Auth + Discord/Google. Google enlaza esta página en su pantalla de consentimiento.
 - [ ] Código muerto en `shared/lib/client.tsx`: `ClientHintCheck` (nunca se monta, así que la cookie de hints de tema nunca se escribe), `subscribeToSchemeChange`, `getLocale`, `parseAcceptLanguage`.

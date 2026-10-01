@@ -27,6 +27,9 @@ function fakeContext(pages: Record<string, { body: unknown; totalPages?: number 
           text: JSON.stringify(page.body),
         };
       },
+      post: async (url) => {
+        throw new HttpError(url, 405);
+      },
     },
   };
   return { ctx, requested, snapshots };
@@ -148,5 +151,20 @@ describe("cliente HTTP", () => {
     });
     await http.get("https://tienda.example/");
     expect(ua ?? "").toContain("FramerateBot");
+  });
+
+  test("post envía JSON y reintenta como un GET", async () => {
+    const seen: RequestInit[] = [];
+    const http = createHttpClient({
+      sleep: noSleep,
+      fetch: (async (_url: string, init: RequestInit) => {
+        seen.push(init);
+        return seen.length < 2 ? new Response("lento", { status: 429 }) : new Response("{}");
+      }) as unknown as typeof fetch,
+    });
+    await http.post("https://tienda.example/api", { page: "1" });
+    expect(seen).toHaveLength(2);
+    expect(seen[1]).toMatchObject({ method: "POST", body: '{"page":"1"}' });
+    expect(new Headers(seen[1]?.headers).get("content-type")).toBe("application/json");
   });
 });

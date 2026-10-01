@@ -49,6 +49,7 @@ describe("normalizeOffer", () => {
   test.each([
     [{ title: "Tarjeta de Video RTX 4070 Super USADA" }, "condition:not_new"],
     [{ title: "Combo Ryzen 5 5600 + RTX 4060" }, "bundle"],
+    [{ title: "KIT MSI B650 Gaming + Tarjeta de Video RTX 4060 8GB" }, "bundle"],
     [{ title: "Notebook ASUS TUF RTX 4060 16GB" }, "category:other_product"],
     [{ priceCash: 990 }, "price:out_of_range"],
     [{ title: "Soporte anti-sag para tarjeta de video" }, "attribute:missing:chipset"],

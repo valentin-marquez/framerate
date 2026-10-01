@@ -43,6 +43,8 @@ describe("marcas", () => {
     expect(detectBrand("Memoria G.Skill Trident Z5 32GB")).toBe("G.Skill");
     expect(detectBrand("Gabinete genérico sin marca")).toBeNull();
     expect(canonicalBrand("xpg")).toBe("ADATA");
+    expect(canonicalBrand("Adata-Xpg")).toBe("ADATA");
+    expect(detectBrand("Fuente de Poder 650W - Formula V Line FV-650 80+ Bronze")).toBe("Formula V Line");
   });
 });
 
