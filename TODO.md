@@ -4,7 +4,7 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 
 ## Para probar en producción
 - [x] Reclamo por DNS con `nozz.skin` (30-09-2026): tienda `nozz` (id 3) sembrada, reclamo 2 verificado y confirmado (organización 1, owner `nozztutos`), perfil editado, error de usuario inexistente al sumar miembro OK. TXT quitado a las 22:46 UTC.
-- [ ] Ver que el Cron pase el reclamo 2 a `stale` y congele `nozz` (3 fallas: ~12:17 UTC del 01-10-2026). Después borrar la tienda de prueba, su organización y el reclamo.
+- [x] Tienda de prueba `nozz` (id 3), su organización (id 1) y el reclamo 2 borrados de producción (01-10-2026). Quedó sin probar en producción el paso a `stale` del reclamo (lo cubren los tests de `claims`).
 - [ ] Sumar un miembro, votar y responder una reseña: hace falta una segunda cuenta de Discord.
 - [x] Login con Discord real y `/perfil` funcionan (callback registrado).
 - [x] Google OAuth configurado (30-09-2026): proyecto de Google Cloud "Framerate" (`gen-lang-client-0491493857`), cliente web `framerate-server`, secretos `GOOGLE_CLIENT_ID`/`_SECRET` en `framerate-server` (copia local en `~/.config/framerate/`). `/v1/auth/providers` ya lista Google.
