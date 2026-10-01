@@ -1,0 +1,154 @@
+{
+  "mybox": [
+    {
+      "products": [
+        {
+          "id_product": "6197",
+          "name": "Tarjeta de Video ASUS X T1 RTX 5060 TI Gaming 8GB OC",
+          "url": "https://mybox.cl/tarjeta-de-video/6197-tarjeta-de-video-asus-x-t1-rtx-5060-ti-gaming-8gb-oc-.html",
+          "reference": "T1-RTX5060TI-O8G-GAMING",
+          "manufacturer_name": "Asus",
+          "price_amount": 631741,
+          "regular_price_amount": 664990,
+          "has_discount": true,
+          "add_to_cart_url": "https://mybox.cl/carrito?add=1&id_product=6197&id_product_attribute=0&token=4d6cdb52add14d8d3e407a930b4bb149",
+          "cover": {
+            "large": {
+              "url": "https://mybox.cl/17376-thickbox_default/tarjeta-de-video-asus-x-t1-rtx-5060-ti-gaming-8gb-oc-.jpg"
+            }
+          }
+        },
+        {
+          "id_product": "6196",
+          "name": "Tarjeta de Video ASUS RTX 5070 DUAL 12GB OC",
+          "url": "https://mybox.cl/tarjeta-de-video/6196-tarjeta-de-video-asus-rtx-5070-dual-12gb-oc.html",
+          "reference": "DUAL-RTX5070-O12G",
+          "manufacturer_name": "Asus",
+          "price_amount": 865328,
+          "regular_price_amount": 935490,
+          "has_discount": true,
+          "add_to_cart_url": null,
+          "cover": {
+            "large": {
+              "url": "https://mybox.cl/17373-thickbox_default/tarjeta-de-video-asus-rtx-5070-dual-12gb-oc.jpg"
+            }
+          }
+        }
+      ],
+      "pagination": {
+        "total_items": 2,
+        "current_page": 1,
+        "pages_count": 2
+      }
+    },
+    {
+      "products": [
+        {
+          "id_product": "5601",
+          "name": "Tarjeta de Video RTX 5000 ADA PNY",
+          "url": "https://mybox.cl/tarjeta-de-video/5601-tarjeta-de-video-rtx-5000-ada-pny.html",
+          "reference": "VCNRTX5000ADA-PB",
+          "manufacturer_name": null,
+          "price_amount": 6189239,
+          "regular_price_amount": 6189239,
+          "has_discount": false,
+          "add_to_cart_url": "https://mybox.cl/carrito?add=1&id_product=5601&id_product_attribute=0&token=4d6cdb52add14d8d3e407a930b4bb149",
+          "cover": {
+            "large": {
+              "url": "https://mybox.cl/15668-thickbox_default/tarjeta-de-video-rtx-5000-ada-pny.jpg"
+            }
+          }
+        }
+      ],
+      "pagination": {
+        "total_items": 1,
+        "current_page": 2,
+        "pages_count": 2
+      }
+    }
+  ],
+  "todoclick": [
+    {
+      "products": [
+        {
+          "id_product": 9645,
+          "name": "Tarjeta de Video MSI NVIDIA GeForce RTX™ 3050 VENTUS 2X 6G OC, 6GB GDDR6",
+          "url": "https://todoclick.cl/tarjeta-de-video-nvidia/9645-tarjeta-de-video-msi-nvidia-geforce-rtx-3050-ventus-2x-6g-ddr6.html",
+          "reference": "912-V812-201",
+          "manufacturer_name": "MSI",
+          "price_amount": 249990,
+          "regular_price_amount": 299990.0036,
+          "has_discount": true,
+          "add_to_cart_url": "https://todoclick.cl/carrito?add=1&id_product=9645&id_product_attribute=0&token=9260290949ef849405c882514abd057c",
+          "cover": {
+            "large": {
+              "url": "https://todoclick.cl/6745873-square_large_default/tarjeta-de-video-msi-nvidia-geforce-rtx-3050-ventus-2x-6g-ddr6.jpg"
+            }
+          }
+        },
+        {
+          "id_product": 9388,
+          "name": "Tarjeta de Video MSI NVIDIA GeForce RTX 5050 8G VENTUS 2X 8GB GDDR6 Negro",
+          "url": "https://todoclick.cl/tarjeta-de-video-nvidia/9388-tarjeta-de-video-msi-nvidia-geforce-rtx-5050-8g-ventus-2x-oc-8gb-gddr6.html",
+          "reference": "824142438329",
+          "manufacturer_name": "MSI",
+          "price_amount": 321990,
+          "regular_price_amount": 321990,
+          "has_discount": false,
+          "add_to_cart_url": null,
+          "cover": {
+            "large": {
+              "url": "https://todoclick.cl/6744861-square_large_default/tarjeta-de-video-msi-nvidia-geforce-rtx-5050-8g-ventus-2x-oc-8gb-gddr6.jpg"
+            }
+          }
+        }
+      ],
+      "pagination": {
+        "total_items": 2,
+        "current_page": 1,
+        "pages_count": 1
+      }
+    }
+  ],
+  "tytgamer": [
+    {
+      "products": [
+        {
+          "id_product": "3043",
+          "name": "AMD Ryzen 5 5600G - Ryzen 5 5000 G-Series Cezanne (Zen 3) 6-Core 3.9 GHz Socket AM4 65W",
+          "url": "https://tytgamer.cl/tienda/procesadores/3043-amd-ryzen-5-5600g-ryzen-5-5000-g-series-cezanne-zen-3-6-core-39-ghz-socket-am4-65w-.html",
+          "reference": "3043",
+          "price_amount": 196990,
+          "regular_price_amount": 196990,
+          "has_discount": false,
+          "add_to_cart_url": "https://tytgamer.cl/tienda/carrito?add=1&id_product=3043&id_product_attribute=0&token=9cbb30057890d1e7c3c455a90443aa8a",
+          "cover": {
+            "large": {
+              "url": "https://tytgamer.cl/tienda/8873-large_default/amd-ryzen-5-5600g-ryzen-5-5000-g-series-cezanne-zen-3-6-core-39-ghz-socket-am4-65w-.jpg"
+            }
+          }
+        },
+        {
+          "id_product": "2626",
+          "name": "AMD Ryzen 5 7600X - 6-Core 4.7 GHz - Socket AM5 - 105W Desktop Processor",
+          "url": "https://tytgamer.cl/tienda/procesadores-amd/2626-amd-ryzen-5-7600x-6-core-47-ghz-socket-am5-105w-desktop-processor-.html",
+          "reference": "2626",
+          "price_amount": 194890,
+          "regular_price_amount": 194890,
+          "has_discount": false,
+          "add_to_cart_url": null,
+          "cover": {
+            "large": {
+              "url": "https://tytgamer.cl/tienda/7705-large_default/amd-ryzen-5-7600x-6-core-47-ghz-socket-am5-105w-desktop-processor-.jpg"
+            }
+          }
+        }
+      ],
+      "pagination": {
+        "total_items": 2,
+        "current_page": 1,
+        "pages_count": 1
+      }
+    }
+  ]
+}

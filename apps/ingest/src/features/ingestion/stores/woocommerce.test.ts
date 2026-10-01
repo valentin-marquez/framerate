@@ -166,6 +166,21 @@ describe("cliente HTTP", () => {
     expect(ua ?? "").toContain("FramerateBot");
   });
 
+  test("get suma cabeceras extra sin perder el User-Agent", async () => {
+    let headers = new Headers();
+    const http = createHttpClient({
+      sleep: noSleep,
+      fetch: (async (_url: string, init: RequestInit) => {
+        headers = new Headers(init.headers);
+        return new Response("{}");
+      }) as unknown as typeof fetch,
+    });
+    await http.get("https://tienda.example/", { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    expect(headers.get("x-requested-with")).toBe("XMLHttpRequest");
+    expect(headers.get("accept")).toBe("application/json");
+    expect(headers.get("user-agent") ?? "").toContain("FramerateBot");
+  });
+
   test("post envía JSON y reintenta como un GET", async () => {
     const seen: RequestInit[] = [];
     const http = createHttpClient({
