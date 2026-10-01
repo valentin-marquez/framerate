@@ -30,6 +30,7 @@ function HoverLogo() {
 export const Logotipo: Story = {
   render: () => (
     <div className="flex items-end gap-6 text-foreground">
+      <Logo className="size-4" />
       <Logo className="size-5" />
       <Logo className="size-8" />
       <Logo className="size-12 text-foreground/40" />

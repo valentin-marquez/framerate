@@ -18,38 +18,16 @@ export function Logo({ className, isHovered }: { className?: string; isHovered?:
 
   return (
     <LazyMotion features={domAnimation}>
-      <m.svg
-        name="Logo Framerate.cl"
-        width="448"
-        height="448"
-        viewBox="0 0 448 448"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={className}
-      >
-        <title>Framerate Logo</title>
-        <path
-          d="M0 5C0 2.24 2.24 0 5 0H135.42C138.18 0 140.42 2.24 140.42 5V442.27C140.42 445.03 138.18 447.27 135.42 447.27H5C2.24 447.27 0 445.03 0 442.27V5Z"
-          fill="currentColor"
-        />
-        <path
-          d="M442.27 0C445.03 0 447.27 2.24 447.27 5V135.42C447.27 138.18 445.03 140.42 442.27 140.42H5C2.24 140.42 0 138.18 0 135.42L0 5C0 2.24 2.24 0 5 0H442.27Z"
-          fill="currentColor"
-        />
-        <path
-          d="M162 209.042C162 206.278 164.239 204.037 167 204.037H304.8C307.561 204.037 309.8 206.278 309.8 209.042V441.995C309.8 444.759 307.561 447 304.8 447H167C164.239 447 162 444.759 162 441.995V209.042Z"
-          fill="currentColor"
-        />
-        <path
-          d="M442 170C444.761 170 447 172.241 447 175.005V307.147C447 309.912 444.761 312.153 442 312.153H167C164.239 312.153 162 309.912 162 307.147V175.005C162 172.241 164.239 170 167 170H442Z"
-          fill="currentColor"
-        />
+      {/* Grilla de 16: a 16 px cada hueco cae en un píxel entero. Las formas no se superponen, así que con
+          opacidad (pie) ninguna zona se pinta dos veces. */}
+      <m.svg viewBox="0 0 16 16" width="16" height="16" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <title>Framerate</title>
+        <path d="M0 0H16V5H5V16H0ZM6 6H16V11H11V16H6Z" fill="currentColor" />
         <m.rect
-          x="339"
-          y="339"
-          width="108"
-          height="108"
-          rx="5"
+          x="12"
+          y="12"
+          width="4"
+          height="4"
           fill="currentColor"
           animate={{ rotate: rotation }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
