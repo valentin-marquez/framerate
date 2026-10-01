@@ -137,7 +137,7 @@ export interface UserProfileQuotesResponse extends QuotesListResponse {
   };
 }
 
-// ponytail: la API v2 aún no tiene cotizaciones (TODO.md, `0005_quotes.sql`). En false, las lecturas automáticas
+// ponytail: la API v2 aún no tiene cotizaciones (#25, `0005_quotes.sql`). En false, las lecturas automáticas
 // (`useQuotes`, `useQuote`, el pegado de enlaces en comentarios) no salen a la red y la UI las ve vacías. Pasar a
 // true cuando exista `/v1/quotes`; crear/editar siguen llamando a la API y fallan con su error.
 export const QUOTES_API_ENABLED = false;
