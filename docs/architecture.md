@@ -160,7 +160,10 @@ clave de atributos, o misma marca + texto similar por FTS):
 3. **Clave de atributos** (`gpu|asus|rtx 4070 super|12|dual|true`):
    - En categorías donde la clave identifica un único producto (CPU) → vínculo.
    - En el resto, vínculo sólo si además la similitud de título es alta
-     (score ≥ 0.85) y no hay MPN en conflicto.
+     (score ≥ 0.85), no hay MPN en conflicto ni códigos de modelo en conflicto
+     (mismo prefijo, distinto número: `nv1`/`nv3`, `cl36`/`cl28`), y el producto
+     no tiene ya otra oferta de la misma tienda (una tienda no publica dos veces
+     lo mismo: si coinciden los atributos es una variante, y va a revisión).
 4. **Zona gris** (score ≥ 0.6) → se crea producto propio (la oferta es visible
    de inmediato) + `match_review` proponiendo el candidato. Aceptar mueve la
    oferta y sus identificadores al candidato.
@@ -227,7 +230,10 @@ Reglas (ya decididas):
    tienda (`cardMarkup`) y si su SKU es del fabricante (`sku`).
 2. Agregar la entrada en `apps/ingest/src/features/ingestion/stores/registry.ts`.
 3. Guardar respuestas reales como fixture y testear el mapeo.
-4. Verificar en producción: `POST /v1/admin/crawls {"store":"x","category":"gpu"}`,
+4. Evaluar en local: `bun run --cwd apps/ingest dry-run <tienda>` (crawl real + `normalize`: cobertura de MPN,
+   precios, marcas desconocidas y cuarentena) y `bun run --cwd apps/ingest match-report [tiendas…]` (pipeline
+   completo contra una D1 en memoria: productos multi-tienda y fusiones sospechosas; con caché HTTP en disco).
+5. Verificar en producción: `POST /v1/admin/crawls {"store":"x","category":"gpu"}`,
    luego revisar `GET /v1/admin/crawls` y `GET /v1/admin/quarantine`.
 
 Reglas del adaptador (ver `apps/ingest/src/features/ingestion/stores/adapter.ts`): sólo extrae datos crudos, nunca
