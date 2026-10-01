@@ -38,8 +38,8 @@ export default async function handleRequest(
     workerSrc: ["'self'", isDevelopment ? "blob:" : ""],
     scriptSrcAttr: [`'nonce-${nonce}'`],
     imgSrc: ["'self'", "data:", "blob:", "https:", apiOrigin],
-    // Las fuentes son de @fontsource (propias). `data:` porque Vite incrusta en el CSS los subsets de menos de 4 KB
-    // (assetsInlineLimit), p. ej. jetbrains-mono cyrillic-ext.
+    // Las fuentes se sirven desde el propio sitio (Satoshi y @fontsource). `data:` porque Vite incrusta en el CSS
+    // los subsets de menos de 4 KB (assetsInlineLimit), p. ej. jetbrains-mono cyrillic-ext.
     fontSrc: ["'self'", "data:"],
     frameSrc: ["'self'"],
     // El formulario de login redirige al proveedor OAuth, y el navegador aplica form-action a toda la cadena: si el

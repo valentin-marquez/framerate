@@ -20,7 +20,7 @@ Queremos una web con mucho movimiento, pero que no le cueste al hilo principal (
 
 ## Web: diseño y rutas
 
-- Sistema de diseño en `.github/instructions/web.instructions.md` y en Storybook (`apps/web`): tipografía Inter,
+- Sistema de diseño en `.github/instructions/web.instructions.md` y en Storybook (`apps/web`): tipografía Satoshi,
   paleta neutra estilo Luma, superficies en capas (`bg-background` / `bg-card` / `bg-secondary`), radios squircle
   (`rounded-md` inputs, `rounded-xl`/`rounded-2xl` tarjetas, `rounded-3xl` modales).
 - **URLs públicas en español** (`/tiendas/:slug`, `/reclamar`, `/explorar`, `/categoria/:slug`, `/producto/:slug`,

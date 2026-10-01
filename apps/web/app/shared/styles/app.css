@@ -2,9 +2,28 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Inter (SIL OFL): alternativa libre a SF Pro, cuya licencia no permite servirla en la web. JetBrains Mono para código. */
-@import "@fontsource-variable/inter";
+/* JetBrains Mono (SIL OFL) para código. */
 @import "@fontsource-variable/jetbrains-mono";
+
+/*
+ * Satoshi (ITF Free Font License, de Fontshare): uso comercial y alojarla en el sitio están permitidos, pero la
+ * licencia prohíbe modificar el archivo (ni subsets ni otro formato) y redistribuirlo: el repo tiene que seguir
+ * privado. Los woff2 son los oficiales, tal cual.
+ */
+@font-face {
+  font-family: "Satoshi";
+  src: url("./fonts/Satoshi-Variable.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Satoshi";
+  src: url("./fonts/Satoshi-VariableItalic.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -108,7 +127,7 @@
 }
 
 @theme inline {
-  --font-sans: "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font-sans);
   --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-sidebar-ring: var(--sidebar-ring);

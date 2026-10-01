@@ -38,6 +38,7 @@ import { cn } from "~/shared/lib/utils";
 import { getClientEnv } from "~/shared/services/env.server";
 import { getCookieLang, resolveLang, setLangCookie } from "~/shared/services/lang.server";
 import { getTheme } from "~/shared/services/theme.server";
+import satoshiUrl from "~/shared/styles/fonts/Satoshi-Variable.woff2?url";
 import type { Route } from "./+types/root";
 
 // `sizes` en el .ico hace que los navegadores con soporte de SVG prefieran el SVG.
@@ -45,6 +46,8 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.ico", sizes: "32x32" },
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+  // Satoshi se aleja más que Inter de las fuentes de respaldo: precargarla acorta el salto del texto al cambiar.
+  { rel: "preload", href: satoshiUrl, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
 ];
 
 export function meta({ error }: Route.MetaArgs) {
