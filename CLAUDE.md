@@ -58,16 +58,25 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
   y no se usa); nunca usar credenciales pegadas en el chat.
 - Salud de producción (consultas D1 de sólo lectura): skill `/prod-health`.
 
-## En un PC nuevo
+## En un PC nuevo o con una persona nueva
+
+Claude: si falta algo de esta lista, completarlo es lo primero de la sesión, antes de tomar un issue. Se comprueba
+rápido: `ls node_modules apps/server/.dev.vars`, `tea logins ls` (tiene que haber un login a `git.nozz.skin`) y
+`bunx wrangler whoami` (tiene que listar la cuenta `3f50a4a123ebcbcb917dababff3ef8b5`). Si falta, guiar a la persona
+paso a paso; los secretos los escribe ella, nunca pegados en el chat.
 
 1. `bun install` (instala también los hooks de git).
-2. `bunx wrangler login` con la cuenta de Cloudflare del proyecto. Un colaborador entra con la suya, después de
+2. `tea login add --name <usuario> --url https://git.nozz.skin --token <token>`, con un token de Forgejo
+   (Configuración → Aplicaciones; permisos de lectura y escritura en issue y repository, y lectura en user). Sin
+   esto no se pueden reclamar issues.
+3. `bunx wrangler login` con la cuenta de Cloudflare del proyecto. Un colaborador entra con la suya, después de
    aceptar la invitación de miembro (rol Administrator); los `wrangler.jsonc` fijan `account_id`, así que wrangler
    no despliega en su cuenta personal.
-3. Crear los `.dev.vars` de `apps/server` (`BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, `DISCORD_CLIENT_ID`,
-   `DISCORD_CLIENT_SECRET`) y de `apps/web` si hace falta. No están en el repo.
-4. `bun run db:migrate:local` y `bun run test`.
-5. Aceptar la confianza del espacio de trabajo en Claude Code: `.claude/settings.json` ofrece los plugins
+4. Crear los `.dev.vars` de `apps/server` (`BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, `DISCORD_CLIENT_ID`,
+   `DISCORD_CLIENT_SECRET`) y de `apps/web` si hace falta. No están en el repo: se los pide al dueño por un
+   canal privado.
+5. `bun run db:migrate:local` y `bun run test`.
+6. Aceptar la confianza del espacio de trabajo en Claude Code: `.claude/settings.json` ofrece los plugins
    `ponytail` y `playwright`. Las skills del proyecto (`deploy`, `prod-health`, `referencias-composicion`) están en
    `.claude/skills/`; los hooks (formateo con Biome, migraciones protegidas) en `.claude/hooks/`. Correr
    `/doctor prompt-audit` para detectar referencias rotas entre CLAUDE.md y las skills.
