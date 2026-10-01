@@ -91,5 +91,11 @@ export function ProductSpecs({ product }: { product: Product }) {
 
   if (items.length === 0) return null;
 
-  return <div className="text-xs text-muted-foreground mt-0.5 truncate">{items.join(" • ")}</div>;
+  return (
+    <div className="text-xs text-muted-foreground mt-0.5 truncate space-x-2">
+      {items.map((item) => (
+        <span key={item}>{item}</span>
+      ))}
+    </div>
+  );
 }

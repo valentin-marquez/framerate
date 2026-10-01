@@ -6,12 +6,12 @@ import type { Route } from "./+types/explore-page";
 
 export function meta() {
   return [
-    { title: "Explorar hardware - Precios y Ofertas | Framerate" },
+    { title: "Explorar precios de hardware - Framerate" },
     {
       name: "description",
       content: "Explora y compara hardware con los mejores precios en Chile. Filtra por marca, precio y stock.",
     },
-    { property: "og:title", content: "Explorar hardware | Framerate" },
+    { property: "og:title", content: "Explorar precios de hardware" },
     { property: "og:description", content: "Encuentra las mejores ofertas de hardware en Chile." },
     { property: "og:type", content: "website" },
     { property: "og:locale", content: "es_CL" },

@@ -10,7 +10,7 @@ import type { Route } from "./+types/store-reviews-page";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
-    { title: `Reseñas de ${params.slug} | Framerate` },
+    { title: `Reseñas de ${params.slug} - Framerate` },
     { name: "description", content: `Lee y escribe reseñas sobre ${params.slug} en Framerate.cl` },
   ];
 }

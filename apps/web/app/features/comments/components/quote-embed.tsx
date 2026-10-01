@@ -89,7 +89,7 @@ export function QuoteEmbed({ quoteId, href }: QuoteEmbedProps) {
         <IconLayoutList className="size-3 shrink-0" />
         <span className="truncate font-medium">{quote.name}</span>
         <span className="text-muted-foreground/80 tabular-nums">
-          · {itemCount} {itemCount === 1 ? "ítem" : "ítems"}
+          {itemCount} {itemCount === 1 ? "ítem" : "ítems"}
         </span>
       </m.button>
 
@@ -176,9 +176,11 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
           <h3 id={titleId} className="text-base font-semibold text-foreground truncate">
             {quote.name}
           </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {itemCount} {itemCount === 1 ? "componente" : "componentes"}
-            {quote.estimated_wattage ? ` · ~${quote.estimated_wattage}W estimados` : ""}
+          <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap gap-x-3">
+            <span>
+              {itemCount} {itemCount === 1 ? "componente" : "componentes"}
+            </span>
+            {quote.estimated_wattage ? <span>~{quote.estimated_wattage}W estimados</span> : null}
           </p>
         </div>
         <button
@@ -206,9 +208,9 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-foreground truncate">{item.product.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {item.category?.name}
-                    {item.quantity > 1 ? ` · x${item.quantity}` : ""}
+                  <div className="text-xs text-muted-foreground flex gap-x-2">
+                    <span>{item.category?.name}</span>
+                    {item.quantity > 1 ? <span className="tabular-nums">x{item.quantity}</span> : null}
                   </div>
                 </div>
                 <div className="text-sm font-mono tabular-nums text-foreground shrink-0">

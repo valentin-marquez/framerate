@@ -27,16 +27,16 @@ import { QUOTE_SLOTS } from "~/shared/utils/slots";
 import type { Route } from "./+types/quote-details";
 
 export function meta({ data }: Route.MetaArgs) {
-  if (!data || !data.quote) return [{ title: "Cotización no encontrada | Framerate" }];
+  if (!data || !data.quote) return [{ title: "Cotización no encontrada - Framerate" }];
   const { quote } = data;
   return [
-    { title: `${quote.name} - Cotización PC Gamer | Framerate` },
+    { title: `${quote.name}: cotización de PC - Framerate` },
     {
       name: "description",
       // TODO: Considerar agregar el nombre del usuario si la API lo retorna en el futuro
       content: `Cotización de PC "${quote.name}" con ${quote.items.length} componentes. Potencia estimada: ${quote.estimated_wattage}W. Verifica compatibilidad y cotiza en tiendas chilenas con Framerate.`,
     },
-    { property: "og:title", content: `${quote.name} - Cotización PC` },
+    { property: "og:title", content: `${quote.name}: cotización de PC` },
     { property: "og:description", content: `Configuración de PC personalizada. Revisa los componentes y precios.` },
     { property: "og:type", content: "article" },
     { property: "og:locale", content: "es_CL" },

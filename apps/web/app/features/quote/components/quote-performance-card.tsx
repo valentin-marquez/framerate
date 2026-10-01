@@ -5,10 +5,10 @@ interface QuotePerformanceCardProps {
 }
 
 const TIER_SUBTITLES: Record<string, string> = {
-  "4K / Enthusiast": "4K Ultra · ray tracing · 60+ FPS",
-  Elite: "1440p Ultra · ray tracing · 100+ FPS",
-  "High / 1440p": "1440p alto · 60–100 FPS en AAA",
-  "Mid / 1080p": "1080p alto · 60+ FPS en AAA",
+  "4K / Enthusiast": "4K en ultra con ray tracing, más de 60 FPS",
+  Elite: "1440p en ultra con ray tracing, más de 100 FPS",
+  "High / 1440p": "Juegos AAA a 1440p en alto, entre 60 y 100 FPS",
+  "Mid / 1080p": "Juegos AAA a 1080p en alto, más de 60 FPS",
   "Entry / Ofimática": "Productividad y eSports a 1080p",
 };
 

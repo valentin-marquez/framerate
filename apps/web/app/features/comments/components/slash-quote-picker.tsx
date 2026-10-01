@@ -81,7 +81,7 @@ export function SlashQuotePicker({ state, onSelect, onActiveChange, onClose, ori
             aria-label="Cotizaciones para insertar"
           >
             <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground/80 font-medium border-b border-border/60 flex items-center justify-between">
-              <span>Tus cotizaciones {query && `· "${query}"`}</span>
+              <span>{query ? `Tus cotizaciones con "${query}"` : "Tus cotizaciones"}</span>
               <kbd className="text-[10px] text-muted-foreground/70 font-mono">esc</kbd>
             </div>
             <ul ref={listRef} className="max-h-72 overflow-y-auto py-1">
@@ -122,9 +122,11 @@ export function SlashQuotePicker({ state, onSelect, onActiveChange, onClose, ori
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-foreground truncate">{quote.name}</div>
-                        <div className="text-xs text-muted-foreground tabular-nums">
-                          {itemCount} {itemCount === 1 ? "ítem" : "ítems"}
-                          {quote.is_public ? "" : " · privada"}
+                        <div className="text-xs text-muted-foreground tabular-nums flex gap-x-2">
+                          <span>
+                            {itemCount} {itemCount === 1 ? "ítem" : "ítems"}
+                          </span>
+                          {quote.is_public ? null : <span>privada</span>}
                         </div>
                       </div>
                       <span className="text-[10px] text-muted-foreground/70 font-mono shrink-0">

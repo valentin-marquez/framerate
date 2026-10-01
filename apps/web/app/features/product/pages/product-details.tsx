@@ -100,7 +100,7 @@ export function meta({ data }: Route.MetaArgs) {
   const ogImage = data.image_url || "/og-image.png";
 
   return [
-    { title: `${data.name} | Precios en Chile - Framerate` },
+    { title: `${data.name}: precios en Chile - Framerate` },
     { name: "description", content: description },
     { property: "og:site_name", content: "Framerate.cl" },
     { property: "og:locale", content: "es_CL" },
@@ -262,12 +262,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                     <IconCircleCheck className="size-3.5" />
                     {t("available_in_stores", { count: product.listings_count || 0 })}
                   </span>
-                  {product.mpn && (
-                    <>
-                      <span className="text-border">•</span>
-                      <span className="font-mono text-xs opacity-70">MPN: {product.mpn}</span>
-                    </>
-                  )}
+                  {product.mpn && <span className="font-mono text-xs opacity-70">MPN: {product.mpn}</span>}
                 </div>
               </div>
             </div>
@@ -282,12 +277,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                     <IconCircleCheck className="size-4" />
                     {t("available_in_stores", { count: product.listings_count || 0 })}
                   </span>
-                  {product.mpn && (
-                    <>
-                      <span className="text-border">•</span>
-                      <span className="font-mono text-xs">MPN: {product.mpn}</span>
-                    </>
-                  )}
+                  {product.mpn && <span className="font-mono text-xs">MPN: {product.mpn}</span>}
                 </div>
               </div>
 

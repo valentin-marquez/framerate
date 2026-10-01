@@ -85,7 +85,7 @@ const PANEL_RESIZE: Transition = { duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "Soporte | Framerate Admin" },
+    { title: "Soporte - Framerate Admin" },
     { name: "description", content: "Bandeja de tickets de soporte." },
     { name: "robots", content: "noindex" },
   ];

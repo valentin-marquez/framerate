@@ -13,7 +13,7 @@ import { moderationClient } from "../services/moderation";
 import type { Route } from "./+types/users-admin";
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "Usuarios | Framerate Admin" }, { name: "robots", content: "noindex" }];
+  return [{ title: "Usuarios - Framerate Admin" }, { name: "robots", content: "noindex" }];
 }
 
 interface ProfileSearchResult {

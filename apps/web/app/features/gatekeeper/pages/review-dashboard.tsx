@@ -7,7 +7,7 @@ import type { Route } from "./+types/review-dashboard";
 const PAGE_SIZE = 50;
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "Gatekeeper | Framerate Admin" }, { name: "description", content: "Revisión de matches dudosos" }];
+  return [{ title: "Gatekeeper - Framerate Admin" }, { name: "description", content: "Revisión de matches dudosos" }];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {

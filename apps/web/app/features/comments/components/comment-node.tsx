@@ -93,7 +93,7 @@ export function CommentNode({
             <span className="font-medium text-foreground text-sm leading-none">{displayName}</span>
             {isDeleted && (
               <span className="text-xs italic text-muted-foreground">
-                · eliminado{node.deleted_reason ? ` (${node.deleted_reason})` : ""}
+                {node.deleted_reason === "moderation" ? "eliminado por moderación" : "eliminado"}
               </span>
             )}
             {node.edited_at && !isDeleted && <span className="text-xs italic text-muted-foreground">(editado)</span>}

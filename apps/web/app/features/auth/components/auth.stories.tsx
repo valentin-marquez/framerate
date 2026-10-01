@@ -29,7 +29,7 @@ export const Tarjeta: Story = {
 };
 
 export const TarjetaParaReclamar: Story = {
-  name: "Tarjeta · al reclamar una tienda",
+  name: "Tarjeta al reclamar una tienda",
   render: () => (
     <Dialog>
       <div className="max-w-sm overflow-hidden rounded-3xl border border-border bg-card">

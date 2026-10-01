@@ -187,7 +187,6 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
               <IconCalendarFilled className="size-3.5" />
               {t("profile_joined", { date: joinDate })}
             </span>
-            <span className="text-border">•</span>
             <span>
               {t(isOwner ? "profile_quotes_count_owner" : "profile_quotes_count_other", {
                 count: quotes.length,
@@ -254,7 +253,6 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
                         </h3>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
                           <span className="capitalize">{dateLabel}</span>
-                          <span className="hidden sm:inline text-border/60">•</span>
                           <span className="font-medium">
                             {t("profile_components_count", { count: componentsCount })}
                           </span>

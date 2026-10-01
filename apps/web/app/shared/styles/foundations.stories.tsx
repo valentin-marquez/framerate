@@ -51,7 +51,7 @@ const TYPE_SCALE = [
   ["text-base font-medium", "Etiqueta destacada"],
   ["text-base", "Texto de cuerpo: compara precios de las tiendas de Chile."],
   ["text-sm text-muted-foreground", "Texto secundario y descripciones"],
-  ["text-xs text-muted-foreground", "Metadatos · 8 productos · $279.990"],
+  ["text-xs text-muted-foreground", "8 productos desde $279.990"],
 ] as const;
 
 export const Tipografia: Story = {
