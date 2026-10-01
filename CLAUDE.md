@@ -73,9 +73,19 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
 ## Cómo trabajar aquí
 
 - **Las tareas salen del tablero de Forgejo**, no de `TODO.md`: issues de `valentin/framerate` con milestones y labels,
-  en el orden del Roadmap fijado (#67). Listar: `tea issues --login valentin --repo valentin/framerate`; leer uno:
-  `tea api --login valentin /repos/valentin/framerate/issues/<n>`. Antes de empezar, verificar contra el código que el
-  issue siga vigente: sus `archivo:línea` son del día en que se escribió. El commit que lo resuelve lleva
+  en el orden del Roadmap fijado (#67). Desde la raíz del repo `tea` usa el login de quien lo corre. Listar:
+  `tea issues --repo valentin/framerate`; leer uno: `tea api /repos/valentin/framerate/issues/<n>`.
+- **Reclamar el issue antes de tocarlo**, cada vez: trabajan dos personas, cada una con su Claude.
+  1. Ver si alguien lo tiene: `tea api /repos/valentin/framerate/issues/<n> | jq '[.assignees[]?.login]'`. Si
+     está asignado a otra persona, no se toca: elegir otro del Roadmap y decirlo.
+  2. Asignárselo y comentar qué se va a hacer:
+     `tea api -X PATCH /repos/valentin/framerate/issues/<n> -F 'assignees=["<tu login>"]'` (`tea api /user` da el
+     login) y `tea api /repos/valentin/framerate/issues/<n>/comments -f body="Trabajando en esto: <qué>, rama <rama>."`.
+  3. Releer los asignados. `PATCH` reemplaza la lista: si ya no figura uno, el otro lo tomó al mismo tiempo; elegir
+     otro.
+
+  Si se deja a medias, desasignarse (`-F 'assignees=[]'`) y comentar dónde quedó. Antes de empezar, verificar contra
+  el código que el issue siga vigente: sus `archivo:línea` son del día en que se escribió. El commit que lo resuelve lleva
   `Closes #<n>` (Forgejo lo cierra al llegar a `main`) y se marca su casilla en el Roadmap. Lo que aparezca trabajando
   va a un issue nuevo con el mismo estilo (qué pasa hoy con `archivo:línea`, qué se ve, qué debería pasar), con su
   milestone, y se suma al Roadmap. El [proyecto](https://git.nozz.skin/valentin/framerate/projects/1) muestra lo mismo
