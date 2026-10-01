@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Button } from "~/shared/components/primitives/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -129,11 +128,9 @@ export function ReportModal({ open, onOpenChange, targetType, targetId, contextL
           </div>
 
           <DialogFooter>
-            <DialogClose>
-              <Button type="button" variant="secondary" disabled={submitting}>
-                Cancelar
-              </Button>
-            </DialogClose>
+            <Button type="button" variant="secondary" disabled={submitting} onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={submitting || !reason}>
               {submitting ? <IconLoader2 className="size-4 animate-spin" /> : null}
               {submitting ? "Enviando..." : "Enviar reporte"}

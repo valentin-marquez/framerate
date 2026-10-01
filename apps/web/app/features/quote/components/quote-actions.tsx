@@ -91,16 +91,14 @@ export function QuoteActions({
         disabled={isCheckingCompatibility}
       >
         <IconRefresh size={18} className={isCheckingCompatibility ? "animate-spin" : ""} />
-        {isCheckingCompatibility ? "Verificando..." : "Chequear Compatibilidad"}
+        {isCheckingCompatibility ? "Verificando..." : "Chequear compatibilidad"}
       </Button>
 
       <DropdownMenu>
-        <DropdownMenuTrigger>
-          <Button className="gap-2">
-            <IconDownload size={18} />
-            Guardar como
-            <IconChevronDown size={16} className="opacity-50" />
-          </Button>
+        <DropdownMenuTrigger render={<Button className="gap-2" />}>
+          <IconDownload size={18} />
+          Guardar como
+          <IconChevronDown size={16} className="opacity-50" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={onExportPDF}>
