@@ -1,4 +1,5 @@
 import type { StoreDefinition } from "./adapter";
+import { createJumpsellerAdapter } from "./jumpseller";
 import { createMyShopAdapter } from "./myshop";
 import { createPcExpressAdapter } from "./pc-express";
 import { createPcFactoryAdapter } from "./pcfactory";
@@ -382,6 +383,115 @@ export const STORES: readonly StoreDefinition[] = [
         hdd: ["HDD - Disco Duros"],
         cpu_cooler: ["Ventiladores y Sistemas de Enfriamiento"],
       },
+    }),
+  },
+  {
+    slug: "notebookstore",
+    name: "Notebook Store",
+    url: "https://notebookstore.cl",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://notebookstore.cl",
+      sku: "mpn",
+      // El precio publicado es "otros medios de pago"; transferencia = precio × 0,966 (verificado en la ficha, sept. 2026).
+      cashDiscount: 0.034,
+      categories: {
+        gpu: ["equipos/componentes-informaticos/tarjetas-de-video"],
+        cpu: ["equipos/componentes-informaticos/procesadores"],
+        motherboard: ["equipos/componentes-informaticos/tarjetas-y-placas-madre"],
+        ram: ["equipos/memorias/ram-para-pc-y-servidores"],
+        psu: ["equipos/componentes-informaticos/fuentes-de-poder"],
+        ssd: ["equipos/almacenamiento/discos-de-estado-solido"],
+        hdd: ["equipos/almacenamiento/discos-duros-internos"],
+        // Mezcla coolers y ventiladores: `normalize` aparta los ventiladores.
+        cpu_cooler: ["equipos/componentes-informaticos/ventiladores-y-sistemas-de-enfriamiento"],
+        case: ["cajas/gabinetes"],
+      },
+      exclude: { hdd: ["Discos de Estado Sólido"] },
+    }),
+  },
+  {
+    slug: "thundertech",
+    name: "Thundertech",
+    url: "https://www.thundertech.cl",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://www.thundertech.cl",
+      // MPN o el modelo del fabricante ("B650 GAMING PLUS WIFI"); el código de barras es el EAN/UPC.
+      sku: "mpn",
+      // El precio publicado es Webpay; transferencia = precio / 1,0578 (verificado en 5 fichas, sept. 2026). Con
+      // descuento de producto la ficha difiere en hasta 6 pesos.
+      cashDiscount: 1 - 1 / 1.0578,
+      categories: {
+        gpu: ["tarjeta-de-video"],
+        cpu: ["procesador"],
+        motherboard: ["placa-madre"],
+        ram: ["memoria-ram-pc"],
+        psu: ["componentes/fuentes-de-poder"],
+        ssd: ["disco-estado-solido"],
+        hdd: ["disco-duro-pcs"],
+        cpu_cooler: ["componentes/disipadores"],
+      },
+    }),
+  },
+  {
+    slug: "tecnocam",
+    name: "Tecnocam",
+    url: "https://www.tecnocam.cl",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://www.tecnocam.cl",
+      // Casi siempre el MPN; a veces un código propio ("TC-SSD-…") o un ASIN de Amazon, que sólo impide el vínculo.
+      sku: "mpn",
+      // Precio único (verificado en la ficha, sept. 2026).
+      categories: {
+        cpu: ["procesadores"],
+        ram: ["memoria-ram"],
+        ssd: ["ssd"],
+      },
+    }),
+  },
+  {
+    slug: "valrod",
+    name: "Valrod",
+    url: "https://valrod.cl",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://valrod.cl",
+      // Part number de Cougar ("31AT075001P01") o modelo de MSI.
+      sku: "mpn",
+      // Precio único (verificado en la ficha, sept. 2026).
+      categories: {
+        psu: ["hardware/fuentes-de-poder"],
+        cpu_cooler: ["hardware/enfriadores-liquidos"],
+        case: ["gabinetes"],
+        case_fan: ["hardware/ventiladores"],
+      },
+    }),
+  },
+  {
+    slug: "vgamers",
+    name: "V Gamers",
+    url: "https://www.vgamers.cl",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://www.vgamers.cl",
+      // SKU interno ("77826332441153"); el código de barras sí es el EAN.
+      sku: "internal",
+      // El precio publicado es "otros medios de pago"; transferencia = precio × 0,97 (verificado en la ficha, sept. 2026).
+      cashDiscount: 0.03,
+      // Sin case_fan: "Ventiladores PC" mezcla AIO y disipadores.
+      categories: {
+        cpu: ["hardware/procesadores"],
+        motherboard: ["hardware/placas-madres"],
+        ram: ["hardware-1/memorias-ram"],
+        psu: ["hardware-1/fuentes-de-poder"],
+        ssd: ["hardware-1/almacenamiento/discos"],
+        cpu_cooler: ["hardware-1/refrigeracion/refrigeracion-liquida", "hardware-1/refrigeracion/disipador-cpu"],
+        case: ["hardware-1/gabinetes-gamer"],
+      },
+      // Un gabinete figura también en "Refrigeración Líquida".
+      exclude: { cpu_cooler: ["Gabinetes Gamer"] },
     }),
   },
 ];

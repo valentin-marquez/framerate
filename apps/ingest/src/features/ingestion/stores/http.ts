@@ -12,7 +12,7 @@ export const USER_AGENT = "FramerateBot/1.0 (+https://framerate.cl/bot; comparad
 export interface HttpClient {
   get(url: string, init?: { accept?: string; headers?: Record<string, string> }): Promise<HttpResponse>;
   /** POST con cuerpo JSON. Sólo para APIs de consulta (idempotentes): se reintenta igual que un GET. */
-  post(url: string, json: unknown): Promise<HttpResponse>;
+  post(url: string, json: unknown, init?: { accept?: string }): Promise<HttpResponse>;
 }
 
 export interface HttpResponse {
@@ -84,11 +84,11 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
 
   return {
     get: (url, init) => request(url, { headers: { Accept: init?.accept ?? "application/json", ...init?.headers } }),
-    post: (url, json) =>
+    post: (url, json, init) =>
       request(url, {
         method: "POST",
         body: JSON.stringify(json),
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        headers: { Accept: init?.accept ?? "application/json", "Content-Type": "application/json" },
       }),
   };
 }
