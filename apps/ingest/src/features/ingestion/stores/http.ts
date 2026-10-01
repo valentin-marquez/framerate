@@ -11,6 +11,8 @@ export const USER_AGENT = "FramerateBot/1.0 (+https://framerate.cl/bot; comparad
 
 export interface HttpClient {
   get(url: string, init?: { accept?: string }): Promise<HttpResponse>;
+  /** POST con cuerpo JSON. Sólo para APIs de consulta (idempotentes): se reintenta igual que un GET. */
+  post(url: string, json: unknown): Promise<HttpResponse>;
 }
 
 export interface HttpResponse {
@@ -57,27 +59,37 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
     lastRequestAt.set(host, Date.now());
   }
 
-  return {
-    async get(url, init) {
-      const host = new URL(url).host;
-      for (let attempt = 0; ; attempt++) {
-        await throttle(host);
-        try {
-          const res = await doFetch(url, {
-            headers: { "User-Agent": USER_AGENT, Accept: init?.accept ?? "application/json" },
-            signal: AbortSignal.timeout(timeoutMs),
-          });
-          if (res.ok) return { status: res.status, headers: res.headers, text: await res.text() };
-          const transient = res.status === 429 || res.status >= 500;
-          if (!transient || attempt >= retries) throw new HttpError(url, res.status);
-          const retryAfter = Number(res.headers.get("retry-after"));
-          await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : backoff(attempt));
-        } catch (error) {
-          if (error instanceof HttpError || attempt >= retries) throw error;
-          await sleep(backoff(attempt));
-        }
+  async function request(url: string, init: { headers: Record<string, string>; method?: string; body?: string }) {
+    const host = new URL(url).host;
+    for (let attempt = 0; ; attempt++) {
+      await throttle(host);
+      try {
+        const res = await doFetch(url, {
+          method: init.method,
+          body: init.body,
+          headers: { "User-Agent": USER_AGENT, ...init.headers },
+          signal: AbortSignal.timeout(timeoutMs),
+        });
+        if (res.ok) return { status: res.status, headers: res.headers, text: await res.text() };
+        const transient = res.status === 429 || res.status >= 500;
+        if (!transient || attempt >= retries) throw new HttpError(url, res.status);
+        const retryAfter = Number(res.headers.get("retry-after"));
+        await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : backoff(attempt));
+      } catch (error) {
+        if (error instanceof HttpError || attempt >= retries) throw error;
+        await sleep(backoff(attempt));
       }
-    },
+    }
+  }
+
+  return {
+    get: (url, init) => request(url, { headers: { Accept: init?.accept ?? "application/json" } }),
+    post: (url, json) =>
+      request(url, {
+        method: "POST",
+        body: JSON.stringify(json),
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+      }),
   };
 }
 

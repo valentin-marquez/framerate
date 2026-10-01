@@ -88,7 +88,8 @@ const REQUIRED_ATTRIBUTES: Record<Category, readonly string[]> = {
 };
 
 const NOT_NEW = /\b(usad[oa]s?|reacondicionad[oa]s?|refurbished|open ?box|caja abierta|segunda mano|outlet)\b/;
-const BUNDLE = /\b(combo|bundle|kit (pc|gamer)|pc armad[oa]|pack de)\b/;
+// "KIT placa + memoria": el " + " con espacios separa productos ("80+ Bronze" y "Xeon 4416+" no lo llevan).
+const BUNDLE = /\b(combo|bundle|kit (pc|gamer)|pc armad[oa]|pack de)\b|\bkit\b.*\s\+\s/;
 const OTHER_PRODUCT = /\b(notebook|laptop|all in one|monitor|consola|tablet)\b/;
 
 /** Ruido de marketing que las tiendas meten en el título. */

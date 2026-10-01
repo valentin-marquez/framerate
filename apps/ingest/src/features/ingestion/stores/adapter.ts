@@ -36,4 +36,6 @@ export interface StoreDefinition {
   name: string;
   url: string;
   adapter: StoreAdapter;
+  /** Espera mínima entre requests a esta tienda, si su rate limit pide más que el valor por defecto del cliente HTTP. */
+  minIntervalMs?: number;
 }

@@ -56,7 +56,10 @@ export function offer(storeSlug: string, externalId: string, patch: Partial<RawO
 export function testDeps(d1: D1Database, clock: () => Date): CrawlCategoryDeps {
   let n = 0;
   const context: CrawlContext = {
-    http: { get: () => Promise.reject(new Error("sin red en tests")) },
+    http: {
+      get: () => Promise.reject(new Error("sin red en tests")),
+      post: () => Promise.reject(new Error("sin red en tests")),
+    },
     log: silentLogger,
     snapshot: async () => {},
   };

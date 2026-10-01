@@ -81,7 +81,7 @@ function productionContext(
 ): CrawlContext {
   const day = new Date().toISOString().slice(0, 10);
   return {
-    http: createHttpClient(),
+    http: createHttpClient({ minIntervalMs: store.minIntervalMs }),
     log: log.child({ store: store.slug, category, runId }),
     async snapshot(name, body) {
       // Comprimido: las respuestas JSON/HTML se reducen ~10x. Retención vía regla de ciclo de vida de R2.
