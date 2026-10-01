@@ -105,7 +105,7 @@ const gpu: CategoryProfile = {
     const a: Attributes = {};
     // "rt" es un error de tipeo frecuente de "rtx".
     const nv = t.match(/ (rtx?|gtx|gt) ?(\d{3,4}) ?(ti super|ti|super|s)?(?= )/);
-    const amd = t.match(/ (?:rx|radeon) ?(\d{4}) ?(xtx|xt|gre)?(?= )/);
+    const amd = t.match(/ (?:rx|radeon) ?(\d{3,4}) ?(xtx|xt|gre)?(?= )/);
     const arc = t.match(/ arc ?([ab]\d{3})(?= )/);
     // MPN de Gigabyte usado como título: GV-N507T… = 5070 Ti, GV-N407S… = 4070 Super, GV-N5060… = 5060.
     const gv = t.match(/ gv ?n([2-9]\d{2})(ts|t|s|0)/);
@@ -145,7 +145,17 @@ const cpu: CategoryProfile = {
     const ryzen = t.match(/ ryzen ?(threadripper )?(\d) ?(pro )?(\d{4}[a-z0-9]{0,4})(?= )/);
     const ultra = t.match(/ ultra ?([3579]) ?(\d{3}[a-z]{0,2})(?= )/);
     const core = t.match(/ (?:core )?i([3579]) ?(\d{4,5}[a-z]{0,3})(?= )/);
-    if (ryzen?.[2] && ryzen[4]) {
+    // Threadripper sin tier ("Threadripper 9970X"), Xeon con su serie y las gamas de entrada.
+    const threadripper = t.match(/ threadripper ?(pro )?(\d{4}[a-z]{0,2})(?= )/);
+    const xeon = t.match(/ xeon ?(bronze|silver|gold|platinum|w)? ?(\d{4}[a-z0-9+]{0,3})(?= )/);
+    const entry = t.match(/ (celeron|pentium|athlon) ?(?:gold )?([gjn]?\d{3,4}[a-z]{0,2})(?= )/);
+    if (threadripper?.[2]) {
+      a.model = ["threadripper", threadripper[1]?.trim(), threadripper[2]].filter(Boolean).join(" ");
+    } else if (xeon?.[2]) {
+      a.model = ["xeon", xeon[1], xeon[2]].filter(Boolean).join(" ");
+    } else if (entry?.[1] && entry[2]) {
+      a.model = `${entry[1]} ${entry[2]}`;
+    } else if (ryzen?.[2] && ryzen[4]) {
       a.model = ["ryzen", ryzen[1]?.trim(), ryzen[2], ryzen[3]?.trim(), ryzen[4]].filter(Boolean).join(" ");
     } else if (ultra?.[1] && ultra[2]) {
       a.model = `core ultra ${ultra[1]} ${ultra[2]}`;
@@ -266,8 +276,8 @@ const motherboard: CategoryProfile = {
   extract(title) {
     const t = prep(title);
     const a: Attributes = {};
-    // Sufijo de formato pegado al chipset: B650M/A620AM = mATX, X870I = ITX.
-    const chip = t.match(/ ([abhxz]\d{3})(e)?(m|am|i)?(?=[ -])/);
+    // Sufijo de formato pegado al chipset: B650M/A620AM = mATX, X870I = ITX. Biostar agrega letras: B650MT, H610MHP.
+    const chip = t.match(/ ([abhxz]\d{3})(e)?(m|am|i)?[a-z]{0,3}(?=[ -])/);
     if (chip?.[1]) a.chipset = `${chip[1]}${chip[2] ?? ""}`;
     if (/ e ?atx /.test(t)) a.formFactor = "eatx";
     else if (/ (?:mini ?|m)?itx /.test(t) || chip?.[3] === "i") a.formFactor = "itx";
