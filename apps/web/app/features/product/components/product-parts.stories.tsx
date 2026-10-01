@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PriceHistoryResponse, PriceHistorySeries } from "~/features/product/services/products";
+import type { QuoteListItem } from "~/features/quote/services/quotes";
+import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
+import { quoteKeys } from "~/shared/lib/query-keys";
 import { products, sessions } from "~/shared/storybook/fixtures";
-import { AddToQuote } from "./add-to-quote";
+import { AddToQuote, AddToQuoteDialog } from "./add-to-quote";
 import { PriceHistoryChart } from "./price-history-chart";
 import { PsuBadge } from "./psu-badge";
 
@@ -77,20 +81,71 @@ export const SelloFuenteDePoder: Story = {
   ),
 };
 
+const quoteProduct = { id: products[0].id ?? "", name: products[0].name };
+
 // Vacía mientras `QUOTES_API_ENABLED` sea false: `AddToQuote` no renderiza sin la API (#25).
 export const AgregarACotizacion: Story = {
-  name: "Agregar a cotización: visitante",
+  name: "Agregar a cotización: botones",
   render: () => (
     <div className="flex flex-wrap items-center gap-3">
-      <AddToQuote product={{ id: products[0].id ?? "" }} label="long" />
-      <AddToQuote product={{ id: products[0].id ?? "" }} label="short" />
-      <AddToQuote product={{ id: products[0].id ?? "" }} className="size-12 rounded-xl border border-border/60" />
+      <AddToQuote product={quoteProduct} label="long" />
+      <AddToQuote product={quoteProduct} label="short" />
+      <AddToQuote product={quoteProduct} className="size-12 rounded-xl border border-border/60" />
     </div>
   ),
 };
 
-export const AgregarACotizacionConSesion: Story = {
-  name: "Agregar a cotización: con sesión",
+const quote = (id: string, name: string, count: number, is_public: boolean): QuoteListItem => ({
+  id,
+  name,
+  description: null,
+  is_public,
+  compatibility_status: "unknown",
+  estimated_wattage: null,
+  last_analyzed_at: null,
+  created_at: "2026-09-20T12:00:00Z",
+  updated_at: "2026-09-28T12:00:00Z",
+  quote_items: [{ count }],
+});
+
+// Sin API, el diálogo lee las cotizaciones de la caché: una query desactivada igual devuelve lo que hay ahí.
+const clientWithQuotes = (data: QuoteListItem[]) => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Number.POSITIVE_INFINITY } },
+  });
+  client.setQueryData(quoteKeys.list(1, 50), { data, meta: { page: 1, limit: 50, total: data.length, totalPages: 1 } });
+  return client;
+};
+
+const withQuotesClient = clientWithQuotes([
+  quote("q-gamer", "PC gamer 2026", 8, true),
+  quote("q-oficina", "Oficina de mamá", 1, false),
+  quote("q-stream", "Streaming", 5, true),
+]);
+const emptyClient = clientWithQuotes([]);
+
+const dialog = (client: QueryClient) => () => (
+  <QueryClientProvider client={client}>
+    <AddToQuoteDialog product={quoteProduct} closing={false} onClose={() => {}} onClosed={() => {}} />
+  </QueryClientProvider>
+);
+
+export const DialogoConCotizaciones: Story = {
+  name: "Agregar a cotización: con cotizaciones",
   parameters: { session: sessions.user },
-  render: AgregarACotizacion.render,
+  beforeEach: () => {
+    useQuoteInteractionStore.setState({ lastSelectedQuoteId: "q-gamer" });
+  },
+  render: dialog(withQuotesClient),
+};
+
+export const DialogoSinCotizaciones: Story = {
+  name: "Agregar a cotización: sin cotizaciones",
+  parameters: { session: sessions.user },
+  render: dialog(emptyClient),
+};
+
+export const DialogoVisitante: Story = {
+  name: "Agregar a cotización: visitante",
+  render: dialog(emptyClient),
 };

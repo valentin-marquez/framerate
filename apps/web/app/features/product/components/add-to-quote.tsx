@@ -1,90 +1,33 @@
-import { IconCheck, IconLoader2, IconLogin, IconPlus, IconReceipt, IconX } from "@tabler/icons-react";
-import { useState, useSyncExternalStore } from "react";
+import { IconLoader2, IconLogin, IconPlus, IconReceipt, IconX } from "@tabler/icons-react";
+import { type FormEvent, type SyntheticEvent, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { AuthProvidersList } from "~/features/auth/components/auth-providers-list";
 import { useUser } from "~/features/auth/hooks/useAuth";
-import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
-import { useQuoteAddItem, useQuotes } from "~/features/quote/hooks/useQuotes";
+import { useCreateQuote, useQuoteAddItem, useQuoteRemoveItem, useQuotes } from "~/features/quote/hooks/useQuotes";
 import { QUOTES_API_ENABLED } from "~/features/quote/services/quotes";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { Button } from "~/shared/components/primitives/button";
+import { Input } from "~/shared/components/primitives/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/shared/components/primitives/tooltip";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import type { Product } from "~/shared/utils/db-types";
+import { getGradient } from "~/shared/utils/gradients";
+
+type QuoteProduct = Pick<Product, "id" | "name">;
 
 interface AddToQuoteProps {
-  /** Sólo necesitamos el `id` para enviar al endpoint de items. */
-  product: Pick<Product, "id">;
+  product: QuoteProduct;
   className?: string;
   /** Texto junto al ícono: "Agregar a cotización" (`long`) o "Cotizar" (`short`). Sin él, sólo ícono con tooltip. */
   label?: "long" | "short";
 }
 
-// useSyncExternalStore para detectar cliente sin flicker durante hidratación.
-const subscribeNoop = () => () => {};
-const getDocumentSnapshot = () => true;
-const getServerDocumentSnapshot = () => false;
-
 export function AddToQuote({ product, className, label }: AddToQuoteProps) {
-  // Entrada y salida con animaciones CSS: `motion` aplicaba el valor final de la opacidad del velo un cuadro tarde y
-  // se veía un parpadeo al terminar de abrir y de cerrar. "closing" mantiene el modal montado mientras anima la salida.
+  // "closing" mantiene el diálogo montado mientras anima la salida.
   const [phase, setPhase] = useState<"closed" | "open" | "closing">("closed");
-  const open = () => setPhase("open");
-  const close = () => setPhase((p) => (p === "open" ? "closing" : p));
-  const mounted = useSyncExternalStore(subscribeNoop, getDocumentSnapshot, getServerDocumentSnapshot);
-  const { lastSelectedQuoteId, setLastSelectedQuoteId } = useQuoteInteractionStore();
-  // userOverride: si el usuario eligió manualmente en este dialog, esto lo refleja.
-  // Caso contrario derivamos el efectivo desde el store + lista de quotes en render.
-  const [userOverride, setUserOverride] = useState<string | null>(null);
   const { t } = useTranslation();
-  const user = useUser();
-  const isAuthed = !!user;
-
-  // Solo pedimos las cotizaciones si el user está logueado; evitamos un 401 ruidoso
-  // y permitimos a la query devolver datos rápidamente cuando el modal abre.
-  const { data: quotes, isLoading: isLoadingQuotes } = useQuotes(1, 50, { enabled: isAuthed });
-  const addItem = useQuoteAddItem();
-
-  // Selección efectiva derivada durante render — evita useEffect+setState chains.
-  // Si el usuario eligió algo explícitamente en este dialog, usamos eso; si no,
-  // intentamos usar el último seleccionado del store (siempre que exista en la lista).
-  const selectedQuoteId: string =
-    userOverride ??
-    (lastSelectedQuoteId && quotes?.data.find((q) => q.id === lastSelectedQuoteId) ? lastSelectedQuoteId : "");
-
-  const handleSelectQuote = (id: string) => {
-    setUserOverride(id);
-    setLastSelectedQuoteId(id);
-  };
-
-  const handleAdd = () => {
-    if (!selectedQuoteId) return;
-
-    setLastSelectedQuoteId(selectedQuoteId);
-
-    const quoteName = quotes?.data.find((q) => q.id === selectedQuoteId)?.name || "";
-
-    if (!product.id) return;
-
-    addItem.mutate(
-      {
-        quoteId: selectedQuoteId,
-        data: {
-          product_id: product.id,
-          quantity: 1,
-        },
-      },
-      {
-        onSuccess: () => {
-          close();
-          toast.success(t("product_added", { name: quoteName }));
-          // TODO: Show toast
-        },
-      },
-    );
-  };
 
   if (!QUOTES_API_ENABLED) return null;
 
@@ -98,7 +41,7 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
                 variant="secondary"
                 size={label ? "sm" : "icon"}
                 className={cn(label ? "w-full gap-1.5 px-3 text-foreground" : "", "transition-all")}
-                onClick={open}
+                onClick={() => setPhase("open")}
                 aria-label={t("add_to_quote")}
                 type="button"
               />
@@ -114,111 +57,206 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
         </Tooltip>
       </div>
 
-      {mounted &&
-        phase !== "closed" &&
-        createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div
-              aria-hidden
-              className={cn(
-                "absolute inset-0 bg-black/50 duration-200 fill-mode-forwards",
-                phase === "open" ? "animate-in fade-in-0" : "animate-out fade-out-0",
-              )}
-              onClick={close}
-            />
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label={t("add_to_quote")}
-              className={cn(
-                "relative w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl duration-200 ease-out fill-mode-forwards",
-                phase === "open"
-                  ? "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2"
-                  : "animate-out fade-out-0 zoom-out-95 slide-out-to-bottom-2",
-              )}
-              onAnimationEnd={(e) => {
-                if (e.target === e.currentTarget && phase === "closing") setPhase("closed");
-              }}
-              onKeyDown={(e) => e.key === "Escape" && close()}
-            >
-              <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
-                <span className="text-sm font-medium text-foreground">{t("add_to_quote")}</span>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors",
-                    "hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] cursor-pointer",
-                  )}
-                  onClick={close}
-                >
-                  <IconX className="size-4" />
-                </button>
-              </div>
-
-              <div className="p-4 space-y-4">
-                {!isAuthed ? (
-                  <div className="space-y-3">
-                    <div className="flex flex-col items-center text-center gap-2 py-2">
-                      <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <IconLogin className="size-5" />
-                      </div>
-                      <p className="text-sm font-medium text-foreground">{t("login_to_save_quote_title")}</p>
-                      <p className="text-xs text-muted-foreground max-w-[260px]">{t("login_to_save_quote_desc")}</p>
-                    </div>
-                    <AuthProvidersList />
-                  </div>
-                ) : isLoadingQuotes ? (
-                  <div className="flex justify-center py-4">
-                    <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : quotes && quotes.data.length > 0 ? (
-                  <div className="space-y-2">
-                    <label htmlFor={`quote-select-${product.id}`} className="text-sm font-medium text-muted-foreground">
-                      {t("select_quote")}
-                    </label>
-                    <select
-                      id={`quote-select-${product.id}`}
-                      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      value={selectedQuoteId}
-                      onChange={(e) => handleSelectQuote(e.target.value)}
-                    >
-                      <option value="">{t("select_option")}</option>
-                      {quotes.data.map((quote) => (
-                        <option key={quote.id} value={quote.id}>
-                          {quote.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : (
-                  <div className="text-center py-2">
-                    <p className="text-sm text-muted-foreground mb-3">{t("no_quotes")}</p>
-                    <CreateQuoteDialog
-                      trigger={
-                        <Button variant="outline" size="sm" className="w-full">
-                          <IconPlus className="mr-2 size-4" /> {t("create_new")}
-                        </Button>
-                      }
-                      onSuccess={(id) => handleSelectQuote(id)}
-                    />
-                  </div>
-                )}
-
-                {quotes && quotes.data.length > 0 && (
-                  <Button className="w-full" onClick={handleAdd} disabled={!selectedQuoteId || addItem.isPending}>
-                    {addItem.isPending ? (
-                      <IconLoader2 className="mr-2 size-4 animate-spin" />
-                    ) : (
-                      <IconCheck className="mr-2 size-4" />
-                    )}
-                    {t("confirm")}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {phase !== "closed" && (
+        <AddToQuoteDialog
+          product={product}
+          closing={phase === "closing"}
+          onClose={() => setPhase((p) => (p === "open" ? "closing" : p))}
+          onClosed={() => setPhase("closed")}
+        />
+      )}
     </>
+  );
+}
+
+const ROW_CLASS =
+  "flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-secondary/60 focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-60";
+
+interface AddToQuoteDialogProps {
+  product: QuoteProduct;
+  closing: boolean;
+  onClose: () => void;
+  onClosed: () => void;
+}
+
+// Aparte del botón para que Storybook lo muestre con datos de ejemplo mientras no exista la API (#25).
+export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQuoteDialogProps) {
+  const { t } = useTranslation();
+  const user = useUser();
+  const { data: quotes, isLoading } = useQuotes(1, 50, { enabled: !!user });
+  const { lastSelectedQuoteId, setLastSelectedQuoteId } = useQuoteInteractionStore();
+  const createQuote = useCreateQuote();
+  const addItem = useQuoteAddItem();
+  const removeItem = useQuoteRemoveItem();
+  const [creating, setCreating] = useState(false);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+
+  const list = quotes?.data ?? [];
+  const showForm = creating || (!!quotes && list.length === 0);
+  const busy = pendingId !== null || createQuote.isPending;
+
+  // showModal atrapa el foco, convierte Esc en el evento cancel y devuelve el foco al botón al cerrar. Como corre
+  // después del autoFocus de React, si ya está el campo de nombre (sin cotizaciones) el foco se pasa a mano.
+  useEffect(() => {
+    dialogRef.current?.showModal();
+    dialogRef.current?.querySelector("input")?.focus();
+  }, []);
+
+  const add = (quote: { id: string; name: string }) => {
+    if (!product.id) return;
+    setPendingId(quote.id);
+    addItem.mutate(
+      { quoteId: quote.id, data: { product_id: product.id, quantity: 1 } },
+      {
+        onSuccess: (item) => {
+          setLastSelectedQuoteId(quote.id);
+          onClose();
+          toast.success(t("product_added", { name: quote.name }), {
+            action: { label: t("undo"), onClick: () => removeItem.mutate({ quoteId: quote.id, itemId: item.id }) },
+          });
+        },
+        onError: () => toast.error(t("add_to_quote_error")),
+        onSettled: () => setPendingId(null),
+      },
+    );
+  };
+
+  const create = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const name = String(new FormData(e.currentTarget).get("name") ?? "").trim();
+    if (!name) return;
+    createQuote.mutate({ name }, { onSuccess: add, onError: () => toast.error(t("add_to_quote_error")) });
+  };
+
+  // Esc retrocede un nivel: primero cierra el campo de nombre, después el diálogo.
+  const onCancel = (e: SyntheticEvent<HTMLDialogElement>) => {
+    e.preventDefault();
+    if (creating && list.length > 0) setCreating(false);
+    else onClose();
+  };
+
+  return createPortal(
+    <dialog
+      ref={dialogRef}
+      aria-labelledby={titleId}
+      onCancel={onCancel}
+      className="fixed inset-0 m-0 size-full max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4 backdrop:bg-transparent open:flex"
+    >
+      <div
+        aria-hidden
+        className={cn(
+          "absolute inset-0 bg-black/50 duration-200 fill-mode-forwards",
+          closing ? "animate-out fade-out-0" : "animate-in fade-in-0",
+        )}
+        onClick={onClose}
+      />
+      <div
+        className={cn(
+          "relative w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl duration-200 ease-out fill-mode-forwards",
+          closing
+            ? "animate-out fade-out-0 zoom-out-95 slide-out-to-bottom-2"
+            : "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2",
+        )}
+        onAnimationEnd={(e) => {
+          if (e.target !== e.currentTarget || !closing) return;
+          dialogRef.current?.close();
+          onClosed();
+        }}
+      >
+        <header className="flex items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-3">
+          <div className="min-w-0">
+            <h2 id={titleId} className="text-sm font-medium text-foreground">
+              {t("add_to_quote")}
+            </h2>
+            {product.name && <p className="mt-0.5 truncate text-xs text-muted-foreground">{product.name}</p>}
+          </div>
+          <button
+            type="button"
+            aria-label={t("close")}
+            onClick={onClose}
+            className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98]"
+          >
+            <IconX className="size-4" />
+          </button>
+        </header>
+
+        <div className="p-2">
+          {!user ? (
+            <div className="space-y-3 p-2">
+              <div className="flex flex-col items-center gap-2 py-2 text-center">
+                <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <IconLogin className="size-5" />
+                </div>
+                <p className="text-sm font-medium text-foreground">{t("login_to_save_quote_title")}</p>
+                <p className="max-w-[260px] text-xs text-muted-foreground">{t("login_to_save_quote_desc")}</p>
+              </div>
+              <AuthProvidersList />
+            </div>
+          ) : isLoading ? (
+            <div className="flex justify-center py-6">
+              <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ul className="max-h-80 overflow-y-auto">
+              <li>
+                {showForm ? (
+                  <form onSubmit={create} className="flex items-center gap-2 px-2 py-1.5">
+                    <Input
+                      name="name"
+                      autoFocus
+                      required
+                      placeholder={t("quote_name_placeholder")}
+                      aria-label={t("new_quote")}
+                      disabled={createQuote.isPending}
+                      className="h-9 flex-1"
+                    />
+                    <Button type="submit" size="sm" disabled={busy}>
+                      {createQuote.isPending ? <IconLoader2 className="animate-spin" /> : t("create")}
+                    </Button>
+                  </form>
+                ) : (
+                  <button
+                    type="button"
+                    // biome-ignore lint/a11y/noAutofocus: al cerrar el campo con Esc el foco vuelve aquí en vez de perderse en el body
+                    autoFocus
+                    onClick={() => setCreating(true)}
+                    disabled={busy}
+                    className={ROW_CLASS}
+                  >
+                    <IconPlus className="mx-2.5 size-4 shrink-0 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">{t("new_quote")}</span>
+                  </button>
+                )}
+              </li>
+              {list.map((quote) => {
+                const count = quote.quote_items?.[0]?.count ?? 0;
+                return (
+                  <li key={quote.id}>
+                    <button type="button" onClick={() => add(quote)} disabled={busy} className={ROW_CLASS}>
+                      <span className="size-9 shrink-0 rounded-md" style={{ background: getGradient(quote.id) }} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-foreground">{quote.name}</span>
+                        <span className="flex gap-x-2 text-xs text-muted-foreground">
+                          <span>{t(count === 1 ? "quote_components_one" : "profile_components_count", { count })}</span>
+                          {!quote.is_public && <span>{t("quote_private")}</span>}
+                        </span>
+                      </span>
+                      {pendingId === quote.id ? (
+                        <IconLoader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
+                      ) : quote.id === lastSelectedQuoteId ? (
+                        <span className="shrink-0 text-xs text-muted-foreground">{t("last_used")}</span>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
+    </dialog>,
+    document.body,
   );
 }

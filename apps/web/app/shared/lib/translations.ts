@@ -235,12 +235,15 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_short: "Cotizar",
     login_to_save_quote_title: "Inicia sesión para guardar",
     login_to_save_quote_desc: "Crea cotizaciones para comparar PCs y guardar tus armados favoritos.",
-    select_quote: "Seleccionar cotización",
-    no_quotes: "No tienes cotizaciones creadas",
-    create_new: "Crear nueva",
-    confirm: "Confirmar",
     product_added: "Producto agregado a la cotización {name}",
-    select_option: "Seleccionar...",
+    new_quote: "Nueva cotización",
+    create: "Crear",
+    quote_private: "Privada",
+    quote_components_one: "1 componente",
+    last_used: "Última usada",
+    undo: "Deshacer",
+    close: "Cerrar",
+    add_to_quote_error: "No se pudo agregar. Inténtalo de nuevo.",
 
     // Create Quote Dialog
     create_new_quote_title: "Crear nueva cotización",
@@ -574,12 +577,15 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_short: "Quote",
     login_to_save_quote_title: "Sign in to save",
     login_to_save_quote_desc: "Create quotes to compare PC builds and save your favorite setups.",
-    select_quote: "Select quote",
-    no_quotes: "You don't have created quotes",
-    create_new: "Create new",
-    confirm: "Confirm",
     product_added: "Product added to quote {name}",
-    select_option: "Select...",
+    new_quote: "New quote",
+    create: "Create",
+    quote_private: "Private",
+    quote_components_one: "1 component",
+    last_used: "Last used",
+    undo: "Undo",
+    close: "Close",
+    add_to_quote_error: "Couldn't add it. Try again.",
 
     // Create Quote Dialog
     create_new_quote_title: "Create new quote",
@@ -915,12 +921,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_short: "Cotización",
     login_to_save_quote_title: "Konunge tami elkayal", // konunge = enter, elkayal = save
     login_to_save_quote_desc: "Dewmayal cotizaciones tami müñetuyal PCs ka elkayal tami doy küme armado.", // make to compare and save
-    select_quote: "Dullinge cotización",
-    no_quotes: "Cotizaciones nielay", // no quotes
-    create_new: "Dewman we", // create new
-    confirm: "Feyentun", // to agree/accept
     product_added: "Producto yengey {name} cotización mew",
-    select_option: "Dullinge...", // choose
 
     // Create Quote Dialog
     create_new_quote_title: "Dewman we cotización",
