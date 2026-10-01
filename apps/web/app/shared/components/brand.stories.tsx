@@ -128,3 +128,41 @@ export const EnlaceATienda: Story = {
     </p>
   ),
 };
+
+// Colores de shared/utils/gradients.ts sobre los tokens del tema claro (fijos: la imagen no cambia con el tema).
+const SHARE_MESH = [
+  "radial-gradient(42% 55% at 85% 12%, #8fd3f4, transparent 70%)",
+  "radial-gradient(40% 55% at 92% 88%, #e0c3fc, transparent 70%)",
+  "radial-gradient(38% 50% at 8% 92%, #84fab0, transparent 70%)",
+  "radial-gradient(36% 48% at 10% 8%, #fbc2eb, transparent 70%)",
+].join(", ");
+// El grano rompe el escalonado de los degradados en 8 bits.
+const SHARE_GRAIN =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
+/**
+ * Fuente de `public/og-image.png`. Con Storybook corriendo, se regenera con:
+ * bunx playwright screenshot --viewport-size "1200, 630" "http://localhost:6006/iframe.html?id=fundamentos-marca-e-%C3%ADconos--imagen-para-compartir&viewMode=story" apps/web/public/og-image.png
+ */
+export const ImagenParaCompartir: Story = {
+  name: "Imagen para compartir",
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <div
+      className="relative flex h-[630px] w-[1200px] flex-col items-center justify-center overflow-hidden"
+      style={{ background: "oklch(0.978 0 0)", color: "oklch(0.2 0 0)" }}
+    >
+      <div aria-hidden className="absolute -inset-[10%] opacity-85 blur-[30px]" style={{ background: SHARE_MESH }} />
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-35 mix-blend-soft-light"
+        style={{ backgroundImage: SHARE_GRAIN }}
+      />
+      <Logo className="relative size-32" />
+      <p className="relative mt-11 font-bold text-[84px] leading-none tracking-[-0.03em]">Framerate</p>
+      <p className="relative mt-[18px] font-medium text-[30px]" style={{ color: "oklch(0.52 0 0)" }}>
+        Compara precios de hardware en Chile
+      </p>
+    </div>
+  ),
+};
