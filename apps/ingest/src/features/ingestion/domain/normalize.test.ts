@@ -65,6 +65,22 @@ describe("normalizeOffer", () => {
     expect(result).toMatchObject({ ok: false, reason });
   });
 
+  test("en RAM y SSD, mencionar notebook o laptop es compatibilidad, no otro producto", () => {
+    const valid = (category: "ram" | "ssd", title: string) =>
+      normalizeOffer({ ...base, category, title, priceCash: 59_990, priceCard: null }, category).ok;
+    expect(valid("ssd", "SSD WD Green SN3000 2TB M.2 NVMe para PC y Laptop")).toBe(true);
+    expect(valid("ram", "ADATA Memoria RAM SODIMM 16GB 3200 DDR4 Laptop/Notebook")).toBe(true);
+    expect(valid("ram", "Notebook HP 15 Intel Core i5 16GB DDR4")).toBe(false);
+  });
+
+  test("seminuevo es usado", () => {
+    const result = normalizeOffer(
+      { ...base, title: "Tarjeta de Video ASUS Dual RTX 4070 SUPER 12GB [Seminuevo]" },
+      "gpu",
+    );
+    expect(result).toMatchObject({ ok: false, reason: "condition:not_new" });
+  });
+
   test("en ventiladores, un pack o un kit con controladora es un producto, no un bundle", () => {
     for (const title of [
       "PACK DE 3 VENTILADORES ANTEC C120 ARGB White",

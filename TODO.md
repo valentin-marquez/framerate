@@ -79,7 +79,7 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 
 ## Scraping / catálogo
 - [ ] Revisar las 56 revisiones pendientes de matching (`match_reviews`) con datos reales y ajustar vetos.
-- [ ] Integrar tiendas en el orden de `docs/store-candidates.md`. Integradas y sin desplegar (30-09-2026): MyShop, Sandos, Infor-Ingen, ETChile, Nuevatec, CCLink, Progaming, Central Gamer, PC Factory, PC Express, Tecnomas, MyBox, Todoclick y TYT Gamer. Centrale y AllTec descartadas; KDTEC, Tecno Shopping y Tecno Master en pausa (ver el doc).
+- [ ] Integrar tiendas en el orden de `docs/store-candidates.md`. Integradas y sin desplegar (30-09-2026): MyShop, Sandos, Infor-Ingen, ETChile, Nuevatec, CCLink, Progaming, Central Gamer, PC Factory, PC Express, Tecnomas, MyBox, Todoclick, TYT Gamer, Notebook Store, Thundertech, Tecnocam, Valrod y V Gamers (22 tiendas en el registro). Centrale y AllTec descartadas; KDTEC, Tecno Shopping y Tecno Master en pausa (ver el doc).
 - [ ] **Antes de desplegar las tiendas nuevas**: correr `bun run --cwd apps/ingest match-report` y revisar las fusiones sospechosas (el primer reporte encontró fusiones erróneas por atributos; se corrigieron con las guardas de código de modelo y de misma tienda en `decide`).
 - [ ] Recalcular huellas (hueco 3 de `architecture.md` §5): los productos ya creados conservan la clave del extractor de su momento; los cambios de extractor y marcas del 30-09 sólo aplican a ofertas nuevas o que cambian.
 - [ ] Tecnomas sin `case` ni `psu`: reactivarlas cuando `normalize` aparte racks, bandejas, rieles, IP66, fuentes PoE, de riel DIN y de servidor (o filtrar por marca en el listado).

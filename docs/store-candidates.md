@@ -82,6 +82,11 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | MyBox | Adaptador `prestashop` (JSON del listado con `X-Requested-With`), referencia = MPN, `cashDiscount: 0.05` | `price_amount` es tarjeta; transferencia = precio − round(precio × 5 %). Stock por `add_to_cart_url` |
 | Todoclick | Mismo adaptador, tarjeta +1,7 % ("Otros medios de pago") | `price_amount` = "Precio Khipu" (transferencia). Catálogo con mucho agotado y SSD mezclados con RAM y externos (`normalize` los aparta) |
 | TYT Gamer | Mismo adaptador, referencia interna, tarjeta +5 % | Sin marca en el JSON. SSD y HDD vienen de la raíz "Almacenamiento" |
+| Notebook Store | Adaptador `jumpseller` (MCP público `POST /api/mcp`, `list_products`), SKU = MPN, `cashDiscount: 0.034` | El catálogo sale del MCP que Jumpseller anuncia en el robots.txt; el precio, de la ficha (`product:price:amount`), porque el MCP ignora las promociones. Catálogo B2B: entran fuentes y racks de servidor |
+| Thundertech | Mismo adaptador, SKU = MPN, transferencia = precio / 1,0578 | Con descuento de producto la ficha difiere hasta 6 pesos. Sin gabinetes (categoría vacía) |
+| Tecnocam | Mismo adaptador, precio único | Chica (~22 válidas), mucho OEM y reacondicionado; sólo CPU, RAM y SSD |
+| Valrod | Mismo adaptador, precio único | Casi todo Cougar: fuentes, gabinetes, AIO y ventiladores |
+| V Gamers | Mismo adaptador, SKU interno, `cashDiscount: 0.03` | Sin `case_fan` ("Ventiladores PC" mezcla AIO y disipadores) |
 | MyShop | Adaptador `myshop` (`POST /servicio/producto`), `minIntervalMs: 2500` | Dry run del 30-09-2026: ~650 ofertas válidas, MPN 81–99 % según categoría, los dos precios en todas. Su Cloudflare corta con 429 (error 1015) a ~1,3 requests/s sostenidas |
 | Sandos | Mismo adaptador, otro mapa de `idFamilia` | Dry run: ~260 válidas, MPN 65–100 %. `api: 1` = entrega diferida por distribuidor: se puede comprar, cuenta como stock |
 
@@ -102,7 +107,7 @@ cuarentena por motivo.
 | 7 | ~~PC Factory~~ | 321 | Integrada | Listado y precios en `catalogo/productos/query` (encontrado con las peticiones de la web) |
 | 8 | ~~Tecnomas~~ | 506 | Integrada (7 categorías) | La mejor huella del lote: MPN, GTIN y marca en JSON-LD, los dos precios en el HTML |
 | 9 | ~~PC Express~~ | 519 | Integrada | JSON-LD con MPN y marca |
-| 10 | NotebookStore y otras Jumpseller | 389 + | Adaptador Jumpseller (JSON-LD + HTML) | Después sirve para Thundertech, Tecnocam, Valrod y V Gamers |
+| 10 | ~~NotebookStore y otras Jumpseller~~ | 389 + | Integradas (adaptador `jumpseller`) | Después sirve para Thundertech, Tecnocam, Valrod y V Gamers |
 | 11 | ~~MyBox, Todoclick, TYT Gamer~~ | 150 + 38 + 28 | Integradas (adaptador `prestashop`) | AllTec descartada: PrestaShop 1.6 sin JSON y casi sin componentes |
 | 12 | WooCommerce chicas con MPN | — | Configuración | Integradas Nuevatec, CCLink y Progaming; quedan DazBog (vende usados), Tecno Shopping y Tecno Master (en pausa) |
 | 13 | Wei, Eylstore, Tecno Saga | 170 + 147 + 145 | Parsers HTML | MPN en la página (Tecno Saga, sólo en el título) |

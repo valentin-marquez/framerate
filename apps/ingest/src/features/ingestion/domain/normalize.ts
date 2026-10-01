@@ -88,12 +88,14 @@ const REQUIRED_ATTRIBUTES: Record<Category, readonly string[]> = {
 };
 
 const NOT_NEW =
-  /\b(usad[oa]s?|reacondicionad[oa]s?|refurbished|open ?box|caja abierta|caja (mala|danada)|segunda mano|outlet)\b/;
+  /\b(usad[oa]s?|reacondicionad[oa]s?|refurbished|open ?box|caja abierta|caja (mala|danada)|seminuev[oa]s?|segunda mano|outlet)\b/;
 const BUNDLE = /\b(combo|bundle|kit (pc|gamer)|pc armad[oa])\b/;
 // "Pack de…" o "KIT placa + memoria" juntan productos distintos ("80+ Bronze" y "Xeon 4416+" no llevan " + "), salvo
 // en ventiladores: un pack de tres o un kit con controladora es un producto de la categoría.
 const MULTI = /\bpack de\b|\bkit\b.*\s\+\s/;
 const OTHER_PRODUCT = /\b(notebook|laptop|all in one|monitor|consola|tablet)\b/;
+// En RAM y SSD "notebook"/"laptop" suele ser compatibilidad (SO-DIMM, "para PC y Laptop"): sólo cuenta al inicio.
+const OTHER_PRODUCT_START = /^(notebook|laptop|all in one|monitor|consola|tablet)\b/;
 const FAN_TITLE = /^(ventilador|pack|kit)\b/;
 const CPU_COOLER_CUE = /\b(cpu|torre|tower|disipador|heatpipes?|liquid[ao]|aio|water|lga ?\d{4}|am[45])\b/;
 const EXTERNAL_DRIVE = /\b(extern[oa]s?|portatil|portable|usb)\b/;
@@ -114,7 +116,8 @@ const MISPLACED: Partial<Record<Category, Array<[misplaced: (title: string) => b
 };
 
 /** Ruido de marketing que las tiendas meten en el título. */
-const TITLE_NOISE = /[¡!]*\s*(oferta|nuevo|envio gratis|envío gratis|liquidacion|liquidación|cyber)\s*[!¡]*/gi;
+// Con límites de palabra: "Seminuevo" no debe perder "nuevo".
+const TITLE_NOISE = /[¡!]*\s*\b(oferta|nuevo|envio gratis|envío gratis|liquidacion|liquidación|cyber)\b\s*[!¡]*/gi;
 
 export function normalizeOffer(input: unknown, expectedCategory: Category): NormalizeResult {
   const parsed = RawOfferSchema.safeParse(input);
@@ -132,7 +135,8 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
   if (BUNDLE.test(folded) || (raw.category !== "case_fan" && MULTI.test(folded))) {
     return { ok: false, externalId, reason: "bundle" };
   }
-  if (OTHER_PRODUCT.test(folded)) return { ok: false, externalId, reason: "category:other_product" };
+  const otherProduct = raw.category === "ram" || raw.category === "ssd" ? OTHER_PRODUCT_START : OTHER_PRODUCT;
+  if (otherProduct.test(folded)) return { ok: false, externalId, reason: "category:other_product" };
   const misplaced = MISPLACED[raw.category]?.find(([test]) => test(folded));
   if (misplaced) return { ok: false, externalId, reason: misplaced[1] };
 

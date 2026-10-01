@@ -23,7 +23,7 @@ const BRANDS: Record<string, string[]> = {
   Intel: ["intel"],
   AMD: ["amd"],
   NVIDIA: ["nvidia"],
-  Kingston: ["kingston", "kingston fury", "hyperx"],
+  Kingston: ["kingston", "kingston fury", "kinsgton", "hyperx"],
   Corsair: ["corsair"],
   "G.Skill": ["g.skill", "gskill", "g skill"],
   Crucial: ["crucial"],
@@ -83,7 +83,7 @@ const BRANDS: Record<string, string[]> = {
   Macrovip: ["macrovip"],
   GamePro: ["gamepro"],
   "Thermal Hero": ["thermal hero"],
-  StarTech: ["startech"],
+  StarTech: ["startech", "startech com"],
   "Snake Gamer": ["snake gamer"],
   Morpheus: ["morpheus"],
   LaCie: ["lacie"],
@@ -92,6 +92,10 @@ const BRANDS: Record<string, string[]> = {
   Zalman: ["zalman"],
   "Iceberg Thermal": ["iceberg thermal"],
   Apevia: ["apevia"],
+  "SK hynix": ["sk hynix", "hynix"],
+  Fanxiang: ["fanxiang"],
+  Timetec: ["timetec"],
+  "Lite-On": ["lite on", "liteon"],
 };
 
 /** Texto comparable: sin tildes, minúsculas, separadores unificados a un espacio. */
