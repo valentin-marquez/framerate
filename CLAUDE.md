@@ -61,7 +61,9 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
 ## En un PC nuevo
 
 1. `bun install` (instala también los hooks de git).
-2. `bunx wrangler login` con la cuenta de Cloudflare del proyecto.
+2. `bunx wrangler login` con la cuenta de Cloudflare del proyecto. Un colaborador entra con la suya, después de
+   aceptar la invitación de miembro (rol Administrator); los `wrangler.jsonc` fijan `account_id`, así que wrangler
+   no despliega en su cuenta personal.
 3. Crear los `.dev.vars` de `apps/server` (`BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, `DISCORD_CLIENT_ID`,
    `DISCORD_CLIENT_SECRET`) y de `apps/web` si hace falta. No están en el repo.
 4. `bun run db:migrate:local` y `bun run test`.
