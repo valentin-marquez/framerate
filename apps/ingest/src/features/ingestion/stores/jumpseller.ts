@@ -3,7 +3,7 @@ import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { HttpError } from "./http";
+import { getPage } from "./html";
 
 /**
  * Tiendas Jumpseller. El catálogo sale del servidor MCP público de la plataforma (`POST /api/mcp`, JSON-RPC,
@@ -93,16 +93,11 @@ export function createJumpsellerAdapter(config: JumpsellerConfig): StoreAdapter 
             let listed = product.price;
             // Las fichas de productos agotados no se piden: basta el precio del MCP.
             if (product.stock_available) {
-              try {
-                const ficha = await ctx.http.get(product.url, { accept: "text/html" });
-                await ctx.snapshot(`fichas/${externalId(product)}.html`, ficha.text);
-                // Sin el meta queda 0 y `normalize` lo manda a cuarentena: mejor que callar una promoción.
-                listed = Number(ficha.text.match(/<meta property="product:price:amount" content="([\d.]+)"/)?.[1] ?? 0);
-              } catch (error) {
-                // Producto borrado entre el listado y la ficha.
-                if (error instanceof HttpError && error.status === 404) continue;
-                throw error;
-              }
+              const ficha = await getPage(ctx, product.url);
+              if (!ficha) continue;
+              await ctx.snapshot(`fichas/${externalId(product)}.html`, ficha);
+              // Sin el meta queda 0 y `normalize` lo manda a cuarentena: mejor que callar una promoción.
+              listed = Number(ficha.match(/<meta property="product:price:amount" content="([\d.]+)"/)?.[1] ?? 0);
             }
             yield toRawOffer(product, Math.round(listed), category, config);
           }

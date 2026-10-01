@@ -15,7 +15,6 @@ export interface MyShopConfig {
   baseUrl: string;
   /** Categoría Framerate → `idFamilia` de la tienda (cada tienda numera distinto). */
   categories: Partial<Record<Category, readonly string[]>>;
-  maxPages?: number;
 }
 
 const PageSchema = z.object({
@@ -41,14 +40,14 @@ const ItemSchema = z.object({
 });
 type MyShopItem = z.infer<typeof ItemSchema>;
 
-export function createMyShopAdapter(config: MyShopConfig): StoreAdapter {
-  const maxPages = config.maxPages ?? 100;
+const MAX_PAGES = 100;
 
+export function createMyShopAdapter(config: MyShopConfig): StoreAdapter {
   return {
     categories: config.categories,
     async *crawlCategory(category: Category, ctx: CrawlContext) {
       for (const idFamilia of config.categories[category] ?? []) {
-        for (let page = 1; page <= maxPages; page++) {
+        for (let page = 1; page <= MAX_PAGES; page++) {
           const res = await ctx.http.post(`${config.baseUrl}/servicio/producto`, {
             tipo: "3",
             page: String(page),

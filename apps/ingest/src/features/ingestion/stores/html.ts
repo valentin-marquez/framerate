@@ -1,4 +1,6 @@
 import { decodeEntities } from "@framerate/kit";
+import type { CrawlContext } from "./adapter";
+import { HttpError } from "./http";
 
 export type LdNode = Record<string, unknown>;
 
@@ -34,4 +36,14 @@ export function findLd(html: string, type: string): LdNode | undefined {
 export function parseClp(text: string | null | undefined): number | null {
   const digits = decodeEntities(text ?? "").replace(/[^\d]/g, "");
   return digits ? Number(digits) : null;
+}
+
+/** HTML de una ficha, o null si ya no existe (producto retirado entre el listado y la ficha). */
+export async function getPage(ctx: CrawlContext, url: string): Promise<string | null> {
+  try {
+    return (await ctx.http.get(url, { accept: "text/html" })).text;
+  } catch (error) {
+    if (error instanceof HttpError && error.status === 404) return null;
+    throw error;
+  }
 }

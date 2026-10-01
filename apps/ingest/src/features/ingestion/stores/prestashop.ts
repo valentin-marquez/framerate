@@ -21,7 +21,6 @@ export interface PrestaShopConfig {
   cardMarkup?: number;
   /** `price_amount` es la tarjeta y la transferencia tiene este descuento (0.05 = −5 %). */
   cashDiscount?: number;
-  maxPages?: number;
 }
 
 const PageSchema = z.object({
@@ -42,14 +41,14 @@ const ProductSchema = z.object({
 });
 type PrestaShopProduct = z.infer<typeof ProductSchema>;
 
-export function createPrestaShopAdapter(config: PrestaShopConfig): StoreAdapter {
-  const maxPages = config.maxPages ?? 50;
+const MAX_PAGES = 50;
 
+export function createPrestaShopAdapter(config: PrestaShopConfig): StoreAdapter {
   return {
     categories: config.categories,
     async *crawlCategory(category: Category, ctx: CrawlContext) {
       for (const path of config.categories[category] ?? []) {
-        for (let page = 1; page <= maxPages; page++) {
+        for (let page = 1; page <= MAX_PAGES; page++) {
           const res = await ctx.http.get(`${config.baseUrl}/${path}?page=${page}`, {
             headers: { "X-Requested-With": "XMLHttpRequest" },
           });

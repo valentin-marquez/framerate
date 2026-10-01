@@ -3,8 +3,7 @@ import { decodeEntities } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { findLd, type LdNode, parseClp } from "./html";
-import { HttpError } from "./http";
+import { findLd, getPage, type LdNode, parseClp } from "./html";
 
 /**
  * PC Express (OpenCart). El listado de categoría trae 20 productos por página (robots.txt prohíbe `limit=`) y
@@ -17,20 +16,19 @@ export interface PcExpressConfig {
   baseUrl: string;
   /** Categoría Framerate → id de categoría OpenCart (el último tramo de `path`). */
   categories: Partial<Record<Category, readonly string[]>>;
-  maxPages?: number;
 }
+
+const MAX_PAGES = 50;
 
 const LIST_ITEM = /class="product-list__item" data-product-id="(\d+)">[\s\S]*?<a href="([^"]+)"/g;
 
 export function createPcExpressAdapter(config: PcExpressConfig): StoreAdapter {
-  const maxPages = config.maxPages ?? 50;
-
   return {
     categories: config.categories,
     async *crawlCategory(category: Category, ctx: CrawlContext) {
       const seen = new Set<string>();
       for (const path of config.categories[category] ?? []) {
-        for (let page = 1; page <= maxPages; page++) {
+        for (let page = 1; page <= MAX_PAGES; page++) {
           const listUrl = `${config.baseUrl}/index.php?route=product/category&path=${path}`;
           const res = await ctx.http.get(page > 1 ? `${listUrl}&page=${page}` : listUrl, { accept: "text/html" });
           await ctx.snapshot(`${path}/page-${page}.html`, res.text);
@@ -42,17 +40,8 @@ export function createPcExpressAdapter(config: PcExpressConfig): StoreAdapter {
             if (seen.has(id)) continue;
             seen.add(id);
             const url = decodeEntities(href);
-            let html: string;
-            try {
-              html = (await ctx.http.get(url, { accept: "text/html" })).text;
-            } catch (error) {
-              // Un producto despublicado entre el listado y la ficha responde 404.
-              if (error instanceof HttpError && error.status === 404) {
-                ctx.log.warn("pc-express.product_gone", { id, url });
-                continue;
-              }
-              throw error;
-            }
+            const html = await getPage(ctx, url);
+            if (!html) continue;
             await ctx.snapshot(`product-${id}.html`, html);
             yield toRawOffer(html, id, url, category);
           }

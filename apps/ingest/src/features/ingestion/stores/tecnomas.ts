@@ -2,8 +2,7 @@ import type { Category } from "@framerate/contracts";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { findLd, type LdNode, parseClp } from "./html";
-import { HttpError } from "./http";
+import { findLd, getPage, type LdNode, parseClp } from "./html";
 
 /**
  * Tecnomas (Rails propio). El listado `/productos?categorias=[Nombre]` sólo muestra productos con stock y trae un
@@ -16,17 +15,15 @@ export interface TecnomasConfig {
   baseUrl: string;
   /** Categoría Framerate → nombres de categoría de la tienda. */
   categories: Partial<Record<Category, readonly string[]>>;
-  maxPages?: number;
 }
 
 const PER_PAGE = 48;
+const MAX_PAGES = 20;
 
 export function createTecnomasAdapter(config: TecnomasConfig): StoreAdapter {
-  const maxPages = config.maxPages ?? 20;
-
   async function listUrls(name: string, ctx: CrawlContext): Promise<string[]> {
     const urls = new Set<string>();
-    for (let page = 1; page <= maxPages; page++) {
+    for (let page = 1; page <= MAX_PAGES; page++) {
       // Sólo "Nuevo": la tienda también lista caja abierta, reacondicionados y "Mejorado".
       const query = new URLSearchParams({
         categorias: `[${name}]`,
@@ -55,14 +52,8 @@ export function createTecnomasAdapter(config: TecnomasConfig): StoreAdapter {
       for (const name of config.categories[category] ?? []) {
         // Primero todas las URLs: el orden por relevancia puede moverse mientras se recorren las fichas.
         for (const url of await listUrls(name, ctx)) {
-          let html: string;
-          try {
-            html = (await ctx.http.get(url, { accept: "text/html" })).text;
-          } catch (error) {
-            // Un producto retirado entre el listado y la ficha no debe tumbar la corrida.
-            if (error instanceof HttpError && error.status === 404) continue;
-            throw error;
-          }
+          const html = await getPage(ctx, url);
+          if (!html) continue;
           await ctx.snapshot(`producto/${new URL(url).pathname.split("/").pop()}.html`, html);
           yield toRawOffer(html, url, category);
         }

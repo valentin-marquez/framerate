@@ -17,7 +17,6 @@ const PAGE_SIZE = 48; // máximo que acepta la API
 export interface PcFactoryConfig {
   /** Categoría Framerate → ids de categoría de PC Factory (la API no incluye las subcategorías: van todas). */
   categories: Partial<Record<Category, readonly string[]>>;
-  maxPages?: number;
 }
 
 const QuerySchema = z.object({
@@ -41,15 +40,15 @@ type PcFactoryItem = z.infer<typeof ItemSchema>;
 
 const DetailSchema = z.object({ partNumber: z.string().nullable() });
 
-export function createPcFactoryAdapter(config: PcFactoryConfig): StoreAdapter {
-  const maxPages = config.maxPages ?? 20;
+const MAX_PAGES = 20;
 
+export function createPcFactoryAdapter(config: PcFactoryConfig): StoreAdapter {
   return {
     categories: config.categories,
     async *crawlCategory(category: Category, ctx: CrawlContext) {
       const ids = config.categories[category];
       if (!ids?.length) return;
-      for (let page = 0; page < maxPages; page++) {
+      for (let page = 0; page < MAX_PAGES; page++) {
         const res = await ctx.http.get(`${API}/query?page=${page}&size=${PAGE_SIZE}&categorias=${ids.join(",")}`);
         await ctx.snapshot(`query/page-${page}.json`, res.text);
         const { items, pageable } = QuerySchema.parse(JSON.parse(res.text)).content;
