@@ -1,5 +1,6 @@
 import type { StoreDefinition } from "./adapter";
 import { createMyShopAdapter } from "./myshop";
+import { createPcExpressAdapter } from "./pc-express";
 import { createPcFactoryAdapter } from "./pcfactory";
 import { createPrestaShopAdapter } from "./prestashop";
 import { createWooCommerceAdapter } from "./woocommerce";
@@ -332,6 +333,30 @@ export const STORES: readonly StoreDefinition[] = [
         cpu_cooler: ["74-procesador", "76-refrigeracion-liquida"],
         case: ["82-gabinetes"],
         case_fan: ["73-ventiladores"],
+      },
+    }),
+  },
+  {
+    slug: "pc-express",
+    name: "PC Express",
+    url: "https://tienda.pc-express.cl",
+    // HTML: listado más una ficha por producto.
+    minIntervalMs: 1000,
+    adapter: createPcExpressAdapter({
+      baseUrl: "https://tienda.pc-express.cl",
+      // Procesadores (473) incluye los coolers y Gabinetes (462) los ventiladores: se usan sus subcategorías.
+      // 410 (discos de servidor) son SSD y SAS; 280 son gabinetes rack.
+      categories: {
+        gpu: ["475"],
+        cpu: ["337", "367", "591", "603", "309", "348", "380", "583", "588", "600"],
+        motherboard: ["472"],
+        ram: ["126"],
+        psu: ["461"],
+        ssd: ["331"],
+        hdd: ["101", "411", "412"],
+        cpu_cooler: ["169"],
+        case: ["119", "120", "278"],
+        case_fan: ["170"],
       },
     }),
   },
