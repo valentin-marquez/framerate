@@ -22,6 +22,7 @@ export function testEnv(d1: D1Database, ingest: Partial<IngestService> = {}, ove
   const env: Env = {
     DB: d1,
     ADMIN_TOKEN: "test-admin-token",
+    ADMIN_TOKENS: "ignacio:test-ignacio-token",
     INGEST: service as unknown as Env["INGEST"],
     BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret-123456",
     BETTER_AUTH_URL: "http://localhost:8787",

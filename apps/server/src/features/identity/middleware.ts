@@ -53,11 +53,13 @@ export const optionalUser: MiddlewareHandler<AppEnv> = async (c, next) => {
 async function resolveActor(c: Context<AppEnv>): Promise<Actor | null> {
   const header = c.req.header("authorization");
   if (header?.startsWith("Bearer ")) {
-    const expected = c.env.ADMIN_TOKEN;
-    if (!expected || !(await timingSafeEqual(header.slice(7), expected))) {
-      throw new AppError(401, "unauthorized", "Token de administrador inválido");
+    const token = header.slice(7);
+    if (c.env.ADMIN_TOKEN && (await timingSafeEqual(token, c.env.ADMIN_TOKEN))) return { kind: "token" };
+    for (const entry of (c.env.ADMIN_TOKENS ?? "").split(",")) {
+      const [name, expected] = entry.trim().split(":");
+      if (name && expected && (await timingSafeEqual(token, expected))) return { kind: "token", name };
     }
-    return { kind: "token" };
+    throw new AppError(401, "unauthorized", "Token de administrador inválido");
   }
   const user = await sessionUser(c);
   return user ? { kind: "user", user } : null;

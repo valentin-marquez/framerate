@@ -196,6 +196,17 @@ describe("API admin", () => {
     expect(crawlRequests).toEqual([{ store: "tectec", category: "gpu", requestedBy: "admin-token" }]);
   });
 
+  test("un token adicional con nombre también es admin y la auditoría dice de quién es", async () => {
+    crawlRequests.length = 0;
+    const res = await get("/v1/admin/crawls", {
+      method: "POST",
+      headers: { authorization: "Bearer test-ignacio-token", "content-type": "application/json" },
+      body: JSON.stringify({ store: "tectec" }),
+    });
+    expect(res.status).toBe(202);
+    expect(crawlRequests).toEqual([{ store: "tectec", requestedBy: "admin-token:ignacio" }]);
+  });
+
   test("tienda desconocida según ingest → 400 con código", async () => {
     refuseUnknownStore = true;
     const res = await get("/v1/admin/crawls", { ...auth, method: "POST", body: JSON.stringify({ store: "nada" }) });

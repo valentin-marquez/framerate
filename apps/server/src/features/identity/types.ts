@@ -21,13 +21,14 @@ export interface SessionUser {
 }
 
 /** Quién ejecuta una acción administrativa: una persona con sesión, o el token de servicio (scripts). */
-export type Actor = { kind: "user"; user: SessionUser } | { kind: "token" };
+export type Actor = { kind: "user"; user: SessionUser } | { kind: "token"; name?: string };
 
 /** Id para columnas con FK a `users` (el token de servicio no es un usuario). */
 export const actorUserId = (actor: Actor): string | null => (actor.kind === "user" ? actor.user.id : null);
 
 /** Etiqueta legible para auditoría en columnas de texto libre. */
-export const actorLabel = (actor: Actor): string => (actor.kind === "user" ? `user:${actor.user.id}` : "admin-token");
+export const actorLabel = (actor: Actor): string =>
+  actor.kind === "user" ? `user:${actor.user.id}` : actor.name ? `admin-token:${actor.name}` : "admin-token";
 
 /** El token de servicio equivale a un admin. */
 export const actorRole = (actor: Actor): Role => (actor.kind === "user" ? actor.user.role : "admin");

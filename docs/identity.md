@@ -77,6 +77,7 @@ Variables (ver `apps/server/.dev.vars.example`):
 | `WEB_ORIGIN` | `wrangler.jsonc` | Origen de la web (`https://framerate.cl`): CORS con cookies y control de origen. |
 | `COOKIE_DOMAIN` | `wrangler.jsonc` | `framerate.cl`: comparte la sesión entre la web y `api.framerate.cl`. |
 | `ADMIN_TOKEN` | secreto | Token de servicio para scripts. |
+| `ADMIN_TOKENS` | secreto (opcional) | Tokens de admin adicionales, uno por persona: `nombre:token,nombre:token`. Se revocan sin tocar `ADMIN_TOKEN`; en la auditoría de crawls quedan como `admin-token:nombre`. |
 | `ASSETS_BASE_URL` | variable, opcional | Base pública de los avatares copiados a R2. |
 | `<PROVEEDOR>_CLIENT_ID` / `_CLIENT_SECRET` | secretos | Credenciales OAuth; ambas habilitan el proveedor. |
 

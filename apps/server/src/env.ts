@@ -8,6 +8,8 @@ export interface Env {
   PUBLIC_RATE_LIMITER?: RateLimit;
   /** Token de servicio para scripts contra `/v1/admin/*` (equivale a rol admin). `wrangler secret put ADMIN_TOKEN`. */
   ADMIN_TOKEN: string;
+  /** Tokens de admin adicionales, uno por persona: `nombre:token,nombre:token`. Se revocan sin tocar ADMIN_TOKEN. */
+  ADMIN_TOKENS?: string;
   /** "production" | "development". */
   ENVIRONMENT?: string;
 
