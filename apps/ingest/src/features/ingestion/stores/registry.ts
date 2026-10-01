@@ -3,6 +3,7 @@ import { createMyShopAdapter } from "./myshop";
 import { createPcExpressAdapter } from "./pc-express";
 import { createPcFactoryAdapter } from "./pcfactory";
 import { createPrestaShopAdapter } from "./prestashop";
+import { createTecnomasAdapter } from "./tecnomas";
 import { createWooCommerceAdapter } from "./woocommerce";
 
 /**
@@ -357,6 +358,29 @@ export const STORES: readonly StoreDefinition[] = [
         cpu_cooler: ["169"],
         case: ["119", "120", "278"],
         case_fan: ["170"],
+      },
+    }),
+  },
+  {
+    slug: "tecnomas",
+    name: "Tecnomas",
+    url: "https://www.tecnomas.cl",
+    // Sitio HTML: una request por ficha.
+    minIntervalMs: 1000,
+    adapter: createTecnomasAdapter({
+      baseUrl: "https://www.tecnomas.cl",
+      // Fuera mientras `normalize` no aparte lo que no es de PC (sept. 2026): "Gabinetes" son ~85 % racks, bandejas y
+      // cajas IP66; "Fuentes de Poder" son mayoría fuentes industriales, PoE y de servidor. "Ventiladores y Sistemas de
+      // Enfriamiento" mezcla coolers con ventiladores y `normalize` no aparta coolers de `case_fan`. "Almacenamiento"
+      // mezcla SSD con pendrives y tarjetas SD que pasan como SSD.
+      categories: {
+        gpu: ["Tarjetas de Video"],
+        cpu: ["Procesadores"],
+        motherboard: ["Placas Madre"],
+        ram: ["RAM"],
+        ssd: ["SSD - Disco Sólido"],
+        hdd: ["HDD - Disco Duros"],
+        cpu_cooler: ["Ventiladores y Sistemas de Enfriamiento"],
       },
     }),
   },
