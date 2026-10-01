@@ -56,6 +56,54 @@ export const STORES: readonly StoreDefinition[] = [
     }),
   },
   {
+    slug: "infor-ingen",
+    name: "Infor-Ingen",
+    url: "https://store.infor-ingen.com",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://store.infor-ingen.com",
+      sku: "internal",
+      // Tarjeta +6 % (verificado en la ficha, sept. 2026). `regular_price` a veces es un "antes" inflado (×1,272).
+      cardMarkup: 0.06,
+      categories: {
+        gpu: ["t-video-pcie-nvidia", "t-video-pcie-amd"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madres"],
+        ram: ["memorias-ram-pc"],
+        psu: ["fuentes-reales"],
+        ssd: ["discos-duros-ssd", "m-2", "nvme"],
+        hdd: ["discos-duros-pc"],
+        cpu_cooler: ["aire-cpu", "refrigeracion-liquida-cpu"],
+        case: ["gabinetes"],
+        case_fan: ["refrigeracion-gabinete"],
+      },
+    }),
+  },
+  {
+    slug: "etchile",
+    name: "ETChile",
+    url: "https://etchile.net",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://etchile.net",
+      // Casi siempre el MPN real; algunas placas traen un código propio ("GBTB550MDS3HAC1W"). Un MPN que no
+      // coincide sólo impide el vínculo automático: termina en duplicado, no en fusión errónea.
+      sku: "mpn",
+      // Tarjeta +5 % (verificado en la ficha, sept. 2026).
+      cardMarkup: 0.05,
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madres"],
+        ram: ["memorias"],
+        psu: ["psu-fuentes-de-poder"],
+        ssd: ["ssd", "ssd-interno-almacenamiento-y-drives"],
+        hdd: ["hdd-interno"],
+        cpu_cooler: ["cpu-cooler", "water-cooling"],
+        case: ["gabinetes"],
+        case_fan: ["ventiladores"],
+      },
+    }),
+  },
+  {
     slug: "myshop",
     name: "MyShop",
     url: "https://myshop.cl",

@@ -36,7 +36,7 @@ const BRANDS: Record<string, string[]> = {
   TeamGroup: ["teamgroup", "team group", "t-force", "tforce"],
   Patriot: ["patriot"],
   Samsung: ["samsung"],
-  "Western Digital": ["western digital", "wd"],
+  "Western Digital": ["western digital", "wester digital", "wd"],
   Seagate: ["seagate"],
   Toshiba: ["toshiba"],
   Lexar: ["lexar"],
@@ -58,10 +58,17 @@ const BRANDS: Record<string, string[]> = {
   GameMax: ["gamemax"],
   Redragon: ["redragon"],
   Fantech: ["fantech"],
-  "Formula V Line": ["formula v line", "formula v"],
+  "Formula V Line": ["formula v line", "formula v", "formula"],
   EsGaming: ["esgaming"],
   Xtech: ["xtech"],
   Tryx: ["tryx"],
+  Biostar: ["biostar"],
+  AZZA: ["azza"],
+  Raidmax: ["raidmax"],
+  Einarex: ["einarex"],
+  Checkpoint: ["checkpoint"],
+  Riotoro: ["riotoro", "rio toro"],
+  NOX: ["nox"],
 };
 
 /** Texto comparable: sin tildes, minúsculas, separadores unificados a un espacio. */

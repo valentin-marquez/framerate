@@ -79,10 +79,10 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 
 ## Scraping / catálogo
 - [ ] Revisar las 56 revisiones pendientes de matching (`match_reviews`) con datos reales y ajustar vetos.
-- [ ] Integrar tiendas en el orden de `docs/store-candidates.md`. MyShop y Sandos integradas (sin desplegar).
-- [ ] El extractor no reconoce productos de estación de trabajo y servidor (Xeon, Threadripper, TRX50, RTX A400/A1000, Radeon PRO): hoy van a cuarentena por atributo faltante.
+- [ ] Integrar tiendas en el orden de `docs/store-candidates.md`. MyShop, Sandos, Infor-Ingen y ETChile integradas (sin desplegar). Centrale descartada (anti-scraping).
+- [ ] El extractor no reconoce GPU de estación de trabajo (RTX A400/A1000, Radeon PRO W7900, Radeon AI PRO R9700) ni la placa TRX50: van a cuarentena por atributo faltante. (Xeon, Threadripper, Celeron, Pentium y Athlon ya se reconocen.)
 - [ ] La cola corre dos categorías a la vez y cada corrida tiene su propio cliente HTTP: dos categorías de la misma tienda duplican el ritmo. Si otra tienda corta por rate limit, serializar por tienda.
-- [ ] Opciones de precio de WooCommerce que faltan: "`regular_price` = tarjeta" (Infor-Ingen) y "`price` = tarjeta" (Central Gamer, Globalbox, Nuevatec, Tecno Shopping).
+- [ ] Opción de precio de WooCommerce que falta: "`price` = tarjeta" con descuento por transferencia (Central Gamer, Globalbox, Nuevatec, Tecno Shopping). Infor-Ingen no la necesitó: es `cardMarkup`.
 - [ ] Decidir la política de MPN dentro del título y de SKU con prefijo (en `normalize`, no por tienda).
 - [ ] Probar Winpy desde el Worker (bloquea desde red local); si bloquea, evaluar Browser Rendering.
 - [ ] Resumen de precios de `products` y `product_price_daily` tras cada corrida (habilita "mejores ofertas" y descuento real).
@@ -94,6 +94,7 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 ## Web (cuando se retome)
 - [ ] **Publicidad suave**: espacios de anuncio discretos integrados al diseño (en listas y ficha), sin pop-ups, intersticiales ni anuncios que muevan el layout (reservar el alto). Sin rastreo invasivo; revisar la CSP y la página de privacidad al elegir proveedor.
 - [ ] El chip "Con stock" de `filter-bar.tsx` sobra: la API ya sólo lista productos con stock.
+- [ ] Hallazgos al armar Storybook (`9d68c6c`): `<button>` dentro de `<button>` en `ReportModal` (DialogClose + Button) y `QuoteActions` (DropdownMenuTrigger + Button); `dialog.tsx` usa `exit="exit"` sin esa variante y su botón dice "Close dialog"; se anima `height` en ClaimWizard, CommentForm, la respuesta de CommentNode y QuoteItem; `ReportModal` en voseo y sin tildes; "· eliminado" en CommentNode; ReviewCard y CommentNode no pasan `token` a ReportButton (siempre pide iniciar sesión); `QuoteHeader` recorta el nombre (`userName.slice(0, -2)`); `listMyStores` siempre devuelve vacío ("Mis tiendas" nunca aparece); el navbar ofrece "Crear cotización" con la API apagada; `getImageUrl` asume rutas de Supabase.
 - [ ] **Reescribir privacidad y términos para v2**: `privacy-page.tsx` describe Supabase (Auth, Postgres, RLS, buckets, tablas `account`) y login con Google/Apple/Facebook; `terms-page.tsx:77` también. v2 es D1 + Better Auth + Discord/Google. Google enlaza esta página en su pantalla de consentimiento.
 - [ ] Código muerto en `shared/lib/client.tsx`: `ClientHintCheck` (nunca se monta, así que la cookie de hints de tema nunca se escribe), `subscribeToSchemeChange`, `getLocale`, `parseAcceptLanguage`.
 - [ ] Quedan menciones al sistema anterior en `comments/services/comments.ts`, `product/services/adapters.ts` y `shared/utils/images.ts`.

@@ -59,6 +59,7 @@ describe("atributos por categoría", () => {
     expect(PROFILES.gpu.extract("Gigabyte Radeon RX 7800 XT Gaming OC 16G").chipset).toBe("rx 7800 xt");
     expect(PROFILES.gpu.extract("Intel Arc B580 Limited Edition 12GB").chipset).toBe("arc b580");
     expect(PROFILES.gpu.extract("MSI RTX 5070 Ti 16GB Ventus 3X").chipset).toBe("rtx 5070 ti");
+    expect(PROFILES.gpu.extract("TARJETA DE VIDEO ASUS DUAL RX560 4GB DDR5").chipset).toBe("rx 560");
   });
 
   test("CPU", () => {
@@ -66,6 +67,11 @@ describe("atributos por categoría", () => {
     expect(PROFILES.cpu.extract("Procesador Intel Core i5-14600K LGA1700").model).toBe("core i5 14600k");
     expect(PROFILES.cpu.extract("Intel Core Ultra 7 265K").model).toBe("core ultra 7 265k");
     expect(PROFILES.cpu.extract("Ryzen 5 5600 vs 5600X").model).toBe("ryzen 5 5600");
+    expect(PROFILES.cpu.extract("Procesador AMD Ryzen Threadripper 9970X 32 Cores").model).toBe("threadripper 9970x");
+    expect(PROFILES.cpu.extract("Procesador Intel Xeon Silver 4416+ - 2 GHz").model).toBe("xeon silver 4416+");
+    expect(PROFILES.cpu.extract("INTEL CPU CELERON G5925 3.6GHZ").model).toBe("celeron g5925");
+    expect(PROFILES.cpu.extract("Intel Pentium Gold G7400 LGA1700").model).toBe("pentium g7400");
+    expect(PROFILES.cpu.extract("CPU AMD ATHLON 3000G 3.5 GHz").model).toBe("athlon 3000g");
   });
 
   test("RAM: kit vs módulo único", () => {
@@ -173,6 +179,8 @@ describe("atributos por categoría", () => {
       chipset: "x870",
       formFactor: "itx",
     });
+    expect(PROFILES.motherboard.extract("M/B BIOSTAR H610MHP")).toMatchObject({ chipset: "h610", formFactor: "matx" });
+    expect(PROFILES.motherboard.extract("M/B BIOSTAR B650MT")).toMatchObject({ chipset: "b650", formFactor: "matx" });
   });
 
   test("SSD: capacidad con 'G' sin B e interfaz 'PCI'", () => {

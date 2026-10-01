@@ -46,8 +46,7 @@ La Store API trae `price` y `regular_price`, pero **cada tienda los usa distinto
 
 | Qué significa en la tienda | Tiendas | Cómo se configura hoy |
 |---|---|---|
-| `price` = transferencia; la tarjeta es un recargo que sólo aparece en el HTML | Centrale, Dust2 (+7 %), TecTec (+4 %), Progaming (+5 %), KDTEC (+2,2 %), ETChile (+5 %), CCLink (+5 %), Tecno Master, DazBog, Café Digital, Electronica Budini, Trulu, Notebooksya, MegaBytes, Natcom, RS Tech | `cardMarkup` con el recargo verificado en la ficha; sin él, tarjeta = transferencia |
-| `price` = transferencia y `regular_price` = tarjeta | Sólo Infor-Ingen | Falta la opción: agregarla al integrarla |
+| `price` = transferencia; la tarjeta es un recargo que sólo aparece en el HTML | Infor-Ingen (+6 %), Dust2 (+7 %), TecTec (+4 %), Progaming (+5 %), KDTEC (+2,2 %), ETChile (+5 %), CCLink (+5 %), Tecno Master, DazBog, Café Digital, Electronica Budini, Trulu, Notebooksya, MegaBytes, Natcom, RS Tech | `cardMarkup` con el recargo verificado en la ficha; sin él, tarjeta = transferencia |
 | `price` = **tarjeta**; la transferencia sólo en el HTML | Central Gamer, Globalbox, Nuevatec (−5 %), Tecno Shopping (−3,5 %) | Falta la opción: agregarla al integrar la primera |
 | Un solo precio | Cintegral, Play Factory, Fiestalan, Xtreme Components | Sin configuración |
 
@@ -71,6 +70,8 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 |---|---|---|
 | TecTec | WooCommerce, `sku: "internal"`, tarjeta +4 % | Casi todo lo que vende es usado certificado: aporta poco. La migración 0009 limpió los MPN falsos que dejó |
 | Dust2 | WooCommerce, `sku: "internal"` (el SKU es EAN-13), tarjeta +7 %, con GPU | Probablemente la misma empresa que Progaming (mismos EAN y hosting) |
+| Infor-Ingen | WooCommerce, `sku: "internal"`, tarjeta +6 % | La ficha muestra siempre tarjeta = transferencia × 1,06. En ~20 % de los productos `regular_price` es un "antes" inflado (× 1,272) que no se muestra: no sirve como precio tarjeta. Mucho catálogo agotado |
+| ETChile | WooCommerce, `sku: "mpn"`, tarjeta +5 % ("Precio otros métodos de pago") | SKU = MPN real casi siempre; algunas placas traen un código propio (`GBTB550MDS3HAC1W`) |
 | MyShop | Adaptador `myshop` (`POST /servicio/producto`), `minIntervalMs: 2500` | Dry run del 30-09-2026: ~650 ofertas válidas, MPN 81–99 % según categoría, los dos precios en todas. Su Cloudflare corta con 429 (error 1015) a ~1,3 requests/s sostenidas |
 | Sandos | Mismo adaptador, otro mapa de `idFamilia` | Dry run: ~260 válidas, MPN 65–100 %. `api: 1` = entrega diferida por distribuidor: se puede comprar, cuenta como stock |
 
@@ -84,9 +85,9 @@ cuarentena por motivo.
 |---|---|---|---|---|
 | 1 | MyShop | 548 | Adaptador nuevo (API JSON propia) | MPN o UPC, marca, los dos precios y stock en `POST /servicio/producto` |
 | 2 | Sandos | 295 | Mismo adaptador que MyShop | Sólo cambia el mapa de familias (`idFamilia`) |
-| 3 | Infor-Ingen | 578 | Configuración + opción "regular = tarjeta" | Precios bien en la API; sin MPN, depende de los vetos por atributos |
+| 3 | ~~Infor-Ingen~~ | 578 | Integrada | `cardMarkup: 0.06`: su `regular_price` coincide con la tarjeta sólo a veces (ver abajo) |
 | 4 | ETChile | 120 | Configuración | La mejor huella de las WooCommerce: SKU = MPN, GTIN y marca |
-| 5 | Centrale | 593 | Configuración | Store API abierta aunque el HTML esté bloqueado; sin MPN |
+| 5 | ~~Centrale~~ | 593 | No integrar | Protege los precios con un plugin anti-scraping (`centrale-anti-scrape` + Turnstile): no quiere que la scrapeen. Candidata a la API abierta para tiendas |
 | 6 | KDTEC | 303 | Configuración (`internal`) | Atributos muy completos |
 | 7 | PC Factory | 321 | Descubrir endpoints | API JSON con `partNumber`, pero falta encontrar el listado y los precios |
 | 8 | Tecnomas | 506 | Parser HTML | La mejor huella del lote: MPN, GTIN y marca en JSON-LD, los dos precios en el HTML |
