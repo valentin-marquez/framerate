@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { IconBrandDiscord, IconLanguage, IconLock, IconMail } from "@tabler/icons-react";
 import { Button } from "~/shared/components/primitives/button";
+import { ConnectedAccounts } from "./connected-accounts";
 import { SettingsBadge, SettingsGroup, SettingsRow, SettingsSection } from "./settings-parts";
 
 const meta = { title: "Cuenta/Ajustes", parameters: { layout: "padded" } } satisfies Meta;
@@ -54,6 +55,57 @@ export const Secciones: Story = {
           />
         </SettingsGroup>
       </SettingsSection>
+    </div>
+  ),
+};
+
+const PROVIDERS = [
+  { id: "discord", label: "Discord" },
+  { id: "google", label: "Google" },
+];
+
+export const CuentasConectadas: Story = {
+  name: "Cuentas conectadas: una",
+  parameters: { providers: PROVIDERS },
+  render: () => (
+    <div className="mx-auto max-w-3xl">
+      <ConnectedAccounts accounts={[{ id: "a1", providerId: "discord" }]} />
+    </div>
+  ),
+};
+
+export const CuentasConectadasDos: Story = {
+  name: "Cuentas conectadas: dos (se puede soltar una)",
+  parameters: { providers: PROVIDERS },
+  render: () => (
+    <div className="mx-auto max-w-3xl">
+      <ConnectedAccounts
+        accounts={[
+          { id: "a1", providerId: "discord" },
+          { id: "a2", providerId: "google" },
+        ]}
+      />
+    </div>
+  ),
+};
+
+export const OfertaDeUnir: Story = {
+  name: "Cuentas conectadas: oferta de unir usuarios",
+  // Vuelta de OAuth al conectar una cuenta que ya es de otro usuario de Framerate.
+  parameters: { providers: PROVIDERS, path: "/ajustes?conectar=google&error=account_already_linked_to_different_user" },
+  render: () => (
+    <div className="mx-auto max-w-3xl">
+      <ConnectedAccounts accounts={[{ id: "a1", providerId: "discord" }]} />
+    </div>
+  ),
+};
+
+export const CuentasError: Story = {
+  name: "Cuentas conectadas: no cargaron",
+  parameters: { providers: PROVIDERS },
+  render: () => (
+    <div className="mx-auto max-w-3xl">
+      <ConnectedAccounts accounts={null} />
     </div>
   ),
 };
