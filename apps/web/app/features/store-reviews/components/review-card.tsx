@@ -8,7 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useAuthStore } from "~/features/auth/store/auth";
-import { ReportButton } from "~/features/moderation";
+import { REPORTS_API_ENABLED, ReportButton } from "~/features/moderation";
 import {
   type StoreReview,
   type StoreReviewItem,
@@ -123,7 +123,7 @@ export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelp
                 </Badge>
               )}
               <div className="flex items-center gap-1">
-                {!isAuthor && user && (
+                {REPORTS_API_ENABLED && !isAuthor && user && (
                   <ReportButton
                     targetType="store_review"
                     targetId={full.id}

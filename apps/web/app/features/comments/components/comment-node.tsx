@@ -5,10 +5,9 @@ import { useUser } from "~/features/auth/hooks/useAuth";
 import { CommentBody } from "~/features/comments/components/comment-body";
 import { CommentForm } from "~/features/comments/components/comment-form";
 import type { CommentNode as CommentNodeT } from "~/features/comments/services/comments";
-import { ReportButton } from "~/features/moderation";
+import { REPORTS_API_ENABLED, ReportButton } from "~/features/moderation";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { cn } from "~/shared/lib/utils";
-import { getImageUrl } from "~/shared/utils/images";
 
 interface CommentNodeProps {
   node: Pick<
@@ -83,7 +82,7 @@ export function CommentNode({
       <article className="flex gap-3 group" data-comment-id={node.id}>
         <div className="size-8 rounded-full overflow-hidden bg-secondary/40 flex items-center justify-center shrink-0">
           {node.author_avatar_url ? (
-            <AsyncImage src={getImageUrl(node.author_avatar_url)} alt="" className="size-full object-cover" />
+            <AsyncImage src={node.author_avatar_url} alt="" className="size-full object-cover" />
           ) : (
             <IconUser className="size-4 text-muted-foreground" />
           )}
@@ -162,7 +161,7 @@ export function CommentNode({
                   Eliminar
                 </FooterAction>
               )}
-              {!isAuthor && !isDeleted && user && (
+              {REPORTS_API_ENABLED && !isAuthor && !isDeleted && user && (
                 <ReportButton
                   targetType="comment"
                   targetId={node.id}

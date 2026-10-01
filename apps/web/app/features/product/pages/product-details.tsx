@@ -11,8 +11,8 @@ import {
 import { Link, redirect } from "react-router";
 import { useAuthStore } from "~/features/auth/store/auth";
 import { getCategoryConfig } from "~/features/category/utils/categories";
-// Fase 3: comments
 import { CommentsSection } from "~/features/comments/components/comments-section";
+import { COMMENTS_API_ENABLED } from "~/features/comments/services/comments";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
 import { PriceHistoryChart } from "~/features/product/components/price-history-chart";
 import { usePriceHistory } from "~/features/product/hooks/useProducts";
@@ -27,7 +27,6 @@ import { isRateLimitError } from "~/shared/lib/api";
 import { getTranslation } from "~/shared/lib/translations";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
-import { getImageUrl, getProductOgImage } from "~/shared/utils/images";
 import type { Route } from "./+types/product-details";
 
 type Translator = (key: string, params?: Record<string, string | number>) => string;
@@ -98,10 +97,8 @@ export function meta({ data }: Route.MetaArgs) {
   const bestPrice = data.prices?.cash || 0;
   const description = `Compra ${data.name} desde ${formatCLP(bestPrice)} en Chile. Compara precios en ${data.listings_count} tiendas.`;
   const categoryConfig = getCategoryConfig(data.category?.slug);
-  // Tarjeta OG dinámica (logo + foto + nombre) generada por collector. El precio
-  // y el stock NO van en la imagen — viajan por la descripción, que se renderiza
-  // fresca en cada SSR, así la imagen queda estable y cacheable por producto.
-  const ogImage = getProductOgImage(data.image_url);
+  // ponytail: la foto de la tienda tal cual; una tarjeta propia (logo + foto + nombre) cuando haga falta.
+  const ogImage = data.image_url || "/og-image.png";
 
   return [
     { title: `${data.name} | Precios en Chile - Framerate` },
@@ -112,8 +109,6 @@ export function meta({ data }: Route.MetaArgs) {
     { property: "og:title", content: data.name },
     { property: "og:description", content: description },
     { property: "og:image", content: ogImage },
-    { property: "og:image:width", content: "1200" },
-    { property: "og:image:height", content: "630" },
     { property: "og:image:alt", content: `${data.name} — Framerate` },
     { property: "product:price:amount", content: String(bestPrice) },
     { property: "product:price:currency", content: "CLP" },
@@ -255,7 +250,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
 
                 <div className="relative aspect-square bg-white flex items-center justify-center p-8 lg:p-12">
                   <AsyncImage
-                    src={getImageUrl(product.image_url) || "/placeholder.png"}
+                    src={product.image_url ?? undefined}
                     alt={product.name || "Imagen de producto"}
                     priority
                     className="max-h-full max-w-full size-auto object-contain transition-transform duration-500 group-hover:scale-105 filter"
@@ -357,7 +352,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                           <div className="size-12 shrink-0 rounded-lg bg-white border border-border/60 sm:p-1 flex items-center justify-center overflow-hidden">
                             {variant.image_url ? (
                               <AsyncImage
-                                src={getImageUrl(variant.image_url)}
+                                src={variant.image_url}
                                 alt=""
                                 className="max-h-full max-w-full object-contain p-1"
                               />
@@ -518,8 +513,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                 </section>
               )}
 
-              {/* Fase 3: comments threaded estilo Reddit */}
-              {product.id && <CommentsSection targetType="product" targetId={product.id} />}
+              {COMMENTS_API_ENABLED && product.id && <CommentsSection targetType="product" targetId={product.id} />}
             </div>
           </div>
         </div>

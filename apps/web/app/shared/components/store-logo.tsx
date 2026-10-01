@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { cn } from "~/shared/lib/utils";
-import { getImageUrl } from "~/shared/utils/images";
 
 interface StoreLogoProps {
   store: { name: string; slug?: string | null; icon_url?: string | null };
@@ -19,19 +18,11 @@ export function StoreLogo({ store, className }: StoreLogoProps) {
   const [broken, setBroken] = useState(false);
   const box = cn("relative inline-flex shrink-0 overflow-hidden rounded-lg size-10", className);
 
-  // El icono vive en nuestro bucket store-assets → se proxia por /v1/images
-  // (CDN). data-uri legacy (sin migrar) se pasa tal cual.
-  const iconSrc = store.icon_url
-    ? store.icon_url.startsWith("data:")
-      ? store.icon_url
-      : getImageUrl(store.icon_url)
-    : "";
-
-  if (iconSrc && !broken) {
+  if (store.icon_url && !broken) {
     return (
       <span className={cn(box, "border border-border/40 bg-secondary/30")}>
         <img
-          src={iconSrc}
+          src={store.icon_url}
           alt={store.name}
           loading="lazy"
           decoding="async"

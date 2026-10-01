@@ -9,7 +9,6 @@ import { Badge } from "~/shared/components/primitives/badge";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import { getGradient } from "~/shared/utils/gradients";
-import { getImageUrl } from "~/shared/utils/images";
 
 interface QuoteEmbedProps {
   quoteId: string;
@@ -202,7 +201,7 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
               <div key={item.id} className="flex items-center gap-3 py-1.5">
                 <div className="size-9 rounded-md overflow-hidden bg-secondary/40 shrink-0">
                   {item.product.image_url ? (
-                    <AsyncImage src={getImageUrl(item.product.image_url)} alt="" className="size-full object-contain" />
+                    <AsyncImage src={item.product.image_url} alt="" className="size-full object-contain" />
                   ) : null}
                 </div>
                 <div className="flex-1 min-w-0">

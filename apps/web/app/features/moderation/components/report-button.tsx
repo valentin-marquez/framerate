@@ -7,8 +7,6 @@ import { ReportModal } from "./report-modal";
 export interface ReportButtonProps {
   targetType: ReportTargetType;
   targetId: string;
-  /** Token JWT del usuario actual. Si es null/undefined, el modal alerta y pide login. */
-  token?: string | null;
   /** Texto descriptivo opcional para mostrar en el header del modal. */
   contextLabel?: string;
   /** Variante visual del boton. Por defecto ghost (poco invasivo). */
@@ -26,13 +24,12 @@ export interface ReportButtonProps {
  *
  * @example
  * ```tsx
- * <ReportButton targetType="product" targetId={product.id} token={session?.access_token} />
+ * <ReportButton targetType="product" targetId={product.id} />
  * ```
  */
 export function ReportButton({
   targetType,
   targetId,
-  token,
   contextLabel,
   variant = "ghost",
   size = "sm",
@@ -60,7 +57,6 @@ export function ReportButton({
         onOpenChange={setOpen}
         targetType={targetType}
         targetId={targetId}
-        token={token}
         contextLabel={contextLabel}
       />
     </>

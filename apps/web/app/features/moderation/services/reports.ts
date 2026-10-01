@@ -33,7 +33,9 @@ export interface CreateReportPayload {
   details?: string;
 }
 
+// ponytail: la API v2 aún no tiene reportes (#23). En false no se muestra el botón de reportar; pasar a true con `/v1/reports`.
+export const REPORTS_API_ENABLED = false;
+
 export const reportsClient = {
-  create: (payload: CreateReportPayload, token: string) => api.post<Report>("/v1/reports", payload, { token }),
-  listMine: (token: string) => api.get<{ reports: Report[] }>("/v1/reports/my", { token }),
+  create: (payload: CreateReportPayload) => api.post<Report>("/v1/reports", payload),
 };

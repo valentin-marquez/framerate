@@ -1,13 +1,3 @@
-/**
- * Barrel API para la feature de moderacion (Fase 4).
- *
- * Las otras fases pueden importar el `ReportButton` reusable desde aqui:
- *
- *   import { ReportButton } from "~/features/moderation";
- *
- *   <ReportButton targetType="comment" targetId={comment.id} token={token} />
- */
-
 export { ReportButton, type ReportButtonProps } from "./components/report-button";
 export { ReportModal, type ReportModalProps } from "./components/report-modal";
 export {
@@ -19,6 +9,7 @@ export {
 } from "./services/moderation";
 export {
   type CreateReportPayload,
+  REPORTS_API_ENABLED,
   type Report,
   type ReportReason,
   type ReportStatus,

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "~/shared/lib/utils";
-import { getImageUrl, isValidImageUrl } from "~/shared/utils/images";
 
 interface AsyncImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   /** Qué mostrar mientras carga (con `reveal="fade"`). */
@@ -34,7 +33,7 @@ export function AsyncImage({
   decoding = "async",
   ...props
 }: AsyncImageProps) {
-  const imageSrc = src ? getImageUrl(src) : src;
+  const imageSrc = src?.trim();
   const [status, setStatus] = useState<Status>("loading");
   const prevSrcRef = useRef(imageSrc);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -55,7 +54,7 @@ export function AsyncImage({
     onReadyRef.current?.(true);
   }, [imageSrc]);
 
-  if (!isValidImageUrl(src) || status === "error") {
+  if (!imageSrc || status === "error") {
     return (
       <div className={cn("flex size-full items-center justify-center text-muted-foreground", className)}>
         {errorFallback ?? <span className="text-xs">Sin imagen</span>}

@@ -19,7 +19,7 @@ export const Boton: Story = {
   ),
 };
 
-function OpenModal({ token }: { token?: string }) {
+function OpenModal() {
   const [open, setOpen] = useState(true);
   return (
     <>
@@ -31,11 +31,10 @@ function OpenModal({ token }: { token?: string }) {
         onOpenChange={setOpen}
         targetType="store_review"
         targetId="r1"
-        token={token}
         contextLabel="Reseña de matias"
       />
     </>
   );
 }
 
-export const Modal: Story = { name: "Modal de reporte", render: () => <OpenModal token="sesion" /> };
+export const Modal: Story = { name: "Modal de reporte", render: () => <OpenModal /> };

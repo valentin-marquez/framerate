@@ -20,41 +20,32 @@ import { type CreateReportPayload, type ReportReason, type ReportTargetType, rep
 const REASON_LABELS: Record<ReportReason, string> = {
   spam: "Spam o promocional",
   harassment: "Acoso o abuso",
-  misleading: "Informacion enganosa",
+  misleading: "Información engañosa",
   duplicate: "Duplicado",
-  wrong_listing: "Listing incorrecto / no coincide",
-  broken_link: "Link roto / producto no disponible",
+  wrong_listing: "La oferta no corresponde al producto",
+  broken_link: "Enlace roto o producto no disponible",
   inappropriate: "Contenido inapropiado",
   other: "Otro motivo",
 };
-
-// Algunas razones tienen mas sentido para algunos targets que para otros,
-// pero dejamos todas disponibles para no esconder opciones.
 
 export interface ReportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   targetType: ReportTargetType;
   targetId: string;
-  /** Token JWT del usuario; si falta el modal muestra prompt para login. */
-  token?: string | null;
   /** Texto descriptivo opcional para mostrar contexto en el header. */
   contextLabel?: string;
 }
 
-export function ReportModal({ open, onOpenChange, targetType, targetId, token, contextLabel }: ReportModalProps) {
+export function ReportModal({ open, onOpenChange, targetType, targetId, contextLabel }: ReportModalProps) {
   const [reason, setReason] = useState<ReportReason | "">("");
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!token) {
-      toast.error("Tenes que iniciar sesion para reportar.");
-      return;
-    }
     if (!reason) {
-      toast.error("Elegi un motivo.");
+      toast.error("Elige un motivo.");
       return;
     }
     setSubmitting(true);
@@ -65,7 +56,7 @@ export function ReportModal({ open, onOpenChange, targetType, targetId, token, c
         reason,
         details: details.trim() ? details.trim() : undefined,
       };
-      await reportsClient.create(payload, token);
+      await reportsClient.create(payload);
       toast.success("Reporte enviado. Gracias por ayudarnos a moderar.");
       setReason("");
       setDetails("");
@@ -73,12 +64,12 @@ export function ReportModal({ open, onOpenChange, targetType, targetId, token, c
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 409) {
-          toast.error("Ya tenes un reporte abierto sobre este contenido.");
+          toast.error("Ya tienes un reporte abierto sobre este contenido.");
         } else {
           toast.error(error.message);
         }
       } else {
-        toast.error("No pudimos enviar el reporte. Intenta de nuevo.");
+        toast.error("No pudimos enviar el reporte. Inténtalo de nuevo.");
       }
     } finally {
       setSubmitting(false);
@@ -132,7 +123,7 @@ export function ReportModal({ open, onOpenChange, targetType, targetId, token, c
               onChange={(e) => setDetails(e.target.value)}
               maxLength={1000}
               rows={4}
-              placeholder="Agregale contexto al moderador si te sirve..."
+              placeholder="Cualquier detalle que ayude a quien modera."
             />
             <span className="text-xs text-muted-foreground self-end">{details.length}/1000</span>
           </div>

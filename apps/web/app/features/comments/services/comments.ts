@@ -1,9 +1,7 @@
-/**
- * Comments service (Fase 3).
- *
- * All requests go through the API gateway; no direct Supabase access.
- */
 import { api } from "~/shared/lib/api";
+
+// ponytail: la API v2 aún no tiene comentarios (#24). En false la ficha no monta la sección; pasar a true con `/v1/comments`.
+export const COMMENTS_API_ENABLED = false;
 
 export type CommentTargetType = "product";
 

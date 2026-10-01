@@ -10,7 +10,6 @@ import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Button } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { formatCLP } from "~/shared/utils/format";
-import { getImageUrl } from "~/shared/utils/images";
 
 interface QuoteItemProps {
   item: VirtualQuoteItem;
@@ -103,7 +102,7 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
             <div className="size-14 shrink-0 rounded-lg bg-card p-1 border border-border/40 overflow-hidden flex items-center justify-center relative">
               {product.image_url ? (
                 <AsyncImage
-                  src={getImageUrl(product.image_url)}
+                  src={product.image_url}
                   alt={product.name || "Product Image"}
                   className={`size-full object-contain ${isOutOfStock || isUnavailable ? "opacity-50 grayscale" : ""}`}
                 />

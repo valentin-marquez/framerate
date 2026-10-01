@@ -19,7 +19,6 @@ import {
 } from "~/shared/components/primitives/command";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
-import { getImageUrl } from "~/shared/utils/images";
 
 interface SearchDialogProps {
   open?: boolean;
@@ -239,7 +238,7 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
                     <div className="relative size-16 shrink-0 rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/40 transition-all duration-200 group-hover:ring-primary/40">
                       {product.image_url ? (
                         <AsyncImage
-                          src={getImageUrl(product.image_url)}
+                          src={product.image_url}
                           alt={product.name}
                           className="size-full object-contain p-1.5 transition-transform duration-200 group-hover:scale-105"
                         />

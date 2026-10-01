@@ -3,7 +3,6 @@ import { RatingStars } from "~/features/store-reviews/components/rating-stars";
 import { OutboundLink } from "~/shared/components/outbound-link";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
-import { getImageUrl } from "~/shared/utils/images";
 import type { StoreDetail } from "../services/stores";
 
 interface StoreHeaderProps {
@@ -82,7 +81,7 @@ export function StoreHeader({ store, productCount }: StoreHeaderProps) {
       {store.banner_url ? (
         <div
           className="h-40 w-full bg-cover bg-center"
-          style={{ backgroundImage: `url(${getImageUrl(store.banner_url)})` }}
+          style={{ backgroundImage: `url(${store.banner_url})` }}
           aria-hidden
         />
       ) : (
