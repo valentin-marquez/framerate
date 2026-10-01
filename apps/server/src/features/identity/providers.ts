@@ -16,9 +16,9 @@ import type { Env } from "@/env";
  *  3. Cargar las credenciales: `wrangler secret put <ID>_CLIENT_ID` y `_CLIENT_SECRET`.
  *  Listo: aparece en `/v1/auth/providers` y ya se puede iniciar sesión con él.
  *
- * Estado: Discord está en uso. Google y Facebook están cableados pero nunca se
- * han probado con credenciales reales. Apple necesita generar un JWT como client
- * secret y se agrega aparte cuando se decida.
+ * Estado: Discord y Google están en uso. Facebook está cableado pero nunca se ha
+ * probado con credenciales reales. Apple necesita generar un JWT como client secret
+ * y se agrega aparte cuando se decida.
  */
 
 type CredentialKey = {

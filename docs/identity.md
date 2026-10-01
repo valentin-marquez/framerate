@@ -102,7 +102,8 @@ Todo pasa por el registro `apps/server/src/features/identity/providers.ts`
 
 1. **Google y Facebook ya están cableados**: basta cargar sus dos credenciales
    (`GOOGLE_CLIENT_ID`/`_SECRET`, `FACEBOOK_CLIENT_ID`/`_SECRET`) y el proveedor
-   aparece solo. Nunca se han probado con credenciales reales.
+   aparece solo. Google está en uso en producción; Facebook nunca se ha probado con
+   credenciales reales.
 2. **Otro proveedor que Better Auth trae** (GitHub, Twitch, Microsoft…): agregar
    sus dos variables a `Env` (`env.ts`) y una entrada en `PROVIDERS`.
 3. **Apple**: requiere generar un JWT como client secret; se agrega aparte.
