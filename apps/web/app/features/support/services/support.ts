@@ -46,6 +46,10 @@ export interface CreatedTicket {
   created_at?: string;
 }
 
+// ponytail: la API v2 aún no tiene soporte (#21). En false la página de privacidad no monta el formulario y da un
+// correo; pasar a true con `/v1/support`.
+export const SUPPORT_API_ENABLED = false;
+
 export const supportClient = {
   create: (payload: CreateTicketPayload) => api.post<CreatedTicket>("/v1/support/tickets", payload),
   listMine: () => api.get<{ tickets: SupportTicket[] }>("/v1/support/tickets/mine"),

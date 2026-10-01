@@ -1,4 +1,5 @@
 import {
+  IconClock,
   IconCookie,
   IconDatabase,
   IconGlobe,
@@ -8,13 +9,16 @@ import {
   IconUserShield,
 } from "@tabler/icons-react";
 import { SupportContactPanel } from "~/features/support/components/support-contact-panel";
+import { SUPPORT_API_ENABLED } from "~/features/support/services/support";
 
 import type { Route } from "./+types/privacy-page";
+
+const CONTACT_EMAIL = "valentin13.mail@gmail.com";
 
 export function meta(_: Route.MetaArgs) {
   const title = "Privacidad - Framerate";
   const description =
-    "Qué datos guarda Framerate.cl, cómo los usa y los derechos ARCO de los usuarios chilenos. Política de privacidad actualizada.";
+    "Qué datos guarda Framerate.cl, para qué los usa, con quién los comparte y cómo ejercer tus derechos sobre ellos.";
 
   return [
     { title },
@@ -30,7 +34,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export default function Privacy() {
-  const lastUpdate = "20 de mayo de 2026";
+  const lastUpdate = "1 de octubre de 2026";
 
   return (
     <div className="container mx-auto max-w-4xl px-6 py-12 lg:py-20">
@@ -38,7 +42,7 @@ export default function Privacy() {
         <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary tracking-tight">
           Protección de datos
         </div>
-        <h1 className="text-4xl font-semibold tracking-tight lg:text-5xl">Política de Privacidad</h1>
+        <h1 className="text-4xl font-semibold tracking-tight lg:text-5xl">Política de privacidad</h1>
         <p className="text-muted-foreground">
           Última actualización: <span className="font-medium text-foreground">{lastUpdate}</span>
         </p>
@@ -52,31 +56,33 @@ export default function Privacy() {
               <h2 className="text-2xl font-semibold">Nuestro compromiso</h2>
             </div>
             <p className="leading-relaxed">
-              Framerate.cl agrega y compara precios de componentes de PC en Chile. Recopilamos los datos mínimos para
-              que el servicio funcione, no vendemos información a terceros y queremos que sepas qué pasa con lo que
-              compartes aquí.
+              Framerate.cl compara precios de componentes de PC en tiendas chilenas. Guardamos lo mínimo para que el
+              servicio funcione, no vendemos tus datos ni los usamos para publicidad, y aquí te contamos qué pasa con lo
+              que compartes.
             </p>
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <h3 className="font-medium flex items-center gap-2 text-sm uppercase tracking-wider text-muted-foreground">
-                  <IconUserShield className="size-4" /> Cuenta y perfil
+                  <IconUserShield className="size-4" /> Si creas una cuenta
                 </h3>
                 <p className="text-sm">
-                  Inicias sesión vía <span className="font-bold">Discord, Google, Apple o Facebook</span> usando
-                  Supabase Auth. Guardamos tu ID de usuario, email, nombre público, username y avatar para que puedas
-                  comentar, dejar reseñas y armar cotizaciones. Tu username y avatar son visibles en{" "}
-                  <code className="bg-muted/10 px-1 rounded">/u/:username</code>.
+                  Entras con <span className="font-bold">Discord o Google</span>; no tenemos contraseñas propias. De tu
+                  proveedor recibimos tu correo, tu nombre y tu foto de perfil. Con eso armamos tu perfil: un nombre de
+                  usuario, un nombre visible y la foto, que son públicos en{" "}
+                  <code className="bg-muted/10 px-1 rounded">/u/tu-usuario</code> junto con las reseñas que publiques.
+                  Tu correo nunca se muestra.
                 </p>
               </div>
               <div className="space-y-2">
                 <h3 className="font-medium flex items-center gap-2 text-sm uppercase tracking-wider text-muted-foreground">
-                  <IconGlobe className="size-4" /> Datos técnicos
+                  <IconGlobe className="size-4" /> Si sólo navegas
                 </h3>
                 <p className="text-sm">
-                  Cloudflare Workers registra <span className="font-bold">IP</span> y{" "}
-                  <span className="font-bold">User-Agent</span> de cada request para aplicar rate limiting y mitigar
-                  abuso. No combinamos esos logs con tu cuenta para perfilarte.
+                  No necesitas cuenta. Cloudflare, donde funciona el sitio, procesa tu{" "}
+                  <span className="font-bold">dirección IP</span> para entregarte las páginas, limitar el exceso de
+                  peticiones y frenar abusos. Contamos cuántas veces se ve cada producto por día, como un total que no
+                  identifica a nadie.
                 </p>
               </div>
             </div>
@@ -86,14 +92,37 @@ export default function Privacy() {
         <section className="px-4 space-y-8">
           <div>
             <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+              <IconLock className="size-5 text-primary" /> Sesión y seguridad
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Al iniciar sesión guardamos la sesión con la IP y el navegador desde donde entraste, para mantenerte
+              conectado y detectar accesos extraños. También guardamos lo que entrega Discord o Google para vincular tu
+              cuenta: tu identificador en ese servicio y las credenciales de acceso que emite. Si entras con los dos,
+              puedes unirlos en una sola cuenta.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
               <IconDatabase className="size-5 text-primary" /> Dónde viven tus datos
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Usamos <span className="font-bold">Supabase</span> (Postgres + Storage) como base de datos. Las tablas con
-              datos personales tienen Row Level Security activado: el cliente público sólo accede a tu propia
-              información. Los avatares de usuario se almacenan en el bucket{" "}
-              <code className="bg-muted/10 px-1 rounded">user-avatars</code> y los activos de tiendas reclamadas en{" "}
-              <code className="bg-muted/10 px-1 rounded">store-assets</code>.
+              El sitio y la base de datos funcionan en <span className="font-bold">Cloudflare</span>. Cloudflare es una
+              empresa de Estados Unidos, así que tus datos pueden procesarse fuera de Chile. Aparte de Cloudflare, y de
+              Discord o Google para iniciar sesión, no compartimos tus datos con nadie.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+              <IconGlobe className="size-5 text-primary" /> Imágenes y enlaces a tiendas
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Las fotos de productos y los íconos de las tiendas se cargan directo desde el sitio de cada tienda, y las
+              fotos de perfil desde Discord o Google. Cuando tu navegador las descarga, esos servidores reciben tu IP,
+              como con cualquier imagen en internet. Los enlaces a una tienda llevan{" "}
+              <code className="bg-muted/10 px-1 rounded">utm_source=framerate.cl</code> para que la tienda sepa que la
+              visita vino de aquí. La compra ocurre en su sitio y se rige por su propia política de privacidad.
             </p>
           </div>
 
@@ -102,33 +131,9 @@ export default function Privacy() {
               <IconUserCheck className="size-5 text-primary" /> Tiendas reclamadas
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Si reclamas una tienda mediante verificación DNS, asociamos tu cuenta a un{" "}
-              <code className="bg-muted/10 px-1 rounded">account</code> y a un perfil editable de la tienda
-              (descripción, redes, logo). Otras personas del equipo pueden ser invitadas vía{" "}
-              <code className="bg-muted/10 px-1 rounded">account_members</code>. Esa relación es{" "}
-              <span className="font-medium text-foreground">pública</span> en la ficha de la tienda.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-              <IconLock className="size-5 text-primary" /> IA y extracción de specs
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Para extraer especificaciones técnicas usamos modelos LLM (DeepSeek vía API). Sólo enviamos texto de
-              producto público (título, descripción de la tienda).{" "}
-              <span className="font-medium text-foreground">Nunca</span> enviamos datos de usuarios ni de pedidos a
-              estos modelos.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-              <IconCookie className="size-5 text-primary" /> Cookies y sesión
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Sólo cookies técnicas: la sesión de Supabase Auth, tu preferencia de tema (claro/oscuro) y tu idioma. No
-              usamos cookies de publicidad ni trackers de terceros con fines comerciales.
+              Si reclamas una tienda, guardamos quién la reclamó, el dominio, el historial de la verificación por DNS y
+              quiénes integran su equipo. La ficha pública muestra que la tienda está verificada; la lista del equipo no
+              se publica.
             </p>
           </div>
 
@@ -137,10 +142,30 @@ export default function Privacy() {
               <IconShield className="size-5 text-primary" /> Moderación
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Cuando reportas contenido o un mod toma una decisión, queda registrado en{" "}
-              <code className="bg-muted/10 px-1 rounded">reports</code> y{" "}
-              <code className="bg-muted/10 px-1 rounded">mod_actions</code> como bitácora interna. Tú puedes ver tus
-              propios reportes; los mods y admins ven la totalidad para coordinar la moderación.
+              Cuando el equipo de Framerate modera una reseña o una cuenta, registramos quién lo hizo, sobre qué y por
+              qué. Ese registro es interno.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+              <IconCookie className="size-5 text-primary" /> Cookies
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Sólo cookies técnicas: la de tu sesión, tu idioma, tu tema (claro u oscuro) y tu zona horaria, para que la
+              página llegue bien desde el servidor. No usamos cookies de publicidad ni herramientas de analítica de
+              terceros.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+              <IconClock className="size-5 text-primary" /> Cuánto tiempo los guardamos
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Tus datos de cuenta, mientras la tengas. Las sesiones vencen solas. Si eliminamos tu cuenta, borramos tus
+              datos personales (correo, nombres, foto, vínculos con Discord o Google y sesiones) y las reseñas que
+              publicaste quedan sin tu nombre.
             </p>
           </div>
 
@@ -151,15 +176,20 @@ export default function Privacy() {
             <p className="text-muted-foreground leading-relaxed">
               Tienes derecho de{" "}
               <span className="font-medium text-foreground">acceso, rectificación, cancelación y oposición</span> sobre
-              tus datos personales (Ley 19.628 y, a partir de su entrada en vigencia, Ley 21.719). Para ejercerlos, abre
-              un ticket desde el formulario de soporte de abajo con la categoría{" "}
-              <span className="font-medium text-foreground">Privacidad</span> o{" "}
-              <span className="font-medium text-foreground">Mis datos</span>. Atendemos cada solicitud dentro de la
-              plataforma para que quede registro de la conversación.
+              tus datos personales (Ley 19.628 y, desde su entrada en vigencia, Ley 21.719). Para ejercerlos, escríbenos
+              a{" "}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-foreground underline">
+                {CONTACT_EMAIL}
+              </a>{" "}
+              desde el correo de tu cuenta. Todavía no hay un botón para eliminar la cuenta; mientras llega, lo hacemos
+              a mano.
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Si cambiamos esta política, actualizamos la fecha de arriba.
             </p>
           </div>
 
-          <SupportContactPanel defaultCategory="privacy" />
+          {SUPPORT_API_ENABLED && <SupportContactPanel defaultCategory="privacy" />}
         </section>
       </div>
     </div>

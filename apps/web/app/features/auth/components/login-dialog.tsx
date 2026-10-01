@@ -36,11 +36,11 @@ export function LoginCard({ returnTo, title, description }: LoginCardProps) {
       </div>
       <p className="border-border border-t px-6 py-4 text-muted-foreground text-xs">
         Al continuar aceptas los{" "}
-        <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+        <Link to="/terminos" className="underline underline-offset-2 hover:text-foreground">
           Términos
         </Link>{" "}
         y la{" "}
-        <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
+        <Link to="/privacidad" className="underline underline-offset-2 hover:text-foreground">
           Privacidad
         </Link>
         .

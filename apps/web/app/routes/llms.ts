@@ -52,8 +52,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   sections.push(
     "",
     "## Legal",
-    `- [Términos de servicio](${origin}/terms)`,
-    `- [Política de privacidad](${origin}/privacy)`,
+    `- [Términos de servicio](${origin}/terminos)`,
+    `- [Política de privacidad](${origin}/privacidad)`,
     "",
   );
 

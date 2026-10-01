@@ -5,8 +5,8 @@ import { Logo } from "./logo";
 const LINKS = [
   { to: "/explorar", label: "Explorar" },
   { to: "/reclamar", label: "Para tiendas" },
-  { to: "/terms", label: "Términos" },
-  { to: "/privacy", label: "Privacidad" },
+  { to: "/terminos", label: "Términos" },
+  { to: "/privacidad", label: "Privacidad" },
 ];
 
 const link = "px-2 py-2 text-foreground/40 text-sm transition-colors hover:text-foreground";

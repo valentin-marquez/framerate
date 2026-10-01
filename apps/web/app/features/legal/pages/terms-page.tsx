@@ -10,7 +10,7 @@ import {
 import { Separator } from "~/shared/components/primitives/separator";
 
 export function meta() {
-  const title = "Términos de Servicio - Framerate";
+  const title = "Términos de servicio - Framerate";
   const description =
     "Condiciones de uso, licencia PolyForm Noncommercial, marca registrada y reglas para cuentas y tiendas reclamadas en Framerate.cl.";
 
@@ -28,7 +28,7 @@ export function meta() {
 }
 
 export default function Terms() {
-  const lastUpdate = "20 de mayo de 2026";
+  const lastUpdate = "1 de octubre de 2026";
 
   return (
     <div className="container mx-auto max-w-4xl px-6 py-12 lg:py-20">
@@ -36,7 +36,7 @@ export default function Terms() {
         <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary tracking-tight">
           Acuerdo legal
         </div>
-        <h1 className="text-4xl font-semibold tracking-tight lg:text-5xl">Términos de Servicio</h1>
+        <h1 className="text-4xl font-semibold tracking-tight lg:text-5xl">Términos de servicio</h1>
         <p className="text-muted-foreground">
           Última actualización: <span className="font-medium text-foreground">{lastUpdate}</span>
         </p>
@@ -51,8 +51,8 @@ export default function Terms() {
           <div className="space-y-4">
             <p className="text-lg leading-relaxed">
               Framerate.cl es una plataforma de <span className="font-bold">comparación de precios</span> de componentes
-              de PC en Chile. No vendemos productos: agregamos información publicada por tiendas como PC Express, SP
-              Digital, Central Gamer, Centrale, MyShop, NotebooksYa y TecTec.
+              de PC en Chile. No vendemos productos: agregamos información publicada por tiendas como PC Express, PC
+              Factory, MyShop, TecTec y Central Gamer.
             </p>
             <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-4 text-sm flex gap-3">
               <IconAlertTriangleFilled className="size-5 text-destructive shrink-0" />
@@ -74,9 +74,8 @@ export default function Terms() {
           </div>
           <div className="space-y-4">
             <p>
-              Puedes navegar Framerate sin cuenta. Si te registras (vía Discord, Google, Apple o Facebook), podrás
-              guardar favoritos, armar cotizaciones, dejar reseñas a tiendas, comentar productos y reclamar la ficha de
-              una tienda que administres.
+              Puedes navegar Framerate sin cuenta. Si te registras (con Discord o Google), puedes dejar reseñas a
+              tiendas y reclamar la ficha de una tienda que administres.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
               <li>
@@ -84,13 +83,13 @@ export default function Terms() {
                 contraseñas propias.
               </li>
               <li>
-                Tu nombre de usuario y avatar son <span className="font-medium text-foreground">públicos</span> en las
-                rutas de perfil (<code className="bg-muted/10 px-1 rounded">/u/:username</code>) y en lo que publiques
-                (reseñas, comentarios, cotizaciones compartidas).
+                Tu nombre de usuario, tu nombre visible y tu foto son{" "}
+                <span className="font-medium text-foreground">públicos</span> en tu perfil (
+                <code className="bg-muted/10 px-1 rounded">/u/:username</code>) y en lo que publiques.
               </li>
               <li>
-                Podemos suspender o cerrar cuentas que abusen del servicio (spam, evasión de rate limits, intentos de
-                vulnerar los crawlers, suplantación, contenido que viole la ley chilena).
+                Podemos suspender o cerrar cuentas que abusen del servicio (spam, esquivar los límites de uso, ataques
+                al sitio, suplantación, contenido que viole la ley chilena).
               </li>
             </ul>
           </div>
@@ -115,12 +114,17 @@ export default function Terms() {
                 revocados sin aviso y el responsable suspendido.
               </li>
               <li>
-                Si el TXT desaparece, el perfil entra en <span className="font-medium text-foreground">freeze</span>: el
-                contenido queda visible pero las ediciones se bloquean hasta re-verificar.
+                Si el registro TXT deja de verificarse, el perfil queda{" "}
+                <span className="font-medium text-foreground">congelado</span>: el contenido sigue visible, pero las
+                ediciones se bloquean hasta volver a verificar.
               </li>
               <li>
                 Las reseñas que dejan los usuarios sobre tu tienda no se editan ni se borran a pedido del dueño. Si una
-                reseña viola las normas, puedes reportarla desde la propia ficha.
+                reseña viola las normas,{" "}
+                <a href="mailto:valentin13.mail@gmail.com" className="font-medium text-foreground underline">
+                  escríbenos
+                </a>{" "}
+                y la revisamos.
               </li>
             </ul>
           </div>
@@ -150,7 +154,7 @@ export default function Terms() {
             <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
               <li>
                 <span className="text-foreground font-medium">Sí puedes:</span> leer, hacer fork, estudiar, modificar y
-                self-hostear para estudio personal, hobby, investigación u organizaciones sin fines de lucro.
+                alojar por tu cuenta para estudio personal, hobby, investigación u organizaciones sin fines de lucro.
               </li>
               <li>
                 <span className="text-foreground font-medium">No puedes:</span> usarlo dentro de un producto o servicio
@@ -178,13 +182,13 @@ export default function Terms() {
           <div className="space-y-4">
             <p>
               La licencia del código <span className="font-bold">no</span> incluye el nombre Framerate, el dominio
-              framerate.cl, el logo, la paleta de colores, la tipografía ni la identidad visual del frontend (incluyendo
-              el sistema de diseño inspirado en macOS). Son propiedad del titular del copyright.
+              framerate.cl, el logo, la paleta de colores, la tipografía ni la identidad visual del frontend. Son
+              propiedad del titular del copyright.
             </p>
             <p>
               La <span className="font-bold">base de datos curada</span> (productos canónicos, especificaciones
-              normalizadas, imágenes curadas, relaciones con tiendas) tampoco se licencia: es resultado de operar la
-              infraestructura de Framerate y se reserva el derecho de uso comercial.
+              normalizadas, relaciones con tiendas) tampoco se licencia: es resultado de operar la infraestructura de
+              Framerate y se reserva el derecho de uso comercial.
             </p>
             <p className="text-sm text-muted-foreground">
               Si alojas el código por tu cuenta bajo la licencia no comercial, tienes que reemplazar el nombre, el logo
@@ -207,8 +211,8 @@ export default function Terms() {
               mostrarlos en la plataforma mientras tu cuenta esté activa.
             </p>
             <p className="text-sm text-muted-foreground">
-              Si borras tu cuenta, despublicamos tu contenido público asociado. Conservamos copias mínimas si una ley
-              chilena nos obliga o si son evidencia de una infracción a estos términos.
+              Si eliminamos tu cuenta, tus reseñas y demás contenido público quedan sin tu nombre. Conservamos copias
+              mínimas si una ley chilena nos obliga o si son evidencia de una infracción a estos términos.
             </p>
           </div>
         </section>

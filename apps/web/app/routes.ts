@@ -7,8 +7,8 @@ export default [
   route("action/auth", "features/auth/pages/auth-action.tsx"),
 
   // Info
-  route("privacy", "features/legal/pages/privacy-page.tsx"),
-  route("terms", "features/legal/pages/terms-page.tsx"),
+  route("privacidad", "features/legal/pages/privacy-page.tsx"),
+  route("terminos", "features/legal/pages/terms-page.tsx"),
 
   // Products & Categories
   route("explorar", "features/explore/pages/explore-page.tsx"),
@@ -44,6 +44,8 @@ export default [
   route("stores/:slug/admin", "features/stores/pages/redirect-old-store-admin.tsx"),
   route("claim", "features/stores/pages/redirect-old-claim.tsx"),
   route("profile", "features/profile/pages/redirect-old-profile.tsx"),
+  route("privacy", "features/legal/pages/redirect-old-privacy.tsx"),
+  route("terms", "features/legal/pages/redirect-old-terms.tsx"),
   route("settings/*", "features/settings/pages/redirect-old-settings.tsx"),
 
   // Admin
