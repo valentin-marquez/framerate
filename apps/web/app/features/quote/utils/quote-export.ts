@@ -11,12 +11,12 @@ export const exportToExcel = async (quote: QuoteDetail, items?: QuoteItem[]) => 
       Producto: item.product.name,
       Categoría: item.product.category?.name || "",
       Tienda: item.selected_listing?.store?.name || "Mejor precio",
-      "Link Tienda": item.selected_listing?.url || "",
+      "Enlace a la tienda": item.selected_listing?.url || "",
       Cantidad: item.quantity,
-      "Precio Normal Unitario": priceNormal,
-      "Precio Efectivo Unitario": priceCash,
-      "Total Normal": (priceNormal ?? 0) * item.quantity,
-      "Total Efectivo": (priceCash ?? 0) * item.quantity,
+      "Precio unitario con tarjeta": priceNormal,
+      "Precio unitario efectivo": priceCash,
+      "Total con tarjeta": (priceNormal ?? 0) * item.quantity,
+      "Total efectivo": (priceCash ?? 0) * item.quantity,
     };
   });
 
@@ -29,12 +29,12 @@ export const exportToExcel = async (quote: QuoteDetail, items?: QuoteItem[]) => 
     { wch: 40 }, // Producto
     { wch: 15 }, // Categoría
     { wch: 20 }, // Tienda
-    { wch: 30 }, // Link Tienda
+    { wch: 30 }, // Enlace a la tienda
     { wch: 10 }, // Cantidad
-    { wch: 15 }, // Precio Normal
-    { wch: 15 }, // Precio Efectivo
-    { wch: 15 }, // Total Normal
-    { wch: 15 }, // Total Efectivo
+    { wch: 26 }, // Precio unitario con tarjeta
+    { wch: 24 }, // Precio unitario efectivo
+    { wch: 18 }, // Total con tarjeta
+    { wch: 15 }, // Total efectivo
   ];
   worksheet["!cols"] = wscols;
 
