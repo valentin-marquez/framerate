@@ -1,6 +1,7 @@
 import type { StoreDefinition } from "./adapter";
 import { createMyShopAdapter } from "./myshop";
 import { createPcFactoryAdapter } from "./pcfactory";
+import { createPrestaShopAdapter } from "./prestashop";
 import { createWooCommerceAdapter } from "./woocommerce";
 
 /**
@@ -255,6 +256,82 @@ export const STORES: readonly StoreDefinition[] = [
         cpu_cooler: ["27", "28"],
         case: ["29", "39", "142"],
         case_fan: ["143"],
+      },
+    }),
+  },
+  {
+    slug: "mybox",
+    name: "MyBox",
+    url: "https://mybox.cl",
+    minIntervalMs: 1000,
+    adapter: createPrestaShopAdapter({
+      baseUrl: "https://mybox.cl",
+      reference: "mpn",
+      // `price_amount` es tarjeta; "5 % OFF adicional pagando por transferencia" (verificado en la ficha, sept. 2026).
+      cashDiscount: 0.05,
+      categories: {
+        gpu: ["68-tarjeta-de-video"],
+        cpu: ["64-procesador"],
+        motherboard: ["65-placa-madre"],
+        ram: ["66-memoria-ram"],
+        psu: ["63-fuentes-de-poder"],
+        // 67-almacenamiento mezcla SSD y HDD; sus subcategorías no.
+        ssd: ["84-ssd", "85-m2"],
+        hdd: ["86-hdd"],
+        cpu_cooler: ["92-enfriamiento-refrigeracion"],
+        case: ["62-gabinetes"],
+        case_fan: ["89-ventiladores-fans"],
+      },
+    }),
+  },
+  {
+    slug: "todoclick",
+    name: "Todoclick",
+    url: "https://todoclick.cl",
+    minIntervalMs: 1000,
+    adapter: createPrestaShopAdapter({
+      baseUrl: "https://todoclick.cl",
+      // MPN casi siempre; a veces un UPC (se detecta como GTIN) o, en productos viejos, un MPN truncado.
+      reference: "mpn",
+      // `price_amount` es el "Precio Khipu" (transferencia); "Otros medios de pago" +1,7 % (verificado en la ficha,
+      // sept. 2026).
+      cardMarkup: 0.017,
+      categories: {
+        gpu: ["tarjetas-de-video-549"],
+        cpu: ["procesadores-450"],
+        motherboard: ["placa-madre-449"],
+        ram: ["memoria-ram-pc-465"],
+        psu: ["fuentes-de-poder-446"],
+        ssd: ["ssd-unidad-de-estado-solido-445"],
+        hdd: ["hdd-disco-duro-mecanico-555"],
+        cpu_cooler: ["disipadores-748", "refrigeracion-liquida-473"],
+        case: ["gabinetes-447"],
+        case_fan: ["ventiladores-pc-474"],
+      },
+    }),
+  },
+  {
+    slug: "tytgamer",
+    name: "TYT Gamer",
+    url: "https://tytgamer.cl/tienda",
+    minIntervalMs: 1000,
+    adapter: createPrestaShopAdapter({
+      baseUrl: "https://tytgamer.cl/tienda",
+      // La referencia es el id del producto. El listado tampoco trae la marca.
+      reference: "internal",
+      // Tarjeta +5 % (verificado en la ficha, sept. 2026).
+      cardMarkup: 0.05,
+      categories: {
+        gpu: ["37-tarjetas-de-video"],
+        cpu: ["130-procesadores"],
+        motherboard: ["129-placas-madre"],
+        ram: ["26-memorias"],
+        psu: ["79-fuentes-de-poder"],
+        // Sus subcategorías de SSD y HDD están vacías: todo cuelga de la raíz.
+        ssd: ["24-almacenamiento"],
+        cpu_cooler: ["74-procesador", "76-refrigeracion-liquida"],
+        case: ["82-gabinetes"],
+        case_fan: ["73-ventiladores"],
       },
     }),
   },
