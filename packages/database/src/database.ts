@@ -144,6 +144,7 @@ export interface StoresTable {
   domain: string | null;
   is_active: Defaulted<SqlBool>;
   scraped_icon_url: string | null;
+  scraped_banner_url: string | null;
   organization_id: number | null;
   verified_at: string | null;
   frozen_at: string | null;

@@ -10,7 +10,8 @@
     "dry-run": "bun scripts/dry-run.ts",
     "check-types": "tsc --noEmit",
     "cf-typegen": "wrangler types",
-    "match-report": "bun scripts/match-report.ts"
+    "match-report": "bun scripts/match-report.ts",
+    "store-images": "bun scripts/store-images.ts"
   },
   "dependencies": {
     "@framerate/contracts": "workspace:*",
