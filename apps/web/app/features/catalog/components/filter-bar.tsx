@@ -185,7 +185,6 @@ function ActiveChips({ brands }: { brands: BrandWithCount[] }) {
   if (params.get("min_price") || params.get("max_price")) {
     chips.push({ label: "Rango de precio", clear: { min_price: null, max_price: null } });
   }
-  if (params.get("in_stock") === "1") chips.push({ label: "En stock", clear: { in_stock: null } });
   if (params.get("search")) chips.push({ label: `“${params.get("search")}”`, clear: { search: null } });
   if (chips.length === 0) return null;
 
@@ -204,7 +203,7 @@ function ActiveChips({ brands }: { brands: BrandWithCount[] }) {
       ))}
       <button
         type="button"
-        onClick={() => update({ brand: null, min_price: null, max_price: null, in_stock: null, search: null })}
+        onClick={() => update({ brand: null, min_price: null, max_price: null, search: null })}
         className="text-muted-foreground text-xs transition-colors hover:text-foreground"
       >
         Limpiar todo
@@ -220,21 +219,11 @@ interface FilterBarProps {
 }
 
 export function FilterBar({ brands, priceRange, total }: FilterBarProps) {
-  const { params, update } = useFilterParams();
-  const inStock = params.get("in_stock") === "1";
   return (
     <div className="space-y-3">
       <div className="sticky top-13 z-30 -mx-4 flex flex-wrap items-center gap-2 border-border/40 border-b bg-background/80 px-4 py-2.5 backdrop-blur-md md:mx-0 md:rounded-2xl md:border md:px-3">
         {brands.length > 0 && <BrandFilter brands={brands} />}
         <PriceFilter priceRange={priceRange} />
-        <button
-          type="button"
-          aria-pressed={inStock}
-          onClick={() => update({ in_stock: inStock ? null : "1" })}
-          className={chip(inStock)}
-        >
-          En stock
-        </button>
         <div className="ml-auto flex items-center gap-3">
           <span className="hidden text-muted-foreground text-sm sm:block">
             {total.toLocaleString("es-CL")} {total === 1 ? "producto" : "productos"}

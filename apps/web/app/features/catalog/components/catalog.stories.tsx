@@ -41,9 +41,9 @@ export const BarraDeFiltros: Story = {
 
 export const BarraDeFiltrosActivos: Story = {
   name: "Barra de filtros con filtros activos",
-  // Los filtros viven en la URL: la historia abre una con marca, rango, stock y orden.
+  // Los filtros viven en la URL: la historia abre una con marca, rango y orden.
   parameters: {
-    path: "/categoria/tarjetas-de-video?brand=msi&min_price=300000&max_price=500000&in_stock=1&sort=price_desc",
+    path: "/categoria/tarjetas-de-video?brand=msi&min_price=300000&max_price=500000&sort=price_desc",
   },
   render: () => <FilterBar brands={brands} priceRange={{ min: 279_990, max: 939_990 }} total={3} />,
 };
@@ -58,7 +58,6 @@ const catalog = (overrides: Partial<CatalogData> = {}): CatalogData => ({
   category: "tarjetas-de-video",
   search: null,
   brand: null,
-  inStock: false,
   ...overrides,
 });
 

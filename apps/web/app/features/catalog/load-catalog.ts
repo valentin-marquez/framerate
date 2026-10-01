@@ -19,7 +19,6 @@ export async function loadCatalog(request: Request, category?: string) {
   const brand = params.get("brand") || undefined;
   const minPrice = number(params.get("min_price"));
   const maxPrice = number(params.get("max_price"));
-  const inStock = params.get("in_stock") === "1";
   const sortParam = params.get("sort");
   const sort = CATALOG_SORTS.find((s) => s === sortParam) ?? "price_asc";
   const page = Math.max(1, Number(params.get("page")) || 1);
@@ -32,7 +31,7 @@ export async function loadCatalog(request: Request, category?: string) {
     trendingIds: [] as string[],
     rateLimited: false,
   };
-  const filters = { category: category ?? null, search: search ?? null, brand: brand ?? null, inStock };
+  const filters = { category: category ?? null, search: search ?? null, brand: brand ?? null };
 
   try {
     const [{ data: products, meta }, brands, priceRange, trending] = await Promise.all([
@@ -44,7 +43,6 @@ export async function loadCatalog(request: Request, category?: string) {
         search,
         min_price: minPrice,
         max_price: maxPrice,
-        in_stock: inStock,
         sort,
       }),
       category ? categoriesService.getBrands(category).catch(() => empty.brands) : Promise.resolve(empty.brands),
