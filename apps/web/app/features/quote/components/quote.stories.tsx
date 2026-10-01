@@ -125,6 +125,7 @@ export const Acciones: Story = {
   ),
 };
 
+// Vacía mientras `QUOTES_API_ENABLED` sea false (#25).
 export const CrearCotizacion: Story = {
   name: "Diálogo para crear cotización",
   render: () => <CreateQuoteDialog trigger={<Button>Nueva cotización</Button>} />,

@@ -77,6 +77,7 @@ export const SelloFuenteDePoder: Story = {
   ),
 };
 
+// Vacía mientras `QUOTES_API_ENABLED` sea false: `AddToQuote` no renderiza sin la API (#25).
 export const AgregarACotizacion: Story = {
   name: "Agregar a cotización: visitante",
   render: () => (
@@ -90,7 +91,6 @@ export const AgregarACotizacion: Story = {
 
 export const AgregarACotizacionConSesion: Story = {
   name: "Agregar a cotización: con sesión",
-  // La API de cotizaciones está apagada (`QUOTES_API_ENABLED`): el modal queda sin cotizaciones para elegir.
   parameters: { session: sessions.user },
   render: AgregarACotizacion.render,
 };

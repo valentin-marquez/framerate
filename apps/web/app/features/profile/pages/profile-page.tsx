@@ -12,7 +12,7 @@ import { getAuthUser, requireAuth } from "~/features/auth/services/auth.server";
 import { meToProfile, profilesService } from "~/features/profile/services/profiles";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
 import { useQuotes } from "~/features/quote/hooks/useQuotes";
-import type { QuoteListItem as Quote } from "~/features/quote/services/quotes";
+import { QUOTES_API_ENABLED, type QuoteListItem as Quote } from "~/features/quote/services/quotes";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Button } from "~/shared/components/primitives/button";
 import { Separator } from "~/shared/components/primitives/separator";
@@ -197,93 +197,97 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
 
-      <div className="mt-8 space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {t(isOwner ? "profile_quotes_title_owner" : "profile_quotes_title_other", { name: displayName })}
-          </h2>
-          {isOwner && quotes.length > 0 && <CreateQuoteDialog />}
-        </div>
-
-        <Separator className="border-1.5" />
-
-        {quotes.length === 0 ? (
-          <div className="text-center py-14 px-4 border border-dashed border-border/70 rounded-2xl bg-card/40">
-            <div className="mx-auto size-12 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
-              <IconCpu className="size-6 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">
-              {t(isOwner ? "profile_no_quotes_owner" : "profile_no_quotes_other")}
-            </h3>
-            {isOwner && (
-              <>
-                <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">
-                  {t("profile_no_quotes_owner_cta")}
-                </p>
-                <CreateQuoteDialog />
-              </>
-            )}
+      {QUOTES_API_ENABLED && (
+        <div className="mt-8 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-xl font-semibold tracking-tight">
+              {t(isOwner ? "profile_quotes_title_owner" : "profile_quotes_title_other", { name: displayName })}
+            </h2>
+            {isOwner && quotes.length > 0 && <CreateQuoteDialog />}
           </div>
-        ) : (
-          <div className="grid gap-3">
-            {quotes.map((quote, index) => {
-              const isNewOptimistic = index === 0 && quote.id.startsWith("temp-");
-              // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-              const dateLabel = new Date(quote.updated_at).toLocaleDateString(locale, {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                timeZone: "America/Santiago",
-              });
-              const componentsCount = quote.quote_items?.[0]?.count || 0;
 
-              const cardBody = (
-                // biome-ignore lint/correctness/useJsxKeyInIterable: cardBody es hijo de elementos con key
-                <div className="flex items-center p-2 gap-4">
-                  <div className="size-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl">
-                    <div
-                      className="size-full transition-transform duration-500 group-hover:scale-110"
-                      style={{ background: getGradient(quote.id) }}
-                    />
-                  </div>
-                  <div className="flex-1 py-2 pr-4 flex items-center justify-between min-w-0">
-                    <div className="space-y-1.5 min-w-0">
-                      <h3 className="font-semibold text-base sm:text-lg group-hover:text-primary transition-colors tracking-tight truncate">
-                        {quote.name}
-                      </h3>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
-                        <span className="capitalize">{dateLabel}</span>
-                        <span className="hidden sm:inline text-border/60">•</span>
-                        <span className="font-medium">{t("profile_components_count", { count: componentsCount })}</span>
+          <Separator className="border-1.5" />
+
+          {quotes.length === 0 ? (
+            <div className="text-center py-14 px-4 border border-dashed border-border/70 rounded-2xl bg-card/40">
+              <div className="mx-auto size-12 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
+                <IconCpu className="size-6 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">
+                {t(isOwner ? "profile_no_quotes_owner" : "profile_no_quotes_other")}
+              </h3>
+              {isOwner && (
+                <>
+                  <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">
+                    {t("profile_no_quotes_owner_cta")}
+                  </p>
+                  <CreateQuoteDialog />
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {quotes.map((quote, index) => {
+                const isNewOptimistic = index === 0 && quote.id.startsWith("temp-");
+                // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+                const dateLabel = new Date(quote.updated_at).toLocaleDateString(locale, {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  timeZone: "America/Santiago",
+                });
+                const componentsCount = quote.quote_items?.[0]?.count || 0;
+
+                const cardBody = (
+                  // biome-ignore lint/correctness/useJsxKeyInIterable: cardBody es hijo de elementos con key
+                  <div className="flex items-center p-2 gap-4">
+                    <div className="size-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl">
+                      <div
+                        className="size-full transition-transform duration-500 group-hover:scale-110"
+                        style={{ background: getGradient(quote.id) }}
+                      />
+                    </div>
+                    <div className="flex-1 py-2 pr-4 flex items-center justify-between min-w-0">
+                      <div className="space-y-1.5 min-w-0">
+                        <h3 className="font-semibold text-base sm:text-lg group-hover:text-primary transition-colors tracking-tight truncate">
+                          {quote.name}
+                        </h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
+                          <span className="capitalize">{dateLabel}</span>
+                          <span className="hidden sm:inline text-border/60">•</span>
+                          <span className="font-medium">
+                            {t("profile_components_count", { count: componentsCount })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 pl-4 shrink-0">
+                        <IconChevronRight className="size-5" />
                       </div>
                     </div>
-                    <div className="text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 pl-4 shrink-0">
-                      <IconChevronRight className="size-5" />
-                    </div>
                   </div>
-                </div>
-              );
+                );
 
-              return isNewOptimistic ? (
-                <div
-                  key={quote.id}
-                  className="group block overflow-hidden bg-card border border-primary/30 rounded-2xl shadow-md shadow-primary/10 quote-item-enter quote-item-glow"
-                >
-                  {cardBody}
-                </div>
-              ) : (
-                <Link
-                  key={quote.id}
-                  to={`/cotizacion/${quote.id}`}
-                  className="group block overflow-hidden bg-card hover:bg-secondary border border-border/60 hover:border-primary/30 transition-colors rounded-2xl"
-                >
-                  {cardBody}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                return isNewOptimistic ? (
+                  <div
+                    key={quote.id}
+                    className="group block overflow-hidden bg-card border border-primary/30 rounded-2xl shadow-md shadow-primary/10 quote-item-enter quote-item-glow"
+                  >
+                    {cardBody}
+                  </div>
+                ) : (
+                  <Link
+                    key={quote.id}
+                    to={`/cotizacion/${quote.id}`}
+                    className="group block overflow-hidden bg-card hover:bg-secondary border border-border/60 hover:border-primary/30 transition-colors rounded-2xl"
+                  >
+                    {cardBody}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { AuthProvidersList } from "~/features/auth/components/auth-providers-lis
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
 import { useQuoteAddItem, useQuotes } from "~/features/quote/hooks/useQuotes";
+import { QUOTES_API_ENABLED } from "~/features/quote/services/quotes";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { Button } from "~/shared/components/primitives/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/shared/components/primitives/tooltip";
@@ -84,6 +85,8 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
       },
     );
   };
+
+  if (!QUOTES_API_ENABLED) return null;
 
   return (
     <>

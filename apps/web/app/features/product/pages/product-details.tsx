@@ -520,9 +520,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
 
         <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/80 backdrop-blur-xl border-t border-border/60 lg:hidden z-50 animate-in slide-in-from-bottom-full duration-300">
           <div className="container mx-auto max-w-md flex items-center gap-3">
-            <div className="shrink-0">
-              <AddToQuote product={product} className="size-12 rounded-xl border border-border/60" />
-            </div>
+            <AddToQuote product={product} className="size-12 shrink-0 rounded-xl border border-border/60" />
 
             <div className="flex-1 flex items-center gap-3 min-w-0">
               <div className="flex flex-col min-w-0 flex-1">

@@ -2,6 +2,7 @@ import { IconLoader2, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useCreateQuote } from "~/features/quote/hooks/useQuotes";
+import { QUOTES_API_ENABLED } from "~/features/quote/services/quotes";
 import { Button } from "~/shared/components/primitives/button";
 import {
   Dialog,
@@ -59,6 +60,8 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
       },
     });
   };
+
+  if (!QUOTES_API_ENABLED) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
