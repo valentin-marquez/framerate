@@ -1,6 +1,7 @@
-import type { ProductSummary } from "@framerate/contracts";
+import type { Me, ProductSummary } from "@framerate/contracts";
 import type { CategoryWithCount } from "~/features/category/services/categories";
 import { toProduct } from "~/features/product/services/adapters";
+import type { Profile } from "~/features/profile/services/profiles";
 import type { ClaimableStore } from "~/features/stores/services/stores";
 
 /** Datos de ejemplo para Storybook, con la forma real de la API (se pasan por los mismos adaptadores que el sitio). */
@@ -127,6 +128,40 @@ export const stores: ClaimableStore[] = [
   { id: "tectec", slug: "tectec", name: "TecTec", icon_url: null, domain: "tectec.cl", is_claimed: false },
   { id: "dust2", slug: "dust2", name: "Dust2", icon_url: null, domain: "dust2.cl", is_claimed: true },
 ];
+
+/** Ocho productos con id distinto, para filas y grillas que usan el id como clave. */
+export const rowProducts = [...products, ...products.map((p) => ({ ...p, id: `${p.id}-b`, slug: `${p.slug}-b` }))];
+
+const me = (role: Me["role"]): Me => ({
+  id: "u1",
+  email: "ana@framerate.cl",
+  username: "ana",
+  displayName: "Ana",
+  avatarUrl: null,
+  bio: null,
+  lang: "es",
+  theme: "system",
+  role,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  ban: null,
+});
+
+const profile: Profile = {
+  id: "u1",
+  username: "ana",
+  full_name: "Ana",
+  avatar_url: null,
+  bio: null,
+  lang: "es",
+  created_at: "",
+  updated_at: "",
+};
+
+/** Para `parameters.session` (ver `.storybook/preview.tsx`). */
+export const sessions = {
+  user: { user: me("user"), profile },
+  admin: { user: me("admin"), profile },
+};
 
 export const brands = [
   { name: "MSI", slug: "msi", count: 4 },

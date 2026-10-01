@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Dialog } from "~/shared/components/primitives/dialog";
+import { Toaster } from "~/shared/components/primitives/sonner";
+import { AuthFlash } from "./auth-flash";
+import { AuthProvidersList } from "./auth-providers-list";
 import { LoginCard, LoginDialog } from "./login-dialog";
 
 const meta = {
@@ -38,6 +41,43 @@ export const TarjetaParaReclamar: Story = {
     </Dialog>
   ),
 };
+
+export const UnSoloProveedor: Story = {
+  name: "Tarjeta con un solo proveedor",
+  parameters: { providers: [{ id: "discord", label: "Discord" }] },
+  render: Tarjeta.render,
+};
+
+export const ProveedoresSinIcono: Story = {
+  name: "Lista con proveedores sin ícono propio",
+  parameters: {
+    providers: [
+      { id: "google", label: "Google" },
+      { id: "apple", label: "Apple" },
+      { id: "facebook", label: "Facebook" },
+      { id: "github", label: "GitHub" },
+    ],
+  },
+  render: () => <AuthProvidersList returnTo="/" className="max-w-sm" />,
+};
+
+// `AuthFlash` lee lo que deja la vuelta de OAuth en la URL, muestra el aviso y limpia los parámetros.
+const flash = (name: string, path: string): Story => ({
+  name,
+  parameters: { path },
+  render: () => (
+    <>
+      <Toaster />
+      <AuthFlash />
+      <p className="text-muted-foreground text-sm">El aviso aparece abajo a la derecha al cargar la historia.</p>
+    </>
+  ),
+});
+
+export const AvisoErrorDeLogin = flash("Aviso: error al entrar", "/?error=account_not_linked");
+export const AvisoCancelado = flash("Aviso: login cancelado", "/?error=access_denied");
+export const AvisoCuentaConectada = flash("Aviso: cuenta conectada", "/ajustes?conectada=google");
+export const AvisoUsuariosUnidos = flash("Aviso: usuarios unidos", "/ajustes?unidas");
 
 export const Dialogo: Story = {
   name: "Diálogo",
