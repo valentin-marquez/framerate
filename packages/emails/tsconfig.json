@@ -1,0 +1,10 @@
+{
+  "extends": "@framerate/config/tsconfig",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": ["ESNext", "DOM"],
+    "noUncheckedIndexedAccess": true
+  },
+  "include": ["src"]
+}

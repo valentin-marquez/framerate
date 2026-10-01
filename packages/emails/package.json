@@ -1,0 +1,23 @@
+{
+  "name": "@framerate/emails",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19"
+  },
+  "devDependencies": {
+    "@framerate/config": "workspace:*",
+    "@types/react": "^19",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@react-email/components": "^1.0.12"
+  }
+}

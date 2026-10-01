@@ -53,6 +53,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.24.0",
     "@cloudflare/workers-types": "^4.20260210.0",
+    "@framerate/emails": "workspace:*",
     "@react-router/dev": "^7.13.0",
     "@storybook/react-vite": "10.6.1",
     "@tailwindcss/vite": "^4.1.18",
