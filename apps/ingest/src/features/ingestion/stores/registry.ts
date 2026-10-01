@@ -1,5 +1,6 @@
 import type { StoreDefinition } from "./adapter";
 import { createMyShopAdapter } from "./myshop";
+import { createPcFactoryAdapter } from "./pcfactory";
 import { createWooCommerceAdapter } from "./woocommerce";
 
 /**
@@ -191,6 +192,26 @@ export const STORES: readonly StoreDefinition[] = [
         ssd: ["almacenamiento"],
         cpu_cooler: ["refrigeracion-pc"],
         case: ["gabinetes-gamer"],
+      },
+    }),
+  },
+  {
+    slug: "pcfactory",
+    name: "PC Factory",
+    url: "https://www.pcfactory.cl",
+    minIntervalMs: 1000,
+    adapter: createPcFactoryAdapter({
+      categories: {
+        gpu: ["334", "378", "454"],
+        cpu: ["272", "1142", "1307"],
+        motherboard: ["292", "1143", "1308"],
+        ram: ["112"],
+        psu: ["54"],
+        ssd: ["585"],
+        hdd: ["340"],
+        cpu_cooler: ["648"],
+        case: ["326"],
+        case_fan: ["647"],
       },
     }),
   },

@@ -23,7 +23,7 @@ const BRANDS: Record<string, string[]> = {
   Intel: ["intel"],
   AMD: ["amd"],
   NVIDIA: ["nvidia"],
-  Kingston: ["kingston", "hyperx"],
+  Kingston: ["kingston", "kingston fury", "hyperx"],
   Corsair: ["corsair"],
   "G.Skill": ["g.skill", "gskill", "g skill"],
   Crucial: ["crucial"],
@@ -73,6 +73,11 @@ const BRANDS: Record<string, string[]> = {
   "Hype Legend": ["hype legend"],
   "X-Micro": ["x micro"],
   Copious: ["copious"],
+  SanDisk: ["sandisk"],
+  Mushkin: ["mushkin"],
+  HPE: ["hpe", "hewlett packard enterprise"],
+  Lenovo: ["lenovo"],
+  Dell: ["dell"],
 };
 
 /** Texto comparable: sin tildes, minúsculas, separadores unificados a un espacio. */

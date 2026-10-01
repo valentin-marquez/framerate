@@ -1,0 +1,84 @@
+{
+  "query": {
+    "content": {
+      "items": [
+        {
+          "id": 56909,
+          "nombre": "Tarjeta de Video NVIDIA GeForce RTX 3050 6GB Twin Edge Gaming",
+          "marca": "Zotac",
+          "categoria": {
+            "id": 378,
+            "nombre": "Tarjetas Gráficas NVIDIA",
+            "metaTitle": "Tarjetas de Video NVIDIA GeForce RTX - MSI y Zotac - pcfactory.cl",
+            "metaDescription": "Potencia tu PC con Tarjetas Gráficas NVIDIA GeForce RTX. Modelos MSI y Zotac con tecnología DLSS y Ray Tracing para Gaming y Renderizado profesional. ¡Compra online y retira de inmediato en tienda!",
+            "metaKeywords": null
+          },
+          "stock": "+100",
+          "thumbnail": "/public/foto/56909/1_200.jpg",
+          "precio": {
+            "efectivo": 349990.0,
+            "normal": 360790.0,
+            "referencia": 499990.0,
+            "bancoEstado": 0,
+            "promocion": true
+          },
+          "slug": "56909-zotac-tarjeta-de-video-nvidia-geforce-rtx-3050-6gb-twin-edge-gaming",
+          "digital": false,
+          "outlet": false
+        },
+        {
+          "id": 54708,
+          "nombre": "Tarjeta de Video Prime Radeon RX 9070 XT 16 GB OC EDITION ",
+          "marca": "Asus",
+          "categoria": {
+            "id": 454,
+            "nombre": "Tarjetas Gráficas AMD",
+            "metaTitle": "Tarjetas Gráficas AMD Radeon RX - Asus y Gaming - pcfactory.cl",
+            "metaDescription": "Maximiza tus FPS con Tarjetas Gráficas AMD Radeon. Arquitectura RDNA 3, tecnología FSR y modelos Asus con refrigeración avanzada para jugar en 1080p y 1440p. ¡Compra online y retira de inmediato en tienda!",
+            "metaKeywords": null
+          },
+          "stock": "19",
+          "thumbnail": "/public/foto/54708/1_200.jpg",
+          "precio": {
+            "efectivo": 914990.0,
+            "normal": 943290.0,
+            "referencia": 999990.0,
+            "bancoEstado": 0,
+            "promocion": true
+          },
+          "slug": "54708-asus-tarjeta-de-video-prime-radeon-rx-9070-xt-16-gb-oc-edition",
+          "digital": false,
+          "outlet": false
+        }
+      ],
+      "pageable": {
+        "totalElements": 2,
+        "totalPages": 1,
+        "pageElements": 2,
+        "pageNumber": 0,
+        "pageSize": 48
+      }
+    }
+  },
+  "detail": {
+    "id": 56909,
+    "lista": "1",
+    "nombre": "Tarjeta de Video NVIDIA GeForce RTX 3050 6GB Twin Edge Gaming",
+    "codigo": "56909",
+    "mayorista": true,
+    "partNumber": "ZT-A30510H-10A",
+    "slug": "56909-zotac-tarjeta-de-video-nvidia-geforce-rtx-3050-6gb-twin-edge-gaming",
+    "digital": false,
+    "marca": {
+      "id": 2995,
+      "nombre": "Zotac"
+    },
+    "categoria": {
+      "id": 378,
+      "nombre": "Tarjetas Gráficas NVIDIA"
+    },
+    "stock": {
+      "aproximado": "+100"
+    }
+  }
+}
