@@ -78,7 +78,9 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
   issue siga vigente: sus `archivo:línea` son del día en que se escribió. El commit que lo resuelve lleva
   `Closes #<n>` (Forgejo lo cierra al llegar a `main`) y se marca su casilla en el Roadmap. Lo que aparezca trabajando
   va a un issue nuevo con el mismo estilo (qué pasa hoy con `archivo:línea`, qué se ve, qué debería pasar), con su
-  milestone, y se suma al Roadmap.
+  milestone, y se suma al Roadmap. El [proyecto](https://git.nozz.skin/valentin/framerate/projects/1) muestra lo mismo
+  en columnas por milestone; la API de Forgejo 8 no tiene proyectos, así que un issue nuevo se agrega desde la web (cae
+  en Backlog) y se mueve a la columna de su milestone.
 - **Skills por defecto:** casi siempre usar `/ponytail:ponytail` (la solución más simple que funcione) y sus subskills: `/ponytail:ponytail-review` (revisar sobreingeniería), `/ponytail:ponytail-audit` (auditar el repo entero), `/ponytail:ponytail-debt`, `/ponytail:ponytail-gain`, `/ponytail:ponytail-help`.
 - **Maquetación y UI nueva:** usar `/referencias-composicion` antes de maquetar una página, sección o componente (busca referencias reales y propone 2–3 layouts).
 - **Comentarios: los mínimos.** Sólo el porqué no obvio (una restricción, una trampa, una decisión). Nada que repita lo que dice el código ni bloques de documentación largos. No agregar comentarios de cabecera por costumbre.
