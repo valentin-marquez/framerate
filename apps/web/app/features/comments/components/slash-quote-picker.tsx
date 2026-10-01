@@ -1,8 +1,8 @@
-import { IconLayoutList, IconLoader2 } from "@tabler/icons-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useEffect, useMemo, useRef } from "react";
+import { QuoteRow } from "~/features/quote/components/quote-row";
 import { useQuotes } from "~/features/quote/hooks/useQuotes";
-import { getGradient } from "~/shared/utils/gradients";
 
 export interface SlashState {
   /** Range in the textarea to be replaced on select (e.g. "/cot"). */
@@ -84,7 +84,7 @@ export function SlashQuotePicker({ state, onSelect, onActiveChange, onClose, ori
               <span>{query ? `Tus cotizaciones con "${query}"` : "Tus cotizaciones"}</span>
               <kbd className="text-[10px] text-muted-foreground/70 font-mono">esc</kbd>
             </div>
-            <ul ref={listRef} className="max-h-72 overflow-y-auto py-1">
+            <ul ref={listRef} className="max-h-72 overflow-y-auto p-1">
               {isLoading && (
                 <li className="px-3 py-3 text-sm text-muted-foreground inline-flex items-center gap-2">
                   <IconLoader2 className="size-3.5 animate-spin" />
@@ -100,39 +100,21 @@ export function SlashQuotePicker({ state, onSelect, onActiveChange, onClose, ori
                 </li>
               )}
               {filtered.map((quote, idx) => {
-                const itemCount = quote.quote_items?.[0]?.count ?? 0;
                 const active = idx === activeIndex;
                 return (
                   <li key={quote.id} data-row-index={idx}>
-                    <button
-                      type="button"
+                    <QuoteRow
+                      quote={quote}
                       role="option"
                       aria-selected={active}
                       onMouseEnter={() => onActiveChange(idx)}
                       onClick={() => onSelect({ id: quote.id, name: quote.name })}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors ${
-                        active ? "bg-secondary/70" : "hover:bg-secondary/40"
-                      }`}
+                      className={active ? "bg-secondary/60" : undefined}
                     >
-                      <div
-                        className="size-7 rounded-md flex items-center justify-center shrink-0 ring-1 ring-inset ring-white/10"
-                        style={{ background: getGradient(quote.id) }}
-                      >
-                        <IconLayoutList className="size-3.5 text-white/90 drop-shadow-sm" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-foreground truncate">{quote.name}</div>
-                        <div className="text-xs text-muted-foreground tabular-nums flex gap-x-2">
-                          <span>
-                            {itemCount} {itemCount === 1 ? "ítem" : "ítems"}
-                          </span>
-                          {quote.is_public ? null : <span>privada</span>}
-                        </div>
-                      </div>
                       <span className="text-[10px] text-muted-foreground/70 font-mono shrink-0">
                         {origin.replace(/^https?:\/\//, "")}
                       </span>
-                    </button>
+                    </QuoteRow>
                   </li>
                 );
               })}

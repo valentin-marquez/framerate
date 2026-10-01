@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { AuthProvidersList } from "~/features/auth/components/auth-providers-list";
 import { useUser } from "~/features/auth/hooks/useAuth";
+import { QUOTE_ROW_CLASS, QuoteRow } from "~/features/quote/components/quote-row";
 import { useCreateQuote, useQuoteAddItem, useQuoteRemoveItem, useQuotes } from "~/features/quote/hooks/useQuotes";
 import { QUOTES_API_ENABLED } from "~/features/quote/services/quotes";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
@@ -13,7 +14,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "~/shared/components/pri
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import type { Product } from "~/shared/utils/db-types";
-import { getGradient } from "~/shared/utils/gradients";
 
 type QuoteProduct = Pick<Product, "id" | "name">;
 
@@ -68,9 +68,6 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
     </>
   );
 }
-
-const ROW_CLASS =
-  "flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-secondary/60 focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-60";
 
 interface AddToQuoteDialogProps {
   product: QuoteProduct;
@@ -223,35 +220,24 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
                     autoFocus
                     onClick={() => setCreating(true)}
                     disabled={busy}
-                    className={ROW_CLASS}
+                    className={QUOTE_ROW_CLASS}
                   >
                     <IconPlus className="mx-2.5 size-4 shrink-0 text-muted-foreground" />
                     <span className="text-sm font-medium text-foreground">{t("new_quote")}</span>
                   </button>
                 )}
               </li>
-              {list.map((quote) => {
-                const count = quote.quote_items?.[0]?.count ?? 0;
-                return (
-                  <li key={quote.id}>
-                    <button type="button" onClick={() => add(quote)} disabled={busy} className={ROW_CLASS}>
-                      <span className="size-9 shrink-0 rounded-md" style={{ background: getGradient(quote.id) }} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-foreground">{quote.name}</span>
-                        <span className="flex gap-x-2 text-xs text-muted-foreground">
-                          <span>{t(count === 1 ? "quote_components_one" : "profile_components_count", { count })}</span>
-                          {!quote.is_public && <span>{t("quote_private")}</span>}
-                        </span>
-                      </span>
-                      {pendingId === quote.id ? (
-                        <IconLoader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
-                      ) : quote.id === lastSelectedQuoteId ? (
-                        <span className="shrink-0 text-xs text-muted-foreground">{t("last_used")}</span>
-                      ) : null}
-                    </button>
-                  </li>
-                );
-              })}
+              {list.map((quote) => (
+                <li key={quote.id}>
+                  <QuoteRow quote={quote} onClick={() => add(quote)} disabled={busy}>
+                    {pendingId === quote.id ? (
+                      <IconLoader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
+                    ) : quote.id === lastSelectedQuoteId ? (
+                      <span className="shrink-0 text-xs text-muted-foreground">{t("last_used")}</span>
+                    ) : null}
+                  </QuoteRow>
+                </li>
+              ))}
             </ul>
           )}
         </div>
