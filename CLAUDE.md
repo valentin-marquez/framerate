@@ -73,9 +73,11 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
 3. `bunx wrangler login` con la cuenta de Cloudflare del proyecto. Un colaborador entra con la suya, después de
    aceptar la invitación de miembro (rol Administrator); los `wrangler.jsonc` fijan `account_id`, así que wrangler
    no despliega en su cuenta personal.
-4. Crear los `.dev.vars` de `apps/server` (`BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, `DISCORD_CLIENT_ID`,
-   `DISCORD_CLIENT_SECRET`) y de `apps/web` si hace falta. No están en el repo: se los pide al dueño por un
-   canal privado.
+4. `cp apps/server/.dev.vars.example apps/server/.dev.vars` y cambiar `BETTER_AUTH_SECRET` por uno propio
+   (`bun -e "console.log(crypto.randomUUID()+crypto.randomUUID())"`). Son valores **locales**: los secretos de
+   producción no se piden ni se copian. Discord y Google son opcionales (el login sólo ofrece los proveedores con
+   credenciales); para probar el login en local, una app propia de Discord con el redirect
+   `http://localhost:8787/v1/auth/callback/discord`.
 5. `bun run db:migrate:local` y `bun run test`.
 6. Aceptar la confianza del espacio de trabajo en Claude Code: `.claude/settings.json` ofrece los plugins
    `ponytail` y `playwright`. Las skills del proyecto (`deploy`, `prod-health`, `referencias-composicion`) están en
