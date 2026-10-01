@@ -13,7 +13,7 @@ import { SUPPORT_API_ENABLED } from "~/features/support/services/support";
 
 import type { Route } from "./+types/privacy-page";
 
-const CONTACT_EMAIL = "valentin13.mail@gmail.com";
+const CONTACT_EMAIL = "soporte@framerate.cl";
 
 export function meta(_: Route.MetaArgs) {
   const title = "Privacidad - Framerate";

@@ -121,7 +121,7 @@ export default function Terms() {
               <li>
                 Las reseñas que dejan los usuarios sobre tu tienda no se editan ni se borran a pedido del dueño. Si una
                 reseña viola las normas,{" "}
-                <a href="mailto:valentin13.mail@gmail.com" className="font-medium text-foreground underline">
+                <a href="mailto:soporte@framerate.cl" className="font-medium text-foreground underline">
                   escríbenos
                 </a>{" "}
                 y la revisamos.
@@ -164,8 +164,8 @@ export default function Terms() {
             </ul>
             <p className="text-sm text-muted-foreground">
               Para uso comercial, escribe a{" "}
-              <a href="mailto:valentin13.mail@gmail.com" className="font-medium text-foreground underline">
-                valentin13.mail@gmail.com
+              <a href="mailto:soporte@framerate.cl" className="font-medium text-foreground underline">
+                soporte@framerate.cl
               </a>{" "}
               y conversamos una licencia.
             </p>

@@ -136,10 +136,10 @@ function EmptyState({ query }: { query: string }) {
       <p className="text-muted-foreground text-xs">
         ¿Tu tienda todavía no está en Framerate? Escríbenos a{" "}
         <a
-          href="mailto:soporte@framerate.com?subject=Quiero%20sumar%20mi%20tienda"
+          href="mailto:soporte@framerate.cl?subject=Quiero%20sumar%20mi%20tienda"
           className="text-primary hover:underline"
         >
-          soporte@framerate.com
+          soporte@framerate.cl
         </a>{" "}
         y la sumamos al catálogo.
       </p>
