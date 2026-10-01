@@ -148,7 +148,7 @@ const cpu: CategoryProfile = {
     // Threadripper sin tier ("Threadripper 9970X"), Xeon con su serie y las gamas de entrada.
     const threadripper = t.match(/ threadripper ?(pro )?(\d{4}[a-z]{0,2})(?= )/);
     const xeon = t.match(/ xeon ?(bronze|silver|gold|platinum|w)? ?(\d{4}[a-z0-9+]{0,3})(?= )/);
-    const entry = t.match(/ (celeron|pentium|athlon) ?(?:gold )?([gjn]?\d{3,4}[a-z]{0,2})(?= )/);
+    const entry = t.match(/ (celeron|pentium|athlon) ?(?:gold |processor |procesador )?([gjn]?\d{3,4}[a-z]{0,2})(?= )/);
     if (threadripper?.[2]) {
       a.model = ["threadripper", threadripper[1]?.trim(), threadripper[2]].filter(Boolean).join(" ");
     } else if (xeon?.[2]) {

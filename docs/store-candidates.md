@@ -76,6 +76,7 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | CCLink | WooCommerce, `sku: "mpn"`, tarjeta +5 % | SKU = MPN o UPC. ~130 válidas, fuerte en discos |
 | Progaming | WooCommerce, `sku: "internal"` (EAN), tarjeta +5 % | Mezcla ventiladores en "Refrigeración": `normalize` los aparta (`category:case_fan`) |
 | Central Gamer | WooCommerce, `sku: "internal"`, `cashDiscount: 0.05` | Vende sobre todo PCs armados; ~55 componentes |
+| PC Factory | Adaptador `pcfactory` (API JSON de la SPA), `minIntervalMs: 1000` | Listado `api.pcfactory.cl/…/catalogo/productos/query?categorias=…` con `efectivo` (transferencia/débito), `normal` (otros medios) y `referencia` ("antes"); el `partNumber` sale de la ficha JSON, una petición por producto. ~300 válidas, MPN 85–100 %. Se saltan los `outlet` |
 | MyShop | Adaptador `myshop` (`POST /servicio/producto`), `minIntervalMs: 2500` | Dry run del 30-09-2026: ~650 ofertas válidas, MPN 81–99 % según categoría, los dos precios en todas. Su Cloudflare corta con 429 (error 1015) a ~1,3 requests/s sostenidas |
 | Sandos | Mismo adaptador, otro mapa de `idFamilia` | Dry run: ~260 válidas, MPN 65–100 %. `api: 1` = entrega diferida por distribuidor: se puede comprar, cuenta como stock |
 
@@ -93,7 +94,7 @@ cuarentena por motivo.
 | 4 | ETChile | 120 | Configuración | La mejor huella de las WooCommerce: SKU = MPN, GTIN y marca |
 | 5 | ~~Centrale~~ | 593 | No integrar | Protege los precios con un plugin anti-scraping (`centrale-anti-scrape` + Turnstile): no quiere que la scrapeen. Candidata a la API abierta para tiendas |
 | 6 | KDTEC | 303 | Configuración (`internal`) | Atributos muy completos |
-| 7 | PC Factory | 321 | Descubrir endpoints | API JSON con `partNumber`, pero falta encontrar el listado y los precios |
+| 7 | ~~PC Factory~~ | 321 | Integrada | Listado y precios en `catalogo/productos/query` (encontrado con las peticiones de la web) |
 | 8 | Tecnomas | 506 | Parser HTML | La mejor huella del lote: MPN, GTIN y marca en JSON-LD, los dos precios en el HTML |
 | 9 | PC Express | 519 | Parser HTML (OpenCart) | JSON-LD con MPN y marca |
 | 10 | NotebookStore y otras Jumpseller | 389 + | Adaptador Jumpseller (JSON-LD + HTML) | Después sirve para Thundertech, Tecnocam, Valrod y V Gamers |

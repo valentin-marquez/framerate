@@ -72,6 +72,7 @@ describe("atributos por categoría", () => {
     expect(PROFILES.cpu.extract("INTEL CPU CELERON G5925 3.6GHZ").model).toBe("celeron g5925");
     expect(PROFILES.cpu.extract("Intel Pentium Gold G7400 LGA1700").model).toBe("pentium g7400");
     expect(PROFILES.cpu.extract("CPU AMD ATHLON 3000G 3.5 GHz").model).toBe("athlon 3000g");
+    expect(PROFILES.cpu.extract("CPU Intel Celeron® Processor G6900").model).toBe("celeron g6900");
   });
 
   test("RAM: kit vs módulo único", () => {
