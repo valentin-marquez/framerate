@@ -79,10 +79,9 @@ Estado al 2026-09-30. Producción: web `framerate.cl`, API `api.framerate.cl` (W
 
 ## Scraping / catálogo
 - [ ] Revisar las 56 revisiones pendientes de matching (`match_reviews`) con datos reales y ajustar vetos.
-- [ ] Integrar tiendas en el orden de `docs/store-candidates.md`. MyShop, Sandos, Infor-Ingen y ETChile integradas (sin desplegar). Centrale descartada (anti-scraping).
+- [ ] Integrar tiendas en el orden de `docs/store-candidates.md`. MyShop, Sandos, Infor-Ingen, ETChile, Nuevatec, CCLink, Progaming y Central Gamer integradas (sin desplegar). Centrale descartada (anti-scraping); KDTEC, Tecno Shopping y Tecno Master en pausa (ver el doc).
 - [ ] El extractor no reconoce GPU de estación de trabajo (RTX A400/A1000, Radeon PRO W7900, Radeon AI PRO R9700) ni la placa TRX50: van a cuarentena por atributo faltante. (Xeon, Threadripper, Celeron, Pentium y Athlon ya se reconocen.)
 - [ ] La cola corre dos categorías a la vez y cada corrida tiene su propio cliente HTTP: dos categorías de la misma tienda duplican el ritmo. Si otra tienda corta por rate limit, serializar por tienda.
-- [ ] Opción de precio de WooCommerce que falta: "`price` = tarjeta" con descuento por transferencia (Central Gamer, Globalbox, Nuevatec, Tecno Shopping). Infor-Ingen no la necesitó: es `cardMarkup`.
 - [ ] Decidir la política de MPN dentro del título y de SKU con prefijo (en `normalize`, no por tienda).
 - [ ] Probar Winpy desde el Worker (bloquea desde red local); si bloquea, evaluar Browser Rendering.
 - [ ] Resumen de precios de `products` y `product_price_daily` tras cada corrida (habilita "mejores ofertas" y descuento real).

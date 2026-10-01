@@ -102,6 +102,19 @@ describe("adaptador WooCommerce", () => {
     expect(offer).toMatchObject({ priceCash: 649_990, priceCard: 695_489 });
   });
 
+  test("con descuento por transferencia, price es la tarjeta", async () => {
+    const cardFirst = createWooCommerceAdapter({
+      baseUrl: "https://tienda.example",
+      sku: "internal",
+      perPage: 2,
+      cashDiscount: 0.05,
+      categories: { gpu: ["tarjetas-de-video"] },
+    });
+    const { ctx } = fakeContext({ [api("tarjetas-de-video", 1)]: { body: [products[0]] } });
+    const [offer] = await Array.fromAsync(cardFirst.crawlCategory("gpu", ctx));
+    expect(offer).toMatchObject({ priceCash: 617_491, priceCard: 649_990 });
+  });
+
   test("categoría no vendida por la tienda no hace requests", async () => {
     const { ctx, requested } = fakeContext({});
     expect(await Array.fromAsync(adapter.crawlCategory("case", ctx))).toEqual([]);

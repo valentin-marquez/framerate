@@ -104,6 +104,97 @@ export const STORES: readonly StoreDefinition[] = [
     }),
   },
   {
+    slug: "nuevatec",
+    name: "Nuevatec",
+    url: "https://nuevatec.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://nuevatec.cl",
+      sku: "mpn",
+      // `price` es Webpay; transferencia −5 % (verificado en la ficha, sept. 2026).
+      cashDiscount: 0.05,
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madres"],
+        ram: ["memorias-ram"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["m2-nvme", "ssd-2-5"],
+        hdd: ["disco-hdd"],
+        cpu_cooler: ["refrigeracion-aire-cpu", "refrigeracion-liquida-cpu"],
+        case: ["gabinetes"],
+        case_fan: ["ventiladores-gabinete"],
+      },
+    }),
+  },
+  {
+    slug: "cclink",
+    name: "CCLink",
+    url: "https://cclink.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://cclink.cl",
+      // MPN del fabricante o UPC (este último se detecta como GTIN).
+      sku: "mpn",
+      // Tarjeta +5 % (verificado en la ficha, sept. 2026).
+      cardMarkup: 0.05,
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placa-madre"],
+        ram: ["ram"],
+        psu: ["fuente-de-poder"],
+        ssd: ["ssd"],
+        hdd: ["discos-duros-internos"],
+        cpu_cooler: ["cooler-cpu"],
+        case: ["gabinetes", "gabinetes-gamer"],
+        case_fan: ["ventiladores"],
+      },
+    }),
+  },
+  {
+    slug: "progaming",
+    name: "Progaming",
+    url: "https://progaming.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://progaming.cl",
+      // El SKU es el EAN: se detecta como GTIN.
+      sku: "internal",
+      // Tarjeta +5 % (verificado en la ficha, sept. 2026).
+      cardMarkup: 0.05,
+      categories: {
+        gpu: ["tarjetas-video"],
+        cpu: ["procesadores-componentes"],
+        motherboard: ["placas-madres"],
+        ram: ["memorias-ram-componentes"],
+        psu: ["fuentes-poder"],
+        ssd: ["almacenamiento-componentes"],
+        // Mezcla coolers y ventiladores: `normalize` aparta los ventiladores.
+        cpu_cooler: ["refrigeracion"],
+        case: ["gabinetes-componentes"],
+      },
+    }),
+  },
+  {
+    slug: "central-gamer",
+    name: "Central Gamer",
+    url: "https://centralgamer.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://centralgamer.cl",
+      sku: "internal",
+      // `price` es tarjeta; "Transferencia bancaria directa (5 % de descuento)" (verificado en la ficha, sept. 2026).
+      cashDiscount: 0.05,
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madre"],
+        ram: ["memorias-ram"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["almacenamiento"],
+        cpu_cooler: ["refrigeracion-pc"],
+        case: ["gabinetes-gamer"],
+      },
+    }),
+  },
+  {
     slug: "myshop",
     name: "MyShop",
     url: "https://myshop.cl",
