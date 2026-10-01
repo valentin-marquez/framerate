@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { requireAuth } from "~/features/auth/services/auth.server";
 import { Button } from "~/shared/components/primitives/button";
 import { ApiError } from "~/shared/lib/api";
+import { cn } from "~/shared/lib/utils";
 import { ClaimWizard } from "../components/claim-wizard";
 import { type ClaimRequest, claimsService } from "../services/claims";
 import { type ClaimableStore, storesService } from "../services/stores";
@@ -173,5 +174,5 @@ function StatusBadge({ status }: { status: ClaimRequest["status"] }) {
       : status === "pending"
         ? "bg-secondary/60 text-secondary-foreground/80"
         : "bg-secondary/40 text-muted-foreground";
-  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${tone}`}>{STATUS_LABEL[status]}</span>;
+  return <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs", tone)}>{STATUS_LABEL[status]}</span>;
 }

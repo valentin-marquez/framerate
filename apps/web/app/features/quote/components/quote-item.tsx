@@ -9,6 +9,7 @@ import { OutboundLink } from "~/shared/components/outbound-link";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Button } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
+import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 
 interface QuoteItemProps {
@@ -104,7 +105,7 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
                 <AsyncImage
                   src={product.image_url}
                   alt={product.name || "Product Image"}
-                  className={`size-full object-contain ${isOutOfStock || isUnavailable ? "opacity-50 grayscale" : ""}`}
+                  className={cn("size-full object-contain", (isOutOfStock || isUnavailable) && "opacity-50 grayscale")}
                 />
               ) : (
                 <div className="size-full bg-secondary/50" />
@@ -152,13 +153,13 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
                     >
                       <StoreLogo
                         store={selectedListing.store}
-                        className={`size-5 rounded-sm ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
+                        className={cn("size-5 rounded-sm", isOutOfStock && "opacity-50 grayscale")}
                       />
                     </OutboundLink>
                   ) : (
                     <StoreLogo
                       store={selectedListing.store}
-                      className={`size-5 rounded-sm ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
+                      className={cn("size-5 rounded-sm", isOutOfStock && "opacity-50 grayscale")}
                     />
                   )
                 ) : (
@@ -174,16 +175,20 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
                         source="quote_item"
                         listingId={selectedListing.id}
                         productId={product.id}
-                        className={`text-sm font-medium truncate hover:text-primary flex items-center gap-1 ${
-                          isOutOfStock ? "text-muted-foreground line-through decoration-muted-foreground" : ""
-                        }`}
+                        className={cn(
+                          "text-sm font-medium truncate hover:text-primary flex items-center gap-1",
+                          isOutOfStock && "text-muted-foreground line-through decoration-muted-foreground",
+                        )}
                       >
                         {selectedListing.store.name}
                         <IconExternalLink size={12} className="text-muted-foreground" />
                       </OutboundLink>
                     ) : (
                       <span
-                        className={`text-sm font-medium truncate ${isOutOfStock ? "text-muted-foreground line-through decoration-muted-foreground" : ""}`}
+                        className={cn(
+                          "text-sm font-medium truncate",
+                          isOutOfStock && "text-muted-foreground line-through decoration-muted-foreground",
+                        )}
                       >
                         {selectedListing?.store?.name || "Mejor precio"}
                       </span>

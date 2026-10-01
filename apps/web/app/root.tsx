@@ -15,6 +15,7 @@ import {
   useLocation,
   useNavigation,
 } from "react-router";
+
 import { AuthFlash } from "~/features/auth/components/auth-flash";
 import { getAuthUser } from "~/features/auth/services/auth.server";
 import { useCategories } from "~/features/category/hooks/useCategories";
@@ -33,6 +34,7 @@ import { getHints, useTheme } from "~/shared/lib/client";
 import { markInitialLoadDone } from "~/shared/lib/initial-load";
 import { getQueryClient } from "~/shared/lib/query-client";
 import type { Lang } from "~/shared/lib/translations";
+import { cn } from "~/shared/lib/utils";
 import { getClientEnv } from "~/shared/services/env.server";
 import { getCookieLang, resolveLang, setLangCookie } from "~/shared/services/lang.server";
 import { getTheme } from "~/shared/services/theme.server";
@@ -215,9 +217,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
     <div className="flex flex-col min-h-screen pb-16">
       <div
         aria-hidden="true"
-        className={`fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary transition-[opacity,transform] ${
-          navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300"
-        }`}
+        className={cn(
+          "fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary transition-[opacity,transform]",
+          navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300",
+        )}
       />
       <header className="sticky top-0 z-50 w-full">
         <Navbar categories={categories ?? []} blurred={scrolled} />

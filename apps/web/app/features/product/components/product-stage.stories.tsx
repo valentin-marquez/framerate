@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { cn } from "~/shared/lib/utils";
 import { cardCases } from "~/shared/storybook/fixtures";
 import { ProductCard } from "./product-card";
 
@@ -37,7 +38,10 @@ function Replay() {
             key={s.value}
             type="button"
             onClick={() => setSlowmo(s.value)}
-            className={`rounded-full px-3 py-1.5 text-sm ${slowmo === s.value ? "bg-secondary font-medium text-foreground" : "text-muted-foreground"}`}
+            className={cn(
+              "rounded-full px-3 py-1.5 text-sm",
+              slowmo === s.value ? "bg-secondary font-medium text-foreground" : "text-muted-foreground",
+            )}
           >
             {s.label}
           </button>

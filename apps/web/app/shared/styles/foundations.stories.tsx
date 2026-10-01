@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { cn } from "~/shared/lib/utils";
 
 /** Tokens del sistema: lo que se ajusta en `app.css` se ve reflejado aquí (y en todo el sitio). */
 const meta = { title: "Fundamentos/Tokens" } satisfies Meta;
@@ -17,7 +18,7 @@ const SURFACES = [
 
 const Swatch = ({ name, className, note }: { name: string; className: string; note: string }) => (
   <div className="space-y-2">
-    <div className={`h-16 rounded-2xl border border-border ${className}`} />
+    <div className={cn("h-16 rounded-2xl border border-border", className)} />
     <div>
       <p className="font-medium text-foreground text-sm">{name}</p>
       <p className="text-muted-foreground text-xs">{note}</p>
@@ -61,7 +62,7 @@ export const Tipografia: Story = {
       {TYPE_SCALE.map(([className, text]) => (
         <div key={className} className="grid gap-1 sm:grid-cols-[16rem_1fr] sm:items-baseline">
           <code className="font-mono text-muted-foreground text-xs">{className}</code>
-          <p className={`text-foreground ${className}`}>{text}</p>
+          <p className={cn("text-foreground", className)}>{text}</p>
         </div>
       ))}
     </div>
@@ -75,7 +76,7 @@ export const Radios: Story = {
     <div className="flex flex-wrap gap-4">
       {RADII.map((r) => (
         <div key={r} className="space-y-2 text-center">
-          <div className={`size-20 border border-border bg-card ${r}`} />
+          <div className={cn("size-20 border border-border bg-card", r)} />
           <code className="font-mono text-muted-foreground text-xs">{r}</code>
         </div>
       ))}
