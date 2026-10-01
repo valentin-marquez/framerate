@@ -41,6 +41,15 @@ describe("normalizeOffer", () => {
     expect(result.ok && result.offer.priceCard).toBe(649_990);
   });
 
+  test("en cpu_cooler, un ventilador de gabinete va a cuarentena y un cooler que dice CPU no", () => {
+    const cooler = (title: string) =>
+      normalizeOffer({ ...base, category: "cpu_cooler", priceCash: 29_990, priceCard: null, title }, "cpu_cooler");
+    expect(cooler("Pack X3 Ventiladores XPG Vento R ARGB 120 Negro")).toMatchObject({ reason: "category:case_fan" });
+    expect(cooler("Ventilador Exodia ARGB Negro 120mm")).toMatchObject({ reason: "category:case_fan" });
+    expect(cooler("Ventilador CPU - Gamdias Boreas E1-210 Lite - Torre Simple").ok).toBe(true);
+    expect(cooler("Refrigeración Líquida CPU - Gamdias Aura GL240").ok).toBe(true);
+  });
+
   test("sin stock fuerza cantidad 0", () => {
     const result = normalizeOffer({ ...base, inStock: false, stockQuantity: 3 }, "gpu");
     expect(result.ok && result.offer.stockQuantity).toBe(0);

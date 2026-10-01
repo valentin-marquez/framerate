@@ -28,6 +28,8 @@ export interface WooCommerceConfig {
    * tarjeta = transferencia.
    */
   cardMarkup?: number;
+  /** Al revés que `cardMarkup`: `price` es el precio tarjeta y la transferencia tiene este descuento (0.05 = −5 %). */
+  cashDiscount?: number;
   perPage?: number;
   /** Tope de páginas por categoría (protección contra loops infinitos). */
   maxPages?: number;
@@ -101,14 +103,20 @@ function parseItems(text: string): unknown[] {
 export function toRawOffer(
   p: WcProduct,
   category: Category,
-  config: Pick<WooCommerceConfig, "sku" | "cardMarkup">,
+  config: Pick<WooCommerceConfig, "sku" | "cardMarkup" | "cashDiscount">,
 ): RawOffer {
   const divisor = 10 ** p.prices.currency_minor_unit;
   const toClp = (v: string | undefined) => {
     const n = Number(v);
     return v && Number.isFinite(n) && n > 0 ? Math.round(n / divisor) : null;
   };
-  const price = toClp(p.prices.price) ?? toClp(p.prices.regular_price);
+  const listed = toClp(p.prices.price) ?? toClp(p.prices.regular_price);
+  const price = listed && config.cashDiscount ? Math.round(listed * (1 - config.cashDiscount)) : listed;
+  const card = config.cashDiscount
+    ? listed
+    : price && config.cardMarkup
+      ? Math.round(price * (1 + config.cardMarkup))
+      : null;
   const sku = p.sku.trim();
   const gtin = normalizeGtin(sku) ? sku : null;
 
@@ -119,7 +127,7 @@ export function toRawOffer(
     category,
     // Un precio inválido (0/NaN) deja un valor que `normalize` rechaza con motivo claro.
     priceCash: price ?? 0,
-    priceCard: price && config.cardMarkup ? Math.round(price * (1 + config.cardMarkup)) : null,
+    priceCard: card,
     inStock: p.is_in_stock,
     stockQuantity: p.is_in_stock ? (p.low_stock_remaining ?? null) : 0,
     brand: p.brands?.[0]?.name ?? brandFromAttributes(p) ?? null,

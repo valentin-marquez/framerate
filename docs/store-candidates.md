@@ -47,7 +47,7 @@ La Store API trae `price` y `regular_price`, pero **cada tienda los usa distinto
 | Qué significa en la tienda | Tiendas | Cómo se configura hoy |
 |---|---|---|
 | `price` = transferencia; la tarjeta es un recargo que sólo aparece en el HTML | Infor-Ingen (+6 %), Dust2 (+7 %), TecTec (+4 %), Progaming (+5 %), KDTEC (+2,2 %), ETChile (+5 %), CCLink (+5 %), Tecno Master, DazBog, Café Digital, Electronica Budini, Trulu, Notebooksya, MegaBytes, Natcom, RS Tech | `cardMarkup` con el recargo verificado en la ficha; sin él, tarjeta = transferencia |
-| `price` = **tarjeta**; la transferencia sólo en el HTML | Central Gamer, Globalbox, Nuevatec (−5 %), Tecno Shopping (−3,5 %) | Falta la opción: agregarla al integrar la primera |
+| `price` = **tarjeta**; la transferencia sólo en el HTML | Central Gamer (−5 %), Globalbox, Nuevatec (−5 %), Tecno Shopping (−3,5 %) | `cashDiscount` con el descuento verificado en la ficha |
 | Un solo precio | Cintegral, Play Factory, Fiestalan, Xtreme Components | Sin configuración |
 
 En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardarse como precio tarjeta.
@@ -72,6 +72,10 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | Dust2 | WooCommerce, `sku: "internal"` (el SKU es EAN-13), tarjeta +7 %, con GPU | Probablemente la misma empresa que Progaming (mismos EAN y hosting) |
 | Infor-Ingen | WooCommerce, `sku: "internal"`, tarjeta +6 % | La ficha muestra siempre tarjeta = transferencia × 1,06. En ~20 % de los productos `regular_price` es un "antes" inflado (× 1,272) que no se muestra: no sirve como precio tarjeta. Mucho catálogo agotado |
 | ETChile | WooCommerce, `sku: "mpn"`, tarjeta +5 % ("Precio otros métodos de pago") | SKU = MPN real casi siempre; algunas placas traen un código propio (`GBTB550MDS3HAC1W`) |
+| Nuevatec | WooCommerce, `sku: "mpn"`, `cashDiscount: 0.05` | `price` = Webpay; "Oferta Internet - Transferencia" −5 %. Catálogo chico (~80 válidas) |
+| CCLink | WooCommerce, `sku: "mpn"`, tarjeta +5 % | SKU = MPN o UPC. ~130 válidas, fuerte en discos |
+| Progaming | WooCommerce, `sku: "internal"` (EAN), tarjeta +5 % | Mezcla ventiladores en "Refrigeración": `normalize` los aparta (`category:case_fan`) |
+| Central Gamer | WooCommerce, `sku: "internal"`, `cashDiscount: 0.05` | Vende sobre todo PCs armados; ~55 componentes |
 | MyShop | Adaptador `myshop` (`POST /servicio/producto`), `minIntervalMs: 2500` | Dry run del 30-09-2026: ~650 ofertas válidas, MPN 81–99 % según categoría, los dos precios en todas. Su Cloudflare corta con 429 (error 1015) a ~1,3 requests/s sostenidas |
 | Sandos | Mismo adaptador, otro mapa de `idFamilia` | Dry run: ~260 válidas, MPN 65–100 %. `api: 1` = entrega diferida por distribuidor: se puede comprar, cuenta como stock |
 
@@ -97,6 +101,14 @@ cuarentena por motivo.
 | 12 | WooCommerce chicas con MPN | — | Configuración | Tecno Shopping, Nuevatec, CCLink, Tecno Master, Progaming, Notebooksya, DazBog |
 | 13 | Wei, Eylstore, Tecno Saga | 170 + 147 + 145 | Parsers HTML | MPN en la página (Tecno Saga, sólo en el título) |
 | 14 | El resto | — | — | SKU interno, títulos pobres o usados |
+
+**Descartadas o en pausa tras el sondeo del 30-09-2026:**
+
+- Centrale: plugin anti-scraping para los precios (ver arriba).
+- KDTEC: la Store API respondió a las primeras peticiones y después dejó de responder (timeout); reintentar otro día.
+- Tecno Shopping: la Store API ahora devuelve HTML en vez de JSON.
+- Tecno Master: la ficha muestra la tarjeta más barata que la transferencia (4.495.621 contra 4.616.610); aclarar antes de integrar.
+- Notebooksya: casi todo son notebooks; pocos componentes.
 
 **Fuera de alcance mientras sólo haya `fetch`:** Winpy, SP Digital, CTMAN y Nice One. Winpy tiene el catálogo más
 grande: conviene probarla desde el Worker antes de descartarla, y si también bloquea, es la primera candidata para

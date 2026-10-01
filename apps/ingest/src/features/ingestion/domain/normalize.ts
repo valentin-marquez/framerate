@@ -91,6 +91,9 @@ const NOT_NEW = /\b(usad[oa]s?|reacondicionad[oa]s?|refurbished|open ?box|caja a
 // "KIT placa + memoria": el " + " con espacios separa productos ("80+ Bronze" y "Xeon 4416+" no lo llevan).
 const BUNDLE = /\b(combo|bundle|kit (pc|gamer)|pc armad[oa]|pack de)\b|\bkit\b.*\s\+\s/;
 const OTHER_PRODUCT = /\b(notebook|laptop|all in one|monitor|consola|tablet)\b/;
+// Varias tiendas mezclan ventiladores de gabinete en "Refrigeración"; los coolers de CPU dicen CPU, torre, líquida…
+const FAN_TITLE = /^(ventilador|pack|kit)\b/;
+const CPU_COOLER_CUE = /\b(cpu|torre|tower|disipador|heatpipes?|liquid[ao]|aio|water|lga ?\d{4}|am[45])\b/;
 
 /** Ruido de marketing que las tiendas meten en el título. */
 const TITLE_NOISE = /[¡!]*\s*(oferta|nuevo|envio gratis|envío gratis|liquidacion|liquidación|cyber)\s*[!¡]*/gi;
@@ -110,6 +113,9 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
   if (NOT_NEW.test(folded)) return { ok: false, externalId, reason: "condition:not_new" };
   if (BUNDLE.test(folded)) return { ok: false, externalId, reason: "bundle" };
   if (OTHER_PRODUCT.test(folded)) return { ok: false, externalId, reason: "category:other_product" };
+  if (raw.category === "cpu_cooler" && FAN_TITLE.test(folded) && !CPU_COOLER_CUE.test(folded)) {
+    return { ok: false, externalId, reason: "category:case_fan" };
+  }
 
   // Algunas tiendas invierten los campos: el efectivo siempre es el menor.
   const priceCash = Math.min(raw.priceCash, raw.priceCard ?? raw.priceCash);
