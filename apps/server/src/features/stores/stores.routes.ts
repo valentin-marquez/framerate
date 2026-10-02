@@ -63,13 +63,11 @@ export const storesRoutes = new Hono<AppEnv>()
     const counts = await storeCategoryCounts(c.var.db, store.id);
     const categories = await Promise.all(
       counts.map(async ({ category, count }) => {
-        const page = await listProducts(c.var.db, {
-          category: category as Category,
-          store: store.slug,
-          sort: "popularity",
-          page: 1,
-          pageSize: 12,
-        });
+        const page = await listProducts(
+          c.var.db,
+          { category: category as Category, store: store.slug, sort: "popularity", page: 1, pageSize: 12 },
+          c.env.ASSETS_BASE_URL,
+        );
         return { category: category as Category, count, items: page.items };
       }),
     );

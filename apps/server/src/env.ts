@@ -22,7 +22,7 @@ export interface Env {
   WEB_ORIGIN: string;
   /** Dominio para compartir la sesión entre subdominios (ej. "framerate.cl"). Omitir en desarrollo local. */
   COOKIE_DOMAIN?: string;
-  /** Base pública de los avatares copiados a R2, si existe. */
+  /** Dominio público del bucket R2 de assets (fotos de producto; luego avatares). Sin él se sirven las URLs de origen. */
   ASSETS_BASE_URL?: string;
   /** Secreto de Turnstile para tickets de soporte sin cuenta. Sin él, sólo se puede escribir con sesión. */
   TURNSTILE_SECRET_KEY?: string;

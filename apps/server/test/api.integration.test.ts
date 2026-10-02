@@ -94,6 +94,34 @@ describe("API pública", () => {
     ]);
   });
 
+  test("la foto sale de la copia propia en R2 (con transformación) y, mientras no exista, de la tienda", async () => {
+    const asus = "asus-dual-rtx-4070-super-oc-12gb";
+    await db.query
+      .updateTable("products")
+      .set({ image_url: "https://alfa.cl/asus.png", image_key: "products/abc.png" })
+      .where("slug", "=", asus)
+      .execute();
+    await db.query
+      .updateTable("products")
+      .set({ image_url: "https://alfa.cl/ryzen.jpg" })
+      .where("slug", "=", "amd-ryzen-7-7800x3d")
+      .execute();
+    const cdn = "https://cdn.framerate.cl/cdn-cgi/image/width=800,format=auto,onerror=redirect/products/abc.png";
+
+    env.ASSETS_BASE_URL = "https://cdn.framerate.cl/";
+    try {
+      const list = ProductPageSchema.parse(await (await get("/v1/products?sort=name")).json());
+      expect(list.items.map((p) => p.imageUrl)).toEqual(["https://alfa.cl/ryzen.jpg", cdn]);
+      expect(ProductDetailSchema.parse(await (await get(`/v1/products/${asus}`)).json()).imageUrl).toBe(cdn);
+    } finally {
+      env.ASSETS_BASE_URL = undefined;
+    }
+    // Sin dominio del bucket configurado (desarrollo local), la de la tienda.
+    expect(ProductDetailSchema.parse(await (await get(`/v1/products/${asus}`)).json()).imageUrl).toBe(
+      "https://alfa.cl/asus.png",
+    );
+  });
+
   test("errores con formato único", async () => {
     const notFound = await get("/v1/products/no-existe");
     expect(notFound.status).toBe(404);

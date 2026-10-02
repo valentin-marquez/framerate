@@ -18,7 +18,9 @@
   "vars": {
     "BETTER_AUTH_URL": "https://api.framerate.cl",
     "WEB_ORIGIN": "https://framerate.cl",
-    "COOKIE_DOMAIN": "framerate.cl"
+    "COOKIE_DOMAIN": "framerate.cl",
+    // Dominio propio del bucket framerate-assets (lo llena apps/ingest), con transformaciones de Images en la zona.
+    "ASSETS_BASE_URL": "https://cdn.framerate.cl"
   },
 
   "d1_databases": [

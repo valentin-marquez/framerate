@@ -54,7 +54,7 @@ export const catalogRoutes = new Hono<AppEnv>()
   .get("/sitemap", edgeCache(3600), async (c) => c.json(await sitemap(c.var.db)))
   .get("/products", edgeCache(300), async (c) => {
     const query = ProductListQuerySchema.parse(c.req.query());
-    return c.json(await listProducts(c.var.db, query));
+    return c.json(await listProducts(c.var.db, query, c.env.ASSETS_BASE_URL));
   })
   .get("/products/redirects/:slug", edgeCache(3600), async (c) => {
     const slug = await resolveRedirect(c.var.db, c.req.param("slug"));
@@ -62,7 +62,7 @@ export const catalogRoutes = new Hono<AppEnv>()
     return c.json({ slug });
   })
   .get("/products/:slug", edgeCache(300), async (c) => {
-    const product = await getProduct(c.var.db, c.req.param("slug"));
+    const product = await getProduct(c.var.db, c.req.param("slug"), c.env.ASSETS_BASE_URL);
     if (!product) throw new AppError(404, "product_not_found", "Producto no encontrado");
     return c.json(product);
   })

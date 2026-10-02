@@ -29,7 +29,10 @@
   "r2_buckets": [
     // bunx wrangler r2 bucket create framerate-snapshots
     // Retención: bunx wrangler r2 bucket lifecycle add framerate-snapshots snapshots-14d snapshots/ --expire-days 14
-    { "binding": "SNAPSHOTS", "bucket_name": "framerate-snapshots" }
+    { "binding": "SNAPSHOTS", "bucket_name": "framerate-snapshots" },
+    // Público en https://cdn.framerate.cl (dominio propio del bucket): fotos de producto copiadas por el Cron.
+    // bunx wrangler r2 bucket create framerate-assets
+    { "binding": "ASSETS", "bucket_name": "framerate-assets" }
   ],
 
   "queues": {

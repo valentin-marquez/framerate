@@ -50,7 +50,7 @@ Dos Workers con responsabilidades separadas, que comparten la misma base D1:
  │                                                                       │
  │  adaptador de tienda ─► normalizar ─► matching ─► oferta + precio     │
  │  (JSON / HTML)          (cuarentena)   (huella)                       │
- │  Bindings: D1 · R2 snapshots · cola (producir y consumir)             │
+ │  Bindings: D1 · R2 snapshots y assets · cola (producir y consumir)    │
  └────────┬───────────────────────────────────┬──────────────────────────┘
           │ fetch                             │ tiendas que exigen JavaScript
           ▼                                   ▼
@@ -251,6 +251,10 @@ bunx wrangler d1 create framerate          # pegar database_id en los 3 wrangler
                                            #   packages/database, apps/server, apps/ingest
 bunx wrangler r2 bucket create framerate-snapshots
 bunx wrangler r2 bucket lifecycle add framerate-snapshots snapshots-14d snapshots/ --expire-days 14
+# Fotos de producto (las copia el Cron de ingest) servidas en cdn.framerate.cl. Además, en el dashboard:
+# Images → Transformations → framerate.cl → Enable (la API arma URLs /cdn-cgi/image/... sobre ese dominio).
+bunx wrangler r2 bucket create framerate-assets --location enam
+bunx wrangler r2 bucket domain add framerate-assets --domain cdn.framerate.cl --zone-id <zone id de framerate.cl>
 bunx wrangler queues create framerate-crawl
 bunx wrangler queues create framerate-crawl-dlq
 
@@ -282,7 +286,8 @@ Observabilidad: logs JSON estructurados (Workers Logs) con `feature`, `store`,
 | Workers Paid (incluye D1, Queues, R2 free tier, Cron) | 5,00 |
 | D1: 50M filas escritas y 25 mil millones leídas incluidas | 0 |
 | Queues: 1M operaciones incluidas (≈ 280 mensajes/día) | 0 |
-| R2: 10 GB incluidos (snapshots gzip, retención 14 días) | 0 |
+| R2: 10 GB incluidos (snapshots gzip, retención 14 días; fotos de producto ≈ 1 GB) | 0 |
+| Images (plan Free): 5.000 transformaciones únicas al mes; la API usa un solo tamaño por foto | 0 |
 | **Total** | **≈ 5** |
 
 Pendientes que pueden sumar: Browser Rendering para tiendas que requieren

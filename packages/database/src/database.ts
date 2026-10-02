@@ -174,6 +174,7 @@ export interface ProductsTable {
   variant_group_id: number | null;
   image_url: string | null;
   image_key: string | null;
+  image_checked_at: string | null;
   best_price: number | null;
   best_price_card: number | null;
   offer_count: Defaulted<number>;

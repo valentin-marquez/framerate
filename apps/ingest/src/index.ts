@@ -9,6 +9,7 @@ import { createDb } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import type { Env } from "@/env";
 import { recheckClaims } from "@/features/claims/recheck";
+import { copyProductImages } from "@/features/images/product-images";
 import { purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
 import { enqueueAllCrawls, requestCrawls, runCrawlMessage } from "@/features/ingestion/runtime";
@@ -16,7 +17,7 @@ import { enqueueAllCrawls, requestCrawls, runCrawlMessage } from "@/features/ing
 /**
  * Worker de ingesta: todo lo que toca tiendas externas. No recibe tráfico
  * público; sus disparadores son:
- *  - scheduled: Cron → encola un crawl por (tienda, categoría).
+ *  - scheduled: Cron → encola un crawl por (tienda, categoría) y copia a R2 las fotos de producto pendientes.
  *  - queue:     consume crawls (uno por mensaje, con reintentos y DLQ).
  *  - RPC:       `IngestRpc`, que usa apps/server para "crawlear ahora".
  */
@@ -35,6 +36,11 @@ export default {
     log.info("cron.enqueued", { enqueued, cron: controller.cron });
     log.info("claims.rechecked", await recheckClaims(createDb(env.DB), new Date().toISOString()));
     log.info("quarantine.purged", { deleted: await purgeQuarantine(createDb(env.DB), new Date()) });
+    const imageLog = log.child({ feature: "images" });
+    imageLog.info(
+      "images.copied",
+      await copyProductImages(createDb(env.DB), env.ASSETS, new Date().toISOString(), imageLog),
+    );
   },
 
   async queue(batch, env) {

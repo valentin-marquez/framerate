@@ -92,6 +92,7 @@ export function testEnv(d1: D1Database) {
   const env: Env = {
     DB: d1,
     SNAPSHOTS: {} as R2Bucket,
+    ASSETS: {} as R2Bucket,
     CRAWL_QUEUE: {
       send: async (body: CrawlMessage) => {
         sent.push(body);

@@ -66,7 +66,25 @@ async function resolveBrand(db: Db, brand: string, category?: string): Promise<s
   return names.find((name) => slugify(name) === slugify(brand)) ?? brand;
 }
 
-export async function listProducts(db: Db, query: ProductListQuery): Promise<ProductPage> {
+/**
+ * Foto del producto: la copia propia en R2 (`image_key`, que llena ingest) servida por las transformaciones de
+ * Cloudflare Images desde el mismo dominio del bucket; mientras no exista, la URL de la tienda. Un solo tamaño a
+ * propósito: cada (foto, parámetros) es una transformación facturada por mes, y así el catálogo cabe en las 5.000
+ * gratis. Si se pasa, `onerror=redirect` sirve el original.
+ */
+export function productImageUrl(
+  product: { image_key: string | null; image_url: string | null },
+  assetsBaseUrl: string | undefined,
+): string | null {
+  if (!product.image_key || !assetsBaseUrl) return product.image_url;
+  return `${assetsBaseUrl.replace(/\/+$/, "")}/cdn-cgi/image/width=800,format=auto,onerror=redirect/${product.image_key}`;
+}
+
+export async function listProducts(
+  db: Db,
+  query: ProductListQuery,
+  assetsBaseUrl: string | undefined,
+): Promise<ProductPage> {
   let match: string | null = null;
   if (query.q) {
     match = ftsQuery(query.q);
@@ -93,7 +111,8 @@ export async function listProducts(db: Db, query: ProductListQuery): Promise<Pro
     "p.name",
     "p.brand",
     "p.category",
-    "p.image_url as imageUrl",
+    "p.image_url",
+    "p.image_key",
     "p.attributes",
     "agg.best_price as bestPrice",
     "agg.best_card_price as bestCardPrice",
@@ -132,8 +151,9 @@ export async function listProducts(db: Db, query: ProductListQuery): Promise<Pro
   ]);
 
   return {
-    items: rows.map((r) => ({
+    items: rows.map(({ image_url, image_key, ...r }) => ({
       ...r,
+      imageUrl: productImageUrl({ image_url, image_key }, assetsBaseUrl),
       category: r.category as Category,
       attributes: parseJson<ProductSummary["attributes"]>(r.attributes, {}),
       offerCount: Number(r.offerCount),
@@ -144,7 +164,11 @@ export async function listProducts(db: Db, query: ProductListQuery): Promise<Pro
   };
 }
 
-export async function getProduct(db: Db, slug: string): Promise<ProductDetail | null> {
+export async function getProduct(
+  db: Db,
+  slug: string,
+  assetsBaseUrl: string | undefined,
+): Promise<ProductDetail | null> {
   const product = await db.query
     .selectFrom("products as p")
     .selectAll("p")
@@ -198,7 +222,7 @@ export async function getProduct(db: Db, slug: string): Promise<ProductDetail | 
     name: product.name,
     brand: product.brand,
     category: product.category as Category,
-    imageUrl: product.image_url,
+    imageUrl: productImageUrl(product, assetsBaseUrl),
     bestPrice: inStock.length > 0 ? Math.min(...inStock.map((o) => o.priceCash)) : null,
     bestCardPrice: inStock.length > 0 ? Math.min(...inStock.map((o) => o.priceCard)) : null,
     lowestPrice: offers.length > 0 ? Math.min(...offers.map((o) => o.priceCash)) : null,

@@ -78,7 +78,7 @@ Variables (ver `apps/server/.dev.vars.example`):
 | `COOKIE_DOMAIN` | `wrangler.jsonc` | `framerate.cl`: comparte la sesión entre la web y `api.framerate.cl`. |
 | `ADMIN_TOKEN` | secreto | Token de servicio para scripts. |
 | `ADMIN_TOKENS` | secreto (opcional) | Tokens de admin adicionales, uno por persona: `nombre:token,nombre:token`. Se revocan sin tocar `ADMIN_TOKEN`; en la auditoría de crawls quedan como `admin-token:nombre`. |
-| `ASSETS_BASE_URL` | variable, opcional | Base pública de los avatares copiados a R2. |
+| `ASSETS_BASE_URL` | variable, opcional | Dominio público del bucket R2 de assets (`https://cdn.framerate.cl`, en `wrangler.jsonc`): fotos de producto y avatares copiados. |
 | `<PROVEEDOR>_CLIENT_ID` / `_CLIENT_SECRET` | secretos | Credenciales OAuth; ambas habilitan el proveedor. |
 
 ```bash
