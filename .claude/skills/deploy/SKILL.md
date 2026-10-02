@@ -24,7 +24,9 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
    2. `apps/ingest`: `bunx wrangler@latest deploy`. Va antes que server, porque server lo referencia por service
       binding.
    3. `apps/server`: `bunx wrangler deploy`.
-   4. `apps/web`: `VITE_API_URL=https://api.framerate.cl bun run build` y luego `bunx wrangler deploy`.
+   4. `apps/web`: `VITE_API_URL=https://api.framerate.cl VITE_TURNSTILE_SITE_KEY=0x4AAAAAAFLjXEJIhds4HQZi bun run build`
+      y luego `bunx wrangler deploy`. La site key de Turnstile es pública (va en el JS del sitio); su secreto vive en
+      `framerate-server` (`TURNSTILE_SECRET_KEY`). Sin ella, el soporte sin cuenta no muestra el formulario.
 5. Verificar: `bunx wrangler tail framerate-ingest` (o `framerate-server`) y, si cambió el scraping, pedir un crawl
    con `POST /v1/admin/crawls` y revisar `GET /v1/admin/crawls` y la cuarentena. Para una revisión más a fondo,
    usar la skill `prod-health`.
@@ -39,7 +41,8 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
 - **Pre-push falla con "The WebSocket is undefined" o "new dependencies optimized".** No es del código: es el build
   de Vite chocando con un dev server o Storybook abierto que re-optimiza dependencias. Reintentar el push.
 - **`wrangler` viejo (4.63) falla al crear colas.** En ingest usar `bunx wrangler@latest`.
-- **La web sin `VITE_API_URL`** se construye apuntando a localhost y en producción no carga datos.
+- **La web sin `VITE_API_URL`** se construye apuntando a localhost y en producción no carga datos; sin
+  `VITE_TURNSTILE_SITE_KEY`, el formulario de soporte sin cuenta desaparece.
 - **Una migración aplica a los dos Workers a la vez.** Nunca desplegar un Worker que depende de columnas que la
   migración todavía no creó, ni escribir migraciones destructivas mientras el código viejo sigue desplegado.
 - **Los secretos no están en el repo.** Si falta uno (`BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, `DISCORD_CLIENT_ID`,
