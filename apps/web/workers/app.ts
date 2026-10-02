@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createRequestHandler, RouterContextProvider } from "react-router";
+import { markdownResponse, varyByAccept } from "../app/features/agents/markdown.server";
 import { setServerContext } from "../app/shared/lib/api";
 
 declare module "react-router" {
@@ -33,12 +34,16 @@ export default {
         fetch: api?.fetch.bind(api),
         memo: new Map(),
       },
-      () =>
-        requestHandler(
+      async () =>
+        (await markdownResponse(request)) ??
+        varyByAccept(
           request,
-          Object.assign(context, {
-            cloudflare: { env, ctx },
-          }),
+          await requestHandler(
+            request,
+            Object.assign(context, {
+              cloudflare: { env, ctx },
+            }),
+          ),
         ),
     );
   },

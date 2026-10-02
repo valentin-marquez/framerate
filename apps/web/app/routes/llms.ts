@@ -19,6 +19,9 @@ export function loader({ request }: LoaderFunctionArgs) {
     "## Navegación principal",
     `- [Explorar productos](${origin}/explorar): catálogo completo con filtros por categoría, marca y precio`,
     `- [Reclamar una tienda](${origin}/reclamar): flujo para que los dueños reclamen el perfil de su tienda`,
+    "",
+    "## Para agentes",
+    "La home, cada ficha de producto y cada categoría responden en markdown si la petición lleva `Accept: text/markdown` (misma URL).",
   ];
 
   sections.push("", "## Categorías");
