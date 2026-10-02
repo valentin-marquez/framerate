@@ -1,6 +1,7 @@
 import { createDb } from "@framerate/database";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import type { Env } from "@/env";
+import { authD1 } from "./auth-instance";
 import { cleanDisplayName, emailLocalPart, generateUsername } from "./domain/username";
 import { buildSocialProviders } from "./providers";
 
@@ -21,9 +22,6 @@ export interface CreateAuthOptions {
   /** Plugins extra. Sólo lo usan los tests (`testUtils`); producción no pasa nada. */
   plugins?: BetterAuthOptions["plugins"];
 }
-
-/** Accesos a D1 que hace Better Auth (aproximado si hay requests concurrentes en el isolate); sale en `Server-Timing`. */
-export const authD1 = { accesses: 0 };
 
 function countAccesses(d1: D1Database): D1Database {
   return new Proxy(d1, {
@@ -159,15 +157,3 @@ export function createAuth(env: Env, options: CreateAuthOptions = {}) {
 }
 
 export type Auth = ReturnType<typeof createAuth>;
-
-const instances = new WeakMap<Env, Auth>();
-
-/** Una instancia por `env` (su inicialización es asíncrona y conviene no repetirla por petición). */
-export function getAuth(env: Env): Auth {
-  let auth = instances.get(env);
-  if (!auth) {
-    auth = createAuth(env);
-    instances.set(env, auth);
-  }
-  return auth;
-}

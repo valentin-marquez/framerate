@@ -6,7 +6,6 @@ import {
   SupportStatusSchema,
   type TicketMessage,
 } from "@framerate/contracts";
-import { ticketClosedEmail, ticketReplyEmail } from "@framerate/emails";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
@@ -76,12 +75,9 @@ export const supportAdminRoutes = new Hono<AppEnv>()
       .where("id", "=", ticket.id)
       .returningAll()
       .executeTakeFirstOrThrow();
-    if ((updated.status === "resolved" || updated.status === "closed") && updated.status !== ticket.status) {
-      sendEmailInBackground(
-        c,
-        ticket.email,
-        ticketClosedEmail({ ...ticketEmailProps(c, ticket), status: updated.status }),
-      );
+    const { status } = updated;
+    if ((status === "resolved" || status === "closed") && status !== ticket.status) {
+      sendEmailInBackground(c, ticket.email, (t) => t.ticketClosedEmail({ ...ticketEmailProps(c, ticket), status }));
     }
     return c.json<AdminTicket>(toAdminTicket(updated));
   })
@@ -103,12 +99,13 @@ export const supportAdminRoutes = new Hono<AppEnv>()
       sendEmailInBackground(
         c,
         ticket.email,
-        ticketReplyEmail({
-          ...ticketEmailProps(c, ticket),
-          staffName: actor.kind === "user" ? actor.user.displayName : null,
-          reply: body,
-          status,
-        }),
+        (t) =>
+          t.ticketReplyEmail({
+            ...ticketEmailProps(c, ticket),
+            staffName: actor.kind === "user" ? actor.user.displayName : null,
+            reply: body,
+            status,
+          }),
         // Si la persona responde a este correo, su In-Reply-To apunta a este Message-ID (#69).
         (messageId) => setMessageId(c.var.db, message.id, messageId),
       );

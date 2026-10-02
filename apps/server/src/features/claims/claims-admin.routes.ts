@@ -1,4 +1,3 @@
-import { claimRevokedEmail } from "@framerate/emails";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
@@ -51,10 +50,8 @@ export const claimsAdminRoutes = new Hono<AppEnv>().post("/claims/:id/revoke", a
   });
   const claimant = await findUserById(c.var.db, claim.claimant_id);
   if (claimant) {
-    sendEmailInBackground(
-      c,
-      claimant.email,
-      claimRevokedEmail({
+    sendEmailInBackground(c, claimant.email, (t) =>
+      t.claimRevokedEmail({
         storeName: claim.store_name,
         storeSlug: claim.store_slug,
         domain: claim.domain,

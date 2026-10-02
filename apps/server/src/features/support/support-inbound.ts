@@ -1,5 +1,4 @@
 import { createDb } from "@framerate/database";
-import { ticketReceivedEmail } from "@framerate/emails";
 import { createLogger } from "@framerate/kit";
 import PostalMime from "postal-mime";
 import type { Env } from "@/env";
@@ -127,10 +126,8 @@ export async function receiveSupportEmail(message: ForwardableEmailMessage, env:
   log.info("email_ticket_created", { ticketId });
 
   ctx.waitUntil(
-    sendEmail(
-      env,
-      from,
-      ticketReceivedEmail({
+    sendEmail(env, from, (t) =>
+      t.ticketReceivedEmail({
         ticketId,
         subject,
         category: "other",

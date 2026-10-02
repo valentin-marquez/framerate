@@ -5,7 +5,6 @@ import {
   type TicketDetail,
   type TicketMessage,
 } from "@framerate/contracts";
-import { ticketReceivedEmail } from "@framerate/emails";
 import { type Context, Hono } from "hono";
 import type { AppEnv } from "@/app";
 import { currentUser } from "@/features/identity/middleware";
@@ -91,10 +90,8 @@ export const supportRoutes = new Hono<AppEnv>()
       now,
     });
 
-    sendEmailInBackground(
-      c,
-      email,
-      ticketReceivedEmail({
+    sendEmailInBackground(c, email, (t) =>
+      t.ticketReceivedEmail({
         ticketId: publicId,
         subject: input.subject,
         category: input.category,

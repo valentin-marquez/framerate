@@ -6,7 +6,7 @@ import { catalogRoutes } from "@/features/catalog/catalog.routes";
 import { claimsRoutes } from "@/features/claims/claims.routes";
 import { claimsAdminRoutes } from "@/features/claims/claims-admin.routes";
 import { crawlAdminRoutes } from "@/features/crawl-admin/crawl-admin.routes";
-import { getAuth } from "@/features/identity/auth";
+import { getAuth } from "@/features/identity/auth-instance";
 import type { UserRow } from "@/features/identity/identity.repository";
 import { authProvidersRoutes, meRoutes, publicProfileRoutes } from "@/features/identity/identity.routes";
 import { mergeRoutes } from "@/features/identity/merge.routes";
@@ -77,7 +77,7 @@ export function createApp() {
   authApi.use("*", rateLimit);
   authApi.route("/", authProvidersRoutes);
   // Todo lo demás lo resuelve Better Auth (sign-in/social, callback/:provider, sign-out, get-session…).
-  authApi.on(["GET", "POST"], "/*", (c) => getAuth(c.env).handler(c.req.raw));
+  authApi.on(["GET", "POST"], "/*", async (c) => (await getAuth(c.env)).handler(c.req.raw));
 
   const meApi = new Hono<AppEnv>();
   meApi.use("*", credentialedCors);

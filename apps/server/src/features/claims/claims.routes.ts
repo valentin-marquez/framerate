@@ -1,5 +1,4 @@
 import { CreateClaimRequestSchema, type DnsCheck, type VerifyResult } from "@framerate/contracts";
-import { claimConfirmedEmail, claimInstructionsEmail } from "@framerate/emails";
 import { checkTxt, claimTxtName, claimTxtValue, detectDnsProvider, dnsProviderName } from "@framerate/kit";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -96,10 +95,8 @@ export const claimsRoutes = new Hono<AppEnv>()
       now: now.toISOString(),
     });
     const created = toClaim((await findClaim(c.var.db, id)) as ClaimRow);
-    sendEmailInBackground(
-      c,
-      user.email,
-      claimInstructionsEmail({
+    sendEmailInBackground(c, user.email, (t) =>
+      t.claimInstructionsEmail({
         ...created,
         dnsProvider: dnsProviderName(provider),
         baseUrl: c.env.WEB_ORIGIN,
@@ -208,10 +205,8 @@ export const claimsRoutes = new Hono<AppEnv>()
         created_at: stamp,
       }),
     ]);
-    sendEmailInBackground(
-      c,
-      user.email,
-      claimConfirmedEmail({
+    sendEmailInBackground(c, user.email, (t) =>
+      t.claimConfirmedEmail({
         storeName: claim.store_name,
         storeSlug: claim.store_slug,
         domain: claim.domain,
