@@ -10,4 +10,6 @@ export interface Env {
   /** Achica las fotos de producto una sola vez antes de guardarlas en ASSETS. */
   IMAGES: ImagesBinding;
   CRAWL_QUEUE: Queue<CrawlMessage>;
+  /** Correos de la plataforma (avisos de reclamos); sin binding (tests) no se envía nada. */
+  EMAIL?: SendEmail;
 }

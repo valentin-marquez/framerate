@@ -13,6 +13,7 @@ import { copyProductImages } from "@/features/images/product-images";
 import { purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
 import { enqueueAllCrawls, requestCrawls, runCrawlMessage } from "@/features/ingestion/runtime";
+import { emailSender } from "@/shared/email";
 
 /**
  * Worker de ingesta: todo lo que toca tiendas externas. No recibe tráfico
@@ -34,7 +35,10 @@ export default {
   async scheduled(controller, env) {
     const enqueued = await enqueueAllCrawls(env, `cron:${controller.cron}`);
     log.info("cron.enqueued", { enqueued, cron: controller.cron });
-    log.info("claims.rechecked", await recheckClaims(createDb(env.DB), new Date().toISOString()));
+    log.info(
+      "claims.rechecked",
+      await recheckClaims(createDb(env.DB), new Date().toISOString(), undefined, emailSender(env)),
+    );
     log.info("quarantine.purged", { deleted: await purgeQuarantine(createDb(env.DB), new Date()) });
     const imageLog = log.child({ feature: "images" });
     imageLog.info(

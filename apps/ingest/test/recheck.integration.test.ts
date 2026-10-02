@@ -102,4 +102,57 @@ describe("recheckClaims", () => {
     expect(stats.expired).toBe(1);
     expect(await claim()).toMatchObject({ status: "expired" });
   });
+
+  describe("avisos por correo", () => {
+    const sent: { to: string; subject: string }[] = [];
+    const mailer = async (to: string, build: Parameters<NonNullable<Parameters<typeof recheckClaims>[3]>>[1]) => {
+      sent.push({ to, subject: build(await import("@framerate/emails")).subject });
+    };
+    beforeEach(() => {
+      sent.length = 0;
+    });
+
+    test("al vencer avisa una sola vez a quien reclamó", async () => {
+      await seedClaim("pending", later(1));
+      await recheckClaims(db, later(6), answer("verified"), mailer);
+      await recheckClaims(db, later(12), answer("verified"), mailer);
+      expect(sent).toEqual([{ to: "a@x.cl", subject: "Tu reclamo de Alfa venció" }]);
+    });
+
+    test("un fallo del envío no impide el cambio de estado", async () => {
+      await seedClaim("pending", later(1));
+      const stats = await recheckClaims(db, later(6), answer("verified"), async () => {
+        throw new Error("boom");
+      });
+      expect(stats.expired).toBe(1);
+      expect(await claim()).toMatchObject({ status: "expired" });
+    });
+
+    test("al quedar stale avisa a dueños y administradores, no a editores, y sólo en la transición", async () => {
+      await seedClaim();
+      await db.query
+        .insertInto("users")
+        .values([
+          { id: "u2", email: "b@x.cl", username: "beto", display_name: "B", created_at: T0, updated_at: T0 },
+          { id: "u3", email: "c@x.cl", username: "caro", display_name: "C", created_at: T0, updated_at: T0 },
+        ])
+        .execute();
+      await db.query
+        .insertInto("organizations")
+        .values({ slug: "alfa", name: "Alfa", created_at: T0, updated_at: T0 })
+        .execute();
+      await db.query.updateTable("stores").set({ organization_id: 1 }).execute();
+      await db.query
+        .insertInto("organization_members")
+        .values([
+          { organization_id: 1, user_id: "u1", role: "owner", invited_by: null, created_at: T0 },
+          { organization_id: 1, user_id: "u2", role: "admin", invited_by: null, created_at: T0 },
+          { organization_id: 1, user_id: "u3", role: "editor", invited_by: null, created_at: T0 },
+        ])
+        .execute();
+      for (let i = 1; i <= FAILURES_TO_FREEZE + 2; i++)
+        await recheckClaims(db, later(6 * i), answer("pending"), mailer);
+      expect(sent.map((m) => m.to).sort()).toEqual(["a@x.cl", "b@x.cl"]);
+    });
+  });
 });

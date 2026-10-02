@@ -38,6 +38,9 @@
     { "binding": "ASSETS", "bucket_name": "framerate-assets" }
   ],
 
+  // Correos de la plataforma (Cloudflare Email Service): avisos de reclamo vencido o con TXT perdido.
+  "send_email": [{ "name": "EMAIL" }],
+
   "queues": {
     "producers": [{ "binding": "CRAWL_QUEUE", "queue": "framerate-crawl" }],
     "consumers": [

@@ -17,6 +17,7 @@
       "dependencies": {
         "@framerate/contracts": "workspace:*",
         "@framerate/database": "workspace:*",
+        "@framerate/emails": "workspace:*",
         "@framerate/kit": "workspace:*",
         "@framerate/matching": "workspace:*",
         "zod": "^4.6.5",

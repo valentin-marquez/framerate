@@ -43,6 +43,14 @@ async function expire(c: Parameters<typeof currentUser>[0], claim: ClaimRow, now
     actorId: null,
     now,
   });
+  sendEmailInBackground(c, currentUser(c).email, (t) =>
+    t.claimExpiredEmail({
+      storeName: claim.store_name,
+      storeSlug: claim.store_slug,
+      domain: claim.domain,
+      baseUrl: c.env.WEB_ORIGIN,
+    }),
+  );
   throw new AppError(410, "claim_expired", "El reclamo venció; inicia uno nuevo");
 }
 
