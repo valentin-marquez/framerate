@@ -1,6 +1,6 @@
 import { QUOTE_SLOT_LABELS } from "@framerate/contracts";
 import { IconArrowUpRight, IconLayoutList, IconX } from "@tabler/icons-react";
-import { AnimatePresence, domMax, LazyMotion, m } from "motion/react";
+import { AnimatePresence, domMax, LazyMotion, m, usePresence } from "motion/react";
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router";
@@ -121,14 +121,7 @@ function QuoteQuickViewPortal({ layoutId, open, onClose, quote, quoteId }: Quote
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50">
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: DURATION.base, ease: EASE_OUT }}
-            className="absolute inset-0 bg-black/50"
-            onClick={onClose}
-          />
+          <Scrim onClick={onClose} />
           <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
             <m.div
               layoutId={layoutId}
@@ -145,6 +138,24 @@ function QuoteQuickViewPortal({ layoutId, open, onClose, quote, quoteId }: Quote
       )}
     </AnimatePresence>,
     document.body,
+  );
+}
+
+/** Velo en CSS: con `motion`, un elemento que sólo anima opacidad parpadea al terminar. `usePresence` hace que AnimatePresence espere la salida. */
+function Scrim({ onClick }: { onClick: () => void }) {
+  const [isPresent, safeToRemove] = usePresence();
+  return (
+    <div
+      aria-hidden
+      onClick={onClick}
+      onAnimationEnd={() => {
+        if (!isPresent) safeToRemove?.();
+      }}
+      className={cn(
+        "absolute inset-0 bg-black/50 ease-out fill-mode-forwards",
+        isPresent ? "animate-in fade-in-0 duration-base" : "animate-out fade-out-0 duration-base",
+      )}
+    />
   );
 }
 
