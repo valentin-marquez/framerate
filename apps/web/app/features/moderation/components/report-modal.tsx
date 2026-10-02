@@ -1,3 +1,4 @@
+import type { ReportReason, ReportTargetType } from "@framerate/contracts";
 import { IconAlertTriangle, IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,18 +15,7 @@ import { Label } from "~/shared/components/primitives/label";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
-import { type CreateReportPayload, type ReportReason, type ReportTargetType, reportsClient } from "../services/reports";
-
-const REASON_LABELS: Record<ReportReason, string> = {
-  spam: "Spam o promocional",
-  harassment: "Acoso o abuso",
-  misleading: "Información engañosa",
-  duplicate: "Duplicado",
-  wrong_listing: "La oferta no corresponde al producto",
-  broken_link: "Enlace roto o producto no disponible",
-  inappropriate: "Contenido inapropiado",
-  other: "Otro motivo",
-};
+import { REASON_LABELS, REASONS_BY_TARGET, reportsClient } from "../services/reports";
 
 export interface ReportModalProps {
   open: boolean;
@@ -49,13 +39,7 @@ export function ReportModal({ open, onOpenChange, targetType, targetId, contextL
     }
     setSubmitting(true);
     try {
-      const payload: CreateReportPayload = {
-        target_type: targetType,
-        target_id: targetId,
-        reason,
-        details: details.trim() ? details.trim() : undefined,
-      };
-      await reportsClient.create(payload);
+      await reportsClient.create({ targetType, targetId, reason, details: details.trim() || undefined });
       toast.success("Reporte enviado. Gracias por ayudarnos a moderar.");
       setReason("");
       setDetails("");
@@ -64,6 +48,8 @@ export function ReportModal({ open, onOpenChange, targetType, targetId, contextL
       if (error instanceof ApiError) {
         if (error.status === 409) {
           toast.error("Ya tienes un reporte abierto sobre este contenido.");
+        } else if (error.status === 404) {
+          toast.error("Ese contenido ya no existe.");
         } else {
           toast.error(error.message);
         }
@@ -92,7 +78,7 @@ export function ReportModal({ open, onOpenChange, targetType, targetId, contextL
           <div className="flex flex-col gap-2">
             <Label htmlFor="report-reason">Motivo</Label>
             <div className="grid grid-cols-1 gap-1.5">
-              {(Object.keys(REASON_LABELS) as ReportReason[]).map((r) => (
+              {REASONS_BY_TARGET[targetType].map((r) => (
                 <label
                   key={r}
                   className={cn(

@@ -125,11 +125,11 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
     try {
       await translationFeedbackService.submit({
         lang,
-        translation_key: selected.key,
-        current_text: selected.current,
-        suggested_text: trimmed,
+        translationKey: selected.key,
+        currentText: selected.current,
+        suggestedText: trimmed,
         comment: comment.trim() || undefined,
-        context_url: typeof window !== "undefined" ? window.location.href : undefined,
+        contextPath: typeof window !== "undefined" ? window.location.pathname : undefined,
       });
       toast.success(t("feedback_sent"));
       close();

@@ -1,41 +1,40 @@
+import type { CreateReportRequest, MyReport, ReportReason, ReportTargetType } from "@framerate/contracts";
 import { api } from "~/shared/lib/api";
 
-export type ReportTargetType = "product" | "comment" | "store_review" | "store";
-
-export type ReportReason =
-  | "spam"
-  | "harassment"
-  | "misleading"
-  | "duplicate"
-  | "wrong_listing"
-  | "broken_link"
-  | "inappropriate"
-  | "other";
-
-export type ReportStatus = "open" | "reviewing" | "resolved" | "dismissed";
-
-export interface Report {
-  id: string;
-  target_type: ReportTargetType;
-  target_id: string;
-  reason: ReportReason;
-  details: string | null;
-  status: ReportStatus;
-  resolution_note?: string | null;
-  resolved_at?: string | null;
-  created_at: string;
-}
-
-export interface CreateReportPayload {
-  target_type: ReportTargetType;
-  target_id: string;
-  reason: ReportReason;
-  details?: string;
-}
-
-// ponytail: la API v2 aún no tiene reportes (#23). En false no se muestra el botón de reportar; pasar a true con `/v1/reports`.
-export const REPORTS_API_ENABLED = false;
-
 export const reportsClient = {
-  create: (payload: CreateReportPayload) => api.post<Report>("/v1/reports", payload),
+  create: (payload: CreateReportRequest) => api.post<{ id: number }>("/v1/reports", payload),
+  mine: () => api.get<{ items: MyReport[] }>("/v1/reports/my"),
+};
+
+export const REASON_LABELS: Record<ReportReason, string> = {
+  spam: "Spam o promocional",
+  harassment: "Acoso o abuso",
+  misleading: "Información engañosa",
+  duplicate: "Duplicado",
+  wrong_listing: "La oferta no corresponde al producto",
+  broken_link: "Enlace roto o producto no disponible",
+  wrong_price: "El precio no coincide con la tienda",
+  inappropriate: "Contenido inapropiado",
+  other: "Otro motivo",
+};
+
+export const TARGET_LABELS: Record<ReportTargetType, string> = {
+  product: "Producto",
+  comment: "Comentario",
+  store_review: "Reseña",
+  store: "Tienda",
+  quote: "Cotización",
+  user: "Usuario",
+};
+
+const CONTENT: ReportReason[] = ["spam", "harassment", "misleading", "inappropriate", "other"];
+
+/** Los motivos que tienen sentido para cada tipo de objetivo. */
+export const REASONS_BY_TARGET: Record<ReportTargetType, ReportReason[]> = {
+  product: ["wrong_price", "wrong_listing", "broken_link", "duplicate", "misleading", "other"],
+  comment: CONTENT,
+  store_review: CONTENT,
+  store: ["misleading", "inappropriate", "other"],
+  quote: CONTENT,
+  user: ["spam", "harassment", "inappropriate", "other"],
 };

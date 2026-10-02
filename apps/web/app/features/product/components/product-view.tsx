@@ -1,6 +1,8 @@
 import { CATEGORY_LABELS, CATEGORY_SLUGS, type Offer, type PricePoint, type ProductDetail } from "@framerate/contracts";
 import { IconChevronDown, IconChevronRight, IconExternalLink, IconPhotoOff } from "@tabler/icons-react";
 import { Link, useLocation, useNavigation, useSearchParams } from "react-router";
+import { useUser } from "~/features/auth/hooks/useAuth";
+import { ReportButton } from "~/features/moderation";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
 import { PriceHistoryChart } from "~/features/product/components/price-history-chart";
 import {
@@ -32,6 +34,7 @@ interface ProductViewProps {
  * (comparado con su historial en el período elegido) y debajo están las tiendas. Las que no tienen stock se pliegan.
  */
 export function ProductView({ product, history, period, now }: ProductViewProps) {
+  const user = useUser();
   const [, setSearchParams] = useSearchParams();
   const navigation = useNavigation();
   const location = useLocation();
@@ -173,6 +176,15 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
                   ))}
                 </ul>
               </details>
+            )}
+            {user && (
+              <ReportButton
+                targetType="product"
+                targetId={String(product.id)}
+                contextLabel={product.name}
+                label="Reportar un error en este producto"
+                className="mt-2 text-xs"
+              />
             )}
           </section>
 

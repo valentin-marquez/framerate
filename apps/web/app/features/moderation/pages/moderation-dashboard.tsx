@@ -1,322 +1,408 @@
-import { IconChecks, IconLoader2, IconRefresh, IconShieldCheck, IconX } from "@tabler/icons-react";
-import { useState } from "react";
-import { useRevalidator } from "react-router";
+import {
+  type ModerationAction,
+  REPORT_RESOLUTIONS,
+  type Report,
+  type ReportResolution,
+  type ReportStatus,
+} from "@framerate/contracts";
+import { IconCircleCheck, IconLoader2, IconRefresh } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { Link, useRevalidator, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { requireRole } from "~/features/auth/services/auth.server";
 import { Button } from "~/shared/components/primitives/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/shared/components/primitives/dialog";
+import { Label } from "~/shared/components/primitives/label";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
-import type { ModAction, QueueItem } from "../services/moderation";
+import { formatDateTime } from "~/shared/utils/format";
 import { moderationClient } from "../services/moderation";
-import type { Report } from "../services/reports";
+import { REASON_LABELS, TARGET_LABELS } from "../services/reports";
 import type { Route } from "./+types/moderation-dashboard";
 
-const REASON_LABELS: Record<Report["reason"], string> = {
-  spam: "Spam",
-  harassment: "Acoso",
-  misleading: "Engañoso",
-  duplicate: "Duplicado",
-  wrong_listing: "Oferta incorrecta",
-  broken_link: "Enlace roto",
-  inappropriate: "Inapropiado",
-  other: "Otro",
-};
+const PAGE_SIZE = 25;
 
-const TARGET_LABELS: Record<Report["target_type"], string> = {
-  product: "Producto",
-  comment: "Comentario",
-  store_review: "Reseña",
-  store: "Tienda",
-};
-
-const STATUS_LABELS: Record<Report["status"], string> = {
+const STATUS_LABELS: Record<ReportStatus, string> = {
   open: "Abierto",
   reviewing: "En revisión",
   resolved: "Resuelto",
   dismissed: "Descartado",
 };
 
-const STATUS_COLORS: Record<Report["status"], string> = {
-  open: "text-amber-600 bg-amber-50 dark:bg-amber-950/40",
-  reviewing: "text-blue-600 bg-blue-50 dark:bg-blue-950/40",
-  resolved: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40",
-  dismissed: "text-muted-foreground bg-secondary",
+const RESOLUTION_LABELS: Record<ReportResolution, string> = {
+  no_action: "Sin acción (descartar)",
+  content_removed: "Contenido eliminado",
+  user_banned: "Usuario sancionado",
+  listing_fixed: "Oferta corregida",
+  duplicate_of_other: "Duplicado de otro reporte",
 };
 
+const VIEWS = [
+  { id: "cola", label: "Cola" },
+  { id: "reportes", label: "Todos los reportes" },
+  { id: "historial", label: "Bitácora" },
+] as const;
+type View = (typeof VIEWS)[number]["id"];
+
 export function meta(_: Route.MetaArgs) {
-  return [
-    { title: "Moderación - Framerate Admin" },
-    { name: "description", content: "Panel de moderación de Framerate" },
-    { name: "robots", content: "noindex" },
-  ];
+  return [{ title: "Moderación - Framerate Admin" }, { name: "robots", content: "noindex" }];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireRole(request, "moderator");
+  const params = new URL(request.url).searchParams;
+  const view: View = VIEWS.find((v) => v.id === params.get("vista"))?.id ?? "cola";
+  const page = Math.max(1, Number(params.get("pagina")) || 1);
+  const args = { page, pageSize: PAGE_SIZE };
 
-  // Cargamos en paralelo: queue item, lista de reports y mod actions.
-  const [queueRes, reportsRes, actionsRes] = await Promise.allSettled([
-    moderationClient.getQueueItem(),
-    moderationClient.listReports({ limit: 50 }),
-    moderationClient.listModActions({ limit: 50 }),
-  ]);
-
-  const queueItem = queueRes.status === "fulfilled" ? queueRes.value.item : null;
-  const reports = reportsRes.status === "fulfilled" ? reportsRes.value.reports : [];
-  const actions = actionsRes.status === "fulfilled" ? actionsRes.value.actions : [];
-
-  return { queueItem, reports, actions };
+  if (view === "historial") return { view, reports: null, actions: await moderationClient.listActions(args) };
+  const reports = await (view === "cola" ? moderationClient.queue(args) : moderationClient.listReports(args));
+  return { view, reports, actions: null };
 }
 
-type TabKey = "queue" | "reports" | "actions";
+function viewUrl(params: URLSearchParams, change: Record<string, string | null>) {
+  const next = new URLSearchParams(params);
+  for (const [key, value] of Object.entries(change)) {
+    if (value === null) next.delete(key);
+    else next.set(key, value);
+  }
+  const query = next.toString();
+  return query ? `?${query}` : ".";
+}
+
+function Chip({ to, active, children }: { to: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      to={to}
+      replace
+      aria-current={active ? "true" : undefined}
+      className={cn(
+        "shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+        active ? "bg-foreground text-background" : "bg-secondary/60 text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function claimedNow(report: Report) {
+  return report.claimedBy && report.claimedUntil && new Date(report.claimedUntil).getTime() > Date.now()
+    ? report.claimedBy
+    : null;
+}
+
+function ReportRow({ report, onOpen }: { report: Report; onOpen: () => void }) {
+  const claimer = claimedNow(report);
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="grid w-full grid-cols-[1fr_auto] items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-secondary/40"
+      >
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-sm font-medium">
+            {TARGET_LABELS[report.targetType]} <span className="font-mono text-xs">{report.targetId}</span>
+          </p>
+          <p className="text-sm text-muted-foreground">{REASON_LABELS[report.reason]}</p>
+          <p className="text-xs text-muted-foreground">
+            {report.reporter ? `@${report.reporter.username}` : "Usuario eliminado"}, {formatDateTime(report.createdAt)}
+            {report.targetReportCount > 1 && `, ${report.targetReportCount} reportes sobre lo mismo`}
+          </p>
+        </div>
+        <div className="text-right text-xs text-muted-foreground">
+          <p className="font-medium text-foreground">{STATUS_LABELS[report.status]}</p>
+          {claimer && <p>Lo tiene @{claimer.username}</p>}
+        </div>
+      </button>
+    </li>
+  );
+}
+
+function Pager({ params, page, total }: { params: URLSearchParams; page: number; total: number }) {
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (pages === 1) return null;
+  return (
+    <nav className="flex items-center justify-between px-4 py-3 text-sm text-muted-foreground">
+      <span className="tabular-nums">
+        Página {page} de {pages}
+      </span>
+      <span className="flex gap-2">
+        {page > 1 && (
+          <Chip to={viewUrl(params, { pagina: String(page - 1) })} active={false}>
+            Anterior
+          </Chip>
+        )}
+        {page < pages && (
+          <Chip to={viewUrl(params, { pagina: String(page + 1) })} active={false}>
+            Siguiente
+          </Chip>
+        )}
+      </span>
+    </nav>
+  );
+}
+
+function ActionRow({ action }: { action: ModerationAction }) {
+  return (
+    <li className="px-4 py-3">
+      <p className="text-sm font-medium capitalize">{action.action.replaceAll("_", " ")}</p>
+      <p className="text-xs text-muted-foreground">
+        {action.targetType} <span className="font-mono">{action.targetId}</span>
+        {action.reportId !== null && `, reporte #${action.reportId}`}
+      </p>
+      {action.reason && <p className="text-sm text-muted-foreground">{action.reason}</p>}
+      <p className="text-xs text-muted-foreground">
+        {action.actor ? `@${action.actor.username}` : "Sistema"}, {formatDateTime(action.createdAt)}
+      </p>
+    </li>
+  );
+}
 
 export default function ModerationDashboard({ loaderData }: Route.ComponentProps) {
-  const { queueItem, reports, actions } = loaderData;
-  const [tab, setTab] = useState<TabKey>("queue");
+  const { view, reports, actions } = loaderData;
+  const [params] = useSearchParams();
   const revalidator = useRevalidator();
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const selected = reports?.items.find((r) => r.id === selectedId) ?? null;
+  const page = reports?.page ?? actions?.page ?? 1;
+  const total = reports?.total ?? actions?.total ?? 0;
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-8">
-      <header className="mx-auto max-w-6xl mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary">
-            <IconShieldCheck className="size-5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Moderación</h1>
-            <p className="text-sm text-muted-foreground">Reportes pendientes, historial y decisiones rápidas.</p>
-          </div>
+    <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 md:px-8">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Moderación</h1>
+          <p className="text-sm text-muted-foreground">
+            {view === "cola"
+              ? `${total} ${total === 1 ? "reporte pendiente" : "reportes pendientes"}`
+              : `${total} en total`}
+          </p>
         </div>
         <Button
-          variant="secondary"
-          size="sm"
+          variant="outline"
+          className="gap-2"
+          disabled={revalidator.state === "loading"}
           onClick={() => revalidator.revalidate()}
-          disabled={revalidator.state !== "idle"}
         >
-          <IconRefresh className={cn("size-4", revalidator.state !== "idle" && "animate-spin")} />
-          Refrescar
+          {revalidator.state === "loading" ? (
+            <IconLoader2 className="size-4 animate-spin" />
+          ) : (
+            <IconRefresh className="size-4" />
+          )}
+          Actualizar
         </Button>
       </header>
 
-      <nav className="mx-auto max-w-6xl mb-6 flex gap-1 rounded-xl bg-card p-1 border border-border w-fit">
-        <TabButton active={tab === "queue"} onClick={() => setTab("queue")}>
-          Cola {queueItem ? <span className="ml-1 rounded-full bg-amber-500 size-2 inline-block" /> : null}
-        </TabButton>
-        <TabButton active={tab === "reports"} onClick={() => setTab("reports")}>
-          Reportes ({reports.length})
-        </TabButton>
-        <TabButton active={tab === "actions"} onClick={() => setTab("actions")}>
-          Historial
-        </TabButton>
-      </nav>
+      <section className="rounded-3xl bg-secondary/30 p-2">
+        <div className="-mx-1 flex gap-2 overflow-x-auto p-3">
+          {VIEWS.map((v) => (
+            <Chip
+              key={v.id}
+              to={viewUrl(new URLSearchParams(), v.id === "cola" ? {} : { vista: v.id })}
+              active={view === v.id}
+            >
+              {v.label}
+            </Chip>
+          ))}
+        </div>
 
-      <main className="mx-auto max-w-6xl">
-        {tab === "queue" ? <QueueTab item={queueItem} /> : null}
-        {tab === "reports" ? <ReportsTab reports={reports} /> : null}
-        {tab === "actions" ? <ActionsTab actions={actions} /> : null}
-      </main>
+        {total === 0 ? (
+          <p className="flex items-center justify-center gap-2 rounded-2xl bg-card px-4 py-10 text-center text-sm text-muted-foreground">
+            {view === "cola" && <IconCircleCheck className="size-5 text-success" />}
+            {view === "cola" ? "Nada pendiente." : "Todavía no hay registros."}
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-2xl bg-card">
+            <ul className="divide-y divide-border/50">
+              {reports?.items.map((r) => (
+                <ReportRow key={r.id} report={r} onOpen={() => setSelectedId(r.id)} />
+              ))}
+              {actions?.items.map((a) => (
+                <ActionRow key={a.id} action={a} />
+              ))}
+            </ul>
+            <Pager params={params} page={page} total={total} />
+          </div>
+        )}
+      </section>
+
+      <ReportDialog key={selected?.id} report={selected} onClose={() => setSelectedId(null)} />
     </div>
   );
 }
 
-function TabButton({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-        active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function QueueTab({ item }: { item: QueueItem | null }) {
-  const [note, setNote] = useState("");
-  const [busy, setBusy] = useState<"resolved" | "dismissed" | "reviewing" | null>(null);
+function ReportDialog({ report, onClose }: { report: Report | null; onClose: () => void }) {
   const revalidator = useRevalidator();
+  const [resolution, setResolution] = useState<ReportResolution | "">("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState<"claim" | "resolve" | null>(null);
+  const [history, setHistory] = useState<ModerationAction[]>([]);
+  const targetType = report?.targetType;
+  const targetId = report?.targetId;
 
-  if (!item) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-12 flex flex-col items-center justify-center text-center">
-        <IconChecks className="size-12 text-emerald-500 mb-3" />
-        <h2 className="text-xl font-semibold">Nada pendiente en la cola</h2>
-        <p className="text-sm text-muted-foreground mt-1">Cuando llegue un reporte nuevo, aparecerá acá.</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!targetType || !targetId) return;
+    moderationClient
+      .listActions({ targetType, targetId, pageSize: 10 })
+      .then((res) => setHistory(res.items))
+      .catch(() => {});
+  }, [targetType, targetId]);
 
-  async function decide(decision: "resolved" | "dismissed" | "reviewing") {
-    setBusy(decision);
+  async function run(kind: "claim" | "resolve", call: () => Promise<unknown>, done: string) {
+    setBusy(kind);
     try {
-      // item es non-null en este branch (early return arriba).
-      const current = item;
-      if (!current) return;
-      await moderationClient.resolve({
-        msg_id: current.msg_id,
-        report_id: current.report_id,
-        decision,
-        note: note.trim() ? note.trim() : undefined,
-      });
-      toast.success(`Reporte ${STATUS_LABELS[decision].toLowerCase()}`);
-      setNote("");
+      await call();
+      toast.success(done);
       revalidator.revalidate();
+      if (kind === "resolve") onClose();
     } catch (error) {
-      const msg = error instanceof ApiError ? error.message : "No se pudo guardar la decisión";
-      toast.error(msg);
+      const code = error instanceof ApiError ? error.code : undefined;
+      toast.error(
+        code === "claimed_by_other"
+          ? "Otra persona lo tiene tomado."
+          : code === "already_resolved"
+            ? "Ese reporte ya estaba resuelto."
+            : error instanceof ApiError
+              ? error.message
+              : "No se pudo completar la acción.",
+      );
+      if (code) revalidator.revalidate();
     } finally {
       setBusy(null);
     }
   }
 
+  const closed = report?.status === "resolved" || report?.status === "dismissed";
+  const claimer = report ? claimedNow(report) : null;
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", STATUS_COLORS[item.status])}>
-            {STATUS_LABELS[item.status]}
-          </span>
-          <h2 className="flex gap-3 text-xl font-semibold mt-2">
-            <span>{TARGET_LABELS[item.target_type]}</span>
-            <span>{REASON_LABELS[item.reason]}</span>
-          </h2>
-          <p className="flex gap-3 text-xs text-muted-foreground mt-1 font-mono">
-            <span>target_id: {item.target_id}</span>
-            <span>report_id: {item.report_id}</span>
-          </p>
-        </div>
-      </div>
+    <Dialog open={report !== null} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg">
+        {report && (
+          <>
+            <DialogHeader>
+              <DialogTitle>
+                {TARGET_LABELS[report.targetType]} <span className="font-mono text-base">{report.targetId}</span>
+              </DialogTitle>
+              <DialogDescription>
+                {REASON_LABELS[report.reason]}, {STATUS_LABELS[report.status].toLowerCase()}. Reportó{" "}
+                {report.reporter ? `@${report.reporter.username}` : "un usuario eliminado"} el{" "}
+                {formatDateTime(report.createdAt)}. Sobre lo mismo hay {report.targetReportCount}{" "}
+                {report.targetReportCount === 1 ? "reporte" : "reportes"}.
+              </DialogDescription>
+            </DialogHeader>
 
-      {item.details ? (
-        <div className="rounded-xl bg-secondary/50 p-4 mb-4">
-          <p className="text-xs uppercase text-muted-foreground mb-1">Detalles de quien reporta</p>
-          <p className="text-sm whitespace-pre-wrap">{item.details}</p>
-        </div>
-      ) : null}
+            {report.details && (
+              <p className="whitespace-pre-wrap rounded-xl bg-secondary/50 p-3 text-sm">{report.details}</p>
+            )}
 
-      <div className="rounded-xl bg-secondary/30 p-4 mb-4">
-        <p className="text-xs uppercase text-muted-foreground mb-2">Contenido reportado</p>
-        <pre className="text-xs overflow-x-auto max-h-64 font-mono">
-          {JSON.stringify(item.target_snapshot, null, 2)}
-        </pre>
-      </div>
+            {history.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Bitácora de este objetivo</p>
+                <ul className="max-h-32 divide-y divide-border/50 overflow-y-auto rounded-xl bg-secondary/30 text-xs">
+                  {history.map((a) => (
+                    <li key={a.id} className="px-3 py-2">
+                      <span className="font-medium capitalize">{a.action.replaceAll("_", " ")}</span>{" "}
+                      {a.actor ? `@${a.actor.username}` : "sistema"}, {formatDateTime(a.createdAt)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-      <div className="flex flex-col gap-3">
-        <Textarea
-          placeholder="Nota interna (opcional, queda en el historial)"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={2}
-        />
-        <div className="flex flex-wrap gap-2 justify-end">
-          <Button variant="secondary" disabled={!!busy} onClick={() => decide("reviewing")}>
-            {busy === "reviewing" ? <IconLoader2 className="size-4 animate-spin" /> : null}
-            Posponer
-          </Button>
-          <Button variant="destructive" disabled={!!busy} onClick={() => decide("dismissed")}>
-            {busy === "dismissed" ? <IconLoader2 className="size-4 animate-spin" /> : <IconX className="size-4" />}
-            Descartar
-          </Button>
-          <Button disabled={!!busy} onClick={() => decide("resolved")}>
-            {busy === "resolved" ? <IconLoader2 className="size-4 animate-spin" /> : <IconChecks className="size-4" />}
-            Resolver
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
+            {closed ? (
+              <p className="text-sm text-muted-foreground">
+                {report.resolution ? RESOLUTION_LABELS[report.resolution] : STATUS_LABELS[report.status]}
+                {report.resolvedBy && ` por @${report.resolvedBy.username}`}
+                {report.resolutionNote && `: ${report.resolutionNote}`}
+              </p>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-muted-foreground">
+                    {claimer
+                      ? `Lo tiene @${claimer.username} hasta ${formatDateTime(report.claimedUntil ?? "")}`
+                      : "Nadie lo ha tomado."}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={busy !== null}
+                    onClick={() =>
+                      run("claim", () => moderationClient.claim(report.id), "Reporte tomado por 15 minutos.")
+                    }
+                  >
+                    {busy === "claim" && <IconLoader2 className="size-4 animate-spin" />}
+                    Tomar
+                  </Button>
+                </div>
 
-function ReportsTab({ reports }: { reports: Report[] }) {
-  if (reports.length === 0) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-12 text-center text-muted-foreground">
-        Todavía no hay reportes.
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-secondary/50 text-xs uppercase text-muted-foreground">
-          <tr>
-            <th className="text-left px-4 py-2">Contenido</th>
-            <th className="text-left px-4 py-2">Motivo</th>
-            <th className="text-left px-4 py-2">Estado</th>
-            <th className="text-left px-4 py-2">Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reports.map((r) => (
-            <tr key={r.id} className="border-t border-border">
-              <td className="px-4 py-2">
-                <div className="font-medium">{TARGET_LABELS[r.target_type]}</div>
-                <div className="text-xs text-muted-foreground font-mono">{r.target_id.slice(0, 8)}...</div>
-              </td>
-              <td className="px-4 py-2">{REASON_LABELS[r.reason]}</td>
-              <td className="px-4 py-2">
-                <span
-                  className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", STATUS_COLORS[r.status])}
-                >
-                  {STATUS_LABELS[r.status]}
-                </span>
-              </td>
-              <td className="px-4 py-2 text-muted-foreground text-xs">
-                {
-                  // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-                  new Date(r.created_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })
-                }
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+                <div className="space-y-2">
+                  <Label>Resolución</Label>
+                  <div className="grid gap-1.5">
+                    {REPORT_RESOLUTIONS.map((r) => (
+                      <label
+                        key={r}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm transition-colors",
+                          resolution === r ? "border-primary bg-primary/5" : "hover:bg-secondary",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="resolution"
+                          checked={resolution === r}
+                          onChange={() => setResolution(r)}
+                          className="accent-primary"
+                        />
+                        {RESOLUTION_LABELS[r]}
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-function ActionsTab({ actions }: { actions: ModAction[] }) {
-  if (actions.length === 0) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-12 text-center text-muted-foreground">
-        Sin acciones registradas.
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-secondary/50 text-xs uppercase text-muted-foreground">
-          <tr>
-            <th className="text-left px-4 py-2">Acción</th>
-            <th className="text-left px-4 py-2">Contenido</th>
-            <th className="text-left px-4 py-2">Responsable</th>
-            <th className="text-left px-4 py-2">Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          {actions.map((a) => (
-            <tr key={a.id} className="border-t border-border">
-              <td className="px-4 py-2 font-medium">{a.action}</td>
-              <td className="px-4 py-2">
-                <div className="font-mono text-xs">{a.target_type}</div>
-                <div className="font-mono text-xs text-muted-foreground">{a.target_id?.slice(0, 8) ?? "—"}</div>
-              </td>
-              <td className="px-4 py-2 font-mono text-xs">{a.actor_id?.slice(0, 8) ?? "—"}</td>
-              <td className="px-4 py-2 text-muted-foreground text-xs">
-                {
-                  // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-                  new Date(a.created_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })
-                }
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                <Textarea
+                  placeholder="Nota interna (opcional, queda en la bitácora)"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  maxLength={1000}
+                  rows={2}
+                />
+
+                <DialogFooter>
+                  <Button variant="secondary" disabled={busy !== null} onClick={onClose}>
+                    Cerrar
+                  </Button>
+                  <Button
+                    disabled={!resolution || busy !== null}
+                    onClick={() =>
+                      resolution &&
+                      run(
+                        "resolve",
+                        () => moderationClient.resolve(report.id, { resolution, note: note.trim() || undefined }),
+                        "Reporte resuelto.",
+                      )
+                    }
+                  >
+                    {busy === "resolve" && <IconLoader2 className="size-4 animate-spin" />}
+                    Resolver
+                  </Button>
+                </DialogFooter>
+              </div>
+            )}
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

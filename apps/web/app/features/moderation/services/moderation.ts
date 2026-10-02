@@ -1,66 +1,35 @@
-import type { AdminUser } from "@framerate/contracts";
+import type {
+  AdminUser,
+  ModerationAction,
+  Report,
+  ReportPage,
+  ReportStatus,
+  ReportTargetType,
+  ResolveReportRequest,
+} from "@framerate/contracts";
 import { api } from "~/shared/lib/api";
-import type { Report, ReportStatus } from "./reports";
 
-export interface QueueItem {
-  msg_id: number;
-  read_ct: number;
-  enqueued_at: string;
-  report_id: string;
-  target_type: Report["target_type"];
-  target_id: string;
-  reason: Report["reason"];
-  details: string | null;
-  reporter_id: string | null;
-  status: ReportStatus;
-  report_created_at: string;
-  target_snapshot: Record<string, unknown> | null;
-}
+const BASE = "/v1/admin/moderation";
 
-export interface ModAction {
-  id: string;
-  actor_id: string | null;
-  action: string;
-  target_type: string;
-  target_id: string | null;
-  reason: string | null;
-  metadata: Record<string, unknown> | null;
-  created_at: string;
-}
-
-export type ResolveDecision = "resolved" | "dismissed" | "reviewing";
-
-export interface ResolvePayload {
-  msg_id: number;
-  report_id: string;
-  decision: ResolveDecision;
-  note?: string;
+function query(params: Record<string, string | number | undefined>) {
+  return Object.fromEntries(Object.entries(params).flatMap(([k, v]) => (v === undefined ? [] : [[k, String(v)]])));
 }
 
 export const moderationClient = {
-  getQueueItem: () => api.get<{ item: QueueItem | null }>("/v1/admin/moderation/queue"),
+  queue: (params: { page?: number; pageSize?: number } = {}) =>
+    api.get<ReportPage>(`${BASE}/queue`, { params: query(params) }),
 
-  resolve: (payload: ResolvePayload) => api.post<{ success: boolean }>("/v1/admin/moderation/resolve", payload),
+  listReports: (params: { status?: ReportStatus; targetType?: ReportTargetType; page?: number; pageSize?: number }) =>
+    api.get<ReportPage>(`${BASE}/reports`, { params: query(params) }),
 
-  listReports: (params: { status?: ReportStatus; limit?: number }) =>
-    api.get<{ reports: Report[] }>("/v1/admin/moderation/reports", {
-      params: {
-        ...(params.status ? { status: params.status } : {}),
-        ...(params.limit ? { limit: String(params.limit) } : {}),
-      },
+  listActions: (params: { targetType?: string; targetId?: string; page?: number; pageSize?: number } = {}) =>
+    api.get<{ items: ModerationAction[]; page: number; pageSize: number; total: number }>(`${BASE}/actions`, {
+      params: query(params),
     }),
 
-  listModActions: (params: { actor_id?: string; target_type?: string; limit?: number }) =>
-    api.get<{ actions: ModAction[] }>("/v1/admin/moderation/mod-actions", {
-      params: {
-        ...(params.actor_id ? { actor_id: params.actor_id } : {}),
-        ...(params.target_type ? { target_type: params.target_type } : {}),
-        ...(params.limit ? { limit: String(params.limit) } : {}),
-      },
-    }),
+  claim: (id: number) => api.post<Report>(`${BASE}/reports/${id}/claim`, {}),
 
-  flagProduct: (payload: { product_id: string; reason?: string }) =>
-    api.post<{ recheck_id: string }>("/v1/admin/moderation/flag-product", payload),
+  resolve: (id: number, payload: ResolveReportRequest) => api.post<Report>(`${BASE}/reports/${id}/resolve`, payload),
 
   searchUsers: (q: string) => api.get<{ items: AdminUser[] }>("/v1/admin/users", { params: { q } }),
 

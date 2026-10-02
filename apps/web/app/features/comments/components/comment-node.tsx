@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { CommentBody } from "~/features/comments/components/comment-body";
 import { CommentForm } from "~/features/comments/components/comment-form";
-import { REPORTS_API_ENABLED, ReportButton } from "~/features/moderation";
+import { ReportButton } from "~/features/moderation";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { cn } from "~/shared/lib/utils";
 
@@ -133,7 +133,7 @@ export function CommentNode({ node, onLike, onReply, onEdit, onDelete, canReply 
                 Eliminar
               </FooterAction>
             )}
-            {REPORTS_API_ENABLED && !isAuthor && !isDeleted && user && (
+            {!isAuthor && !isDeleted && user && (
               <ReportButton
                 targetType="comment"
                 targetId={String(node.id)}
