@@ -1,7 +1,6 @@
-import type { PricePoint } from "@framerate/contracts";
+import type { PricePoint, QuoteSummary } from "@framerate/contracts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { QuoteListItem } from "~/features/quote/services/quotes";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { quoteKeys } from "~/shared/lib/query-keys";
 import { products, sessions } from "~/shared/storybook/fixtures";
@@ -59,7 +58,6 @@ export const HistorialVacio: Story = {
 
 const quoteProduct = { id: products[0].id, name: products[0].name };
 
-// Vacía mientras `QUOTES_API_ENABLED` sea false: `AddToQuote` no renderiza sin la API (#25).
 export const AgregarACotizacion: Story = {
   name: "Agregar a cotización: botones",
   render: () => (
@@ -71,32 +69,30 @@ export const AgregarACotizacion: Story = {
   ),
 };
 
-const quote = (id: string, name: string, count: number, is_public: boolean): QuoteListItem => ({
+const quote = (id: string, name: string, itemCount: number, visibility: QuoteSummary["visibility"]): QuoteSummary => ({
   id,
   name,
   description: null,
-  is_public,
-  compatibility_status: "unknown",
-  estimated_wattage: null,
-  last_analyzed_at: null,
-  created_at: "2026-09-20T12:00:00Z",
-  updated_at: "2026-09-28T12:00:00Z",
-  quote_items: [{ count }],
+  visibility,
+  itemCount,
+  author: { username: "ana", displayName: "Ana Pérez", avatarUrl: null },
+  createdAt: "2026-09-20T12:00:00.000Z",
+  updatedAt: "2026-09-28T12:00:00.000Z",
 });
 
-// Sin API, el diálogo lee las cotizaciones de la caché: una query desactivada igual devuelve lo que hay ahí.
-const clientWithQuotes = (data: QuoteListItem[]) => {
+// Sin sesión de API, el diálogo lee las cotizaciones de la caché: con staleTime infinito no sale a la red.
+const clientWithQuotes = (items: QuoteSummary[]) => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Number.POSITIVE_INFINITY } },
   });
-  client.setQueryData(quoteKeys.list(1, 50), { data, meta: { page: 1, limit: 50, total: data.length, totalPages: 1 } });
+  client.setQueryData(quoteKeys.list(1, 50), { items, page: 1, pageSize: 50, total: items.length });
   return client;
 };
 
 const withQuotesClient = clientWithQuotes([
-  quote("q-gamer", "PC gamer 2026", 8, true),
-  quote("q-oficina", "Oficina de mamá", 1, false),
-  quote("q-stream", "Streaming", 5, true),
+  quote("q-gamer", "PC gamer 2026", 8, "public"),
+  quote("q-oficina", "Oficina de mamá", 1, "private"),
+  quote("q-stream", "Streaming", 5, "public"),
 ]);
 const emptyClient = clientWithQuotes([]);
 

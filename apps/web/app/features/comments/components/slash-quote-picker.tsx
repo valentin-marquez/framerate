@@ -43,7 +43,7 @@ export function SlashQuotePicker({ state, onSelect, onActiveChange, onClose, ori
   const activeIndex = state?.activeIndex ?? 0;
 
   const { data, isLoading, isError } = useQuotes(1, 20, { enabled: open });
-  const all = data?.data ?? [];
+  const all = data?.items ?? [];
   const filtered = useMemo(() => {
     if (!query) return all;
     return all.filter((q) => q.name.toLowerCase().includes(query));

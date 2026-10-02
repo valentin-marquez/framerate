@@ -6,8 +6,13 @@ import { toast } from "sonner";
 import { AuthProvidersList } from "~/features/auth/components/auth-providers-list";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { QUOTE_ROW_CLASS, QuoteRow } from "~/features/quote/components/quote-row";
-import { useCreateQuote, useQuoteAddItem, useQuoteRemoveItem, useQuotes } from "~/features/quote/hooks/useQuotes";
-import { QUOTES_API_ENABLED } from "~/features/quote/services/quotes";
+import {
+  useCreateQuote,
+  useQuoteAddItem,
+  useQuoteRemoveItem,
+  useQuotes,
+  useQuoteUpdateItem,
+} from "~/features/quote/hooks/useQuotes";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
@@ -28,8 +33,6 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
   // "closing" mantiene el diálogo montado mientras anima la salida.
   const [phase, setPhase] = useState<"closed" | "open" | "closing">("closed");
   const { t } = useTranslation();
-
-  if (!QUOTES_API_ENABLED) return null;
 
   return (
     <>
@@ -76,7 +79,7 @@ interface AddToQuoteDialogProps {
   onClosed: () => void;
 }
 
-// Aparte del botón para que Storybook lo muestre con datos de ejemplo mientras no exista la API (#25).
+// Aparte del botón para que Storybook lo muestre con datos de ejemplo.
 export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQuoteDialogProps) {
   const { t } = useTranslation();
   const user = useUser();
@@ -85,12 +88,13 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
   const createQuote = useCreateQuote();
   const addItem = useQuoteAddItem();
   const removeItem = useQuoteRemoveItem();
+  const updateItem = useQuoteUpdateItem();
   const [creating, setCreating] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
-  const list = quotes?.data ?? [];
+  const list = quotes?.items ?? [];
   const showForm = creating || (!!quotes && list.length === 0);
   const busy = pendingId !== null || createQuote.isPending;
 
@@ -104,13 +108,25 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
   const add = (quote: { id: string; name: string }) => {
     setPendingId(quote.id);
     addItem.mutate(
-      { quoteId: quote.id, data: { product_id: String(product.id), quantity: 1 } },
+      { quoteId: quote.id, data: { productId: product.id, quantity: 1 } },
       {
-        onSuccess: (item) => {
+        onSuccess: (detail) => {
+          // Si el producto ya estaba, agregar sólo sumó una unidad: deshacer resta esa unidad en vez de quitarlo.
+          const item = detail.items.find((i) => i.product.id === product.id);
           setLastSelectedQuoteId(quote.id);
           onClose();
           toast.success(t("product_added", { name: quote.name }), {
-            action: { label: t("undo"), onClick: () => removeItem.mutate({ quoteId: quote.id, itemId: item.id }) },
+            action: {
+              label: t("undo"),
+              onClick: () => {
+                if (!item) return;
+                if (item.quantity > 1) {
+                  updateItem.mutate({ quoteId: quote.id, itemId: item.id, data: { quantity: item.quantity - 1 } });
+                } else {
+                  removeItem.mutate({ quoteId: quote.id, itemId: item.id });
+                }
+              },
+            },
           });
         },
         onError: () => toast.error(t("add_to_quote_error")),
@@ -123,7 +139,10 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
     e.preventDefault();
     const name = String(new FormData(e.currentTarget).get("name") ?? "").trim();
     if (!name) return;
-    createQuote.mutate({ name }, { onSuccess: add, onError: () => toast.error(t("add_to_quote_error")) });
+    createQuote.mutate(
+      { name, visibility: "private" },
+      { onSuccess: add, onError: () => toast.error(t("add_to_quote_error")) },
+    );
   };
 
   // Esc retrocede un nivel: primero cierra el campo de nombre, después el diálogo.

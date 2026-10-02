@@ -9,7 +9,8 @@ export const categoryKeys = {
 
 export const quoteKeys = {
   all: ["quotes"] as const,
-  list: (page: number, limit: number) => [...quoteKeys.all, "list", page, limit] as const,
+  lists: () => [...quoteKeys.all, "list"] as const,
+  list: (page: number, limit: number) => [...quoteKeys.lists(), page, limit] as const,
   details: () => [...quoteKeys.all, "detail"] as const,
   detail: (id: string) => [...quoteKeys.details(), id] as const,
 };

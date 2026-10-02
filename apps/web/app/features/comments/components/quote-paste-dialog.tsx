@@ -3,8 +3,8 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { findQuoteUrls } from "~/features/comments/lib/quote-url";
-import { useUpdateQuote } from "~/features/quote/hooks/useQuotes";
-import { QUOTES_API_ENABLED, quotesService } from "~/features/quote/services/quotes";
+import { useSetQuoteVisibility } from "~/features/quote/hooks/useQuotes";
+import { quotesService } from "~/features/quote/services/quotes";
 import { Button } from "~/shared/components/primitives/button";
 import {
   Dialog,
@@ -14,6 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/shared/components/primitives/dialog";
+
+// ponytail: hacer pública una cotización necesita PATCH /v1/quotes/:id, que llega con la entrega 2 de #25. Hasta entonces
+// el aviso queda apagado para no llamar a una ruta que no existe.
+const PASTE_PROMPT_ENABLED = false;
 
 interface PendingQuote {
   id: string;
@@ -35,7 +39,7 @@ interface QuotePasteDialogState {
  */
 export function useQuotePasteWatcher() {
   const user = useUser();
-  const updateQuote = useUpdateQuote();
+  const setVisibility = useSetQuoteVisibility();
 
   const [state, setState] = useState<QuotePasteDialogState>(() => ({
     pending: null,
@@ -52,7 +56,7 @@ export function useQuotePasteWatcher() {
 
   const handlePasteText = useCallback(
     async (text: string) => {
-      if (!user || !QUOTES_API_ENABLED) return;
+      if (!user || !PASTE_PROMPT_ENABLED) return;
       if (!text) return;
       const hits = findQuoteUrls(text);
       if (hits.length === 0) return;
@@ -66,7 +70,7 @@ export function useQuotePasteWatcher() {
         if (state.asked.has(hit.quoteId)) continue;
         try {
           const quote = await quotesService.getById(hit.quoteId);
-          if (quote.user_id === user.id && !quote.is_public) {
+          if (quote.author.username === user.username && quote.visibility === "private") {
             toQueue.push({ id: hit.quoteId, name: quote.name });
           }
         } catch {
@@ -98,14 +102,14 @@ export function useQuotePasteWatcher() {
     const pending = state.pending;
     if (!pending) return;
     try {
-      await updateQuote.mutateAsync({ id: pending.id, data: { is_public: true } });
+      await setVisibility.mutateAsync({ id: pending.id, visibility: "public" });
       toast.success(`"${pending.name}" ahora es pública`);
     } catch {
       toast.error("No se pudo cambiar la visibilidad de la cotización");
     } finally {
       close();
     }
-  }, [state.pending, updateQuote, close]);
+  }, [state.pending, setVisibility, close]);
 
   const node = (
     <Dialog
@@ -126,12 +130,12 @@ export function useQuotePasteWatcher() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2">
-          <Button variant="ghost" onClick={close} disabled={updateQuote.isPending}>
+          <Button variant="ghost" onClick={close} disabled={setVisibility.isPending}>
             Mantener privada
           </Button>
-          <Button onClick={confirm} disabled={updateQuote.isPending} className="gap-1.5">
+          <Button onClick={confirm} disabled={setVisibility.isPending} className="gap-1.5">
             <IconLockOpen className="size-4" />
-            {updateQuote.isPending ? "Publicando…" : "Hacer pública"}
+            {setVisibility.isPending ? "Publicando…" : "Hacer pública"}
           </Button>
         </DialogFooter>
       </DialogContent>

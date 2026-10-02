@@ -2,7 +2,6 @@ import { IconLoader2, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useCreateQuote } from "~/features/quote/hooks/useQuotes";
-import { QUOTES_API_ENABLED } from "~/features/quote/services/quotes";
 import { Button } from "~/shared/components/primitives/button";
 import {
   Dialog,
@@ -40,28 +39,30 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
     e.preventDefault();
     setError(null);
 
-    createQuote.mutate(formData, {
-      onSuccess: (newQuote) => {
-        setIsOpen(false);
-        setFormData({ name: "", description: "", is_public: false });
+    createQuote.mutate(
+      {
+        name: formData.name,
+        description: formData.description || null,
+        visibility: formData.is_public ? "public" : "private",
+      },
+      {
+        onSuccess: (newQuote) => {
+          setIsOpen(false);
+          setFormData({ name: "", description: "", is_public: false });
 
-        // Delay de 600ms para permitir ver la animación de agregado en la lista
-        setTimeout(() => {
           if (onSuccess) {
             onSuccess(newQuote.id);
           } else {
             navigate(`/cotizacion/${newQuote.id}`);
           }
-        }, 600);
+        },
+        onError: (err) => {
+          console.error("Error creating quote:", err);
+          setError(err instanceof Error ? err.message : t("create_quote_error"));
+        },
       },
-      onError: (err) => {
-        console.error("Error creating quote:", err);
-        setError(err instanceof Error ? err.message : t("create_quote_error"));
-      },
-    });
+    );
   };
-
-  if (!QUOTES_API_ENABLED) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

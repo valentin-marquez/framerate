@@ -1,77 +1,54 @@
-import type { QuoteDetail, QuoteItem } from "~/features/quote/services/quotes";
+import { CATEGORY_LABELS, type QuoteDetail } from "@framerate/contracts";
 
-export const exportToExcel = async (quote: QuoteDetail, items?: QuoteItem[]) => {
+/** Lo que cuenta en el total: los seleccionados (las alternativas guardadas no se exportan). */
+const selectedItems = (quote: QuoteDetail) => quote.items.filter((item) => item.isSelected);
+
+export const exportToExcel = async (quote: QuoteDetail) => {
   const XLSX = await import("xlsx");
-  const itemsToExport = items || quote.items;
-  const data = itemsToExport.map((item) => {
-    const priceNormal = item.selected_listing ? item.selected_listing.price_normal : item.product.prices?.normal || 0;
-    const priceCash = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
-
-    return {
-      Producto: item.product.name,
-      Categoría: item.product.category?.name || "",
-      Tienda: item.selected_listing?.store?.name || "Mejor precio",
-      "Enlace a la tienda": item.selected_listing?.url || "",
-      Cantidad: item.quantity,
-      "Precio unitario con tarjeta": priceNormal,
-      "Precio unitario efectivo": priceCash,
-      "Total con tarjeta": (priceNormal ?? 0) * item.quantity,
-      "Total efectivo": (priceCash ?? 0) * item.quantity,
-    };
-  });
+  const data = selectedItems(quote).map(({ product, offer, quantity }) => ({
+    Producto: product.name,
+    Categoría: CATEGORY_LABELS[product.category],
+    Tienda: offer?.store.name ?? "No disponible",
+    "Enlace a la tienda": offer?.url ?? "",
+    Cantidad: quantity,
+    "Precio unitario con tarjeta": offer?.priceCard ?? 0,
+    "Precio unitario efectivo": offer?.priceCash ?? 0,
+    "Total con tarjeta": (offer?.priceCard ?? 0) * quantity,
+    "Total efectivo": (offer?.priceCash ?? 0) * quantity,
+  }));
 
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Cotización");
 
-  // Adjust column widths
-  const wscols = [
-    { wch: 40 }, // Producto
-    { wch: 15 }, // Categoría
-    { wch: 20 }, // Tienda
-    { wch: 30 }, // Enlace a la tienda
-    { wch: 10 }, // Cantidad
-    { wch: 26 }, // Precio unitario con tarjeta
-    { wch: 24 }, // Precio unitario efectivo
-    { wch: 18 }, // Total con tarjeta
-    { wch: 15 }, // Total efectivo
+  worksheet["!cols"] = [
+    { wch: 40 },
+    { wch: 18 },
+    { wch: 20 },
+    { wch: 30 },
+    { wch: 10 },
+    { wch: 26 },
+    { wch: 24 },
+    { wch: 18 },
+    { wch: 15 },
   ];
-  worksheet["!cols"] = wscols;
 
   XLSX.writeFile(workbook, `${quote.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.xlsx`);
 };
 
-export const copyToClipboard = async (quote: QuoteDetail, items?: QuoteItem[]) => {
-  const itemsToExport = items || quote.items;
-  const lines = [`Cotización: ${quote.name}`];
-  lines.push(`Fecha: ${new Date().toLocaleDateString("es-CL")}`);
-  lines.push("");
+export const copyToClipboard = async (quote: QuoteDetail) => {
+  const lines = [`Cotización: ${quote.name}`, `Fecha: ${new Date().toLocaleDateString("es-CL")}`, ""];
 
-  itemsToExport.forEach((item) => {
-    const priceCash = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
-    const store = item.selected_listing?.store?.name || "Mejor precio";
+  for (const { product, offer, quantity } of selectedItems(quote)) {
+    lines.push(`- ${quantity}x ${product.name}`);
+    lines.push(`  ${offer ? `${offer.store.name} - $${offer.priceCash.toLocaleString("es-CL")}` : "No disponible"}`);
+    if (offer) lines.push(`  Link: ${offer.url}`);
+  }
 
-    lines.push(`- ${item.quantity}x ${item.product.name}`);
-    lines.push(`  ${store} - $${(priceCash ?? 0).toLocaleString("es-CL")}`);
-    if (item.selected_listing?.url) {
-      lines.push(`  Link: ${item.selected_listing.url}`);
-    }
-  });
-
-  const totalCash = itemsToExport.reduce((acc, item) => {
-    const price = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
-    return acc + (price ?? 0) * item.quantity;
-  }, 0);
-
-  lines.push("");
-  lines.push(`Total: $${totalCash.toLocaleString("es-CL")}`);
-  lines.push("");
-  lines.push("Generado en Framerate.cl");
-
-  const text = lines.join("\n");
+  lines.push("", `Total: $${quote.totals.cash.toLocaleString("es-CL")}`, "", "Generado en Framerate.cl");
 
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(lines.join("\n"));
     return true;
   } catch (err) {
     console.error("Failed to copy: ", err);

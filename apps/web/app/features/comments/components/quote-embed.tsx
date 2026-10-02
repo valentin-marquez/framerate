@@ -1,3 +1,4 @@
+import { QUOTE_SLOT_LABELS } from "@framerate/contracts";
 import { IconArrowUpRight, IconLayoutList, IconX } from "@tabler/icons-react";
 import { AnimatePresence, domMax, LazyMotion, m } from "motion/react";
 import { useEffect, useId, useState } from "react";
@@ -67,7 +68,7 @@ export function QuoteEmbed({ quoteId, href }: QuoteEmbedProps) {
     );
   }
 
-  const itemCount = quote.items?.length ?? 0;
+  const itemCount = quote.itemCount;
 
   return (
     <LazyMotion features={domMax}>
@@ -155,9 +156,10 @@ interface QuoteQuickViewContentProps {
 }
 
 function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickViewContentProps) {
-  const itemCount = quote.items?.length ?? 0;
-  const totalCash = quote.totals?.cash ?? 0;
-  const totalNormal = quote.totals?.normal ?? 0;
+  const itemCount = quote.itemCount;
+  const items = quote.items.filter((item) => item.isSelected);
+  const totalCash = quote.totals.cash;
+  const totalCard = quote.totals.card;
 
   return (
     <m.div
@@ -169,7 +171,7 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
       <header className="flex items-start gap-3 p-5 border-b border-border/60">
         <div
           className="size-10 rounded-xl flex items-center justify-center shrink-0 ring-1 ring-inset ring-white/10"
-          style={{ background: getGradient(quote.user_id || quote.id) }}
+          style={{ background: getGradient(quote.id) }}
         >
           <IconLayoutList className="size-5 text-white/90 drop-shadow-sm" />
         </div>
@@ -181,7 +183,6 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
             <span>
               {itemCount} {itemCount === 1 ? "componente" : "componentes"}
             </span>
-            {quote.estimated_wattage ? <span>~{quote.estimated_wattage}W estimados</span> : null}
           </p>
         </div>
         <button
@@ -197,20 +198,20 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
       {quote.description && <p className="px-5 pt-3 text-sm text-muted-foreground line-clamp-3">{quote.description}</p>}
 
       <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
-        {quote.items?.length ? (
-          quote.items.slice(0, 8).map((item) => {
-            const price = item.selected_listing?.price_cash ?? item.product.prices?.cash ?? null;
+        {items.length ? (
+          items.slice(0, 8).map((item) => {
+            const price = item.offer?.priceCash ?? null;
             return (
               <div key={item.id} className="flex items-center gap-3 py-1.5">
                 <div className="size-9 rounded-md overflow-hidden bg-secondary/40 shrink-0">
-                  {item.product.image_url ? (
-                    <AsyncImage src={item.product.image_url} alt="" className="size-full object-contain" />
+                  {item.product.imageUrl ? (
+                    <AsyncImage src={item.product.imageUrl} alt="" className="size-full object-contain" />
                   ) : null}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-foreground truncate">{item.product.name}</div>
                   <div className="text-xs text-muted-foreground flex gap-x-2">
-                    <span>{item.category?.name}</span>
+                    <span>{QUOTE_SLOT_LABELS[item.slot]}</span>
                     {item.quantity > 1 ? <span className="tabular-nums">x{item.quantity}</span> : null}
                   </div>
                 </div>
@@ -223,9 +224,7 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
         ) : (
           <p className="text-sm text-muted-foreground italic py-2">Esta cotización está vacía.</p>
         )}
-        {(quote.items?.length ?? 0) > 8 && (
-          <p className="text-xs text-muted-foreground pt-1">+{(quote.items?.length ?? 0) - 8} más…</p>
-        )}
+        {items.length > 8 && <p className="text-xs text-muted-foreground pt-1">+{items.length - 8} más…</p>}
       </div>
 
       <footer className="border-t border-border/60 p-4 space-y-3 bg-background/40">
@@ -233,10 +232,10 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
           <span className="text-xs text-muted-foreground">Total efectivo</span>
           <span className="text-lg font-semibold font-mono tabular-nums text-foreground">{formatCLP(totalCash)}</span>
         </div>
-        {totalNormal > 0 && totalNormal !== totalCash && (
+        {totalCard > 0 && totalCard !== totalCash && (
           <div className="flex items-baseline justify-between text-xs text-muted-foreground">
-            <span>Total normal</span>
-            <span className="font-mono tabular-nums">{formatCLP(totalNormal)}</span>
+            <span>Total con tarjeta</span>
+            <span className="font-mono tabular-nums">{formatCLP(totalCard)}</span>
           </div>
         )}
         <Link

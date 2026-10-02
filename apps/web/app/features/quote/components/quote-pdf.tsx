@@ -1,5 +1,5 @@
+import { CATEGORY_LABELS, type QuoteDetail } from "@framerate/contracts";
 import { Document, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import type { QuoteDetail, QuoteItem } from "~/features/quote/services/quotes";
 import { buildOutboundUrl } from "~/shared/utils/outbound";
 
 // Register a font that supports special characters if needed,
@@ -140,23 +140,11 @@ const formatCurrency = (amount: number) => clpPdfFormatter.format(amount);
 
 interface QuotePDFProps {
   quote: QuoteDetail;
-  items?: QuoteItem[];
 }
 
-export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
-  const itemsToRender = items || quote.items;
-
-  const totalNormal = itemsToRender.reduce((acc, item) => {
-    if (!item.product) return acc;
-    const price = item.selected_listing ? item.selected_listing.price_normal : item.product.prices?.normal || 0;
-    return acc + (price ?? 0) * item.quantity;
-  }, 0);
-
-  const totalCash = itemsToRender.reduce((acc, item) => {
-    if (!item.product) return acc;
-    const price = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
-    return acc + (price ?? 0) * item.quantity;
-  }, 0);
+export const QuotePDF = ({ quote }: QuotePDFProps) => {
+  // Lo que cuenta en el total: los seleccionados (las alternativas guardadas no se exportan).
+  const itemsToRender = quote.items.filter((item) => item.isSelected);
 
   return (
     <Document>
@@ -168,14 +156,14 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
               Creado:{" "}
               {
                 // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-                new Date(quote.created_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
+                new Date(quote.createdAt).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
               }
             </Text>
             <Text>
               Actualizado:{" "}
               {
                 // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-                new Date(quote.updated_at).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
+                new Date(quote.updatedAt).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
               }
             </Text>
           </View>
@@ -193,78 +181,50 @@ export const QuotePDF = ({ quote, items }: QuotePDFProps) => {
               <Text style={styles.tableCellHeader}>Cant.</Text>
             </View>
             <View style={styles.tableColHeaderSmall}>
-              <Text style={styles.tableCellHeader}>Precio Ef.</Text>
+              <Text style={styles.tableCellHeader}>Efectivo</Text>
             </View>
           </View>
 
-          {itemsToRender.map((item, index) => {
-            if (!item.product) {
-              return (
-                <View style={styles.tableRow} key={item.id || index}>
-                  <View style={styles.tableCol}>
-                    <View style={{ margin: 5 }}>
-                      <Text style={{ ...styles.productName, color: "#9CA3AF" }}>
-                        {item.category?.name || "Componente"}
-                      </Text>
-                      <Text style={styles.productSpecs}>Pendiente</Text>
-                    </View>
-                  </View>
-                  <View style={styles.tableColSmall}>
-                    <Text style={styles.tableCell}>-</Text>
-                  </View>
-                  <View style={styles.tableColSmall}>
-                    <Text style={styles.tableCell}>{item.quantity}</Text>
-                  </View>
-                  <View style={styles.tableColSmall}>
-                    <Text style={styles.tableCell}>-</Text>
-                  </View>
-                </View>
-              );
-            }
-
-            const priceCash = item.selected_listing ? item.selected_listing.price_cash : item.product.prices?.cash || 0;
-
-            return (
-              <View style={styles.tableRow} key={item.id || index}>
-                <View style={styles.tableCol}>
-                  <View style={{ margin: 5 }}>
-                    <Text style={styles.productName}>{item.product.name}</Text>
-                    <Text style={styles.productSpecs}>{item.product.category?.name}</Text>
-                  </View>
-                </View>
-                <View style={styles.tableColSmall}>
-                  {item.selected_listing?.url ? (
-                    <Link
-                      src={buildOutboundUrl(item.selected_listing.url, "quote_pdf")}
-                      style={{ ...styles.tableCell, color: "#2563EB", textDecoration: "none" }}
-                    >
-                      {item.selected_listing?.store?.name || "Mejor precio"}
-                    </Link>
-                  ) : (
-                    <Text style={styles.tableCell}>{item.selected_listing?.store?.name || "Mejor precio"}</Text>
-                  )}
-                </View>
-                <View style={styles.tableColSmall}>
-                  <Text style={styles.tableCell}>{item.quantity}</Text>
-                </View>
-                <View style={styles.tableColSmall}>
-                  <Text style={styles.tableCell}>{formatCurrency(priceCash ?? 0)}</Text>
+          {itemsToRender.map(({ id, product, offer, quantity }) => (
+            <View style={styles.tableRow} key={id}>
+              <View style={styles.tableCol}>
+                <View style={{ margin: 5 }}>
+                  <Text style={styles.productName}>{product.name}</Text>
+                  <Text style={styles.productSpecs}>{CATEGORY_LABELS[product.category]}</Text>
                 </View>
               </View>
-            );
-          })}
+              <View style={styles.tableColSmall}>
+                {offer ? (
+                  <Link
+                    src={buildOutboundUrl(offer.url, "quote_pdf")}
+                    style={{ ...styles.tableCell, color: "#2563EB", textDecoration: "none" }}
+                  >
+                    {offer.store.name}
+                  </Link>
+                ) : (
+                  <Text style={styles.tableCell}>No disponible</Text>
+                )}
+              </View>
+              <View style={styles.tableColSmall}>
+                <Text style={styles.tableCell}>{quantity}</Text>
+              </View>
+              <View style={styles.tableColSmall}>
+                <Text style={styles.tableCell}>{offer ? formatCurrency(offer.priceCash * quantity) : "-"}</Text>
+              </View>
+            </View>
+          ))}
         </View>
 
         <View style={styles.totals}>
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total Normal:</Text>
+            <Text style={styles.totalLabel}>Total con tarjeta:</Text>
             <Text style={{ ...styles.totalValue, color: "#6B7280", textDecoration: "line-through", fontSize: 12 }}>
-              {formatCurrency(totalNormal)}
+              {formatCurrency(quote.totals.card)}
             </Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total Efectivo:</Text>
-            <Text style={styles.totalValue}>{formatCurrency(totalCash)}</Text>
+            <Text style={styles.totalValue}>{formatCurrency(quote.totals.cash)}</Text>
           </View>
         </View>
 

@@ -1,3 +1,4 @@
+import type { QuoteSummary } from "@framerate/contracts";
 import {
   IconAlertCircle,
   IconCalendarFilled,
@@ -11,8 +12,7 @@ import { toast } from "sonner";
 import { getAuthUser, requireAuth } from "~/features/auth/services/auth.server";
 import { meToProfile, profilesService } from "~/features/profile/services/profiles";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
-import { useQuotes } from "~/features/quote/hooks/useQuotes";
-import { QUOTES_API_ENABLED, type QuoteListItem as Quote } from "~/features/quote/services/quotes";
+import { quotesService } from "~/features/quote/services/quotes";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Button } from "~/shared/components/primitives/button";
 import { Separator } from "~/shared/components/primitives/separator";
@@ -43,33 +43,41 @@ export function meta({ data }: Route.MetaArgs) {
   ];
 }
 
+/** Un fallo al listar cotizaciones no tumba el perfil: se muestra sin ellas. */
+const quotesOrEmpty = (load: Promise<{ items: QuoteSummary[] }>) =>
+  load
+    .then((page) => page.items)
+    .catch((error): QuoteSummary[] => {
+      console.error("No se pudieron listar las cotizaciones", error);
+      return [];
+    });
+
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { username } = params;
 
   if (username) {
     try {
-      const [{ user: currentUser }, profileUser] = await Promise.all([
+      const [{ user: currentUser }, profileUser, publicQuotes] = await Promise.all([
         getAuthUser(request),
         profilesService.getByUsername(username),
+        quotesOrEmpty(quotesService.getByUsername(username, 1, 100)),
       ]);
-      // Las cotizaciones aún no existen en la API nueva (/v1/quotes da 404): no se pide, cuesta un viaje entero.
-      const quotes: Quote[] = [];
-      return { profileUser, quotes, isOwner: currentUser?.username === profileUser.username, currentUser };
+      const isOwner = currentUser?.username === profileUser.username;
+      // El dueño ve también las privadas y las con link, no sólo las públicas.
+      const quotes = isOwner ? await quotesOrEmpty(quotesService.getAll(1, 100)) : publicQuotes;
+      return { profileUser, quotes, isOwner, currentUser };
     } catch (_error) {
       throw new Response("User not found", { status: 404 });
     }
   }
 
-  const { user } = await requireAuth(request);
-  return { profileUser: meToProfile(user), quotes: [] as Quote[], isOwner: true, currentUser: user };
+  const [{ user }, quotes] = await Promise.all([requireAuth(request), quotesOrEmpty(quotesService.getAll(1, 100))]);
+  return { profileUser: meToProfile(user), quotes, isOwner: true, currentUser: user };
 }
 
 export default function Profile({ loaderData }: Route.ComponentProps) {
-  const { profileUser, isOwner } = loaderData;
+  const { profileUser, isOwner, quotes } = loaderData;
   const { t, lang } = useTranslation();
-
-  const { data: quotesData } = useQuotes(1, 100, { enabled: isOwner });
-  const quotes = (isOwner && quotesData?.data) || loaderData.quotes;
 
   const locale = lang === "en" ? "en-US" : "es-CL";
   // timeZone explícito evita hydration mismatch: el server (Workers) y el cliente
@@ -198,49 +206,50 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
 
-      {QUOTES_API_ENABLED && (
-        <div className="mt-8 space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold tracking-tight">
-              {t(isOwner ? "profile_quotes_title_owner" : "profile_quotes_title_other", { name: displayName })}
-            </h2>
-            {isOwner && quotes.length > 0 && <CreateQuoteDialog />}
-          </div>
+      <div className="mt-8 space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold tracking-tight">
+            {t(isOwner ? "profile_quotes_title_owner" : "profile_quotes_title_other", { name: displayName })}
+          </h2>
+          {isOwner && quotes.length > 0 && <CreateQuoteDialog />}
+        </div>
 
-          <Separator className="border-1.5" />
+        <Separator className="border-1.5" />
 
-          {quotes.length === 0 ? (
-            <div className="text-center py-14 px-4 border border-dashed border-border/70 rounded-2xl bg-card/40">
-              <div className="mx-auto size-12 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
-                <IconCpu className="size-6 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium mb-2">
-                {t(isOwner ? "profile_no_quotes_owner" : "profile_no_quotes_other")}
-              </h3>
-              {isOwner && (
-                <>
-                  <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">
-                    {t("profile_no_quotes_owner_cta")}
-                  </p>
-                  <CreateQuoteDialog />
-                </>
-              )}
+        {quotes.length === 0 ? (
+          <div className="text-center py-14 px-4 border border-dashed border-border/70 rounded-2xl bg-card/40">
+            <div className="mx-auto size-12 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
+              <IconCpu className="size-6 text-muted-foreground" />
             </div>
-          ) : (
-            <div className="grid gap-3">
-              {quotes.map((quote, index) => {
-                const isNewOptimistic = index === 0 && quote.id.startsWith("temp-");
-                // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-                const dateLabel = new Date(quote.updated_at).toLocaleDateString(locale, {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  timeZone: "America/Santiago",
-                });
-                const componentsCount = quote.quote_items?.[0]?.count || 0;
+            <h3 className="text-lg font-medium mb-2">
+              {t(isOwner ? "profile_no_quotes_owner" : "profile_no_quotes_other")}
+            </h3>
+            {isOwner && (
+              <>
+                <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">
+                  {t("profile_no_quotes_owner_cta")}
+                </p>
+                <CreateQuoteDialog />
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {quotes.map((quote) => {
+              // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+              const dateLabel = new Date(quote.updatedAt).toLocaleDateString(locale, {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                timeZone: "America/Santiago",
+              });
 
-                const cardBody = (
-                  // biome-ignore lint/correctness/useJsxKeyInIterable: cardBody es hijo de elementos con key
+              return (
+                <Link
+                  key={quote.id}
+                  to={`/cotizacion/${quote.id}`}
+                  className="group block overflow-hidden bg-card hover:bg-secondary border border-border/60 hover:border-primary/30 transition-colors rounded-2xl"
+                >
                   <div className="flex items-center p-2 gap-4">
                     <div className="size-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl">
                       <div
@@ -256,8 +265,9 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
                           <span className="capitalize">{dateLabel}</span>
                           <span className="font-medium">
-                            {t("profile_components_count", { count: componentsCount })}
+                            {t("profile_components_count", { count: quote.itemCount })}
                           </span>
+                          {quote.visibility === "private" && <span>{t("quote_private")}</span>}
                         </div>
                       </div>
                       <div className="text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 pl-4 shrink-0">
@@ -265,29 +275,12 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
                       </div>
                     </div>
                   </div>
-                );
-
-                return isNewOptimistic ? (
-                  <div
-                    key={quote.id}
-                    className="group block overflow-hidden bg-card border border-primary/30 rounded-2xl shadow-md shadow-primary/10 animate-in fade-in-0 slide-in-from-top-2 duration-base ease-out"
-                  >
-                    {cardBody}
-                  </div>
-                ) : (
-                  <Link
-                    key={quote.id}
-                    to={`/cotizacion/${quote.id}`}
-                    className="group block overflow-hidden bg-card hover:bg-secondary border border-border/60 hover:border-primary/30 transition-colors rounded-2xl"
-                  >
-                    {cardBody}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

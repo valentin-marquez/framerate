@@ -334,12 +334,10 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     // Quote Details
     by: "Por {name}",
     updated_on: "Actualizado el {date}",
-    estimated_wattage: "Consumo estimado",
     components: "Componentes",
     active_items_count: "{count} activos",
     price_normal: "Precio con tarjeta",
     price_cash: "Precio efectivo",
-    others: "Otros",
     some_items_out_of_stock: "Algunos productos no tienen stock disponible. El total puede variar.",
     total_normal: "Total con tarjeta",
     total_cash: "Total efectivo",
@@ -347,14 +345,10 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     // Quote Actions / Messages
     quote_not_found: "cotizacion no encontrada",
     product_removed: "Producto eliminado",
-    quote_deleted: "Cotización eliminada correctamente",
-    quote_delete_error: "Error al eliminar la cotización",
     product_added_short: "Producto agregado",
     product_add_error: "Error al agregar producto",
-    compatibility_checked: "Compatibilidad verificada",
-    compatibility_check_error: "Error al verificar compatibilidad",
-    removing_product: "Eliminando producto...",
     remove_product_error: "Error al eliminar producto",
+    update_quantity_error: "No se pudo cambiar la cantidad",
   },
   en: {
     // Specs
@@ -675,12 +669,10 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     // Quote Details
     by: "By {name}",
     updated_on: "Updated on {date}",
-    estimated_wattage: "Estimated Wattage",
     components: "Components",
     active_items_count: "{count} active",
     price_normal: "Normal Price",
     price_cash: "Cash Price",
-    others: "Others",
     some_items_out_of_stock: "Some items are out of stock. Total may vary.",
     total_normal: "Total Normal",
     total_cash: "Total Cash",
@@ -688,14 +680,10 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     // Quote Actions / Messages
     quote_not_found: "Quote not found",
     product_removed: "Product removed",
-    quote_deleted: "Quote deleted successfully",
-    quote_delete_error: "Error deleting quote",
     product_added_short: "Product added",
     product_add_error: "Error adding product",
-    compatibility_checked: "Compatibility checked",
-    compatibility_check_error: "Error checking compatibility",
-    removing_product: "Removing product...",
     remove_product_error: "Error removing product",
+    update_quantity_error: "Couldn't change the quantity",
   },
   arn: {
     // Mapudungun (Alfabeto Mapuche Unificado). Best-effort translations:
@@ -962,12 +950,10 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     // Quote Details
     by: "Kelu {name}", // kelu = by/from
     updated_on: "Adkünungey {date}", // updated on
-    estimated_wattage: "Newen rakin", // energy count
     components: "Componentes",
     active_items_count: "{count} mongey", // mongey = alive/active
     price_normal: "Kullin normal",
     price_cash: "Kullin efectivo",
-    others: "Kake", // others
     some_items_out_of_stock: "Kiñeke productos stock nielay. Total kakey.", // some products no stock. Total varies
     total_normal: "Kom normal",
     total_cash: "Kom efectivo",
@@ -975,13 +961,8 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     // Quote Actions / Messages
     quote_not_found: "Cotización pelay", // not found
     product_removed: "Producto entutuy", // removed
-    quote_deleted: "Cotización entutuy",
-    quote_delete_error: "Wera entutun cotización",
     product_added_short: "Producto yengey",
     product_add_error: "Wera yengen producto",
-    compatibility_checked: "Compatibilidad adkintungey",
-    compatibility_check_error: "Wera adkintun compatibilidad",
-    removing_product: "Entutuken producto...", // removing
     remove_product_error: "Wera entutun producto",
   },
 };
