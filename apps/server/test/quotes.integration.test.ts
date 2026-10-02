@@ -157,13 +157,17 @@ describe("ítems y slots", () => {
     const msiItem = items.find((i) => i.product.id === seed.msi);
     if (!asusItem || !msiItem) throw new Error("faltan ítems");
 
+    // El PATCH devuelve la cotización ya actualizada, con el total recalculado: la web no vuelve a pedirla.
     const patched = await call(ana, `/v1/quotes/${quote.id}/items/${asusItem.id}`, "PATCH", { quantity: 4 });
     expect(patched.status).toBe(200);
-    expect((await detail(ana, quote.id)).items.find((i) => i.id === asusItem.id)?.quantity).toBe(4);
+    const updated = QuoteDetailSchema.parse(await patched.json());
+    expect(updated.items.find((i) => i.id === asusItem.id)?.quantity).toBe(4);
+    expect(updated.totals.cash).toBe(599_990 * 4);
     expect((await call(ana, `/v1/quotes/${quote.id}/items/${asusItem.id}`, "PATCH", { quantity: 0 })).status).toBe(400);
 
-    expect((await call(ana, `/v1/quotes/${quote.id}/items/${asusItem.id}`, "DELETE")).status).toBe(204);
-    const after = await detail(ana, quote.id);
+    const removed = await call(ana, `/v1/quotes/${quote.id}/items/${asusItem.id}`, "DELETE");
+    expect(removed.status).toBe(200);
+    const after = QuoteDetailSchema.parse(await removed.json());
     expect(after.items.map((i) => [i.id, i.isSelected])).toEqual([[msiItem.id, true]]);
     expect((await call(ana, `/v1/quotes/${quote.id}/items/${asusItem.id}`, "DELETE")).status).toBe(404);
   });

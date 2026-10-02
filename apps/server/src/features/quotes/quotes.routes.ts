@@ -86,7 +86,13 @@ export const quotesRoutes = new Hono<AppEnv>()
   })
   .delete("/:id/items/:itemId", async (c) => {
     const user = currentUser(c);
-    const removed = await removeItem(c.var.db, c.req.param("id"), user.id, ItemIdSchema.parse(c.req.param("itemId")));
-    if (!removed) throw itemNotFound();
-    return c.body(null, 204);
+    const detail = await removeItem(
+      c.var.db,
+      c.req.param("id"),
+      user.id,
+      ItemIdSchema.parse(c.req.param("itemId")),
+      c.env.ASSETS_BASE_URL,
+    );
+    if (!detail) throw itemNotFound();
+    return c.json(detail);
   });

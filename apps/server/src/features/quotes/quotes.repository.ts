@@ -8,10 +8,11 @@ import {
   type QuotePage,
   type QuoteSummary,
   type QuoteVisibility,
+  quoteTotals,
   SLOT_BY_CATEGORY,
 } from "@framerate/contracts";
 import { type Db, toBool } from "@framerate/database";
-import { type Compilable, sql } from "kysely";
+import { sql } from "kysely";
 import { productImageUrl } from "@/features/catalog/catalog.queries";
 import { avatarUrl } from "@/features/identity/domain/avatar";
 import { newPublicId } from "@/shared/public-id";
@@ -151,15 +152,7 @@ function toDetail(row: SummaryRow, itemRows: ItemRow[], assetsBaseUrl: string | 
         Number(b.isSelected) - Number(a.isSelected) ||
         a.id - b.id,
     );
-  const counted = items.filter((i) => i.isSelected && i.offer);
-  return {
-    ...toSummary(row, assetsBaseUrl),
-    items,
-    totals: {
-      cash: counted.reduce((sum, i) => sum + (i.offer?.priceCash ?? 0) * i.quantity, 0),
-      card: counted.reduce((sum, i) => sum + (i.offer?.priceCard ?? 0) * i.quantity, 0),
-    },
-  };
+  return { ...toSummary(row, assetsBaseUrl), items, totals: quoteTotals(items) };
 }
 
 export interface LoadedQuote {
@@ -350,31 +343,55 @@ export async function setItemQuantity(
   assetsBaseUrl: string | undefined,
   now: string,
 ): Promise<QuoteDetail | null> {
+  // Un solo viaje: el UPDATE sólo toca el ítem si la cotización es del dueño, y el detalle dice si pasó.
+  const [, [row], itemRows] = await db.read([
+    db.query
+      .updateTable("quote_items")
+      .set({ quantity, updated_at: now })
+      .where("id", "=", itemId)
+      .where(
+        "quote_id",
+        "=",
+        db.query.selectFrom("quotes").select("id").where("public_id", "=", publicId).where("owner_id", "=", ownerId),
+      ),
+    summariesQuery(db).where("q.public_id", "=", publicId),
+    itemsQuery(db, publicId),
+  ]);
+  if (!row || row.owner_id !== ownerId || !itemRows.some((r) => r.id === itemId)) return null;
+  return toDetail(row, itemRows, assetsBaseUrl);
+}
+
+/**
+ * Quita un ítem y devuelve la cotización ya actualizada; si era el seleccionado de un slot exclusivo, sube la
+ * alternativa más antigua. `null` si el ítem no existe o no es del dueño.
+ */
+export async function removeItem(
+  db: Db,
+  publicId: string,
+  ownerId: string,
+  itemId: number,
+  assetsBaseUrl: string | undefined,
+): Promise<QuoteDetail | null> {
   const [[item]] = await db.read([ownedItemQuery(db, publicId, ownerId, itemId)]);
   if (!item) return null;
-  const [, [row], itemRows] = await db.read([
-    db.query.updateTable("quote_items").set({ quantity, updated_at: now }).where("id", "=", itemId),
+  const exclusiveSlots = QUOTE_SLOTS.filter((slot) => !isAdditiveSlot(slot));
+  const [, , [row], itemRows] = await db.read([
+    db.query.deleteFrom("quote_items").where("id", "=", itemId),
+    // Idempotente: en cada slot exclusivo que se quedó sin seleccionado, sube el ítem más antiguo.
+    db.query
+      .updateTable("quote_items")
+      .set({ is_selected: 1 })
+      .where("id", "in", (eb) =>
+        eb
+          .selectFrom("quote_items")
+          .select(eb.fn.min("id").as("id"))
+          .where("quote_id", "=", item.quote_id)
+          .where("slot", "in", exclusiveSlots)
+          .groupBy("slot")
+          .having(eb.fn.sum("is_selected"), "=", 0),
+      ),
     summariesQuery(db).where("q.public_id", "=", publicId),
     itemsQuery(db, publicId),
   ]);
   return row ? toDetail(row, itemRows, assetsBaseUrl) : null;
-}
-
-/** Quita un ítem; si era el seleccionado de un slot exclusivo, sube la alternativa más antigua. */
-export async function removeItem(db: Db, publicId: string, ownerId: string, itemId: number): Promise<boolean> {
-  const [[item]] = await db.read([ownedItemQuery(db, publicId, ownerId, itemId)]);
-  if (!item) return false;
-  const inSlot = () =>
-    db.query.selectFrom("quote_items").where("quote_id", "=", item.quote_id).where("slot", "=", item.slot);
-  const writes: Compilable[] = [db.query.deleteFrom("quote_items").where("id", "=", itemId)];
-  if (toBool(item.is_selected) && !isAdditiveSlot(item.slot)) {
-    writes.push(
-      db.query
-        .updateTable("quote_items")
-        .set({ is_selected: 1 })
-        .where("id", "=", inSlot().select("id").where("id", "!=", itemId).orderBy("id").limit(1)),
-    );
-  }
-  await db.batch(writes);
-  return true;
 }

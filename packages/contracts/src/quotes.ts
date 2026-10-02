@@ -103,6 +103,18 @@ export const QuoteItemSchema = z.object({
 });
 export type QuoteItem = z.infer<typeof QuoteItemSchema>;
 
+/** Suma de los ítems seleccionados con oferta, por su cantidad: la usan el servidor y la web al actualizar sin esperar. */
+export function quoteTotals(items: readonly QuoteItem[]) {
+  let cash = 0;
+  let card = 0;
+  for (const item of items) {
+    if (!item.isSelected || !item.offer) continue;
+    cash += item.offer.priceCash * item.quantity;
+    card += item.offer.priceCard * item.quantity;
+  }
+  return { cash, card };
+}
+
 export const QuoteDetailSchema = QuoteSummarySchema.extend({
   items: z.array(QuoteItemSchema),
   /** Suma de los ítems seleccionados con oferta, por su cantidad. */
