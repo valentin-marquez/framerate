@@ -137,12 +137,9 @@ export async function listProducts(
       break;
   }
 
-  const [rows, totalRow] = await Promise.all([
-    page
-      .limit(query.pageSize)
-      .offset((query.page - 1) * query.pageSize)
-      .execute(),
-    base.select((eb) => eb.fn.countAll<number>().as("total")).executeTakeFirst(),
+  const [rows, [totalRow]] = await db.read([
+    page.limit(query.pageSize).offset((query.page - 1) * query.pageSize),
+    base.select((eb) => eb.fn.countAll<number>().as("total")),
   ]);
 
   return {
@@ -164,35 +161,31 @@ export async function getProduct(
   slug: string,
   assetsBaseUrl: string | undefined,
 ): Promise<ProductDetail | null> {
-  const product = await db.query
-    .selectFrom("products as p")
-    .selectAll("p")
-    .select(mpnOf.as("mpn"))
-    .where("p.slug", "=", slug)
-    .executeTakeFirst();
+  const [[product], offerRows] = await db.read([
+    db.query.selectFrom("products as p").selectAll("p").select(mpnOf.as("mpn")).where("p.slug", "=", slug),
+    db.query
+      .selectFrom("listings as l")
+      .innerJoin("products as pr", "pr.id", "l.product_id")
+      .innerJoin("stores as s", "s.id", "l.store_id")
+      .select([
+        "l.id",
+        "s.slug as storeSlug",
+        "s.name as storeName",
+        "s.url as storeUrl",
+        "l.url",
+        "l.title",
+        "l.price_cash",
+        "l.price_card",
+        "l.in_stock",
+        "l.stock_quantity",
+        "l.last_seen_at",
+        "l.is_active",
+      ])
+      .where("pr.slug", "=", slug)
+      .orderBy("l.in_stock", "desc")
+      .orderBy("l.price_cash"),
+  ]);
   if (!product) return null;
-
-  const offerRows = await db.query
-    .selectFrom("listings as l")
-    .innerJoin("stores as s", "s.id", "l.store_id")
-    .select([
-      "l.id",
-      "s.slug as storeSlug",
-      "s.name as storeName",
-      "s.url as storeUrl",
-      "l.url",
-      "l.title",
-      "l.price_cash",
-      "l.price_card",
-      "l.in_stock",
-      "l.stock_quantity",
-      "l.last_seen_at",
-      "l.is_active",
-    ])
-    .where("l.product_id", "=", product.id)
-    .orderBy("l.in_stock", "desc")
-    .orderBy("l.price_cash")
-    .execute();
 
   // Un producto sin ninguna oferta (ej. provisional fusionado por revisión) no existe públicamente.
   if (offerRows.length === 0) return null;
@@ -229,26 +222,28 @@ export async function getProduct(
 }
 
 export async function getPriceHistory(db: Db, slug: string, days: number): Promise<PricePoint[] | null> {
-  const product = await db.query.selectFrom("products").select("id").where("slug", "=", slug).executeTakeFirst();
-  if (!product) return null;
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
-  const rows = await db.query
-    .selectFrom("price_points as pp")
-    .innerJoin("listings as l", "l.id", "pp.listing_id")
-    .innerJoin("stores as s", "s.id", "l.store_id")
-    .select([
-      "s.slug as store",
-      "s.name as storeName",
-      "pp.price_cash",
-      "pp.price_card",
-      "pp.in_stock",
-      "pp.observed_at",
-    ])
-    .where("l.product_id", "=", product.id)
-    .where("pp.observed_at", ">=", since)
-    .orderBy("pp.observed_at")
-    .orderBy("pp.id")
-    .execute();
+  const [[product], rows] = await db.read([
+    db.query.selectFrom("products").select("id").where("slug", "=", slug),
+    db.query
+      .selectFrom("price_points as pp")
+      .innerJoin("listings as l", "l.id", "pp.listing_id")
+      .innerJoin("products as pr", "pr.id", "l.product_id")
+      .innerJoin("stores as s", "s.id", "l.store_id")
+      .select([
+        "s.slug as store",
+        "s.name as storeName",
+        "pp.price_cash",
+        "pp.price_card",
+        "pp.in_stock",
+        "pp.observed_at",
+      ])
+      .where("pr.slug", "=", slug)
+      .where("pp.observed_at", ">=", since)
+      .orderBy("pp.observed_at")
+      .orderBy("pp.id"),
+  ]);
+  if (!product) return null;
   return rows.map((r) => ({
     store: r.store,
     storeName: r.storeName,

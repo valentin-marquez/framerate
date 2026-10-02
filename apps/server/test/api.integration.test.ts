@@ -52,9 +52,9 @@ describe("API pública", () => {
     expect((await (await get("/health")).json()) as object).toEqual({ status: "ok" });
   });
 
-  test("Server-Timing cuenta las consultas a D1 del request", async () => {
-    expect((await get("/health")).headers.get("server-timing")).toMatch(/^d1;dur=0;desc="0 consultas"/);
-    expect((await get("/v1/products?category=gpu")).headers.get("server-timing")).toMatch(/desc="[1-9]d* consultas"/);
+  test("Server-Timing cuenta los viajes a D1 del request", async () => {
+    expect((await get("/health")).headers.get("server-timing")).toMatch(/^d1;dur=0;desc="0 viajes"/);
+    expect((await get("/v1/products?category=gpu")).headers.get("server-timing")).toMatch(/desc="[1-9]\d* viajes"/);
   });
 
   test("Server-Timing suma el tiempo de sesión cuando la ruta la pide", async () => {

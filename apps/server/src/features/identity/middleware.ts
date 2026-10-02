@@ -24,7 +24,10 @@ async function sessionUser(c: Context<AppEnv>): Promise<SessionUser | null> {
   // Better Auth consulta D1 por su cuenta y su primer uso en un isolate inicializa: nada de eso pasa por `d1;dur`.
   c.header("Server-Timing", `session;dur=${Date.now() - start}`, { append: true });
   if (!session) return null;
-  return loadSessionUser(c.var.db, session.user.id, new Date().toISOString());
+  const loaded = await loadSessionUser(c.var.db, session.user.id, new Date().toISOString());
+  if (!loaded) return null;
+  c.set("userRow", loaded.row);
+  return loaded.user;
 }
 
 /**

@@ -35,28 +35,30 @@ const USER_COLUMNS = [
   "created_at",
 ] as const;
 
-/** Sanción vigente: no levantada y (permanente o aún no expirada). */
-export async function findActiveBan(db: Db, userId: string, now: string): Promise<ActiveBan | null> {
-  const row = await db.query
+const activeBanQuery = (db: Db, userId: string, now: string) =>
+  db.query
     .selectFrom("user_bans")
     .select(["reason", "expires_at"])
     .where("user_id", "=", userId)
     .where("lifted_at", "is", null)
     .where((eb) => eb.or([eb("expires_at", "is", null), eb("expires_at", ">", now)]))
     .orderBy("created_at", "desc")
-    .limit(1)
-    .executeTakeFirst();
-  return row ? { reason: row.reason, expiresAt: row.expires_at } : null;
+    .limit(1);
+
+const toActiveBan = (row: { reason: string | null; expires_at: string | null } | undefined): ActiveBan | null =>
+  row ? { reason: row.reason, expiresAt: row.expires_at } : null;
+
+/** Sanción vigente: no levantada y (permanente o aún no expirada). */
+export async function findActiveBan(db: Db, userId: string, now: string): Promise<ActiveBan | null> {
+  return toActiveBan(await activeBanQuery(db, userId, now).executeTakeFirst());
 }
+
+const userByIdQuery = (db: Db, id: string) =>
+  db.query.selectFrom("users").select(USER_COLUMNS).where("id", "=", id).where("deleted_at", "is", null);
 
 /** Usuario por id. Las cuentas eliminadas no existen para el resto del sistema. */
 export async function findUserById(db: Db, id: string): Promise<UserRow | undefined> {
-  return db.query
-    .selectFrom("users")
-    .select(USER_COLUMNS)
-    .where("id", "=", id)
-    .where("deleted_at", "is", null)
-    .executeTakeFirst();
+  return userByIdQuery(db, id).executeTakeFirst();
 }
 
 /** Usuario por correo, sólo si lo verificó su proveedor: un correo sin verificar no prueba que la cuenta sea suya. */
@@ -79,18 +81,23 @@ export async function findUserByUsername(db: Db, username: string): Promise<User
     .executeTakeFirst();
 }
 
-/** Datos autoritativos del usuario de la petición (rol y sanción frescos). */
-export async function loadSessionUser(db: Db, id: string, now: string): Promise<SessionUser | null> {
-  const [user, ban] = await Promise.all([findUserById(db, id), findActiveBan(db, id, now)]);
-  if (!user) return null;
-  return {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-    displayName: user.display_name,
-    role: user.role,
-    ban,
+/** Datos autoritativos del usuario de la petición (rol y sanción frescos), con su fila para no volver a leerla. */
+export async function loadSessionUser(
+  db: Db,
+  id: string,
+  now: string,
+): Promise<{ user: SessionUser; row: UserRow } | null> {
+  const [[row], [banRow]] = await db.read([userByIdQuery(db, id), activeBanQuery(db, id, now)]);
+  if (!row) return null;
+  const user: SessionUser = {
+    id: row.id,
+    email: row.email,
+    username: row.username,
+    displayName: row.display_name,
+    role: row.role,
+    ban: toActiveBan(banRow),
   };
+  return { user, row };
 }
 
 export type UpdateProfileResult = "ok" | "username_taken";

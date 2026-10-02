@@ -7,6 +7,7 @@ import { claimsRoutes } from "@/features/claims/claims.routes";
 import { claimsAdminRoutes } from "@/features/claims/claims-admin.routes";
 import { crawlAdminRoutes } from "@/features/crawl-admin/crawl-admin.routes";
 import { getAuth } from "@/features/identity/auth";
+import type { UserRow } from "@/features/identity/identity.repository";
 import { authProvidersRoutes, meRoutes, publicProfileRoutes } from "@/features/identity/identity.routes";
 import { mergeRoutes } from "@/features/identity/merge.routes";
 import { credentialedCors, optionalUser, requireStaff, requireUser } from "@/features/identity/middleware";
@@ -26,6 +27,8 @@ export type AppEnv = {
     db: Db;
     /** Presente tras `requireUser`. */
     user?: SessionUser;
+    /** Fila del usuario que `requireUser` ya leyó, para no pedirla de nuevo. */
+    userRow?: UserRow;
     /** Presente tras `requireStaff`. */
     actor?: Actor;
   };
@@ -63,7 +66,7 @@ export function createApp() {
     await next();
     c.res.headers.append(
       "Server-Timing",
-      `d1;dur=${Math.round(d1Ms)};desc="${queries} consultas", app;dur=${Date.now() - start}`,
+      `d1;dur=${Math.round(d1Ms)};desc="${queries} viajes", app;dur=${Date.now() - start}`,
     );
   });
 

@@ -17,7 +17,7 @@ export const authProvidersRoutes = new Hono<AppEnv>().get("/providers", (c) =>
 export const meRoutes = new Hono<AppEnv>()
   .get("/", async (c) => {
     const session = currentUser(c);
-    const user = await findUserById(c.var.db, session.id);
+    const user = c.var.userRow;
     if (!user) throw new AppError(401, "unauthorized", "Inicia sesión para continuar");
     return c.json(toMe(user, session.ban, c.env.ASSETS_BASE_URL));
   })
