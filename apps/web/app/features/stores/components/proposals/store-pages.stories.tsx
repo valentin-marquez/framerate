@@ -35,6 +35,7 @@ const store: StoreDetail = {
   frozen: false,
   createdAt: "2026-01-10T12:00:00.000Z",
   offerCount: 60,
+  memberCount: 2,
   rating: { average: 4.3, count: 12, recent: { average: 3.8, count: 4 } },
 };
 
@@ -48,6 +49,7 @@ const unclaimed: StoreDetail = {
   isClaimed: false,
   verifiedAt: null,
   offerCount: 0,
+  memberCount: 0,
   rating: { average: null, count: 0, recent: { average: null, count: 0 } },
 };
 

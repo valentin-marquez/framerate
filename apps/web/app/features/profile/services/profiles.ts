@@ -1,4 +1,4 @@
-import type { Me, PublicProfile } from "@framerate/contracts";
+import type { Me, MyStores, PublicProfile } from "@framerate/contracts";
 import { api } from "~/shared/lib/api";
 
 export type MyStoreRole = "owner" | "admin" | "editor";
@@ -71,6 +71,13 @@ export const profilesService = {
       }),
     ),
 
-  // Pendiente: las tiendas y sus miembros aún no existen en la API nueva.
-  listMyStores: async (): Promise<{ stores: MyStore[] }> => ({ stores: [] }),
+  listMyStores: async (): Promise<{ stores: MyStore[] }> => ({
+    stores: (await api.get<MyStores>("/v1/me/stores")).items.map((s) => ({
+      id: s.slug,
+      slug: s.slug,
+      name: s.name,
+      icon_url: s.iconUrl,
+      role: s.role,
+    })),
+  }),
 };

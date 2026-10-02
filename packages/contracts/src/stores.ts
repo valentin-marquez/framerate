@@ -28,12 +28,25 @@ export const StoreDetailSchema = z.object({
   frozen: z.boolean(),
   createdAt: z.string(),
   offerCount: z.number().int(),
+  /** Miembros de la organización dueña; 0 si la tienda no está reclamada. */
+  memberCount: z.number().int().nonnegative(),
   rating: RatingWindowSchema.extend({ recent: RatingWindowSchema }),
 });
 export type StoreDetail = z.infer<typeof StoreDetailSchema>;
 
 export const StoreRoleSchema = z.enum(["owner", "admin", "editor"]);
 export type StoreRole = z.infer<typeof StoreRoleSchema>;
+
+/** Una tienda de las organizaciones del usuario, con su rol (`GET /v1/me/stores`). */
+export const MyStoreSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  iconUrl: z.string().nullable(),
+  role: StoreRoleSchema,
+});
+export type MyStore = z.infer<typeof MyStoreSchema>;
+export const MyStoresSchema = z.object({ items: z.array(MyStoreSchema) });
+export type MyStores = z.infer<typeof MyStoresSchema>;
 
 // ─── Reseñas ─────────────────────────────────────────────────────────────────
 

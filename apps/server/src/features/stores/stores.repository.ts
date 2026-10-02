@@ -1,4 +1,4 @@
-import type { RatingStats, ReviewItem, ReviewSort, StoreDetail, StoreRole } from "@framerate/contracts";
+import type { MyStore, RatingStats, ReviewItem, ReviewSort, StoreDetail, StoreRole } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { sql } from "kysely";
 import { avatarUrl } from "@/features/identity/domain/avatar";
@@ -37,19 +37,21 @@ export async function findStore(db: Db, slug: string) {
 }
 export type StoreRow = NonNullable<Awaited<ReturnType<typeof findStore>>>;
 
-async function recentRating(db: Db, storeId: number, now: string) {
-  const since = new Date(Date.parse(now) - RECENT_DAYS * 86_400_000).toISOString();
-  const row = await db.query
-    .selectFrom("store_reviews")
-    .select([sql<number>`count(*)`.as("count"), sql<number>`coalesce(sum(rating), 0)`.as("sum")])
-    .where("store_id", "=", storeId)
-    .where("deleted_at", "is", null)
-    .where("created_at", ">=", since)
-    .executeTakeFirstOrThrow();
-  return { average: average(Number(row.sum), Number(row.count)), count: Number(row.count) };
-}
-
 export async function storeDetail(db: Db, store: StoreRow, now: string): Promise<StoreDetail> {
+  const since = new Date(Date.parse(now) - RECENT_DAYS * 86_400_000).toISOString();
+  // Un solo viaje a D1 para el promedio reciente y el conteo de miembros.
+  const [[recent], [members]] = await db.read([
+    db.query
+      .selectFrom("store_reviews")
+      .select([sql<number>`count(*)`.as("count"), sql<number>`coalesce(sum(rating), 0)`.as("sum")])
+      .where("store_id", "=", store.id)
+      .where("deleted_at", "is", null)
+      .where("created_at", ">=", since),
+    db.query
+      .selectFrom("organization_members")
+      .select((eb) => eb.fn.countAll<number>().as("n"))
+      .where("organization_id", "=", store.organization_id ?? -1),
+  ]);
   return {
     slug: store.slug,
     name: store.display_name ?? store.name,
@@ -67,12 +69,34 @@ export async function storeDetail(db: Db, store: StoreRow, now: string): Promise
     frozen: store.frozen_at !== null,
     createdAt: store.created_at,
     offerCount: Number(store.offer_count),
+    memberCount: Number(members?.n ?? 0),
     rating: {
       average: average(store.rating_sum, store.rating_count),
       count: store.rating_count,
-      recent: await recentRating(db, store.id, now),
+      recent: {
+        average: average(Number(recent?.sum ?? 0), Number(recent?.count ?? 0)),
+        count: Number(recent?.count ?? 0),
+      },
     },
   };
+}
+
+/** Tiendas de las organizaciones del usuario, con su rol. */
+export async function listStoresOf(db: Db, userId: string): Promise<MyStore[]> {
+  const rows = await db.query
+    .selectFrom("organization_members as m")
+    .innerJoin("stores as s", "s.organization_id", "m.organization_id")
+    .leftJoin("store_profiles as p", "p.store_id", "s.id")
+    .select(["s.slug", "s.name", "p.display_name", "s.scraped_icon_url", "m.role"])
+    .where("m.user_id", "=", userId)
+    .orderBy("s.name")
+    .execute();
+  return rows.map((r) => ({
+    slug: r.slug,
+    name: r.display_name ?? r.name,
+    iconUrl: r.scraped_icon_url,
+    role: r.role as StoreRole,
+  }));
 }
 
 /** Rol del usuario en la organización dueña de la tienda; null si no es miembro o la tienda no está reclamada. */

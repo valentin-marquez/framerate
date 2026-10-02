@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import {
   ApiErrorSchema,
+  MyStoresSchema,
   RatingStatsSchema,
   ReviewListSchema,
   StoreDetailSchema,
@@ -92,6 +93,42 @@ describe("detalle de tienda", () => {
 
   test("tienda inexistente → 404", async () => {
     expect((await call("anon", "/v1/stores/nada")).status).toBe(404);
+  });
+
+  test("cuenta los miembros de la organización dueña, y cero si no está reclamada", async () => {
+    const owner = await ownedStore();
+    const detail = async (slug: string) =>
+      StoreDetailSchema.parse(await (await call("anon", `/v1/stores/${slug}`)).json());
+    expect((await detail("alfa")).memberCount).toBe(1);
+    expect((await detail("beta")).memberCount).toBe(0);
+
+    const editor = await who("Editor");
+    const org = await db.query.selectFrom("organizations").select("id").executeTakeFirstOrThrow();
+    await db.query
+      .insertInto("organization_members")
+      .values({ organization_id: org.id, user_id: editor, role: "editor", created_at: at })
+      .execute();
+    expect((await detail("alfa")).memberCount).toBe(2);
+    expect(owner).not.toBe(editor);
+  });
+});
+
+describe("mis tiendas", () => {
+  test("lista las tiendas de mis organizaciones con mi rol, y exige sesión", async () => {
+    const owner = await ownedStore();
+    const editor = await who("Editor");
+    const org = await db.query.selectFrom("organizations").select("id").executeTakeFirstOrThrow();
+    await db.query
+      .insertInto("organization_members")
+      .values({ organization_id: org.id, user_id: editor, role: "editor", created_at: at })
+      .execute();
+    const stranger = await who("Ajena");
+
+    expect((await call("anon", "/v1/me/stores")).status).toBe(401);
+    const mine = MyStoresSchema.parse(await (await call(owner, "/v1/me/stores")).json());
+    expect(mine.items).toEqual([{ slug: "alfa", name: "alfa", iconUrl: null, role: "owner" }]);
+    expect(MyStoresSchema.parse(await (await call(editor, "/v1/me/stores")).json()).items[0]?.role).toBe("editor");
+    expect(MyStoresSchema.parse(await (await call(stranger, "/v1/me/stores")).json()).items).toEqual([]);
   });
 });
 

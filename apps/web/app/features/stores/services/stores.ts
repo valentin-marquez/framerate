@@ -114,7 +114,7 @@ function toStoreDetail(s: ApiStoreDetail): StoreDetail {
     verified_at: s.verifiedAt,
     created_at: s.createdAt,
     updated_at: s.createdAt,
-    member_count: 0,
+    member_count: s.memberCount,
     rating: s.rating,
   };
 }

@@ -14,6 +14,7 @@ import { credentialedCors, optionalUser, requireStaff, requireUser } from "@/fea
 import type { Actor, SessionUser } from "@/features/identity/types";
 import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
 import { quotesRoutes } from "@/features/quotes/quotes.routes";
+import { myStoresRoutes } from "@/features/stores/my-stores.routes";
 import { storeManagementRoutes } from "@/features/stores/store-management.routes";
 import { storesRoutes } from "@/features/stores/stores.routes";
 import { supportRoutes } from "@/features/support/support.routes";
@@ -89,6 +90,7 @@ export function createApp() {
   meApi.use("*", rateLimit);
   meApi.use("*", requireUser);
   meApi.route("/merge", mergeRoutes);
+  meApi.route("/stores", myStoresRoutes);
   meApi.route("/", meRoutes);
 
   const claimsApi = new Hono<AppEnv>();
