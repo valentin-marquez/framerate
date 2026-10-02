@@ -141,6 +141,18 @@ export const CreateQuoteRequestSchema = z.object({
 });
 export type CreateQuoteRequest = z.infer<typeof CreateQuoteRequestSchema>;
 
+/** Editar la cotización: cualquier combinación de campos, al menos uno; una descripción vacía la borra. */
+export const UpdateQuoteRequestSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100).optional(),
+    description: z.string().trim().max(1000).nullish(),
+    visibility: QuoteVisibilitySchema.optional(),
+  })
+  .refine((v) => v.name !== undefined || v.description !== undefined || v.visibility !== undefined, {
+    message: "Nada que cambiar",
+  });
+export type UpdateQuoteRequest = z.infer<typeof UpdateQuoteRequestSchema>;
+
 export const QuoteQuantitySchema = z.number().int().min(1).max(99);
 
 /** Agregar un producto; si ya está en la cotización, suma a su cantidad. */

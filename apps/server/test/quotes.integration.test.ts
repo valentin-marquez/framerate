@@ -212,3 +212,70 @@ describe("visibilidad", () => {
     expect((await all(db, "quote_items")).length).toBe(1);
   });
 });
+
+describe("editar y borrar la cotización", () => {
+  const patch = (actor: string, id: string, body: unknown) => call(actor, `/v1/quotes/${id}`, "PATCH", body);
+
+  test("cambia nombre, descripción y visibilidad, y devuelve la cotización", async () => {
+    const quote = await createQuote(ana, { name: "Mi PC" });
+    await addItem(ana, quote.id, seed.ryzen);
+
+    const res = await patch(ana, quote.id, { name: "  PC gamer  ", description: "Para 1440p", visibility: "unlisted" });
+    expect(res.status).toBe(200);
+    const updated = QuoteDetailSchema.parse(await res.json());
+    expect(updated).toMatchObject({
+      name: "PC gamer",
+      description: "Para 1440p",
+      visibility: "unlisted",
+      itemCount: 1,
+    });
+    expect(updated.items).toHaveLength(1);
+
+    // Cambios parciales: lo que no se manda se queda, y una descripción vacía la borra.
+    const onlyName = QuoteDetailSchema.parse(await (await patch(ana, quote.id, { name: "Otro" })).json());
+    expect(onlyName).toMatchObject({ name: "Otro", description: "Para 1440p", visibility: "unlisted" });
+    const cleared = QuoteDetailSchema.parse(await (await patch(ana, quote.id, { description: "" })).json());
+    expect(cleared.description).toBeNull();
+  });
+
+  test("hacerla pública la muestra en el perfil, y volverla privada la esconde", async () => {
+    const quote = await createQuote(ana, { name: "Mi PC" });
+    const listed = async () =>
+      QuotePageSchema.parse(await (await call("anon", "/v1/quotes/user/ana")).json()).items.map((q) => q.name);
+    expect(await listed()).toEqual([]);
+
+    await patch(ana, quote.id, { visibility: "public" });
+    expect(await listed()).toEqual(["Mi PC"]);
+    expect((await call("anon", `/v1/quotes/${quote.id}`)).status).toBe(200);
+
+    await patch(ana, quote.id, { visibility: "private" });
+    expect(await listed()).toEqual([]);
+    expect((await call("anon", `/v1/quotes/${quote.id}`)).status).toBe(404);
+  });
+
+  test("un cuerpo vacío o inválido da 400, y sólo el dueño puede editar", async () => {
+    const quote = await createQuote(ana);
+    expect((await patch(ana, quote.id, {})).status).toBe(400);
+    expect((await patch(ana, quote.id, { name: "   " })).status).toBe(400);
+    expect((await patch(ana, quote.id, { visibility: "secreta" })).status).toBe(400);
+
+    expect((await patch(beto, quote.id, { name: "Mía" })).status).toBe(404);
+    expect((await patch("anon", quote.id, { name: "Mía" })).status).toBe(401);
+    expect((await detail(ana, quote.id)).name).toBe("Mi PC");
+  });
+
+  test("borrar quita la cotización y sus ítems; sólo el dueño puede", async () => {
+    const quote = await createQuote(ana);
+    await addItem(ana, quote.id, seed.ryzen);
+
+    expect((await call(beto, `/v1/quotes/${quote.id}`, "DELETE")).status).toBe(404);
+    expect((await call("anon", `/v1/quotes/${quote.id}`, "DELETE")).status).toBe(401);
+    expect((await all(db, "quotes")).length).toBe(1);
+
+    expect((await call(ana, `/v1/quotes/${quote.id}`, "DELETE")).status).toBe(204);
+    expect(await all(db, "quotes")).toEqual([]);
+    expect(await all(db, "quote_items")).toEqual([]);
+    expect((await call(ana, `/v1/quotes/${quote.id}`)).status).toBe(404);
+    expect((await call(ana, `/v1/quotes/${quote.id}`, "DELETE")).status).toBe(404);
+  });
+});

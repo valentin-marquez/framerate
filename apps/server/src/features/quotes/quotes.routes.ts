@@ -3,6 +3,7 @@ import {
   CreateQuoteRequestSchema,
   QuoteListQuerySchema,
   UpdateQuoteItemRequestSchema,
+  UpdateQuoteRequestSchema,
 } from "@framerate/contracts";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -14,11 +15,13 @@ import {
   addItem,
   canRead,
   createQuote,
+  deleteQuote,
   listPublicQuotes,
   listQuotes,
   loadQuote,
   removeItem,
   setItemQuantity,
+  updateQuote,
 } from "./quotes.repository";
 
 /**
@@ -52,6 +55,27 @@ export const quotesRoutes = new Hono<AppEnv>()
     const quote = await loadQuote(c.var.db, c.req.param("id"), c.env.ASSETS_BASE_URL);
     if (!quote || !canRead(quote, c.get("user")?.id)) throw quoteNotFound();
     return c.json(quote.detail);
+  })
+  .patch("/:id", async (c) => {
+    const user = currentUser(c);
+    const changes = UpdateQuoteRequestSchema.parse(await c.req.json().catch(() => ({})));
+    // Hacerla pública es publicar: quien está sancionado no puede.
+    if (changes.visibility === "public") assertNotBanned(user);
+    const detail = await updateQuote(
+      c.var.db,
+      c.req.param("id"),
+      user.id,
+      changes,
+      c.env.ASSETS_BASE_URL,
+      new Date().toISOString(),
+    );
+    if (!detail) throw quoteNotFound();
+    return c.json(detail);
+  })
+  .delete("/:id", async (c) => {
+    const user = currentUser(c);
+    if (!(await deleteQuote(c.var.db, c.req.param("id"), user.id))) throw quoteNotFound();
+    return c.body(null, 204);
   })
   .post("/:id/items", async (c) => {
     const user = currentUser(c);

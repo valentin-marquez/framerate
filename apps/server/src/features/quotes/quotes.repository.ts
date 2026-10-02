@@ -10,6 +10,7 @@ import {
   type QuoteVisibility,
   quoteTotals,
   SLOT_BY_CATEGORY,
+  type UpdateQuoteRequest,
 } from "@framerate/contracts";
 import { type Db, toBool } from "@framerate/database";
 import { sql } from "kysely";
@@ -266,6 +267,43 @@ export async function listPublicQuotes(
     pageSize,
     total: Number(totalRow?.total ?? 0),
   };
+}
+
+/** Edita la cotización del dueño y devuelve el detalle ya actualizado, todo en un viaje. `null` si no existe o no es suya. */
+export async function updateQuote(
+  db: Db,
+  publicId: string,
+  ownerId: string,
+  changes: UpdateQuoteRequest,
+  assetsBaseUrl: string | undefined,
+  now: string,
+): Promise<QuoteDetail | null> {
+  const { name, description, visibility } = changes;
+  const [, [row], itemRows] = await db.read([
+    db.query
+      .updateTable("quotes")
+      .set({
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description: description || null }),
+        ...(visibility !== undefined && { visibility }),
+        updated_at: now,
+      })
+      .where("public_id", "=", publicId)
+      .where("owner_id", "=", ownerId),
+    summariesQuery(db).where("q.public_id", "=", publicId),
+    itemsQuery(db, publicId),
+  ]);
+  if (!row || row.owner_id !== ownerId) return null;
+  return toDetail(row, itemRows, assetsBaseUrl);
+}
+
+/** Borra la cotización del dueño (sus ítems se van en cascada). `false` si no existe o no es suya. */
+export async function deleteQuote(db: Db, publicId: string, ownerId: string): Promise<boolean> {
+  const [[found]] = await db.read([
+    db.query.selectFrom("quotes").select("id").where("public_id", "=", publicId).where("owner_id", "=", ownerId),
+    db.query.deleteFrom("quotes").where("public_id", "=", publicId).where("owner_id", "=", ownerId),
+  ]);
+  return found !== undefined;
 }
 
 export type AddItemResult = { detail: QuoteDetail; created: boolean } | "quote_not_found" | "product_not_found";
