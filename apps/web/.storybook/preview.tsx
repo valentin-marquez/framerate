@@ -42,7 +42,6 @@ const preview: Preview = {
       const theme = globals.theme === "dark" ? "dark" : "light";
       const requestInfo = {
         clientEnv: {},
-        hints: { theme, timeZone: "America/Santiago" },
         userPrefs: { theme, lang: "es" },
         origin: "http://localhost:6006",
       };
