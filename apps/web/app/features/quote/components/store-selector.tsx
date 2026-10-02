@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { productsService } from "~/features/product/services/products";
 import { Button } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
+import { DURATION, EASE_OUT } from "~/shared/lib/motion";
 import { cn } from "~/shared/lib/utils";
 import type { Product } from "~/shared/utils/db-types";
 import { formatCLP } from "~/shared/utils/format";
@@ -76,16 +77,17 @@ export function StoreSelector({
                   <m.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    exit={{ opacity: 0, transition: { duration: DURATION.fast, ease: EASE_OUT } }}
+                    transition={{ duration: DURATION.base, ease: EASE_OUT }}
                     className="absolute inset-0 bg-black/50"
                     onClick={() => setIsOpen(false)}
                   />
                   <m.div
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="relative w-full max-w-md rounded-2xl border border-border/50 bg-card/95 shadow-2xl overflow-hidden backdrop-blur-xl"
+                    exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: DURATION.fast, ease: EASE_OUT } }}
+                    transition={{ duration: DURATION.base, ease: EASE_OUT }}
+                    className="relative w-full max-w-md rounded-2xl border border-border/50 bg-card shadow-2xl overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between border-b border-border/50 bg-muted/30 px-4 py-3">
@@ -117,7 +119,7 @@ export function StoreSelector({
                               setIsOpen(false);
                             }}
                             className={cn(
-                              "group flex items-center justify-between p-3 rounded-xl border transition-all text-left cursor-pointer",
+                              "group flex items-center justify-between p-3 rounded-xl border transition-colors text-left cursor-pointer",
                               !currentListingId
                                 ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20 cursor-default"
                                 : "border-border/40 bg-card hover:bg-secondary/40 hover:border-border/80",
@@ -160,7 +162,7 @@ export function StoreSelector({
                                 setIsOpen(false);
                               }}
                               className={cn(
-                                "group flex items-center justify-between p-3 rounded-xl border transition-all text-left cursor-pointer",
+                                "group flex items-center justify-between p-3 rounded-xl border transition-colors text-left cursor-pointer",
                                 currentListingId === String(listing.id)
                                   ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20 cursor-default"
                                   : "border-border/40 bg-card hover:bg-secondary/40 hover:border-border/80",

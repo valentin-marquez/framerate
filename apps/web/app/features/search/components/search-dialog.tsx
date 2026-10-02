@@ -139,12 +139,9 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
       onOpenChange={handleSetIsOpen}
       title="Buscar productos"
       description="Busca productos, categorías y más"
-      className="backdrop-blur-md bg-card/85 transition-all duration-300 ease-out"
+      className="bg-card"
     >
-      <Command
-        shouldFilter={false}
-        className={cn("w-full transition-all duration-300 ease-out", "md:w-180", showProducts && "md:w-200")}
-      >
+      <Command shouldFilter={false} className={cn("w-full md:w-180", showProducts && "md:w-200")}>
         <div className="relative">
           <CommandInput
             placeholder="Buscar productos, categorías..."
@@ -155,7 +152,7 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
 
           <div
             className={cn(
-              "absolute right-3 top-1/2 -translate-y-1/2 transition-all duration-200",
+              "absolute right-3 top-1/2 -translate-y-1/2 transition-[opacity,scale]",
               showLoading ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none",
             )}
           >
@@ -163,26 +160,16 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
           </div>
         </div>
 
-        <CommandList
-          className={cn(
-            "transition-all duration-300 ease-out",
-            showProducts ? "max-h-128" : showCategories ? "max-h-96" : "max-h-60",
-          )}
-        >
+        <CommandList className={showProducts ? "max-h-128" : showCategories ? "max-h-96" : "max-h-60"}>
           <CommandEmpty>
-            <div
-              className={cn(
-                "flex flex-col items-center justify-center py-8 text-center transition-all duration-300",
-                showLoading && "py-12",
-              )}
-            >
+            <div className={cn("flex flex-col items-center justify-center py-8 text-center", showLoading && "py-12")}>
               <IconSearch
                 className={cn(
-                  "size-12 text-muted-foreground/50 mb-3 transition-all duration-300",
+                  "size-12 text-muted-foreground/50 mb-3 transition-[opacity,scale]",
                   showLoading && "opacity-50 scale-95",
                 )}
               />
-              <p className="text-sm text-muted-foreground transition-opacity duration-200">
+              <p className="text-sm text-muted-foreground">
                 {showLoading
                   ? "Buscando..."
                   : hasSearchQuery
@@ -190,7 +177,7 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
                     : "Escribe para buscar productos"}
               </p>
               {hasSearchQuery && !showLoading && (
-                <p className="text-xs text-muted-foreground/70 mt-1 animate-in fade-in duration-300">
+                <p className="text-xs text-muted-foreground/70 mt-1 animate-in fade-in duration-fast ease-out">
                   Intenta con otros términos de búsqueda
                 </p>
               )}
@@ -198,13 +185,13 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
           </CommandEmpty>
 
           {showCategories && (
-            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="animate-in fade-in slide-in-from-top-2 duration-base ease-out">
               <CommandGroup heading="Categorías">
                 {filteredCategories.map((category: CategoryItem) => (
                   <CommandItem
                     key={category.id}
                     onSelect={() => handleSelectCategory(category.slug)}
-                    className="cursor-pointer transition-colors duration-150"
+                    className="cursor-pointer transition-colors"
                   >
                     <IconTag className="text-muted-foreground shrink-0" />
                     <span className="line-clamp-1 flex-1">{category.label}</span>
@@ -214,30 +201,25 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
                   </CommandItem>
                 ))}
               </CommandGroup>
-              <CommandSeparator className="transition-opacity duration-200" />
+              <CommandSeparator />
             </div>
           )}
 
           {showProducts && (
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-base ease-out">
               <CommandGroup heading="Productos">
-                {products.map((product, index) => (
+                {products.map((product) => (
                   <CommandItem
                     key={product.id}
                     onSelect={() => handleSelectProduct(product)}
-                    className="cursor-pointer transition-all duration-150 hover:scale-[1.01] hover:bg-accent/50 p-3 gap-3"
-                    style={{
-                      animationDelay: `${index * 30}ms`,
-                      animation: "fadeInUp 200ms ease-out forwards",
-                      opacity: 0,
-                    }}
+                    className="cursor-pointer transition-[background-color,scale] hover:scale-[1.01] hover:bg-accent/50 p-3 gap-3"
                   >
-                    <div className="relative size-16 shrink-0 rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/40 transition-all duration-200 group-hover:ring-primary/40">
+                    <div className="relative size-16 shrink-0 rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/40 group-hover:ring-primary/40">
                       {product.imageUrl ? (
                         <AsyncImage
                           src={product.imageUrl}
                           alt={product.name}
-                          className="size-full object-contain p-1.5 transition-transform duration-200 group-hover:scale-105"
+                          className="size-full object-contain p-1.5 transition-transform group-hover:scale-105"
                         />
                       ) : (
                         <div className="flex items-center justify-center size-full">
@@ -247,13 +229,13 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
                     </div>
 
                     <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden">
-                      <span className="text-sm font-medium line-clamp-2 leading-snug transition-colors duration-150">
+                      <span className="text-sm font-medium line-clamp-2 leading-snug transition-colors">
                         {product.name}
                       </span>
                       <span className="text-xs text-muted-foreground line-clamp-1">{product.brand}</span>
                     </div>
                     <div className="flex flex-col items-end gap-0.5 shrink-0">
-                      <span className="text-base font-semibold tabular-nums transition-colors duration-150">
+                      <span className="text-base font-semibold tabular-nums transition-colors">
                         {formatCLP(product.bestPrice ?? 0)}
                       </span>
                       <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Precio</span>
@@ -265,27 +247,27 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
           )}
         </CommandList>
 
-        <div className="border-t border-border/50 px-4 py-3 transition-all duration-200">
+        <div className="border-t border-border/50 px-4 py-3">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md bg-secondary/30 px-1.5 font-mono text-[10px] font-medium transition-colors duration-150">
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md bg-secondary/30 px-1.5 font-mono text-[10px] font-medium transition-colors">
                   <span className="text-xs">↑↓</span>
                 </kbd>
-                <span className="transition-colors duration-150">Navegar</span>
+                <span>Navegar</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md bg-secondary/30 px-1.5 font-mono text-[10px] font-medium transition-colors duration-150">
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md bg-secondary/30 px-1.5 font-mono text-[10px] font-medium transition-colors">
                   <span className="text-xs">↵</span>
                 </kbd>
-                <span className="transition-colors duration-150">Seleccionar</span>
+                <span>Seleccionar</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md bg-secondary/30 px-1.5 font-mono text-[10px] font-medium transition-colors duration-150">
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md bg-secondary/30 px-1.5 font-mono text-[10px] font-medium transition-colors">
                 ESC
               </kbd>
-              <span className="transition-colors duration-150">Cerrar</span>
+              <span>Cerrar</span>
             </div>
           </div>
         </div>
@@ -310,13 +292,16 @@ export function SearchTrigger({ onClick, className, ref, ...rest }: SearchTrigge
         aria-label="Buscar"
         size="icon"
         {...rest}
-        className={cn("rounded-full transition-all duration-200 hover:scale-105 active:scale-95", className)}
+        className={cn(
+          "rounded-full transition-[color,background-color,scale] hover:scale-105 active:scale-95",
+          className,
+        )}
         onClick={(e) => {
           onClick?.(e);
           setOpen(true);
         }}
       >
-        <IconSearch className="size-4 text-muted-foreground transition-colors duration-200" />
+        <IconSearch className="size-4 text-muted-foreground transition-colors" />
       </Button>
       <SearchDialog open={open} onOpenChange={setOpen} />
     </>
