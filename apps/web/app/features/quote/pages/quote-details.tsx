@@ -1,4 +1,4 @@
-import { type QuoteDetail, type QuoteItem, quoteTotals } from "@framerate/contracts";
+import { isAdditiveSlot, type Offer, type QuoteDetail, type QuoteItem, quoteTotals } from "@framerate/contracts";
 import { useEffect, useRef, useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
@@ -76,6 +76,47 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     );
   };
 
+  const handleSelect = (item: QuoteItem) => {
+    showItems(
+      quote.items.map((i) =>
+        i.slot === item.slot && !isAdditiveSlot(i.slot) ? { ...i, isSelected: i.id === item.id } : i,
+      ),
+    );
+    inFlight.current += 1;
+    updateItem.mutate(
+      { quoteId: quote.id, itemId: item.id, data: { isSelected: true } },
+      { onSuccess: settle, onError: () => fail(t("quote_update_error")) },
+    );
+  };
+
+  const handleChooseOffer = (item: QuoteItem, offer: Offer | null) => {
+    // Al elegir una tienda se ve su precio ya; al volver al mejor precio hay que esperar al servidor.
+    showItems(
+      quote.items.map((i) =>
+        i.id !== item.id
+          ? i
+          : {
+              ...i,
+              chosenListingId: offer?.id ?? null,
+              offer: offer
+                ? {
+                    id: offer.id,
+                    store: offer.store,
+                    url: offer.url,
+                    priceCash: offer.priceCash,
+                    priceCard: offer.priceCard,
+                  }
+                : i.offer,
+            },
+      ),
+    );
+    inFlight.current += 1;
+    updateItem.mutate(
+      { quoteId: quote.id, itemId: item.id, data: { listingId: offer?.id ?? null } },
+      { onSuccess: settle, onError: () => fail(t("quote_update_error")) },
+    );
+  };
+
   const handleRemove = (item: QuoteItem) => {
     showItems(quote.items.filter((i) => i.id !== item.id));
     inFlight.current += 1;
@@ -118,6 +159,8 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           isOwner={isOwner}
           onChangeQuantity={handleChangeQuantity}
           onRemove={handleRemove}
+          onSelect={handleSelect}
+          onChooseOffer={handleChooseOffer}
         />
 
         {quote.items.length > 0 && (

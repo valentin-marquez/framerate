@@ -29,6 +29,7 @@ const item = (
   quantity,
   isSelected,
   note: null,
+  chosenListingId: null,
   product: { id, slug: `producto-${id}`, name, brand, category, imageUrl: null },
   offer:
     priceCash === null
@@ -79,18 +80,38 @@ export const ListaVacia: Story = {
       isOwner
       onChangeQuantity={noop}
       onRemove={noop}
+      onSelect={noop}
+      onChooseOffer={noop}
     />
   ),
 };
 
 export const ListaDelDueno: Story = {
   name: "Lista de componentes: dueño",
-  render: () => <QuoteItemsList quote={quote} isOwner onChangeQuantity={noop} onRemove={noop} />,
+  render: () => (
+    <QuoteItemsList
+      quote={quote}
+      isOwner
+      onChangeQuantity={noop}
+      onRemove={noop}
+      onSelect={noop}
+      onChooseOffer={noop}
+    />
+  ),
 };
 
 export const ListaDeVisitante: Story = {
   name: "Lista de componentes: visitante",
-  render: () => <QuoteItemsList quote={quote} isOwner={false} onChangeQuantity={noop} onRemove={noop} />,
+  render: () => (
+    <QuoteItemsList
+      quote={quote}
+      isOwner={false}
+      onChangeQuantity={noop}
+      onRemove={noop}
+      onSelect={noop}
+      onChooseOffer={noop}
+    />
+  ),
 };
 
 export const Totales: Story = {

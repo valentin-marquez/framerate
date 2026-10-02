@@ -1,214 +1,120 @@
-import type { Offer } from "@framerate/contracts";
-import { IconBuildingStore, IconChevronDown, IconRefresh, IconX } from "@tabler/icons-react";
-import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
-import { useState, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
+import type { Offer, QuoteItem } from "@framerate/contracts";
+import { IconCheck, IconChevronDown } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { productsService } from "~/features/product/services/products";
-import { Button } from "~/shared/components/primitives/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/shared/components/primitives/dialog";
 import { StoreLogo } from "~/shared/components/store-logo";
-import { DURATION, EASE_OUT } from "~/shared/lib/motion";
+import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
-import type { Product } from "~/shared/utils/db-types";
 import { formatCLP } from "~/shared/utils/format";
 
-// useSyncExternalStore: detecta si estamos en cliente sin un useEffect+useState
-// que provoque un flicker de portal entre SSR y hidratación.
-const subscribeNoop = () => () => {};
-const getDocumentSnapshot = () => true;
-const getServerDocumentSnapshot = () => false;
+interface StoreSelectorProps {
+  item: QuoteItem;
+  /** `null` = mejor precio disponible. */
+  onChoose: (offer: Offer | null) => void;
+}
 
-export function StoreSelector({
-  product,
-  currentListingId,
-  onSelect,
-}: {
-  product: Product;
-  currentListingId?: string | null;
-  onSelect: (listingId: string | null) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [listings, setListings] = useState<Offer[]>([]);
-  const [loading, setLoading] = useState(false);
-  const mounted = useSyncExternalStore(subscribeNoop, getDocumentSnapshot, getServerDocumentSnapshot);
+/** Elegir con qué tienda cuenta un ítem: una de sus ofertas con stock, o siempre el mejor precio. */
+export function StoreSelector({ item, onChoose }: StoreSelectorProps) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const offers = useQuery({
+    queryKey: ["product-offers", item.product.slug],
+    queryFn: async () => (await productsService.getBySlug(item.product.slug)).offers,
+    enabled: open,
+    staleTime: 60_000,
+  });
 
-  const handleOpen = async () => {
-    setIsOpen(true);
-    setLoading(true);
-    try {
-      if (!product.slug) return;
-      setListings((await productsService.getBySlug(product.slug)).offers);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+  const choose = (offer: Offer | null) => {
+    onChoose(offer);
+    setOpen(false);
   };
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleOpen}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="flex min-w-0 cursor-pointer items-center gap-1 text-sm font-medium hover:text-primary"
+        >
+          <span className="truncate">{item.offer?.store.name ?? t("quote_choose_store")}</span>
+          <IconChevronDown size={14} className="shrink-0 text-muted-foreground" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md bg-card">
+        <DialogHeader>
+          <DialogTitle>{t("quote_choose_store")}</DialogTitle>
+          <DialogDescription className="truncate">{item.product.name}</DialogDescription>
+        </DialogHeader>
+
+        <ul className="grid gap-2">
+          <Row selected={item.chosenListingId === null} onClick={() => choose(null)}>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{t("quote_best_price")}</p>
+              <p className="text-xs text-muted-foreground">{t("quote_best_price_hint")}</p>
+            </div>
+          </Row>
+
+          {offers.isLoading && <li className="px-3 py-2 text-sm text-muted-foreground">{t("quote_offers_loading")}</li>}
+          {offers.isError && <li className="px-3 py-2 text-sm text-destructive">{t("quote_offers_error")}</li>}
+          {offers.data?.map((offer) => (
+            <Row
+              key={offer.id}
+              selected={item.chosenListingId === offer.id}
+              disabled={!offer.inStock}
+              onClick={() => choose(offer)}
+            >
+              <StoreLogo store={offer.store} className="size-6 rounded-md" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{offer.store.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {offer.inStock
+                    ? t("quote_offer_prices", { cash: formatCLP(offer.priceCash), card: formatCLP(offer.priceCard) })
+                    : t("out_of_stock")}
+                </p>
+              </div>
+            </Row>
+          ))}
+        </ul>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Row({
+  selected,
+  disabled,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        disabled={disabled}
+        aria-pressed={selected}
+        onClick={onClick}
         className={cn(
-          "h-auto py-1 px-2 text-xs font-normal text-muted-foreground hover:text-foreground gap-1.5 border border-transparent hover:border-border/50 hover:bg-secondary/50",
+          "flex w-full cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+          selected ? "border-primary bg-primary/5" : "border-border/60 hover:bg-secondary/40",
         )}
       >
-        {currentListingId ? (
-          <span className="flex items-center gap-1.5">
-            <IconBuildingStore size={12} />
-            <span className="truncate max-w-20">Cambiar</span>
-          </span>
-        ) : (
-          <>
-            <IconBuildingStore size={12} />
-            <span>Mejor precio</span>
-          </>
-        )}
-        <IconChevronDown size={10} className="opacity-50" />
-      </Button>
-
-      {mounted &&
-        createPortal(
-          <LazyMotion features={domAnimation}>
-            <AnimatePresence>
-              {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                  <m.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0, transition: { duration: DURATION.fast, ease: EASE_OUT } }}
-                    transition={{ duration: DURATION.base, ease: EASE_OUT }}
-                    className="absolute inset-0 bg-black/50"
-                    onClick={() => setIsOpen(false)}
-                  />
-                  <m.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: DURATION.fast, ease: EASE_OUT } }}
-                    transition={{ duration: DURATION.base, ease: EASE_OUT }}
-                    className="relative w-full max-w-md rounded-2xl border border-border/50 bg-card shadow-2xl overflow-hidden"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex items-center justify-between border-b border-border/50 bg-muted/30 px-4 py-3">
-                      <span className="text-sm font-medium text-foreground">Seleccionar tienda</span>
-                      <button
-                        type="button"
-                        className={cn(
-                          "flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors",
-                          "hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] cursor-pointer",
-                        )}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <IconX className="size-4" />
-                      </button>
-                    </div>
-
-                    <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
-                      {loading ? (
-                        <div className="py-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-                          <IconRefresh className="animate-spin opacity-50" size={20} />
-                          <span>Cargando tiendas…</span>
-                        </div>
-                      ) : (
-                        <div className="grid gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onSelect(null);
-                              setIsOpen(false);
-                            }}
-                            className={cn(
-                              "group flex items-center justify-between p-3 rounded-xl border transition-colors text-left cursor-pointer",
-                              !currentListingId
-                                ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20 cursor-default"
-                                : "border-border/40 bg-card hover:bg-secondary/40 hover:border-border/80",
-                            )}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={cn(
-                                  "size-10 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                                  !currentListingId
-                                    ? "bg-primary/10 text-primary"
-                                    : "bg-secondary text-muted-foreground",
-                                )}
-                              >
-                                <IconBuildingStore size={20} />
-                              </div>
-                              <div>
-                                <div
-                                  className={cn(
-                                    "font-medium text-sm",
-                                    !currentListingId ? "text-primary" : "text-foreground",
-                                  )}
-                                >
-                                  Mejor precio automático
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Selecciona la mejor opción disponible
-                                </div>
-                              </div>
-                            </div>
-                            {!currentListingId && <div className="size-2 rounded-full bg-primary mr-2" />}
-                          </button>
-
-                          {listings.map((listing) => (
-                            <button
-                              type="button"
-                              key={listing.id}
-                              onClick={() => {
-                                onSelect(String(listing.id));
-                                setIsOpen(false);
-                              }}
-                              className={cn(
-                                "group flex items-center justify-between p-3 rounded-xl border transition-colors text-left cursor-pointer",
-                                currentListingId === String(listing.id)
-                                  ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20 cursor-default"
-                                  : "border-border/40 bg-card hover:bg-secondary/40 hover:border-border/80",
-                              )}
-                            >
-                              <div className="flex items-center gap-3 overflow-hidden">
-                                <StoreLogo store={listing.store} className="size-10 rounded-lg shrink-0" />
-                                <div className="min-w-0">
-                                  <div
-                                    className={cn(
-                                      "font-medium text-sm truncate transition-colors",
-                                      currentListingId === String(listing.id) ? "text-primary" : "text-foreground",
-                                    )}
-                                  >
-                                    {listing.store?.name}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground line-clamp-1 break-all opacity-70">
-                                    {listing.url}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0 ml-2">
-                                <div
-                                  className={cn(
-                                    "font-mono font-medium text-sm",
-                                    currentListingId === String(listing.id) ? "text-primary" : "text-foreground",
-                                  )}
-                                >
-                                  {formatCLP(listing.priceCash)}
-                                </div>
-                                <div className="text-xs text-muted-foreground line-through decoration-muted-foreground opacity-60">
-                                  {formatCLP(listing.priceCard)}
-                                </div>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </m.div>
-                </div>
-              )}
-            </AnimatePresence>
-          </LazyMotion>,
-          document.body,
-        )}
-    </>
+        {children}
+        {selected && <IconCheck size={16} className="shrink-0 text-primary" />}
+      </button>
+    </li>
   );
 }

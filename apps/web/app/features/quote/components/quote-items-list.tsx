@@ -1,4 +1,4 @@
-import { QUOTE_SLOTS, type QuoteDetail, type QuoteItem as QuoteItemData } from "@framerate/contracts";
+import { type Offer, QUOTE_SLOTS, type QuoteDetail, type QuoteItem as QuoteItemData } from "@framerate/contracts";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { QuoteSlot } from "./quote-slot";
 import { QuoteTotals } from "./quote-totals";
@@ -8,9 +8,18 @@ interface QuoteItemsListProps {
   isOwner: boolean;
   onChangeQuantity: (item: QuoteItemData, quantity: number) => void;
   onRemove: (item: QuoteItemData) => void;
+  onSelect: (item: QuoteItemData) => void;
+  onChooseOffer: (item: QuoteItemData, offer: Offer | null) => void;
 }
 
-export function QuoteItemsList({ quote, isOwner, onChangeQuantity, onRemove }: QuoteItemsListProps) {
+export function QuoteItemsList({
+  quote,
+  isOwner,
+  onChangeQuantity,
+  onRemove,
+  onSelect,
+  onChooseOffer,
+}: QuoteItemsListProps) {
   const { t } = useTranslation();
 
   return (
@@ -37,6 +46,8 @@ export function QuoteItemsList({ quote, isOwner, onChangeQuantity, onRemove }: Q
             isOwner={isOwner}
             onChangeQuantity={onChangeQuantity}
             onRemove={onRemove}
+            onSelect={onSelect}
+            onChooseOffer={onChooseOffer}
           />
         ))}
       </div>

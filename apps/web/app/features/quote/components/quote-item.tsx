@@ -1,4 +1,4 @@
-import { CATEGORY_LABELS, type QuoteItem as QuoteItemData } from "@framerate/contracts";
+import { CATEGORY_LABELS, type Offer, type QuoteItem as QuoteItemData } from "@framerate/contracts";
 import { IconAlertTriangle, IconExternalLink, IconMinus, IconPlus, IconTrash } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { OutboundLink } from "~/shared/components/outbound-link";
@@ -7,15 +7,17 @@ import { Button } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
+import { StoreSelector } from "./store-selector";
 
 interface QuoteItemProps {
   item: QuoteItemData;
   isOwner: boolean;
   onChangeQuantity: (item: QuoteItemData, quantity: number) => void;
   onRemove: (item: QuoteItemData) => void;
+  onChooseOffer: (item: QuoteItemData, offer: Offer | null) => void;
 }
 
-export function QuoteItem({ item, isOwner, onChangeQuantity, onRemove }: QuoteItemProps) {
+export function QuoteItem({ item, isOwner, onChangeQuantity, onRemove, onChooseOffer }: QuoteItemProps) {
   const { product, offer, quantity } = item;
 
   return (
@@ -83,7 +85,12 @@ export function QuoteItem({ item, isOwner, onChangeQuantity, onRemove }: QuoteIt
         </div>
 
         <div className="col-span-1 md:col-span-2 flex items-center gap-2 min-w-0">
-          {offer ? (
+          {isOwner ? (
+            <>
+              {offer && <StoreLogo store={offer.store} className="size-5 rounded-sm" />}
+              <StoreSelector item={item} onChoose={(chosen) => onChooseOffer(item, chosen)} />
+            </>
+          ) : offer ? (
             <>
               <StoreLogo store={offer.store} className="size-5 rounded-sm" />
               <OutboundLink

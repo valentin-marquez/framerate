@@ -2,15 +2,18 @@ import {
   CATEGORIES,
   CATEGORY_SLUGS,
   isAdditiveSlot,
+  type Offer,
   QUOTE_SLOT_LABELS,
   type QuoteItem as QuoteItemData,
   type QuoteSlot as QuoteSlotId,
   SLOT_BY_CATEGORY,
 } from "@framerate/contracts";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { QuoteItem } from "~/features/quote/components/quote-item";
-import { buttonVariants } from "~/shared/components/primitives/button";
+import { Button, buttonVariants } from "~/shared/components/primitives/button";
+import { useTranslation } from "~/shared/hooks/use-translation";
+import { formatCLP } from "~/shared/utils/format";
 import { SLOT_SHORT_LABELS } from "~/shared/utils/slots";
 
 interface QuoteSlotProps {
@@ -20,6 +23,8 @@ interface QuoteSlotProps {
   isOwner: boolean;
   onChangeQuantity: (item: QuoteItemData, quantity: number) => void;
   onRemove: (item: QuoteItemData) => void;
+  onSelect: (item: QuoteItemData) => void;
+  onChooseOffer: (item: QuoteItemData, offer: Offer | null) => void;
 }
 
 /** Agregar lleva a la página de la categoría del slot (en storage, la primera: SSD): ahí se elige y se agrega. */
@@ -28,9 +33,18 @@ const categoryHref = (slot: QuoteSlotId) => {
   return category ? `/categoria/${CATEGORY_SLUGS[category]}` : "/explorar";
 };
 
-export function QuoteSlot({ slot, items, isOwner, onChangeQuantity, onRemove }: QuoteSlotProps) {
+export function QuoteSlot({
+  slot,
+  items,
+  isOwner,
+  onChangeQuantity,
+  onRemove,
+  onSelect,
+  onChooseOffer,
+}: QuoteSlotProps) {
+  const { t } = useTranslation();
   const shown = isAdditiveSlot(slot) ? items : items.filter((item) => item.isSelected);
-  const alternatives = items.length - shown.length;
+  const alternatives = items.filter((item) => !shown.includes(item));
 
   if (shown.length === 0) {
     return (
@@ -68,14 +82,46 @@ export function QuoteSlot({ slot, items, isOwner, onChangeQuantity, onRemove }: 
             isOwner={isOwner}
             onChangeQuantity={onChangeQuantity}
             onRemove={onRemove}
+            onChooseOffer={onChooseOffer}
           />
         ))}
       </div>
-      {alternatives > 0 && (
-        <p className="px-6 py-2 bg-secondary/5 border-t border-border/40 text-xs text-muted-foreground">
-          {alternatives} {alternatives === 1 ? "alternativa guardada" : "alternativas guardadas"} en{" "}
-          {QUOTE_SLOT_LABELS[slot].toLowerCase()}
-        </p>
+      {alternatives.length > 0 && (
+        <div className="bg-secondary/5 border-t border-border/40 px-6 py-3 space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">
+            {t("quote_alternatives", { slot: QUOTE_SLOT_LABELS[slot].toLowerCase() })}
+          </p>
+          <ul className="divide-y divide-border/40">
+            {alternatives.map((item) => (
+              <li key={item.id} className="flex items-center gap-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <Link to={`/producto/${item.product.slug}`} className="block truncate text-sm hover:text-primary">
+                    {item.product.name}
+                  </Link>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {item.offer ? formatCLP(item.offer.priceCash) : t("out_of_stock")}
+                  </span>
+                </div>
+                {isOwner && (
+                  <>
+                    <Button variant="outline" size="sm" onClick={() => onSelect(item)}>
+                      {t("quote_use_this")}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-destructive"
+                      aria-label={t("remove_product_error")}
+                      onClick={() => onRemove(item)}
+                    >
+                      <IconTrash size={16} />
+                    </Button>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
