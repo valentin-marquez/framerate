@@ -1,7 +1,6 @@
 "use client";
 import { IconX } from "@tabler/icons-react";
-import { AnimatePresence, domAnimation, LazyMotion, m, type Transition, type Variants } from "motion/react";
-import React, { createContext, use, useEffect, useId, useRef, useSyncExternalStore } from "react";
+import React, { createContext, use, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { usePreventScroll } from "~/shared/hooks/use-prevent-scroll";
 import { cn } from "~/shared/lib/utils";
@@ -10,51 +9,23 @@ const DialogContext = createContext<{
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   dialogRef: React.RefObject<HTMLDialogElement | null>;
-  variants: Variants;
-  transition?: Transition;
   ids: {
     dialog: string;
     title: string;
     description: string;
   };
-  onAnimationComplete: (definition: string) => void;
   handleTrigger: () => void;
 } | null>(null);
 
-const defaultVariants: Variants = {
-  initial: {
-    opacity: 0,
-    scale: 0.9,
-  },
-  animate: {
-    opacity: 1,
-    scale: 1,
-  },
-};
-
-const defaultTransition: Transition = {
-  ease: "easeOut",
-  duration: 0.2,
-};
-
 export type DialogProps = {
   children: React.ReactNode;
-  variants?: Variants;
-  transition?: Transition;
   className?: string;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   open?: boolean;
 };
 
-function Dialog({
-  children,
-  variants = defaultVariants,
-  transition = defaultTransition,
-  defaultOpen,
-  onOpenChange,
-  open,
-}: DialogProps) {
+function Dialog({ children, defaultOpen, onOpenChange, open }: DialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen || false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const isOpen = open !== undefined ? open : uncontrolledOpen;
@@ -101,19 +72,14 @@ function Dialog({
   }, [isOpen, setIsOpen]);
 
   useEffect(() => {
-    if (isOpen && dialogRef.current) {
+    // Si se reabre mientras sale, el <dialog> sigue abierto y showModal() lanzaría un error.
+    if (isOpen && dialogRef.current && !dialogRef.current.open) {
       dialogRef.current.showModal();
     }
   }, [isOpen]);
 
   const handleTrigger = () => {
     setIsOpen(true);
-  };
-
-  const onAnimationComplete = (definition: string) => {
-    if (definition === "exit" && !isOpen) {
-      dialogRef.current?.close();
-    }
   };
 
   const baseId = useId();
@@ -129,10 +95,7 @@ function Dialog({
         isOpen,
         setIsOpen,
         dialogRef,
-        variants,
-        transition,
         ids,
-        onAnimationComplete,
         handleTrigger,
       }}
     >
@@ -219,46 +182,51 @@ export type DialogContentProps = {
 function DialogContent({ children, className, container }: DialogContentProps) {
   const context = use(DialogContext);
   if (!context) throw new Error("DialogContent must be used within Dialog");
-  const { isOpen, setIsOpen, dialogRef, variants, transition, ids, onAnimationComplete } = context;
+  const { isOpen, setIsOpen, dialogRef, ids } = context;
+  // Al cerrar sigue montado hasta que termina la salida.
+  const [rendered, setRendered] = useState(isOpen);
+  if (isOpen && !rendered) setRendered(true);
+  if (!rendered) return null;
 
-  const content = (
-    <LazyMotion features={domAnimation}>
-      <AnimatePresence mode="wait">
-        {isOpen && (
-          <m.dialog
-            key={ids.dialog}
-            ref={dialogRef as React.RefObject<HTMLDialogElement>}
-            id={ids.dialog}
-            aria-labelledby={ids.title}
-            aria-describedby={ids.description}
-            aria-modal="true"
-            role="dialog"
-            onClick={(e) => {
-              if (e.target === dialogRef.current) {
-                setIsOpen(false);
-              }
-            }}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={variants}
-            transition={transition}
-            onAnimationComplete={onAnimationComplete}
-            className={cn(
-              "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-border bg-background p-6 shadow-lg",
-              "backdrop:bg-black/50 backdrop:opacity-50",
-              "open:flex open:flex-col",
-              className,
-            )}
-          >
-            <div className="w-full">{children}</div>
-          </m.dialog>
+  return (
+    <DialogPortal container={container}>
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: el clic es en el velo; con teclado se cierra con Esc */}
+      <dialog
+        ref={dialogRef}
+        id={ids.dialog}
+        aria-labelledby={ids.title}
+        aria-describedby={ids.description}
+        aria-modal="true"
+        onClick={(e) => {
+          if (e.target === dialogRef.current) {
+            setIsOpen(false);
+          }
+        }}
+        onAnimationEnd={(e) => {
+          // También llega la del ::backdrop (mismo target, misma duración): la que llegue primero cierra.
+          if (e.target !== e.currentTarget || isOpen) return;
+          dialogRef.current?.close();
+        }}
+        // El navegador puede cerrarlo por su cuenta (Esc repetido sin interacción): el estado lo sigue.
+        onClose={() => {
+          setRendered(false);
+          if (isOpen) setIsOpen(false);
+        }}
+        className={cn(
+          "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-border bg-background p-6 shadow-lg",
+          "backdrop:bg-black/50 backdrop:opacity-50",
+          "open:flex open:flex-col",
+          "ease-out fill-mode-forwards backdrop:ease-out backdrop:fill-mode-forwards",
+          isOpen
+            ? "animate-in fade-in-0 zoom-in-95 duration-base backdrop:animate-in backdrop:fade-in-0 backdrop:duration-base"
+            : "animate-out fade-out-0 zoom-out-95 duration-fast backdrop:animate-out backdrop:fade-out-0 backdrop:duration-fast",
+          className,
         )}
-      </AnimatePresence>
-    </LazyMotion>
+      >
+        <div className="w-full">{children}</div>
+      </dialog>
+    </DialogPortal>
   );
-
-  return <DialogPortal container={container}>{content}</DialogPortal>;
 }
 
 export type DialogHeaderProps = {
@@ -330,7 +298,7 @@ function DialogClose({ className, children, disabled }: DialogCloseProps) {
     <button
       onClick={() => context.setIsOpen(false)}
       type="button"
-      aria-label="Close dialog"
+      aria-label="Cerrar"
       className={cn(
         "absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
         className,
@@ -338,7 +306,6 @@ function DialogClose({ className, children, disabled }: DialogCloseProps) {
       disabled={disabled}
     >
       {children || <IconX className="size-4" />}
-      <span className="sr-only">Close</span>
     </button>
   );
 }
