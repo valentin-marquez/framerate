@@ -6,7 +6,9 @@ import type { Route } from "./+types/category-page";
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.category) return [{ title: "Categoría no encontrada - Framerate" }];
-  const label = categoryLabel(data.category);
+  // A media frase va en minúscula: "Precios de fuentes de poder", "de memoria RAM".
+  const name = categoryLabel(data.category);
+  const label = name.charAt(0).toLowerCase() + name.slice(1);
   return [
     { title: `Precios de ${label} en Chile - Framerate` },
     {
