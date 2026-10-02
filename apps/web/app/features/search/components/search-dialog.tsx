@@ -214,12 +214,12 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
                     onSelect={() => handleSelectProduct(product)}
                     className="cursor-pointer transition-[background-color,scale] hover:scale-[1.01] hover:bg-accent/50 p-3 gap-3"
                   >
-                    <div className="relative size-16 shrink-0 rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/40 group-hover:ring-primary/40">
+                    <div className="relative size-16 shrink-0 rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/40 group-data-[selected=true]/command-item:ring-primary/40">
                       {product.imageUrl ? (
                         <AsyncImage
                           src={product.imageUrl}
                           alt={product.name}
-                          className="size-full object-contain p-1.5 transition-transform group-hover:scale-105"
+                          className="size-full object-contain p-1.5 transition-transform group-data-[selected=true]/command-item:scale-105"
                         />
                       ) : (
                         <div className="flex items-center justify-center size-full">
