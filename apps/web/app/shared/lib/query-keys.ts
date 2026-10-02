@@ -18,7 +18,7 @@ export const quoteKeys = {
 // Fase 3: comments
 export const commentKeys = {
   all: ["comments"] as const,
-  productRoots: (productId: string, sort: string) => [...commentKeys.all, "product", productId, sort] as const,
-  thread: (rootId: string) => [...commentKeys.all, "thread", rootId] as const,
-  myVotes: (ids: string[]) => [...commentKeys.all, "my-votes", ids.toSorted().join(",")] as const,
+  productRoots: (productId: number, sort: string, pageSize: number) =>
+    [...commentKeys.all, "product", productId, sort, pageSize] as const,
+  thread: (rootId: number) => [...commentKeys.all, "thread", rootId] as const,
 };

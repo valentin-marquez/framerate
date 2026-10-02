@@ -1,5 +1,5 @@
+import type { Comment } from "@framerate/contracts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { CommentNode as CommentNodeT, CommentRoot } from "~/features/comments/services/comments";
 import { commentKeys } from "~/shared/lib/query-keys";
 import { sessions } from "~/shared/storybook/fixtures";
 import { withQueryData } from "~/shared/storybook/with-query-data";
@@ -15,111 +15,91 @@ type Story = StoryObj<typeof meta>;
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 const noop = () => {};
 
-const comment = (id: string, author: string, body: string | null, extra: Partial<CommentNodeT> = {}): CommentNodeT => ({
+const comment = (id: number, author: string, body: string | null, extra: Partial<Comment> = {}): Comment => ({
   id,
-  target_type: "product",
-  target_id: "8",
-  parent_id: null,
-  root_id: id,
-  path: id,
+  productId: 8,
+  parentId: null,
+  rootId: id,
   depth: 0,
-  // Ana (u1) es la de la sesión de ejemplo: sus comentarios muestran editar y eliminar.
-  author_id: author === "ana" ? "u1" : `u-${author}`,
-  author_username: author,
-  author_avatar_url: null,
   body,
-  score: 0,
-  deleted_at: null,
-  deleted_reason: null,
-  edited_at: null,
-  created_at: ago(180),
+  likeCount: 0,
+  likedByMe: false,
+  replyCount: 0,
+  editedAt: null,
+  deletedAt: null,
+  deletionReason: null,
+  createdAt: ago(180),
+  // Ana es la de la sesión de ejemplo: sus comentarios muestran editar y eliminar.
+  author: { username: author, displayName: author, avatarUrl: null },
   ...extra,
 });
 
-const c1 = comment("c1", "matias", "¿Alguien sabe si la Ventus 2X se calienta mucho? La vi a buen precio en TecTec.", {
-  score: 12,
-  created_at: ago(60 * 26),
+const c1 = comment(1, "matias", "¿Alguien sabe si la Ventus 2X se calienta mucho? La vi a buen precio en TecTec.", {
+  likeCount: 12,
+  replyCount: 2,
+  createdAt: ago(60 * 26),
 });
-const c2 = comment("c2", "ana", "La tengo hace un año: con buen flujo de aire no pasa de 70 °C jugando.", {
-  parent_id: "c1",
-  root_id: "c1",
-  path: "c1.c2",
+const c2 = comment(2, "ana", "La tengo hace un año: con buen flujo de aire no pasa de 70 °C jugando.", {
+  parentId: 1,
+  rootId: 1,
   depth: 1,
-  score: 5,
-  created_at: ago(60 * 20),
+  likeCount: 5,
+  createdAt: ago(60 * 20),
 });
-const c3 = comment("c3", "fran", "Confirmo, y es bien silenciosa.", {
-  parent_id: "c2",
-  root_id: "c1",
-  path: "c1.c2.c3",
+const c3 = comment(3, "fran", "Confirmo, y es bien silenciosa.", {
+  parentId: 2,
+  rootId: 1,
   depth: 2,
-  score: 2,
-  edited_at: ago(60),
-  created_at: ago(90),
+  likeCount: 2,
+  likedByMe: true,
+  editedAt: ago(60),
+  createdAt: ago(90),
 });
 const c4 = comment(
-  "c4",
+  4,
   "javi",
   "Comparé con la Dual OC de Asus:\n```\nVentus 2X  $279.990\nDual OC    $299.990\n```\nPor `20 lucas` me quedo con la MSI.",
-  { score: 3, created_at: ago(240) },
+  { likeCount: 3, createdAt: ago(240) },
 );
-const c5 = comment("c5", "anonimo", null, {
-  deleted_at: ago(30),
-  deleted_reason: "spam",
-  created_at: ago(45),
+const c5 = comment(5, "anonimo", null, {
+  author: null,
+  deletedAt: ago(30),
+  deletionReason: "moderation",
+  createdAt: ago(45),
 });
 
-const root = (node: CommentNodeT, replyCount: number): CommentRoot => ({
-  id: node.id,
-  target_id: node.target_id,
-  author_id: node.author_id,
-  body: node.body,
-  score: node.score,
-  deleted_at: node.deleted_at,
-  deleted_reason: node.deleted_reason,
-  edited_at: node.edited_at,
-  created_at: node.created_at,
-  reply_count: replyCount,
-  author_username: node.author_username,
-  author_avatar_url: node.author_avatar_url,
-});
-
-const thread = (nodes: CommentNodeT[]) => ({ data: nodes, meta: { rootId: nodes[0].id, limit: 200 } });
+const thread = (items: Comment[]) => ({ items });
 
 const withComments = withQueryData([
-  [
-    commentKeys.productRoots("8", "best"),
-    { data: [root(c1, 2), root(c4, 0), root(c5, 0)], meta: { sort: "best", limit: 50, offset: 0 } },
-  ],
-  [commentKeys.thread("c1"), thread([c1, c2, c3])],
-  [commentKeys.thread("c4"), thread([c4])],
-  [commentKeys.thread("c5"), thread([c5])],
-  [commentKeys.myVotes(["c1", "c2", "c3"]), { data: [{ comment_id: "c3", value: 1 }] }],
-  [commentKeys.myVotes(["c4"]), { data: [] }],
-  [commentKeys.myVotes(["c5"]), { data: [] }],
+  [commentKeys.productRoots(8, "best", 20), { items: [c1, c4, c5], page: 1, pageSize: 20, total: 3 }],
+  [commentKeys.thread(1), thread([c1, c2, c3])],
+  [commentKeys.thread(4), thread([c4])],
+  [commentKeys.thread(5), thread([c5])],
 ]);
 
 export const Seccion: Story = {
   name: "Sección completa",
   parameters: { session: sessions.user },
   decorators: [withComments],
-  render: () => <CommentsSection targetType="product" targetId="8" className="max-w-2xl" />,
+  render: () => <CommentsSection productId={8} className="max-w-2xl" />,
 };
 
 export const SeccionVisitante: Story = {
   name: "Sección completa: visitante",
   decorators: [withComments],
-  render: () => <CommentsSection targetType="product" targetId="8" className="max-w-2xl" />,
+  render: () => <CommentsSection productId={8} className="max-w-2xl" />,
 };
 
 export const SeccionVacia: Story = {
   name: "Sección sin comentarios",
   parameters: { session: sessions.user },
-  decorators: [withQueryData([[commentKeys.productRoots("8", "best"), { data: [], meta: { sort: "best" } }]])],
-  render: () => <CommentsSection targetType="product" targetId="8" className="max-w-2xl" />,
+  decorators: [
+    withQueryData([[commentKeys.productRoots(8, "best", 20), { items: [], page: 1, pageSize: 20, total: 0 }]]),
+  ],
+  render: () => <CommentsSection productId={8} className="max-w-2xl" />,
 };
 
-const nodeProps = { myVote: 0 as const, onVote: noop, onReply: noop, onEdit: noop, onDelete: noop };
+const nodeProps = { onLike: noop, onReply: noop, onEdit: noop, onDelete: noop };
 
 export const Comentarios: Story = {
   name: "Comentario: estados",
@@ -127,8 +107,8 @@ export const Comentarios: Story = {
   render: () => (
     <div className="max-w-2xl space-y-6">
       <CommentNode node={c1} {...nodeProps} />
-      <CommentNode node={c3} {...nodeProps} myVote={1} />
-      <CommentNode node={{ ...c2, created_at: ago(2) }} {...nodeProps} />
+      <CommentNode node={c3} {...nodeProps} />
+      <CommentNode node={{ ...c2, createdAt: ago(2) }} {...nodeProps} />
       <CommentNode node={c5} {...nodeProps} />
       <CommentNode node={c1} {...nodeProps}>
         <CommentNode node={c2} {...nodeProps}>

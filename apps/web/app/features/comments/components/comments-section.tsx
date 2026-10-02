@@ -1,21 +1,20 @@
+import type { CommentSort } from "@framerate/contracts";
 import { domMax, LazyMotion, m } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { CommentForm } from "~/features/comments/components/comment-form";
 import { CommentThread } from "~/features/comments/components/comment-thread";
 import { useCreateComment, useProductComments } from "~/features/comments/hooks/useComments";
-import type { CommentSort, CommentTargetType } from "~/features/comments/services/comments";
 import { Button } from "~/shared/components/primitives/button";
 import { DURATION, EASE_IN_OUT } from "~/shared/lib/motion";
 import { cn } from "~/shared/lib/utils";
 
 interface CommentsSectionProps {
-  /**
-   * Currently always "product"; the API is built to extend to other targets later.
-   */
-  targetType: CommentTargetType;
-  targetId: string;
+  productId: number;
   className?: string;
 }
+
+const PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 100;
 
 const SORTS = [
   { key: "best", label: "Mejores" },
@@ -23,25 +22,22 @@ const SORTS = [
   { key: "old", label: "Antiguos" },
 ] as const;
 
-/**
- * Top-level container for threaded comments on a target (currently products).
- * Designed to be reusable from Fase 4 (moderation) if a moderator needs a
- * read-only embed.
- */
-export function CommentsSection({ targetType, targetId, className }: CommentsSectionProps) {
+export function CommentsSection({ productId, className }: CommentsSectionProps) {
   const [sort, setSort] = useState<CommentSort>("best");
-  const { data, isLoading, error } = useProductComments(targetId, sort);
-  const createMutation = useCreateComment(targetId, sort);
-  const [newCommentId, setNewCommentId] = useState<string | null>(null);
+  // ponytail: "Ver más" agranda pageSize (tope 100 del contrato); paginar de verdad si un producto pasa de ahí.
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const { data, isLoading, error } = useProductComments(productId, sort, pageSize);
+  const createMutation = useCreateComment(productId);
+  const [newCommentId, setNewCommentId] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   const handleCreate = async (body: string) => {
-    const result = await createMutation.mutateAsync({ parent_id: null, body });
+    const result = await createMutation.mutateAsync({ body });
     setSort("recent");
-    setNewCommentId(result.data.id);
+    setNewCommentId(result.id);
   };
 
-  const listLength = data?.data.length ?? 0;
+  const listLength = data?.items.length ?? 0;
   // biome-ignore lint/correctness/useExhaustiveDependencies: listLength signals "new node landed in DOM" — see comment
   useEffect(() => {
     if (!newCommentId || !listRef.current) return;
@@ -56,11 +52,7 @@ export function CommentsSection({ targetType, targetId, className }: CommentsSec
     return () => clearTimeout(t);
   }, [newCommentId, listLength]);
 
-  if (targetType !== "product") {
-    return null;
-  }
-
-  const count = data?.data.length ?? 0;
+  const count = data?.total ?? 0;
 
   return (
     <LazyMotion features={domMax}>
@@ -123,22 +115,26 @@ export function CommentsSection({ targetType, targetId, className }: CommentsSec
         )}
 
         <div ref={listRef} className="space-y-5">
-          {data?.data.map((root) => (
+          {data?.items.map((root) => (
             <m.div key={root.id} layout="position" transition={{ duration: DURATION.base, ease: EASE_IN_OUT }}>
-              <CommentThread productId={targetId} root={root} sort={sort} />
+              <CommentThread productId={productId} root={root} />
             </m.div>
           ))}
-          {data && data.data.length === 0 && !isLoading && (
+          {data && data.items.length === 0 && !isLoading && (
             <div className="text-sm text-muted-foreground text-center py-6 italic">
               Aún no hay comentarios. ¡Sé el primero!
             </div>
           )}
         </div>
 
-        {data && data.data.length >= 50 && (
+        {data && data.total > data.items.length && pageSize < MAX_PAGE_SIZE && (
           <div className="flex justify-center">
-            <Button variant="ghost" size="sm" disabled>
-              Ver más (próximamente)
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPageSize((n) => Math.min(n + PAGE_SIZE, MAX_PAGE_SIZE))}
+            >
+              Ver más
             </Button>
           </div>
         )}

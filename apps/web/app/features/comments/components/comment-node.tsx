@@ -1,34 +1,19 @@
+import type { Comment } from "@framerate/contracts";
 import { IconArrowBackUp, IconHeart, IconHeartFilled, IconPencil, IconTrash, IconUser } from "@tabler/icons-react";
 import { useState } from "react";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { CommentBody } from "~/features/comments/components/comment-body";
 import { CommentForm } from "~/features/comments/components/comment-form";
-import type { CommentNode as CommentNodeT } from "~/features/comments/services/comments";
 import { REPORTS_API_ENABLED, ReportButton } from "~/features/moderation";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { cn } from "~/shared/lib/utils";
 
 interface CommentNodeProps {
-  node: Pick<
-    CommentNodeT,
-    | "id"
-    | "author_id"
-    | "author_username"
-    | "author_avatar_url"
-    | "body"
-    | "score"
-    | "deleted_at"
-    | "deleted_reason"
-    | "edited_at"
-    | "created_at"
-    | "depth"
-  >;
-  myVote: -1 | 0 | 1;
-  onVote: (value: -1 | 0 | 1) => void;
+  node: Comment;
+  onLike: () => void;
   onReply: (body: string) => Promise<void> | void;
   onEdit: (body: string) => Promise<void> | void;
   onDelete: () => void;
-  votePending?: boolean;
   /**
    * When true, hides the reply button (e.g. at the depth ceiling).
    */
@@ -48,39 +33,28 @@ const formatRelative = (iso: string) => {
   return new Date(iso).toLocaleDateString("es-CL");
 };
 
-export function CommentNode({
-  node,
-  myVote,
-  onVote,
-  onReply,
-  onEdit,
-  onDelete,
-  votePending,
-  canReply = true,
-  children,
-}: CommentNodeProps) {
+export function CommentNode({ node, onLike, onReply, onEdit, onDelete, canReply = true, children }: CommentNodeProps) {
   const user = useUser();
-  const isAuthor = !!user && user.id === node.author_id;
-  const isDeleted = !!node.deleted_at;
-  const isWithinEditWindow = isAuthor && !isDeleted && Date.now() - new Date(node.created_at).getTime() < 5 * 60 * 1000;
+  const isAuthor = !!user && user.username === node.author?.username;
+  const isDeleted = !!node.deletedAt;
 
   const [showReply, setShowReply] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   const isAuthed = !!user;
-  const liked = myVote === 1;
-  const displayName = isDeleted ? "[eliminado]" : node.author_username || (node.author_id ? "usuario" : "[anónimo]");
+  const liked = node.likedByMe;
+  const displayName = isDeleted ? "[eliminado]" : (node.author?.username ?? "[anónimo]");
 
   const handleLike = () => {
-    if (!isAuthed || votePending || isDeleted) return;
-    onVote(liked ? 0 : 1);
+    if (!isAuthed || isDeleted) return;
+    onLike();
   };
 
   return (
     <article className="flex gap-3 group" data-comment-id={node.id}>
       <div className="size-8 rounded-full overflow-hidden bg-secondary/40 flex items-center justify-center shrink-0">
-        {node.author_avatar_url ? (
-          <AsyncImage src={node.author_avatar_url} alt="" className="size-full object-cover" />
+        {node.author?.avatarUrl ? (
+          <AsyncImage src={node.author.avatarUrl} alt="" className="size-full object-cover" />
         ) : (
           <IconUser className="size-4 text-muted-foreground" />
         )}
@@ -91,10 +65,10 @@ export function CommentNode({
           <span className="font-medium text-foreground text-sm leading-none">{displayName}</span>
           {isDeleted && (
             <span className="text-xs italic text-muted-foreground">
-              {node.deleted_reason === "moderation" ? "eliminado por moderación" : "eliminado"}
+              {node.deletionReason === "moderation" ? "eliminado por moderación" : "eliminado"}
             </span>
           )}
-          {node.edited_at && !isDeleted && <span className="text-xs italic text-muted-foreground">(editado)</span>}
+          {node.editedAt && !isDeleted && <span className="text-xs italic text-muted-foreground">(editado)</span>}
         </div>
 
         <div className="mt-1">
@@ -119,7 +93,7 @@ export function CommentNode({
           <div className="mt-1.5 flex items-center gap-3.5 text-xs text-muted-foreground/90">
             <FooterAction
               onClick={handleLike}
-              disabled={!isAuthed || votePending || isDeleted}
+              disabled={!isAuthed || isDeleted}
               pressed={liked}
               aria-label={liked ? "Quitar me gusta" : "Me gusta"}
               className={cn(
@@ -128,7 +102,7 @@ export function CommentNode({
               )}
             >
               {liked ? <IconHeartFilled className="size-4" /> : <IconHeart className="size-4" />}
-              <span className="tabular-nums">{Math.max(0, node.score)}</span>
+              <span className="tabular-nums">{node.likeCount}</span>
             </FooterAction>
 
             {!isDeleted && canReply && (
@@ -138,11 +112,11 @@ export function CommentNode({
               </FooterAction>
             )}
 
-            <time dateTime={node.created_at} className="select-none">
-              {formatRelative(node.created_at)}
+            <time dateTime={node.createdAt} className="select-none">
+              {formatRelative(node.createdAt)}
             </time>
 
-            {isWithinEditWindow && (
+            {isAuthor && !isDeleted && (
               <FooterAction onClick={() => setIsEditing(true)}>
                 <IconPencil className="size-3.5" />
                 Editar
@@ -162,7 +136,7 @@ export function CommentNode({
             {REPORTS_API_ENABLED && !isAuthor && !isDeleted && user && (
               <ReportButton
                 targetType="comment"
-                targetId={node.id}
+                targetId={String(node.id)}
                 contextLabel={`Comentario de ${displayName}`}
                 size="xs"
               />

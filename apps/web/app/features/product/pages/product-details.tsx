@@ -2,7 +2,6 @@ import { CATEGORY_LABELS, type PricePoint, type ProductDetail } from "@framerate
 import { useEffect } from "react";
 import { redirect } from "react-router";
 import { CommentsSection } from "~/features/comments/components/comments-section";
-import { COMMENTS_API_ENABLED } from "~/features/comments/services/comments";
 import { ProductView } from "~/features/product/components/product-view";
 import { productsService } from "~/features/product/services/products";
 import { legacySlug } from "~/features/product/utils/legacy-slug";
@@ -130,11 +129,9 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
     <>
       <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       <ProductView product={product} history={history} period={period} now={now} />
-      {COMMENTS_API_ENABLED && (
-        <div className="mx-auto max-w-6xl px-4 pb-12">
-          <CommentsSection targetType="product" targetId={String(product.id)} />
-        </div>
-      )}
+      <div className="mx-auto max-w-6xl px-4 pb-12">
+        <CommentsSection productId={product.id} />
+      </div>
     </>
   );
 }

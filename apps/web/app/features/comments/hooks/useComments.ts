@@ -1,129 +1,73 @@
+import type { Comment, CommentSort } from "@framerate/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useUser } from "~/features/auth/hooks/useAuth";
-import {
-  type CommentRoot,
-  type CommentSort,
-  type CommentsListResponse,
-  type CommentThreadResponse,
-  commentsService,
-} from "~/features/comments/services/comments";
+import { commentsService } from "~/features/comments/services/comments";
 import { commentKeys } from "~/shared/lib/query-keys";
 
-export function useProductComments(productId: string, sort: CommentSort = "best") {
+export function useProductComments(productId: number, sort: CommentSort, pageSize: number) {
   return useQuery({
-    queryKey: commentKeys.productRoots(productId, sort),
-    queryFn: () => commentsService.listForProduct(productId, sort),
-    enabled: !!productId,
+    queryKey: commentKeys.productRoots(productId, sort, pageSize),
+    queryFn: () => commentsService.listForProduct(productId, sort, pageSize),
   });
 }
 
-export function useCommentThread(rootId: string | null, enabled = true) {
+export function useCommentThread(rootId: number, enabled = true) {
   return useQuery({
-    queryKey: rootId ? commentKeys.thread(rootId) : ["comments", "thread", "noop"],
-    queryFn: () => {
-      if (!rootId) throw new Error("rootId required");
-      return commentsService.getThread(rootId);
-    },
-    enabled: enabled && !!rootId,
+    queryKey: commentKeys.thread(rootId),
+    queryFn: () => commentsService.getThread(rootId),
+    enabled,
   });
 }
 
-export function useMyVotes(commentIds: string[]) {
-  const user = useUser();
-  return useQuery({
-    queryKey: commentKeys.myVotes(commentIds),
-    queryFn: () => commentsService.myVotes(commentIds),
-    enabled: !!user && commentIds.length > 0,
-  });
-}
-
-export function useCreateComment(productId: string, sort: CommentSort) {
+export function useCreateComment(productId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { parent_id?: string | null; body: string }) => commentsService.create(productId, payload),
-    onSuccess: (result, vars) => {
-      // Invalidate roots list if this is a top-level comment, otherwise the
-      // affected thread.
-      if (!vars.parent_id) {
-        queryClient.invalidateQueries({ queryKey: commentKeys.productRoots(productId, sort) });
-      } else if (result.data.root_id) {
-        queryClient.invalidateQueries({ queryKey: commentKeys.thread(result.data.root_id) });
-        // Reply count on the root changed; bump the listing too.
-        queryClient.invalidateQueries({ queryKey: commentKeys.productRoots(productId, sort) });
-      }
-    },
+    mutationFn: (payload: { parentId?: number | null; body: string }) => commentsService.create(productId, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: commentKeys.all }),
   });
 }
 
 export function useEditComment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: string }) => commentsService.edit(id, body),
-    onSuccess: () => {
-      // Invalidate all comment caches because we don't know which thread without an extra fetch.
-      queryClient.invalidateQueries({ queryKey: commentKeys.all });
-    },
+    mutationFn: ({ id, body }: { id: number; body: string }) => commentsService.edit(id, body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: commentKeys.all }),
   });
 }
 
-export function useSoftDeleteComment() {
+export function useDeleteComment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) => commentsService.softDelete(id, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commentKeys.all });
-    },
+    mutationFn: (id: number) => commentsService.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: commentKeys.all }),
   });
 }
 
-export function useVoteComment(productId: string, sort: CommentSort, rootId?: string) {
+type WithItems = { items: Comment[] };
+
+/** Me gusta optimista: parchea el comentario en todas las listas e hilos cacheados. */
+export function useLikeComment() {
   const queryClient = useQueryClient();
+  const patch = (id: number, liked: boolean) =>
+    queryClient.setQueriesData<WithItems>({ queryKey: commentKeys.all }, (old) =>
+      old?.items
+        ? {
+            ...old,
+            items: old.items.map((c) =>
+              c.id === id ? { ...c, likedByMe: liked, likeCount: Math.max(0, c.likeCount + (liked ? 1 : -1)) } : c,
+            ),
+          }
+        : old,
+    );
   return useMutation({
-    mutationFn: ({ commentId, value }: { commentId: string; value: -1 | 0 | 1 }) =>
-      commentsService.vote(commentId, value),
-    // Optimistic update: shift score by delta locally.
-    onMutate: async ({ commentId, value }) => {
-      // Cancel relevant queries.
-      const rootsKey = commentKeys.productRoots(productId, sort);
-      const threadKey = rootId ? commentKeys.thread(rootId) : null;
-
-      await queryClient.cancelQueries({ queryKey: rootsKey });
-      if (threadKey) await queryClient.cancelQueries({ queryKey: threadKey });
-
-      const prevRoots = queryClient.getQueryData<CommentsListResponse>(rootsKey);
-      const prevThread = threadKey ? queryClient.getQueryData<CommentThreadResponse>(threadKey) : undefined;
-
-      // Determine previous vote from cached my-votes if available.
-      // Without it we conservatively assume value 0 (no vote).
-      const currentVotes = queryClient
-        .getQueriesData<{ data: { comment_id: string; value: number }[] }>({ queryKey: commentKeys.all })
-        .flatMap(([, v]) => v?.data ?? []);
-      const prev = currentVotes.find((vt) => vt.comment_id === commentId)?.value ?? 0;
-      const delta = value - prev;
-
-      if (prevRoots) {
-        queryClient.setQueryData<CommentsListResponse>(rootsKey, {
-          ...prevRoots,
-          data: prevRoots.data.map((r: CommentRoot) => (r.id === commentId ? { ...r, score: r.score + delta } : r)),
-        });
-      }
-
-      if (threadKey && prevThread) {
-        queryClient.setQueryData<CommentThreadResponse>(threadKey, {
-          ...prevThread,
-          data: prevThread.data.map((n) => (n.id === commentId ? { ...n, score: n.score + delta } : n)),
-        });
-      }
-
-      return { prevRoots, prevThread, rootsKey, threadKey };
+    mutationFn: ({ id, liked }: { id: number; liked: boolean }) =>
+      liked ? commentsService.like(id) : commentsService.unlike(id),
+    onMutate: async ({ id, liked }) => {
+      await queryClient.cancelQueries({ queryKey: commentKeys.all });
+      patch(id, liked);
     },
-    onError: (_err, _vars, ctx) => {
-      if (!ctx) return;
-      if (ctx.prevRoots) queryClient.setQueryData(ctx.rootsKey, ctx.prevRoots);
-      if (ctx.threadKey && ctx.prevThread) queryClient.setQueryData(ctx.threadKey, ctx.prevThread);
+    onError: (_err, { id, liked }) => {
+      patch(id, !liked);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: commentKeys.all });
-    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: commentKeys.all }),
   });
 }
