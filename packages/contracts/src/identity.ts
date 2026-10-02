@@ -127,6 +127,10 @@ export const UpdateProfileSchema = z
   .refine((v) => Object.keys(v).length > 0, "No hay nada que actualizar");
 export type UpdateProfile = z.infer<typeof UpdateProfileSchema>;
 
+/** Borrar la cuenta (`DELETE /v1/me`): hay que escribir el propio handle para confirmar. */
+export const DeleteAccountRequestSchema = z.object({ confirm: z.string().min(1) });
+export type DeleteAccountRequest = z.infer<typeof DeleteAccountRequestSchema>;
+
 // ─── Proveedores de login ────────────────────────────────────────────────────
 
 /** Proveedores habilitados en este despliegue (los que tienen credenciales). La web dibuja sus botones con esto. */

@@ -44,8 +44,6 @@ beforeEach(async () => {
   turnstilePasses = true;
   siteverifyForms = [];
   stubSiteverify();
-  // Antes que `users`: su ON DELETE SET NULL dejaría tickets sin dueño ni token y rompería el CHECK.
-  await db.query.deleteFrom("support_tickets").execute();
   await resetD1(d1);
 });
 afterEach(() => {

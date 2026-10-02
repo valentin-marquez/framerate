@@ -50,9 +50,13 @@ export async function resetD1(d1: D1Database) {
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE '%_fts%'",
     )
     .all<{ name: string }>();
+  // support_tickets primero: borrar antes a sus usuarios dispararía su ON DELETE SET NULL y rompería su CHECK.
+  const tables = results
+    .map((t) => t.name)
+    .sort((a, b) => Number(b === "support_tickets") - Number(a === "support_tickets"));
   await d1.batch([
     d1.prepare("PRAGMA defer_foreign_keys = ON"),
-    ...results.map((t) => d1.prepare(`DELETE FROM "${t.name}"`)),
+    ...tables.map((name) => d1.prepare(`DELETE FROM "${name}"`)),
   ]);
 }
 

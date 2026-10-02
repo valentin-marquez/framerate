@@ -54,6 +54,7 @@ avatar o correo. El perfil se edita con nuestro `PATCH /v1/me`.
 | `POST /v1/auth/unlink-account` | sesión de < 24 h | `{accountId}` (el `id` de `list-accounts`) → `{ status: true }`. |
 | `GET /v1/me` | sesión | Perfil propio (con correo y sanción vigente). |
 | `PATCH /v1/me` | sesión | Edita perfil. 409 si el handle está tomado o reservado. |
+| `DELETE /v1/me` | sesión | Da de baja la cuenta (`{ confirm }` = el propio handle). 204. Ver "Eliminar cuenta". |
 | `POST /v1/me/merge/start` | sesión (A) | Inicia la unión de usuarios: 204 + cookie `framerate.merge`. |
 | `GET /v1/me/merge` | sesión (B) + cookie | Previsualización (`MergePreviewSchema`). |
 | `POST /v1/me/merge/confirm` | sesión (B) + cookie | Absorbe B en A. 204. |
@@ -189,6 +190,23 @@ Errores (formato `{ error: { code, message } }` de la API):
 | `403 bad_origin` | `POST`/`DELETE` con un `Origin` que no es la web. |
 | `401 unauthorized` | Sin sesión. |
 
+## Eliminar cuenta
+
+`DELETE /v1/me` con `{ confirm: "<tu handle>" }` (400 `confirmation_mismatch` si no coincide). Es una **baja suave**: la fila de
+`users` se conserva (así las FK y la autoría de lo que queda siguen en pie) y se anonimiza.
+
+- `deleted_at` queda marcado; `username` pasa a `eliminado_<8 del id>`, `display_name` a "Usuario eliminado", el correo a
+  `eliminado+<id>@framerate.invalid` (libera el correo real: esa persona puede volver a registrarse como cuenta nueva),
+  y se borran avatar, bio y rol (queda `user`). Para el resto del sistema la cuenta ya no existe (`findUserById` y las
+  listas filtran `deleted_at`), y sus sesiones y proveedores vinculados se borran.
+- Lo que publicó se despublica: sus cotizaciones se borran, y sus reseñas y comentarios quedan eliminados por el autor
+  (`deletion_reason = 'author'`, sin texto; los triggers recalculan promedios y contadores). Sus votos y likes se quitan.
+- Los **tickets de soporte se conservan** tal cual (pueden ser una solicitud de derechos ARCO); falta definir por cuánto
+  tiempo y purgarlos. Como la fila de `users` no se borra, el `CHECK` de `support_tickets` no se dispara.
+- Bloqueos (409): `sole_owner` si es el único dueño de una organización con tiendas (que sume otro dueño o libere la
+  tienda antes) y `last_admin` si es el último administrador.
+- Los reclamos de tienda en curso (`pending` o `verified`) pasan a `expired`.
+
 ## Cómo la usa la web
 
 `apps/web` no guarda sesión: la cookie es de la API (`framerate.session_token`, compartida con `COOKIE_DOMAIN`).
@@ -213,7 +231,7 @@ de una sesión válida, para probar la web y la API sin pasar por Discord.
 ## Pendiente
 
 - **Copiar el avatar a R2** al iniciar sesión (`avatar_key`), en vez de servir la URL del proveedor.
-- **Eliminar cuenta** (la base ya soporta `deleted_at`; falta la ruta y la anonimización).
+- **Purga de tickets de soporte** de cuentas dadas de baja, cuando se defina el plazo de conservación.
 - **Caché de sesión** (`session.cookieCache`) para bajar lecturas a D1; hoy cada petición autenticada
   hace ~4 lecturas (sesión + usuario + sanción), aceptable a este volumen.
 - **Tamaño del Worker:** Better Auth lo llevó de ~175 KB a ~490 KB comprimidos. Medir el arranque en frío tras

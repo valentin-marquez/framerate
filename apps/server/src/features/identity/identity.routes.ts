@@ -1,8 +1,9 @@
-import { RESERVED_USERNAMES, UpdateProfileSchema } from "@framerate/contracts";
+import { DeleteAccountRequestSchema, RESERVED_USERNAMES, UpdateProfileSchema } from "@framerate/contracts";
 import { Hono } from "hono";
 import type { AppEnv } from "@/app";
 import { AppError } from "@/shared/http/errors";
 import { edgeCache } from "@/shared/http/middleware";
+import { deleteAccount } from "./account-deletion";
 import { toMe, toPublicProfile } from "./identity.mappers";
 import { findUserById, findUserByUsername, updateProfile } from "./identity.repository";
 import { currentUser } from "./middleware";
@@ -37,6 +38,15 @@ export const meRoutes = new Hono<AppEnv>()
     const user = await findUserById(c.var.db, session.id);
     if (!user) throw new AppError(401, "unauthorized", "Inicia sesión para continuar");
     return c.json(toMe(user, session.ban, c.env.ASSETS_BASE_URL));
+  })
+  .delete("/", async (c) => {
+    const session = currentUser(c);
+    const { confirm } = DeleteAccountRequestSchema.parse(await c.req.json().catch(() => ({})));
+    if (confirm !== session.username) {
+      throw new AppError(400, "confirmation_mismatch", "Escribe tu nombre de usuario para confirmar");
+    }
+    await deleteAccount(c.var.db, session, new Date().toISOString());
+    return c.body(null, 204);
   });
 
 /** `GET /v1/users/:username` — perfil público (sin correo, rol ni sanciones). */

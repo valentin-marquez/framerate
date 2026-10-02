@@ -19,8 +19,6 @@ beforeAll(async () => {
 });
 afterAll(() => dispose());
 beforeEach(async () => {
-  // Antes que `users`: su ON DELETE SET NULL dejaría tickets web sin dueño ni token y rompería el CHECK.
-  await db.query.deleteFrom("support_tickets").execute();
   await resetD1(d1);
   mail = fakeEmail();
   ({ env } = testEnv(d1, {}, { EMAIL: mail.binding }));
