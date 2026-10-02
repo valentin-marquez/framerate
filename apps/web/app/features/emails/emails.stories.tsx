@@ -56,7 +56,7 @@ function EmailFrame({ email }: { email: Email }) {
 const show = (email: Email) => () => <EmailFrame email={email} />;
 
 const base = typeof window === "undefined" ? "" : window.location.origin;
-const ticket = { ticketId: "FR-1042", subject: "No puedo reclamar mi tienda", baseUrl: base };
+const ticket = { ticketId: "FR-1042", subject: "No puedo verificar mi tienda", baseUrl: base };
 const anonymous = { kind: "anonymous", trackingUrl: "https://framerate.cl/soporte/FR-1042?t=9c1f7a2e44b8" } as const;
 const claim = { storeName: "TecTec", storeSlug: "tectec", domain: "tectec.cl", baseUrl: base };
 const txt = {
@@ -64,7 +64,7 @@ const txt = {
   txtValue: "framerate-verify=v1:8f3a2c91d07e4b6a9c55e1f0b3d2a7c4",
 };
 const longReply =
-  "Hola, Ignacio. Revisamos el reclamo de TecTec y el registro TXT todavía no aparece en el DNS de tectec.cl.\n\nLos cambios pueden tardar hasta una hora en propagarse. Si después de eso sigue sin aparecer, revisa que el nombre sea exactamente _framerate-verify.tectec.cl: algunos paneles agregan el dominio solos y el registro queda como _framerate-verify.tectec.cl.tectec.cl.\n\nSi quieres, mándanos una captura del panel de tu proveedor y lo revisamos contigo.";
+  "Hola, Ignacio. Revisamos la verificación de TecTec y el registro TXT todavía no aparece en el DNS de tectec.cl.\n\nLos cambios pueden tardar hasta una hora en propagarse. Si después de eso sigue sin aparecer, revisa que el nombre sea exactamente _framerate-verify.tectec.cl: algunos paneles agregan el dominio solos y el registro queda como _framerate-verify.tectec.cl.tectec.cl.\n\nSi quieres, mándanos una captura del panel de tu proveedor y lo revisamos contigo.";
 
 // Soporte
 
@@ -75,7 +75,7 @@ export const TicketRecibidoConCuenta: Story = {
       ...ticket,
       channel: { kind: "account" },
       category: "store_issue",
-      message: "Agregué el registro TXT hace dos días y el reclamo sigue diciendo que no lo encuentra.",
+      message: "Agregué el registro TXT hace dos días y la verificación sigue diciendo que no lo encuentra.",
     }),
   ),
 };
@@ -152,47 +152,47 @@ export const TicketCerradoPorCorreo: Story = {
   render: show(ticketClosedEmail({ ...ticket, channel: { kind: "email" }, status: "closed" })),
 };
 
-// Reclamo de tienda
+// Verificación de tienda
 
 export const InstruccionesConProveedor: Story = {
-  name: "Reclamo: instrucciones, proveedor conocido",
+  name: "Verificación: instrucciones, proveedor conocido",
   render: show(
     claimInstructionsEmail({ ...claim, ...txt, dnsProvider: "Cloudflare", expiresAt: "2026-10-08T15:00:00Z" }),
   ),
 };
 
 export const InstruccionesSinProveedor: Story = {
-  name: "Reclamo: instrucciones, proveedor desconocido",
+  name: "Verificación: instrucciones, proveedor desconocido",
   render: show(claimInstructionsEmail({ ...claim, ...txt, dnsProvider: null, expiresAt: "2026-10-08T15:00:00Z" })),
 };
 
 export const ReclamoConfirmado: Story = {
-  name: "Reclamo: tienda confirmada",
+  name: "Verificación: tienda confirmada",
   render: show(claimConfirmedEmail(claim)),
 };
 
 export const ReclamoVencido: Story = {
-  name: "Reclamo: vencido",
+  name: "Verificación: vencida",
   render: show(claimExpiredEmail(claim)),
 };
 
 export const RegistroPerdido: Story = {
-  name: "Reclamo: registro perdido, tienda congelada",
+  name: "Verificación: registro perdido, tienda congelada",
   render: show(claimStaleEmail({ ...claim, ...txt })),
 };
 
 export const RevocadoConMotivo: Story = {
-  name: "Reclamo: revocado, con motivo",
+  name: "Verificación: revocada, con motivo",
   render: show(
     claimRevokedEmail({
       ...claim,
-      reason: "El dominio cambió de dueño y el nuevo responsable de TecTec nos pidió revisar el reclamo.",
+      reason: "El dominio cambió de dueño y el nuevo responsable de TecTec nos pidió revisar la verificación.",
     }),
   ),
 };
 
 export const RevocadoSinMotivo: Story = {
-  name: "Reclamo: revocado, sin motivo",
+  name: "Verificación: revocada, sin motivo",
   render: show(claimRevokedEmail({ ...claim, reason: null })),
 };
 

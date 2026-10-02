@@ -207,7 +207,7 @@ describe("correos", () => {
 
     const claim = ClaimSchema.parse(await (await send(ana, "/v1/claims", { storeSlug: "alfa" })).json());
     expect(await sent()).toHaveLength(1);
-    expect(email.sent[0]).toMatchObject({ to: "ana@example.com", subject: "Verifica alfa.cl para reclamar alfa" });
+    expect(email.sent[0]).toMatchObject({ to: "ana@example.com", subject: "Verifica alfa.cl para administrar alfa" });
     expect(email.sent[0]?.text).toContain(claim.txtValue);
     expect(email.sent[0]?.text).toContain("Cloudflare");
 

@@ -23,7 +23,7 @@ async function ownClaim(c: Parameters<typeof currentUser>[0]): Promise<ClaimRow>
   const id = z.coerce.number().int().positive().safeParse(c.req.param("id"));
   const claim = id.success ? await findClaim(c.var.db, id.data) : undefined;
   if (!claim || claim.claimant_id !== currentUser(c).id)
-    throw new AppError(404, "claim_not_found", "Reclamo no encontrado");
+    throw new AppError(404, "claim_not_found", "Verificación no encontrada");
   return claim;
 }
 
@@ -51,7 +51,7 @@ async function expire(c: Parameters<typeof currentUser>[0], claim: ClaimRow, now
       baseUrl: c.env.WEB_ORIGIN,
     }),
   );
-  throw new AppError(410, "claim_expired", "El reclamo venció; inicia uno nuevo");
+  throw new AppError(410, "claim_expired", "La verificación venció; inicia otra");
 }
 
 export const claimsRoutes = new Hono<AppEnv>()
@@ -66,9 +66,9 @@ export const claimsRoutes = new Hono<AppEnv>()
 
     const { domain } = store;
     if (!domain) throw new AppError(422, "no_domain", "Esta tienda no tiene un dominio verificable");
-    if (store.organization_id !== null) throw new AppError(409, "already_claimed", "Esta tienda ya fue reclamada");
+    if (store.organization_id !== null) throw new AppError(409, "already_claimed", "Esta tienda ya fue verificada");
     if ((await liveClaimCount(c.var.db, user.id)) >= MAX_OPEN_CLAIMS) {
-      throw new AppError(429, "too_many_claims", "Tienes demasiados reclamos en curso");
+      throw new AppError(429, "too_many_claims", "Tienes demasiadas verificaciones en curso");
     }
 
     const now = new Date();
@@ -91,7 +91,7 @@ export const claimsRoutes = new Hono<AppEnv>()
       .then((row) => row.id)
       .catch((error: Error) => {
         if (error.message.includes("UNIQUE")) {
-          throw new AppError(409, "claim_in_progress", "Ya hay un reclamo en curso para esta tienda");
+          throw new AppError(409, "claim_in_progress", "Ya hay una verificación en curso para esta tienda");
         }
         throw error;
       });
@@ -116,7 +116,7 @@ export const claimsRoutes = new Hono<AppEnv>()
   .get("/:id/dns-check", async (c) => {
     const claim = await ownClaim(c);
     if (claim.status !== "pending" && claim.status !== "verified") {
-      throw new AppError(409, "claim_not_open", "Este reclamo ya no está en verificación");
+      throw new AppError(409, "claim_not_open", "Esta verificación ya no está en curso");
     }
     const check = await checkTxt(claimTxtName(claim.domain), claimTxtValue(claim.token));
     return c.json<DnsCheck>({
@@ -132,7 +132,7 @@ export const claimsRoutes = new Hono<AppEnv>()
     const now = new Date();
     const stamp = now.toISOString();
     if (claim.status !== "pending" && claim.status !== "verified") {
-      throw new AppError(409, "claim_not_open", "Este reclamo ya no está en verificación");
+      throw new AppError(409, "claim_not_open", "Esta verificación ya no está en curso");
     }
     if (isExpired(claim, stamp)) await expire(c, claim, stamp);
     if (claim.last_attempt_at && now.getTime() - Date.parse(claim.last_attempt_at) < VERIFY_COOLDOWN_MS) {
@@ -183,7 +183,7 @@ export const claimsRoutes = new Hono<AppEnv>()
     const stamp = new Date().toISOString();
     if (claim.status !== "verified") throw new AppError(409, "claim_not_verified", "Primero verifica el registro TXT");
     if (isExpired(claim, stamp)) await expire(c, claim, stamp);
-    if (claim.organization_id !== null) throw new AppError(409, "already_claimed", "Esta tienda ya fue reclamada");
+    if (claim.organization_id !== null) throw new AppError(409, "already_claimed", "Esta tienda ya fue verificada");
 
     const org = await c.var.db.query
       .insertInto("organizations")

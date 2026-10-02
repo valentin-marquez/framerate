@@ -39,16 +39,16 @@ export function claimInstructionsEmail({
   expiresAt: string;
 }): Email {
   return {
-    subject: `Verifica ${domain} para reclamar ${storeName}`,
+    subject: `Verifica ${domain} para administrar ${storeName}`,
     element: (
       <EmailLayout
         baseUrl={baseUrl}
-        preview={`Agrega un registro TXT en el DNS de ${domain} para reclamar ${storeName}.`}
+        preview={`Agrega un registro TXT en el DNS de ${domain} para administrar ${storeName}.`}
         title={`Verifica que ${domain} es tuyo`}
-        intro={`Para reclamar ${storeName} en Framerate, agrega este registro TXT en el DNS de ${domain}.`}
-        action={{ label: "Ir al reclamo", href: claimUrl(baseUrl, storeSlug) }}
-        note="Si no iniciaste este reclamo, ignora este correo: sin el registro TXT nadie puede tomar la tienda."
-        whyReceived="Te llega porque iniciaste el reclamo de una tienda en Framerate."
+        intro={`Para verificar ${storeName} en Framerate, agrega este registro TXT en el DNS de ${domain}.`}
+        action={{ label: "Ir a la verificación", href: claimUrl(baseUrl, storeSlug) }}
+        note="Si no iniciaste esta verificación, ignora este correo: sin el registro TXT nadie puede tomar la tienda."
+        whyReceived="Te llega porque iniciaste la verificación de una tienda en Framerate."
       >
         <Block title="Registro TXT">
           <CodeValue label="Nombre" value={txtName} />
@@ -61,7 +61,7 @@ export function claimInstructionsEmail({
                 ? `Entra al panel de DNS de ${dnsProvider}, que es donde está el DNS de ${domain}.`
                 : `Entra al panel donde administras el DNS de ${domain}: suele ser donde compraste el dominio o tu hosting.`,
               "Crea un registro TXT con el nombre y el valor de arriba.",
-              "Vuelve al reclamo y aprieta Verificar. El cambio puede tardar unos minutos en verse.",
+              "Vuelve a la verificación y aprieta Verificar. El cambio puede tardar unos minutos en verse.",
             ]}
           />
         </Block>
@@ -90,12 +90,12 @@ export function claimConfirmedEmail({
     element: (
       <EmailLayout
         baseUrl={baseUrl}
-        preview={`Confirmamos tu reclamo de ${storeName}.`}
+        preview={`Verificamos tu tienda ${storeName}.`}
         title={`${storeName} ya es tuya`}
-        intro={`Confirmamos tu reclamo: ahora administras ${storeName} en Framerate.`}
+        intro={`Verificamos tu tienda: ahora administras ${storeName} en Framerate.`}
         action={{ label: "Ir al panel de la tienda", href: storeAdminUrl(baseUrl, storeSlug) }}
         note={`Mantén el registro TXT en el DNS de ${domain}: lo revisamos cada 6 horas y, si desaparece, la tienda se congela hasta que vuelva.`}
-        whyReceived="Te llega porque reclamaste una tienda en Framerate."
+        whyReceived="Te llega porque verificaste una tienda en Framerate."
       >
         <Block>
           <Paragraph>
@@ -114,16 +114,16 @@ export function claimExpiredEmail({
   baseUrl = DEFAULT_BASE_URL,
 }: ClaimEmailProps): Email {
   return {
-    subject: `Tu reclamo de ${storeName} venció`,
+    subject: `La verificación de ${storeName} venció`,
     element: (
       <EmailLayout
         baseUrl={baseUrl}
         preview={`Pasaron 7 días sin verificar el registro TXT de ${domain}.`}
-        title={`Tu reclamo de ${storeName} venció`}
-        intro={`Pasaron 7 días sin que pudiéramos verificar el registro TXT en el DNS de ${domain}, así que el reclamo venció.`}
-        action={{ label: "Iniciar otro reclamo", href: claimUrl(baseUrl, storeSlug) }}
-        note="Al iniciar otro reclamo te damos un registro TXT nuevo: el anterior ya no sirve."
-        whyReceived="Te llega porque iniciaste el reclamo de una tienda en Framerate."
+        title={`La verificación de ${storeName} venció`}
+        intro={`Pasaron 7 días sin que pudiéramos verificar el registro TXT en el DNS de ${domain}, así que la verificación venció.`}
+        action={{ label: "Iniciar otra verificación", href: claimUrl(baseUrl, storeSlug) }}
+        note="Al iniciar otra verificación te damos un registro TXT nuevo: el anterior ya no sirve."
+        whyReceived="Te llega porque iniciaste la verificación de una tienda en Framerate."
       />
     ),
   };
@@ -171,13 +171,13 @@ export function claimRevokedEmail({
   baseUrl = DEFAULT_BASE_URL,
 }: ClaimEmailProps & { reason: string | null }): Email {
   return {
-    subject: `Revocamos tu reclamo de ${storeName}`,
+    subject: `Revocamos la verificación de ${storeName}`,
     element: (
       <EmailLayout
         baseUrl={baseUrl}
         preview={`${storeName} ya no está vinculada a tu equipo.`}
-        title={`Revocamos tu reclamo de ${storeName}`}
-        intro={`Un administrador de Framerate revocó tu reclamo: ${storeName} ya no está vinculada a tu equipo y no puedes editarla.`}
+        title={`Revocamos la verificación de ${storeName}`}
+        intro={`Un administrador de Framerate revocó tu verificación: ${storeName} ya no está vinculada a tu equipo y no puedes editarla.`}
         action={{ label: "Ver la tienda", href: `${baseUrl}/tiendas/${encodeURIComponent(storeSlug)}` }}
         note="Si crees que es un error, responde este correo y lo revisamos."
         whyReceived={`Te llega porque administrabas ${storeName} en Framerate.`}

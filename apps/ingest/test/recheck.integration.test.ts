@@ -116,7 +116,7 @@ describe("recheckClaims", () => {
       await seedClaim("pending", later(1));
       await recheckClaims(db, later(6), answer("verified"), mailer);
       await recheckClaims(db, later(12), answer("verified"), mailer);
-      expect(sent).toEqual([{ to: "a@x.cl", subject: "Tu reclamo de Alfa venció" }]);
+      expect(sent).toEqual([{ to: "a@x.cl", subject: "La verificación de Alfa venció" }]);
     });
 
     test("un fallo del envío no impide el cambio de estado", async () => {

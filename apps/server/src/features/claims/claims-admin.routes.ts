@@ -20,8 +20,8 @@ export const claimsAdminRoutes = new Hono<AppEnv>().post("/claims/:id/revoke", a
     .parse(await c.req.json().catch(() => ({})));
   const id = z.coerce.number().int().positive().safeParse(c.req.param("id"));
   const claim = id.success ? await findClaim(c.var.db, id.data) : undefined;
-  if (!claim) throw new AppError(404, "claim_not_found", "Reclamo no encontrado");
-  if (claim.status === "revoked") throw new AppError(409, "already_revoked", "El reclamo ya estaba revocado");
+  if (!claim) throw new AppError(404, "claim_not_found", "Verificación no encontrada");
+  if (claim.status === "revoked") throw new AppError(409, "already_revoked", "La verificación ya estaba revocada");
 
   const now = new Date().toISOString();
   await c.var.db.batch([
