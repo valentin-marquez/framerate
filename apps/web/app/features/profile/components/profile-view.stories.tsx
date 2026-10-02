@@ -3,8 +3,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { sessions } from "~/shared/storybook/fixtures";
 import { ProfileView } from "./profile-view";
 
-/** #50: /perfil y /u/:username en el sistema nuevo, sin la portada de `getGradient` ni separadores. A: cabecera. B: lateral. */
-const meta = { title: "Cuenta/Perfil: propuesta", parameters: { layout: "fullscreen" } } satisfies Meta;
+/** /perfil y /u/:username en el sistema nuevo, sin portada de `getGradient` ni separadores. */
+const meta = { title: "Cuenta/Perfil", parameters: { layout: "fullscreen" } } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -47,38 +47,20 @@ const quotes = [
 ];
 
 export const CabeceraPropio: Story = {
-  name: "A cabecera: perfil propio",
+  name: "Perfil propio",
   parameters: { session: sessions.user },
   render: () => <ProfileView profile={ana} isOwner quotes={quotes} />,
 };
 
 export const CabeceraPublico: Story = {
-  name: "A cabecera: público",
+  name: "Público, visitante",
   render: () => <ProfileView profile={ana} isOwner={false} quotes={quotes.filter((q) => q.visibility === "public")} />,
-};
-
-export const LateralPropio: Story = {
-  name: "B lateral: perfil propio",
-  parameters: { session: sessions.user },
-  render: () => <ProfileView profile={ana} isOwner quotes={quotes} layout="lateral" />,
-};
-
-export const LateralPublico: Story = {
-  name: "B lateral: público",
-  render: () => (
-    <ProfileView
-      profile={ana}
-      isOwner={false}
-      quotes={quotes.filter((q) => q.visibility === "public")}
-      layout="lateral"
-    />
-  ),
 };
 
 export const SinCotizaciones: Story = {
   name: "Sin cotizaciones (propio)",
   parameters: { session: sessions.user },
-  render: () => <ProfileView profile={ana} isOwner />,
+  render: () => <ProfileView profile={ana} isOwner quotes={[]} />,
 };
 
 export const SinFotoNiBio: Story = {
@@ -89,13 +71,12 @@ export const SinFotoNiBio: Story = {
 };
 
 export const NombreLargo: Story = {
-  name: "Nombre largo (lateral)",
+  name: "Nombre largo",
   render: () => (
     <ProfileView
       profile={{ ...ana, displayName: "María Ignacia de los Ángeles Fernández Cortés", username: "mariaignacia_fc" }}
       isOwner
       quotes={quotes}
-      layout="lateral"
     />
   ),
 };
