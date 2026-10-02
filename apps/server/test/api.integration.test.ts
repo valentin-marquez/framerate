@@ -52,6 +52,11 @@ describe("API pública", () => {
     expect((await (await get("/health")).json()) as object).toEqual({ status: "ok" });
   });
 
+  test("Server-Timing cuenta las consultas a D1 del request", async () => {
+    expect((await get("/health")).headers.get("server-timing")).toMatch(/^d1;dur=0;desc="0 consultas"/);
+    expect((await get("/v1/products?category=gpu")).headers.get("server-timing")).toMatch(/desc="[1-9]d* consultas"/);
+  });
+
   test("el listado sólo muestra productos con stock, con su mejor precio y ofertas", async () => {
     const res = await get("/v1/products?category=gpu&sort=price_asc");
     expect(res.status).toBe(200);

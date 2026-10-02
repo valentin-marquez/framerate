@@ -48,9 +48,23 @@ export function createApp() {
   const app = new Hono<AppEnv>();
 
   app.use("*", secureHeaders());
+  // Server-Timing: cuánto del request fue D1 (la primaria está lejos de Chile). En el navegador sale en la pestaña Red.
   app.use("*", async (c, next) => {
-    c.set("db", createDb(c.env.DB));
+    const start = Date.now();
+    let queries = 0;
+    let d1Ms = 0;
+    c.set(
+      "db",
+      createDb(c.env.DB, (ms) => {
+        queries++;
+        d1Ms += ms;
+      }),
+    );
     await next();
+    c.res.headers.set(
+      "Server-Timing",
+      `d1;dur=${Math.round(d1Ms)};desc="${queries} consultas", app;dur=${Date.now() - start}`,
+    );
   });
 
   app.get("/health", (c) => c.json({ status: "ok" }));

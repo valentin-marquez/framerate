@@ -15,9 +15,13 @@ export interface Db {
   batch(queries: readonly Compilable[]): Promise<void>;
 }
 
-export function createDb(d1: D1Database): Db {
+/** `onQuery` recibe la duración en ms de cada consulta (para medir cuánto del request se va en D1). */
+export function createDb(d1: D1Database, onQuery?: (ms: number) => void): Db {
   return {
-    query: new Kysely<Database>({ dialect: new D1Dialect({ database: d1 }) }),
+    query: new Kysely<Database>({
+      dialect: new D1Dialect({ database: d1 }),
+      log: onQuery && ((event) => onQuery(event.queryDurationMillis)),
+    }),
     async batch(queries) {
       if (queries.length === 0) return;
       await d1.batch(

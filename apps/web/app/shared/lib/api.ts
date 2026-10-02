@@ -39,7 +39,21 @@ export function apiFetch(input: string, init?: RequestInit): Promise<Response> {
   if (!context?.fetch) return fetch(input, init);
   const headers = new Headers(init?.headers);
   if (context.ip) headers.set("x-client-ip", context.ip);
-  return context.fetch(input, { ...init, headers });
+  const start = Date.now();
+  return context.fetch(input, { ...init, headers }).then((response) => {
+    // Una línea por llamada del SSR a la API; `serverTiming` trae lo que el server gastó en D1.
+    console.log(
+      JSON.stringify({
+        msg: "api.fetch",
+        feature: "web",
+        path: new URL(input, "http://api").pathname,
+        status: response.status,
+        ms: Date.now() - start,
+        serverTiming: response.headers.get("server-timing"),
+      }),
+    );
+    return response;
+  });
 }
 
 export class ApiError extends Error {
