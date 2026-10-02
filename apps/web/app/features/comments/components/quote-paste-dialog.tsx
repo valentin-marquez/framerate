@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { findQuoteUrls } from "~/features/comments/lib/quote-url";
-import { useSetQuoteVisibility } from "~/features/quote/hooks/useQuotes";
+import { useUpdateQuote } from "~/features/quote/hooks/useQuotes";
 import { quotesService } from "~/features/quote/services/quotes";
 import { Button } from "~/shared/components/primitives/button";
 import {
@@ -39,7 +39,7 @@ interface QuotePasteDialogState {
  */
 export function useQuotePasteWatcher() {
   const user = useUser();
-  const setVisibility = useSetQuoteVisibility();
+  const publish = useUpdateQuote();
 
   const [state, setState] = useState<QuotePasteDialogState>(() => ({
     pending: null,
@@ -102,14 +102,14 @@ export function useQuotePasteWatcher() {
     const pending = state.pending;
     if (!pending) return;
     try {
-      await setVisibility.mutateAsync({ id: pending.id, visibility: "public" });
+      await publish.mutateAsync({ id: pending.id, data: { visibility: "public" } });
       toast.success(`"${pending.name}" ahora es pública`);
     } catch {
       toast.error("No se pudo cambiar la visibilidad de la cotización");
     } finally {
       close();
     }
-  }, [state.pending, setVisibility, close]);
+  }, [state.pending, publish, close]);
 
   const node = (
     <Dialog
@@ -130,12 +130,12 @@ export function useQuotePasteWatcher() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2">
-          <Button variant="ghost" onClick={close} disabled={setVisibility.isPending}>
+          <Button variant="ghost" onClick={close} disabled={publish.isPending}>
             Mantener privada
           </Button>
-          <Button onClick={confirm} disabled={setVisibility.isPending} className="gap-1.5">
+          <Button onClick={confirm} disabled={publish.isPending} className="gap-1.5">
             <IconLockOpen className="size-4" />
-            {setVisibility.isPending ? "Publicando…" : "Hacer pública"}
+            {publish.isPending ? "Publicando…" : "Hacer pública"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,4 +1,4 @@
-import type { QuoteVisibility } from "@framerate/contracts";
+import type { UpdateQuoteRequest } from "@framerate/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { quotesService } from "~/features/quote/services/quotes";
 import { quoteKeys } from "~/shared/lib/query-keys";
@@ -32,6 +32,25 @@ export function useCreateQuote() {
 }
 
 /** Agregar, cambiar cantidad y quitar devuelven el detalle ya actualizado: se deja en la caché del detalle. */
+export function useUpdateQuote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateQuoteRequest }) => quotesService.update(id, data),
+    onSuccess: (detail, { id }) => {
+      queryClient.setQueryData(quoteKeys.detail(id), detail);
+      queryClient.invalidateQueries({ queryKey: quoteKeys.lists() });
+    },
+  });
+}
+
+export function useDeleteQuote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => quotesService.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: quoteKeys.all }),
+  });
+}
+
 export function useQuoteAddItem() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -60,14 +79,5 @@ export function useQuoteRemoveItem() {
       queryClient.setQueryData(quoteKeys.detail(quoteId), detail);
       queryClient.invalidateQueries({ queryKey: quoteKeys.lists() });
     },
-  });
-}
-
-export function useSetQuoteVisibility() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, visibility }: { id: string; visibility: QuoteVisibility }) =>
-      quotesService.setVisibility(id, visibility),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: quoteKeys.all }),
   });
 }

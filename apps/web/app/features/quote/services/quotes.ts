@@ -3,8 +3,8 @@ import type {
   CreateQuoteRequest,
   QuoteDetail,
   QuotePage,
-  QuoteVisibility,
   UpdateQuoteItemRequest,
+  UpdateQuoteRequest,
 } from "@framerate/contracts";
 import { api } from "~/shared/lib/api";
 
@@ -22,6 +22,10 @@ export const quotesService = {
 
   getById: (id: string) => api.get<QuoteDetail>(`/v1/quotes/${id}`),
 
+  update: (id: string, data: UpdateQuoteRequest) => api.patch<QuoteDetail>(`/v1/quotes/${id}`, data),
+
+  remove: (id: string) => api.delete<void>(`/v1/quotes/${id}`),
+
   /** Si el producto ya está, suma a su cantidad. */
   addItem: (quoteId: string, data: AddQuoteItemRequest) => api.post<QuoteDetail>(`/v1/quotes/${quoteId}/items`, data),
 
@@ -29,9 +33,4 @@ export const quotesService = {
     api.patch<QuoteDetail>(`/v1/quotes/${quoteId}/items/${itemId}`, data),
 
   removeItem: (quoteId: string, itemId: number) => api.delete<QuoteDetail>(`/v1/quotes/${quoteId}/items/${itemId}`),
-
-  // ponytail: PATCH /v1/quotes/:id llega con la entrega 2 de #25. Hoy sólo lo usa el aviso al pegar un link
-  // (apagado, ver quote-paste-dialog.tsx).
-  setVisibility: (id: string, visibility: QuoteVisibility) =>
-    api.patch<QuoteDetail>(`/v1/quotes/${id}`, { visibility }),
 };

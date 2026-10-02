@@ -6,6 +6,7 @@ import { useUser } from "~/features/auth/hooks/useAuth";
 import { QuoteActions } from "~/features/quote/components/quote-actions";
 import { QuoteHeader } from "~/features/quote/components/quote-header";
 import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
+import { QuoteOwnerBar } from "~/features/quote/components/quote-owner-bar";
 import { useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/useQuotes";
 import { quotesService } from "~/features/quote/services/quotes";
 import { copyToClipboard, exportToExcel } from "~/features/quote/utils/quote-export";
@@ -109,6 +110,8 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     <div className="min-h-screen w-full bg-background p-4 md:p-8 flex justify-center">
       <div className="w-full max-w-6xl space-y-8">
         <QuoteHeader quoteName={quote.name} author={quote.author} updatedAt={quote.updatedAt} />
+
+        {isOwner && <QuoteOwnerBar quote={quote} onChange={setQuote} />}
 
         <QuoteItemsList
           quote={quote}
