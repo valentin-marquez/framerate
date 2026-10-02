@@ -48,6 +48,12 @@ beforeAll(async () => {
 afterAll(() => dispose());
 
 describe("API pública", () => {
+  test("la imagen del proxy del sistema anterior redirige a la imagen para compartir del sitio", async () => {
+    const res = await get("/v1/images/product-images/og/kingston-16gb--1768446227502.png");
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe(`${env.WEB_ORIGIN}/og-image.png`);
+  });
+
   test("GET /health", async () => {
     expect((await (await get("/health")).json()) as object).toEqual({ status: "ok" });
   });
@@ -161,7 +167,7 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
 
   test("cada producto trae id, MPN y su mejor precio", async () => {
     const [asus, ...rest] = (await list("category=gpu&sort=name")).items;
-    expect(asus).toMatchObject({ mpn: "DUALRTX4070SO12G", bestPrice: 599_990, lowestPrice: 599_990 });
+    expect(asus).toMatchObject({ mpn: "DUALRTX4070SO12G", bestPrice: 599_990 });
     expect(asus?.id).toBeGreaterThan(0);
     expect(rest).toEqual([]);
   });

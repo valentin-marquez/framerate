@@ -111,8 +111,6 @@ export async function listProducts(
     "p.attributes",
     "agg.best_price as bestPrice",
     "agg.best_card_price as bestCardPrice",
-    // ponytail: igual a bestPrice desde que las listas sólo muestran stock; se quita del contrato al migrar la web.
-    "agg.best_price as lowestPrice",
     "agg.offer_count as offerCount",
     mpnOf.as("mpn"),
   ]);
@@ -213,7 +211,6 @@ export async function getProduct(
     imageUrl: productImageUrl(product, assetsBaseUrl),
     bestPrice: inStock.length > 0 ? Math.min(...inStock.map((o) => o.priceCash)) : null,
     bestCardPrice: inStock.length > 0 ? Math.min(...inStock.map((o) => o.priceCard)) : null,
-    lowestPrice: offers.length > 0 ? Math.min(...offers.map((o) => o.priceCash)) : null,
     mpn: product.mpn,
     attributes: parseJson<ProductSummary["attributes"]>(product.attributes, {}),
     offerCount: offers.length,

@@ -5,6 +5,7 @@ import { CommentsSection } from "~/features/comments/components/comments-section
 import { COMMENTS_API_ENABLED } from "~/features/comments/services/comments";
 import { ProductView } from "~/features/product/components/product-view";
 import { productsService } from "~/features/product/services/products";
+import { legacySlug } from "~/features/product/utils/legacy-slug";
 import { periodFromParam } from "~/features/product/utils/price-history";
 import { isRateLimitError } from "~/shared/lib/api";
 import { formatCLP } from "~/shared/utils/format";
@@ -79,6 +80,19 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         throw new Response("Servicio saturado, intenta en unos segundos.", { status: 503 });
       }
       // Fallthrough al 404.
+    }
+
+    // Las URLs del sistema anterior (`...--<número>`) siguen llegando desde buscadores: a la ficha de hoy, o a una búsqueda.
+    const legacy = legacySlug(params.slug);
+    if (legacy) {
+      const exists = await productsService.getBySlug(legacy.base).then(
+        () => true,
+        () => false,
+      );
+      throw redirect(
+        exists ? `/producto/${legacy.base}` : `/explorar?search=${encodeURIComponent(legacy.search)}`,
+        301,
+      );
     }
 
     throw new Response("Producto no encontrado", { status: 404 });

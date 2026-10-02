@@ -95,7 +95,6 @@ const psu = (id: number, name: string, efficiency: string, image: string | null,
   attributes: { wattage: 850, efficiency },
   bestPrice: price,
   bestCardPrice: price,
-  lowestPrice: price,
   offerCount: 5,
   mpn: null,
 });

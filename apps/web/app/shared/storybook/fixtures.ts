@@ -22,7 +22,6 @@ const gpu = (
   attributes: { chipset, vram },
   bestPrice: price,
   bestCardPrice: price,
-  lowestPrice: price,
   offerCount: 1,
   mpn: null,
 });
@@ -75,7 +74,6 @@ export const productStates = {
     attributes: { wattage: 850, efficiency: "gold" },
     bestPrice: 124_990,
     bestCardPrice: 129_990,
-    lowestPrice: 124_990,
     offerCount: 4,
     mpn: null,
   },

@@ -41,8 +41,6 @@ export const ProductSummarySchema = z.object({
   bestPrice: z.number().int().nonnegative().nullable(),
   /** Mejor precio con tarjeta entre ofertas con stock (puede ser de otra tienda que `bestPrice`); null si nadie tiene stock. */
   bestCardPrice: z.number().int().nonnegative().nullable(),
-  /** Precio más bajo entre todas las ofertas activas (con o sin stock). */
-  lowestPrice: z.number().int().nonnegative().nullable(),
   mpn: z.string().nullable(),
   /** Atributos extraídos del título (chipset, VRAM, capacidad…). */
   attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),

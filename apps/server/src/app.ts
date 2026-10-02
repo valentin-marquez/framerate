@@ -74,6 +74,9 @@ export function createApp() {
 
   app.get("/health", (c) => c.json({ status: "ok" }));
 
+  // El proxy de imágenes del sistema anterior ya no existe, pero buscadores y cachés lo siguen pidiendo.
+  app.get("/v1/images/*", (c) => c.redirect(`${c.env.WEB_ORIGIN}/og-image.png`, 301));
+
   const authApi = new Hono<AppEnv>();
   authApi.use("*", credentialedCors);
   authApi.use("*", rateLimit);
