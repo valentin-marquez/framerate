@@ -1,12 +1,9 @@
 /**
- * Metadata visual de DNS providers para el wizard de reclamo.
- *
- * El backend (apps/api/src/lib/dns-provider.ts) sólo devuelve el `id` del
- * provider detectado; este archivo mapea ese id a lo que la UI necesita
- * (nombre, link al panel, logo, pasos). Si se agrega un provider en la API,
- * hay que agregarlo acá también con el mismo id.
+ * Guía visual de cada proveedor de DNS para el wizard de reclamo. El id y el nombre salen de
+ * `@framerate/kit` (`detectDnsProvider`, `dnsProviderName`): un proveedor nuevo se agrega allá y acá.
  */
 
+import { dnsProviderName } from "@framerate/kit";
 import type { DnsProviderId } from "../services/claims";
 
 export interface DnsProviderUi {
@@ -26,10 +23,9 @@ export interface DnsProviderUi {
   steps: string[];
 }
 
-export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
+export const DNS_PROVIDER_UI: Record<DnsProviderId, Omit<DnsProviderUi, "name">> = {
   cloudflare: {
     id: "cloudflare",
-    name: "Cloudflare",
     // Deep-link directo a DNS → Records de la zona. Cloudflare resuelve
     // `:account` solo; si el usuario tiene varias cuentas puede caer al
     // listado, pero igual es mejor que el dashboard raíz.
@@ -47,7 +43,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   route53: {
     id: "route53",
-    name: "AWS Route 53",
     dashboardUrl: "https://console.aws.amazon.com/route53/v2/hostedzones",
     docsUrl: "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-creating.html",
     brandColor: "FF9900",
@@ -62,7 +57,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   gcdns: {
     id: "gcdns",
-    name: "Google Cloud DNS",
     dashboardUrl: "https://console.cloud.google.com/net-services/dns/zones",
     docsUrl: "https://cloud.google.com/dns/docs/records",
     brandColor: "4285F4",
@@ -77,7 +71,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   vercel: {
     id: "vercel",
-    name: "Vercel",
     dashboardUrl: "https://vercel.com/dashboard/domains",
     docsUrl: "https://vercel.com/docs/projects/domains/working-with-dns",
     brandColor: "000000",
@@ -92,7 +85,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   digitalocean: {
     id: "digitalocean",
-    name: "DigitalOcean",
     dashboardUrl: "https://cloud.digitalocean.com/networking/domains",
     docsUrl: "https://docs.digitalocean.com/products/networking/dns/how-to/manage-records/",
     brandColor: "0080FF",
@@ -107,7 +99,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   godaddy: {
     id: "godaddy",
-    name: "GoDaddy",
     dashboardUrl: "https://dcc.godaddy.com/manage/dns",
     docsUrl: "https://www.godaddy.com/help/add-a-txt-record-19232",
     brandColor: "1BDBDB",
@@ -122,7 +113,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   namecheap: {
     id: "namecheap",
-    name: "Namecheap",
     dashboardUrl: "https://ap.www.namecheap.com/domains/list/",
     docsUrl:
       "https://www.namecheap.com/support/knowledgebase/article.aspx/317/2237/how-do-i-add-txtspfdkimdmarc-records-for-my-domain/",
@@ -138,7 +128,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   hostinger: {
     id: "hostinger",
-    name: "Hostinger",
     dashboardUrl: "https://hpanel.hostinger.com/domains",
     docsUrl: "https://support.hostinger.com/en/articles/1583227-how-to-manage-dns-records-at-hostinger",
     brandColor: "673DE6",
@@ -153,7 +142,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   azure: {
     id: "azure",
-    name: "Azure DNS",
     dashboardUrl:
       "https://portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones",
     docsUrl: "https://learn.microsoft.com/azure/dns/dns-operations-recordsets-portal",
@@ -169,7 +157,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   nic_cl: {
     id: "nic_cl",
-    name: "NIC Chile",
     dashboardUrl: "https://www.nic.cl/registry/Login.do",
     docsUrl: "https://www.nic.cl/dnssec/registro-de-dns.html",
     brandColor: "0F4C81",
@@ -184,7 +171,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   hostingplus_cl: {
     id: "hostingplus_cl",
-    name: "HostingPlus",
     dashboardUrl: "https://www.hostingplus.cl/cliente/clientarea.php",
     brandColor: "1E8FCD",
     monogram: "HP",
@@ -197,7 +183,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   sered_cl: {
     id: "sered_cl",
-    name: "Sered",
     dashboardUrl: "https://www.sered.net/clientes/clientarea.php",
     brandColor: "F26522",
     monogram: "SR",
@@ -211,7 +196,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
   },
   bluehosting_cl: {
     id: "bluehosting_cl",
-    name: "BlueHosting",
     dashboardUrl: "https://clientes.bluehosting.cl/clientarea.php",
     brandColor: "1565C0",
     monogram: "BH",
@@ -226,6 +210,6 @@ export const DNS_PROVIDER_UI: Record<DnsProviderId, DnsProviderUi> = {
 };
 
 export function getDnsProviderUi(id: string | null | undefined): DnsProviderUi | null {
-  if (!id) return null;
-  return DNS_PROVIDER_UI[id as DnsProviderId] ?? null;
+  const ui = id ? DNS_PROVIDER_UI[id as DnsProviderId] : undefined;
+  return ui ? { ...ui, name: dnsProviderName(ui.id) ?? ui.id } : null;
 }

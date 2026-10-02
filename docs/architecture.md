@@ -36,7 +36,7 @@ Dos Workers con responsabilidades separadas, que comparten la misma base D1:
  │ apps/server   "lo que ve y toca el usuario"  (sólo HTTP)          │
  │  · catálogo público (cache en el edge)   · cuentas, cotizaciones… │
  │  · admin: corridas, cuarentena, revisión de matches               │
- │  Bindings: D1 · rate limit · INGEST (RPC)      ← sin cola, sin R2 │
+ │  Bindings: D1 · rate limit · INGEST (RPC) · EMAIL ← sin cola ni R2│
  └──────┬────────────────────────────────────────────┬───────────────┘
         │ lee/escribe                                │ RPC: enqueueCrawls()
         ▼                                            ▼

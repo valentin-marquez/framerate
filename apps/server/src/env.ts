@@ -26,6 +26,8 @@ export interface Env {
   ASSETS_BASE_URL?: string;
   /** Secreto de Turnstile para tickets de soporte sin cuenta. Sin él, sólo se puede escribir con sesión. */
   TURNSTILE_SECRET_KEY?: string;
+  /** Envío de correos (Email Service). Ausente en tests: los correos se omiten. */
+  EMAIL?: SendEmail;
 
   // ─── Proveedores OAuth ─────────────────────────────────────────────────────
   // Un proveedor queda habilitado cuando están sus DOS credenciales (ver features/identity/providers.ts).

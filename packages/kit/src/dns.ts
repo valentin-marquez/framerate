@@ -93,24 +93,28 @@ export async function checkTxt(name: string, expected: string, fetcher: Fetcher 
 }
 
 /** Patrones de nameserver → proveedor de DNS. Sólo mejora las instrucciones; un falso negativo no rompe nada. */
-const NS_PROVIDERS: [id: string, pattern: RegExp][] = [
-  ["cloudflare", /\.ns\.cloudflare\.com$/],
-  ["route53", /\.awsdns-\d+\.(com|net|org|co\.uk)$/],
-  ["gcdns", /\.googledomains\.com$/],
-  ["vercel", /\.vercel-dns\.com$/],
-  ["digitalocean", /\.digitalocean\.com$/],
-  ["godaddy", /\.domaincontrol\.com$/],
-  ["namecheap", /\.registrar-servers\.com$/],
-  ["hostinger", /\.(hostinger\.com|hostingertest\.net)$/],
-  ["azure", /\.azure-dns\.(com|net|org|info)$/],
-  ["nic_cl", /\.nic\.cl$/],
-  ["hostingplus_cl", /\.hostingplus\.(cl|com)$/],
-  ["sered_cl", /\.sered\.net$/],
-  ["bluehosting_cl", /\.bluehosting\.(cl|host)$/],
+const NS_PROVIDERS: [id: string, name: string, pattern: RegExp][] = [
+  ["cloudflare", "Cloudflare", /\.ns\.cloudflare\.com$/],
+  ["route53", "AWS Route 53", /\.awsdns-\d+\.(com|net|org|co\.uk)$/],
+  ["gcdns", "Google Cloud DNS", /\.googledomains\.com$/],
+  ["vercel", "Vercel", /\.vercel-dns\.com$/],
+  ["digitalocean", "DigitalOcean", /\.digitalocean\.com$/],
+  ["godaddy", "GoDaddy", /\.domaincontrol\.com$/],
+  ["namecheap", "Namecheap", /\.registrar-servers\.com$/],
+  ["hostinger", "Hostinger", /\.(hostinger\.com|hostingertest\.net)$/],
+  ["azure", "Azure DNS", /\.azure-dns\.(com|net|org|info)$/],
+  ["nic_cl", "NIC Chile", /\.nic\.cl$/],
+  ["hostingplus_cl", "HostingPlus", /\.hostingplus\.(cl|com)$/],
+  ["sered_cl", "Sered", /\.sered\.net$/],
+  ["bluehosting_cl", "BlueHosting", /\.bluehosting\.(cl|host)$/],
 ];
 
 export const providerFromNameservers = (nameservers: string[]): string | null =>
-  NS_PROVIDERS.find(([, pattern]) => nameservers.some((ns) => pattern.test(ns)))?.[0] ?? null;
+  NS_PROVIDERS.find(([, , pattern]) => nameservers.some((ns) => pattern.test(ns)))?.[0] ?? null;
+
+/** Nombre legible de un id de `detectDnsProvider` ("nic_cl" → "NIC Chile"). */
+export const dnsProviderName = (id: string | null | undefined): string | null =>
+  NS_PROVIDERS.find(([providerId]) => providerId === id)?.[1] ?? null;
 
 export async function detectDnsProvider(domain: string, fetcher: Fetcher = fetch) {
   const [cf, google] = await Promise.all([

@@ -172,8 +172,9 @@ export function Details({ items }: { items: Array<[label: string, value: ReactNo
     <Section style={{ backgroundColor: color.page, borderRadius: 12, padding: "12px 16px" }}>
       {items.map(([label, value]) => (
         <Row key={label}>
+          {/* El espacio separa etiqueta y valor en la versión de texto plano, donde las celdas se juntan. */}
           <Column style={{ width: 110, fontSize: 14, lineHeight: "28px", color: color.muted, verticalAlign: "top" }}>
-            {label}
+            {label}{" "}
           </Column>
           <Column
             style={{

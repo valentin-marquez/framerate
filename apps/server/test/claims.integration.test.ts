@@ -4,7 +4,7 @@ import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { createUser, seedCatalog, sessionHeaders, testEnv, WEB_ORIGIN } from "./helpers";
+import { createUser, fakeEmail, seedCatalog, sessionHeaders, testEnv, WEB_ORIGIN } from "./helpers";
 
 let d1: D1Database;
 let db: Db;
@@ -44,13 +44,21 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
-async function call(actor: string | "anon", path: string, method = "GET", body?: unknown) {
+async function call(
+  actor: string | "anon",
+  path: string,
+  method = "GET",
+  body?: unknown,
+  useEnv = env,
+  ctx?: ExecutionContext,
+) {
   const headers = new Headers({ "content-type": "application/json" });
   if (actor !== "anon") {
     for (const [k, v] of await sessionHeaders(env, actor)) headers.set(k, v);
     headers.set("origin", WEB_ORIGIN);
   }
-  return app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }, env);
+  const init = { method, headers, body: body === undefined ? undefined : JSON.stringify(body) };
+  return app.request(path, init, useEnv, ctx);
 }
 
 const who = (name: string, role: "user" | "moderator" | "admin" = "user") => createUser(env, db, { name, role });
@@ -182,5 +190,38 @@ describe("revocar (personal)", () => {
 
     const reclaim = await call(await who("Beto"), "/v1/claims", "POST", { storeSlug: "alfa" });
     expect(reclaim.status).toBe(201);
+  });
+});
+
+describe("correos", () => {
+  test("crear manda el TXT, confirmar avisa que es suya y revocar manda el motivo", async () => {
+    await seedCatalog(db);
+    const [ana, mod] = [await who("Ana"), await who("Mod", "moderator")];
+    const email = fakeEmail();
+    const mailEnv = { ...env, EMAIL: email.binding };
+    const send = (actor: string, path: string, body?: unknown) => call(actor, path, "POST", body, mailEnv, email.ctx);
+    const sent = async () => {
+      await email.settle();
+      return email.sent;
+    };
+
+    const claim = ClaimSchema.parse(await (await send(ana, "/v1/claims", { storeSlug: "alfa" })).json());
+    expect(await sent()).toHaveLength(1);
+    expect(email.sent[0]).toMatchObject({ to: "ana@example.com", subject: "Verifica alfa.cl para reclamar alfa" });
+    expect(email.sent[0]?.text).toContain(claim.txtValue);
+    expect(email.sent[0]?.text).toContain("Cloudflare");
+
+    txt["_framerate-verify.alfa.cl"] = [claim.txtValue];
+    await send(ana, `/v1/claims/${claim.id}/verify`);
+    expect(await sent()).toHaveLength(1);
+    expect((await send(ana, `/v1/claims/${claim.id}/confirm`)).status).toBe(200);
+    expect(await sent()).toHaveLength(2);
+    expect(email.sent[1]).toMatchObject({ to: "ana@example.com", subject: "alfa ya es tuya en Framerate" });
+
+    const revoked = await send(mod, `/v1/admin/claims/${claim.id}/revoke`, { reason: "El dominio es de otra empresa" });
+    expect(revoked.status).toBe(204);
+    expect(await sent()).toHaveLength(3);
+    expect(email.sent[2]?.to).toBe("ana@example.com");
+    expect(email.sent[2]?.text).toContain("El dominio es de otra empresa");
   });
 });

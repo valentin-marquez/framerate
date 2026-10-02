@@ -145,3 +145,20 @@ export async function seedCatalog(db: Db) {
 
   return { alfa, beta, asus, msi, ryzen, listings: { l1, l4 } };
 }
+
+/**
+ * Binding `EMAIL` falso: guarda lo que se "envía". Pasa `ctx` como cuarto argumento de `app.request` y espera
+ * `settle()` antes de revisar `sent`, porque los correos salen en segundo plano (`waitUntil`).
+ */
+export function fakeEmail() {
+  const sent: Array<{ to: string; subject: string; html: string; text: string; replyTo?: string }> = [];
+  const pending: Promise<unknown>[] = [];
+  const binding = {
+    send: async (message: { to: string; subject: string; html: string; text: string; replyTo?: string }) => {
+      sent.push(message);
+      return { messageId: `<test-${sent.length}@framerate.cl>` };
+    },
+  } as unknown as SendEmail;
+  const ctx = { waitUntil: (p: Promise<unknown>) => pending.push(p), passThroughOnException() {}, props: {} };
+  return { binding, sent, ctx: ctx as unknown as ExecutionContext, settle: () => Promise.all(pending) };
+}

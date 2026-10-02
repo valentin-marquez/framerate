@@ -5,9 +5,11 @@ import {
   type TicketDetail,
   type TicketMessage,
 } from "@framerate/contracts";
+import { ticketReceivedEmail } from "@framerate/emails";
 import { type Context, Hono } from "hono";
 import type { AppEnv } from "@/app";
 import { currentUser } from "@/features/identity/middleware";
+import { sendEmailInBackground } from "@/shared/email";
 import { AppError } from "@/shared/http/errors";
 import { timingSafeEqual } from "@/shared/http/middleware";
 import {
@@ -113,6 +115,21 @@ export const supportRoutes = new Hono<AppEnv>()
       if (!error.message.includes("UNIQUE")) throw error;
       return insert(newPublicId());
     });
+
+    sendEmailInBackground(
+      c,
+      email,
+      ticketReceivedEmail({
+        ticketId: publicId,
+        subject: input.subject,
+        category: input.category,
+        message: input.body,
+        channel: accessToken
+          ? { kind: "anonymous", trackingUrl: `${c.env.WEB_ORIGIN}/soporte/${publicId}?t=${accessToken}` }
+          : { kind: "account" },
+        baseUrl: c.env.WEB_ORIGIN,
+      }),
+    );
 
     return c.json<CreatedTicket>(
       {

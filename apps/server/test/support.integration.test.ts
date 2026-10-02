@@ -13,7 +13,7 @@ import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { z } from "zod";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { createUser, sessionHeaders, testEnv, WEB_ORIGIN } from "./helpers";
+import { createUser, fakeEmail, sessionHeaders, testEnv, WEB_ORIGIN } from "./helpers";
 
 let d1: D1Database;
 let db: Db;
@@ -53,14 +53,15 @@ afterEach(() => {
 });
 
 /** `actor`: id de usuario (sesión), "anon" o "token" (token de servicio de admin). */
-async function call(actor: string, path: string, method = "GET", body?: unknown, useEnv = env) {
+async function call(actor: string, path: string, method = "GET", body?: unknown, useEnv = env, ctx?: ExecutionContext) {
   const headers = new Headers({ "content-type": "application/json", "cf-connecting-ip": "203.0.113.7" });
   if (actor === "token") headers.set("authorization", `Bearer ${env.ADMIN_TOKEN}`);
   else if (actor !== "anon") {
     for (const [k, v] of await sessionHeaders(env, actor)) headers.set(k, v);
     headers.set("origin", WEB_ORIGIN);
   }
-  return app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }, useEnv);
+  const init = { method, headers, body: body === undefined ? undefined : JSON.stringify(body) };
+  return app.request(path, init, useEnv, ctx);
 }
 
 const who = (name: string, role: "user" | "moderator" | "admin" = "user") => createUser(env, db, { name, role });
@@ -297,5 +298,85 @@ describe("admin", () => {
     expect(byToken.status).toBe(400);
     expect(await code(byToken)).toBe("cannot_assign_token");
     expect((await patch("NOEXISTE", { status: "closed" })).status).toBe(404);
+  });
+});
+
+describe("correos", () => {
+  /** Env con `EMAIL` falso; `send` llama a la API con su contexto, para esperar los correos en segundo plano. */
+  function withEmail() {
+    const email = fakeEmail();
+    const mailEnv = { ...env, EMAIL: email.binding };
+    const send = (actor: string, path: string, method?: string, body?: unknown) =>
+      call(actor, path, method, body, mailEnv, email.ctx);
+    const sent = async () => {
+      await email.settle();
+      return email.sent;
+    };
+    return { send, sent };
+  }
+
+  test("crear con sesión avisa a la cuenta con enlace a sus tickets", async () => {
+    const { send, sent } = withEmail();
+    const res = await send(await who("Ana"), "/v1/support/tickets", "POST", ticketInput);
+    const { id } = CreatedTicketSchema.parse(await res.json());
+    const mails = await sent();
+    expect(mails).toHaveLength(1);
+    expect(mails[0]?.to).toBe("ana@example.com");
+    expect(mails[0]?.subject.endsWith(`[Framerate #${id}]`)).toBe(true);
+    expect(mails[0]?.html).toContain("Ver el ticket");
+  });
+
+  test("crear sin sesión manda el enlace de seguimiento con el token", async () => {
+    const { send, sent } = withEmail();
+    const res = await send("anon", "/v1/support/tickets", "POST", {
+      ...ticketInput,
+      email: "visita@example.com",
+      turnstileToken: "widget-token",
+    });
+    const { id, accessToken } = CreatedTicketSchema.parse(await res.json());
+    const mails = await sent();
+    expect(mails).toHaveLength(1);
+    expect(mails[0]?.to).toBe("visita@example.com");
+    expect(mails[0]?.html).toContain(`/soporte/${id}?t=${accessToken}`);
+  });
+
+  test("la respuesta pública avisa al usuario; la nota interna no", async () => {
+    const ticket = await createTicket(await who("Ana"));
+    const { send, sent } = withEmail();
+    const reply = (body: string, isInternal: boolean) =>
+      send("token", `/v1/admin/support/tickets/${ticket.id}/reply`, "POST", { body, isInternal });
+
+    expect((await reply("Revisar logs", true)).status).toBe(201);
+    expect(await sent()).toHaveLength(0);
+
+    expect((await reply("Ya lo arreglamos", false)).status).toBe(201);
+    const mails = await sent();
+    expect(mails).toHaveLength(1);
+    expect(mails[0]?.to).toBe("ana@example.com");
+    expect(mails[0]?.text).toContain("Ya lo arreglamos");
+  });
+
+  test("la respuesta a un ticket anónimo no lleva el token", async () => {
+    const ticket = await anonTicket();
+    const { send, sent } = withEmail();
+    await send("token", `/v1/admin/support/tickets/${ticket.id}/reply`, "POST", { body: "Hola", isInternal: false });
+    const mails = await sent();
+    expect(mails).toHaveLength(1);
+    expect(mails[0]?.to).toBe("visita@example.com");
+    expect(mails[0]?.html).not.toContain("?t=");
+  });
+
+  test("avisa sólo cuando el estado pasa a resuelto o cerrado", async () => {
+    const ticket = await createTicket(await who("Ana"));
+    const { send, sent } = withEmail();
+    const to = (status: string) => send("token", `/v1/admin/support/tickets/${ticket.id}`, "PATCH", { status });
+
+    await to("resolved");
+    expect(await sent()).toHaveLength(1);
+    await to("in_progress");
+    expect(await sent()).toHaveLength(1);
+    await setStatus(ticket.id, "closed");
+    await to("closed");
+    expect(await sent()).toHaveLength(1);
   });
 });

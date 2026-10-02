@@ -1,9 +1,12 @@
+import { claimRevokedEmail } from "@framerate/emails";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
+import { findUserById } from "@/features/identity/identity.repository";
 import { currentActor } from "@/features/identity/middleware";
 import { actorUserId } from "@/features/identity/types";
 import { recordModerationAction } from "@/shared/audit";
+import { sendEmailInBackground } from "@/shared/email";
 import { AppError } from "@/shared/http/errors";
 import { findClaim, recordClaimEvent } from "./claims.repository";
 
@@ -46,5 +49,19 @@ export const claimsAdminRoutes = new Hono<AppEnv>().post("/claims/:id/revoke", a
     reason: reason ?? null,
     now,
   });
+  const claimant = await findUserById(c.var.db, claim.claimant_id);
+  if (claimant) {
+    sendEmailInBackground(
+      c,
+      claimant.email,
+      claimRevokedEmail({
+        storeName: claim.store_name,
+        storeSlug: claim.store_slug,
+        domain: claim.domain,
+        reason: reason || null,
+        baseUrl: c.env.WEB_ORIGIN,
+      }),
+    );
+  }
   return c.body(null, 204);
 });

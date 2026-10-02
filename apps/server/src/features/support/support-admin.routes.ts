@@ -6,11 +6,13 @@ import {
   SupportStatusSchema,
   type TicketMessage,
 } from "@framerate/contracts";
+import { ticketClosedEmail, ticketReplyEmail } from "@framerate/emails";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
 import { currentActor } from "@/features/identity/middleware";
 import { actorUserId } from "@/features/identity/types";
+import { sendEmailInBackground } from "@/shared/email";
 import { AppError } from "@/shared/http/errors";
 import {
   addMessage,
@@ -18,6 +20,7 @@ import {
   listMessages,
   listTickets,
   setStatus,
+  type TicketRow,
   toAdminTicket,
   toMessage,
 } from "./support.repository";
@@ -29,6 +32,14 @@ async function ticketOr404(c: Context<AppEnv>) {
   if (!ticket) throw new AppError(404, "ticket_not_found", "Ticket no encontrado");
   return ticket;
 }
+
+// El enlace con token sólo va en el primer correo: en la base queda su hash, así que al anónimo se le escribe sin enlace.
+const ticketEmailProps = (c: Context<AppEnv>, ticket: TicketRow) => ({
+  ticketId: ticket.public_id,
+  subject: ticket.subject,
+  channel: ticket.user_id ? ({ kind: "account" } as const) : ({ kind: "email" } as const),
+  baseUrl: c.env.WEB_ORIGIN,
+});
 
 export const supportAdminRoutes = new Hono<AppEnv>()
   .get("/tickets", async (c) => {
@@ -64,6 +75,13 @@ export const supportAdminRoutes = new Hono<AppEnv>()
       .where("id", "=", ticket.id)
       .returningAll()
       .executeTakeFirstOrThrow();
+    if ((updated.status === "resolved" || updated.status === "closed") && updated.status !== ticket.status) {
+      sendEmailInBackground(
+        c,
+        ticket.email,
+        ticketClosedEmail({ ...ticketEmailProps(c, ticket), status: updated.status }),
+      );
+    }
     return c.json<AdminTicket>(toAdminTicket(updated));
   })
 
@@ -78,8 +96,19 @@ export const supportAdminRoutes = new Hono<AppEnv>()
       body,
       isInternal,
     });
-    if (!isInternal && (ticket.status === "open" || ticket.status === "in_progress")) {
-      await setStatus(c.var.db, ticket.id, "waiting_user");
+    if (!isInternal) {
+      const status = ticket.status === "open" || ticket.status === "in_progress" ? "waiting_user" : ticket.status;
+      if (status !== ticket.status) await setStatus(c.var.db, ticket.id, status);
+      sendEmailInBackground(
+        c,
+        ticket.email,
+        ticketReplyEmail({
+          ...ticketEmailProps(c, ticket),
+          staffName: actor.kind === "user" ? actor.user.displayName : null,
+          reply: body,
+          status,
+        }),
+      );
     }
     return c.json<TicketMessage>(toMessage(message), 201);
   });

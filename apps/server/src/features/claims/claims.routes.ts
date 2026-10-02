@@ -1,11 +1,13 @@
 import { CreateClaimRequestSchema, type DnsCheck, type VerifyResult } from "@framerate/contracts";
-import { checkTxt, claimTxtName, claimTxtValue, detectDnsProvider } from "@framerate/kit";
+import { claimConfirmedEmail, claimInstructionsEmail } from "@framerate/emails";
+import { checkTxt, claimTxtName, claimTxtValue, detectDnsProvider, dnsProviderName } from "@framerate/kit";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
 import { currentUser } from "@/features/identity/middleware";
 import { assertNotBanned } from "@/features/identity/policies";
 import { findStore } from "@/features/stores/stores.repository";
+import { sendEmailInBackground } from "@/shared/email";
 import { AppError } from "@/shared/http/errors";
 import { type ClaimRow, findClaim, listClaimsOf, liveClaimCount, recordClaimEvent, toClaim } from "./claims.repository";
 
@@ -93,8 +95,17 @@ export const claimsRoutes = new Hono<AppEnv>()
       actorId: user.id,
       now: now.toISOString(),
     });
-    const created = await findClaim(c.var.db, id);
-    return c.json({ ...toClaim(created as ClaimRow), nameservers }, 201);
+    const created = toClaim((await findClaim(c.var.db, id)) as ClaimRow);
+    sendEmailInBackground(
+      c,
+      user.email,
+      claimInstructionsEmail({
+        ...created,
+        dnsProvider: dnsProviderName(provider),
+        baseUrl: c.env.WEB_ORIGIN,
+      }),
+    );
+    return c.json({ ...created, nameservers }, 201);
   })
 
   .get("/:id/dns-check", async (c) => {
@@ -197,5 +208,15 @@ export const claimsRoutes = new Hono<AppEnv>()
         created_at: stamp,
       }),
     ]);
+    sendEmailInBackground(
+      c,
+      user.email,
+      claimConfirmedEmail({
+        storeName: claim.store_name,
+        storeSlug: claim.store_slug,
+        domain: claim.domain,
+        baseUrl: c.env.WEB_ORIGIN,
+      }),
+    );
     return c.json({ storeSlug: claim.store_slug });
   });
