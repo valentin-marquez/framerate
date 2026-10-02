@@ -5,8 +5,11 @@ import {
   IconBuildingStore,
   IconDatabase,
   IconHelp,
+  IconMail,
+  IconRobot,
   IconShieldLock,
   IconSparkles,
+  IconWorld,
 } from "@tabler/icons-react";
 
 export const CATEGORY_LABELS: Record<SupportCategory, string> = {
@@ -45,3 +48,13 @@ export const STATUS_COLORS: Record<SupportStatus, string> = {
   resolved: "text-success bg-success/10",
   closed: "text-muted-foreground bg-secondary",
 };
+
+const SOURCES: Record<string, { label: string; Icon: typeof IconHelp }> = {
+  web: { label: "Web", Icon: IconWorld },
+  email: { label: "Correo", Icon: IconMail },
+  api: { label: "API", Icon: IconRobot },
+  system: { label: "Sistema", Icon: IconRobot },
+};
+
+/** `AdminTicket.source` es texto libre: un origen nuevo se ve como "Otro" hasta sumarlo aquí. */
+export const ticketSource = (source: string) => SOURCES[source] ?? { label: "Otro", Icon: IconHelp };

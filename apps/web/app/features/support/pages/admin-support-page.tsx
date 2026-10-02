@@ -7,11 +7,12 @@ import {
   IconLoader2,
   IconLock,
   IconLockOpen,
+  IconMail,
   IconRefresh,
   IconUserCheck,
 } from "@tabler/icons-react";
 import { domAnimation, LazyMotion, m, type Transition } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRevalidator, useSearchParams } from "react-router";
 import useMeasure from "react-use-measure";
 import { toast } from "sonner";
@@ -22,8 +23,14 @@ import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
 import { formatDateTime } from "~/shared/utils/format";
-import { CATEGORY_ICONS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS as USER_STATUS_LABELS } from "../lib/labels";
-import { adminSupportClient } from "../services/support";
+import {
+  CATEGORY_ICONS,
+  CATEGORY_LABELS,
+  STATUS_COLORS,
+  ticketSource,
+  STATUS_LABELS as USER_STATUS_LABELS,
+} from "../lib/labels";
+import { adminSupportClient, SUPPORT_EMAIL } from "../services/support";
 import type { Route } from "./+types/admin-support-page";
 
 const STATUS_LABELS: Record<SupportStatus, string> = { ...USER_STATUS_LABELS, waiting_user: "Esperando respuesta" };
@@ -96,7 +103,7 @@ export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
           </div>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Soporte</h1>
-            <p className="text-sm text-muted-foreground">Tickets del formulario integrado.</p>
+            <p className="text-sm text-muted-foreground">Tickets de la web y de {SUPPORT_EMAIL}.</p>
           </div>
         </div>
         <Button
@@ -146,6 +153,7 @@ export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
             <ul className="divide-y divide-border max-h-[70vh] overflow-y-auto">
               {tickets.map((ticket) => {
                 const Icon = CATEGORY_ICONS[ticket.category];
+                const source = ticketSource(ticket.source);
                 const isSelected = ticket.id === selectedId;
                 return (
                   <li key={ticket.id}>
@@ -168,12 +176,18 @@ export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
                           >
                             {STATUS_LABELS[ticket.status]}
                           </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <source.Icon className="size-3" aria-hidden />
+                            {source.label}
+                          </span>
                           {ticket.assignedTo === currentUserId && (
                             <span className="text-[10px] text-primary font-medium">tuyo</span>
                           )}
                         </div>
                         <p className="text-sm font-medium truncate mt-1">{ticket.subject}</p>
-                        <p className="text-xs text-muted-foreground truncate">{ticket.email}</p>
+                        <p className="text-xs text-muted-foreground truncate" title={ticket.email}>
+                          {ticket.email}
+                        </p>
                         <p className="text-[11px] text-muted-foreground/70 mt-0.5">
                           {formatDateTime(ticket.lastMessageAt)}
                         </p>
@@ -293,6 +307,8 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
 
   // Icono con fallback: sólo se usa en la rama con `ticket` non-null.
   const Icon = ticket ? CATEGORY_ICONS[ticket.category] : IconHelp;
+  const source = ticketSource(ticket?.source ?? "");
+  const replyHintId = useId();
 
   return (
     <LazyMotion features={domAnimation}>
@@ -331,14 +347,15 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
                         {STATUS_LABELS[ticket.status]}
                       </span>
                       <span className="text-xs text-muted-foreground">{CATEGORY_LABELS[ticket.category]}</span>
-                      {ticket.source !== "web" && (
-                        <span className="text-xs text-muted-foreground">{ticket.source}</span>
-                      )}
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <source.Icon className="size-3.5" aria-hidden />
+                        {source.label}
+                      </span>
                     </div>
                     <h2 className="text-lg font-semibold mt-1">{ticket.subject}</h2>
                     <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground mt-0.5">
-                      <span>{ticket.email}</span>
-                      <span>{ticket.userId ? "Con cuenta" : "Anónimo"}</span>
+                      <span className="break-all text-foreground">{ticket.email}</span>
+                      <span>{ticket.userId ? "Con cuenta" : "Sin cuenta"}</span>
                       <span>{formatDateTime(ticket.createdAt)}</span>
                     </p>
                   </div>
@@ -387,12 +404,29 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
 
               <footer className="border-t border-border p-4 space-y-3 bg-secondary/20">
                 <Textarea
-                  placeholder={isInternal ? "Nota interna (sólo el equipo)…" : "Escribe una respuesta al usuario…"}
+                  placeholder={isInternal ? "Escribe una nota interna…" : "Escribe una respuesta…"}
+                  aria-describedby={replyHintId}
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
                   rows={3}
                   disabled={sending}
                 />
+                <p id={replyHintId} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                  {isInternal ? (
+                    <>
+                      <IconLock className="size-3.5 shrink-0 mt-px text-warn" aria-hidden />
+                      Sólo la ve el equipo, no se envía por correo
+                    </>
+                  ) : (
+                    <>
+                      <IconMail className="size-3.5 shrink-0 mt-px" aria-hidden />
+                      <span className="min-w-0">
+                        Se envía por correo a{" "}
+                        <span className="break-all font-medium text-foreground">{ticket.email}</span>
+                      </span>
+                    </>
+                  )}
+                </p>
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2.5">
                     <Switch
@@ -411,8 +445,7 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
                         isInternal ? "text-warn font-medium" : "text-muted-foreground",
                       )}
                     >
-                      {isInternal && <IconLock className="size-3.5" />}
-                      {isInternal ? "Nota interna (no la ve el usuario)" : "Nota interna"}
+                      Nota interna
                     </button>
                   </div>
                   <Button size="sm" onClick={sendReply} disabled={sending || reply.trim().length === 0}>
