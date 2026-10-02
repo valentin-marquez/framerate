@@ -37,6 +37,10 @@ ven en Storybook, Fundamentos/Movimiento.
 - `ease-in` no se usa: arranca lento y la interfaz parece que no respondió. Tampoco `linear`, salvo lo que gira o
   avanza sin fin (un spinner).
 - Sin springs, salvo en lo que sigue al dedo (arrastrar, deslizar un carrusel): ahí la física da continuidad al soltar.
+- Cambio de página: `<Link viewTransition>` (o `NavLink`); las reglas `::view-transition-*` están en `app.css`. Un
+  elemento compartido lleva un `view-transition-name` que tiene que ser único en la página al capturarla: en una lista,
+  sólo el elemento que navega lo lleva, y sólo mientras dura la transición (`useViewTransitionState(ruta)` o
+  `isTransitioning` de `NavLink`). Volver atrás repite la transición sola.
 - La excepción es una coreografía de varios tiempos sincronizados (la carga de la foto de producto, `.stage-*`): lleva
   su propia duración y curvas por tramo.
 

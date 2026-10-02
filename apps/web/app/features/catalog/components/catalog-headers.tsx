@@ -1,7 +1,7 @@
 import type { CategoryItem } from "@framerate/contracts";
 import { IconSearch, IconX } from "@tabler/icons-react";
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { NavLink, useSearchParams } from "react-router";
 import { categoryLabel, getCategoryImage } from "~/features/category/utils/categories";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
@@ -27,7 +27,7 @@ export function CategoryHeader({
   ].filter(Boolean);
 
   return (
-    <header className="relative isolate overflow-hidden rounded-3xl">
+    <header className="relative isolate overflow-hidden rounded-3xl" style={{ viewTransitionName: "category-photo" }}>
       <img
         src={getCategoryImage(category)}
         alt=""
@@ -123,9 +123,13 @@ export function ExploreHeader({
               const empty = !category.productCount;
               return (
                 <li key={category.id} className={enterClass()} style={enterStyle(160 + Math.min(i, 6) * 50)}>
-                  <Link
+                  <NavLink
                     to={`/categoria/${category.slug}`}
                     prefetch="intent"
+                    viewTransition
+                    style={({ isTransitioning }) =>
+                      isTransitioning ? { viewTransitionName: "category-photo" } : undefined
+                    }
                     className="group relative flex h-24 w-40 flex-col justify-end overflow-hidden rounded-2xl bg-secondary p-3"
                   >
                     <img
@@ -139,7 +143,7 @@ export function ExploreHeader({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     <span className="relative font-medium text-sm text-white leading-tight">{category.label}</span>
-                  </Link>
+                  </NavLink>
                 </li>
               );
             })}

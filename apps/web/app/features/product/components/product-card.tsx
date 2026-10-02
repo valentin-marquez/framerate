@@ -1,7 +1,7 @@
 import type { ProductSummary } from "@framerate/contracts";
 import { IconPhotoOff, IconTrendingUp } from "@tabler/icons-react";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useViewTransitionState } from "react-router";
 import { getSpecsSummary } from "~/features/product/utils/specs";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Skeleton } from "~/shared/components/primitives/skeleton";
@@ -32,6 +32,8 @@ function availabilityText(inStock: boolean, stores: number) {
  */
 function ProductStage({ product, priority, psu }: { product: ProductSummary; priority: boolean; psu: string | null }) {
   const [stage, setStage] = useState<"loading" | "opening" | "open">("loading");
+  // El panel pasa a ser la foto de la ficha (app.css). El nombre tiene que ser único: sólo durante su transición.
+  const morphing = useViewTransitionState(`/producto/${product.slug}`);
 
   if (!product.imageUrl) {
     return (
@@ -50,7 +52,7 @@ function ProductStage({ product, priority, psu }: { product: ProductSummary; pri
     <div
       className="absolute inset-y-0 right-0 isolate w-[58%] overflow-hidden"
       // El producto va alineado a la derecha: el orbe y la apertura nacen ahí, no en el centro del panel.
-      style={{ "--reveal-x": "68%" } as React.CSSProperties}
+      style={{ "--reveal-x": "68%", viewTransitionName: morphing ? "product-photo" : undefined } as React.CSSProperties}
     >
       <div
         aria-hidden
@@ -132,6 +134,7 @@ export function ProductCard({ product, priority = false, trending = false, class
             <Link
               to={`/producto/${product.slug}`}
               prefetch="intent"
+              viewTransition
               className="after:absolute after:inset-0 after:z-[1] after:rounded-3xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
             >
               {product.name}

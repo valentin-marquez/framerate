@@ -182,10 +182,14 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
           </nav>
         </div>
 
-        <div className="container mx-auto max-w-6xl px-4 py-2 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+        <div className="container mx-auto max-w-6xl px-4 py-2">
           <div className="grid gap-8 lg:grid-cols-12 items-start">
             <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-24">
-              <div className="rounded-3xl border border-border/60 bg-card shadow-sm relative overflow-hidden group">
+              {/* Destino de la foto de la tarjeta de producto (app.css). */}
+              <div
+                className="rounded-3xl border border-border/60 bg-card shadow-sm relative overflow-hidden group"
+                style={{ viewTransitionName: "product-photo" }}
+              >
                 <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                   <Badge
                     variant="secondary"

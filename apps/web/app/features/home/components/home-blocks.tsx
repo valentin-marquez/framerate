@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, NavLink } from "react-router";
 import { getCategoryImage } from "~/features/category/utils/categories";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
@@ -37,10 +37,13 @@ export function CategoryMosaic({ categories }: Pick<HomeData, "categories">) {
           const big = i === 0 && !isEmpty(category);
           const last = i === sorted.length - 1 && sorted.length > 1;
           return (
-            <Link
+            <NavLink
               key={category.id}
               to={`/categoria/${category.slug}`}
               prefetch="intent"
+              viewTransition
+              // Pasa a ser la cabecera de la categoría (app.css). El nombre tiene que ser único: sólo durante su transición.
+              style={({ isTransitioning }) => (isTransitioning ? { viewTransitionName: "category-photo" } : undefined)}
               className={cn(
                 "group relative flex h-full flex-col justify-end overflow-hidden rounded-2xl bg-secondary p-4",
                 big && "col-span-2 row-span-2",
@@ -65,7 +68,7 @@ export function CategoryMosaic({ categories }: Pick<HomeData, "categories">) {
                 </p>
                 <p className="text-white/70 text-xs">{countLabel(category)}</p>
               </div>
-            </Link>
+            </NavLink>
           );
         })}
       </div>

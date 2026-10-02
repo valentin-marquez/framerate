@@ -483,6 +483,33 @@
   background-color: var(--color-muted-foreground);
 }
 
+/*
+ * Cambio de página: View Transitions de React Router (`<Link viewTransition>`). La página se funde y la foto compartida
+ * viaja a su lugar nuevo: `category-photo` (ficha de categoría → cabecera) y `product-photo` (tarjeta → ficha). El
+ * nombre tiene que ser único al capturar, o el navegador cancela la transición: las fichas y tarjetas lo llevan sólo
+ * durante la suya (`useViewTransitionState` / `isTransitioning` de NavLink).
+ */
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: var(--transition-duration-slow);
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-group(category-photo),
+::view-transition-group(product-photo) {
+  animation-timing-function: var(--ease-in-out);
+}
+
+/* Origen y destino tienen otra proporción: cada captura llena el grupo recortada, sin estirarse ni desbordar. */
+::view-transition-old(category-photo),
+::view-transition-new(category-photo),
+::view-transition-old(product-photo),
+::view-transition-new(product-photo) {
+  height: 100%;
+  object-fit: cover;
+}
+
 /* biome-ignore-start lint/complexity/noImportantStyles: le gana a las clases de este archivo (.enter-up, .stage-*), que pesan más que `*` */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -494,6 +521,13 @@
     transition-duration: 0.01ms !important;
     transition-delay: 0s !important;
     scroll-behavior: auto !important;
+  }
+
+  /* La regla de arriba no alcanza a los pseudo-elementos de View Transitions. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
   }
 }
 /* biome-ignore-end lint/complexity/noImportantStyles: fin de la regla de movimiento reducido */
