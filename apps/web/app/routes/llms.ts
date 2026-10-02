@@ -1,34 +1,13 @@
+import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SLUGS } from "@framerate/contracts";
 import type { LoaderFunctionArgs } from "react-router";
 
 /**
  * `llms.txt` — resumen del sitio para asistentes de IA (ChatGPT, Perplexity,
  * Claude, AI Overviews). Sigue la convención https://llmstxt.org: H1 con el
  * nombre, blockquote con el resumen, y secciones de enlaces.
- *
- * Las categorías se traen del API para que los enlaces estén siempre al día;
- * si el API falla, se omite esa sección (el resto es estático).
  */
-
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8787";
-
-interface Category {
-  name: string;
-  slug: string;
-}
-
-export async function loader({ request }: LoaderFunctionArgs) {
+export function loader({ request }: LoaderFunctionArgs) {
   const { origin } = new URL(request.url);
-
-  let categories: Category[] = [];
-  try {
-    const response = await fetch(`${API_URL}/v1/categories`);
-    if (response.ok) {
-      const data = (await response.json()) as Category[];
-      categories = Array.isArray(data) ? data : [];
-    }
-  } catch {
-    // El API no respondió: servimos llms.txt sin la sección de categorías.
-  }
 
   const sections = [
     `# Framerate`,
@@ -42,11 +21,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     `- [Reclamar una tienda](${origin}/reclamar): flujo para que los dueños reclamen el perfil de su tienda`,
   ];
 
-  if (categories.length > 0) {
-    sections.push("", "## Categorías");
-    for (const category of categories) {
-      sections.push(`- [${category.name}](${origin}/categoria/${category.slug})`);
-    }
+  sections.push("", "## Categorías");
+  for (const category of CATEGORIES) {
+    sections.push(`- [${CATEGORY_LABELS[category]}](${origin}/categoria/${CATEGORY_SLUGS[category]})`);
   }
 
   sections.push(
