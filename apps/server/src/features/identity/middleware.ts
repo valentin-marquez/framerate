@@ -116,7 +116,7 @@ export const credentialedCors: MiddlewareHandler<AppEnv> = (c, next) =>
   cors({
     origin: c.env.WEB_ORIGIN,
     credentials: true,
-    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["content-type"],
     maxAge: 600,
   })(c, next);

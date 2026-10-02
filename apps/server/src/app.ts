@@ -5,6 +5,7 @@ import type { Env } from "@/env";
 import { catalogRoutes } from "@/features/catalog/catalog.routes";
 import { claimsRoutes } from "@/features/claims/claims.routes";
 import { claimsAdminRoutes } from "@/features/claims/claims-admin.routes";
+import { commentsRoutes, productCommentsRoutes } from "@/features/comments/comments.routes";
 import { crawlAdminRoutes } from "@/features/crawl-admin/crawl-admin.routes";
 import { healthRoutes } from "@/features/health/health.routes";
 import { getAuth } from "@/features/identity/auth-instance";
@@ -112,6 +113,18 @@ export function createApp() {
   quotesApi.use("*", optionalUser);
   quotesApi.route("/", quotesRoutes);
 
+  const productCommentsApi = new Hono<AppEnv>();
+  productCommentsApi.use("*", credentialedCors);
+  productCommentsApi.use("*", rateLimit);
+  productCommentsApi.use("*", optionalUser);
+  productCommentsApi.route("/", productCommentsRoutes);
+
+  const commentsApi = new Hono<AppEnv>();
+  commentsApi.use("*", credentialedCors);
+  commentsApi.use("*", rateLimit);
+  commentsApi.use("*", optionalUser);
+  commentsApi.route("/", commentsRoutes);
+
   const publicApi = new Hono<AppEnv>();
   publicApi.use("*", credentialedCors);
   publicApi.use("*", rateLimit);
@@ -135,6 +148,8 @@ export function createApp() {
   app.route("/v1/claims", claimsApi);
   app.route("/v1/support", supportApi);
   app.route("/v1/quotes", quotesApi);
+  app.route("/v1/comments", commentsApi);
+  app.route("/v1/products/:id/comments", productCommentsApi);
   app.route("/v1/admin", adminApi);
   app.route("/v1", publicApi);
 
