@@ -116,7 +116,7 @@ export async function computeHealth(db: Db, now = new Date()): Promise<Health> {
     }
   }
 
-  if (matching && matching.oldest && Date.parse(matching.oldest) < waiting) {
+  if (matching?.oldest && Date.parse(matching.oldest) < waiting) {
     incidents.matching.push({
       id: "matching:pending",
       system: "matching",
@@ -144,7 +144,7 @@ export async function computeHealth(db: Db, now = new Date()): Promise<Health> {
     });
   }
 
-  if (reports && reports.oldest_open && Date.parse(reports.oldest_open) < waiting) {
+  if (reports?.oldest_open && Date.parse(reports.oldest_open) < waiting) {
     incidents.moderation.push({
       id: "moderation:reports",
       system: "moderation",
