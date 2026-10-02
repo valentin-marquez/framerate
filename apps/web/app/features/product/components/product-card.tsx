@@ -1,14 +1,11 @@
 import { IconPhotoOff, IconTrendingUp } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router";
 import type { Product } from "~/features/product/services/products";
-import { productsService } from "~/features/product/services/products";
 import { getProductPricing } from "~/features/product/utils/pricing";
 import { getSpecsSummary } from "~/features/product/utils/specs";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Skeleton } from "~/shared/components/primitives/skeleton";
-import { productKeys } from "~/shared/lib/query-keys";
 import { cn } from "~/shared/lib/utils";
 import type { PsuSpecs } from "~/shared/utils/db-types";
 import { formatCLP } from "~/shared/utils/format";
@@ -104,7 +101,6 @@ function ProductStage({ product, priority, psu }: { product: Product; priority: 
  * precio y disponibilidad) y la foto es una miniatura a la derecha con el botón de cotizar encima.
  */
 export function ProductCard({ product, priority = false, trending = false, className }: ProductCardProps) {
-  const queryClient = useQueryClient();
   const { current, card, hasCardGap, hasRealDrop, reference, dropPct } = getProductPricing(product.prices);
   const specs = getSpecsSummary(product);
   const inStock = product.prices?.in_stock !== false;
@@ -112,16 +108,6 @@ export function ProductCard({ product, priority = false, trending = false, class
     product.category?.slug === "fuentes-de-poder"
       ? ((product.specs as PsuSpecs | null)?.efficiency_rating ?? null)
       : null;
-
-  const prefetch = () => {
-    const slug = product.slug;
-    if (!slug) return;
-    queryClient.prefetchQuery({
-      queryKey: productKeys.detail(slug),
-      queryFn: () => productsService.getBySlug(slug),
-      staleTime: 60_000,
-    });
-  };
 
   return (
     <article
@@ -151,9 +137,7 @@ export function ProductCard({ product, priority = false, trending = false, class
             {/* El enlace cubre toda la tarjeta (::after); el botón de cotizar queda por encima. */}
             <Link
               to={`/producto/${product.slug}`}
-              onClick={() => product.slug && productsService.trackView(product.slug).catch(() => {})}
-              onMouseEnter={prefetch}
-              onFocus={prefetch}
+              prefetch="intent"
               className="after:absolute after:inset-0 after:z-[1] after:rounded-3xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
             >
               {product.name}

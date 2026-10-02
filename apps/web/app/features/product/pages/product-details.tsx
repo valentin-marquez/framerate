@@ -8,6 +8,7 @@ import {
   IconExternalLink,
   IconHome,
 } from "@tabler/icons-react";
+import { useEffect } from "react";
 import { Link, redirect } from "react-router";
 import { getCategoryConfig } from "~/features/category/utils/categories";
 import { CommentsSection } from "~/features/comments/components/comments-section";
@@ -125,7 +126,6 @@ export async function loader({ params }: Route.LoaderArgs) {
       throw new Response("Producto no encontrado", { status: 404 });
     }
 
-    productsService.trackView(params.slug).catch(() => {});
     return product;
   } catch (error) {
     // Respeta redirects/respuestas explícitas (incluye `throw redirect(...)`).
@@ -161,6 +161,10 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
   const { t } = useTranslation();
 
   const product = loaderData;
+  // Fuera del loader: con prefetch="intent" el loader corre al pasar el mouse y cada hover contaría como visita.
+  useEffect(() => {
+    if (product.slug) productsService.trackView(product.slug).catch(() => {});
+  }, [product.slug]);
   const { data: priceHistory } = usePriceHistory(product.slug || "", 30);
   const totalHistoryPoints = priceHistory?.series.reduce((acc, s) => acc + s.points.length, 0) ?? 0;
   const bestPrice = product.prices?.cash || 0;
