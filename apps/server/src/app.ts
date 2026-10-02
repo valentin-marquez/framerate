@@ -61,7 +61,7 @@ export function createApp() {
       }),
     );
     await next();
-    c.res.headers.set(
+    c.res.headers.append(
       "Server-Timing",
       `d1;dur=${Math.round(d1Ms)};desc="${queries} consultas", app;dur=${Date.now() - start}`,
     );

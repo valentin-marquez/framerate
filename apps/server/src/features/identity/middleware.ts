@@ -19,7 +19,10 @@ import { type Actor, actorRole, type SessionUser } from "./types";
  */
 
 async function sessionUser(c: Context<AppEnv>): Promise<SessionUser | null> {
+  const start = Date.now();
   const session = await getAuth(c.env).api.getSession({ headers: c.req.raw.headers });
+  // Better Auth consulta D1 por su cuenta y su primer uso en un isolate inicializa: nada de eso pasa por `d1;dur`.
+  c.header("Server-Timing", `session;dur=${Date.now() - start}`, { append: true });
   if (!session) return null;
   return loadSessionUser(c.var.db, session.user.id, new Date().toISOString());
 }

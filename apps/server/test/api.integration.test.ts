@@ -57,6 +57,11 @@ describe("API pública", () => {
     expect((await get("/v1/products?category=gpu")).headers.get("server-timing")).toMatch(/desc="[1-9]d* consultas"/);
   });
 
+  test("Server-Timing suma el tiempo de sesión cuando la ruta la pide", async () => {
+    const res = await get("/v1/me", { headers: { cookie: "framerate.session_token=x.y" } });
+    expect(res.headers.get("server-timing")).toMatch(/session;dur=\d+.*d1;dur=/);
+  });
+
   test("el listado sólo muestra productos con stock, con su mejor precio y ofertas", async () => {
     const res = await get("/v1/products?category=gpu&sort=price_asc");
     expect(res.status).toBe(200);
