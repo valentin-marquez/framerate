@@ -107,7 +107,7 @@ export function createAuth(env: Env, options: CreateAuthOptions = {}) {
       cookiePrefix: "framerate",
       // Inspeccionar el esquema son ~70 accesos a D1 que cada isolate nuevo espera antes de la primera sesión (~500 ms).
       // El esquema es de nuestras migraciones, no de Better Auth.
-      database: { validateSchema: false },
+      database: { validateSchema: false, joins: true },
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
       crossSubDomainCookies: env.COOKIE_DOMAIN ? { enabled: true, domain: env.COOKIE_DOMAIN } : { enabled: false },
     },
