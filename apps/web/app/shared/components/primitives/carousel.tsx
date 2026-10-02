@@ -113,7 +113,7 @@ function CarouselNavigation({ className, classNameButton, alwaysShow }: Carousel
     >
       <button
         type="button"
-        aria-label="Previous slide"
+        aria-label="Anterior"
         className={cn(
           "pointer-events-auto size-fit rounded-full bg-background border border-border p-2 transition-opacity duration-300 hover:bg-accent hover:text-accent-foreground cursor-pointer",
           alwaysShow ? "opacity-100" : "opacity-0 group-hover/hover:opacity-100",
@@ -137,7 +137,7 @@ function CarouselNavigation({ className, classNameButton, alwaysShow }: Carousel
           alwaysShow ? "disabled:opacity-40" : "group-hover/hover:disabled:opacity-40",
           classNameButton,
         )}
-        aria-label="Next slide"
+        aria-label="Siguiente"
         disabled={index + visibleItemsCount >= itemsCount}
         onClick={() => {
           if (index + visibleItemsCount < itemsCount) {
