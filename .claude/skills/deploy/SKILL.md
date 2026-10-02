@@ -33,8 +33,7 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
 
 ## Push
 
-`git push https://git.nozz.skin/valentin/framerate.git <rama>:refs/heads/<rama>`. No es un remote configurado, y
-`origin` (GitHub) no se usa. Nunca usar credenciales pegadas en el chat: si pide contraseña, que la ingrese el dueño.
+`git push origin <rama>`. `origin` es Forgejo (`git.nozz.skin`); GitHub ya no se usa. Nunca usar credenciales pegadas en el chat: si pide contraseña, que la ingrese el dueño.
 
 ## Trampas
 

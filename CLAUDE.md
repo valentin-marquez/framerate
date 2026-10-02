@@ -55,8 +55,8 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
   está en la skill `/deploy`.
 - **Nunca desplegar sin que quien trabaja lo pida explícitamente**, ni para "probar". Commit y push sí se hacen tras
   cada tanda. Los dos despliegan: **sólo desde `main` actualizado y con el árbol limpio**, si no se pisa lo que desplegó
-  el otro. Push: `git push https://git.nozz.skin/valentin/framerate.git <rama>:refs/heads/<rama>` (`origin` es GitHub
-  y no se usa); nunca usar credenciales pegadas en el chat.
+  el otro. Push: `git push origin <rama>` (`origin` es Forgejo, `git.nozz.skin`; GitHub ya no se usa); nunca usar
+  credenciales pegadas en el chat.
 - Salud de producción (consultas D1 de sólo lectura): skill `/prod-health`.
 
 ## En un PC nuevo o con una persona nueva
