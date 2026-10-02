@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
 
 export function loader() {
-  throw redirect("/admin/moderation");
+  throw redirect("/admin/estado");
 }
 
 export default function AdminIndex() {

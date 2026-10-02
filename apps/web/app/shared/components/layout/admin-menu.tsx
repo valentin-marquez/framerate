@@ -1,4 +1,4 @@
-import { IconGavel, IconLifebuoy, IconShieldCheck, IconUsers } from "@tabler/icons-react";
+import { IconActivityHeartbeat, IconGavel, IconLifebuoy, IconShieldCheck, IconUsers } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import {
@@ -29,6 +29,12 @@ export function AdminMenu({ enabled }: AdminMenuProps) {
         <IconShieldCheck className="size-4" />
         <span>Administración</span>
       </DropdownMenuLabel>
+      <DropdownMenuItem>
+        <Link to="/admin/estado" className="flex items-center gap-2.5 w-full" prefetch="intent">
+          <IconActivityHeartbeat className="size-5" />
+          <span>Estado</span>
+        </Link>
+      </DropdownMenuItem>
       <DropdownMenuItem>
         <Link to="/admin/support" className="flex items-center gap-2.5 w-full" prefetch="intent">
           <IconLifebuoy className="size-5" />
