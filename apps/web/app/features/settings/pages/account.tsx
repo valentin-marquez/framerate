@@ -13,6 +13,7 @@ import { Textarea } from "~/shared/components/primitives/textarea";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { ApiError, api } from "~/shared/lib/api";
 import { ConnectedAccounts, type LinkedAccount } from "../components/connected-accounts";
+import { DeleteAccount } from "../components/delete-account";
 import { SettingsBadge, SettingsGroup, SettingsRow, SettingsSection } from "../components/settings-parts";
 import type { Route } from "./+types/account";
 
@@ -154,6 +155,8 @@ export default function AccountSettings({ loaderData, actionData }: Route.Compon
       </SettingsSection>
 
       <ConnectedAccounts accounts={accounts} />
+
+      <DeleteAccount username={profile.username || ""} />
     </div>
   );
 }

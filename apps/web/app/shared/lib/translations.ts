@@ -275,6 +275,15 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     emails_desc: "Gestiona tus direcciones de correo electrónico.",
     primary_email: "Email principal",
     managed_by_provider: "Gestionado por el proveedor de autenticación",
+    delete_account: "Borrar cuenta",
+    delete_account_desc:
+      "Anonimiza tu cuenta y despublica tus cotizaciones, reseñas y comentarios. No se puede deshacer.",
+    delete_account_button: "Borrar mi cuenta",
+    delete_account_confirm_title: "¿Borrar tu cuenta?",
+    delete_account_confirm_desc:
+      "Cerraremos tus sesiones y desvincularemos tus proveedores. Tus cotizaciones se borran y tus reseñas y comentarios dejan de mostrarse. Los tickets de soporte se conservan.",
+    delete_account_type: "Escribe {username} para confirmar",
+    delete_account_error: "No pudimos borrar tu cuenta. Intenta de nuevo.",
     manage: "Gestionar",
     saving_changes_toast: "Guardando cambios...",
     profile_updated_toast: "Perfil actualizado correctamente",
@@ -613,6 +622,15 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     emails_desc: "Manage your email addresses.",
     primary_email: "Primary email",
     managed_by_provider: "Managed by authentication provider",
+    delete_account: "Delete account",
+    delete_account_desc:
+      "Anonymizes your account and unpublishes your quotes, reviews and comments. This cannot be undone.",
+    delete_account_button: "Delete my account",
+    delete_account_confirm_title: "Delete your account?",
+    delete_account_confirm_desc:
+      "We will end your sessions and unlink your providers. Your quotes are deleted and your reviews and comments stop showing. Support tickets are kept.",
+    delete_account_type: "Type {username} to confirm",
+    delete_account_error: "We could not delete your account. Please try again.",
     manage: "Manage",
     saving_changes_toast: "Saving changes...",
     profile_updated_toast: "Profile updated successfully",
