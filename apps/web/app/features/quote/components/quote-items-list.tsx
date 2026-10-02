@@ -4,7 +4,7 @@ import { QuoteSlot } from "./quote-slot";
 import { QuoteTotals } from "./quote-totals";
 
 interface QuoteItemsListProps {
-  quote: Pick<QuoteDetail, "items" | "itemCount" | "totals">;
+  quote: Pick<QuoteDetail, "id" | "name" | "items" | "itemCount" | "totals">;
   isOwner: boolean;
   onChangeQuantity: (item: QuoteItemData, quantity: number) => void;
   onRemove: (item: QuoteItemData) => void;
@@ -42,6 +42,7 @@ export function QuoteItemsList({
           <QuoteSlot
             key={slot}
             slot={slot}
+            quote={quote}
             items={quote.items.filter((item) => item.slot === slot)}
             isOwner={isOwner}
             onChangeQuantity={onChangeQuantity}

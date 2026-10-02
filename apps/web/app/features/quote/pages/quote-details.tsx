@@ -9,6 +9,7 @@ import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
 import { QuoteOwnerBar } from "~/features/quote/components/quote-owner-bar";
 import { useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/useQuotes";
 import { quotesService } from "~/features/quote/services/quotes";
+import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { copyToClipboard, exportToExcel } from "~/features/quote/utils/quote-export";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import type { Route } from "./+types/quote-details";
@@ -42,6 +43,8 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   const [quote, setQuote] = useState(loaderData.quote);
   // Una navegación o una recarga trae otra versión desde el loader.
   useEffect(() => setQuote(loaderData.quote), [loaderData.quote]);
+  // Ya se volvió a la cotización: la ficha deja de agregar directo a ella.
+  useEffect(() => useQuoteInteractionStore.getState().setOriginQuote(null), []);
   const inFlight = useRef(0);
   const user = useUser();
   const revalidator = useRevalidator();

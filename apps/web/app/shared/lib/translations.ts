@@ -237,6 +237,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     login_to_save_quote_title: "Inicia sesión para guardar",
     login_to_save_quote_desc: "Crea cotizaciones para comparar PCs y guardar tus armados favoritos.",
     product_added: "Producto agregado a la cotización {name}",
+    back_to_quote: "Volver a la cotización",
     new_quote: "Nueva cotización",
     create: "Crear",
     quote_private: "Privada",
@@ -610,6 +611,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     login_to_save_quote_title: "Sign in to save",
     login_to_save_quote_desc: "Create quotes to compare PC builds and save your favorite setups.",
     product_added: "Product added to quote {name}",
+    back_to_quote: "Back to quote",
     new_quote: "New quote",
     create: "Create",
     quote_private: "Private",
@@ -984,6 +986,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     login_to_save_quote_title: "Konunge tami elkayal", // konunge = enter, elkayal = save
     login_to_save_quote_desc: "Dewmayal cotizaciones tami müñetuyal PCs ka elkayal tami doy küme armado.", // make to compare and save
     product_added: "Producto yengey {name} cotización mew",
+    back_to_quote: "Volver a la cotización",
 
     // Create Quote Dialog
     create_new_quote_title: "Dewman we cotización",

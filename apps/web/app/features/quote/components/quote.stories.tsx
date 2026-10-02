@@ -76,7 +76,7 @@ export const ListaVacia: Story = {
   name: "Lista de componentes vacía",
   render: () => (
     <QuoteItemsList
-      quote={{ items: [], itemCount: 0, totals: { cash: 0, card: 0 } }}
+      quote={{ id: "q-vacia", name: "Cotización vacía", items: [], itemCount: 0, totals: { cash: 0, card: 0 } }}
       isOwner
       onChangeQuantity={noop}
       onRemove={noop}

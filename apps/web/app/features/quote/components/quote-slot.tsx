@@ -11,6 +11,7 @@ import {
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { QuoteItem } from "~/features/quote/components/quote-item";
+import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { Button, buttonVariants } from "~/shared/components/primitives/button";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { formatCLP } from "~/shared/utils/format";
@@ -18,6 +19,7 @@ import { SLOT_SHORT_LABELS } from "~/shared/utils/slots";
 
 interface QuoteSlotProps {
   slot: QuoteSlotId;
+  quote: { id: string; name: string };
   /** Todos los ítems del slot, también las alternativas no seleccionadas. */
   items: QuoteItemData[];
   isOwner: boolean;
@@ -35,6 +37,7 @@ const categoryHref = (slot: QuoteSlotId) => {
 
 export function QuoteSlot({
   slot,
+  quote,
   items,
   isOwner,
   onChangeQuantity,
@@ -43,6 +46,7 @@ export function QuoteSlot({
   onChooseOffer,
 }: QuoteSlotProps) {
   const { t } = useTranslation();
+  const setOriginQuote = useQuoteInteractionStore((s) => s.setOriginQuote);
   const shown = isAdditiveSlot(slot) ? items : items.filter((item) => item.isSelected);
   const alternatives = items.filter((item) => !shown.includes(item));
 
@@ -62,6 +66,7 @@ export function QuoteSlot({
           {isOwner && (
             <Link
               to={categoryHref(slot)}
+              onClick={() => setOriginQuote(quote)}
               className={buttonVariants({ variant: "outline", size: "sm", className: "gap-2" })}
             >
               <IconPlus size={16} /> Agregar

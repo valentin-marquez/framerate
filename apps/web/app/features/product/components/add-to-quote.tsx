@@ -2,6 +2,7 @@ import type { ProductSummary } from "@framerate/contracts";
 import { IconLoader2, IconLogin, IconPlus, IconReceipt, IconX } from "@tabler/icons-react";
 import { type FormEvent, type SyntheticEvent, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { AuthProvidersList } from "~/features/auth/components/auth-providers-list";
 import { useUser } from "~/features/auth/hooks/useAuth";
@@ -29,10 +30,59 @@ interface AddToQuoteProps {
   label?: "long" | "short";
 }
 
+/** Agrega el producto a una cotización y avisa con deshacer; si viene de un slot, también ofrece volver a ella. */
+function useAddToQuote(product: QuoteProduct) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const addItem = useQuoteAddItem();
+  const removeItem = useQuoteRemoveItem();
+  const updateItem = useQuoteUpdateItem();
+  const setLastSelectedQuoteId = useQuoteInteractionStore((s) => s.setLastSelectedQuoteId);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const add = (quote: { id: string; name: string }, onAdded?: () => void) => {
+    setPendingId(quote.id);
+    addItem.mutate(
+      { quoteId: quote.id, data: { productId: product.id, quantity: 1 } },
+      {
+        onSuccess: (detail) => {
+          // Si el producto ya estaba, agregar sólo sumó una unidad: deshacer resta esa unidad en vez de quitarlo.
+          const item = detail.items.find((i) => i.product.id === product.id);
+          setLastSelectedQuoteId(quote.id);
+          onAdded?.();
+          toast.success(t("product_added", { name: quote.name }), {
+            action: {
+              label: t("undo"),
+              onClick: () => {
+                if (!item) return;
+                if (item.quantity > 1) {
+                  updateItem.mutate({ quoteId: quote.id, itemId: item.id, data: { quantity: item.quantity - 1 } });
+                } else {
+                  removeItem.mutate({ quoteId: quote.id, itemId: item.id });
+                }
+              },
+            },
+            cancel: {
+              label: t("back_to_quote"),
+              onClick: () => navigate(`/cotizacion/${quote.id}`),
+            },
+          });
+        },
+        onError: () => toast.error(t("add_to_quote_error")),
+        onSettled: () => setPendingId(null),
+      },
+    );
+  };
+
+  return { add, pendingId };
+}
+
 export function AddToQuote({ product, className, label }: AddToQuoteProps) {
   // "closing" mantiene el diálogo montado mientras anima la salida.
   const [phase, setPhase] = useState<"closed" | "open" | "closing">("closed");
   const { t } = useTranslation();
+  const originQuote = useQuoteInteractionStore((s) => s.originQuote);
+  const { add } = useAddToQuote(product);
 
   return (
     <>
@@ -44,7 +94,7 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
                 variant="secondary"
                 size={label ? "sm" : "icon"}
                 className={cn(label ? "w-full gap-1.5 px-3 text-foreground" : "", "transition-all")}
-                onClick={() => setPhase("open")}
+                onClick={() => (originQuote ? add(originQuote) : setPhase("open"))}
                 aria-label={t("add_to_quote")}
                 type="button"
               />
@@ -84,13 +134,10 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
   const { t } = useTranslation();
   const user = useUser();
   const { data: quotes, isLoading } = useQuotes(1, 50, { enabled: !!user });
-  const { lastSelectedQuoteId, setLastSelectedQuoteId } = useQuoteInteractionStore();
+  const lastSelectedQuoteId = useQuoteInteractionStore((s) => s.lastSelectedQuoteId);
   const createQuote = useCreateQuote();
-  const addItem = useQuoteAddItem();
-  const removeItem = useQuoteRemoveItem();
-  const updateItem = useQuoteUpdateItem();
+  const { add: addToQuote, pendingId } = useAddToQuote(product);
   const [creating, setCreating] = useState(false);
-  const [pendingId, setPendingId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -105,35 +152,7 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
     dialogRef.current?.querySelector("input")?.focus();
   }, []);
 
-  const add = (quote: { id: string; name: string }) => {
-    setPendingId(quote.id);
-    addItem.mutate(
-      { quoteId: quote.id, data: { productId: product.id, quantity: 1 } },
-      {
-        onSuccess: (detail) => {
-          // Si el producto ya estaba, agregar sólo sumó una unidad: deshacer resta esa unidad en vez de quitarlo.
-          const item = detail.items.find((i) => i.product.id === product.id);
-          setLastSelectedQuoteId(quote.id);
-          onClose();
-          toast.success(t("product_added", { name: quote.name }), {
-            action: {
-              label: t("undo"),
-              onClick: () => {
-                if (!item) return;
-                if (item.quantity > 1) {
-                  updateItem.mutate({ quoteId: quote.id, itemId: item.id, data: { quantity: item.quantity - 1 } });
-                } else {
-                  removeItem.mutate({ quoteId: quote.id, itemId: item.id });
-                }
-              },
-            },
-          });
-        },
-        onError: () => toast.error(t("add_to_quote_error")),
-        onSettled: () => setPendingId(null),
-      },
-    );
-  };
+  const add = (quote: { id: string; name: string }) => addToQuote(quote, onClose);
 
   const create = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
