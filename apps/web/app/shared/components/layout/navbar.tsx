@@ -1,6 +1,5 @@
 import type { CategoryItem } from "@framerate/contracts";
 import { IconCompass, IconCpu, IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react";
-import { domAnimation, LazyMotion, m, useTransform } from "motion/react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { LoginDialog } from "~/features/auth/components/login-dialog";
@@ -9,10 +8,8 @@ import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dial
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { AdminMenu } from "~/shared/components/layout/admin-menu";
 import { Logo } from "~/shared/components/layout/logo";
-import { navTargetWidth } from "~/shared/components/layout/morph-search";
 import { NavClock, NavTab, navTabClass } from "~/shared/components/layout/nav-parts";
-import { useMediaQuery } from "~/shared/hooks/use-media-query";
-import { useMorphState } from "~/shared/hooks/use-morph-state";
+import { SiteSearch } from "~/shared/components/layout/site-search";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { AsyncImage } from "../primitives/async-image";
@@ -107,20 +104,8 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   const onExplore = location.pathname.startsWith("/explorar");
   const onCategory = location.pathname.startsWith("/categoria");
 
-  // El ancla del buscador sólo existe en la landing (donde está el hero que lo
-  // origina). ≥1024px: ancla inline que crece su ancho con el scroll y separa
-  // Explorar/Hardware. <1024px: segunda fila (doble navbar) que se abre con el
-  // scroll. El campo real flota encima vía MorphSearch (interpolación continua).
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const showAnchor = location.pathname === "/";
-  // `e` one-shot 0↔1 (200ms al cruzar el umbral). El ancla crece su ancho y la
-  // fila móvil su alto en sincronía con el morph del campo (mismo driver).
-  const e = useMorphState();
-  const navAnchorW = useTransform(
-    e,
-    (k) => k * navTargetWidth(typeof window !== "undefined" ? window.innerWidth : 1280, isDesktop),
-  );
-  const mobileBarH = useTransform(e, [0, 1], [0, 56]);
+  // Sólo la home tiene el buscador del hero que se acopla al navbar (reglas `.nav-search` de app.css).
+  const isHome = location.pathname === "/";
 
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -283,25 +268,13 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             </div>
           </div>
 
-          {/* Centro absoluto sin transform (no choca con la proyección de
-              Framer). El ancla B invisible crece su ancho con el progreso de
-              scroll y empuja Explorar/Hardware hacia los lados; el campo real
-              (MorphSearch) flota encima e interpola su caja de forma continua. */}
-          <LazyMotion features={domAnimation}>
-            <div className="hidden md:flex items-center gap-6 absolute inset-x-0 mx-auto w-max">
+          {/* En la home, con el buscador acoplado, `.nav-search-start/end` apartan Explorar y Hardware (app.css). */}
+          <div className="hidden md:flex items-center gap-6 absolute inset-x-0 mx-auto w-max">
+            <div className="nav-search-start">
               <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} />
+            </div>
 
-              {showAnchor && (
-                // Existe ya en el HTML del servidor (se oculta con CSS bajo lg): si apareciera tras hidratar
-                // empujaría a Explorar/Hardware. Los márgenes negativos descuentan el hueco extra del `gap`.
-                <m.div
-                  id="nav-search-anchor"
-                  aria-hidden
-                  style={{ width: navAnchorW }}
-                  className="hidden h-9 shrink-0 lg:-mx-3 lg:block"
-                />
-              )}
-
+            <div className="nav-search-end">
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTabClass(onCategory)}>
                   <IconCpu className="size-4" stroke={1.75} />
@@ -323,7 +296,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </LazyMotion>
+          </div>
 
           <div className="flex items-center gap-4">
             <NavClock className="hidden lg:inline-block" />
@@ -449,18 +422,12 @@ export function Navbar({ categories, blurred }: NavbarProps) {
         </div>
       </nav>
 
-      {/* Doble navbar en móvil/tablet: el buscador no cabe inline, así que la
-          segunda fila se ABRE con el scroll (alto ligado al progreso) y el
-          campo real (MorphSearch) se interpola hasta el ancla de adentro. */}
-      {showAnchor && !isDesktop && (
-        <LazyMotion features={domAnimation}>
-          <m.div
-            style={{ height: mobileBarH }}
-            className="lg:hidden w-full overflow-hidden bg-background/90 backdrop-blur-md"
-          >
-            <div id="nav-search-anchor-mobile" aria-hidden className="mx-4 my-[10px] h-9" />
-          </m.div>
-        </LazyMotion>
+      {/* Bajo lg el campo no cabe en el navbar: va en una segunda fila, encima del contenido para no correrlo. Desde lg
+          queda al centro del navbar. Se posiciona contra el <header> sticky de root.tsx. */}
+      {isHome && (
+        <div className="nav-search absolute inset-x-0 top-full bg-background/90 px-4 py-2.5 backdrop-blur-md lg:top-2 lg:z-50 lg:mx-auto lg:w-(--nav-search-w) lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+          <SiteSearch id="nav-search" className="h-9 rounded-xl" />
+        </div>
       )}
     </>
   );

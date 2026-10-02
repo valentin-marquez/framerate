@@ -11,14 +11,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Portada: Story = {
   name: "Portada con buscador",
-  // El campo real es `MorphSearch` (flota sobre el ancla); aquí se ve sólo el espacio que reserva. El armado completo
-  // está en Layout/Navegación > Estructura del sitio.
-  render: () => (
-    <div className="space-y-2">
-      <CompactSearchHero categories={categories} />
-      <p className="text-center text-muted-foreground text-xs">El hueco bajo el título es el ancla del buscador.</p>
-    </div>
-  ),
+  // El paso del buscador al navbar al bajar se ve en Layout/Navegación > Estructura del sitio.
+  render: () => <CompactSearchHero categories={categories} />,
 };
 
 export const FilaDeProductos: Story = {

@@ -414,6 +414,52 @@
   }
 }
 
+/* Buscador de la home: el del hero va en el flujo y, cuando pasa bajo el navbar, `data-search-docked` en <html> (lo pone
+   un IntersectionObserver del hero) muestra `.nav-search`. En móvil es una fila que baja desde atrás del navbar; en
+   escritorio el campo aparece al centro y Explorar/Hardware se apartan. `visibility` lo saca del foco cuando no se ve. */
+:root {
+  --nav-search-w: clamp(256px, 26vw, 360px);
+}
+
+.nav-search {
+  visibility: hidden;
+  transform: translateY(-100%);
+  transition:
+    transform var(--transition-duration-base) var(--ease-in-out),
+    visibility 0s var(--transition-duration-base);
+}
+
+@media (width >= 64rem) {
+  .nav-search {
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity var(--transition-duration-base) var(--ease-in-out),
+      transform var(--transition-duration-base) var(--ease-in-out),
+      visibility 0s var(--transition-duration-base);
+  }
+
+  .nav-search-start,
+  .nav-search-end {
+    transition: transform var(--transition-duration-base) var(--ease-in-out);
+  }
+
+  [data-search-docked] .nav-search-start {
+    transform: translateX(calc(var(--nav-search-w) / -2));
+  }
+
+  [data-search-docked] .nav-search-end {
+    transform: translateX(calc(var(--nav-search-w) / 2));
+  }
+}
+
+[data-search-docked] .nav-search {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition-delay: 0s;
+}
+
 /* Animaciones personalizadas para el search dialog */
 @keyframes fadeInUp {
   from {
@@ -423,16 +469,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes pulse-subtle {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
   }
 }
 
@@ -457,21 +493,6 @@
 }
 .thread-scroll::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-muted-foreground);
-}
-
-/* Animación para nuevas cotizaciones */
-@keyframes slideInFromTop {
-  0% {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  60% {
-    transform: translateY(5px) scale(1.01);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 @keyframes glow-pulse {

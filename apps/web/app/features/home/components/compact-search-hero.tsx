@@ -1,5 +1,7 @@
 import type { CategoryItem } from "@framerate/contracts";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router";
+import { SiteSearch } from "~/shared/components/layout/site-search";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 
@@ -11,13 +13,38 @@ interface CompactSearchHeroProps {
  * Header compacto y accionable: en vez de un hero de marketing, el usuario
  * aterriza sobre una barra de búsqueda grande (Enter → /explorar?search=) y
  * pills de categoría para saltar directo a navegar productos.
- *
- * El campo de búsqueda real NO vive aquí: es `MorphSearch` (montado en el
- * layout) flotando `position: fixed`. Aquí sólo dejamos un ancla invisible
- * (`#hero-search-anchor`) que reserva su espacio y le dice de dónde partir;
- * al scrollear se interpola de forma continua hasta el ancla del navbar.
  */
 export function CompactSearchHero({ categories }: CompactSearchHeroProps) {
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Cuando el campo pasa bajo el navbar (h-13, 52 px) lo reemplaza el del navbar: `data-search-docked` en <html> activa
+  // las reglas `.nav-search` de app.css. Un solo observer; nada de leer layout en cada scroll.
+  useEffect(() => {
+    const field = searchRef.current;
+    if (!field) return;
+    const root = document.documentElement;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const docked = entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0);
+        if (docked === root.hasAttribute("data-search-docked")) return;
+        root.toggleAttribute("data-search-docked", docked);
+        // Lo escrito y el foco pasan al campo que queda a la vista.
+        const hero = document.getElementById("hero-search") as HTMLInputElement | null;
+        const nav = document.getElementById("nav-search") as HTMLInputElement | null;
+        if (!hero || !nav) return;
+        const [from, to] = docked ? [hero, nav] : [nav, hero];
+        to.value = from.value;
+        if (document.activeElement === from) to.focus({ preventScroll: true });
+      },
+      { rootMargin: "-52px 0px 0px 0px", threshold: 1 },
+    );
+    observer.observe(field);
+    return () => {
+      observer.disconnect();
+      root.removeAttribute("data-search-docked");
+    };
+  }, []);
+
   return (
     <section className="flex flex-col items-center gap-6 pt-6 pb-8 md:pt-10 md:pb-10">
       <div className={cn("text-center space-y-2 max-w-2xl", enterClass())}>
@@ -29,9 +56,9 @@ export function CompactSearchHero({ categories }: CompactSearchHeroProps) {
         </p>
       </div>
 
-      {/* Ancla A: reserva el espacio del buscador grande (alto = HERO_H del
-          MorphSearch). El campo real flota encima e interpola desde aquí. */}
-      <div id="hero-search-anchor" aria-hidden className="w-full max-w-2xl h-14" />
+      <div ref={searchRef} className={cn("w-full max-w-2xl", enterClass())} style={enterStyle(80)}>
+        <SiteSearch id="hero-search" className="h-14 rounded-2xl" />
+      </div>
 
       {categories.length > 0 && (
         <div

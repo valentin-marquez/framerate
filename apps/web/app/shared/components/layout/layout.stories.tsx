@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "../primitives/dropdown-menu";
 import { AdminMenu } from "./admin-menu";
-import { MorphSearch } from "./morph-search";
 import { NavClock, NavTab } from "./nav-parts";
 import { Navbar } from "./navbar";
 import { SiteFooter } from "./site-footer";
@@ -116,8 +115,8 @@ export const Pestanas: Story = {
 export const Pie: Story = { render: () => <SiteFooter /> };
 
 /**
- * El armado de `root.tsx` con el home: navbar fija, el buscador flotante (`MorphSearch`, sólo en "/") y el pie.
- * Al bajar más de ~100 px el buscador viaja del hero al navbar.
+ * El armado de `root.tsx` con el home: navbar fija y pie. Al bajar, cuando el buscador del hero pasa bajo el navbar,
+ * aparece el del navbar.
  */
 export const EstructuraDelSitio: Story = {
   name: "Estructura del sitio (home)",
@@ -126,7 +125,6 @@ export const EstructuraDelSitio: Story = {
       <header className="sticky top-0 z-50 w-full">
         <Navbar categories={categories} />
       </header>
-      <MorphSearch />
       <main className="container mx-auto flex-1 px-4 pt-11">
         <HomeContent
           categories={categories}

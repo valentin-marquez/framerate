@@ -5,7 +5,7 @@ import { withQueryData } from "~/shared/storybook/with-query-data";
 import { SearchDialog, SearchTrigger } from "./search-dialog";
 
 /**
- * Hoy sólo la usa la página de cotización (apagada). El buscador del sitio es `MorphSearch`. Para ver resultados de
+ * Hoy sólo la usa la página de cotización (apagada). El buscador del sitio es `SiteSearch`. Para ver resultados de
  * productos hay que escribir: la búsqueda pide a la API, que en Storybook no está.
  */
 const meta = {
