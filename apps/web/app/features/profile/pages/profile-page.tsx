@@ -47,9 +47,11 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const { username } = params;
 
   if (username) {
-    const { user: currentUser } = await getAuthUser(request);
     try {
-      const profileUser = await profilesService.getByUsername(username);
+      const [{ user: currentUser }, profileUser] = await Promise.all([
+        getAuthUser(request),
+        profilesService.getByUsername(username),
+      ]);
       // Las cotizaciones aún no existen en la API nueva (/v1/quotes da 404): no se pide, cuesta un viaje entero.
       const quotes: Quote[] = [];
       return { profileUser, quotes, isOwner: currentUser?.username === profileUser.username, currentUser };

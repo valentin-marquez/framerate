@@ -19,16 +19,18 @@ import type { Route } from "./+types/account";
 const BIO_MAX = 280;
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { user } = await getAuthUser(request);
+  // Las dos llamadas sólo necesitan la cookie: juntas cuestan lo de la más lenta, no la suma.
+  const [{ user }, accounts] = await Promise.all([
+    getAuthUser(request),
+    api
+      .get<LinkedAccount[]>("/v1/auth/list-accounts", { headers: { cookie: request.headers.get("cookie") ?? "" } })
+      .then((list) => list.map(({ id, providerId }) => ({ id, providerId })))
+      .catch((error) => {
+        console.error("No se pudieron listar las cuentas conectadas", error);
+        return null;
+      }),
+  ]);
   if (!user) throw new Response("Unauthorized", { status: 401 });
-
-  const accounts = await api
-    .get<LinkedAccount[]>("/v1/auth/list-accounts", { headers: { cookie: request.headers.get("cookie") ?? "" } })
-    .then((list) => list.map(({ id, providerId }) => ({ id, providerId })))
-    .catch((error) => {
-      console.error("No se pudieron listar las cuentas conectadas", error);
-      return null;
-    });
 
   return { profile: meToProfile(user), email: user.email, accounts };
 }

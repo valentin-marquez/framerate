@@ -24,12 +24,29 @@ interface ServerContext {
   /** IP del visitante: por el service binding la API no la ve, y sin ella todos comparten un límite. */
   ip?: string | null;
   fetch?: typeof fetch;
+  /** Resultados compartidos por todos los loaders de la petición HTTP en curso. */
+  memo?: Map<string, Promise<unknown>>;
 }
 
 let serverContext: () => ServerContext | undefined = () => undefined;
 
 export function setServerContext(provider: () => ServerContext | undefined) {
   serverContext = provider;
+}
+
+/**
+ * Ejecuta `load` una sola vez por petición HTTP del SSR aunque varios loaders lo pidan: en single fetch cada loader
+ * recibe su propio `Request`, así que no sirve memoizar por `Request`.
+ */
+export function memoPerRequest<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const memo = serverContext()?.memo;
+  if (!memo) return load();
+  let pending = memo.get(key) as Promise<T> | undefined;
+  if (!pending) {
+    pending = load();
+    memo.set(key, pending);
+  }
+  return pending;
 }
 
 /** `fetch` hacia la API: por el service binding en el SSR de producción, `fetch` normal en el resto. */

@@ -1,22 +1,17 @@
 import { hasRole, type Me, type Role } from "@framerate/contracts";
 import { redirect } from "react-router";
-import { API_BASE_URL, ApiError, api, apiFetch } from "~/shared/lib/api";
+import { API_BASE_URL, ApiError, api, apiFetch, memoPerRequest } from "~/shared/lib/api";
 
 export type UserRole = Role;
 
-const cache = new WeakMap<Request, Promise<Me | null>>();
-
 /** Usuario de la petición (o null). Una sola consulta a la API por petición aunque varios loaders la pidan. */
 function loadUser(request: Request): Promise<Me | null> {
-  let pending = cache.get(request);
-  if (!pending) {
-    pending = api.get<Me>("/v1/me", { headers: { cookie: request.headers.get("cookie") ?? "" } }).catch((error) => {
+  return memoPerRequest("me", () =>
+    api.get<Me>("/v1/me", { headers: { cookie: request.headers.get("cookie") ?? "" } }).catch((error) => {
       if (!(error instanceof ApiError && error.status === 401)) console.error("No se pudo consultar la sesión", error);
       return null;
-    });
-    cache.set(request, pending);
-  }
-  return pending;
+    }),
+  );
 }
 
 export async function getAuthUser(request: Request) {

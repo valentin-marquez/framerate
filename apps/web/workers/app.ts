@@ -12,7 +12,12 @@ declare module "react-router" {
 }
 
 // Contexto de la petición en curso: `api` reenvía la cookie a la API y, en producción, usa el service binding.
-const requestContext = new AsyncLocalStorage<{ cookie: string | null; ip: string | null; fetch?: typeof fetch }>();
+const requestContext = new AsyncLocalStorage<{
+  cookie: string | null;
+  ip: string | null;
+  fetch?: typeof fetch;
+  memo: Map<string, Promise<unknown>>;
+}>();
 setServerContext(() => requestContext.getStore());
 
 const requestHandler = createRequestHandler(() => import("virtual:react-router/server-build"), import.meta.env.MODE);
@@ -26,6 +31,7 @@ export default {
         cookie: request.headers.get("cookie"),
         ip: request.headers.get("cf-connecting-ip"),
         fetch: api?.fetch.bind(api),
+        memo: new Map(),
       },
       () =>
         requestHandler(
