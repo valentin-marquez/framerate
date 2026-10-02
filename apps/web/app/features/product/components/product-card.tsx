@@ -1,6 +1,6 @@
 import type { ProductSummary } from "@framerate/contracts";
 import { IconPhotoOff, IconTrendingUp } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Link, useViewTransitionState } from "react-router";
 import { getSpecsSummary } from "~/features/product/utils/specs";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
@@ -30,10 +30,39 @@ function availabilityText(inStock: boolean, stores: number) {
  * el tono de la foto: blanco, o gris claro en oscuro vía `--product-stage` + multiply, así nunca se ve su borde).
  * Mientras carga sólo se ve el color de la tarjeta y un orbe; al llegar la foto, el panel se abre desde el orbe.
  */
-function ProductStage({ product, priority, psu }: { product: ProductSummary; priority: boolean; psu: string | null }) {
+// Un producto puede salir dos veces en la misma página (dos filas de la home) y un view-transition-name repetido cancela
+// la transición: lo lleva una sola tarjeta, la clickeada o, al volver de la ficha, la primera que se dibuja.
+let morphOwner: string | null = null;
+
+function useProductMorph(slug: string, cardId: string) {
+  const morphing = useViewTransitionState(`/producto/${slug}`);
+  if (morphing && morphOwner === null) morphOwner = cardId;
+  useEffect(() => {
+    if (!morphing && morphOwner === cardId) morphOwner = null;
+  }, [morphing, cardId]);
+  useEffect(
+    () => () => {
+      if (morphOwner === cardId) morphOwner = null;
+    },
+    [cardId],
+  );
+  return morphing && morphOwner === cardId;
+}
+
+function ProductStage({
+  product,
+  priority,
+  psu,
+  cardId,
+}: {
+  product: ProductSummary;
+  priority: boolean;
+  psu: string | null;
+  cardId: string;
+}) {
   const [stage, setStage] = useState<"loading" | "opening" | "open">("loading");
-  // El panel pasa a ser la foto de la ficha (app.css). El nombre tiene que ser único: sólo durante su transición.
-  const morphing = useViewTransitionState(`/producto/${product.slug}`);
+  // El panel pasa a ser la foto de la ficha (app.css).
+  const morphing = useProductMorph(product.slug, cardId);
 
   if (!product.imageUrl) {
     return (
@@ -106,6 +135,7 @@ export function ProductCard({ product, priority = false, trending = false, class
   const inStock = bestPrice !== null;
   const efficiency = product.attributes.efficiency;
   const psu = product.category === "psu" && typeof efficiency === "string" ? efficiency : null;
+  const cardId = useId();
 
   return (
     <article
@@ -115,7 +145,7 @@ export function ProductCard({ product, priority = false, trending = false, class
       )}
     >
       <div className="relative flex min-h-36">
-        <ProductStage product={product} priority={priority} psu={psu} />
+        <ProductStage product={product} priority={priority} psu={psu} cardId={cardId} />
 
         <div className="relative flex w-[58%] min-w-0 flex-col gap-1.5 p-3 pt-3.5 pb-2.5">
           <div className="flex h-5 items-center gap-2">
@@ -135,6 +165,9 @@ export function ProductCard({ product, priority = false, trending = false, class
               to={`/producto/${product.slug}`}
               prefetch="intent"
               viewTransition
+              onClick={() => {
+                morphOwner = cardId;
+              }}
               className="after:absolute after:inset-0 after:z-[1] after:rounded-3xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
             >
               {product.name}
