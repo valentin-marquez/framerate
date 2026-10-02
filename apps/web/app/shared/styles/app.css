@@ -70,9 +70,6 @@
   --success: oklch(0.7014 0.2115 141.59);
   --success-foreground: oklch(0.9787 0.0017 247.84);
   --warn: oklch(79.5% 0.184 86.047);
-
-  /* Animation variables */
-  --bounce-transition-fn: cubic-bezier(0.54, 1.12, 0.38, 1.11);
 }
 
 .dark {
@@ -171,16 +168,21 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+}
 
-  --transition-duration: 0.3s;
-  --fast-transition-duration: 0.2s;
-  --slow-transition-duration: 0.6s;
-  --transition-fn: cubic-bezier(0.4, 0, 0.2, 1);
-  --bounce-transition-fn: cubic-bezier(0.54, 1.12, 0.38, 1.11);
-  --transition: all var(--transition-duration) var(--transition-fn);
-  --bounce-transition: all var(--transition-duration) var(--bounce-transition-fn);
-  --fast-transition: all var(--fast-transition-duration) var(--transition-fn);
-  --slow-transition: all var(--slow-transition-duration) var(--transition-fn);
+/*
+ * Lenguaje de motion (qué usa cada movimiento: apps/web/CLAUDE.md). En Tailwind: `ease-out`, `ease-in-out` y
+ * `duration-fast|base|slow`; un `transition-*` sin más ya va con `fast` y `ease-out`. Para `motion`, los mismos
+ * valores en `shared/lib/motion.ts`. `static`: las variables existen siempre, para usarlas en estilos en línea.
+ */
+@theme static {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --transition-duration-fast: 150ms;
+  --transition-duration-base: 250ms;
+  --transition-duration-slow: 400ms;
+  --default-transition-duration: var(--transition-duration-fast);
+  --default-transition-timing-function: var(--ease-out);
 }
 
 @layer base {
@@ -321,7 +323,7 @@
 .stage-backdrop[data-state="open"],
 .stage-image[data-state="open"] {
   transform-origin: var(--reveal-x, 50%) var(--reveal-y, 50%);
-  animation: stage-image-settle var(--stage-duration) cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation: stage-image-settle var(--stage-duration) var(--ease-out) backwards;
 }
 
 /*
@@ -387,7 +389,7 @@
 }
 
 .enter-up {
-  animation: enter-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: enter-up var(--transition-duration-slow) var(--ease-out) both;
   animation-delay: var(--delay, 0ms);
 }
 

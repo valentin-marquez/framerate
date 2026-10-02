@@ -1,36 +1,6 @@
 import { IconAlertOctagon, IconAlertTriangle, IconCircleCheck, IconInfoCircle, IconLoader } from "@tabler/icons-react";
-import { domAnimation, LazyMotion, m, useReducedMotion } from "motion/react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 import { useTheme } from "~/shared/lib/client";
-
-const SuccessIcon = () => {
-  const shouldReduceMotion = useReducedMotion();
-  return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={shouldReduceMotion ? false : { scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{
-          type: "spring",
-          stiffness: 260,
-          damping: 20,
-        }}
-      >
-        <IconCircleCheck className="size-5" />
-      </m.div>
-    </LazyMotion>
-  );
-};
-
-const LoadingIcon = () => {
-  return (
-    <LazyMotion features={domAnimation}>
-      <m.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-        <IconLoader className="size-4" />
-      </m.div>
-    </LazyMotion>
-  );
-};
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const theme = useTheme();
@@ -40,11 +10,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       icons={{
-        success: <SuccessIcon />,
+        success: <IconCircleCheck className="size-5 animate-in fade-in-0 zoom-in-95 duration-base ease-out" />,
         info: <IconInfoCircle className="size-4" />,
         warning: <IconAlertTriangle className="size-4" />,
         error: <IconAlertOctagon className="size-4" />,
-        loading: <LoadingIcon />,
+        loading: <IconLoader className="size-4 animate-spin" />,
       }}
       style={
         {
@@ -54,14 +24,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--border-radius": "var(--radius-xl)",
           "--success-bg-color": "var(--success)",
           "--min-width": "200px",
-          "--animation-duration": "0.4s",
-          "--animation-timing": "cubic-bezier(0.06, 0.71, 0.55, 1)",
         } as React.CSSProperties
       }
       toastOptions={{
+        // Sonner fija sus duraciones; sólo se le cambia la curva. En línea porque su CSS no va en capa y gana a Tailwind.
+        style: { transitionTimingFunction: "var(--ease-out)" },
         classNames: {
           toast:
-            "group toast font-sans text-sm md:text-base group-[.toaster]:bg-primary group-[.toaster]:text-primary-foreground group-[.toaster]:border-border group-[.toaster]:shadow-md transition animate-[toast-in_0.4s_cubic-bezier(0.06,0.71,0.55,1)_forwards,toast-resize_0.3s_ease-out] min-w-[280px] md:min-w-[400px] p-4 md:p-5 select-none",
+            "group toast font-sans text-sm md:text-base group-[.toaster]:bg-primary group-[.toaster]:text-primary-foreground group-[.toaster]:border-border group-[.toaster]:shadow-md min-w-[280px] md:min-w-[400px] p-4 md:p-5 select-none",
           title: "font-semibold text-sm md:text-base text-primary-foreground",
           description: "group-[.toast]:text-muted-foreground text-xs md:text-sm font-normal",
           actionButton:

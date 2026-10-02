@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import { useQuote } from "~/features/quote/hooks/useQuotes";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Badge } from "~/shared/components/primitives/badge";
+import { DURATION, EASE_IN_OUT, EASE_OUT } from "~/shared/lib/motion";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import { getGradient } from "~/shared/utils/gradients";
@@ -123,7 +124,7 @@ function QuoteQuickViewPortal({ layoutId, open, onClose, quote, quoteId }: Quote
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: DURATION.base, ease: EASE_OUT }}
             className="absolute inset-0 bg-black/50"
             onClick={onClose}
           />
@@ -134,7 +135,7 @@ function QuoteQuickViewPortal({ layoutId, open, onClose, quote, quoteId }: Quote
               aria-modal="true"
               aria-labelledby={`${layoutId}-title`}
               className="pointer-events-auto w-full max-w-md rounded-2xl border border-border bg-card shadow-xl overflow-hidden"
-              transition={{ type: "spring", stiffness: 360, damping: 32, mass: 0.7 }}
+              transition={{ duration: DURATION.base, ease: EASE_IN_OUT }}
             >
               <QuoteQuickViewContent quote={quote} quoteId={quoteId} onClose={onClose} titleId={`${layoutId}-title`} />
             </m.div>
@@ -162,7 +163,7 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
     <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ delay: 0.08, duration: 0.18 }}
+      transition={{ delay: 0.08, duration: DURATION.fast, ease: EASE_OUT }}
       className="flex flex-col max-h-[80vh]"
     >
       <header className="flex items-start gap-3 p-5 border-b border-border/60">

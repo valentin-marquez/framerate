@@ -188,7 +188,6 @@ export function RichCommentInput({
         onClick={handleKeyUp}
         className={cn(
           "block w-full bg-transparent px-3.5 py-2.5 text-sm leading-relaxed text-foreground outline-none whitespace-pre-wrap break-words",
-          "transition-[min-height] duration-200 ease-out",
           expanded ? "min-h-20" : "min-h-9",
           className,
         )}

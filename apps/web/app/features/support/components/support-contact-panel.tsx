@@ -12,6 +12,7 @@ import { Input } from "~/shared/components/primitives/input";
 import { Label } from "~/shared/components/primitives/label";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
+import { DURATION, EASE_OUT } from "~/shared/lib/motion";
 import { cn } from "~/shared/lib/utils";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "../lib/labels";
 import { SUPPORT_EMAIL, supportClient } from "../services/support";
@@ -24,10 +25,7 @@ const TURNSTILE_CONFIGURED = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
 //   2. `bg-card` (color base del container) — segundo pulso, tapa al primero.
 // Animamos `scale` (transform → compositor) en vez de clip-path para que
 // corra a 60fps sin lag. El swap de contenido ocurre con todo cubierto.
-const EASE_OUT: Transition["ease"] = [0.33, 1, 0.68, 1];
-const COVER_DUR = 0.2;
 const COVER_LAYER_GAP = 0.14; // retardo de la 2ª onda respecto de la 1ª
-const REVEAL_DUR = 0.22;
 const REVEAL_LAYER_GAP = 0.1;
 
 const CATEGORY_HINTS: Record<SupportCategory, string> = {
@@ -213,14 +211,14 @@ export function SupportContactPanel({
   // Onda 1 (primary): entra primero al cubrir, sale última al revelar.
   const layer1Scale = covered ? 1 : 0;
   const layer1Transition: Transition = {
-    duration: covered ? COVER_DUR : REVEAL_DUR,
+    duration: covered ? DURATION.fast : DURATION.base,
     ease: EASE_OUT,
     delay: covered ? 0 : REVEAL_LAYER_GAP,
   };
   // Onda 2 (card): entra última al cubrir, sale primera al revelar.
   const layer2Scale = covered ? 1 : 0;
   const layer2Transition: Transition = {
-    duration: covered ? COVER_DUR : REVEAL_DUR,
+    duration: covered ? DURATION.fast : DURATION.base,
     ease: EASE_OUT,
     delay: covered ? COVER_LAYER_GAP : 0,
   };

@@ -3,6 +3,7 @@ import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useEffect, useMemo, useRef } from "react";
 import { QuoteRow } from "~/features/quote/components/quote-row";
 import { useQuotes } from "~/features/quote/hooks/useQuotes";
+import { DURATION, EASE_OUT } from "~/shared/lib/motion";
 
 export interface SlashState {
   /** Range in the textarea to be replaced on select (e.g. "/cot"). */
@@ -75,7 +76,7 @@ export function SlashQuotePicker({ state, onSelect, onActiveChange, onClose, ori
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
-            transition={{ duration: 0.12, ease: "easeOut" }}
+            transition={{ duration: DURATION.fast, ease: EASE_OUT }}
             className="absolute left-0 right-0 top-full mt-1 z-30 rounded-xl border border-border bg-card shadow-xl overflow-hidden"
             role="listbox"
             aria-label="Cotizaciones para insertar"

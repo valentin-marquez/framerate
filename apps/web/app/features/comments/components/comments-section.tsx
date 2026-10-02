@@ -5,6 +5,7 @@ import { CommentThread } from "~/features/comments/components/comment-thread";
 import { useCreateComment, useProductComments } from "~/features/comments/hooks/useComments";
 import type { CommentSort, CommentTargetType } from "~/features/comments/services/comments";
 import { Button } from "~/shared/components/primitives/button";
+import { DURATION, EASE_IN_OUT } from "~/shared/lib/motion";
 import { cn } from "~/shared/lib/utils";
 
 interface CommentsSectionProps {
@@ -82,7 +83,7 @@ export function CommentsSection({ targetType, targetId, className }: CommentsSec
                   // Reserve bold width even when inactive so the pill (and adjacent
                   // tabs) don't shift horizontally when the active tab changes.
                   className={cn(
-                    "relative px-2.5 py-1 rounded-md transition-colors duration-150",
+                    "relative px-2.5 py-1 rounded-md transition-colors",
                     active ? "text-foreground" : "hover:text-foreground",
                   )}
                   style={
@@ -97,7 +98,7 @@ export function CommentsSection({ targetType, targetId, className }: CommentsSec
                     <m.span
                       layoutId="comments-tab-pill"
                       className="absolute inset-0 rounded-md bg-secondary/70 -z-0"
-                      transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                      transition={{ duration: DURATION.base, ease: EASE_IN_OUT }}
                     />
                   )}
                   <span className={cn("relative z-10", active && "font-medium text-foreground")}>{s.label}</span>
@@ -123,11 +124,7 @@ export function CommentsSection({ targetType, targetId, className }: CommentsSec
 
         <div ref={listRef} className="space-y-5">
           {data?.data.map((root) => (
-            <m.div
-              key={root.id}
-              layout="position"
-              transition={{ type: "spring", stiffness: 380, damping: 34, mass: 0.6 }}
-            >
+            <m.div key={root.id} layout="position" transition={{ duration: DURATION.base, ease: EASE_IN_OUT }}>
               <CommentThread productId={targetId} root={root} sort={sort} />
             </m.div>
           ))}

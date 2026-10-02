@@ -1,5 +1,6 @@
 import { domAnimation, LazyMotion, m } from "motion/react";
 import { useRef, useState } from "react";
+import { DURATION, EASE_IN_OUT } from "~/shared/lib/motion";
 
 export function Logo({ className, isHovered }: { className?: string; isHovered?: boolean }) {
   // El rotation se incrementa exactamente una vez por cada transición false→true.
@@ -30,7 +31,7 @@ export function Logo({ className, isHovered }: { className?: string; isHovered?:
           height="4"
           fill="currentColor"
           animate={{ rotate: rotation }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
+          transition={{ duration: DURATION.slow, ease: EASE_IN_OUT }}
           style={{ transformBox: "fill-box", transformOrigin: "center" }}
         />
       </m.svg>
