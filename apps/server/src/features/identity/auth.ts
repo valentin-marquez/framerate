@@ -105,6 +105,9 @@ export function createAuth(env: Env, options: CreateAuthOptions = {}) {
       // Better Auth apaga el control de Origin/callbackURL con NODE_ENV=test; así los tests ven el de producción.
       disableOriginCheck: false,
       cookiePrefix: "framerate",
+      // Inspeccionar el esquema son ~70 accesos a D1 que cada isolate nuevo espera antes de la primera sesión (~500 ms).
+      // El esquema es de nuestras migraciones, no de Better Auth.
+      database: { validateSchema: false },
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
       crossSubDomainCookies: env.COOKIE_DOMAIN ? { enabled: true, domain: env.COOKIE_DOMAIN } : { enabled: false },
     },
