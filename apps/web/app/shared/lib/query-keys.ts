@@ -1,6 +1,5 @@
 export const productKeys = {
   all: ["products"] as const,
-  priceHistory: (slug: string, days: number) => [...productKeys.all, "price-history", slug, days] as const,
   quickSearch: (query: string) => [...productKeys.all, "quick-search", query] as const,
 };
 

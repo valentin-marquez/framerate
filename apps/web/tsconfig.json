@@ -1,5 +1,7 @@
 {
   "include": ["**/*", "**/.server/**/*", "**/.client/**/*", ".react-router/types/**/*"],
+  // Los tests corren con bun test; sus tipos (bun:test) cambiarían el fetch global del worker.
+  "exclude": ["node_modules", "**/*.test.ts"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2023"],
     "types": ["node", "vite/client"],

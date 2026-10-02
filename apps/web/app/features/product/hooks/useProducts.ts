@@ -10,12 +10,3 @@ export function useQuickSearch(query: string, limit = 10) {
     staleTime: 30000,
   });
 }
-
-export function usePriceHistory(slug: string, days = 30) {
-  return useQuery({
-    queryKey: productKeys.priceHistory(slug, days),
-    queryFn: () => productsService.getPriceHistory(slug, days),
-    enabled: !!slug,
-    staleTime: 5 * 60 * 1000,
-  });
-}

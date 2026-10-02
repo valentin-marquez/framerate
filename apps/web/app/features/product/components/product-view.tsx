@@ -1,49 +1,82 @@
-import type { Offer } from "@framerate/contracts";
-import { IconChevronDown, IconExternalLink } from "@tabler/icons-react";
+import { CATEGORY_LABELS, CATEGORY_SLUGS, type Offer, type PricePoint, type ProductDetail } from "@framerate/contracts";
+import { IconChevronDown, IconChevronRight, IconExternalLink, IconPhotoOff } from "@tabler/icons-react";
+import { Link, useLocation, useNavigation, useSearchParams } from "react-router";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
 import { PriceHistoryChart } from "~/features/product/components/price-history-chart";
+import {
+  type HistorySummary,
+  PERIODS,
+  type Period,
+  periodFromParam,
+  priceVerdict,
+  summarizeHistory,
+} from "~/features/product/utils/price-history";
 import { OutboundLink } from "~/shared/components/outbound-link";
+import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { buttonVariants } from "~/shared/components/primitives/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/shared/components/primitives/select";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
-import type { ProductCase } from "./fixtures";
-import {
-  Breadcrumb,
-  type HistorySummary,
-  ProductPhoto,
-  priceVerdict,
-  StockDot,
-  seenAgo,
-  shortDate,
-  sortOffers,
-  specRows,
-  stockText,
-  summarizeHistory,
-} from "./shared";
+
+interface ProductViewProps {
+  product: ProductDetail;
+  history: PricePoint[];
+  period: Period;
+  /** Hora de la respuesta del loader: "visto hace" y el período se calculan igual en el servidor y al hidratar. */
+  now: number;
+}
 
 /**
- * v2, precio con contexto (Knasta, Geizhals): la foto y la ficha a la izquierda; a la derecha el precio dice si
- * conviene comprar hoy (comparado con su historial) y debajo están las tiendas. Las que no tienen stock se pliegan.
+ * Ficha de producto: la foto y la ficha técnica a la izquierda; a la derecha el precio dice si conviene comprar hoy
+ * (comparado con su historial en el período elegido) y debajo están las tiendas. Las que no tienen stock se pliegan.
  */
-export function ProductPageV2({ product, history }: ProductCase) {
-  const offers = sortOffers(product.offers);
+export function ProductView({ product, history, period, now }: ProductViewProps) {
+  const [, setSearchParams] = useSearchParams();
+  const navigation = useNavigation();
+  const location = useLocation();
+  const changingPeriod = navigation.state === "loading" && navigation.location?.pathname === location.pathname;
+
+  // La API ya las ordena: primero con stock y luego por precio.
+  const offers = product.offers;
   const inStock = offers.filter((o) => o.inStock);
   const outOfStock = offers.filter((o) => !o.inStock);
   const best = offers[0];
   const specs = specRows(product.attributes);
-  const summary = summarizeHistory(history);
+  const summary = summarizeHistory(history, offers, period.days, now);
+
+  const choosePeriod = (key: string) =>
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (key === PERIODS[0].key) next.delete("periodo");
+        else next.set("periodo", key);
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
       <Breadcrumb category={product.category} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10">
-        <ProductPhoto
-          src={product.imageUrl}
-          alt={product.name}
-          className="aspect-[4/3] rounded-3xl lg:col-start-1 lg:row-start-1 lg:aspect-square"
-        />
+        {/* Destino de la foto de la tarjeta de producto (app.css). */}
+        <div
+          className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl bg-[var(--product-stage)] lg:col-start-1 lg:row-start-1 lg:aspect-square"
+          style={{ viewTransitionName: "product-photo" }}
+        >
+          {product.imageUrl ? (
+            <AsyncImage
+              src={product.imageUrl}
+              alt={product.name}
+              priority
+              className="size-full object-contain p-4 mix-blend-multiply"
+            />
+          ) : (
+            <IconPhotoOff className="size-10 text-foreground/20" stroke={1.25} role="img" aria-label="Sin imagen" />
+          )}
+        </div>
 
         <div className="min-w-0 space-y-8 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <header className="space-y-2">
@@ -76,22 +109,22 @@ export function ProductPageV2({ product, history }: ProductCase) {
               </div>
             )}
 
-            {best?.inStock && summary ? (
-              <PriceContext today={best.priceCash} summary={summary} />
-            ) : (
-              best?.inStock && (
+            {best?.inStock &&
+              (summary ? (
+                <PriceContext
+                  today={best.priceCash}
+                  summary={summary}
+                  period={period}
+                  onPeriod={choosePeriod}
+                  busy={changingPeriod}
+                />
+              ) : (
                 <p className="rounded-2xl bg-secondary/60 px-4 py-3 text-muted-foreground text-sm">
                   {history.length > 0
-                    ? `Lo seguimos desde el ${shortDate(
-                        history
-                          .map((p) => p.observedAt)
-                          .toSorted()[0]
-                          ?.slice(0, 10) ?? "",
-                      )}. Con una semana de datos te vamos a decir si es buen precio.`
+                    ? `Lo seguimos desde el ${shortDate(history[0]?.observedAt ?? "")}. Con una semana de datos te vamos a decir si es buen precio.`
                     : "Todavía no tenemos historial para decirte si es buen precio. Lo empezamos a seguir hoy."}
                 </p>
-              )
-            )}
+              ))}
 
             {best && (
               <div className="flex gap-2">
@@ -122,7 +155,7 @@ export function ProductPageV2({ product, history }: ProductCase) {
             {inStock.length > 0 && (
               <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
                 {inStock.map((o) => (
-                  <StoreRow key={o.id} offer={o} productId={product.id} />
+                  <StoreRow key={o.id} offer={o} productId={product.id} now={now} />
                 ))}
               </ul>
             )}
@@ -136,7 +169,7 @@ export function ProductPageV2({ product, history }: ProductCase) {
                 </summary>
                 <ul className="mt-2 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
                   {outOfStock.map((o) => (
-                    <StoreRow key={o.id} offer={o} productId={product.id} />
+                    <StoreRow key={o.id} offer={o} productId={product.id} now={now} />
                   ))}
                 </ul>
               </details>
@@ -144,7 +177,10 @@ export function ProductPageV2({ product, history }: ProductCase) {
           </section>
 
           {history.length > 0 && (
-            <section className="space-y-3">
+            <section
+              aria-busy={changingPeriod}
+              className={cn("space-y-3 transition-opacity", changingPeriod && "opacity-60")}
+            >
               <h2 className="font-semibold text-foreground text-lg tracking-tight">Cómo se ha movido el precio</h2>
               <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
                 {summary && (
@@ -154,25 +190,29 @@ export function ProductPageV2({ product, history }: ProductCase) {
                     <Stat label="Más alto" value={summary.max} />
                   </dl>
                 )}
-                <PriceHistoryChart points={history} days={30} />
+                <PriceHistoryChart points={history} days={period.days} />
               </div>
             </section>
           )}
         </div>
 
-        {specs.length > 0 && (
+        {(specs.length > 0 || product.mpn) && (
           <section className="space-y-3 lg:col-start-1 lg:row-start-2">
-            <h2 className="font-semibold text-foreground text-lg tracking-tight">Ficha técnica</h2>
-            <dl className="grid grid-cols-2 gap-2">
-              {specs.map(([label, value]) => (
-                <div key={label} className="rounded-2xl bg-secondary/60 px-3 py-2.5">
-                  <dt className="text-muted-foreground text-xs">{label}</dt>
-                  <dd className="font-medium text-foreground text-sm">{value}</dd>
-                </div>
-              ))}
-            </dl>
+            {specs.length > 0 && (
+              <>
+                <h2 className="font-semibold text-foreground text-lg tracking-tight">Ficha técnica</h2>
+                <dl className="grid grid-cols-2 gap-2">
+                  {specs.map(([label, value]) => (
+                    <div key={label} className="rounded-2xl bg-secondary/60 px-3 py-2.5">
+                      <dt className="text-muted-foreground text-xs">{label}</dt>
+                      <dd className="font-medium text-foreground text-sm">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            )}
             <p className="text-muted-foreground text-xs">
-              Sacada del nombre del producto en las tiendas.
+              {specs.length > 0 && "Sacada del nombre del producto en las tiendas."}
               {product.mpn && (
                 <span className="block">
                   Código del fabricante <span className="font-mono">{product.mpn}</span>
@@ -186,14 +226,29 @@ export function ProductPageV2({ product, history }: ProductCase) {
   );
 }
 
-/** Veredicto y barra entre el mínimo y el máximo del período, con la marca de hoy. */
-function PriceContext({ today, summary }: { today: number; summary: HistorySummary }) {
+/** Veredicto y barra entre el mínimo y el máximo del período, con la marca de hoy y el selector de período. */
+function PriceContext({
+  today,
+  summary,
+  period,
+  onPeriod,
+  busy,
+}: {
+  today: number;
+  summary: HistorySummary;
+  period: Period;
+  onPeriod: (key: string) => void;
+  busy: boolean;
+}) {
   const verdict = priceVerdict(today, summary);
   const span = summary.max - summary.min;
   const at = span > 0 ? Math.min(1, Math.max(0, (today - summary.min) / span)) : 0.5;
   return (
-    <div className="space-y-3 rounded-2xl bg-secondary/60 p-4">
-      <p className="flex flex-wrap items-center gap-2 text-sm">
+    <div
+      aria-busy={busy}
+      className={cn("space-y-3 rounded-2xl bg-secondary/60 p-4 transition-opacity", busy && "opacity-60")}
+    >
+      <div className="flex flex-wrap items-center gap-2 text-sm">
         <span
           className={cn(
             "rounded-full px-2 py-0.5 font-medium text-xs",
@@ -204,8 +259,24 @@ function PriceContext({ today, summary }: { today: number; summary: HistorySumma
         >
           {verdict.label}
         </span>
-        <span className="text-muted-foreground">Comparado con los últimos {summary.days} días.</span>
-      </p>
+        {/* Si el producto se sigue hace menos que el período, se dice desde cuándo: si no, cambiar a 12 meses
+            parecería no hacer nada. */}
+        <span className="text-muted-foreground">
+          {summary.coversPeriod ? `Comparado con ${period.text}.` : `Con datos desde el ${shortDate(summary.since)}.`}
+        </span>
+        <Select value={period.key} onValueChange={(value) => onPeriod(value as string)}>
+          <SelectTrigger size="sm" aria-label="Período para comparar" className="ml-auto bg-background">
+            <SelectValue>{(value: string) => periodFromParam(value).label}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {PERIODS.map((p) => (
+              <SelectItem key={p.key} value={p.key}>
+                {p.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div className="space-y-1.5">
         <div className="relative h-1.5 rounded-full bg-gradient-to-r from-success/60 via-foreground/15 to-warn/70">
           <span
@@ -232,7 +303,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function StoreRow({ offer: o, productId }: { offer: Offer; productId: number }) {
+function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: number; now: number }) {
   return (
     <li className="relative flex items-center gap-3 px-4 py-3 transition-colors hover:bg-secondary/40">
       <StoreLogo store={o.store} className={cn("size-9", !o.inStock && "opacity-50")} />
@@ -248,10 +319,13 @@ function StoreRow({ offer: o, productId }: { offer: Offer; productId: number }) 
         </OutboundLink>
         <p className="flex flex-wrap items-center gap-x-3 whitespace-nowrap text-muted-foreground text-xs">
           <span className="inline-flex items-center gap-1.5">
-            <StockDot inStock={o.inStock} />
+            <span
+              aria-hidden
+              className={cn("size-1.5 shrink-0 rounded-full", o.inStock ? "bg-success" : "bg-foreground/25")}
+            />
             {stockText(o)}
           </span>
-          <span>{seenAgo(o.lastSeenAt)}</span>
+          <span>{seenAgo(o.lastSeenAt, now)}</span>
         </p>
       </div>
       <div className="text-right tabular-nums">
@@ -263,4 +337,63 @@ function StoreRow({ offer: o, productId }: { offer: Offer; productId: number }) 
       <IconExternalLink aria-hidden className="size-4 shrink-0 text-muted-foreground" />
     </li>
   );
+}
+
+function Breadcrumb({ category }: { category: ProductDetail["category"] }) {
+  return (
+    <nav aria-label="Migas" className="flex items-center gap-1.5 text-muted-foreground text-xs">
+      <Link to="/" className="hover:text-foreground">
+        Inicio
+      </Link>
+      <IconChevronRight className="size-3" />
+      <Link to={`/categoria/${CATEGORY_SLUGS[category]}`} className="hover:text-foreground">
+        {CATEGORY_LABELS[category]}
+      </Link>
+    </nav>
+  );
+}
+
+const relative = new Intl.RelativeTimeFormat("es-CL", { numeric: "auto" });
+
+function seenAgo(iso: string, now: number) {
+  const minutes = Math.max(1, Math.round((now - Date.parse(iso)) / 60_000));
+  if (minutes < 60) return relative.format(-minutes, "minute");
+  const hours = Math.round(minutes / 60);
+  return hours < 24 ? relative.format(-hours, "hour") : relative.format(-Math.round(hours / 24), "day");
+}
+
+function stockText(o: Offer) {
+  if (!o.inStock) return "Sin stock";
+  return o.stockQuantity && o.stockQuantity <= 5 ? `Quedan ${o.stockQuantity}` : "Con stock";
+}
+
+const shortDate = (iso: string) =>
+  new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString("es-CL", { day: "numeric", month: "long" });
+
+const SPEC_LABELS: Record<string, string> = {
+  chipset: "Chip",
+  vram: "Memoria",
+  capacity: "Capacidad",
+  type: "Tipo",
+  speed: "Velocidad",
+  interface: "Interfaz",
+  rpm: "Velocidad de giro",
+  formFactor: "Formato",
+  wattage: "Potencia",
+  efficiency: "Certificación",
+  socket: "Socket",
+};
+const UNITS: Record<string, string> = { vram: " GB", capacity: " GB", speed: " MHz", rpm: " RPM", wattage: " W" };
+const UPPER = new Set(["chipset", "type", "interface", "formFactor", "socket"]);
+
+/** Los atributos que el matching saca del título, como filas legibles. El resto (línea, OC...) sólo le sirve al
+ * matching. */
+function specRows(attributes: ProductDetail["attributes"]): [string, string][] {
+  return Object.entries(attributes).flatMap(([key, value]): [string, string][] => {
+    const label = SPEC_LABELS[key];
+    if (!label || typeof value === "boolean") return [];
+    if (typeof value === "number") return [[label, `${value}${UNITS[key] ?? ""}`]];
+    if (key === "efficiency") return [[label, `80 Plus ${value[0]?.toUpperCase()}${value.slice(1)}`]];
+    return [[label, UPPER.has(key) ? value.toUpperCase() : `${value[0]?.toUpperCase()}${value.slice(1)}`]];
+  });
 }
