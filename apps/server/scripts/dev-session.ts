@@ -7,7 +7,7 @@ import { createAuth } from "../src/features/identity/auth";
 /** Crea (o reutiliza) un usuario en la D1 local y imprime la cabecera `Cookie` de una sesión válida. */
 const [name = "Dev", role = "user"] = process.argv.slice(2);
 
-const { env, dispose } = await getPlatformProxy<Env>({ persist: { path: ".wrangler/state/v3" } });
+const { env, dispose } = await getPlatformProxy<Env>({ persist: { path: "../../.wrangler/state/v3" } });
 const db = createDb(env.DB);
 const email = `${name.toLowerCase().replace(/\W+/g, "")}@local.dev`;
 

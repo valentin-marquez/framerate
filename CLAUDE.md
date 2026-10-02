@@ -36,7 +36,7 @@ Reglas:
 
 ```bash
 bun install
-bun run db:migrate:local      # aplica packages/database/migrations en D1 local
+bun run db:migrate:local      # aplica packages/database/migrations en la D1 local, compartida por server e ingest (.wrangler/state en la raíz)
 bun run dev:server            # API (wrangler dev)
 bun run dev:ingest            # scraping (Cron/Queue/RPC)
 bun run dev:web               # frontend

@@ -4,11 +4,11 @@
   "license": "UNLICENSED",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --persist-to ../../.wrangler/state",
     "deploy": "wrangler deploy",
     "test": "bun test --timeout 20000",
     "check-types": "tsc --noEmit",
-    "db:migrate:local": "wrangler d1 migrations apply framerate --local",
+    "db:migrate:local": "wrangler d1 migrations apply framerate --local --persist-to ../../.wrangler/state",
     "db:migrate:remote": "wrangler d1 migrations apply framerate --remote",
     "cf-typegen": "wrangler types",
     "dev:session": "bun scripts/dev-session.ts"
