@@ -1,6 +1,7 @@
 export * from "./catalog";
 export * from "./categories";
 export * from "./claims";
+export * from "./comments";
 export * from "./health";
 export * from "./identity";
 export * from "./ingest";
