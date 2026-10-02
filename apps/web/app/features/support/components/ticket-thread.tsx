@@ -43,8 +43,8 @@ export function TicketThread({ ticket, token }: TicketThreadProps) {
   }
 
   return (
-    <div className="bg-background/40">
-      <div className="space-y-3 p-3 sm:p-4">
+    <div className="flex flex-1 flex-col bg-background/40">
+      <div className="flex-1 space-y-3 p-3 sm:p-4">
         {messages.map((m, i) => (
           <Bubble key={m.id} message={m} isFirst={i === 0} />
         ))}
