@@ -71,10 +71,12 @@ const deleted: StoreReviewItem = {
 };
 
 const items: StoreReviewItem[] = [pinned, plain, mine, deleted];
-const list = (data: StoreReviewItem[]): StoreReviewsListResponse => ({
+const list = (data: StoreReviewItem[], total = data.length): StoreReviewsListResponse => ({
   data,
-  meta: { limit: 20, offset: 0, total: data.length, sort: "recent" },
+  meta: { limit: 20, offset: 0, total, sort: "recent" },
 });
+// Forma de `useInfiniteQuery`: la lista pagina con Cargar más.
+const firstPage = (data: StoreReviewItem[], total?: number) => ({ pages: [list(data, total)], pageParams: [0] });
 const stats: StoreRatingStats = {
   avg_rating: 4.3,
   total_reviews: 12,
@@ -83,7 +85,7 @@ const stats: StoreRatingStats = {
 
 const withReviews = withQueryData([
   [storeReviewKeys.stats(SLUG), stats],
-  [storeReviewKeys.list(SLUG, "recent", 20, 0), list(items)],
+  [storeReviewKeys.pages(SLUG, "recent"), firstPage(items)],
   [storeReviewKeys.list(SLUG, "recent", 50, 0), list(items)],
 ]);
 
@@ -107,7 +109,7 @@ export const SeccionVacia: Story = {
   decorators: [
     withQueryData([
       [storeReviewKeys.stats(SLUG), { avg_rating: null, total_reviews: 0, distribution: stats.distribution }],
-      [storeReviewKeys.list(SLUG, "recent", 20, 0), list([])],
+      [storeReviewKeys.pages(SLUG, "recent"), firstPage([])],
       [storeReviewKeys.list(SLUG, "recent", 50, 0), list([])],
     ]),
   ],
@@ -129,6 +131,12 @@ export const ResumenCargando: Story = {
 export const Lista: Story = {
   name: "Lista de reseñas",
   decorators: [withReviews],
+  render: () => <ReviewList storeSlug={SLUG} />,
+};
+
+export const ListaConMas: Story = {
+  name: "Lista de reseñas con más páginas",
+  decorators: [withQueryData([[storeReviewKeys.pages(SLUG, "recent"), firstPage(items, 32)]])],
   render: () => <ReviewList storeSlug={SLUG} />,
 };
 

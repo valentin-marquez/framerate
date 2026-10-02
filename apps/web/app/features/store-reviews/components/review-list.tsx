@@ -1,8 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   type ReviewSort,
   type StoreReviewItem,
-  useStoreReviews,
+  storeReviewKeys,
+  useStoreReviewPages,
 } from "~/features/store-reviews/services/store-reviews";
 import { Button } from "~/shared/components/primitives/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/shared/components/primitives/select";
@@ -17,8 +19,6 @@ interface ReviewListProps {
   canManage?: boolean;
 }
 
-const PAGE_SIZE = 20;
-
 const SORT_OPTIONS: { value: ReviewSort; label: string }[] = [
   { value: "recent", label: "Más recientes" },
   { value: "helpful", label: "Más útiles" },
@@ -26,14 +26,14 @@ const SORT_OPTIONS: { value: ReviewSort; label: string }[] = [
 ];
 
 export function ReviewList({ storeSlug, canManage = false }: ReviewListProps) {
+  const queryClient = useQueryClient();
   const [sort, setSort] = useState<ReviewSort>("recent");
-  const [page, setPage] = useState(0);
+  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useStoreReviewPages(
+    storeSlug,
+    sort,
+  );
 
-  const offset = page * PAGE_SIZE;
-  const { data, isLoading, isError } = useStoreReviews(storeSlug, sort, PAGE_SIZE, offset);
-
-  const total = data?.meta.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const total = data?.pages[0]?.meta.total ?? 0;
 
   // El estado vacío lo cubre RatingSummary con un placeholder visual; aquí
   // dejaríamos un mensaje redundante ("Aún no hay reseñas...").
@@ -50,8 +50,9 @@ export function ReviewList({ storeSlug, canManage = false }: ReviewListProps) {
           <Select
             value={sort}
             onValueChange={(value) => {
+              // Sin las páginas cargadas del orden que se deja, volver a él empieza otra vez por la primera.
+              queryClient.removeQueries({ queryKey: storeReviewKeys.pages(storeSlug, sort) });
               setSort(value as ReviewSort);
-              setPage(0);
             }}
           >
             <SelectTrigger size="sm" aria-label="Ordenar reseñas">
@@ -80,37 +81,26 @@ export function ReviewList({ storeSlug, canManage = false }: ReviewListProps) {
       {isError && <p className="text-sm text-destructive">No se pudieron cargar las reseñas.</p>}
 
       <ul className="flex flex-col gap-3">
-        {data?.data.map((review: StoreReviewItem) => (
-          <li key={review.id}>
-            <ReviewCard storeSlug={storeSlug} review={review} canManage={canManage} />
-          </li>
-        ))}
+        {data?.pages
+          .flatMap((page) => page.data)
+          .map((review: StoreReviewItem) => (
+            <li key={review.id}>
+              <ReviewCard storeSlug={storeSlug} review={review} canManage={canManage} />
+            </li>
+          ))}
       </ul>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-border pt-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={page === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-          >
-            Anterior
-          </Button>
-          <span className="text-xs text-muted-foreground">
-            Página {page + 1} de {totalPages}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Siguiente
-          </Button>
-        </div>
+      {hasNextPage && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="self-center"
+          disabled={isFetchingNextPage}
+          onClick={() => fetchNextPage()}
+        >
+          {isFetchingNextPage ? "Cargando…" : "Cargar más"}
+        </Button>
       )}
     </div>
   );

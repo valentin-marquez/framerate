@@ -5,7 +5,7 @@ import type {
   ReviewItem,
   ReviewList,
 } from "@framerate/contracts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "~/shared/lib/api";
 
 export type ReviewSort = "recent" | "helpful" | "rating-desc";
@@ -153,6 +153,7 @@ export const storeReviewKeys = {
   byStore: (slug: string) => [...storeReviewKeys.all, "store", slug] as const,
   list: (slug: string, sort: ReviewSort, limit: number, offset: number) =>
     [...storeReviewKeys.byStore(slug), "list", sort, limit, offset] as const,
+  pages: (slug: string, sort: ReviewSort) => [...storeReviewKeys.byStore(slug), "pages", sort] as const,
   stats: (slug: string) => [...storeReviewKeys.byStore(slug), "stats"] as const,
 };
 
@@ -160,6 +161,18 @@ export function useStoreReviews(slug: string, sort: ReviewSort = "recent", limit
   return useQuery({
     queryKey: storeReviewKeys.list(slug, sort, limit, offset),
     queryFn: () => storeReviewsService.list(slug, sort, limit, offset),
+    enabled: !!slug,
+  });
+}
+
+const REVIEW_PAGE_SIZE = 20;
+
+export function useStoreReviewPages(slug: string, sort: ReviewSort) {
+  return useInfiniteQuery({
+    queryKey: storeReviewKeys.pages(slug, sort),
+    queryFn: ({ pageParam }) => storeReviewsService.list(slug, sort, REVIEW_PAGE_SIZE, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: ({ meta }) => (meta.offset + meta.limit < meta.total ? meta.offset + meta.limit : undefined),
     enabled: !!slug,
   });
 }
