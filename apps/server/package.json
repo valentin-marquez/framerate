@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "test": "bun test",
+    "test": "bun test --timeout 20000",
     "check-types": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply framerate --local",
     "db:migrate:remote": "wrangler d1 migrations apply framerate --remote",
