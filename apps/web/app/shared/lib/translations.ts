@@ -349,7 +349,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     merge_count_reviews: "Reseñas de tiendas",
     merge_count_comments: "Comentarios",
     merge_count_organizations: "Tiendas que administras",
-    merge_count_claims: "Reclamos de tiendas",
+    merge_count_claims: "Verificaciones de tiendas",
     merge_count_quotes: "Cotizaciones",
     merge_count_tickets: "Tickets de soporte",
     merge_before_title: "Antes de unir",

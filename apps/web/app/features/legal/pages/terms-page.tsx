@@ -12,7 +12,7 @@ import { Separator } from "~/shared/components/primitives/separator";
 export function meta() {
   const title = "Términos de servicio - Framerate";
   const description =
-    "Condiciones de uso, licencia PolyForm Noncommercial, marca registrada y reglas para cuentas y tiendas reclamadas en Framerate.cl.";
+    "Condiciones de uso, licencia PolyForm Noncommercial, marca registrada y reglas para cuentas y tiendas verificadas en Framerate.cl.";
 
   return [
     { title },
@@ -75,7 +75,7 @@ export default function Terms() {
           <div className="space-y-4">
             <p>
               Puedes navegar Framerate sin cuenta. Si te registras (con Discord o Google), puedes dejar reseñas a
-              tiendas y reclamar la ficha de una tienda que administres.
+              tiendas y verificar la ficha de una tienda que administres.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
               <li>
@@ -100,18 +100,18 @@ export default function Terms() {
         <section className="grid gap-6 md:grid-cols-[200px_1fr]">
           <div className="flex items-start gap-2 pt-1 text-primary">
             <IconBuildingStore className="size-5" />
-            <h2 className="font-semibold uppercase tracking-wider text-xs pt-1">Tiendas reclamadas</h2>
+            <h2 className="font-semibold uppercase tracking-wider text-xs pt-1">Tiendas verificadas</h2>
           </div>
           <div className="space-y-4">
             <p>
-              Si representas una tienda listada, puedes <span className="font-bold">reclamar</span> su perfil
-              verificando el dominio mediante un registro DNS TXT. Una vez verificada, tú y tu equipo pueden editar el
+              Si representas una tienda listada, puedes <span className="font-bold">verificar</span> su perfil
+              comprobando el dominio mediante un registro DNS TXT. Una vez verificada, tú y tu equipo pueden editar el
               perfil público (logo, descripción, redes), pero no los datos de catálogo, precios ni reseñas de usuarios.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
               <li>
-                Reclamar una tienda implica que tienes autorización para representarla. Reclamos fraudulentos pueden ser
-                revocados sin aviso y el responsable suspendido.
+                Verificar una tienda implica que tienes autorización para representarla. Las verificaciones fraudulentas
+                pueden ser revocadas sin aviso y el responsable suspendido.
               </li>
               <li>
                 Si el registro TXT deja de verificarse, el perfil queda{" "}

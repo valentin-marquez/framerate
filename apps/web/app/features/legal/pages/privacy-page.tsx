@@ -126,12 +126,12 @@ export default function Privacy() {
 
           <div>
             <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-              <IconUserCheck className="size-5 text-primary" /> Tiendas reclamadas
+              <IconUserCheck className="size-5 text-primary" /> Tiendas verificadas
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Si reclamas una tienda, guardamos quién la reclamó, el dominio, el historial de la verificación por DNS y
-              quiénes integran su equipo. La ficha pública muestra que la tienda está verificada; la lista del equipo no
-              se publica.
+              Si verificas una tienda, guardamos quién la verificó, el dominio, el historial de la verificación por DNS
+              y quiénes integran su equipo. La ficha pública muestra que la tienda está verificada; la lista del equipo
+              no se publica.
             </p>
           </div>
 
