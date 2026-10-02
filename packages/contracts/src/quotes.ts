@@ -113,9 +113,12 @@ export type QuoteDetail = z.infer<typeof QuoteDetailSchema>;
 export const QuotePageSchema = pageSchema(QuoteSummarySchema);
 export type QuotePage = z.infer<typeof QuotePageSchema>;
 
+/** Tope de `pageSize`: pedir más da 400, no una página más grande. */
+export const QUOTES_MAX_PAGE_SIZE = 50;
+
 export const QuoteListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(500).default(1),
-  pageSize: z.coerce.number().int().min(1).max(50).default(10),
+  pageSize: z.coerce.number().int().min(1).max(QUOTES_MAX_PAGE_SIZE).default(10),
 });
 export type QuoteListQuery = z.infer<typeof QuoteListQuerySchema>;
 

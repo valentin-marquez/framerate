@@ -1,4 +1,4 @@
-import type { QuoteSummary } from "@framerate/contracts";
+import { QUOTES_MAX_PAGE_SIZE, type QuoteSummary } from "@framerate/contracts";
 import {
   IconAlertCircle,
   IconCalendarFilled,
@@ -60,18 +60,21 @@ export async function loader({ request, params }: Route.LoaderArgs) {
       const [{ user: currentUser }, profileUser, publicQuotes] = await Promise.all([
         getAuthUser(request),
         profilesService.getByUsername(username),
-        quotesOrEmpty(quotesService.getByUsername(username, 1, 100)),
+        quotesOrEmpty(quotesService.getByUsername(username, 1, QUOTES_MAX_PAGE_SIZE)),
       ]);
       const isOwner = currentUser?.username === profileUser.username;
       // El dueño ve también las privadas y las con link, no sólo las públicas.
-      const quotes = isOwner ? await quotesOrEmpty(quotesService.getAll(1, 100)) : publicQuotes;
+      const quotes = isOwner ? await quotesOrEmpty(quotesService.getAll(1, QUOTES_MAX_PAGE_SIZE)) : publicQuotes;
       return { profileUser, quotes, isOwner, currentUser };
     } catch (_error) {
       throw new Response("User not found", { status: 404 });
     }
   }
 
-  const [{ user }, quotes] = await Promise.all([requireAuth(request), quotesOrEmpty(quotesService.getAll(1, 100))]);
+  const [{ user }, quotes] = await Promise.all([
+    requireAuth(request),
+    quotesOrEmpty(quotesService.getAll(1, QUOTES_MAX_PAGE_SIZE)),
+  ]);
   return { profileUser: meToProfile(user), quotes, isOwner: true, currentUser: user };
 }
 
