@@ -13,6 +13,7 @@ import { mergeRoutes } from "@/features/identity/merge.routes";
 import { credentialedCors, optionalUser, requireStaff, requireUser } from "@/features/identity/middleware";
 import type { Actor, SessionUser } from "@/features/identity/types";
 import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
+import { quotesRoutes } from "@/features/quotes/quotes.routes";
 import { storeManagementRoutes } from "@/features/stores/store-management.routes";
 import { storesRoutes } from "@/features/stores/stores.routes";
 import { supportRoutes } from "@/features/support/support.routes";
@@ -41,6 +42,7 @@ export type AppEnv = {
  *   /v1/auth/*    login/logout (Better Auth) + lista de proveedores. CORS con cookies sólo desde la web.
  *   /v1/me        perfil propio y unión de usuarios (`/v1/me/merge`). Requiere sesión.
  *   /v1/support   tickets de soporte: con sesión, o sin cuenta con Turnstile y el token del ticket.
+ *   /v1/quotes    cotizaciones: las ajenas se leen según su visibilidad; escribir exige ser el dueño.
  *   /v1/*         lectura pública (catálogo, perfiles públicos), con caché en el edge.
  *   /v1/admin/*   personal: moderador o superior (sesión), o el token de servicio.
  *
@@ -98,6 +100,12 @@ export function createApp() {
   supportApi.use("*", optionalUser);
   supportApi.route("/", supportRoutes);
 
+  const quotesApi = new Hono<AppEnv>();
+  quotesApi.use("*", credentialedCors);
+  quotesApi.use("*", rateLimit);
+  quotesApi.use("*", optionalUser);
+  quotesApi.route("/", quotesRoutes);
+
   const publicApi = new Hono<AppEnv>();
   publicApi.use("*", credentialedCors);
   publicApi.use("*", rateLimit);
@@ -119,6 +127,7 @@ export function createApp() {
   app.route("/v1/me", meApi);
   app.route("/v1/claims", claimsApi);
   app.route("/v1/support", supportApi);
+  app.route("/v1/quotes", quotesApi);
   app.route("/v1/admin", adminApi);
   app.route("/v1", publicApi);
 

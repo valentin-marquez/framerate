@@ -4,6 +4,7 @@ export * from "./claims";
 export * from "./identity";
 export * from "./ingest";
 export * from "./match-review";
+export * from "./quotes";
 export * from "./specs";
 export * from "./stores";
 export * from "./support";

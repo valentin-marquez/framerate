@@ -1,15 +1,10 @@
 import type { AdminTicket, SupportCategory, SupportStatus, Ticket, TicketMessage } from "@framerate/contracts";
 import { type Db, type SupportMessagesTable, type SupportTicketsTable, toBool } from "@framerate/database";
 import type { Selectable } from "kysely";
+import { newPublicId } from "@/shared/public-id";
 
 export type TicketRow = Selectable<SupportTicketsTable>;
 type MessageRow = Selectable<SupportMessagesTable>;
-
-const PUBLIC_ID_ALPHABET = "ABCDEFGHJKMNPQRSTVWXYZ23456789";
-const newPublicId = () =>
-  Array.from(crypto.getRandomValues(new Uint32Array(8)), (n) => PUBLIC_ID_ALPHABET[n % PUBLIC_ID_ALPHABET.length]).join(
-    "",
-  );
 
 /** Crea el ticket y su primer mensaje en un solo batch. Devuelve el `public_id`. */
 export async function createTicket(
