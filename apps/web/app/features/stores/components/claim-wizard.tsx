@@ -169,14 +169,14 @@ export function ClaimWizard({ initialClaim, initialStore, onDone, onCancel }: Cl
             if (existing.status === "verified") {
               dispatch({ type: "go-verified" });
             }
-            toast.message("Retomamos tu reclamo en curso para esta tienda.");
+            toast.message("Retomamos tu verificación en curso para esta tienda.");
             return;
           }
         } catch {
           // si listMine también falla, seguimos al toast genérico abajo
         }
       }
-      const msg = err instanceof ApiError ? err.message : "No se pudo iniciar el reclamo";
+      const msg = err instanceof ApiError ? err.message : "No se pudo iniciar la verificación";
       toast.error(msg);
       dispatch({ type: "submitting", submitting: false });
     }

@@ -84,7 +84,7 @@ export default function StorePage({ loaderData }: Route.ComponentProps) {
 
       {showClaimCta && !canManage && (
         <section
-          aria-label="Reclamar tienda"
+          aria-label="Verificar tienda"
           className="flex flex-col gap-4 rounded-2xl border border-border/40 bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
         >
           <div className="flex items-start gap-3">
@@ -106,19 +106,19 @@ export default function StorePage({ loaderData }: Route.ComponentProps) {
               to={claimHref}
               className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 self-start rounded-xl bg-secondary px-4 font-medium text-secondary-foreground text-sm transition-all hover:bg-primary hover:text-primary-foreground sm:self-auto"
             >
-              Reclamar tienda
+              Verificar mi tienda
             </Link>
           ) : (
             <LoginDialog
               returnTo={claimHref}
-              title="Inicia sesión para reclamar"
+              title="Inicia sesión para verificar tu tienda"
               description="Necesitas una cuenta para verificar la propiedad y gestionar la tienda después."
               trigger={
                 <button
                   type="button"
                   className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-1.5 self-start rounded-xl bg-secondary px-4 font-medium text-secondary-foreground text-sm transition-all hover:bg-primary hover:text-primary-foreground sm:self-auto"
                 >
-                  Reclamar tienda
+                  Verificar mi tienda
                 </button>
               }
             />

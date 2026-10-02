@@ -25,14 +25,14 @@ const STEPS = [
 ];
 
 /**
- * /reclamar en el sistema nuevo: el asistente que ya existe va en la columna principal y al lado se explica en tres
- * pasos qué va a pasar. Los reclamos anteriores quedan abajo, como filas de Ajustes.
+ * /reclamar (la ruta se mantiene) en el sistema nuevo: el asistente que ya existe va en la columna principal y al lado se explica en tres
+ * pasos qué va a pasar. Las verificaciones anteriores quedan abajo, como filas de Ajustes.
  */
 export function ClaimPage({ claims, initialClaim }: { claims: Claim[]; initialClaim?: ClaimRequest }) {
   return (
     <main className="mx-auto max-w-5xl space-y-10 px-4 py-8">
       <header className="max-w-2xl space-y-2">
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight">Reclama tu tienda</h1>
+        <h1 className="font-semibold text-3xl text-foreground tracking-tight">Verifica tu tienda</h1>
         <p className="text-muted-foreground">
           Verifica que el dominio es tuyo y administra el perfil de tu tienda en Framerate.
         </p>
@@ -64,9 +64,9 @@ export function ClaimPage({ claims, initialClaim }: { claims: Claim[]; initialCl
       {claims.length > 0 && (
         <section className="space-y-4 border-border border-t pt-8">
           <div className="space-y-1">
-            <h2 className="font-semibold text-foreground text-xl">Tus reclamos</h2>
+            <h2 className="font-semibold text-foreground text-xl">Tus verificaciones</h2>
             <p className="text-muted-foreground text-sm">
-              Un reclamo pendiente vence a los 7 días si no encontramos el registro.
+              Una verificación pendiente vence a los 7 días si no encontramos el registro.
             </p>
           </div>
           <ul className="divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card">

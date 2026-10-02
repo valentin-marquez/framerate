@@ -12,7 +12,7 @@ import { type ClaimableStore, storesService } from "../services/stores";
 import type { Route } from "./+types/claim-page";
 
 export function meta() {
-  return [{ title: "Reclamar tienda - Framerate" }];
+  return [{ title: "Verificar tienda - Framerate" }];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -93,7 +93,7 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
     if (preselectError === "not_found") {
       toast.error("No encontramos esa tienda en el catálogo");
     } else if (preselectError === "already_claimed") {
-      toast.message("Esa tienda ya fue reclamada por otra cuenta.");
+      toast.message("Esa tienda ya la verificó otra cuenta.");
     }
   }, [preselectError]);
 
@@ -114,7 +114,7 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-4 pt-8">
       <header>
-        <h1 className="font-semibold text-2xl tracking-tight">Reclama tu tienda</h1>
+        <h1 className="font-semibold text-2xl tracking-tight">Verifica tu tienda</h1>
         <p className="mt-1 text-muted-foreground text-sm">
           Elige tu tienda del catálogo y verifica que el dominio es tuyo. Una vez verificado, podrás gestionar su
           perfil, responder reseñas y más.
@@ -133,7 +133,7 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
 
       {claims.length > 0 && (
         <section className="space-y-3">
-          <h2 className="font-medium text-sm">Tus reclamos</h2>
+          <h2 className="font-medium text-sm">Tus verificaciones</h2>
           <ul className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border">
             {claims.map((c: ClaimRequest) => {
               const resumable = isResumable(c.status);

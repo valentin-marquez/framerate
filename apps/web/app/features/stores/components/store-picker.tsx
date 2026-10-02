@@ -120,7 +120,7 @@ function StoreRow({
             No disponible
           </span>
         ) : (
-          <span className="shrink-0 text-muted-foreground text-xs">Reclamar →</span>
+          <span className="shrink-0 text-muted-foreground text-xs">Verificar →</span>
         )}
       </button>
     </li>

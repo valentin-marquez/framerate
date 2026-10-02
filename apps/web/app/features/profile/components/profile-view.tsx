@@ -40,7 +40,7 @@ export function ProfileView({
   return (
     <div className="mx-auto max-w-4xl space-y-10 px-4 py-8">
       <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+        <div className="flex min-w-0 flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:gap-5 sm:text-left">
           <Avatar src={profile.avatarUrl} name={name} />
           <div className="min-w-0 space-y-3 sm:space-y-2 sm:pt-1">
             <div>
@@ -48,15 +48,17 @@ export function ProfileView({
               <p className="text-muted-foreground">@{profile.username}</p>
             </div>
             {profile.bio && (
-              <p className="max-w-xl whitespace-pre-line text-foreground/85 text-sm leading-relaxed">{profile.bio}</p>
+              <p className="mx-auto max-w-xl whitespace-pre-line text-foreground/85 text-sm leading-relaxed sm:mx-0">
+                {profile.bio}
+              </p>
             )}
-            <p className="inline-flex items-center gap-1.5 text-muted-foreground text-xs">
+            <p className="inline-flex items-center justify-center gap-1.5 text-muted-foreground text-xs">
               <IconCalendar className="size-3.5" stroke={1.75} />
               {t("profile_joined", { date: date(profile.createdAt, { month: "long", year: "numeric" }) })}
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
+        <div className="flex shrink-0 flex-wrap justify-center gap-2 sm:justify-start">
           <Button variant="secondary" onClick={share}>
             <IconShare3 className="size-4" />
             {t("profile_share")}

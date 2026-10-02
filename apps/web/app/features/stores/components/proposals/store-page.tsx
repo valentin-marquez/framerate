@@ -34,13 +34,13 @@ export function StorePage({ store, categories, viewerRole }: StorePageProps) {
       {store.bannerUrl && <img src={store.bannerUrl} alt="" className="h-36 w-full rounded-3xl object-cover sm:h-48" />}
 
       <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
-        <div className="flex min-w-0 items-start gap-4 sm:gap-5">
+        <div className="flex min-w-0 flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:gap-5 sm:text-left">
           <StoreLogo
             store={{ name: store.name, slug: store.slug, icon_url: store.iconUrl }}
             className="size-16 rounded-2xl sm:size-20"
           />
           <div className="min-w-0 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
               <h1 className="font-semibold text-3xl text-foreground tracking-tight">{store.name}</h1>
               {store.verifiedAt && (
                 <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-1.5 py-0.5 font-medium text-foreground text-xs">
@@ -50,14 +50,16 @@ export function StorePage({ store, categories, viewerRole }: StorePageProps) {
               )}
             </div>
             {store.description && (
-              <p className="max-w-2xl text-muted-foreground text-sm leading-relaxed">{store.description}</p>
+              <p className="mx-auto max-w-2xl text-muted-foreground text-sm leading-relaxed sm:mx-0">
+                {store.description}
+              </p>
             )}
-            <p className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
+            <p className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-muted-foreground text-sm sm:justify-start">
               {store.offerCount > 0 && <span>{plural(store.offerCount, "producto", "productos")}</span>}
               <span>En Framerate desde {since(store.createdAt)}</span>
             </p>
             {host && (
-              <div className="flex pt-1">
+              <div className="flex justify-center pt-1 sm:justify-start">
                 <OutboundLink
                   href={store.website ?? store.url}
                   source="store_page"
@@ -109,7 +111,7 @@ export function StorePage({ store, categories, viewerRole }: StorePageProps) {
             text="¿Es tu tienda? Verifica el dominio y podrás editar este perfil y responder reseñas."
           >
             <Link to={`/reclamar?store=${store.slug}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
-              Reclamar tienda
+              Verificar mi tienda
             </Link>
           </Notice>
         )

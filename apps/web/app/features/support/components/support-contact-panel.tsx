@@ -32,7 +32,7 @@ const CATEGORY_HINTS: Record<SupportCategory, string> = {
   privacy: "Datos personales, ARCO",
   data_request: "Exportar o eliminar",
   abuse_report: "Contenido inapropiado",
-  store_issue: "Reclamo, perfil, dueños",
+  store_issue: "Verificación, perfil, dueños",
   bug: "Algo no funciona",
   feature: "Idea o mejora",
   other: "Cualquier otra cosa",
