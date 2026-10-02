@@ -24,6 +24,8 @@ export interface Env {
   COOKIE_DOMAIN?: string;
   /** Base pública de los avatares copiados a R2, si existe. */
   ASSETS_BASE_URL?: string;
+  /** Secreto de Turnstile para tickets de soporte sin cuenta. Sin él, sólo se puede escribir con sesión. */
+  TURNSTILE_SECRET_KEY?: string;
 
   // ─── Proveedores OAuth ─────────────────────────────────────────────────────
   // Un proveedor queda habilitado cuando están sus DOS credenciales (ver features/identity/providers.ts).

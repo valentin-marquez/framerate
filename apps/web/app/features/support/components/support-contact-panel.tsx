@@ -1,29 +1,20 @@
-import {
-  IconAlertTriangle,
-  IconBug,
-  IconBuildingStore,
-  IconCheck,
-  IconCircleCheck,
-  IconDatabase,
-  IconHelp,
-  IconLoader2,
-  IconMessageCircle,
-  IconShieldLock,
-  IconSparkles,
-  IconX,
-} from "@tabler/icons-react";
+import type { CreatedTicket, CreateTicketRequest, SupportCategory } from "@framerate/contracts";
+import { IconCheck, IconCircleCheck, IconLoader2, IconLogin2, IconMessageCircle, IconX } from "@tabler/icons-react";
 import { domAnimation, LazyMotion, MotionConfig, m, type Transition } from "motion/react";
 import { type FormEvent, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
+import { LoginDialog } from "~/features/auth/components/login-dialog";
 import { useUser } from "~/features/auth/hooks/useAuth";
+import { CopyField } from "~/shared/components/copy-field";
 import { Button } from "~/shared/components/primitives/button";
 import { Input } from "~/shared/components/primitives/input";
 import { Label } from "~/shared/components/primitives/label";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
-import { type CreateTicketPayload, type SupportCategory, supportClient } from "../services/support";
+import { CATEGORY_ICONS, CATEGORY_LABELS } from "../lib/labels";
+import { SUPPORT_EMAIL, supportClient } from "../services/support";
 import { TurnstileWidget } from "./turnstile-widget";
 
 const TURNSTILE_CONFIGURED = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
@@ -39,22 +30,22 @@ const COVER_LAYER_GAP = 0.14; // retardo de la 2ª onda respecto de la 1ª
 const REVEAL_DUR = 0.22;
 const REVEAL_LAYER_GAP = 0.1;
 
-interface CategoryOption {
-  id: SupportCategory;
-  label: string;
-  hint: string;
-  Icon: typeof IconHelp;
-}
+const CATEGORY_HINTS: Record<SupportCategory, string> = {
+  privacy: "Datos personales, ARCO",
+  data_request: "Exportar o eliminar",
+  abuse_report: "Contenido inapropiado",
+  store_issue: "Reclamo, perfil, dueños",
+  bug: "Algo no funciona",
+  feature: "Idea o mejora",
+  other: "Cualquier otra cosa",
+};
 
-const CATEGORIES: CategoryOption[] = [
-  { id: "privacy", label: "Privacidad", hint: "Datos personales, ARCO", Icon: IconShieldLock },
-  { id: "data_request", label: "Mis datos", hint: "Exportar o eliminar", Icon: IconDatabase },
-  { id: "abuse_report", label: "Abuso", hint: "Contenido inapropiado", Icon: IconAlertTriangle },
-  { id: "store_issue", label: "Tienda", hint: "Reclamo, perfil, dueños", Icon: IconBuildingStore },
-  { id: "bug", label: "Bug", hint: "Algo no funciona", Icon: IconBug },
-  { id: "feature", label: "Sugerencia", hint: "Idea o mejora", Icon: IconSparkles },
-  { id: "other", label: "Otro", hint: "Cualquier otra cosa", Icon: IconHelp },
-];
+const CATEGORIES = (Object.keys(CATEGORY_HINTS) as SupportCategory[]).map((id) => ({
+  id,
+  label: CATEGORY_LABELS[id],
+  hint: CATEGORY_HINTS[id],
+  Icon: CATEGORY_ICONS[id],
+}));
 
 type ViewKind = "idle" | "form" | "done";
 type WipePhase = null | "cover" | "reveal";
@@ -81,7 +72,7 @@ export function SupportContactPanel({
   const [wipe, setWipe] = useState<WipePhase>(null);
   const pendingViewRef = useRef<ViewKind>("idle");
   const [submitting, setSubmitting] = useState(false);
-  const [doneTicketId, setDoneTicketId] = useState<string | null>(null);
+  const [created, setCreated] = useState<CreatedTicket | null>(null);
   const [category, setCategory] = useState<SupportCategory>(defaultCategory);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -153,7 +144,7 @@ export function SupportContactPanel({
         toast.error("Necesitamos un email para responderte.");
         return;
       }
-      if (TURNSTILE_CONFIGURED && !turnstileToken) {
+      if (!turnstileToken) {
         toast.error("Espera a que termine la verificación anti-spam.");
         return;
       }
@@ -161,29 +152,61 @@ export function SupportContactPanel({
 
     setSubmitting(true);
     try {
-      const payload: CreateTicketPayload = {
+      const payload: CreateTicketRequest = {
         category,
         subject: trimmedSubject,
         body: trimmedBody,
       };
       if (!isAuthed) {
         payload.email = email.trim();
-        payload.turnstile_token = turnstileToken ?? undefined;
+        payload.turnstileToken = turnstileToken ?? undefined;
       }
 
-      const result = await supportClient.create(payload);
-      setDoneTicketId(result.id);
+      setCreated(await supportClient.create(payload));
       transitionTo("done");
     } catch (error) {
       setTurnstileResetKey((k) => k + 1);
       setTurnstileToken(null);
-      const message = error instanceof ApiError ? error.message : "No pudimos enviar tu mensaje. Inténtalo de nuevo.";
+      const message =
+        error instanceof ApiError && error.code === "support_unavailable"
+          ? `El formulario no está disponible ahora. Escríbenos a ${SUPPORT_EMAIL}.`
+          : error instanceof ApiError
+            ? error.message
+            : "No pudimos enviar tu mensaje. Inténtalo de nuevo.";
       toast.error(message);
     } finally {
       setSubmitting(false);
     }
   }
 
+  // Sin captcha no se aceptan tickets anónimos (la API responde 503): no tiene sentido mostrar el formulario.
+  if (!isAuthed && !TURNSTILE_CONFIGURED) {
+    return (
+      <div className="rounded-2xl border border-border/40 bg-card p-6 text-center">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Inicia sesión para escribirle a soporte desde aquí, o escríbenos a{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="font-medium text-foreground underline">
+            {SUPPORT_EMAIL}
+          </a>
+          .
+        </p>
+        <LoginDialog
+          title="Inicia sesión para escribir"
+          description="Con tu cuenta, tus consultas y nuestras respuestas quedan en Mis tickets."
+          trigger={
+            <Button type="button" className="h-10 rounded-xl px-8">
+              <IconLogin2 className="size-4" />
+              Iniciar sesión
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  const trackingPath = created?.accessToken
+    ? `/soporte/${encodeURIComponent(created.id)}?t=${encodeURIComponent(created.accessToken)}`
+    : null;
   const isFormView = view === "form";
   const covered = wipe === "cover";
 
@@ -222,8 +245,8 @@ export function SupportContactPanel({
                   <h3 className="font-semibold tracking-tight text-lg">Contactar a soporte</h3>
                   <p className="text-sm text-muted-foreground">
                     {isAuthed
-                      ? "Te respondemos dentro de la plataforma. Recibirás las respuestas en tu cuenta."
-                      : "Te respondemos al email que nos dejes. Si tienes cuenta, inicia sesión para ver la conversación dentro del sitio."}
+                      ? "Te respondemos dentro de la plataforma. Verás las respuestas en Mis tickets."
+                      : "Al enviar te damos un enlace para seguir la conversación y ver nuestras respuestas. Si tienes cuenta, inicia sesión para verla en Mis tickets."}
                   </p>
                 </div>
                 <Button
@@ -342,7 +365,7 @@ export function SupportContactPanel({
                   <p className="text-[11px] text-muted-foreground text-right">{body.length}/5000</p>
                 </div>
 
-                {!isAuthed && TURNSTILE_CONFIGURED && (
+                {!isAuthed && (
                   <div className="space-y-2">
                     <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                       Verificación anti-spam
@@ -355,11 +378,6 @@ export function SupportContactPanel({
                     />
                   </div>
                 )}
-                {!isAuthed && !TURNSTILE_CONFIGURED && (
-                  <p className="text-xs text-muted-foreground italic">
-                    Captcha desactivado en este entorno (sin <code>VITE_TURNSTILE_SITE_KEY</code>).
-                  </p>
-                )}
 
                 <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
                   <Button
@@ -371,11 +389,7 @@ export function SupportContactPanel({
                   >
                     Cancelar
                   </Button>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={submitting || (!isAuthed && TURNSTILE_CONFIGURED && !turnstileToken)}
-                  >
+                  <Button type="submit" size="sm" disabled={submitting || (!isAuthed && !turnstileToken)}>
                     {submitting ? <IconLoader2 className="size-4 animate-spin" /> : <IconCheck className="size-4" />}
                     {submitting ? "Enviando…" : "Enviar"}
                   </Button>
@@ -412,12 +426,31 @@ export function SupportContactPanel({
                   <h3 className="font-semibold text-lg tracking-tight">Mensaje enviado</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Recibimos tu ticket{" "}
-                    <code className="text-xs bg-background/60 px-1.5 py-0.5 rounded border border-border/60">
-                      {doneTicketId?.slice(0, 8) ?? ""}
+                    <code className="text-xs bg-background/60 px-1.5 py-0.5 rounded border border-border/60 break-all">
+                      {created?.id}
                     </code>
-                    . Un miembro del equipo te responde dentro de la plataforma.
+                    .{" "}
+                    {trackingPath
+                      ? "Te respondemos en el enlace de seguimiento."
+                      : "Te respondemos dentro de la plataforma, en Mis tickets."}
                   </p>
+                  {trackingPath && (
+                    <div className="space-y-2 pt-1">
+                      <CopyField label="Enlace de seguimiento" value={`${window.location.origin}${trackingPath}`} />
+                      <p className="text-xs text-muted-foreground">
+                        Es la única forma de ver el ticket sin cuenta. Guárdalo y no lo compartas.
+                      </p>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2 pt-2">
+                    {trackingPath && (
+                      <Link
+                        to={trackingPath}
+                        className="inline-flex h-8 items-center justify-center gap-1 rounded-xl bg-secondary/70 px-3 text-sm font-medium text-secondary-foreground/80 transition-colors hover:bg-primary hover:text-primary-foreground"
+                      >
+                        Abrir el ticket
+                      </Link>
+                    )}
                     {isAuthed && (
                       <Link
                         to="/ajustes/tickets"

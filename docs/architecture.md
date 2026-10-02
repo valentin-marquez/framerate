@@ -87,6 +87,7 @@ apps/
         identity/               login (Better Auth), sesión, perfil, roles y sanciones
         stores/                 perfil de tienda, miembros y reseñas
         claims/                 reclamo de tiendas por DNS (ver stores.md)
+        support/                tickets de soporte (usuarios y anónimos con token) y bandeja del personal
         users-admin/            admin: buscar usuarios, suspender, cambiar rol
         crawl-admin/            admin: historial de corridas y cuarentena, "crawlear ahora"
         match-review/           admin: cola de revisión humana de matches

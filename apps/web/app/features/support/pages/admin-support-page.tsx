@@ -1,18 +1,13 @@
+import type { AdminTicketDetail, SupportStatus, TicketMessage } from "@framerate/contracts";
 import {
-  IconAlertTriangle,
-  IconBug,
-  IconBuildingStore,
   IconCheck,
   IconChecks,
-  IconDatabase,
   IconHelp,
   IconLifebuoy,
   IconLoader2,
   IconLock,
   IconLockOpen,
   IconRefresh,
-  IconShieldLock,
-  IconSparkles,
   IconUserCheck,
 } from "@tabler/icons-react";
 import { domAnimation, LazyMotion, m, type Transition } from "motion/react";
@@ -26,49 +21,12 @@ import { Switch } from "~/shared/components/primitives/switch";
 import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
-import {
-  adminSupportClient,
-  type SupportCategory,
-  type SupportStatus,
-  type SupportTicketMessage,
-} from "../services/support";
+import { formatDateTime } from "~/shared/utils/format";
+import { CATEGORY_ICONS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS as USER_STATUS_LABELS } from "../lib/labels";
+import { adminSupportClient } from "../services/support";
 import type { Route } from "./+types/admin-support-page";
 
-const CATEGORY_LABELS: Record<SupportCategory, string> = {
-  privacy: "Privacidad",
-  data_request: "Mis datos",
-  abuse_report: "Abuso",
-  store_issue: "Tienda",
-  bug: "Bug",
-  feature: "Sugerencia",
-  other: "Otro",
-};
-
-const CATEGORY_ICONS: Record<SupportCategory, typeof IconHelp> = {
-  privacy: IconShieldLock,
-  data_request: IconDatabase,
-  abuse_report: IconAlertTriangle,
-  store_issue: IconBuildingStore,
-  bug: IconBug,
-  feature: IconSparkles,
-  other: IconHelp,
-};
-
-const STATUS_LABELS: Record<SupportStatus, string> = {
-  open: "Abierto",
-  in_progress: "En curso",
-  waiting_user: "Esperando user",
-  resolved: "Resuelto",
-  closed: "Cerrado",
-};
-
-const STATUS_COLORS: Record<SupportStatus, string> = {
-  open: "text-warn bg-warn/10",
-  in_progress: "text-primary bg-primary/10",
-  waiting_user: "text-primary bg-primary/10",
-  resolved: "text-success bg-success/10",
-  closed: "text-muted-foreground bg-secondary",
-};
+const STATUS_LABELS: Record<SupportStatus, string> = { ...USER_STATUS_LABELS, waiting_user: "Esperando respuesta" };
 
 const STATUS_FILTERS: Array<SupportStatus | "all"> = [
   "open",
@@ -96,9 +54,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const statusFilter = (url.searchParams.get("status") as SupportStatus | null) ?? null;
 
-  const { tickets } = await adminSupportClient.list({ status: statusFilter ?? undefined, limit: 100 });
+  const { items } = await adminSupportClient.list({ status: statusFilter ?? undefined, limit: 100 });
 
-  return { tickets, currentUserId: user.id };
+  return { tickets: items, currentUserId: user.id };
 }
 
 export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
@@ -210,14 +168,14 @@ export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
                           >
                             {STATUS_LABELS[ticket.status]}
                           </span>
-                          {ticket.assigned_to === currentUserId && (
+                          {ticket.assignedTo === currentUserId && (
                             <span className="text-[10px] text-primary font-medium">tuyo</span>
                           )}
                         </div>
                         <p className="text-sm font-medium truncate mt-1">{ticket.subject}</p>
                         <p className="text-xs text-muted-foreground truncate">{ticket.email}</p>
                         <p className="text-[11px] text-muted-foreground/70 mt-0.5">
-                          {new Date(ticket.last_message_at).toLocaleString("es-CL")}
+                          {formatDateTime(ticket.lastMessageAt)}
                         </p>
                       </div>
                     </button>
@@ -250,8 +208,8 @@ interface TicketThreadProps {
 function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
   const revalidator = useRevalidator();
   const [loading, setLoading] = useState(true);
-  const [ticket, setTicket] = useState<Awaited<ReturnType<typeof adminSupportClient.get>>["ticket"] | null>(null);
-  const [messages, setMessages] = useState<SupportTicketMessage[]>([]);
+  const [ticket, setTicket] = useState<AdminTicketDetail | null>(null);
+  const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [reply, setReply] = useState("");
   const [isInternal, setIsInternal] = useState(false);
   const [sending, setSending] = useState(false);
@@ -269,7 +227,7 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
       .get(ticketId)
       .then((res) => {
         if (cancelled) return;
-        setTicket(res.ticket);
+        setTicket(res);
         setMessages(res.messages);
       })
       .catch((err) => {
@@ -313,7 +271,7 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
     try {
       const updated = await adminSupportClient.update(ticketId, { status });
       setTicket((prev) => (prev ? { ...prev, status: updated.status } : prev));
-      toast.success(`Status actualizado: ${STATUS_LABELS[updated.status]}`);
+      toast.success(`Estado actualizado: ${STATUS_LABELS[updated.status]}`);
       revalidator.revalidate();
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : "No pudimos actualizar";
@@ -323,8 +281,8 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
 
   async function assignToMe() {
     try {
-      await adminSupportClient.update(ticketId, { assign_to_self: true });
-      setTicket((prev) => (prev ? { ...prev, assigned_to: currentUserId } : prev));
+      const updated = await adminSupportClient.update(ticketId, { assignToSelf: true });
+      setTicket((prev) => (prev ? { ...prev, assignedTo: updated.assignedTo } : prev));
       toast.success("Asignado a ti");
       revalidator.revalidate();
     } catch (err) {
@@ -380,13 +338,13 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
                     <h2 className="text-lg font-semibold mt-1">{ticket.subject}</h2>
                     <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground mt-0.5">
                       <span>{ticket.email}</span>
-                      <span>{ticket.user_id ? "Con cuenta" : "Anónimo"}</span>
-                      <span>{new Date(ticket.created_at).toLocaleString("es-CL")}</span>
+                      <span>{ticket.userId ? "Con cuenta" : "Anónimo"}</span>
+                      <span>{formatDateTime(ticket.createdAt)}</span>
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {ticket.assigned_to !== currentUserId && (
+                  {ticket.assignedTo !== currentUserId && (
                     <Button size="sm" variant="secondary" onClick={assignToMe}>
                       <IconUserCheck className="size-4" /> Asignármelo
                     </Button>
@@ -415,27 +373,21 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
               </header>
 
               <div ref={messagesRef} className="thread-scroll px-6 py-4 space-y-4 max-h-[55vh] overflow-y-auto">
-                <MessageBubble
-                  authorRole="user"
-                  body={ticket.body}
-                  createdAt={ticket.created_at}
-                  isInternalNote={false}
-                  isOriginalMessage
-                />
-                {messages.map((m) => (
+                {messages.map((m, i) => (
                   <MessageBubble
                     key={m.id}
-                    authorRole={m.author_role}
+                    authorRole={m.authorRole}
                     body={m.body}
-                    createdAt={m.created_at}
-                    isInternalNote={m.is_internal_note}
+                    createdAt={m.createdAt}
+                    isInternalNote={m.isInternal}
+                    isOriginalMessage={i === 0}
                   />
                 ))}
               </div>
 
               <footer className="border-t border-border p-4 space-y-3 bg-secondary/20">
                 <Textarea
-                  placeholder={isInternal ? "Nota interna (sólo staff)…" : "Escribir respuesta al usuario…"}
+                  placeholder={isInternal ? "Nota interna (sólo el equipo)…" : "Escribe una respuesta al usuario…"}
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
                   rows={3}
@@ -487,7 +439,7 @@ interface MessageBubbleProps {
 
 function MessageBubble({ authorRole, body, createdAt, isInternalNote, isOriginalMessage }: MessageBubbleProps) {
   const isStaff = authorRole === "staff";
-  const timestamp = new Date(createdAt).toLocaleString("es-CL");
+  const timestamp = formatDateTime(createdAt);
 
   // Nota interna: no es parte de la conversación con el usuario. Se renderiza
   // como un callout a ancho completo, con acento `warn` e icono de candado,
@@ -498,7 +450,7 @@ function MessageBubble({ authorRole, body, createdAt, isInternalNote, isOriginal
         <div className="flex items-center gap-1.5 mb-1">
           <IconLock className="size-3.5 text-warn" />
           <span className="text-[11px] uppercase tracking-wider font-semibold text-warn">Nota interna</span>
-          <span className="text-[11px] text-muted-foreground">Sólo staff</span>
+          <span className="text-[11px] text-muted-foreground">Sólo el equipo</span>
           <span className="text-[11px] text-muted-foreground">{timestamp}</span>
         </div>
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{body}</p>
@@ -518,8 +470,8 @@ function MessageBubble({ authorRole, body, createdAt, isInternalNote, isOriginal
       >
         <div className="flex items-center gap-2 mb-1">
           <span className="text-[11px] uppercase tracking-wider font-medium opacity-80">
-            {authorRole === "user" ? "Usuario" : authorRole === "staff" ? "Staff" : "Sistema"}
-            {isOriginalMessage && <span className="ml-2 opacity-70">original</span>}
+            {authorRole === "user" ? "Usuario" : authorRole === "staff" ? "Equipo" : "Sistema"}
+            {isOriginalMessage && <span className="ml-2 opacity-70">consulta</span>}
           </span>
           <span className="text-[11px] opacity-60">{timestamp}</span>
         </div>

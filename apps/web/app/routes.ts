@@ -9,6 +9,7 @@ export default [
   // Info
   route("privacidad", "features/legal/pages/privacy-page.tsx"),
   route("terminos", "features/legal/pages/terms-page.tsx"),
+  route("soporte/:id", "features/support/pages/ticket-page.tsx"),
 
   // Products & Categories
   route("explorar", "features/explore/pages/explore-page.tsx"),

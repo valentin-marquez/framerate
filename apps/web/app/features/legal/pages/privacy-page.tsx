@@ -9,11 +9,9 @@ import {
   IconUserShield,
 } from "@tabler/icons-react";
 import { SupportContactPanel } from "~/features/support/components/support-contact-panel";
-import { SUPPORT_API_ENABLED } from "~/features/support/services/support";
+import { SUPPORT_EMAIL } from "~/features/support/services/support";
 
 import type { Route } from "./+types/privacy-page";
-
-const CONTACT_EMAIL = "soporte@framerate.cl";
 
 export function meta(_: Route.MetaArgs) {
   const title = "Privacidad - Framerate";
@@ -178,8 +176,8 @@ export default function Privacy() {
               <span className="font-medium text-foreground">acceso, rectificación, cancelación y oposición</span> sobre
               tus datos personales (Ley 19.628 y, desde su entrada en vigencia, Ley 21.719). Para ejercerlos, escríbenos
               a{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-foreground underline">
-                {CONTACT_EMAIL}
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="font-medium text-foreground underline">
+                {SUPPORT_EMAIL}
               </a>{" "}
               desde el correo de tu cuenta. Todavía no hay un botón para eliminar la cuenta; mientras llega, lo hacemos
               a mano.
@@ -189,7 +187,7 @@ export default function Privacy() {
             </p>
           </div>
 
-          {SUPPORT_API_ENABLED && <SupportContactPanel defaultCategory="privacy" />}
+          <SupportContactPanel defaultCategory="privacy" />
         </section>
       </div>
     </div>

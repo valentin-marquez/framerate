@@ -9,11 +9,13 @@ import { crawlAdminRoutes } from "@/features/crawl-admin/crawl-admin.routes";
 import { getAuth } from "@/features/identity/auth";
 import { authProvidersRoutes, meRoutes, publicProfileRoutes } from "@/features/identity/identity.routes";
 import { mergeRoutes } from "@/features/identity/merge.routes";
-import { credentialedCors, requireStaff, requireUser } from "@/features/identity/middleware";
+import { credentialedCors, optionalUser, requireStaff, requireUser } from "@/features/identity/middleware";
 import type { Actor, SessionUser } from "@/features/identity/types";
 import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
 import { storeManagementRoutes } from "@/features/stores/store-management.routes";
 import { storesRoutes } from "@/features/stores/stores.routes";
+import { supportRoutes } from "@/features/support/support.routes";
+import { supportAdminRoutes } from "@/features/support/support-admin.routes";
 import { usersAdminRoutes } from "@/features/users-admin/users-admin.routes";
 import { handleError, notFound } from "@/shared/http/errors";
 import { rateLimit } from "@/shared/http/middleware";
@@ -35,6 +37,7 @@ export type AppEnv = {
  *
  *   /v1/auth/*    login/logout (Better Auth) + lista de proveedores. CORS con cookies sólo desde la web.
  *   /v1/me        perfil propio y unión de usuarios (`/v1/me/merge`). Requiere sesión.
+ *   /v1/support   tickets de soporte: con sesión, o sin cuenta con Turnstile y el token del ticket.
  *   /v1/*         lectura pública (catálogo, perfiles públicos), con caché en el edge.
  *   /v1/admin/*   personal: moderador o superior (sesión), o el token de servicio.
  *
@@ -72,6 +75,12 @@ export function createApp() {
   claimsApi.use("*", requireUser);
   claimsApi.route("/", claimsRoutes);
 
+  const supportApi = new Hono<AppEnv>();
+  supportApi.use("*", credentialedCors);
+  supportApi.use("*", rateLimit);
+  supportApi.use("*", optionalUser);
+  supportApi.route("/", supportRoutes);
+
   const publicApi = new Hono<AppEnv>();
   publicApi.use("*", credentialedCors);
   publicApi.use("*", rateLimit);
@@ -86,11 +95,13 @@ export function createApp() {
   adminApi.route("/", crawlAdminRoutes);
   adminApi.route("/", matchReviewRoutes);
   adminApi.route("/", claimsAdminRoutes);
+  adminApi.route("/support", supportAdminRoutes);
   adminApi.route("/users", usersAdminRoutes);
 
   app.route("/v1/auth", authApi);
   app.route("/v1/me", meApi);
   app.route("/v1/claims", claimsApi);
+  app.route("/v1/support", supportApi);
   app.route("/v1/admin", adminApi);
   app.route("/v1", publicApi);
 

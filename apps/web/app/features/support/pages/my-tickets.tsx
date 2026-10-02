@@ -1,67 +1,13 @@
-import {
-  IconAlertTriangle,
-  IconBug,
-  IconBuildingStore,
-  IconCheck,
-  IconDatabase,
-  IconHelp,
-  IconLifebuoy,
-  IconLoader2,
-  IconShieldLock,
-  IconSparkles,
-} from "@tabler/icons-react";
+import type { Ticket, TicketDetail } from "@framerate/contracts";
+import { IconLifebuoy, IconLoader2 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { getAuthUser } from "~/features/auth/services/auth.server";
-import { Button } from "~/shared/components/primitives/button";
-import { Textarea } from "~/shared/components/primitives/textarea";
 import { ApiError } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
-import {
-  type SupportCategory,
-  type SupportStatus,
-  type SupportTicket,
-  type SupportTicketMessage,
-  supportClient,
-} from "../services/support";
+import { TicketThread } from "../components/ticket-thread";
+import { CATEGORY_ICONS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS } from "../lib/labels";
+import { supportClient } from "../services/support";
 import type { Route } from "./+types/my-tickets";
-
-const CATEGORY_LABELS: Record<SupportCategory, string> = {
-  privacy: "Privacidad",
-  data_request: "Mis datos",
-  abuse_report: "Abuso",
-  store_issue: "Tienda",
-  bug: "Bug",
-  feature: "Sugerencia",
-  other: "Otro",
-};
-
-const CATEGORY_ICONS: Record<SupportCategory, typeof IconHelp> = {
-  privacy: IconShieldLock,
-  data_request: IconDatabase,
-  abuse_report: IconAlertTriangle,
-  store_issue: IconBuildingStore,
-  bug: IconBug,
-  feature: IconSparkles,
-  other: IconHelp,
-};
-
-const STATUS_LABELS: Record<SupportStatus, string> = {
-  open: "Abierto",
-  in_progress: "En curso",
-  waiting_user: "Te respondieron",
-  resolved: "Resuelto",
-  closed: "Cerrado",
-};
-
-const STATUS_COLORS: Record<SupportStatus, string> = {
-  open: "text-warn bg-warn/10",
-  in_progress: "text-primary bg-primary/10",
-  waiting_user: "text-primary bg-primary/10",
-  resolved: "text-success bg-success/10",
-  closed: "text-muted-foreground bg-secondary",
-};
-
-const CLOSED_STATUSES = new Set<SupportStatus>(["closed", "resolved"]);
 
 export function meta() {
   return [{ title: "Mis tickets - Framerate" }, { name: "robots", content: "noindex, nofollow" }];
@@ -71,9 +17,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await getAuthUser(request);
   if (!user) throw new Response("Unauthorized", { status: 401 });
 
-  // El soporte aún no existe en la API nueva: sin él la página igual carga, vacía.
-  const { tickets } = await supportClient.listMine().catch(() => ({ tickets: [] }));
-  return { tickets };
+  const { items } = await supportClient.listMine();
+  return { tickets: items };
 }
 
 export default function MyTicketsSettings({ loaderData }: Route.ComponentProps) {
@@ -111,7 +56,7 @@ export default function MyTicketsSettings({ loaderData }: Route.ComponentProps) 
 }
 
 interface TicketRowProps {
-  ticket: SupportTicket;
+  ticket: Ticket;
   expanded: boolean;
   onToggle: () => void;
 }
@@ -124,6 +69,7 @@ function TicketRow({ ticket, expanded, onToggle }: TicketRowProps) {
       <button
         type="button"
         onClick={onToggle}
+        aria-expanded={expanded}
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-secondary/40 transition-colors cursor-pointer"
       >
         <Icon className="size-4 shrink-0 text-muted-foreground" />
@@ -131,7 +77,7 @@ function TicketRow({ ticket, expanded, onToggle }: TicketRowProps) {
           <p className="text-sm font-medium truncate">{ticket.subject}</p>
           <p className="flex gap-3 text-xs text-muted-foreground">
             <span>{CATEGORY_LABELS[ticket.category]}</span>
-            <span>{new Date(ticket.created_at).toLocaleDateString("es-CL")}</span>
+            <span>{new Date(ticket.createdAt).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })}</span>
           </p>
         </div>
         <span
@@ -144,139 +90,41 @@ function TicketRow({ ticket, expanded, onToggle }: TicketRowProps) {
         </span>
       </button>
 
-      {expanded && <TicketThread ticketId={ticket.id} ticketStatus={ticket.status} />}
+      {expanded && <TicketDetailPanel ticketId={ticket.id} />}
     </li>
   );
 }
 
-interface TicketThreadProps {
-  ticketId: string;
-  ticketStatus: SupportStatus;
-}
-
-function TicketThread({ ticketId, ticketStatus }: TicketThreadProps) {
-  const [loading, setLoading] = useState(true);
-  const [ticketBody, setTicketBody] = useState<string | null>(null);
-  const [createdAt, setCreatedAt] = useState<string | null>(null);
-  const [messages, setMessages] = useState<SupportTicketMessage[]>([]);
-  const [reply, setReply] = useState("");
-  const [sending, setSending] = useState(false);
+function TicketDetailPanel({ ticketId }: { ticketId: string }) {
+  const [ticket, setTicket] = useState<TicketDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     supportClient
       .get(ticketId)
       .then((res) => {
-        if (cancelled) return;
-        setTicketBody(res.ticket.body);
-        setCreatedAt(res.ticket.created_at);
-        setMessages(res.messages.filter((m) => !m.is_internal_note));
+        if (!cancelled) setTicket(res);
       })
       .catch((err) => {
-        if (!cancelled) {
-          setTicketBody(err instanceof ApiError ? `No pudimos cargar el ticket: ${err.message}` : "Error al cargar.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setError(err instanceof ApiError ? err.message : "No pudimos cargar el ticket.");
       });
     return () => {
       cancelled = true;
     };
   }, [ticketId]);
 
-  async function sendReply() {
-    if (sending) return;
-    const text = reply.trim();
-    if (text.length < 1) return;
-    setSending(true);
-    try {
-      const created = await supportClient.reply(ticketId, text);
-      setMessages((prev) => [...prev, created]);
-      setReply("");
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "No pudimos enviar tu respuesta.";
-      setReply((r) => r);
-      window.alert(msg);
-    } finally {
-      setSending(false);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="border-t border-border/60 p-6 flex justify-center">
-        <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  const canReply = !CLOSED_STATUSES.has(ticketStatus);
-
   return (
-    <div className="border-t border-border/60 bg-background/40">
-      <div className="p-4 space-y-3">
-        <Bubble authorRole="user" body={ticketBody ?? ""} createdAt={createdAt} isOriginal />
-        {messages.map((m) => (
-          <Bubble key={m.id} authorRole={m.author_role} body={m.body} createdAt={m.created_at} />
-        ))}
-      </div>
-
-      {canReply ? (
-        <div className="border-t border-border/60 p-4 space-y-2">
-          <Textarea
-            placeholder="Escribir una respuesta…"
-            value={reply}
-            onChange={(e) => setReply(e.target.value)}
-            rows={3}
-            disabled={sending}
-            maxLength={5000}
-          />
-          <div className="flex justify-end">
-            <Button size="sm" onClick={sendReply} disabled={sending || reply.trim().length === 0}>
-              {sending ? <IconLoader2 className="size-4 animate-spin" /> : <IconCheck className="size-4" />}
-              {sending ? "Enviando…" : "Responder"}
-            </Button>
-          </div>
-        </div>
+    <div className="border-t border-border/60">
+      {ticket ? (
+        <TicketThread ticket={ticket} />
+      ) : error ? (
+        <p className="p-4 text-sm text-muted-foreground">{error}</p>
       ) : (
-        <p className="border-t border-border/60 px-4 py-3 text-xs text-muted-foreground">
-          Este ticket está {STATUS_LABELS[ticketStatus].toLowerCase()}. Si necesitas algo más, abre uno nuevo.
-        </p>
-      )}
-    </div>
-  );
-}
-
-interface BubbleProps {
-  authorRole: "user" | "staff" | "system";
-  body: string;
-  createdAt: string | null;
-  isOriginal?: boolean;
-}
-
-function Bubble({ authorRole, body, createdAt, isOriginal }: BubbleProps) {
-  const isStaff = authorRole === "staff";
-  return (
-    <div className={cn("flex", isStaff ? "justify-start" : "justify-end")}>
-      <div
-        className={cn(
-          "rounded-2xl px-4 py-3 max-w-[85%] border",
-          isStaff
-            ? "bg-secondary/60 border-border text-foreground"
-            : "bg-primary text-primary-foreground border-primary",
-        )}
-      >
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-[11px] uppercase tracking-wider font-medium opacity-80">
-            {isStaff ? "Soporte" : authorRole === "system" ? "Sistema" : "Tú"}
-            {isOriginal && <span className="ml-2 opacity-70">consulta</span>}
-          </span>
-          {createdAt && <span className="text-[11px] opacity-60">{new Date(createdAt).toLocaleString("es-CL")}</span>}
+        <div className="flex justify-center p-6">
+          <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
         </div>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{body}</p>
-      </div>
+      )}
     </div>
   );
 }

@@ -6,3 +6,4 @@ export * from "./ingest";
 export * from "./match-review";
 export * from "./specs";
 export * from "./stores";
+export * from "./support";

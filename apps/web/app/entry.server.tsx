@@ -24,6 +24,8 @@ export default async function handleRequest(
     "https://appleid.apple.com",
     "https://www.facebook.com",
   ];
+  // Turnstile (anti-spam del formulario de soporte sin cuenta) carga su script y su iframe desde aquí.
+  const turnstile = "https://challenges.cloudflare.com";
   const contentSecurityPolicy = buildContentSecurityPolicy({
     baseUri: ["'self'"],
     objectSrc: ["'none'"],
@@ -34,6 +36,7 @@ export default async function handleRequest(
       "'unsafe-eval'",
       `'nonce-${nonce}'`,
       isDevelopment ? "'unsafe-inline'" : "",
+      turnstile,
     ],
     workerSrc: ["'self'", isDevelopment ? "blob:" : ""],
     scriptSrcAttr: [`'nonce-${nonce}'`],
@@ -41,7 +44,7 @@ export default async function handleRequest(
     // Las fuentes se sirven desde el propio sitio (Satoshi y @fontsource). `data:` porque Vite incrusta en el CSS
     // los subsets de menos de 4 KB (assetsInlineLimit), p. ej. jetbrains-mono cyrillic-ext.
     fontSrc: ["'self'", "data:"],
-    frameSrc: ["'self'"],
+    frameSrc: ["'self'", turnstile],
     // El formulario de login redirige al proveedor OAuth, y el navegador aplica form-action a toda la cadena: si el
     // proveedor ya tiene el consentimiento (Google) responde 302 directo al callback de la API.
     formAction: ["'self'", ...oauthProviders, apiOrigin],

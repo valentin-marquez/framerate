@@ -12,6 +12,9 @@ WEB_ORIGIN=http://localhost:5173
 # Token de servicio para scripts contra /v1/admin/* (equivale a rol admin).
 ADMIN_TOKEN=dev-admin-token
 
+# Turnstile para tickets de soporte sin cuenta; esta es la clave de prueba de Cloudflare que siempre pasa.
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+
 # Discord: https://discord.com/developers/applications → OAuth2.
 # Redirect: http://localhost:8787/v1/auth/callback/discord
 DISCORD_CLIENT_ID=

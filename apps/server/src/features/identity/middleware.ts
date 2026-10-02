@@ -43,10 +43,13 @@ export const requireUser: MiddlewareHandler<AppEnv> = async (c, next) => {
   await next();
 };
 
-/** Identifica al visitante si trae sesión, sin exigirla (lecturas públicas que cambian según quién mira). */
+/** Identifica al visitante si trae sesión, sin exigirla (lecturas públicas que cambian según quién mira, soporte). */
 export const optionalUser: MiddlewareHandler<AppEnv> = async (c, next) => {
   const user = await sessionUser(c);
-  if (user) c.set("user", user);
+  if (user) {
+    assertTrustedOrigin(c);
+    c.set("user", user);
+  }
   await next();
 };
 

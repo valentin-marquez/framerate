@@ -222,6 +222,12 @@ Ver [architecture.md](./architecture.md) §4–5 para matching e ingesta. Lo nue
 - `store_id` es opcional, para asociar el ticket a una tienda.
 - Los cambios de estado automáticos (respuesta del staff → `waiting_user`, y
   viceversa) viven en la API.
+- API: `/v1/support/*` (con sesión, o sin cuenta con Turnstile; el token del
+  ticket viaja una sola vez al crearlo) y `/v1/admin/support/*`. Sin
+  `TURNSTILE_SECRET_KEY` sólo se puede escribir con sesión.
+- Ojo: borrar un usuario con tickets falla. `user_id` es `ON DELETE SET NULL`
+  y un ticket con sesión no tiene token, así que el `CHECK` lo rechaza. Una
+  futura baja de cuenta tiene que borrar o anonimizar sus tickets antes.
 
 ## analytics
 
