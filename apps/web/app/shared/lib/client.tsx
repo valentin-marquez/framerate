@@ -1,7 +1,6 @@
-import { useEffect, useSyncExternalStore } from "react";
-import { useFetcher, useRevalidator } from "react-router";
+import { useSyncExternalStore } from "react";
+import { useFetcher } from "react-router";
 import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
-import { cookiePrefix } from "./config";
 
 export type Theme = "system" | "light" | "dark";
 
@@ -23,136 +22,6 @@ export function parseThemeData(data: Record<string, unknown>): ThemeFormData {
   };
 }
 
-export interface ClientHint {
-  timeZone: string;
-  locale: string;
-}
-
-type ClientHintDefinition<T = string> = {
-  cookieName: string;
-  getValueCode: string;
-  fallback: T;
-  transform?: (value: string) => T;
-};
-
-const THEME_COOKIE_NAME = `${cookiePrefix}.CH-prefers-color-scheme`;
-
-const clientHints: Record<string, ClientHintDefinition> = {
-  timeZone: {
-    cookieName: `${cookiePrefix}.CH-Time-Zone`,
-    getValueCode: "Intl.DateTimeFormat().resolvedOptions().timeZone",
-    fallback: "UTC",
-  },
-  theme: {
-    cookieName: THEME_COOKIE_NAME,
-    getValueCode: `window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'`,
-    fallback: "light",
-  },
-};
-
-type ClientHintNames = keyof typeof clientHints;
-
-/**
- * Parse Accept-Language header value into an ordered array of locales
- * @internal
- */
-type ParseAcceptLanguageOptions = {
-  validate?: (locale: string) => string | string[] | null | undefined;
-  ignoreWildcard?: boolean;
-};
-
-function parseAcceptLanguage(
-  languageHeaderValue: string | null | undefined,
-  options: ParseAcceptLanguageOptions = {},
-): string[] {
-  if (!languageHeaderValue) return [];
-
-  const { ignoreWildcard = true, validate = (locale: string) => locale } = options;
-
-  return languageHeaderValue
-    .split(",")
-    .map((lang): [number, string] => {
-      const [locale, q = "q=1"] = lang.split(";");
-      const trimmedLocale = locale?.trim() ?? "";
-      const numQ = Number(q.replace(/q ?=/, ""));
-      return [Number.isNaN(numQ) ? 0 : numQ, trimmedLocale];
-    })
-    .sort(([q1], [q2]) => q2 - q1)
-    .flatMap(([_, locale]) => {
-      if (locale === "*" && ignoreWildcard) return [];
-      try {
-        return validate(locale) || [];
-      } catch {
-        return [];
-      }
-    });
-}
-
-/**
- * Extract a specific cookie value from a cookie string
- * @internal
- */
-function getCookieValue(cookieString: string, name: ClientHintNames) {
-  const hint = clientHints[name];
-  if (!hint) {
-    throw new Error(`Unknown client hint: ${name}`);
-  }
-
-  const value = cookieString
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${hint.cookieName}=`))
-    ?.split("=")[1];
-
-  return value ? decodeURIComponent(value) : null;
-}
-
-/**
- * Get all client hints from cookies
- * Works in both browser and server environments
- *
- * @param request - Optional request object (server-side only)
- * @returns Object with all client hint values
- */
-export function getHints(request?: Request) {
-  const cookieString =
-    typeof document !== "undefined"
-      ? document.cookie
-      : typeof request !== "undefined"
-        ? (request.headers.get("Cookie") ?? "")
-        : "";
-
-  return Object.entries(clientHints).reduce(
-    (acc, [name, hint]) => {
-      const hintName = name as ClientHintNames;
-      const cookieValue = getCookieValue(cookieString, hintName);
-
-      if (hint.transform) {
-        acc[hintName] = hint.transform(cookieValue ?? hint.fallback);
-      } else {
-        acc[hintName] = cookieValue ?? hint.fallback;
-      }
-      return acc;
-    },
-    {} as Record<ClientHintNames, string>,
-  );
-}
-
-/**
- * Extract user's preferred locale from Accept-Language header
- *
- * @param request - The incoming request object
- * @returns Preferred locale string, defaults to "en-US"
- * @public
- */
-export function getLocale(request: Request): string {
-  const locales = parseAcceptLanguage(request.headers.get("accept-language"), {
-    validate: Intl.DateTimeFormat.supportedLocalesOf,
-  });
-
-  return locales[0] ?? "en-US";
-}
-
 /**
  * Get current theme with optimistic updates support
  * @returns Current theme: "light" | "dark"
@@ -162,8 +31,8 @@ export function useTheme() {
   // Opcional: el Toaster de Layout también se monta en el ErrorBoundary del root, donde no hay datos del loader.
   const requestInfo = useOptionalRequestInfo();
   const optimisticMode = useOptimisticThemeMode();
-  // Sin preferencia guardada manda el sistema: se lee en el cliente (el servidor no lo sabe y caería en "light").
-  const system = useSystemTheme(requestInfo?.hints.theme ?? "light");
+  // Sin preferencia guardada manda el sistema: se lee en el cliente (el servidor no lo sabe y cae en "light").
+  const system = useSystemTheme();
 
   if (optimisticMode) {
     return optimisticMode === "system" ? system : optimisticMode;
@@ -178,11 +47,11 @@ function subscribeToSystemTheme(onChange: () => void) {
   return () => query.removeEventListener("change", onChange);
 }
 
-function useSystemTheme(serverFallback: string): "light" | "dark" {
+function useSystemTheme(): "light" | "dark" {
   return useSyncExternalStore(
     subscribeToSystemTheme,
     () => (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
-    () => (serverFallback === "dark" ? "dark" : "light"),
+    () => "light",
   );
 }
 
@@ -200,78 +69,4 @@ export function useOptimisticThemeMode() {
     const { theme } = parseThemeData(formData);
     return theme;
   }
-}
-
-/**
- * Subscribe to changes in the user's color scheme preference
- * Based on @epic-web/client-hints color-scheme implementation
- * @param subscriber - Callback function to handle theme changes
- * @param cookieName - Cookie name to use (defaults to CH-prefers-color-scheme)
- * @returns Cleanup function to remove the event listener
- * @public
- */
-export function subscribeToSchemeChange(
-  subscriber: (value: "dark" | "light") => void,
-  cookieName: string = THEME_COOKIE_NAME,
-) {
-  if (typeof window === "undefined") return () => {};
-
-  const schemaMatch = window.matchMedia("(prefers-color-scheme: dark)");
-
-  function handleThemeChange() {
-    const value = schemaMatch.matches ? "dark" : "light";
-    // biome-ignore lint/suspicious/noDocumentCookie: Direct cookie setting is required for client hints synchronization
-    document.cookie = `${cookieName}=${value}; Max-Age=31536000; SameSite=Lax; Path=/`;
-    subscriber(value);
-  }
-
-  schemaMatch.addEventListener("change", handleThemeChange);
-
-  return function cleanupSchemaChange() {
-    schemaMatch.removeEventListener("change", handleThemeChange);
-  };
-}
-
-/**
- * Client-side script that checks and synchronizes client hints
- *
- * This component renders an inline script that:
- * 1. Checks if cookies can be set
- * 2. Compares actual browser values with stored cookie values
- * 3. Updates cookies if they don't match
- * 4. Reloads the page once to ensure server gets correct values
- * 5. Prevents infinite reload loops with sessionStorage counter
- * 6. Subscribes to system theme changes for real-time updates
- *
- * @param nonce - CSP nonce for inline script
- */
-export function ClientHintCheck({ nonce }: { nonce?: string }) {
-  const { revalidate } = useRevalidator();
-
-  // Subscribe to system theme changes
-  useEffect(() => {
-    return subscribeToSchemeChange(() => {
-      // Revalidate to get fresh data with updated theme
-      void revalidate();
-    });
-  }, [revalidate]);
-
-  const script = `!function(){if(navigator.cookieEnabled){document.cookie="canSetCookies=1; Max-Age=60; SameSite=Lax; path=/";const e=document.cookie.includes("canSetCookies=1");if(document.cookie="canSetCookies=; Max-Age=-1; path=/",e){const e=document.cookie.split(";").map(e=>e.trim()).reduce((e,t)=>{const[a,n]=t.split("=");return e[a]=n,e},{});let t=parseInt(sessionStorage.getItem("clientHintReloadAttempts")||"0");if(!(t>3)){const a=[${Object.values(
-    clientHints,
-  )
-    .map(
-      (hint) =>
-        `{name:${JSON.stringify(hint.cookieName)},actual:String(${hint.getValueCode}),value:e[${JSON.stringify(hint.cookieName)}]!=null?e[${JSON.stringify(hint.cookieName)}]:encodeURIComponent(${JSON.stringify(hint.fallback)})}`,
-    )
-    .join(
-      ",",
-    )}];let n=!1;for(const t of a){document.cookie=encodeURIComponent(t.name)+"="+encodeURIComponent(t.actual)+"; Max-Age=31536000; SameSite=Lax; path=/";try{decodeURIComponent(t.value)!==t.actual&&(n=!0)}catch(e){n=!0}}n?(sessionStorage.setItem("clientHintReloadAttempts",String(t+1)),document.head.appendChild(Object.assign(document.createElement("style"),{textContent:"html { visibility: hidden !important; }"})),window.location.reload()):sessionStorage.removeItem("clientHintReloadAttempts")}}}}();`;
-
-  return (
-    <script
-      nonce={nonce}
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: Inline script necessary for client hints synchronization
-      dangerouslySetInnerHTML={{ __html: script }}
-    />
-  );
 }

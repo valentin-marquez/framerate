@@ -30,7 +30,7 @@ import { Toaster } from "~/shared/components/primitives/sonner";
 import { useNonce } from "~/shared/hooks/use-nonce";
 import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
 import { api, isRateLimitError } from "~/shared/lib/api";
-import { getHints, useTheme } from "~/shared/lib/client";
+import { useTheme } from "~/shared/lib/client";
 import { markInitialLoadDone } from "~/shared/lib/initial-load";
 import { getQueryClient } from "~/shared/lib/query-client";
 import type { Lang } from "~/shared/lib/translations";
@@ -118,7 +118,6 @@ export async function loader({ request }: Route.LoaderArgs) {
       categories,
       requestInfo: {
         clientEnv,
-        hints: getHints(request),
         userPrefs: { theme: getTheme(request), lang },
         // Origin de la request — usado para construir la URL canónica en Layout.
         origin: new URL(request.url).origin,
