@@ -40,9 +40,9 @@ export function ProfileView({
   return (
     <div className="mx-auto max-w-4xl space-y-10 px-4 py-8">
       <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-4 sm:gap-5">
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
           <Avatar src={profile.avatarUrl} name={name} />
-          <div className="min-w-0 space-y-2 pt-1">
+          <div className="min-w-0 space-y-3 sm:space-y-2 sm:pt-1">
             <div>
               <h1 className="truncate font-semibold text-2xl text-foreground tracking-tight sm:text-3xl">{name}</h1>
               <p className="text-muted-foreground">@{profile.username}</p>
@@ -56,7 +56,7 @@ export function ProfileView({
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <Button variant="secondary" onClick={share}>
             <IconShare3 className="size-4" />
             {t("profile_share")}
