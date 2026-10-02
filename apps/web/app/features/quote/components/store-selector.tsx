@@ -1,3 +1,4 @@
+import type { Offer } from "@framerate/contracts";
 import { IconBuildingStore, IconChevronDown, IconRefresh, IconX } from "@tabler/icons-react";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useState, useSyncExternalStore } from "react";
@@ -6,7 +7,7 @@ import { productsService } from "~/features/product/services/products";
 import { Button } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
-import type { Listing, Product } from "~/shared/utils/db-types";
+import type { Product } from "~/shared/utils/db-types";
 import { formatCLP } from "~/shared/utils/format";
 
 // useSyncExternalStore: detecta si estamos en cliente sin un useEffect+useState
@@ -25,7 +26,7 @@ export function StoreSelector({
   onSelect: (listingId: string | null) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [listings, setListings] = useState<Listing[]>([]);
+  const [listings, setListings] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
   const mounted = useSyncExternalStore(subscribeNoop, getDocumentSnapshot, getServerDocumentSnapshot);
 
@@ -34,11 +35,7 @@ export function StoreSelector({
     setLoading(true);
     try {
       if (!product.slug) return;
-      const data = await productsService.getBySlug(product.slug);
-      if (data?.listings) {
-        console.log("Loaded listings for", product.slug, data.listings);
-        setListings(data.listings);
-      }
+      setListings((await productsService.getBySlug(product.slug)).offers);
     } catch (e) {
       console.error(e);
     } finally {
@@ -159,16 +156,12 @@ export function StoreSelector({
                               type="button"
                               key={listing.id}
                               onClick={() => {
-                                if (listing.id) {
-                                  onSelect(listing.id);
-                                  setIsOpen(false);
-                                } else {
-                                  console.error("Listing ID missing", listing);
-                                }
+                                onSelect(String(listing.id));
+                                setIsOpen(false);
                               }}
                               className={cn(
                                 "group flex items-center justify-between p-3 rounded-xl border transition-all text-left cursor-pointer",
-                                currentListingId === listing.id
+                                currentListingId === String(listing.id)
                                   ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20 cursor-default"
                                   : "border-border/40 bg-card hover:bg-secondary/40 hover:border-border/80",
                               )}
@@ -179,7 +172,7 @@ export function StoreSelector({
                                   <div
                                     className={cn(
                                       "font-medium text-sm truncate transition-colors",
-                                      currentListingId === listing.id ? "text-primary" : "text-foreground",
+                                      currentListingId === String(listing.id) ? "text-primary" : "text-foreground",
                                     )}
                                   >
                                     {listing.store?.name}
@@ -193,13 +186,13 @@ export function StoreSelector({
                                 <div
                                   className={cn(
                                     "font-mono font-medium text-sm",
-                                    currentListingId === listing.id ? "text-primary" : "text-foreground",
+                                    currentListingId === String(listing.id) ? "text-primary" : "text-foreground",
                                   )}
                                 >
-                                  {formatCLP(listing.price_cash)}
+                                  {formatCLP(listing.priceCash)}
                                 </div>
                                 <div className="text-xs text-muted-foreground line-through decoration-muted-foreground opacity-60">
-                                  {formatCLP(listing.price_normal)}
+                                  {formatCLP(listing.priceCard)}
                                 </div>
                               </div>
                             </button>

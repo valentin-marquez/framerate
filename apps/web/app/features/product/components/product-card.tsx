@@ -1,19 +1,17 @@
+import type { ProductSummary } from "@framerate/contracts";
 import { IconPhotoOff, IconTrendingUp } from "@tabler/icons-react";
 import { useState } from "react";
 import { Link } from "react-router";
-import type { Product } from "~/features/product/services/products";
-import { getProductPricing } from "~/features/product/utils/pricing";
 import { getSpecsSummary } from "~/features/product/utils/specs";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Skeleton } from "~/shared/components/primitives/skeleton";
 import { cn } from "~/shared/lib/utils";
-import type { PsuSpecs } from "~/shared/utils/db-types";
 import { formatCLP } from "~/shared/utils/format";
 import { AddToQuote } from "./add-to-quote";
 import { PsuBadge } from "./psu-badge";
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductSummary;
   /** La foto carga con prioridad (primeras tarjetas visibles, LCP). */
   priority?: boolean;
   /** En el ranking de tendencia (server-side). */
@@ -32,10 +30,10 @@ function availabilityText(inStock: boolean, stores: number) {
  * el tono de la foto: blanco, o gris claro en oscuro vía `--product-stage` + multiply, así nunca se ve su borde).
  * Mientras carga sólo se ve el color de la tarjeta y un orbe; al llegar la foto, el panel se abre desde el orbe.
  */
-function ProductStage({ product, priority, psu }: { product: Product; priority: boolean; psu: string | null }) {
+function ProductStage({ product, priority, psu }: { product: ProductSummary; priority: boolean; psu: string | null }) {
   const [stage, setStage] = useState<"loading" | "opening" | "open">("loading");
 
-  if (!product.image_url) {
+  if (!product.imageUrl) {
     return (
       <div className="absolute inset-y-0 right-0 flex w-[58%] items-center justify-end pr-8 text-foreground/20">
         <IconPhotoOff className="size-8" stroke={1.25} role="img" aria-label="Sin imagen" />
@@ -60,8 +58,8 @@ function ProductStage({ product, priority, psu }: { product: Product; priority: 
         data-state={stage === "opening" ? "open" : undefined}
       />
       <AsyncImage
-        src={product.image_url}
-        alt={product.name ?? "Producto"}
+        src={product.imageUrl}
+        alt={product.name}
         priority={priority}
         reveal="none"
         onReady={(fromCache) => setStage(fromCache ? "open" : "opening")}
@@ -101,13 +99,11 @@ function ProductStage({ product, priority, psu }: { product: Product; priority: 
  * precio y disponibilidad) y la foto es una miniatura a la derecha con el botón de cotizar encima.
  */
 export function ProductCard({ product, priority = false, trending = false, className }: ProductCardProps) {
-  const { current, card, hasCardGap, hasRealDrop, reference, dropPct } = getProductPricing(product.prices);
+  const { bestPrice, bestCardPrice } = product;
   const specs = getSpecsSummary(product);
-  const inStock = product.prices?.in_stock !== false;
-  const psu =
-    product.category?.slug === "fuentes-de-poder"
-      ? ((product.specs as PsuSpecs | null)?.efficiency_rating ?? null)
-      : null;
+  const inStock = bestPrice !== null;
+  const efficiency = product.attributes.efficiency;
+  const psu = product.category === "psu" && typeof efficiency === "string" ? efficiency : null;
 
   return (
     <article
@@ -121,9 +117,7 @@ export function ProductCard({ product, priority = false, trending = false, class
 
         <div className="relative flex w-[58%] min-w-0 flex-col gap-1.5 p-3 pt-3.5 pb-2.5">
           <div className="flex h-5 items-center gap-2">
-            {product.brand?.name && (
-              <span className="truncate text-muted-foreground text-xs">{product.brand.name}</span>
-            )}
+            {product.brand && <span className="truncate text-muted-foreground text-xs">{product.brand}</span>}
             {trending && (
               <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary px-1.5 py-0.5 font-medium text-[11px] text-foreground">
                 <IconTrendingUp className="size-3" stroke={2} />
@@ -159,18 +153,10 @@ export function ProductCard({ product, priority = false, trending = false, class
       <div className="mt-auto flex items-center justify-between gap-3 border-border border-t px-3 py-2.5">
         <div className="min-w-0 space-y-0.5">
           <div className="flex flex-wrap items-baseline gap-x-2">
-            {current ? (
-              <span className="font-semibold text-foreground tabular-nums">{formatCLP(current)}</span>
+            {bestPrice ? (
+              <span className="font-semibold text-foreground tabular-nums">{formatCLP(bestPrice)}</span>
             ) : (
               <span className="text-muted-foreground text-sm">Ver tiendas</span>
-            )}
-            {hasRealDrop && reference && (
-              <>
-                <span className="hidden text-muted-foreground text-xs tabular-nums line-through @[20rem]:inline">
-                  {formatCLP(reference)}
-                </span>
-                <span className="font-semibold text-success text-xs">−{dropPct}%</span>
-              </>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-x-3 text-xs">
@@ -181,11 +167,11 @@ export function ProductCard({ product, priority = false, trending = false, class
               )}
             >
               <span aria-hidden className={cn("size-1.5 rounded-full", inStock ? "bg-success" : "bg-foreground/25")} />
-              {availabilityText(inStock, product.listings_count ?? 0)}
+              {availabilityText(inStock, product.offerCount)}
             </span>
-            {hasCardGap && card && (
+            {bestPrice && bestCardPrice && bestCardPrice > bestPrice && (
               <span className="hidden text-muted-foreground tabular-nums @[20rem]:inline">
-                Con tarjeta {formatCLP(card)}
+                Con tarjeta {formatCLP(bestCardPrice)}
               </span>
             )}
           </div>

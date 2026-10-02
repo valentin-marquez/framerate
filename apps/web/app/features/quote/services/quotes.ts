@@ -1,5 +1,5 @@
-import type { Product } from "~/features/product/services/products";
 import { api } from "~/shared/lib/api";
+import type { Product } from "~/shared/utils/db-types";
 
 export type ValidationSeverity = "info" | "warning" | "error";
 

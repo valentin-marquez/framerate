@@ -1,6 +1,6 @@
+import type { ProductSummary } from "@framerate/contracts";
 import { Link } from "react-router";
 import { ProductCard } from "~/features/product/components/product-card";
-import type { Product } from "~/features/product/services/products";
 import { Carousel, CarouselContent, CarouselItem, CarouselNavigation } from "~/shared/components/primitives/carousel";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
@@ -9,12 +9,12 @@ interface ProductRowProps {
   title: string;
   /** Destino del enlace "Ver todos" (ej: /explorar?category=...). */
   href: string;
-  products: Product[];
+  products: ProductSummary[];
   /** Primera fila visible: carga sus imágenes con prioridad (LCP) y entra en cascada al cargar la página. */
   priority?: boolean;
   /** Ids en tendencia para el badge. La fila "Lo más popular" no lo pasa
    *  (ahí todo sería tendencia → ruido). */
-  trendingIds?: Set<string>;
+  trendingIds?: Set<number>;
 }
 
 /**
@@ -55,7 +55,7 @@ export function ProductRow({ title, href, products, priority = false, trendingId
                   <ProductCard
                     product={product}
                     priority={priority && index < 6}
-                    trending={product.id ? trendingIds?.has(product.id) : false}
+                    trending={trendingIds?.has(product.id)}
                     className="h-full"
                   />
                 </div>

@@ -28,13 +28,13 @@ export async function loadCatalog(request: Request, category?: string) {
     meta: { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 },
     brands: [] as Awaited<ReturnType<typeof categoriesService.getBrands>>,
     priceRange: null as Awaited<ReturnType<typeof categoriesService.getPriceRange>> | null,
-    trendingIds: [] as string[],
+    trendingIds: [] as number[],
     rateLimited: false,
   };
   const filters = { category: category ?? null, search: search ?? null, brand: brand ?? null };
 
   try {
-    const [{ data: products, meta }, brands, priceRange, trending] = await Promise.all([
+    const [{ items: products, total }, brands, priceRange, trending] = await Promise.all([
       productsService.getAll({
         page,
         limit: PAGE_SIZE,
@@ -47,8 +47,9 @@ export async function loadCatalog(request: Request, category?: string) {
       }),
       category ? categoriesService.getBrands(category).catch(() => empty.brands) : Promise.resolve(empty.brands),
       category ? categoriesService.getPriceRange(category).catch(() => null) : Promise.resolve(null),
-      productsService.getTrending(40).catch(() => ({ ids: [] as string[] })),
+      productsService.getTrending(40).catch(() => ({ ids: [] as number[] })),
     ]);
+    const meta = { page, limit: PAGE_SIZE, total, totalPages: Math.ceil(total / PAGE_SIZE) };
     return { ...empty, ...filters, products, meta, brands, priceRange, trendingIds: trending.ids };
   } catch (error) {
     // Bajo el límite de peticiones la página igual se dibuja, vacía, con un aviso.

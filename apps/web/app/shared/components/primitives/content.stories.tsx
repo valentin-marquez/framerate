@@ -88,7 +88,7 @@ export const Carrusel: Story = {
           <CarouselItem key={c.id} className="basis-1/2 pl-3 md:basis-1/3">
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
               <img src={getCategoryImage(c.slug)} alt="" className="size-full object-cover" />
-              <span className="absolute top-3 left-3 font-medium text-sm text-white">{c.name}</span>
+              <span className="absolute top-3 left-3 font-medium text-sm text-white">{c.label}</span>
             </div>
           </CarouselItem>
         ))}

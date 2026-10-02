@@ -37,6 +37,7 @@ function offerAggregate(db: Db) {
     .select((eb) => [
       "product_id",
       eb.fn.min("price_cash").as("best_price"),
+      eb.fn.min("price_card").as("best_card_price"),
       eb.fn.countAll<number>().as("offer_count"),
     ])
     .where("is_active", "=", 1)
@@ -95,6 +96,7 @@ export async function listProducts(db: Db, query: ProductListQuery): Promise<Pro
     "p.image_url as imageUrl",
     "p.attributes",
     "agg.best_price as bestPrice",
+    "agg.best_card_price as bestCardPrice",
     // ponytail: igual a bestPrice desde que las listas sólo muestran stock; se quita del contrato al migrar la web.
     "agg.best_price as lowestPrice",
     "agg.offer_count as offerCount",
@@ -198,6 +200,7 @@ export async function getProduct(db: Db, slug: string): Promise<ProductDetail | 
     category: product.category as Category,
     imageUrl: product.image_url,
     bestPrice: inStock.length > 0 ? Math.min(...inStock.map((o) => o.priceCash)) : null,
+    bestCardPrice: inStock.length > 0 ? Math.min(...inStock.map((o) => o.priceCard)) : null,
     lowestPrice: offers.length > 0 ? Math.min(...offers.map((o) => o.priceCash)) : null,
     mpn: product.mpn,
     attributes: parseJson<ProductSummary["attributes"]>(product.attributes, {}),

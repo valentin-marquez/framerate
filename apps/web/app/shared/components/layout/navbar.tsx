@@ -1,10 +1,10 @@
+import type { CategoryItem } from "@framerate/contracts";
 import { IconCompass, IconCpu, IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react";
 import { domAnimation, LazyMotion, m, useTransform } from "motion/react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { LoginDialog } from "~/features/auth/components/login-dialog";
 import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
-import type { Category } from "~/features/category/services/categories";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { AdminMenu } from "~/shared/components/layout/admin-menu";
@@ -28,7 +28,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
 
 interface NavbarProps {
-  categories: Category[];
+  categories: CategoryItem[];
   blurred?: boolean;
 }
 
@@ -271,7 +271,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     categories.map((c) => (
                       <DropdownMenuItem key={c.id}>
                         <Link to={`/categoria/${c.slug}`} viewTransition className="cursor-pointer" prefetch="intent">
-                          {c.name}
+                          {c.label}
                         </Link>
                       </DropdownMenuItem>
                     ))
@@ -313,7 +313,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     categories.map((c) => (
                       <DropdownMenuItem key={c.id}>
                         <Link to={`/categoria/${c.slug}`} viewTransition className="cursor-pointer" prefetch="intent">
-                          {c.name}
+                          {c.label}
                         </Link>
                       </DropdownMenuItem>
                     ))

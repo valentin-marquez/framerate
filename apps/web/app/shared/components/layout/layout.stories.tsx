@@ -131,7 +131,7 @@ export const EstructuraDelSitio: Story = {
         <HomeContent
           categories={categories}
           stores={stores}
-          trendingIds={[rowProducts[2].id ?? ""]}
+          trendingIds={[rowProducts[2].id]}
           rows={[
             { key: "popular", title: "Lo más popular", href: "/explorar", products: rowProducts },
             {

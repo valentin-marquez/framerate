@@ -191,11 +191,11 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     });
   };
 
-  const handleAddProduct = (product: { id: string }) => {
+  const handleAddProduct = (product: { id: number }) => {
     addItem.mutate(
       {
         quoteId: quote.id,
-        data: { product_id: product.id, quantity: 1 },
+        data: { product_id: String(product.id), quantity: 1 },
       },
       {
         onSuccess: () => {

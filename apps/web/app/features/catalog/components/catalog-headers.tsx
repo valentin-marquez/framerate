@@ -1,7 +1,7 @@
+import type { CategoryItem } from "@framerate/contracts";
 import { IconSearch, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import type { CategoryWithCount } from "~/features/category/services/categories";
 import { categoryLabel, getCategoryImage } from "~/features/category/utils/categories";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
@@ -22,7 +22,7 @@ export function CategoryHeader({
 }) {
   const stats = [
     total > 0 && `${total.toLocaleString("es-CL")} ${total === 1 ? "producto" : "productos"}`,
-    priceRange && priceRange.max > 0 && `${formatCLP(priceRange.min)} – ${formatCLP(priceRange.max)}`,
+    priceRange?.max && `${formatCLP(priceRange.min ?? 0)} – ${formatCLP(priceRange.max)}`,
     brandCount > 0 && `${brandCount} ${brandCount === 1 ? "marca" : "marcas"}`,
   ].filter(Boolean);
 
@@ -60,7 +60,7 @@ export function ExploreHeader({
 }: {
   total: number;
   search: string | null;
-  categories: CategoryWithCount[];
+  categories: CategoryItem[];
 }) {
   const [params, setParams] = useSearchParams();
   const [value, setValue] = useState(search ?? "");
@@ -120,7 +120,7 @@ export function ExploreHeader({
         <nav aria-label="Categorías" className="scrollbar-hide -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
           <ul className="flex w-max gap-3 md:w-full md:flex-wrap">
             {categories.map((category, i) => {
-              const empty = !category.product_count;
+              const empty = !category.productCount;
               return (
                 <li key={category.id} className={enterClass()} style={enterStyle(160 + Math.min(i, 6) * 50)}>
                   <Link
@@ -138,7 +138,7 @@ export function ExploreHeader({
                       )}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <span className="relative font-medium text-sm text-white leading-tight">{category.name}</span>
+                    <span className="relative font-medium text-sm text-white leading-tight">{category.label}</span>
                   </Link>
                 </li>
               );

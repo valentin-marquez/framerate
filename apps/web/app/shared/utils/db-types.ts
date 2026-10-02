@@ -1,3 +1,4 @@
+// Forma del sistema anterior (filas de Supabase) que sólo usa el cotizador; se va al construirlo sobre la API (#25).
 export interface ProductPrices {
   /** Precio efectivo/transferencia (el más bajo entre listings activos). */
   cash: number;
@@ -98,33 +99,4 @@ export interface Product {
   listings_count: number | null;
   group_id: string | null;
   created_at: string | null;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  code: string;
-  created_at: string;
-}
-
-export interface Listing {
-  id: string;
-  product_id: string;
-  price_cash: number;
-  price_normal: number;
-  url: string;
-  is_active: boolean;
-  stock_quantity: number | null;
-  last_scraped_at: string | null;
-  external_id: string | null;
-  currency: string;
-  created_at: string;
-  updated_at: string;
-  store: { name: string; slug: string; icon_url: string | null };
-}
-
-export interface ProductDetail extends Product {
-  variants: Product[];
-  listings: Listing[];
 }

@@ -1,10 +1,8 @@
-import type { Me, ProductSummary } from "@framerate/contracts";
-import type { CategoryWithCount } from "~/features/category/services/categories";
-import { toProduct } from "~/features/product/services/adapters";
+import { CATEGORY_LABELS, CATEGORY_SLUGS, type CategoryItem, type Me, type ProductSummary } from "@framerate/contracts";
 import type { Profile } from "~/features/profile/services/profiles";
 import type { ClaimableStore } from "~/features/stores/services/stores";
 
-/** Datos de ejemplo para Storybook, con la forma real de la API (se pasan por los mismos adaptadores que el sitio). */
+/** Datos de ejemplo para Storybook, con la forma real de la API. */
 
 const gpu = (
   id: number,
@@ -23,6 +21,7 @@ const gpu = (
   imageUrl: `https://tectec.cl/wp-content/uploads/${image}`,
   attributes: { chipset, vram },
   bestPrice: price,
+  bestCardPrice: price,
   lowestPrice: price,
   offerCount: 1,
   mpn: null,
@@ -31,7 +30,7 @@ const gpu = (
 export const products = [
   gpu(
     8,
-    "Nvidia RTX 3050 | MSI Ventus 2X | 6GB GDDR6",
+    "Nvidia RTX 3050 MSI Ventus 2X 6GB GDDR6",
     "MSI",
     "2022/03/RTX-3050-MSI-Ventus-2X-6gb_1.jpg",
     "rtx 3050",
@@ -40,7 +39,7 @@ export const products = [
   ),
   gpu(
     1,
-    "Nvidia RTX 5050 | 8GB VRAM | Zotac Twin Edge OC",
+    "Nvidia RTX 5050 8GB VRAM Zotac Twin Edge OC",
     "Zotac",
     "2026/09/RTX-5050-Zotac_1.png",
     "rtx 5050",
@@ -49,79 +48,65 @@ export const products = [
   ),
   gpu(
     3,
-    "Nvidia RTX 5060 | 8GB GDDR7 | MSI Shadow 2X",
+    "Nvidia RTX 5060 8GB GDDR7 MSI Shadow 2X",
     "MSI",
     "2025/09/RTX-5070-MSI-Shadow-2x_1.png",
     "rtx 5060",
     8,
     449_990,
   ),
-  gpu(
-    4,
-    "Nvidia RTX 5060 | 8GB GDDR6 | Asus Dual OC",
-    "ASUS",
-    "2025/07/RTX-5060-Asus-Dual_1.png",
-    "rtx 5060",
-    8,
-    459_990,
-  ),
-].map(toProduct);
+  gpu(4, "Nvidia RTX 5060 8GB GDDR6 Asus Dual OC", "ASUS", "2025/07/RTX-5060-Asus-Dual_1.png", "rtx 5060", 8, 459_990),
+];
 
-const [base0, base1, base2, base3] = products;
+const [base0, base1, , base3] = products;
 
-/**
- * Un producto por cada caso que la tarjeta debe resolver. Parten de los reales y se les cambia lo mínimo
- * (la API aún no entrega precio de referencia ni precio tarjeta distinto, pero la tarjeta los soporta).
- */
+/** Un producto por cada caso que la tarjeta debe resolver. Parten de los reales y se les cambia lo mínimo. */
 export const productStates = {
-  descuento: { ...base2, prices: { ...base2.prices, reference: 519_990 }, listings_count: 3 },
-  tarjetaDistinta: { ...base3, prices: { ...base3.prices, normal: 489_990 }, listings_count: 2 },
-  sinStock: { ...base1, prices: { ...base1.prices, in_stock: false } },
+  tarjetaDistinta: { ...base3, bestCardPrice: 489_990, offerCount: 2 },
+  sinStock: { ...base1, bestPrice: null, bestCardPrice: null },
   normal: base0,
-  fuenteDePoder: toProduct({
+  fuenteDePoder: {
     id: 90,
     slug: "corsair-rm850e",
     name: "Fuente de poder Corsair RM850e 850W 80 Plus Gold Full Modular ATX 3.1",
     brand: "Corsair",
     category: "psu",
     imageUrl: null,
-    attributes: { wattage: 850, efficiency: "80 Plus Gold" },
+    attributes: { wattage: 850, efficiency: "gold" },
     bestPrice: 124_990,
+    bestCardPrice: 129_990,
     lowestPrice: 124_990,
     offerCount: 4,
     mpn: null,
-  }),
+  },
   nombreLargo: {
     ...base0,
     name: "Tarjeta de video Nvidia GeForce RTX 3050 MSI Ventus 2X OC Edition 6GB GDDR6 128-bit PCIe 4.0 con ventilación doble",
   },
-};
+} satisfies Record<string, ProductSummary>;
 
-export const cardCases: { label: string; product: (typeof products)[number]; trending?: boolean }[] = [
-  { label: "Con descuento", product: productStates.descuento, trending: true },
-  { label: "Precio tarjeta distinto", product: productStates.tarjetaDistinta },
+export const cardCases: { label: string; product: ProductSummary; trending?: boolean }[] = [
+  { label: "Precio tarjeta distinto", product: productStates.tarjetaDistinta, trending: true },
   { label: "Sin stock", product: productStates.sinStock },
   { label: "Normal", product: productStates.normal },
   { label: "Fuente, sin imagen", product: productStates.fuenteDePoder },
   { label: "Nombre largo", product: productStates.nombreLargo },
 ];
 
-const category = (id: string, slug: string, name: string, count: number): CategoryWithCount => ({
+const category = (id: CategoryItem["id"], productCount: number): CategoryItem => ({
   id,
-  slug,
-  name,
-  code: id,
-  created_at: "",
-  product_count: count,
+  slug: CATEGORY_SLUGS[id],
+  label: CATEGORY_LABELS[id],
+  productCount,
 });
 
-export const categories: CategoryWithCount[] = [
-  category("gpu", "tarjetas-de-video", "Tarjetas de video", 8),
-  category("cpu", "procesadores", "Procesadores", 0),
-  category("motherboard", "placas-madre", "Placas madre", 0),
-  category("ram", "memorias-ram", "Memorias RAM", 0),
-  category("psu", "fuentes-de-poder", "Fuentes de poder", 0),
-  category("ssd", "ssd", "SSD", 0),
+export const categories: CategoryItem[] = [
+  category("gpu", 8),
+  category("cpu", 0),
+  category("motherboard", 0),
+  category("ram", 0),
+  category("psu", 0),
+  category("ssd", 0),
 ];
 
 export const stores: ClaimableStore[] = [
@@ -130,7 +115,7 @@ export const stores: ClaimableStore[] = [
 ];
 
 /** Ocho productos con id distinto, para filas y grillas que usan el id como clave. */
-export const rowProducts = [...products, ...products.map((p) => ({ ...p, id: `${p.id}-b`, slug: `${p.slug}-b` }))];
+export const rowProducts = [...products, ...products.map((p) => ({ ...p, id: p.id + 100, slug: `${p.slug}-b` }))];
 
 const me = (role: Me["role"]): Me => ({
   id: "u1",

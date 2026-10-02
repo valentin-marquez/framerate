@@ -1,10 +1,10 @@
+import type { CategoryItem } from "@framerate/contracts";
 import { Link } from "react-router";
-import type { Category } from "~/features/category/services/categories";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 
 interface CompactSearchHeroProps {
-  categories: Category[];
+  categories: CategoryItem[];
 }
 
 /**
@@ -50,7 +50,7 @@ export function CompactSearchHero({ categories }: CompactSearchHeroProps) {
                   "hover:bg-primary hover:text-primary-foreground",
                 )}
               >
-                {category.name}
+                {category.label}
               </Link>
             ))}
           </div>

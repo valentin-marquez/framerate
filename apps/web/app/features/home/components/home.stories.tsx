@@ -28,7 +28,7 @@ export const FilaDeProductos: Story = {
       title="Tarjetas de video"
       href="/categoria/tarjetas-de-video"
       products={rowProducts}
-      trendingIds={new Set([rowProducts[0].id ?? ""])}
+      trendingIds={new Set([rowProducts[0].id])}
     />
   ),
 };

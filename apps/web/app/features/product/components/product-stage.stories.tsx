@@ -21,7 +21,7 @@ const SPEEDS = [
 function Replay() {
   const [run, setRun] = useState(0);
   const [slowmo, setSlowmo] = useState(1);
-  const cases = cardCases.filter((c) => c.product.image_url).slice(0, 3);
+  const cases = cardCases.filter((c) => c.product.imageUrl).slice(0, 3);
 
   return (
     <div className="space-y-5" style={{ "--stage-slowmo": slowmo } as React.CSSProperties}>
@@ -49,10 +49,7 @@ function Replay() {
       </div>
       <div key={run} className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {cases.map((c) => (
-          <ProductCard
-            key={c.label}
-            product={{ ...c.product, image_url: `${c.product.image_url}?r=${NONCE}-${run}` }}
-          />
+          <ProductCard key={c.label} product={{ ...c.product, imageUrl: `${c.product.imageUrl}?r=${NONCE}-${run}` }} />
         ))}
       </div>
     </div>

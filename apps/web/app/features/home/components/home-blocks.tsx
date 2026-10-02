@@ -8,16 +8,16 @@ type Category = HomeData["categories"][number];
 
 /** Las categorías con productos primero; el orden original se conserva dentro de cada grupo. */
 const withProductsFirst = (categories: Category[]) =>
-  [...categories].sort((a, b) => Number((b.product_count ?? 0) > 0) - Number((a.product_count ?? 0) > 0));
+  [...categories].sort((a, b) => Number(b.productCount > 0) - Number(a.productCount > 0));
 
-const isEmpty = (category: Category) => !category.product_count;
+const isEmpty = (category: Category) => !category.productCount;
 
 const countLabel = (category: Category) =>
   isEmpty(category)
     ? "Próximamente"
-    : category.product_count === 1
+    : category.productCount === 1
       ? "1 producto"
-      : `${category.product_count} productos`;
+      : `${category.productCount} productos`;
 
 const MD_SPAN = { 1: "md:col-span-1", 2: "md:col-span-2", 3: "md:col-span-3", 4: "md:col-span-4" } as const;
 
@@ -61,7 +61,7 @@ export function CategoryMosaic({ categories }: Pick<HomeData, "categories">) {
                 <p
                   className={cn("font-semibold tracking-tight", big ? "text-2xl md:text-3xl" : "text-sm md:text-base")}
                 >
-                  {category.name}
+                  {category.label}
                 </p>
                 <p className="text-white/70 text-xs">{countLabel(category)}</p>
               </div>

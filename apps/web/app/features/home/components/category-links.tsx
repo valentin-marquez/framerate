@@ -1,8 +1,8 @@
+import type { CategoryItem } from "@framerate/contracts";
 import { Link } from "react-router";
-import type { Category } from "~/features/category/services/categories";
 
 interface CategoryLinksProps {
-  categories: Category[];
+  categories: CategoryItem[];
 }
 
 /**
@@ -26,7 +26,7 @@ export function CategoryLinks({ categories }: CategoryLinksProps) {
             prefetch="intent"
             className="text-sm text-muted-foreground hover:text-primary transition-colors py-1"
           >
-            {category.name}
+            {category.label}
           </Link>
         ))}
         <Link

@@ -128,6 +128,22 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
     expect(rest).toEqual([]);
   });
 
+  test("el mejor precio con tarjeta es el mínimo entre ofertas con stock, aunque sea de otra tienda", async () => {
+    // beta tiene el mejor efectivo (599.990) pero un recargo alto con tarjeta; alfa cobra 650.000 en ambos.
+    await db.query.updateTable("listings").set({ price_card: 669_990 }).where("external_id", "=", "9").execute();
+    try {
+      const [asus] = (await list("category=gpu&sort=name")).items;
+      expect(asus).toMatchObject({ bestPrice: 599_990, bestCardPrice: 650_000 });
+      const detail = ProductDetailSchema.parse(await (await get(`/v1/products/${asus?.slug}`)).json());
+      expect(detail).toMatchObject({ bestPrice: 599_990, bestCardPrice: 650_000 });
+      // Sin stock no hay mejor precio con tarjeta.
+      const msi = ProductDetailSchema.parse(await (await get("/v1/products/msi-rtx-4060-ventus-2x-8gb")).json());
+      expect(msi.bestCardPrice).toBeNull();
+    } finally {
+      await db.query.updateTable("listings").set({ price_card: 599_990 }).where("external_id", "=", "9").execute();
+    }
+  });
+
   test("filtra por marca (por slug o por nombre) y por rango de precio", async () => {
     expect(names(await list("category=gpu&brand=asus"))).toEqual(["ASUS Dual RTX 4070 SUPER OC 12GB"]);
     expect(names(await list("category=gpu&brand=ASUS"))).toEqual(["ASUS Dual RTX 4070 SUPER OC 12GB"]);

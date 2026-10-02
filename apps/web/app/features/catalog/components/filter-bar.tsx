@@ -1,7 +1,7 @@
+import type { BrandCount } from "@framerate/contracts";
 import { IconCheck, IconChevronDown, IconX } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import type { BrandWithCount } from "~/features/category/services/categories";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import type { CatalogData } from "../load-catalog";
@@ -69,7 +69,7 @@ function Popover({ label, active, children }: { label: string; active: boolean; 
   );
 }
 
-function BrandFilter({ brands }: { brands: BrandWithCount[] }) {
+function BrandFilter({ brands }: { brands: BrandCount[] }) {
   const { params, update } = useFilterParams();
   const current = params.get("brand");
   const selected = brands.find((b) => b.slug === current);
@@ -134,9 +134,9 @@ function PriceFilter({ priceRange }: { priceRange: CatalogData["priceRange"] }) 
         }}
       >
         <div className="flex items-center gap-2">
-          {field("min", priceRange ? String(priceRange.min) : "Mínimo")}
+          {field("min", priceRange?.min != null ? String(priceRange.min) : "Mínimo")}
           <span className="text-muted-foreground">a</span>
-          {field("max", priceRange ? String(priceRange.max) : "Máximo")}
+          {field("max", priceRange?.max != null ? String(priceRange.max) : "Máximo")}
         </div>
         <button
           type="submit"
@@ -177,7 +177,7 @@ function SortMenu() {
 }
 
 /** Filtros aplicados, cada uno con su quitar. Sólo aparece cuando hay alguno. */
-function ActiveChips({ brands }: { brands: BrandWithCount[] }) {
+function ActiveChips({ brands }: { brands: BrandCount[] }) {
   const { params, update } = useFilterParams();
   const chips: { label: string; clear: Record<string, null> }[] = [];
   const brand = params.get("brand");
@@ -213,7 +213,7 @@ function ActiveChips({ brands }: { brands: BrandWithCount[] }) {
 }
 
 interface FilterBarProps {
-  brands: BrandWithCount[];
+  brands: BrandCount[];
   priceRange: CatalogData["priceRange"];
   total: number;
 }

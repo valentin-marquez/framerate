@@ -3,12 +3,11 @@ import {
   type StoreMember as ApiStoreMember,
   CATEGORY_LABELS,
   CATEGORY_SLUGS,
+  type ProductSummary,
   type StoreListItem,
   type StoreProducts,
   type UpdateStoreRequest,
 } from "@framerate/contracts";
-import { toProduct } from "~/features/product/services/adapters";
-import type { Product } from "~/features/product/services/products";
 import { api } from "~/shared/lib/api";
 
 export interface StoreAccount {
@@ -83,7 +82,7 @@ export interface StoreProductCategory {
   /** Total de productos de la tienda en esta categoría. */
   count: number;
   /** Subconjunto destacado (orden: popularidad) para el carrusel. */
-  products: Product[];
+  products: ProductSummary[];
 }
 
 export interface StoreProductsResponse {
@@ -129,7 +128,7 @@ async function getProducts(slug: string, name: string): Promise<StoreProductsRes
       slug: CATEGORY_SLUGS[c.category],
       name: CATEGORY_LABELS[c.category],
       count: c.count,
-      products: c.items.map(toProduct),
+      products: c.items,
     })),
   };
 }

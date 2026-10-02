@@ -1,10 +1,9 @@
+import type { CategoryItem, ProductSummary } from "@framerate/contracts";
 import { IconLoader2, IconPhoto, IconSearch, IconTag } from "@tabler/icons-react";
 import { type ButtonHTMLAttributes, type Ref, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useCategories } from "~/features/category/hooks/useCategories";
-import type { CategoryWithCount } from "~/features/category/services/categories";
 import { useQuickSearch } from "~/features/product/hooks/useProducts";
-import type { QuickSearchResult } from "~/features/product/services/products";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Button } from "~/shared/components/primitives/button";
 import {
@@ -23,7 +22,7 @@ import { formatCLP } from "~/shared/utils/format";
 interface SearchDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onSelectProduct?: (product: QuickSearchResult) => void;
+  onSelectProduct?: (product: ProductSummary) => void;
 }
 
 // Hook personalizado para debounce
@@ -102,7 +101,7 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
   }, []);
 
   const handleSelectProduct = useCallback(
-    (product: QuickSearchResult) => {
+    (product: ProductSummary) => {
       if (onSelectProduct) {
         onSelectProduct(product);
       } else {
@@ -125,7 +124,7 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
 
   // Filter categories based on search
   const filteredCategories = searchQuery
-    ? categories.filter((cat: CategoryWithCount) => cat.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? categories.filter((cat: CategoryItem) => cat.label.toLowerCase().includes(searchQuery.toLowerCase()))
     : categories.slice(0, 5);
 
   // Determinar si mostrar el estado de carga
@@ -201,19 +200,17 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
           {showCategories && (
             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
               <CommandGroup heading="Categorías">
-                {filteredCategories.map((category: CategoryWithCount) => (
+                {filteredCategories.map((category: CategoryItem) => (
                   <CommandItem
                     key={category.id}
                     onSelect={() => handleSelectCategory(category.slug)}
                     className="cursor-pointer transition-colors duration-150"
                   >
                     <IconTag className="text-muted-foreground shrink-0" />
-                    <span className="line-clamp-1 flex-1">{category.name}</span>
-                    {"product_count" in category && category.product_count !== undefined && (
-                      <span className="ml-auto text-xs text-muted-foreground tabular-nums shrink-0">
-                        {category.product_count} productos
-                      </span>
-                    )}
+                    <span className="line-clamp-1 flex-1">{category.label}</span>
+                    <span className="ml-auto text-xs text-muted-foreground tabular-nums shrink-0">
+                      {category.productCount} productos
+                    </span>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -236,9 +233,9 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
                     }}
                   >
                     <div className="relative size-16 shrink-0 rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/40 transition-all duration-200 group-hover:ring-primary/40">
-                      {product.image_url ? (
+                      {product.imageUrl ? (
                         <AsyncImage
-                          src={product.image_url}
+                          src={product.imageUrl}
                           alt={product.name}
                           className="size-full object-contain p-1.5 transition-transform duration-200 group-hover:scale-105"
                         />
@@ -253,11 +250,11 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
                       <span className="text-sm font-medium line-clamp-2 leading-snug transition-colors duration-150">
                         {product.name}
                       </span>
-                      <span className="text-xs text-muted-foreground line-clamp-1">{product.brand_name}</span>
+                      <span className="text-xs text-muted-foreground line-clamp-1">{product.brand}</span>
                     </div>
                     <div className="flex flex-col items-end gap-0.5 shrink-0">
                       <span className="text-base font-semibold tabular-nums transition-colors duration-150">
-                        {formatCLP(product.current_price)}
+                        {formatCLP(product.bestPrice ?? 0)}
                       </span>
                       <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Precio</span>
                     </div>

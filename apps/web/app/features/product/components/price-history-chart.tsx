@@ -1,6 +1,6 @@
+import type { PricePoint } from "@framerate/contracts";
 import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { PriceHistoryResponse, PriceHistorySeries } from "~/features/product/services/products";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
@@ -17,7 +17,9 @@ const STORE_COLORS = [
 ];
 
 interface PriceHistoryChartProps {
-  data: PriceHistoryResponse;
+  points: PricePoint[];
+  /** Ventana pedida a la API, para el texto "últimos N días". */
+  days: number;
   className?: string;
 }
 
@@ -26,15 +28,14 @@ interface NormalizedPoint {
   price: number;
   series: string;
   color: string;
-  store_name: string;
-  store_logo_url: string | null;
+  storeName: string;
 }
 
 const PADDING = { top: 16, right: 16, bottom: 28, left: 56 };
 const HEIGHT = 240;
 
 // react-doctor-disable-next-line no-giant-component -- breaking into focused components is a separate task, tracked
-export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
+export function PriceHistoryChart({ points, days, className }: PriceHistoryChartProps) {
   const { t, lang } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoverX, setHoverX] = useState<number | null>(null);
@@ -58,26 +59,25 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
   }, []);
 
   const enrichedSeries = useMemo(() => {
-    // react-doctor-disable-next-line js-combine-iterations -- micro-optimization not worth losing readability
-    return data.series
-      .filter((s) => s.points.length > 0)
-      .map((s, i) => ({
-        ...s,
-        color: STORE_COLORS[i % STORE_COLORS.length],
-      }));
-  }, [data.series]);
+    const byStore = new Map<string, { store: string; storeName: string; points: PricePoint[] }>();
+    for (const p of points) {
+      const series = byStore.get(p.store) ?? { store: p.store, storeName: p.storeName, points: [] };
+      series.points.push(p);
+      byStore.set(p.store, series);
+    }
+    return [...byStore.values()].map((s, i) => ({ ...s, color: STORE_COLORS[i % STORE_COLORS.length] }));
+  }, [points]);
 
   const stats = useMemo(() => {
     const allPoints: NormalizedPoint[] = [];
     for (const s of enrichedSeries) {
       for (const p of s.points) {
         allPoints.push({
-          t: new Date(p.recorded_at).getTime(),
-          price: p.price_cash,
-          series: s.store_slug,
+          t: new Date(p.observedAt).getTime(),
+          price: p.priceCash,
+          series: s.store,
           color: s.color,
-          store_name: s.store_name,
-          store_logo_url: s.store_logo_url,
+          storeName: s.storeName,
         });
       }
     }
@@ -120,9 +120,9 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
       .map((s) => {
         if (s.points.length === 0) return null;
         let nearest = s.points[0];
-        let nearestDiff = Math.abs(new Date(nearest.recorded_at).getTime() - tHover);
+        let nearestDiff = Math.abs(new Date(nearest.observedAt).getTime() - tHover);
         for (const p of s.points) {
-          const d = Math.abs(new Date(p.recorded_at).getTime() - tHover);
+          const d = Math.abs(new Date(p.observedAt).getTime() - tHover);
           if (d < nearestDiff) {
             nearest = p;
             nearestDiff = d;
@@ -130,10 +130,10 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
         }
         return {
           color: s.color,
-          store_name: s.store_name,
+          storeName: s.storeName,
           point: nearest,
-          x: xScaleLocal(new Date(nearest.recorded_at).getTime()),
-          y: yScaleLocal(nearest.price_cash),
+          x: xScaleLocal(new Date(nearest.observedAt).getTime()),
+          y: yScaleLocal(nearest.priceCash),
         };
       })
       .filter((p): p is NonNullable<typeof p> => p !== null);
@@ -156,15 +156,15 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
   };
 
   // Genera el path SVG para una serie (line). Si solo hay 1 punto, dibuja un círculo.
-  const buildPath = (series: PriceHistorySeries) => {
+  const buildPath = (series: { points: PricePoint[] }) => {
     if (series.points.length === 0) return "";
     const sorted = series.points.toSorted(
-      (a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime(),
+      (a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime(),
     );
     return sorted
       .map((p, i) => {
-        const x = xScale(new Date(p.recorded_at).getTime());
-        const y = yScale(p.price_cash);
+        const x = xScale(new Date(p.observedAt).getTime());
+        const y = yScale(p.priceCash);
         return `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
       })
       .join(" ");
@@ -184,7 +184,7 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
       : new Date(ts).toLocaleDateString(locale, { day: "numeric", month: "short" });
   const xTicks = Array.from({ length: 4 }, (_, i) => minT + ((maxT - minT) * i) / 3);
 
-  const hoverDate = hoveredPoints[0] ? new Date(hoveredPoints[0].point.recorded_at) : null;
+  const hoverDate = hoveredPoints[0] ? new Date(hoveredPoints[0].point.observedAt) : null;
 
   const onMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const svg = e.currentTarget;
@@ -211,7 +211,7 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
       <div className="mb-3 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <span className="text-xs uppercase tracking-wider text-muted-foreground">
-            {t("price_history_window", { days: data.days })}
+            {t("price_history_window", { days })}
           </span>
           {Math.abs(pct) >= 0.5 && (
             <span className={cn("inline-flex items-center gap-1 text-xs font-medium", trendColor)}>
@@ -226,9 +226,9 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
         {/* Leyenda */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           {enrichedSeries.map((s) => (
-            <span key={s.store_slug} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span key={s.store} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className="size-2 rounded-full" style={{ background: s.color }} />
-              {s.store_name}
+              {s.storeName}
             </span>
           ))}
         </div>
@@ -286,7 +286,7 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
 
             {/* Líneas por serie */}
             {enrichedSeries.map((s) => (
-              <g key={s.store_slug}>
+              <g key={s.store}>
                 <path
                   d={buildPath(s)}
                   fill="none"
@@ -297,10 +297,10 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
                 />
                 {/* Si la serie tiene solo 1 punto, dibujar círculo */}
                 {s.points.length === 1 && (
-                  // react-doctor-disable-next-line rendering-hydration-mismatch-time -- parsing fixed recorded_at to ms; getTime() is locale/timezone-independent
+                  // react-doctor-disable-next-line rendering-hydration-mismatch-time -- parsing fixed observedAt to ms; getTime() is locale/timezone-independent
                   <circle
-                    cx={xScale(new Date(s.points[0].recorded_at).getTime())}
-                    cy={yScale(s.points[0].price_cash)}
+                    cx={xScale(new Date(s.points[0].observedAt).getTime())}
+                    cy={yScale(s.points[0].priceCash)}
                     r={3.5}
                     fill={s.color}
                   />
@@ -321,7 +321,7 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
                 />
                 {hoveredPoints.map((hp) => (
                   <circle
-                    key={hp.store_name}
+                    key={hp.storeName}
                     cx={hp.x}
                     cy={hp.y}
                     r={4}
@@ -349,12 +349,12 @@ export function PriceHistoryChart({ data, className }: PriceHistoryChartProps) {
             </div>
             <div className="space-y-1">
               {hoveredPoints.map((hp) => (
-                <div key={hp.store_name} className="flex items-center justify-between gap-3">
+                <div key={hp.storeName} className="flex items-center justify-between gap-3">
                   <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                     <span className="size-2 rounded-full" style={{ background: hp.color }} />
-                    {hp.store_name}
+                    {hp.storeName}
                   </span>
-                  <span className="font-medium text-foreground tabular-nums">{formatCLP(hp.point.price_cash)}</span>
+                  <span className="font-medium text-foreground tabular-nums">{formatCLP(hp.point.priceCash)}</span>
                 </div>
               ))}
             </div>

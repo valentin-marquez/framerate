@@ -39,6 +39,8 @@ export const ProductSummarySchema = z.object({
   imageUrl: z.url().nullable(),
   /** Mejor precio efectivo entre ofertas con stock; null si nadie tiene stock. */
   bestPrice: z.number().int().nonnegative().nullable(),
+  /** Mejor precio con tarjeta entre ofertas con stock (puede ser de otra tienda que `bestPrice`); null si nadie tiene stock. */
+  bestCardPrice: z.number().int().nonnegative().nullable(),
   /** Precio más bajo entre todas las ofertas activas (con o sin stock). */
   lowestPrice: z.number().int().nonnegative().nullable(),
   mpn: z.string().nullable(),

@@ -53,7 +53,7 @@ const catalog = (overrides: Partial<CatalogData> = {}): CatalogData => ({
   meta: { page: 2, limit: 24, total: 180, totalPages: 8 },
   brands,
   priceRange: { min: 279_990, max: 939_990 },
-  trendingIds: [rowProducts[0].id ?? ""],
+  trendingIds: [rowProducts[0].id],
   rateLimited: false,
   category: "tarjetas-de-video",
   search: null,

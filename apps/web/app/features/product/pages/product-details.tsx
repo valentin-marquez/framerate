@@ -1,10 +1,9 @@
+import { CATEGORY_LABELS, CATEGORY_SLUGS, type ProductDetail } from "@framerate/contracts";
 import {
-  IconArrowsRightLeft,
   IconBuildingStore,
   IconChartLine,
   IconChevronRight,
   IconCircleCheck,
-  IconCpu,
   IconExternalLink,
   IconHome,
 } from "@tabler/icons-react";
@@ -20,7 +19,6 @@ import { OutboundLink } from "~/shared/components/outbound-link";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Badge } from "~/shared/components/primitives/badge";
 import { buttonVariants } from "~/shared/components/primitives/button";
-import { Card } from "~/shared/components/primitives/card";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { isRateLimitError } from "~/shared/lib/api";
@@ -28,75 +26,31 @@ import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import type { Route } from "./+types/product-details";
 
-type Translator = (key: string, params?: Record<string, string | number>) => string;
+/** Atributos que se muestran como especificaciones, con la clave de traducción de su nombre. El resto (línea, OC,
+ * wifi...) sólo le sirve al matching. */
+const SPEC_LABELS = {
+  chipset: "chipset",
+  vram: "memory_gb",
+  capacity: "capacity_gb",
+  type: "type",
+  speed: "speed_mt_s",
+  interface: "interface",
+  rpm: "rpm",
+  formFactor: "form_factor",
+  wattage: "wattage",
+  efficiency: "efficiency_rating",
+};
 
-// Si t() no encuentra traducción devuelve la clave raw (e.g. "usb_3_2_gen_1");
-// formateamos snake_case a "Title Case" para que al menos sea legible.
-function formatSpecKey(key: string, t: Translator): string {
-  const translated = t(key);
-  if (translated !== key) return translated;
-  // react-doctor-disable-next-line js-combine-iterations -- string-builder chain; rewriting to for-loop hurts readability
-  return key
-    .split(/[_\s]+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
-
-interface SpecValueProps {
-  value: unknown;
-  t: Translator;
-}
-
-function SpecValue({ value, t }: SpecValueProps): React.ReactNode {
-  if (value === null || value === undefined) return null;
-  if (typeof value === "boolean") return value ? t("yes") : t("no");
-  if (Array.isArray(value)) {
-    // Array de primitivos: join simple. Array de objects: cada item se renderiza como un grupo.
-    const allPrimitive = value.every((v) => v === null || typeof v !== "object");
-    if (allPrimitive) return value.join(", ");
-    return (
-      <div className="flex flex-col gap-2 items-end w-full">
-        {value.map((item) => {
-          // Derivamos una key estable a partir del contenido del item (no índice).
-          const itemKey = typeof item === "object" ? JSON.stringify(item) : String(item);
-          return (
-            <div key={itemKey} className="flex flex-col gap-0.5 items-end w-full border-l-2 border-border/40 pl-2">
-              <SpecValue value={item} t={t} />
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-  if (typeof value === "object") {
-    return (
-      <div className="flex flex-col gap-1 items-end w-full">
-        {Object.entries(value).map(([k, v]) => {
-          if (v === null || v === undefined) return null;
-          if (Array.isArray(v) && v.length === 0) return null;
-          return (
-            <div key={k} className="flex gap-2 text-xs w-full justify-between sm:justify-end">
-              <span className="text-muted-foreground mr-1">{formatSpecKey(k, t)}:</span>
-              <span className="font-mono text-foreground">
-                <SpecValue value={v} t={t} />
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-  return String(value);
-}
+/** Precio a destacar: el mejor con stock, o el de la oferta más barata si nadie tiene (la API las ordena así). */
+const headlinePrice = (product: ProductDetail) => product.bestPrice ?? product.offers[0]?.priceCash ?? 0;
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data) return [{ title: "Producto no encontrado - Framerate" }];
 
-  const bestPrice = data.prices?.cash || 0;
-  const description = `Compra ${data.name} desde ${formatCLP(bestPrice)} en Chile. Compara precios en ${data.listings_count} tiendas.`;
+  const bestPrice = headlinePrice(data);
+  const description = `Compra ${data.name} desde ${formatCLP(bestPrice)} en Chile. Compara precios en ${data.offerCount} tiendas.`;
   // ponytail: la foto de la tienda tal cual; una tarjeta propia (logo + foto + nombre) cuando haga falta.
-  const ogImage = data.image_url || "/og-image.png";
+  const ogImage = data.imageUrl || "/og-image.png";
 
   return [
     { title: `${data.name}: precios en Chile - Framerate` },
@@ -110,7 +64,7 @@ export function meta({ data }: Route.MetaArgs) {
     { property: "og:image:alt", content: `${data.name} — Framerate` },
     { property: "product:price:amount", content: String(bestPrice) },
     { property: "product:price:currency", content: "CLP" },
-    { property: "product:category", content: data.category?.name ?? "" },
+    { property: "product:category", content: CATEGORY_LABELS[data.category] },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:image", content: ogImage },
   ];
@@ -120,7 +74,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   try {
     const product = await productsService.getBySlug(params.slug);
 
-    if (!product || product.prices?.cash === 0 || product.prices?.cash == null) {
+    if (product.offers.length === 0) {
       throw new Response("Producto no encontrado", { status: 404 });
     }
 
@@ -161,45 +115,40 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
   const product = loaderData;
   // Fuera del loader: con prefetch="intent" el loader corre al pasar el mouse y cada hover contaría como visita.
   useEffect(() => {
-    if (product.slug) productsService.trackView(product.slug).catch(() => {});
+    productsService.trackView(product.slug).catch(() => {});
   }, [product.slug]);
-  const { data: priceHistory } = usePriceHistory(product.slug || "", 30);
-  const totalHistoryPoints = priceHistory?.series.reduce((acc, s) => acc + s.points.length, 0) ?? 0;
-  const bestPrice = product.prices?.cash || 0;
+  const { data: priceHistory = [] } = usePriceHistory(product.slug, 30);
+  const bestPrice = headlinePrice(product);
+  const productId = String(product.id);
+  const categorySlug = CATEGORY_SLUGS[product.category];
 
-  const sortedListings = product.listings.toSorted((a, b) => (a.price_cash || Infinity) - (b.price_cash || Infinity));
-  const bestOffer = sortedListings[0];
-  const sortedVariants = product.variants?.toSorted((a, b) => (a.prices?.cash || 0) - (b.prices?.cash || 0)) ?? [];
+  // La API ya las ordena: primero con stock y luego por precio.
+  const offers = product.offers;
+  const bestOffer = offers[0];
 
-  // Specs puede venir como {} o con todas las keys vacías; sólo renderizamos si hay
-  // al menos una entrada con valor renderizable.
-  const hasRenderableSpecs =
-    product.specs &&
-    typeof product.specs === "object" &&
-    Object.entries(product.specs).some(([, value]) => {
-      if (value === null || value === undefined) return false;
-      if (Array.isArray(value) && value.length === 0) return false;
-      if (typeof value === "object" && Object.keys(value).length === 0) return false;
-      return true;
-    });
+  const specs = Object.entries(SPEC_LABELS).flatMap(([key, label]) => {
+    const value = product.attributes[key];
+    if (value === undefined || typeof value === "boolean") return [];
+    return [{ label, value: typeof value === "string" ? value.toUpperCase() : String(value) }];
+  });
 
   const structuredData = {
     "@context": "https://schema.org/",
     "@type": "Product",
     name: product.name,
-    image: product.image_url,
+    image: product.imageUrl,
     description: `Compra ${product.name} al mejor precio.`,
     brand: {
       "@type": "Brand",
-      name: product.brand?.name || "Genérico",
+      name: product.brand || "Genérico",
     },
     sku: product.mpn,
     offers: {
       "@type": "AggregateOffer",
       lowPrice: bestPrice,
       priceCurrency: "CLP",
-      offerCount: product.listings_count,
-      availability: "https://schema.org/InStock",
+      offerCount: product.offerCount,
+      availability: `https://schema.org/${product.bestPrice === null ? "OutOfStock" : "InStock"}`,
     },
   };
 
@@ -221,10 +170,10 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
             <IconChevronRight className="size-3 mx-2 shrink-0 text-border" />
 
             <Link
-              to={`/categoria/${product.category?.slug}`}
+              to={`/categoria/${categorySlug}`}
               className="hover:text-primary transition-colors active:text-primary"
             >
-              {product.category?.name}
+              {CATEGORY_LABELS[product.category]}
             </Link>
 
             <IconChevronRight className="size-3 mx-2 shrink-0 text-border" />
@@ -242,14 +191,14 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                     variant="secondary"
                     className="font-mono text-xs backdrop-blur-md bg-background/80 border-border/50 shadow-sm px-3 py-1.5"
                   >
-                    {product.brand?.name}
+                    {product.brand}
                   </Badge>
                 </div>
 
                 <div className="relative aspect-square bg-white flex items-center justify-center p-8 lg:p-12">
                   <AsyncImage
-                    src={product.image_url ?? undefined}
-                    alt={product.name || "Imagen de producto"}
+                    src={product.imageUrl ?? undefined}
+                    alt={product.name}
                     priority
                     className="max-h-full max-w-full size-auto object-contain transition-transform duration-500 group-hover:scale-105 filter"
                   />
@@ -261,7 +210,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     <IconCircleCheck className="size-3.5" />
-                    {t("available_in_stores", { count: product.listings_count || 0 })}
+                    {t("available_in_stores", { count: product.offerCount })}
                   </span>
                   {product.mpn && <span className="font-mono text-xs opacity-70">MPN: {product.mpn}</span>}
                 </div>
@@ -276,7 +225,7 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
                     <IconCircleCheck className="size-4" />
-                    {t("available_in_stores", { count: product.listings_count || 0 })}
+                    {t("available_in_stores", { count: product.offerCount })}
                   </span>
                   {product.mpn && <span className="font-mono text-xs">MPN: {product.mpn}</span>}
                 </div>
@@ -309,12 +258,12 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                   </div>
 
                   <div className="hidden md:flex flex-col gap-2 w-full md:w-auto min-w-[200px]">
-                    {bestOffer?.url && (
+                    {bestOffer && (
                       <OutboundLink
                         href={bestOffer.url}
                         source="product_details_hero"
-                        listingId={bestOffer.id}
-                        productId={product.id}
+                        listingId={String(bestOffer.id)}
+                        productId={productId}
                         className={cn(buttonVariants({ size: "lg" }), "w-full flex items-center justify-center gap-2")}
                       >
                         {t("go_to_store")}
@@ -326,52 +275,14 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                 </div>
               </div>
 
-              {sortedVariants.length > 0 && (
-                <section>
-                  <h3 className="mb-3 inline-flex items-center gap-2 text-lg font-medium">
-                    <IconArrowsRightLeft className="size-4 text-muted-foreground" />
-                    {t("other_versions")}
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {sortedVariants.map((variant) => (
-                      <Link key={variant.slug} to={`/producto/${variant.slug}`} className="group block h-full">
-                        <Card className="flex items-center gap-3 p-3 h-full border border-border/60 bg-card hover:bg-secondary/40 hover:border-border transition-all duration-200">
-                          <div className="size-12 shrink-0 rounded-lg bg-white border border-border/60 sm:p-1 flex items-center justify-center overflow-hidden">
-                            {variant.image_url ? (
-                              <AsyncImage
-                                src={variant.image_url}
-                                alt=""
-                                className="max-h-full max-w-full object-contain p-1"
-                              />
-                            ) : (
-                              <IconCpu className="size-6 text-muted-foreground/50" />
-                            )}
-                          </div>
-
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-medium line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-0.5">
-                              {variant.name}
-                            </span>
-                            <span className="text-sm font-display font-bold text-muted-foreground">
-                              {formatCLP(variant.prices?.cash || 0)}
-                            </span>
-                          </div>
-                        </Card>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {priceHistory && totalHistoryPoints >= 2 && (
+              {priceHistory.length >= 2 && (
                 <section className="space-y-3">
                   <h3 className="inline-flex items-center gap-2 text-lg font-medium">
                     <IconChartLine className="size-4 text-muted-foreground" />
                     {t("price_history")}
                   </h3>
                   <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-                    <PriceHistoryChart data={priceHistory} />
+                    <PriceHistoryChart points={priceHistory} days={30} />
                   </div>
                 </section>
               )}
@@ -393,44 +304,40 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                   </div>
 
                   <div className="divide-y divide-border/40">
-                    {sortedListings.map((listing, idx) => {
-                      // price_normal NO es un precio anterior: es el precio
-                      // tarjeta del mismo listing (medio de pago). No es un
-                      // descuento; se muestra como referencia, sin tachar.
-                      const hasCardGap =
-                        !!listing.price_normal && !!listing.price_cash && listing.price_normal > listing.price_cash;
+                    {offers.map((offer, idx) => {
+                      // priceCard NO es un precio anterior: es el precio tarjeta de la misma oferta (medio de pago).
+                      // No es un descuento; se muestra como referencia, sin tachar.
+                      const hasCardGap = offer.priceCard > offer.priceCash;
                       return (
                         <div
-                          key={`${listing.store.slug}-${listing.url}`}
+                          key={offer.id}
                           className="group relative grid grid-cols-12 gap-4 px-5 md:px-6 py-4 md:py-5 items-center hover:bg-muted/20 transition-colors"
                         >
                           {/* Tienda → enlaza al perfil de la tienda */}
                           <div className="col-span-12 md:col-span-5 min-w-0">
                             <Link
-                              to={`/tiendas/${listing.store.slug}`}
+                              to={`/tiendas/${offer.store.slug}`}
                               prefetch="intent"
                               className="group/store flex items-center gap-4 min-w-0"
                             >
-                              <StoreLogo store={listing.store} className="size-12" />
+                              <StoreLogo store={offer.store} className="size-12" />
                               <div className="flex flex-col min-w-0 gap-1">
                                 <span className="font-medium text-sm truncate group-hover/store:text-primary transition-colors">
-                                  {listing.store.name}
+                                  {offer.store.name}
                                 </span>
                                 <span
                                   className={cn(
                                     "inline-flex items-center gap-1.5 text-[11px] font-medium",
-                                    listing.is_active
-                                      ? "text-emerald-600 dark:text-emerald-400"
-                                      : "text-muted-foreground",
+                                    offer.inStock ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
                                   )}
                                 >
                                   <span
                                     className={cn(
                                       "size-1.5 rounded-full",
-                                      listing.is_active ? "bg-emerald-500" : "bg-muted-foreground/50",
+                                      offer.inStock ? "bg-emerald-500" : "bg-muted-foreground/50",
                                     )}
                                   />
-                                  {listing.is_active ? t("in_stock") : t("out_of_stock")}
+                                  {offer.inStock ? t("in_stock") : t("out_of_stock")}
                                 </span>
                               </div>
                             </Link>
@@ -440,11 +347,11 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                               tarjeta como referencia de medio de pago. */}
                           <div className="col-span-7 md:col-span-4 flex flex-col md:items-end justify-center gap-0.5 min-w-0">
                             <span className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors tabular-nums whitespace-nowrap">
-                              {formatCLP(listing.price_cash || 0)}
+                              {formatCLP(offer.priceCash)}
                             </span>
                             {hasCardGap && (
                               <span className="text-[11px] text-muted-foreground tabular-nums">
-                                Con tarjeta {formatCLP(listing.price_normal ?? 0)}
+                                Con tarjeta {formatCLP(offer.priceCard)}
                               </span>
                             )}
                           </div>
@@ -452,10 +359,10 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                           {/* Acción */}
                           <div className="col-span-5 md:col-span-3 flex md:justify-end items-center min-w-0">
                             <OutboundLink
-                              href={listing.url}
+                              href={offer.url}
                               source="product_details_comparison"
-                              listingId={listing.id}
-                              productId={product.id}
+                              listingId={String(offer.id)}
+                              productId={productId}
                               className={cn(
                                 buttonVariants({
                                   size: "sm",
@@ -475,33 +382,26 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                 </div>
               </section>
 
-              {hasRenderableSpecs && product.specs && (
+              {specs.length > 0 && (
                 <section className="space-y-3">
                   <h3 className="text-lg font-medium">{t("specs_title")}</h3>
-                  <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-                    <div className="divide-y divide-border/40">
-                      {Object.entries(product.specs).map(([key, value]) => {
-                        if (value === null || value === undefined) return null;
-                        if (Array.isArray(value) && value.length === 0) return null;
-
-                        return (
-                          <div
-                            key={key}
-                            className="grid grid-cols-2 md:grid-cols-3 gap-4 px-4 md:px-6 py-3 hover:bg-muted/15 transition-colors"
-                          >
-                            <dt className="text-sm text-muted-foreground flex items-center">{formatSpecKey(key, t)}</dt>
-                            <dd className="col-span-1 md:col-span-2 text-sm text-foreground text-right md:text-left break-words">
-                              <SpecValue value={value} t={t} />
-                            </dd>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <dl className="rounded-xl border border-border/60 bg-card overflow-hidden divide-y divide-border/40">
+                    {specs.map(({ label, value }) => (
+                      <div
+                        key={label}
+                        className="grid grid-cols-2 md:grid-cols-3 gap-4 px-4 md:px-6 py-3 hover:bg-muted/15 transition-colors"
+                      >
+                        <dt className="text-sm text-muted-foreground flex items-center">{t(label)}</dt>
+                        <dd className="col-span-1 md:col-span-2 text-sm text-foreground text-right md:text-left break-words">
+                          {value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
                 </section>
               )}
 
-              {COMMENTS_API_ENABLED && product.id && <CommentsSection targetType="product" targetId={product.id} />}
+              {COMMENTS_API_ENABLED && <CommentsSection targetType="product" targetId={productId} />}
             </div>
           </div>
         </div>
@@ -520,12 +420,12 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
                 </span>
               </div>
 
-              {sortedListings[0]?.url && (
+              {bestOffer && (
                 <OutboundLink
-                  href={sortedListings[0].url}
+                  href={bestOffer.url}
                   source="product_details_mobile"
-                  listingId={sortedListings[0].id}
-                  productId={product.id}
+                  listingId={String(bestOffer.id)}
+                  productId={productId}
                   className={cn(buttonVariants({ size: "lg" }), "rounded-xl px-5 font-medium shrink-0")}
                 >
                   {t("go_to_store")}

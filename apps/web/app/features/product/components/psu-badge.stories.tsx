@@ -1,6 +1,5 @@
 import type { ProductSummary } from "@framerate/contracts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { toProduct } from "~/features/product/services/adapters";
 import { ProductCard } from "./product-card";
 import { PsuBadge } from "./psu-badge";
 
@@ -95,6 +94,7 @@ const psu = (id: number, name: string, efficiency: string, image: string | null,
   imageUrl: image && `https://dust2.gg/wp-content/uploads/${image}`,
   attributes: { wattage: 850, efficiency },
   bestPrice: price,
+  bestCardPrice: price,
   lowestPrice: price,
   offerCount: 5,
   mpn: null,
@@ -132,7 +132,7 @@ const cards = [
     189_326,
   ),
   psu(903, "Fuente sin foto con Cybenetics LAMBDA A+ (simulado)", "lambda-a+", null, 129_990),
-].map(toProduct);
+];
 
 export const EnTarjeta: Story = {
   name: "En contexto de tarjeta",

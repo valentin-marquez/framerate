@@ -1,3 +1,4 @@
+import type { ProductSummary } from "@framerate/contracts";
 import { IconLoader2, IconLogin, IconPlus, IconReceipt, IconX } from "@tabler/icons-react";
 import { type FormEvent, type SyntheticEvent, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -13,9 +14,8 @@ import { Input } from "~/shared/components/primitives/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/shared/components/primitives/tooltip";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
-import type { Product } from "~/shared/utils/db-types";
 
-type QuoteProduct = Pick<Product, "id" | "name">;
+type QuoteProduct = Pick<ProductSummary, "id" | "name">;
 
 interface AddToQuoteProps {
   product: QuoteProduct;
@@ -102,10 +102,9 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
   }, []);
 
   const add = (quote: { id: string; name: string }) => {
-    if (!product.id) return;
     setPendingId(quote.id);
     addItem.mutate(
-      { quoteId: quote.id, data: { product_id: product.id, quantity: 1 } },
+      { quoteId: quote.id, data: { product_id: String(product.id), quantity: 1 } },
       {
         onSuccess: (item) => {
           setLastSelectedQuoteId(quote.id);
@@ -167,7 +166,7 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
             <h2 id={titleId} className="text-sm font-medium text-foreground">
               {t("add_to_quote")}
             </h2>
-            {product.name && <p className="mt-0.5 truncate text-xs text-muted-foreground">{product.name}</p>}
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{product.name}</p>
           </div>
           <button
             type="button"

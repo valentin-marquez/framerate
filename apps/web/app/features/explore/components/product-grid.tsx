@@ -1,16 +1,16 @@
+import type { ProductSummary } from "@framerate/contracts";
 import { IconMoodEmpty } from "@tabler/icons-react";
 import { PRODUCT_GRID_CLASS, ProductGridSkeleton } from "~/features/explore/components/product-grid-skeleton";
 import { ProductCard } from "~/features/product/components/product-card";
-import type { Product } from "~/features/product/services/products";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 
 interface ProductGridProps {
-  products: Product[];
+  products: ProductSummary[];
   isLoading?: boolean;
   className?: string;
   /** Ids en tendencia (ranking server-side) para pintar el badge. */
-  trendingIds?: Set<string>;
+  trendingIds?: Set<number>;
 }
 
 export function ProductGrid({ products, isLoading, className, trendingIds }: ProductGridProps) {
@@ -41,7 +41,7 @@ export function ProductGrid({ products, isLoading, className, trendingIds }: Pro
           <ProductCard
             product={product}
             priority={index < 8}
-            trending={product.id ? trendingIds?.has(product.id) : false}
+            trending={trendingIds?.has(product.id)}
             className="h-full"
           />
         </div>

@@ -80,12 +80,12 @@ export async function loader() {
   }
 
   // No se piden filas de categorías que no llenarían el carrusel: cada una es una llamada a la API.
-  const rowCategories = categories.filter((c) => (c.product_count ?? 0) >= MIN_ROW_PRODUCTS);
+  const rowCategories = categories.filter((c) => c.productCount >= MIN_ROW_PRODUCTS);
 
   // "Mejores ofertas" vuelve cuando exista precio de referencia (hoy repetiría "Lo más popular").
   const rowDefs: { key: string; title: string; href: string }[] = [
     { key: "popular", title: "Lo más popular", href: "/explorar" },
-    ...rowCategories.map((c) => ({ key: c.slug, title: c.name, href: `/categoria/${c.slug}` })),
+    ...rowCategories.map((c) => ({ key: c.slug, title: c.label, href: `/categoria/${c.slug}` })),
   ];
 
   const fetches = [
@@ -96,7 +96,7 @@ export async function loader() {
   // allSettled aísla fallos/rate-limit: una fila que falla simplemente no se renderiza.
   const [settled, trending, stores] = await Promise.all([
     Promise.allSettled(fetches),
-    productsService.getTrending(40).catch(() => ({ ids: [] as string[] })),
+    productsService.getTrending(40).catch(() => ({ ids: [] as number[] })),
     storesService.listClaimable().then(
       (r) => r.stores,
       () => [],
@@ -111,7 +111,7 @@ export async function loader() {
       }
       return;
     }
-    const products = result.value.data ?? [];
+    const products = result.value.items;
     if (products.length >= MIN_ROW_PRODUCTS) {
       rows.push({ ...rowDefs[i], products });
     }

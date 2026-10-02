@@ -9,7 +9,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Grilla: Story = {
-  render: () => <ProductGrid products={rowProducts} trendingIds={new Set([rowProducts[1].id ?? ""])} />,
+  render: () => <ProductGrid products={rowProducts} trendingIds={new Set([rowProducts[1].id])} />,
 };
 
 export const GrillaCargando: Story = {
