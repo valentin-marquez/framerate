@@ -6,6 +6,7 @@ import { catalogRoutes } from "@/features/catalog/catalog.routes";
 import { claimsRoutes } from "@/features/claims/claims.routes";
 import { claimsAdminRoutes } from "@/features/claims/claims-admin.routes";
 import { crawlAdminRoutes } from "@/features/crawl-admin/crawl-admin.routes";
+import { healthRoutes } from "@/features/health/health.routes";
 import { getAuth } from "@/features/identity/auth-instance";
 import type { UserRow } from "@/features/identity/identity.repository";
 import { authProvidersRoutes, meRoutes, publicProfileRoutes } from "@/features/identity/identity.routes";
@@ -123,6 +124,7 @@ export function createApp() {
   adminApi.use("*", credentialedCors);
   adminApi.use("*", requireStaff("moderator"));
   adminApi.route("/", crawlAdminRoutes);
+  adminApi.route("/", healthRoutes);
   adminApi.route("/", matchReviewRoutes);
   adminApi.route("/", claimsAdminRoutes);
   adminApi.route("/support", supportAdminRoutes);
