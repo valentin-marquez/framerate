@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import type { AppEnv } from "@/app";
 import { AppError } from "@/shared/http/errors";
 import { timingSafeEqual } from "@/shared/http/middleware";
-import { getAuth } from "./auth";
+import { authD1, getAuth } from "./auth";
 import { loadSessionUser } from "./identity.repository";
 import { type Actor, actorRole, type SessionUser } from "./types";
 
@@ -20,9 +20,12 @@ import { type Actor, actorRole, type SessionUser } from "./types";
 
 async function sessionUser(c: Context<AppEnv>): Promise<SessionUser | null> {
   const start = Date.now();
+  const accessesBefore = authD1.accesses;
   const session = await getAuth(c.env).api.getSession({ headers: c.req.raw.headers });
   // Better Auth consulta D1 por su cuenta y su primer uso en un isolate inicializa: nada de eso pasa por `d1;dur`.
-  c.header("Server-Timing", `session;dur=${Date.now() - start}`, { append: true });
+  c.header("Server-Timing", `session;dur=${Date.now() - start};desc="${authD1.accesses - accessesBefore} accesos"`, {
+    append: true,
+  });
   if (!session) return null;
   const loaded = await loadSessionUser(c.var.db, session.user.id, new Date().toISOString());
   if (!loaded) return null;

@@ -22,6 +22,23 @@ export interface CreateAuthOptions {
   plugins?: BetterAuthOptions["plugins"];
 }
 
+/** Accesos a D1 que hace Better Auth (aproximado si hay requests concurrentes en el isolate); sale en `Server-Timing`. */
+export const authD1 = { accesses: 0 };
+
+function countAccesses(d1: D1Database): D1Database {
+  return new Proxy(d1, {
+    get(target, prop) {
+      const value = Reflect.get(target, prop);
+      if (typeof value !== "function") return value;
+      const counts = prop === "prepare" || prop === "batch" || prop === "exec";
+      return (...args: unknown[]) => {
+        if (counts) authD1.accesses++;
+        return value.apply(target, args);
+      };
+    },
+  });
+}
+
 export function createAuth(env: Env, options: CreateAuthOptions = {}) {
   const db = createDb(env.DB);
   const isUsernameTaken = async (username: string) =>
@@ -33,7 +50,7 @@ export function createAuth(env: Env, options: CreateAuthOptions = {}) {
     basePath: "/v1/auth",
     secret: env.BETTER_AUTH_SECRET,
     // D1 nativo: Better Auth lo detecta por su forma y no usa transacciones (D1 no las tiene).
-    database: env.DB,
+    database: countAccesses(env.DB),
     trustedOrigins: [env.WEB_ORIGIN],
     telemetry: { enabled: false },
     logger: { level: "warn" },
