@@ -1,5 +1,4 @@
 import { IconArrowBackUp, IconHeart, IconHeartFilled, IconPencil, IconTrash, IconUser } from "@tabler/icons-react";
-import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useState } from "react";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { CommentBody } from "~/features/comments/components/comment-body";
@@ -78,129 +77,116 @@ export function CommentNode({
   };
 
   return (
-    <LazyMotion features={domAnimation}>
-      <article className="flex gap-3 group" data-comment-id={node.id}>
-        <div className="size-8 rounded-full overflow-hidden bg-secondary/40 flex items-center justify-center shrink-0">
-          {node.author_avatar_url ? (
-            <AsyncImage src={node.author_avatar_url} alt="" className="size-full object-cover" />
+    <article className="flex gap-3 group" data-comment-id={node.id}>
+      <div className="size-8 rounded-full overflow-hidden bg-secondary/40 flex items-center justify-center shrink-0">
+        {node.author_avatar_url ? (
+          <AsyncImage src={node.author_avatar_url} alt="" className="size-full object-cover" />
+        ) : (
+          <IconUser className="size-4 text-muted-foreground" />
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <span className="font-medium text-foreground text-sm leading-none">{displayName}</span>
+          {isDeleted && (
+            <span className="text-xs italic text-muted-foreground">
+              {node.deleted_reason === "moderation" ? "eliminado por moderación" : "eliminado"}
+            </span>
+          )}
+          {node.edited_at && !isDeleted && <span className="text-xs italic text-muted-foreground">(editado)</span>}
+        </div>
+
+        <div className="mt-1">
+          {isEditing && !isDeleted ? (
+            <CommentForm
+              initialValue={node.body || ""}
+              submitLabel="Guardar cambios"
+              onCancel={() => setIsEditing(false)}
+              onSubmit={async (body) => {
+                await onEdit(body);
+                setIsEditing(false);
+              }}
+            />
+          ) : isDeleted ? (
+            <p className="text-sm leading-relaxed italic text-muted-foreground">[Comentario eliminado]</p>
           ) : (
-            <IconUser className="size-4 text-muted-foreground" />
+            <CommentBody body={node.body || ""} />
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="font-medium text-foreground text-sm leading-none">{displayName}</span>
-            {isDeleted && (
-              <span className="text-xs italic text-muted-foreground">
-                {node.deleted_reason === "moderation" ? "eliminado por moderación" : "eliminado"}
-              </span>
-            )}
-            {node.edited_at && !isDeleted && <span className="text-xs italic text-muted-foreground">(editado)</span>}
-          </div>
+        {!isEditing && (
+          <div className="mt-1.5 flex items-center gap-3.5 text-xs text-muted-foreground/90">
+            <FooterAction
+              onClick={handleLike}
+              disabled={!isAuthed || votePending || isDeleted}
+              pressed={liked}
+              aria-label={liked ? "Quitar me gusta" : "Me gusta"}
+              className={cn(
+                "hover:text-rose-600 dark:hover:text-rose-400",
+                liked && "text-rose-600 dark:text-rose-400",
+              )}
+            >
+              {liked ? <IconHeartFilled className="size-4" /> : <IconHeart className="size-4" />}
+              <span className="tabular-nums">{Math.max(0, node.score)}</span>
+            </FooterAction>
 
-          <div className="mt-1">
-            {isEditing && !isDeleted ? (
-              <CommentForm
-                initialValue={node.body || ""}
-                submitLabel="Guardar cambios"
-                onCancel={() => setIsEditing(false)}
-                onSubmit={async (body) => {
-                  await onEdit(body);
-                  setIsEditing(false);
-                }}
-              />
-            ) : isDeleted ? (
-              <p className="text-sm leading-relaxed italic text-muted-foreground">[Comentario eliminado]</p>
-            ) : (
-              <CommentBody body={node.body || ""} />
-            )}
-          </div>
-
-          {!isEditing && (
-            <div className="mt-1.5 flex items-center gap-3.5 text-xs text-muted-foreground/90">
-              <FooterAction
-                onClick={handleLike}
-                disabled={!isAuthed || votePending || isDeleted}
-                pressed={liked}
-                aria-label={liked ? "Quitar me gusta" : "Me gusta"}
-                className={cn(
-                  "hover:text-rose-600 dark:hover:text-rose-400",
-                  liked && "text-rose-600 dark:text-rose-400",
-                )}
-              >
-                {liked ? <IconHeartFilled className="size-4" /> : <IconHeart className="size-4" />}
-                <span className="tabular-nums">{Math.max(0, node.score)}</span>
+            {!isDeleted && canReply && (
+              <FooterAction onClick={() => setShowReply((v) => !v)} aria-expanded={showReply}>
+                <IconArrowBackUp className="size-3.5" />
+                Responder
               </FooterAction>
-
-              {!isDeleted && canReply && (
-                <FooterAction onClick={() => setShowReply((v) => !v)} aria-expanded={showReply}>
-                  <IconArrowBackUp className="size-3.5" />
-                  Responder
-                </FooterAction>
-              )}
-
-              <time dateTime={node.created_at} className="select-none">
-                {formatRelative(node.created_at)}
-              </time>
-
-              {isWithinEditWindow && (
-                <FooterAction onClick={() => setIsEditing(true)}>
-                  <IconPencil className="size-3.5" />
-                  Editar
-                </FooterAction>
-              )}
-              {isAuthor && !isDeleted && (
-                <FooterAction
-                  onClick={() => {
-                    if (window.confirm("¿Eliminar este comentario?")) onDelete();
-                  }}
-                  className="hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
-                >
-                  <IconTrash className="size-3.5" />
-                  Eliminar
-                </FooterAction>
-              )}
-              {REPORTS_API_ENABLED && !isAuthor && !isDeleted && user && (
-                <ReportButton
-                  targetType="comment"
-                  targetId={node.id}
-                  contextLabel={`Comentario de ${displayName}`}
-                  size="xs"
-                />
-              )}
-            </div>
-          )}
-
-          <AnimatePresence initial={false}>
-            {showReply && !isDeleted && (
-              <m.div
-                key="reply-form"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.18, ease: "easeOut" }}
-                className="overflow-hidden"
-              >
-                <div className="mt-2">
-                  <CommentForm
-                    placeholder="Responder…"
-                    submitLabel="Responder"
-                    onCancel={() => setShowReply(false)}
-                    onSubmit={async (body) => {
-                      await onReply(body);
-                      setShowReply(false);
-                    }}
-                  />
-                </div>
-              </m.div>
             )}
-          </AnimatePresence>
 
-          {children && <div className="mt-3 border-l border-border/40 pl-4 space-y-4">{children}</div>}
-        </div>
-      </article>
-    </LazyMotion>
+            <time dateTime={node.created_at} className="select-none">
+              {formatRelative(node.created_at)}
+            </time>
+
+            {isWithinEditWindow && (
+              <FooterAction onClick={() => setIsEditing(true)}>
+                <IconPencil className="size-3.5" />
+                Editar
+              </FooterAction>
+            )}
+            {isAuthor && !isDeleted && (
+              <FooterAction
+                onClick={() => {
+                  if (window.confirm("¿Eliminar este comentario?")) onDelete();
+                }}
+                className="hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
+              >
+                <IconTrash className="size-3.5" />
+                Eliminar
+              </FooterAction>
+            )}
+            {REPORTS_API_ENABLED && !isAuthor && !isDeleted && user && (
+              <ReportButton
+                targetType="comment"
+                targetId={node.id}
+                contextLabel={`Comentario de ${displayName}`}
+                size="xs"
+              />
+            )}
+          </div>
+        )}
+
+        {showReply && !isDeleted && (
+          <div className="mt-2 animate-in fade-in-0 slide-in-from-top-1 duration-base ease-out">
+            <CommentForm
+              placeholder="Responder…"
+              submitLabel="Responder"
+              onCancel={() => setShowReply(false)}
+              onSubmit={async (body) => {
+                await onReply(body);
+                setShowReply(false);
+              }}
+            />
+          </div>
+        )}
+
+        {children && <div className="mt-3 border-l border-border/40 pl-4 space-y-4">{children}</div>}
+      </div>
+    </article>
   );
 }
 

@@ -1,8 +1,6 @@
 import { IconArrowLeft, IconCircleCheckFilled, IconLoader2, IconRefresh } from "@tabler/icons-react";
-import { domAnimation, LazyMotion, m, type Transition } from "motion/react";
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { Link } from "react-router";
-import useMeasure from "react-use-measure";
 import { toast } from "sonner";
 import { Button } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
@@ -109,19 +107,10 @@ function screenKey(step: Step): "pick" | "claim" | "confirmed" {
   return "claim";
 }
 
-// El contenedor del wizard anima su alto cuando cambia el contenido (paso 1→2,
-// toggle provider/genérico, aparición del estado de verificación). Misma curva
-// que el panel de soporte.
-const WIZARD_RESIZE: Transition = { duration: 0.28, ease: [0.22, 0.61, 0.36, 1] };
-
 export function ClaimWizard({ initialClaim, initialStore, onDone, onCancel }: ClaimWizardProps) {
   const [state, dispatch] = useReducer(wizardReducer, initialClaim, initState);
   const { step, identity, claim, submitting } = state;
   const current = stepIndex(step);
-
-  // Mide todo el contenido del wizard para animar el alto de la caja entre
-  // pasos en vez de que pegue un salto.
-  const [stepRef, stepBounds] = useMeasure();
 
   // Verificación pasiva: mientras el wizard está en el paso DNS, polleamos
   // solos el TXT. El usuario no aprieta nada — apenas aparece, avanzamos.
@@ -220,131 +209,110 @@ export function ClaimWizard({ initialClaim, initialStore, onDone, onCancel }: Cl
   }
 
   return (
-    <LazyMotion features={domAnimation}>
-      <div className="space-y-5">
-        <Stepper current={current} />
+    <div className="space-y-5">
+      <Stepper current={current} />
 
-        <m.div
-          initial={false}
-          animate={{ height: stepBounds.height > 0 ? stepBounds.height : "auto" }}
-          transition={WIZARD_RESIZE}
-          className="overflow-hidden"
-        >
-          <div ref={stepRef}>
-            <m.div
-              key={screenKey(step)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-5"
-            >
-              {step === "pick" &&
-                (initialStore && submitting ? (
-                  <div className="flex items-center justify-center gap-2 rounded-xl border border-border/40 bg-secondary/30 p-8 text-muted-foreground text-sm">
-                    <IconLoader2 className="size-4 animate-spin" />
-                    Preparando reclamo para {initialStore.name}…
-                  </div>
-                ) : (
-                  <StorePicker onSelect={selectStore} busy={submitting} />
-                ))}
+      {/* El alto cambia de golpe entre pasos: animarlo recalcula el layout en cada cuadro. */}
+      <div key={screenKey(step)} className="animate-in fade-in-0 duration-base ease-out space-y-5">
+        {step === "pick" &&
+          (initialStore && submitting ? (
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-border/40 bg-secondary/30 p-8 text-muted-foreground text-sm">
+              <IconLoader2 className="size-4 animate-spin" />
+              Preparando reclamo para {initialStore.name}…
+            </div>
+          ) : (
+            <StorePicker onSelect={selectStore} busy={submitting} />
+          ))}
 
-              {identity && step !== "pick" && step !== "confirmed" && (
-                <>
-                  <IdentityCard identity={identity} />
+        {identity && step !== "pick" && step !== "confirmed" && (
+          <>
+            <IdentityCard identity={identity} />
 
-                  {step === "dns" && (
-                    <VerifyStatus
-                      status={auto.status}
-                      found={auto.found}
-                      expected={auto.expected}
-                      lastCheckedAt={auto.lastCheckedAt}
-                      checking={auto.checking}
-                      domain={identity.domain}
-                    />
-                  )}
+            {step === "dns" && (
+              <VerifyStatus
+                status={auto.status}
+                found={auto.found}
+                expected={auto.expected}
+                lastCheckedAt={auto.lastCheckedAt}
+                checking={auto.checking}
+                domain={identity.domain}
+              />
+            )}
 
-                  <DnsInstructions
-                    txtName={claim?.txtName ?? ""}
-                    txtValue={claim?.txtValue ?? ""}
-                    domain={identity.domain}
-                    dnsProvider={claim?.dnsProvider ?? null}
-                    dnsNameservers={claim?.dnsNameservers ?? null}
-                  />
+            <DnsInstructions
+              txtName={claim?.txtName ?? ""}
+              txtValue={claim?.txtValue ?? ""}
+              domain={identity.domain}
+              dnsProvider={claim?.dnsProvider ?? null}
+              dnsNameservers={claim?.dnsNameservers ?? null}
+            />
 
-                  {step === "verified" ? (
-                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
-                      <div className="flex items-center gap-2 font-medium text-primary text-sm">
-                        <IconCircleCheckFilled className="size-4" />
-                        Dominio verificado
-                      </div>
-                      <p className="mt-1 text-muted-foreground text-sm">
-                        Confirma para tomar la propiedad y poder gestionar la tienda.
-                      </p>
-                      <Button className="mt-3" onClick={confirmClaim} disabled={submitting}>
-                        {submitting && <IconLoader2 className="size-4 animate-spin" />}
-                        Confirmar y tomar propiedad
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-3">
-                      {onCancel && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            // Transición interna a "pick" (la caja anima el alto)
-                            // en vez de remontar el wizard desde el padre.
-                            dispatch({ type: "back-to-pick" });
-                            onCancel();
-                          }}
-                        >
-                          <IconArrowLeft className="size-4" />
-                          Volver
-                        </Button>
-                      )}
-                      {/* Verificamos solos — esto es sólo un atajo de baja jerarquía
-                          para impacientes, por eso es un link y no un botón. */}
-                      <button
-                        type="button"
-                        onClick={auto.checkNow}
-                        disabled={auto.checking}
-                        className="inline-flex cursor-pointer items-center gap-1.5 text-muted-foreground text-xs underline-offset-2 hover:text-foreground hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {auto.checking ? (
-                          <IconLoader2 className="size-3.5 animate-spin" />
-                        ) : (
-                          <IconRefresh className="size-3.5" />
-                        )}
-                        {auto.checking ? "Verificando…" : "¿Impaciente? Verificar ahora"}
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {step === "confirmed" && (
-                <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center">
-                  <IconCircleCheckFilled className="mx-auto size-8 text-primary" />
-                  <p className="mt-2 font-medium">¡Propiedad confirmada!</p>
-                  <p className="mt-1 text-muted-foreground text-sm">
-                    Ya puedes editar la tienda desde su panel de administración.
-                  </p>
-                  {identity?.slug && (
-                    <Button
-                      className="mt-4"
-                      nativeButton={false}
-                      render={<Link to={`/tiendas/${identity.slug}/admin`} />}
-                    >
-                      Ir al panel
-                    </Button>
-                  )}
+            {step === "verified" ? (
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 font-medium text-primary text-sm">
+                  <IconCircleCheckFilled className="size-4" />
+                  Dominio verificado
                 </div>
-              )}
-            </m.div>
+                <p className="mt-1 text-muted-foreground text-sm">
+                  Confirma para tomar la propiedad y poder gestionar la tienda.
+                </p>
+                <Button className="mt-3" onClick={confirmClaim} disabled={submitting}>
+                  {submitting && <IconLoader2 className="size-4 animate-spin" />}
+                  Confirmar y tomar propiedad
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-3">
+                {onCancel && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      // Transición interna a "pick" en vez de remontar el wizard desde el padre.
+                      dispatch({ type: "back-to-pick" });
+                      onCancel();
+                    }}
+                  >
+                    <IconArrowLeft className="size-4" />
+                    Volver
+                  </Button>
+                )}
+                {/* Verificamos solos — esto es sólo un atajo de baja jerarquía
+                          para impacientes, por eso es un link y no un botón. */}
+                <button
+                  type="button"
+                  onClick={auto.checkNow}
+                  disabled={auto.checking}
+                  className="inline-flex cursor-pointer items-center gap-1.5 text-muted-foreground text-xs underline-offset-2 hover:text-foreground hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {auto.checking ? (
+                    <IconLoader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <IconRefresh className="size-3.5" />
+                  )}
+                  {auto.checking ? "Verificando…" : "¿Impaciente? Verificar ahora"}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {step === "confirmed" && (
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center">
+            <IconCircleCheckFilled className="mx-auto size-8 text-primary" />
+            <p className="mt-2 font-medium">¡Propiedad confirmada!</p>
+            <p className="mt-1 text-muted-foreground text-sm">
+              Ya puedes editar la tienda desde su panel de administración.
+            </p>
+            {identity?.slug && (
+              <Button className="mt-4" nativeButton={false} render={<Link to={`/tiendas/${identity.slug}/admin`} />}>
+                Ir al panel
+              </Button>
+            )}
           </div>
-        </m.div>
+        )}
       </div>
-    </LazyMotion>
+    </div>
   );
 }
 

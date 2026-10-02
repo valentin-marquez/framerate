@@ -11,10 +11,8 @@ import {
   IconRefresh,
   IconUserCheck,
 } from "@tabler/icons-react";
-import { domAnimation, LazyMotion, m, type Transition } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useRevalidator, useSearchParams } from "react-router";
-import useMeasure from "react-use-measure";
 import { toast } from "sonner";
 import { requireRole } from "~/features/auth/services/auth.server";
 import { Button } from "~/shared/components/primitives/button";
@@ -43,10 +41,6 @@ const STATUS_FILTERS: Array<SupportStatus | "all"> = [
   "closed",
   "all",
 ];
-
-// Misma curva que el composer de comentarios: el panel anima su alto cuando
-// el contenido cambia de tamaño (loading → cargado, cambio de ticket, etc).
-const PANEL_RESIZE: Transition = { duration: 0.28, ease: [0.22, 0.61, 0.36, 1] };
 
 export function meta(_: Route.MetaArgs) {
   return [
@@ -227,9 +221,6 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
   const [reply, setReply] = useState("");
   const [isInternal, setIsInternal] = useState(false);
   const [sending, setSending] = useState(false);
-  // Mide el contenido para animar la altura del panel cuando cambia (igual que
-  // el composer de comentarios): el cambio entre tickets crece/encoge suave.
-  const [contentRef, contentBounds] = useMeasure();
   // Hilo de mensajes: lo bajamos al último mensaje al cargar el ticket y al
   // enviar/recibir uno nuevo.
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -311,154 +302,144 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
   const replyHintId = useId();
 
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        initial={false}
-        animate={{ height: contentBounds.height > 0 ? contentBounds.height : "auto" }}
-        transition={PANEL_RESIZE}
-        className="relative rounded-2xl border border-border bg-card overflow-hidden"
-      >
-        <div ref={contentRef}>
-          {/* Spinner sutil mientras recarga sin vaciar el panel (stale-while-revalidate). */}
-          {loading && ticket && (
-            <div className="absolute top-3 right-3 z-10">
-              <IconLoader2 className="size-4 animate-spin text-muted-foreground" />
-            </div>
-          )}
-          {!ticket ? (
-            <div className="p-12 text-center">
-              <IconLoader2 className="mx-auto size-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className={cn("transition-opacity duration-200", loading && "opacity-50")}>
-              <header className="px-6 py-4 border-b border-border space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="size-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                    <Icon className="size-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className={cn(
-                          "inline-block rounded-full px-2 py-0.5 text-xs font-medium",
-                          STATUS_COLORS[ticket.status],
-                        )}
-                      >
-                        {STATUS_LABELS[ticket.status]}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{CATEGORY_LABELS[ticket.category]}</span>
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                        <source.Icon className="size-3.5" aria-hidden />
-                        {source.label}
-                      </span>
-                    </div>
-                    <h2 className="text-lg font-semibold mt-1">{ticket.subject}</h2>
-                    <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground mt-0.5">
-                      <span className="break-all text-foreground">{ticket.email}</span>
-                      <span>{ticket.userId ? "Con cuenta" : "Sin cuenta"}</span>
-                      <span>{formatDateTime(ticket.createdAt)}</span>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {ticket.assignedTo !== currentUserId && (
-                    <Button size="sm" variant="secondary" onClick={assignToMe}>
-                      <IconUserCheck className="size-4" /> Asignármelo
-                    </Button>
-                  )}
-                  {ticket.status !== "in_progress" && (
-                    <Button size="sm" variant="secondary" onClick={() => changeStatus("in_progress")}>
-                      En curso
-                    </Button>
-                  )}
-                  {ticket.status !== "resolved" && (
-                    <Button size="sm" variant="secondary" onClick={() => changeStatus("resolved")}>
-                      <IconCheck className="size-4" /> Resolver
-                    </Button>
-                  )}
-                  {ticket.status !== "closed" && (
-                    <Button size="sm" variant="outline" onClick={() => changeStatus("closed")}>
-                      <IconLock className="size-4" /> Cerrar
-                    </Button>
-                  )}
-                  {ticket.status === "closed" && (
-                    <Button size="sm" variant="outline" onClick={() => changeStatus("open")}>
-                      <IconLockOpen className="size-4" /> Reabrir
-                    </Button>
-                  )}
-                </div>
-              </header>
-
-              <div ref={messagesRef} className="thread-scroll px-6 py-4 space-y-4 max-h-[55vh] overflow-y-auto">
-                {messages.map((m, i) => (
-                  <MessageBubble
-                    key={m.id}
-                    authorRole={m.authorRole}
-                    body={m.body}
-                    createdAt={m.createdAt}
-                    isInternalNote={m.isInternal}
-                    isOriginalMessage={i === 0}
-                  />
-                ))}
-              </div>
-
-              <footer className="border-t border-border p-4 space-y-3 bg-secondary/20">
-                <Textarea
-                  placeholder={isInternal ? "Escribe una nota interna…" : "Escribe una respuesta…"}
-                  aria-describedby={replyHintId}
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  rows={3}
-                  disabled={sending}
-                />
-                <p id={replyHintId} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                  {isInternal ? (
-                    <>
-                      <IconLock className="size-3.5 shrink-0 mt-px text-warn" aria-hidden />
-                      Sólo la ve el equipo, no se envía por correo
-                    </>
-                  ) : (
-                    <>
-                      <IconMail className="size-3.5 shrink-0 mt-px" aria-hidden />
-                      <span className="min-w-0">
-                        Se envía por correo a{" "}
-                        <span className="break-all font-medium text-foreground">{ticket.email}</span>
-                      </span>
-                    </>
-                  )}
-                </p>
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-2.5">
-                    <Switch
-                      size="sm"
-                      checked={isInternal}
-                      onCheckedChange={(checked) => setIsInternal(checked)}
-                      disabled={sending}
-                      aria-label="Marcar como nota interna"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => !sending && setIsInternal((v) => !v)}
-                      disabled={sending}
-                      className={cn(
-                        "flex items-center gap-1.5 text-sm cursor-pointer transition-colors",
-                        isInternal ? "text-warn font-medium" : "text-muted-foreground",
-                      )}
-                    >
-                      Nota interna
-                    </button>
-                  </div>
-                  <Button size="sm" onClick={sendReply} disabled={sending || reply.trim().length === 0}>
-                    {sending ? <IconLoader2 className="size-4 animate-spin" /> : <IconCheck className="size-4" />}
-                    {sending ? "Enviando…" : "Enviar"}
-                  </Button>
-                </div>
-              </footer>
-            </div>
-          )}
+    <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+      {/* Spinner sutil mientras recarga sin vaciar el panel (stale-while-revalidate). */}
+      {loading && ticket && (
+        <div className="absolute top-3 right-3 z-10">
+          <IconLoader2 className="size-4 animate-spin text-muted-foreground" />
         </div>
-      </m.div>
-    </LazyMotion>
+      )}
+      {!ticket ? (
+        <div className="p-12 text-center">
+          <IconLoader2 className="mx-auto size-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <div className={cn("transition-opacity", loading && "opacity-50")}>
+          <header className="px-6 py-4 border-b border-border space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="size-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                <Icon className="size-5 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={cn(
+                      "inline-block rounded-full px-2 py-0.5 text-xs font-medium",
+                      STATUS_COLORS[ticket.status],
+                    )}
+                  >
+                    {STATUS_LABELS[ticket.status]}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{CATEGORY_LABELS[ticket.category]}</span>
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <source.Icon className="size-3.5" aria-hidden />
+                    {source.label}
+                  </span>
+                </div>
+                <h2 className="text-lg font-semibold mt-1">{ticket.subject}</h2>
+                <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground mt-0.5">
+                  <span className="break-all text-foreground">{ticket.email}</span>
+                  <span>{ticket.userId ? "Con cuenta" : "Sin cuenta"}</span>
+                  <span>{formatDateTime(ticket.createdAt)}</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {ticket.assignedTo !== currentUserId && (
+                <Button size="sm" variant="secondary" onClick={assignToMe}>
+                  <IconUserCheck className="size-4" /> Asignármelo
+                </Button>
+              )}
+              {ticket.status !== "in_progress" && (
+                <Button size="sm" variant="secondary" onClick={() => changeStatus("in_progress")}>
+                  En curso
+                </Button>
+              )}
+              {ticket.status !== "resolved" && (
+                <Button size="sm" variant="secondary" onClick={() => changeStatus("resolved")}>
+                  <IconCheck className="size-4" /> Resolver
+                </Button>
+              )}
+              {ticket.status !== "closed" && (
+                <Button size="sm" variant="outline" onClick={() => changeStatus("closed")}>
+                  <IconLock className="size-4" /> Cerrar
+                </Button>
+              )}
+              {ticket.status === "closed" && (
+                <Button size="sm" variant="outline" onClick={() => changeStatus("open")}>
+                  <IconLockOpen className="size-4" /> Reabrir
+                </Button>
+              )}
+            </div>
+          </header>
+
+          <div ref={messagesRef} className="thread-scroll px-6 py-4 space-y-4 max-h-[55vh] overflow-y-auto">
+            {messages.map((m, i) => (
+              <MessageBubble
+                key={m.id}
+                authorRole={m.authorRole}
+                body={m.body}
+                createdAt={m.createdAt}
+                isInternalNote={m.isInternal}
+                isOriginalMessage={i === 0}
+              />
+            ))}
+          </div>
+
+          <footer className="border-t border-border p-4 space-y-3 bg-secondary/20">
+            <Textarea
+              placeholder={isInternal ? "Escribe una nota interna…" : "Escribe una respuesta…"}
+              aria-describedby={replyHintId}
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              rows={3}
+              disabled={sending}
+            />
+            <p id={replyHintId} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              {isInternal ? (
+                <>
+                  <IconLock className="size-3.5 shrink-0 mt-px text-warn" aria-hidden />
+                  Sólo la ve el equipo, no se envía por correo
+                </>
+              ) : (
+                <>
+                  <IconMail className="size-3.5 shrink-0 mt-px" aria-hidden />
+                  <span className="min-w-0">
+                    Se envía por correo a <span className="break-all font-medium text-foreground">{ticket.email}</span>
+                  </span>
+                </>
+              )}
+            </p>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2.5">
+                <Switch
+                  size="sm"
+                  checked={isInternal}
+                  onCheckedChange={(checked) => setIsInternal(checked)}
+                  disabled={sending}
+                  aria-label="Marcar como nota interna"
+                />
+                <button
+                  type="button"
+                  onClick={() => !sending && setIsInternal((v) => !v)}
+                  disabled={sending}
+                  className={cn(
+                    "flex items-center gap-1.5 text-sm cursor-pointer transition-colors",
+                    isInternal ? "text-warn font-medium" : "text-muted-foreground",
+                  )}
+                >
+                  Nota interna
+                </button>
+              </div>
+              <Button size="sm" onClick={sendReply} disabled={sending || reply.trim().length === 0}>
+                {sending ? <IconLoader2 className="size-4 animate-spin" /> : <IconCheck className="size-4" />}
+                {sending ? "Enviando…" : "Enviar"}
+              </Button>
+            </div>
+          </footer>
+        </div>
+      )}
+    </div>
   );
 }
 

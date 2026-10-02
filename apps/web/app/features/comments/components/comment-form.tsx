@@ -1,4 +1,3 @@
-import { domAnimation, LazyMotion, m } from "motion/react";
 import { useCallback, useId, useRef, useState } from "react";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { useQuotePasteWatcher } from "~/features/comments/components/quote-paste-dialog";
@@ -150,11 +149,11 @@ export function CommentForm({
   const origin = typeof window !== "undefined" ? window.location.origin : "framerate.cl";
 
   return (
-    <LazyMotion features={domAnimation}>
+    <>
       <div className="relative" id={containerId}>
         <div
           className={cn(
-            "rounded-xl border bg-input/30 transition-all duration-200",
+            "rounded-xl border bg-input/30 transition-colors",
             focused || trimmed.length > 0
               ? "border-ring/50 ring-[3px] ring-ring/15 shadow-sm"
               : "border-border/60 hover:border-border",
@@ -181,13 +180,7 @@ export function CommentForm({
           />
 
           {expanded && (
-            <m.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-              className="overflow-hidden"
-            >
+            <div className="animate-in fade-in-0 duration-fast ease-out">
               <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/40">
                 <span
                   className={cn(
@@ -208,7 +201,7 @@ export function CommentForm({
                   </Button>
                 </div>
               </div>
-            </m.div>
+            </div>
           )}
         </div>
 
@@ -221,6 +214,6 @@ export function CommentForm({
         />
       </div>
       {paste.node}
-    </LazyMotion>
+    </>
   );
 }
