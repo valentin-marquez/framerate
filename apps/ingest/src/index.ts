@@ -39,7 +39,7 @@ export default {
     const imageLog = log.child({ feature: "images" });
     imageLog.info(
       "images.copied",
-      await copyProductImages(createDb(env.DB), env.ASSETS, new Date().toISOString(), imageLog),
+      await copyProductImages(createDb(env.DB), env.ASSETS, env.IMAGES, new Date().toISOString(), imageLog),
     );
   },
 

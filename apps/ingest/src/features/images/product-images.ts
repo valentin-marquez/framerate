@@ -6,14 +6,15 @@ import { USER_AGENT } from "@/features/ingestion/stores/http";
 const BATCH = 250;
 const RETRY_AFTER_MS = 86_400_000;
 const MAX_BYTES = 10 * 1024 * 1024;
+/** Ancho de la copia: el de la foto de la ficha. La tarjeta la muestra más chica. */
+const WIDTH = 800;
 
-const CONTENT_TYPES = { jpg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp" } as const;
-type ImageExtension = keyof typeof CONTENT_TYPES;
+type ImageExtension = "jpg" | "png" | "gif" | "webp";
 
 /**
  * Formato según los primeros bytes. Content-Type no sirve: hay tiendas que sirven PNG como image/jpeg, o HTML con 200.
- * Sólo formatos que las transformaciones de Cloudflare aceptan como entrada (AVIF es sólo Enterprise), y nunca SVG:
- * el bucket se sirve bajo framerate.cl.
+ * Lo que no es una foto se descarta antes de procesarla (cada proceso cuenta como transformación), y nunca SVG: el
+ * bucket se sirve bajo framerate.cl.
  */
 export function imageExtension(b: Uint8Array): ImageExtension | null {
   const ascii = (from: number, to: number) => String.fromCharCode(...b.subarray(from, to));
@@ -24,20 +25,23 @@ export function imageExtension(b: Uint8Array): ImageExtension | null {
   return null;
 }
 
-/** Clave por contenido: la misma foto da la misma clave (idempotente, se comparte entre productos y nunca cambia). */
-export async function productImageKey(bytes: Uint8Array, ext: ImageExtension): Promise<string> {
-  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+/** Clave por la foto original: la misma foto da la misma clave (idempotente, se comparte entre productos). */
+export async function productImageKey(original: Uint8Array): Promise<string> {
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", original));
   const hex = Array.from(digest.subarray(0, 16), (x) => x.toString(16).padStart(2, "0")).join("");
-  return `products/${hex}.${ext}`;
+  return `products/${hex}.webp`;
 }
 
 /**
- * Copia a R2 la foto de los productos que todavía no tienen copia propia (`image_key`). Corre aparte de los crawls,
- * de a una foto por vez, y lo que falla se reintenta al día siguiente; mientras tanto la API sirve la URL de la tienda.
+ * Copia a R2 la foto de los productos que todavía no tienen copia propia (`image_key`): la achica una sola vez con el
+ * binding de Images y guarda ese WebP, que cdn.framerate.cl sirve tal cual. Así cada foto cuenta una vez como
+ * transformación, no cada mes que alguien la vea. Corre aparte de los crawls, de a una foto por vez, y lo que falla se
+ * reintenta al día siguiente; mientras tanto la API sirve la URL de la tienda.
  */
 export async function copyProductImages(
   db: Db,
   bucket: Pick<R2Bucket, "put">,
+  images: Pick<ImagesBinding, "input">,
   now: string,
   log: Logger,
   fetchImage: typeof fetch = fetch,
@@ -59,7 +63,7 @@ export async function copyProductImages(
   for (const product of pending) {
     let key: string | null = null;
     try {
-      key = await copyImage(bucket, product.image_url as string, fetchImage);
+      key = await copyImage(bucket, images, product.image_url as string, fetchImage);
       stats.copied++;
     } catch (error) {
       stats.failed++;
@@ -74,21 +78,31 @@ export async function copyProductImages(
   return stats;
 }
 
-async function copyImage(bucket: Pick<R2Bucket, "put">, url: string, fetchImage: typeof fetch): Promise<string> {
+async function copyImage(
+  bucket: Pick<R2Bucket, "put">,
+  images: Pick<ImagesBinding, "input">,
+  url: string,
+  fetchImage: typeof fetch,
+): Promise<string> {
   const res = await fetchImage(url, {
-    // Sin image/avif: algunas CDN de tiendas negocian el formato y AVIF no se puede transformar.
+    // Sin image/avif: algunas CDN de tiendas negocian el formato y Images no siempre lo acepta como entrada.
     headers: { "User-Agent": USER_AGENT, Accept: "image/webp,image/*;q=0.8" },
     signal: AbortSignal.timeout(15_000),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   if (Number(res.headers.get("content-length")) > MAX_BYTES) throw new Error("imagen demasiado grande");
-  const bytes = new Uint8Array(await res.arrayBuffer());
-  if (bytes.byteLength > MAX_BYTES) throw new Error("imagen demasiado grande");
-  const ext = imageExtension(bytes);
-  if (!ext) throw new Error("no es JPEG, PNG, GIF ni WebP");
-  const key = await productImageKey(bytes, ext);
-  await bucket.put(key, bytes, {
-    httpMetadata: { contentType: CONTENT_TYPES[ext], cacheControl: "public, max-age=31536000, immutable" },
+  const original = new Uint8Array(await res.arrayBuffer());
+  if (original.byteLength > MAX_BYTES) throw new Error("imagen demasiado grande");
+  if (!imageExtension(original)) throw new Error("no es JPEG, PNG, GIF ni WebP");
+
+  const key = await productImageKey(original);
+  const webp = await images
+    .input(new Blob([original]).stream())
+    .transform({ width: WIDTH, fit: "scale-down" })
+    .output({ format: "image/webp", quality: 85 });
+  // En bytes: R2 rechaza un stream sin largo conocido.
+  await bucket.put(key, await webp.response().arrayBuffer(), {
+    httpMetadata: { contentType: "image/webp", cacheControl: "public, max-age=31536000, immutable" },
   });
   return key;
 }

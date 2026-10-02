@@ -26,6 +26,9 @@
     }
   ],
 
+  // Achica las fotos de producto una vez al copiarlas a ASSETS (cuenta como transformación de Images).
+  "images": { "binding": "IMAGES" },
+
   "r2_buckets": [
     // bunx wrangler r2 bucket create framerate-snapshots
     // Retención: bunx wrangler r2 bucket lifecycle add framerate-snapshots snapshots-14d snapshots/ --expire-days 14

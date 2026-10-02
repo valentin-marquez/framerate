@@ -66,18 +66,13 @@ async function resolveBrand(db: Db, brand: string, category?: string): Promise<s
   return names.find((name) => slugify(name) === slugify(brand)) ?? brand;
 }
 
-/**
- * Foto del producto: la copia propia en R2 (`image_key`, que llena ingest) servida por las transformaciones de
- * Cloudflare Images desde el mismo dominio del bucket; mientras no exista, la URL de la tienda. Un solo tamaño a
- * propósito: cada (foto, parámetros) es una transformación facturada por mes, y así el catálogo cabe en las 5.000
- * gratis. Si se pasa, `onerror=redirect` sirve el original.
- */
+/** Foto del producto: la copia propia en R2 (`image_key`, ya achicada por ingest), o la URL de la tienda mientras no exista. */
 export function productImageUrl(
   product: { image_key: string | null; image_url: string | null },
   assetsBaseUrl: string | undefined,
 ): string | null {
   if (!product.image_key || !assetsBaseUrl) return product.image_url;
-  return `${assetsBaseUrl.replace(/\/+$/, "")}/cdn-cgi/image/width=800,format=auto,onerror=redirect/${product.image_key}`;
+  return `${assetsBaseUrl.replace(/\/+$/, "")}/${product.image_key}`;
 }
 
 export async function listProducts(

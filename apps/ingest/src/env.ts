@@ -7,5 +7,7 @@ export interface Env {
   SNAPSHOTS: R2Bucket;
   /** Bucket público (cdn.framerate.cl): copia propia de las fotos de producto, bajo `products/`. */
   ASSETS: R2Bucket;
+  /** Achica las fotos de producto una sola vez antes de guardarlas en ASSETS. */
+  IMAGES: ImagesBinding;
   CRAWL_QUEUE: Queue<CrawlMessage>;
 }

@@ -98,7 +98,7 @@ describe("API pública", () => {
     const asus = "asus-dual-rtx-4070-super-oc-12gb";
     await db.query
       .updateTable("products")
-      .set({ image_url: "https://alfa.cl/asus.png", image_key: "products/abc.png" })
+      .set({ image_url: "https://alfa.cl/asus.png", image_key: "products/abc.webp" })
       .where("slug", "=", asus)
       .execute();
     await db.query
@@ -106,7 +106,7 @@ describe("API pública", () => {
       .set({ image_url: "https://alfa.cl/ryzen.jpg" })
       .where("slug", "=", "amd-ryzen-7-7800x3d")
       .execute();
-    const cdn = "https://cdn.framerate.cl/cdn-cgi/image/width=800,format=auto,onerror=redirect/products/abc.png";
+    const cdn = "https://cdn.framerate.cl/products/abc.webp";
 
     env.ASSETS_BASE_URL = "https://cdn.framerate.cl/";
     try {

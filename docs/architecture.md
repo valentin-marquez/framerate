@@ -251,8 +251,8 @@ bunx wrangler d1 create framerate          # pegar database_id en los 3 wrangler
                                            #   packages/database, apps/server, apps/ingest
 bunx wrangler r2 bucket create framerate-snapshots
 bunx wrangler r2 bucket lifecycle add framerate-snapshots snapshots-14d snapshots/ --expire-days 14
-# Fotos de producto (las copia el Cron de ingest) servidas en cdn.framerate.cl. Además, en el dashboard:
-# Images → Transformations → framerate.cl → Enable (la API arma URLs /cdn-cgi/image/... sobre ese dominio).
+# Fotos de producto: el Cron de ingest las achica una vez (binding de Images, WebP de 800 px) y cdn.framerate.cl
+# las sirve tal cual. No hace falta activar las transformaciones por URL en la zona.
 bunx wrangler r2 bucket create framerate-assets --location enam
 bunx wrangler r2 bucket domain add framerate-assets --domain cdn.framerate.cl --zone-id <zone id de framerate.cl>
 bunx wrangler queues create framerate-crawl
@@ -287,7 +287,7 @@ Observabilidad: logs JSON estructurados (Workers Logs) con `feature`, `store`,
 | D1: 50M filas escritas y 25 mil millones leídas incluidas | 0 |
 | Queues: 1M operaciones incluidas (≈ 280 mensajes/día) | 0 |
 | R2: 10 GB incluidos (snapshots gzip, retención 14 días; fotos de producto ≈ 1 GB) | 0 |
-| Images (plan Free): 5.000 transformaciones únicas al mes; la API usa un solo tamaño por foto | 0 |
+| Images (plan Free): 5.000 transformaciones únicas al mes; cada foto se procesa una sola vez, al copiarla | 0 |
 | **Total** | **≈ 5** |
 
 Pendientes que pueden sumar: Browser Rendering para tiendas que requieren

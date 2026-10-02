@@ -35,6 +35,22 @@ function fakeFetch(routes: Record<string, () => Response>) {
   return { fetchImage, calls };
 }
 
+/** Images falso: devuelve "webp" y cuenta cuántas veces se procesó una foto (cada una es una transformación). */
+function fakeImages() {
+  const calls: unknown[] = [];
+  const images = {
+    input: () => ({
+      transform: (t: unknown) => {
+        calls.push(t);
+        return {
+          output: async () => ({ response: () => new Response("webp") }),
+        };
+      },
+    }),
+  } as unknown as Pick<ImagesBinding, "input">;
+  return { images, calls };
+}
+
 function fakeBucket() {
   const puts = new Map<string, { contentType?: string; cacheControl?: string }>();
   const bucket = {
@@ -54,7 +70,7 @@ describe("copia de fotos de producto a R2", () => {
     expect(imageExtension(new TextEncoder().encode("<svg xmlns="))).toBeNull();
   });
 
-  test("copia con clave por contenido: la misma foto en dos productos es un solo objeto", async () => {
+  test("guarda la foto achicada en WebP, con clave por la original: la misma foto en dos productos es un objeto", async () => {
     await product("a", "https://alfa.cl/a.jpg");
     await product("b", "https://beta.cl/misma.jpg");
     await product("sin-foto", null);
@@ -63,13 +79,19 @@ describe("copia de fotos de producto a R2", () => {
     const { fetchImage } = fakeFetch({ "https://alfa.cl/a.jpg": png, "https://beta.cl/misma.jpg": png });
     const { bucket, puts } = fakeBucket();
 
-    expect(await copyProductImages(db, bucket, T0, silentLogger, fetchImage)).toEqual({ copied: 2, failed: 0 });
+    const { images, calls } = fakeImages();
+
+    expect(await copyProductImages(db, bucket, images, T0, silentLogger, fetchImage)).toEqual({ copied: 2, failed: 0 });
 
     const [key] = [...puts.keys()];
     expect(puts.size).toBe(1);
-    expect(key).toMatch(/^products\/[0-9a-f]{32}\.png$/);
+    expect(calls).toEqual([
+      { width: 800, fit: "scale-down" },
+      { width: 800, fit: "scale-down" },
+    ]);
+    expect(key).toMatch(/^products\/[0-9a-f]{32}\.webp$/);
     expect(puts.get(key as string)).toEqual({
-      contentType: "image/png",
+      contentType: "image/webp",
       cacheControl: "public, max-age=31536000, immutable",
     });
     const rows = await all(db, "products");
@@ -89,19 +111,22 @@ describe("copia de fotos de producto a R2", () => {
       "https://alfa.cl/hotlink.png": () => new Response("<html>no hotlinking</html>", { status: 200 }),
     });
     const { bucket } = fakeBucket();
+    const { images, calls: processed } = fakeImages();
 
-    expect(await copyProductImages(db, bucket, T0, silentLogger, fetchImage)).toEqual({ copied: 1, failed: 2 });
+    expect(await copyProductImages(db, bucket, images, T0, silentLogger, fetchImage)).toEqual({ copied: 1, failed: 2 });
+    // El HTML con 200 se descarta antes de procesarlo: no gasta una transformación.
+    expect(processed.length).toBe(1);
     const failed = (await all(db, "products")).filter((r) => r.image_key === null);
     expect(failed.map((r) => r.image_checked_at)).toEqual([T0, T0]);
 
     calls.length = 0;
-    expect(await copyProductImages(db, bucket, "2026-10-01T06:00:00.000Z", silentLogger, fetchImage)).toEqual({
+    expect(await copyProductImages(db, bucket, images, "2026-10-01T06:00:00.000Z", silentLogger, fetchImage)).toEqual({
       copied: 0,
       failed: 0,
     });
     expect(calls).toEqual([]);
 
-    await copyProductImages(db, bucket, nextDay, silentLogger, fetchImage);
+    await copyProductImages(db, bucket, images, nextDay, silentLogger, fetchImage);
     expect(calls.sort()).toEqual(["https://alfa.cl/borrada.png", "https://alfa.cl/hotlink.png"]);
   });
 });
