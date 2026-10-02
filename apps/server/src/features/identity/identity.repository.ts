@@ -59,6 +59,17 @@ export async function findUserById(db: Db, id: string): Promise<UserRow | undefi
     .executeTakeFirst();
 }
 
+/** Usuario por correo, sólo si lo verificó su proveedor: un correo sin verificar no prueba que la cuenta sea suya. */
+export async function findUserByEmail(db: Db, email: string): Promise<UserRow | undefined> {
+  return db.query
+    .selectFrom("users")
+    .select(USER_COLUMNS)
+    .where((eb) => eb(eb.fn("lower", ["email"]), "=", email.toLowerCase()))
+    .where("email_verified", "=", 1)
+    .where("deleted_at", "is", null)
+    .executeTakeFirst();
+}
+
 export async function findUserByUsername(db: Db, username: string): Promise<UserRow | undefined> {
   return db.query
     .selectFrom("users")

@@ -14,6 +14,7 @@ import { AppError } from "@/shared/http/errors";
 import { timingSafeEqual } from "@/shared/http/middleware";
 import {
   addMessage,
+  createTicket,
   findTicket,
   listMessages,
   listTicketsOf,
@@ -27,17 +28,11 @@ import {
  * sola vez al crear el ticket. Un usuario sancionado igual puede escribir: puede querer apelar.
  */
 
-const PUBLIC_ID_ALPHABET = "ABCDEFGHJKMNPQRSTVWXYZ23456789";
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
 const hex = (bytes: ArrayBuffer | Uint8Array) =>
   Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
 const sha256 = async (value: string) => hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
-
-const newPublicId = () =>
-  Array.from(crypto.getRandomValues(new Uint32Array(8)), (n) => PUBLIC_ID_ALPHABET[n % PUBLIC_ID_ALPHABET.length]).join(
-    "",
-  );
 
 async function verifyTurnstile(c: Context<AppEnv>, secret: string, token: string | undefined) {
   if (token) {
@@ -85,35 +80,15 @@ export const supportRoutes = new Hono<AppEnv>()
     }
 
     const now = new Date().toISOString();
-    const accessTokenHash = accessToken ? await sha256(accessToken) : null;
-    const insert = async (publicId: string) => {
-      await c.var.db.batch([
-        c.var.db.query.insertInto("support_tickets").values({
-          public_id: publicId,
-          user_id: user?.id ?? null,
-          email,
-          category: input.category,
-          subject: input.subject,
-          access_token_hash: accessTokenHash,
-          source: "web",
-          created_at: now,
-          updated_at: now,
-          last_message_at: now,
-        }),
-        c.var.db.query.insertInto("support_messages").values({
-          ticket_id: c.var.db.query.selectFrom("support_tickets").select("id").where("public_id", "=", publicId),
-          author_id: user?.id ?? null,
-          author_role: "user",
-          body: input.body,
-          created_at: now,
-        }),
-      ]);
-      return publicId;
-    };
-    // 30^8 combinaciones: un choque del UNIQUE es rarísimo y basta un reintento.
-    const publicId = await insert(newPublicId()).catch((error: Error) => {
-      if (!error.message.includes("UNIQUE")) throw error;
-      return insert(newPublicId());
+    const publicId = await createTicket(c.var.db, {
+      userId: user?.id ?? null,
+      email,
+      category: input.category,
+      subject: input.subject,
+      body: input.body,
+      accessTokenHash: accessToken ? await sha256(accessToken) : null,
+      source: "web",
+      now,
     });
 
     sendEmailInBackground(

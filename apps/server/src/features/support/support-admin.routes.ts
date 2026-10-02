@@ -19,6 +19,7 @@ import {
   findTicket,
   listMessages,
   listTickets,
+  setMessageId,
   setStatus,
   type TicketRow,
   toAdminTicket,
@@ -108,6 +109,8 @@ export const supportAdminRoutes = new Hono<AppEnv>()
           reply: body,
           status,
         }),
+        // Si la persona responde a este correo, su In-Reply-To apunta a este Message-ID (#69).
+        (messageId) => setMessageId(c.var.db, message.id, messageId),
       );
     }
     return c.json<TicketMessage>(toMessage(message), 201);

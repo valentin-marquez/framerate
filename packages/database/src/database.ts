@@ -548,7 +548,7 @@ export interface SupportTicketsTable {
   assigned_to: string | null;
   store_id: number | null;
   access_token_hash: string | null;
-  source: Defaulted<"web" | "api" | "system">;
+  source: Defaulted<"web" | "api" | "system" | "email">;
   created_at: string;
   updated_at: string;
   last_message_at: string;
@@ -562,6 +562,7 @@ export interface SupportMessagesTable {
   author_role: "user" | "staff" | "system";
   body: string;
   is_internal: Defaulted<SqlBool>;
+  message_id: string | null;
   created_at: string;
 }
 

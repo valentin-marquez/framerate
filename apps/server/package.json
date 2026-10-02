@@ -22,6 +22,7 @@
     "better-auth": "^1.7.6",
     "hono": "^4.13.12",
     "kysely": "^0.29.6",
+    "postal-mime": "^4.0.2",
     "react": "19.1.2",
     "react-dom": "19.1.2",
     "zod": "^4.6.5"
