@@ -10,7 +10,6 @@ import {
 } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { Link, redirect } from "react-router";
-import { getCategoryConfig } from "~/features/category/utils/categories";
 import { CommentsSection } from "~/features/comments/components/comments-section";
 import { COMMENTS_API_ENABLED } from "~/features/comments/services/comments";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
@@ -96,7 +95,6 @@ export function meta({ data }: Route.MetaArgs) {
 
   const bestPrice = data.prices?.cash || 0;
   const description = `Compra ${data.name} desde ${formatCLP(bestPrice)} en Chile. Compara precios en ${data.listings_count} tiendas.`;
-  const categoryConfig = getCategoryConfig(data.category?.slug);
   // ponytail: la foto de la tienda tal cual; una tarjeta propia (logo + foto + nombre) cuando haga falta.
   const ogImage = data.image_url || "/og-image.png";
 
@@ -112,7 +110,7 @@ export function meta({ data }: Route.MetaArgs) {
     { property: "og:image:alt", content: `${data.name} — Framerate` },
     { property: "product:price:amount", content: String(bestPrice) },
     { property: "product:price:currency", content: "CLP" },
-    { property: "product:category", content: categoryConfig.label },
+    { property: "product:category", content: data.category?.name ?? "" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:image", content: ogImage },
   ];
@@ -168,7 +166,6 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
   const { data: priceHistory } = usePriceHistory(product.slug || "", 30);
   const totalHistoryPoints = priceHistory?.series.reduce((acc, s) => acc + s.points.length, 0) ?? 0;
   const bestPrice = product.prices?.cash || 0;
-  const categoryConfig = getCategoryConfig(product.category?.slug);
 
   const sortedListings = product.listings.toSorted((a, b) => (a.price_cash || Infinity) - (b.price_cash || Infinity));
   const bestOffer = sortedListings[0];
@@ -224,10 +221,10 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
             <IconChevronRight className="size-3 mx-2 shrink-0 text-border" />
 
             <Link
-              to={`/categoria/${categoryConfig.urlSlug}`}
+              to={`/categoria/${product.category?.slug}`}
               className="hover:text-primary transition-colors active:text-primary"
             >
-              {categoryConfig.label}
+              {product.category?.name}
             </Link>
 
             <IconChevronRight className="size-3 mx-2 shrink-0 text-border" />

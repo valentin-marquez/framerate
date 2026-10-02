@@ -1,26 +1,10 @@
-export const CATEGORY_CONFIG: Record<string, { label: string; urlSlug: string }> = {
-  "placas-madre": { label: "Placas Madre", urlSlug: "placas-madre" },
-  gabinetes: { label: "Gabinetes", urlSlug: "gabinetes" },
-  "tarjetas-de-video": { label: "Tarjetas de Video", urlSlug: "tarjetas-de-video" },
-  ssd: { label: "SSD", urlSlug: "ssd" },
-  "fuentes-de-poder": { label: "Fuentes de Poder", urlSlug: "fuentes-de-poder" },
-  procesadores: { label: "Procesadores", urlSlug: "procesadores" },
-  "coolers-cpu": { label: "Coolers CPU", urlSlug: "coolers-cpu" },
-  "discos-duros": { label: "Discos Duros", urlSlug: "discos-duros" },
-  ventiladores: { label: "Ventiladores", urlSlug: "ventiladores" },
-  "memorias-ram": { label: "Memorias RAM", urlSlug: "memorias-ram" },
-};
+import { CATEGORY_LABELS, categoryFromSlug } from "@framerate/contracts";
 
-export function getCategoryConfig(apiSlug: string) {
-  return CATEGORY_CONFIG[apiSlug] || { label: apiSlug, urlSlug: apiSlug };
-}
-
-export function getApiSlugFromUrl(urlSlug: string) {
-  const entry = Object.entries(CATEGORY_CONFIG).find(([_, config]) => config.urlSlug === urlSlug);
-  return entry ? entry[0] : null;
+/** Nombre de una categoría por su slug, para cuando no se tiene la lista de la API a mano: es la misma fuente. */
+export function categoryLabel(slug: string) {
+  const category = categoryFromSlug(slug);
+  return category ? CATEGORY_LABELS[category] : slug;
 }
 
 /** Foto de stock de la categoría (ver public/img/CREDITS.md). */
-export function getCategoryImage(apiSlug: string) {
-  return `/img/categories/${getCategoryConfig(apiSlug).urlSlug}.jpg`;
-}
+export const getCategoryImage = (slug: string) => `/img/categories/${slug}.jpg`;

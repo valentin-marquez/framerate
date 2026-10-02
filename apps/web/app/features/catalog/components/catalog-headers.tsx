@@ -2,7 +2,7 @@ import { IconSearch, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { CategoryWithCount } from "~/features/category/services/categories";
-import { getCategoryConfig, getCategoryImage } from "~/features/category/utils/categories";
+import { categoryLabel, getCategoryImage } from "~/features/category/utils/categories";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
@@ -37,7 +37,7 @@ export function CategoryHeader({
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/60 to-transparent md:via-background/40" />
       <div className="flex min-h-56 flex-col justify-end gap-3 p-6 pt-24 md:min-h-72 md:p-10 md:pt-32">
         <h1 className={cn("font-semibold text-3xl text-foreground tracking-tight md:text-5xl", enterClass())}>
-          {getCategoryConfig(category).label}
+          {categoryLabel(category)}
         </h1>
         <ul
           className={cn("flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm", enterClass())}
@@ -120,12 +120,11 @@ export function ExploreHeader({
         <nav aria-label="Categorías" className="scrollbar-hide -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
           <ul className="flex w-max gap-3 md:w-full md:flex-wrap">
             {categories.map((category, i) => {
-              const config = getCategoryConfig(category.slug);
               const empty = !category.product_count;
               return (
                 <li key={category.id} className={enterClass()} style={enterStyle(160 + Math.min(i, 6) * 50)}>
                   <Link
-                    to={`/categoria/${config.urlSlug}`}
+                    to={`/categoria/${category.slug}`}
                     prefetch="intent"
                     className="group relative flex h-24 w-40 flex-col justify-end overflow-hidden rounded-2xl bg-secondary p-3"
                   >
@@ -139,7 +138,7 @@ export function ExploreHeader({
                       )}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <span className="relative font-medium text-sm text-white leading-tight">{config.label}</span>
+                    <span className="relative font-medium text-sm text-white leading-tight">{category.name}</span>
                   </Link>
                 </li>
               );

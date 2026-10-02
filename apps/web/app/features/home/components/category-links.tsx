@@ -1,6 +1,5 @@
 import { Link } from "react-router";
 import type { Category } from "~/features/category/services/categories";
-import { getCategoryConfig } from "~/features/category/utils/categories";
 
 interface CategoryLinksProps {
   categories: Category[];
@@ -20,19 +19,16 @@ export function CategoryLinks({ categories }: CategoryLinksProps) {
       <p className="text-sm text-muted-foreground mb-6">Navega por categoría y compara precios al instante.</p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
-        {categories.map((category) => {
-          const config = getCategoryConfig(category.slug);
-          return (
-            <Link
-              key={category.id}
-              to={`/categoria/${config.urlSlug}`}
-              prefetch="intent"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors py-1"
-            >
-              {config.label}
-            </Link>
-          );
-        })}
+        {categories.map((category) => (
+          <Link
+            key={category.id}
+            to={`/categoria/${category.slug}`}
+            prefetch="intent"
+            className="text-sm text-muted-foreground hover:text-primary transition-colors py-1"
+          >
+            {category.name}
+          </Link>
+        ))}
         <Link
           to="/explorar"
           prefetch="intent"

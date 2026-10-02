@@ -1,6 +1,5 @@
 import { Link } from "react-router";
 import type { Category } from "~/features/category/services/categories";
-import { getCategoryConfig } from "~/features/category/utils/categories";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 
@@ -40,23 +39,20 @@ export function CompactSearchHero({ categories }: CompactSearchHeroProps) {
           style={enterStyle(160)}
         >
           <div className="flex items-center gap-2 w-max md:w-full md:flex-wrap md:justify-center">
-            {categories.map((category) => {
-              const config = getCategoryConfig(category.slug);
-              return (
-                <Link
-                  key={category.id}
-                  to={`/categoria/${config.urlSlug}`}
-                  prefetch="intent"
-                  className={cn(
-                    "shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap",
-                    "bg-secondary/30 text-secondary-foreground/70 transition-colors duration-200",
-                    "hover:bg-primary hover:text-primary-foreground",
-                  )}
-                >
-                  {config.label}
-                </Link>
-              );
-            })}
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                to={`/categoria/${category.slug}`}
+                prefetch="intent"
+                className={cn(
+                  "shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap",
+                  "bg-secondary/30 text-secondary-foreground/70 transition-colors duration-200",
+                  "hover:bg-primary hover:text-primary-foreground",
+                )}
+              >
+                {category.name}
+              </Link>
+            ))}
           </div>
         </div>
       )}

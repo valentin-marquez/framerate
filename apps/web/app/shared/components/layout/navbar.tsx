@@ -5,7 +5,6 @@ import { Link, useLocation } from "react-router";
 import { LoginDialog } from "~/features/auth/components/login-dialog";
 import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
 import type { Category } from "~/features/category/services/categories";
-import { getCategoryConfig } from "~/features/category/utils/categories";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { AdminMenu } from "~/shared/components/layout/admin-menu";
@@ -269,21 +268,13 @@ export function Navbar({ categories, blurred }: NavbarProps) {
 
                 <DropdownMenuContent align="start" className="w-56 mt-2">
                   {categories && categories.length > 0 ? (
-                    categories.map((c) => {
-                      const categoryConfig = getCategoryConfig(c.slug);
-                      return (
-                        <DropdownMenuItem key={c.id}>
-                          <Link
-                            to={`/categoria/${categoryConfig.urlSlug}`}
-                            viewTransition
-                            className="cursor-pointer"
-                            prefetch="intent"
-                          >
-                            {categoryConfig.label}
-                          </Link>
-                        </DropdownMenuItem>
-                      );
-                    })
+                    categories.map((c) => (
+                      <DropdownMenuItem key={c.id}>
+                        <Link to={`/categoria/${c.slug}`} viewTransition className="cursor-pointer" prefetch="intent">
+                          {c.name}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))
                   ) : (
                     <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
                   )}
@@ -319,21 +310,13 @@ export function Navbar({ categories, blurred }: NavbarProps) {
 
                 <DropdownMenuContent align="center" className="w-56 mt-2">
                   {categories && categories.length > 0 ? (
-                    categories.map((c) => {
-                      const categoryConfig = getCategoryConfig(c.slug);
-                      return (
-                        <DropdownMenuItem key={c.id}>
-                          <Link
-                            to={`/categoria/${categoryConfig.urlSlug}`}
-                            viewTransition
-                            className="cursor-pointer"
-                            prefetch="intent"
-                          >
-                            {categoryConfig.label}
-                          </Link>
-                        </DropdownMenuItem>
-                      );
-                    })
+                    categories.map((c) => (
+                      <DropdownMenuItem key={c.id}>
+                        <Link to={`/categoria/${c.slug}`} viewTransition className="cursor-pointer" prefetch="intent">
+                          {c.name}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))
                   ) : (
                     <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
                   )}

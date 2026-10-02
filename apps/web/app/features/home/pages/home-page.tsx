@@ -1,6 +1,5 @@
 import { categoriesService } from "@/features/category/services/categories";
 import { productsService } from "@/features/product/services/products";
-import { getCategoryConfig } from "~/features/category/utils/categories";
 import { HomeContent } from "~/features/home/components/home-content";
 import type { HomeData, HomeRow } from "~/features/home/types";
 import { storesService } from "~/features/stores/services/stores";
@@ -86,10 +85,7 @@ export async function loader() {
   // "Mejores ofertas" vuelve cuando exista precio de referencia (hoy repetiría "Lo más popular").
   const rowDefs: { key: string; title: string; href: string }[] = [
     { key: "popular", title: "Lo más popular", href: "/explorar" },
-    ...rowCategories.map((c) => {
-      const config = getCategoryConfig(c.slug);
-      return { key: c.slug, title: config.label, href: `/categoria/${config.urlSlug}` };
-    }),
+    ...rowCategories.map((c) => ({ key: c.slug, title: c.name, href: `/categoria/${c.slug}` })),
   ];
 
   const fetches = [

@@ -1,7 +1,6 @@
 import { redirect } from "react-router";
 import { CatalogView } from "~/features/catalog/components/catalog-view";
 import { loadCatalog } from "~/features/catalog/load-catalog";
-import { getCategoryConfig } from "~/features/category/utils/categories";
 import type { Route } from "./+types/explore-page";
 
 export function meta() {
@@ -25,7 +24,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (legacyCategory) {
     url.searchParams.delete("category");
     const query = url.searchParams.toString();
-    throw redirect(`/categoria/${getCategoryConfig(legacyCategory).urlSlug}${query ? `?${query}` : ""}`, 301);
+    throw redirect(`/categoria/${legacyCategory}${query ? `?${query}` : ""}`, 301);
   }
   return loadCatalog(request);
 }

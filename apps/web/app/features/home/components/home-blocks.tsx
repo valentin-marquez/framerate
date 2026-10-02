@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { getCategoryConfig, getCategoryImage } from "~/features/category/utils/categories";
+import { getCategoryImage } from "~/features/category/utils/categories";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import type { HomeData } from "../types";
@@ -34,13 +34,12 @@ export function CategoryMosaic({ categories }: Pick<HomeData, "categories">) {
       <h2 className="font-semibold text-foreground text-lg tracking-tight md:text-xl">Explora por categoría</h2>
       <div className="grid auto-rows-[7.5rem] grid-cols-2 gap-3 md:grid-cols-4 md:auto-rows-[8.5rem]">
         {sorted.map((category, i) => {
-          const config = getCategoryConfig(category.slug);
           const big = i === 0 && !isEmpty(category);
           const last = i === sorted.length - 1 && sorted.length > 1;
           return (
             <Link
               key={category.id}
-              to={`/categoria/${config.urlSlug}`}
+              to={`/categoria/${category.slug}`}
               prefetch="intent"
               className={cn(
                 "group relative flex h-full flex-col justify-end overflow-hidden rounded-2xl bg-secondary p-4",
@@ -62,7 +61,7 @@ export function CategoryMosaic({ categories }: Pick<HomeData, "categories">) {
                 <p
                   className={cn("font-semibold tracking-tight", big ? "text-2xl md:text-3xl" : "text-sm md:text-base")}
                 >
-                  {config.label}
+                  {category.name}
                 </p>
                 <p className="text-white/70 text-xs">{countLabel(category)}</p>
               </div>

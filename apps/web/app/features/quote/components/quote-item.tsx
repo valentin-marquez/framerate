@@ -1,7 +1,7 @@
 import { IconAlertTriangle, IconBuildingStore, IconExternalLink, IconPlus, IconTrash } from "@tabler/icons-react";
 import { domAnimation, LazyMotion, m } from "motion/react";
 import { useNavigate } from "react-router";
-import { getCategoryConfig } from "~/features/category/utils/categories";
+import { categoryLabel } from "~/features/category/utils/categories";
 import { ProductSpecs } from "~/features/quote/components/product-specs";
 import { StoreSelector } from "~/features/quote/components/store-selector";
 import type { VirtualQuoteItem } from "~/features/quote/services/quotes";
@@ -119,7 +119,7 @@ export function QuoteItem({ item, onRemove, onChangeStore, isOwner }: QuoteItemP
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                  {getCategoryConfig(product.category?.slug || "")?.label || "Componente"}
+                  {categoryLabel(product.category?.slug || "") || "Componente"}
                 </span>
                 {product.brand?.name && <span className="text-xs text-muted-foreground">{product.brand.name}</span>}
               </div>

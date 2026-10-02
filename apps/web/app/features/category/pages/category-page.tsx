@@ -1,11 +1,12 @@
+import { categoryFromSlug } from "@framerate/contracts";
 import { CatalogView } from "~/features/catalog/components/catalog-view";
 import { loadCatalog } from "~/features/catalog/load-catalog";
-import { getApiSlugFromUrl, getCategoryConfig } from "../utils/categories";
+import { categoryLabel } from "../utils/categories";
 import type { Route } from "./+types/category-page";
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.category) return [{ title: "Categoría no encontrada - Framerate" }];
-  const { label } = getCategoryConfig(data.category);
+  const label = categoryLabel(data.category);
   return [
     { title: `Precios de ${label} en Chile - Framerate` },
     {
@@ -20,9 +21,8 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  const category = getApiSlugFromUrl(params.slug);
-  if (!category) throw new Response("Category not found", { status: 404 });
-  return loadCatalog(request, category);
+  if (!categoryFromSlug(params.slug)) throw new Response("Category not found", { status: 404 });
+  return loadCatalog(request, params.slug);
 }
 
 export default function CategoryPage({ loaderData }: Route.ComponentProps) {
