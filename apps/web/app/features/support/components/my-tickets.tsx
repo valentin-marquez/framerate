@@ -7,9 +7,6 @@ import { buttonVariants } from "~/shared/components/primitives/button";
 import { cn } from "~/shared/lib/utils";
 import { CATEGORY_ICONS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS } from "../lib/labels";
 
-/** Cómo se arma la lista: etiquetas discretas, un solo listado con filtro, o el estado a la derecha de cada fila. */
-export type TicketsVariant = "quieta" | "filtro" | "estado";
-
 const ACTIVE = new Set<Ticket["status"]>(["waiting_user", "open", "in_progress"]);
 // "Te respondieron" primero: es lo único que espera algo de la persona.
 const byUrgency = (a: Ticket, b: Ticket) =>
@@ -28,21 +25,17 @@ export function MyTickets({
   tickets,
   renderThread,
   initial = null,
-  variant = "quieta",
 }: {
   tickets: Ticket[];
   /** La conversación de un ticket: la página la carga al elegirlo. */
   renderThread: (ticket: Ticket) => ReactNode;
   initial?: string | null;
-  variant?: TicketsVariant;
 }) {
   const [selected, setSelected] = useState<string | null>(initial);
   const active = tickets.filter((t) => ACTIVE.has(t.status)).toSorted(byUrgency);
   const closed = tickets.filter((t) => !ACTIVE.has(t.status)).toSorted(byUrgency);
-  const [tab, setTab] = useState<"active" | "closed">(active.length > 0 ? "active" : "closed");
   // `selected` sólo lo fija quien elige; sin él, escritorio muestra el primero y teléfono la lista.
-  const visible = variant === "filtro" ? (tab === "active" ? active : closed) : [...active, ...closed];
-  const shown = visible.find((t) => t.id === selected) ?? visible[0];
+  const shown = tickets.find((t) => t.id === selected) ?? active[0] ?? closed[0];
   const pick = (id: string) => setSelected(id);
 
   return (
@@ -60,35 +53,6 @@ export function MyTickets({
               </div>
             </SettingsGroup>
           </SettingsSection>
-        ) : variant === "filtro" ? (
-          <div className="space-y-3">
-            <fieldset className="m-0 flex min-w-0 gap-1 rounded-2xl border-0 bg-secondary p-1">
-              <legend className="sr-only">Filtrar tickets</legend>
-              {(
-                [
-                  ["active", "En curso", active.length],
-                  ["closed", "Cerrados", closed.length],
-                ] as const
-              ).map(([key, label, count]) => (
-                <button
-                  key={key}
-                  type="button"
-                  aria-pressed={tab === key}
-                  onClick={() => {
-                    setTab(key);
-                    setSelected(null);
-                  }}
-                  className={cn(
-                    "flex-1 cursor-pointer rounded-xl px-3 py-1.5 font-medium text-sm transition-colors",
-                    tab === key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {label} <span className="tabular-nums opacity-60">{count}</span>
-                </button>
-              ))}
-            </fieldset>
-            <TicketGroup tickets={visible} shownId={shown?.id} onPick={pick} variant={variant} />
-          </div>
         ) : (
           <>
             {active.length > 0 && (
@@ -96,7 +60,6 @@ export function MyTickets({
                 tickets={active}
                 shownId={shown?.id}
                 onPick={pick}
-                variant={variant}
                 label="En curso"
                 hint="Te avisamos por correo cuando el equipo responde."
               />
@@ -106,7 +69,6 @@ export function MyTickets({
                 tickets={closed}
                 shownId={shown?.id}
                 onPick={pick}
-                variant={variant}
                 label="Cerrados"
                 hint="Si respondes uno resuelto, lo volvemos a abrir."
               />
@@ -165,14 +127,12 @@ function TicketGroup({
   tickets,
   shownId,
   onPick,
-  variant,
   label,
   hint,
 }: {
   tickets: Ticket[];
   shownId?: string;
   onPick: (id: string) => void;
-  variant: TicketsVariant;
   /** Cabecera del grupo dentro de la tarjeta: así el primer ticket y el chat quedan a la misma altura. */
   label?: string;
   hint?: string;
@@ -204,24 +164,13 @@ function TicketGroup({
             <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" stroke={1.75} />
             <div className="min-w-0 flex-1 space-y-1.5">
               <p className="line-clamp-2 font-medium text-foreground leading-snug">{t.subject}</p>
-              {variant === "estado" ? (
-                <p className="text-muted-foreground text-xs">{CATEGORY_LABELS[t.category]}</p>
-              ) : (
-                <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-muted-foreground text-xs">
-                  <StatusBadge status={t.status} />
-                  <span>{CATEGORY_LABELS[t.category]}</span>
-                  <span>{day(t.lastMessageAt)}</span>
-                </p>
-              )}
-            </div>
-            {variant === "estado" ? (
-              <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-muted-foreground text-xs">
                 <StatusBadge status={t.status} />
-                <span className="text-muted-foreground text-xs">{day(t.lastMessageAt)}</span>
-              </div>
-            ) : (
-              <IconChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground lg:hidden" />
-            )}
+                <span>{CATEGORY_LABELS[t.category]}</span>
+                <span>{day(t.lastMessageAt)}</span>
+              </p>
+            </div>
+            <IconChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground lg:hidden" />
           </button>
         );
       })}

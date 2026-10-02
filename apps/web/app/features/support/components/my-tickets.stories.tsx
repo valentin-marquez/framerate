@@ -115,19 +115,9 @@ const threads: Record<string, TicketDetail> = Object.fromEntries(
 
 const renderThread = (t: Ticket) => <TicketThread ticket={threads[t.id]} />;
 
-export const Quieta: Story = {
-  name: "1 Etiquetas discretas",
-  render: () => <MyTickets tickets={tickets} renderThread={renderThread} variant="quieta" />,
-};
-
-export const Filtro: Story = {
-  name: "2 Un listado con filtro",
-  render: () => <MyTickets tickets={tickets} renderThread={renderThread} variant="filtro" />,
-};
-
-export const Estado: Story = {
-  name: "3 Estado a la derecha",
-  render: () => <MyTickets tickets={tickets} renderThread={renderThread} variant="estado" />,
+export const Auto: Story = {
+  name: "Abre solo el más urgente",
+  render: () => <MyTickets tickets={tickets} renderThread={renderThread} />,
 };
 
 export const OtroElegido: Story = {
