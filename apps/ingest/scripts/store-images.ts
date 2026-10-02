@@ -4,6 +4,9 @@ import { STORES } from "../src/features/ingestion/stores/registry";
 
 // Icono y banner de cada tienda sacados de su portada: icono = apple-touch-icon, el icono más grande o /favicon.ico;
 // banner = og:image si es una imagen ancha y no un logo. Imprime los UPDATE para D1.
+// Ojo: producción sirve estas imágenes desde cdn.framerate.cl (R2 `framerate-assets`, `stores/<slug>/icon-<hash>.webp`
+// a 256 px y `banner-<hash>.webp` a 1600 px, ambas WebP con `cache-control: immutable`). Este script sólo da las URLs de
+// origen: no aplicar su SQL tal cual, que volvería a enlazar el sitio de la tienda; primero hay que bajarlas y subirlas.
 // Uso: `bun run store-images [tienda…] > /tmp/imagenes.sql` y luego
 // `bunx wrangler d1 execute framerate --remote --file /tmp/imagenes.sql` (en packages/database).
 const slugs = process.argv.slice(2);
