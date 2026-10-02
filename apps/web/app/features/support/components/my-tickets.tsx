@@ -16,9 +16,6 @@ const byUrgency = (a: Ticket, b: Ticket) =>
 const day = (iso: string) =>
   new Date(iso).toLocaleDateString("es-CL", { day: "numeric", month: "short", timeZone: "America/Santiago" });
 
-const ENTER =
-  "animate-in fade-in-0 duration-base ease-out fill-mode-forwards slide-in-from-right-4 motion-reduce:animate-none";
-
 /**
  * /ajustes/tickets: la lista a la izquierda (en curso arriba, cerrados aparte) y la conversación a la derecha. En
  * escritorio siempre hay un ticket abierto: el que espera respuesta o, si no, el de movimiento más reciente. En
@@ -86,7 +83,7 @@ export function MyTickets({
 
       {shown && (
         <div className={cn(!selected && "hidden lg:block")}>
-          <div key={shown.id} className={cn("space-y-4 lg:sticky lg:top-24", ENTER)}>
+          <div key={shown.id} className="space-y-4 lg:sticky lg:top-24">
             <button
               type="button"
               onClick={() => setSelected(null)}
