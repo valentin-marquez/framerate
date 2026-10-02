@@ -13,7 +13,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return null;
 }
 
-/** Ajustes: título, pestañas subrayadas y el contenido en una sola columna. */
+/** Ajustes: título, pestañas subrayadas y el contenido en una sola columna (los tickets, más ancho: lista y chat). */
 export default function SettingsLayout() {
   const { pathname } = useLocation();
   const { t } = useTranslation();
@@ -25,7 +25,7 @@ export default function SettingsLayout() {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl pb-16">
+    <div className={cn("mx-auto pb-16", pathname.startsWith("/ajustes/tickets") ? "max-w-5xl" : "max-w-3xl")}>
       <header className="space-y-5 pt-2">
         <h1 className="font-semibold text-3xl text-foreground">{t("settings")}</h1>
         <nav

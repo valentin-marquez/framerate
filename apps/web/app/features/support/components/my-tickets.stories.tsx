@@ -2,13 +2,11 @@ import type { Ticket, TicketDetail, TicketMessage } from "@framerate/contracts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { sessions } from "~/shared/storybook/fixtures";
 import { MyTickets } from "./my-tickets";
+import { TicketThread } from "./ticket-thread";
 
-/**
- * #50: /ajustes/tickets en el sistema nuevo, con tres formas de leer la conversación sin modal: bandeja de dos
- * paneles, página propia del ticket y chat acoplado abajo.
- */
+/** /ajustes/tickets: lista a la izquierda y conversación a la derecha, siempre con un ticket abierto en escritorio. */
 const meta = {
-  title: "Cuenta/Mis tickets: propuesta",
+  title: "Cuenta/Mis tickets",
   parameters: { layout: "padded", session: sessions.user },
   decorators: [
     (Story) => (
@@ -115,37 +113,24 @@ const threads: Record<string, TicketDetail> = Object.fromEntries(
   tickets.map((t) => [t.id, { ...t, messages: conversations[t.id] ?? [] }]),
 );
 
-export const BandejaAbierta: Story = {
-  name: "A Bandeja: ticket abierto",
-  render: () => <MyTickets tickets={tickets} threads={threads} variant="bandeja" initial="T-7K3M9Q" />,
+const renderThread = (t: Ticket) => <TicketThread ticket={threads[t.id]} />;
+
+export const Auto: Story = {
+  name: "Abre solo el más urgente",
+  render: () => <MyTickets tickets={tickets} renderThread={renderThread} />,
 };
 
-export const BandejaVacia: Story = {
-  name: "A Bandeja: sin elegir",
-  render: () => <MyTickets tickets={tickets} threads={threads} variant="bandeja" />,
-};
-
-export const PaginaLista: Story = {
-  name: "B Página: la lista",
-  render: () => <MyTickets tickets={tickets} threads={threads} variant="pagina" />,
-};
-
-export const PaginaAbierta: Story = {
-  name: "B Página: ticket abierto",
-  render: () => <MyTickets tickets={tickets} threads={threads} variant="pagina" initial="T-7K3M9Q" />,
-};
-
-export const DockAbierto: Story = {
-  name: "C Chat acoplado: abierto",
-  render: () => <MyTickets tickets={tickets} threads={threads} variant="dock" initial="T-7K3M9Q" />,
+export const OtroElegido: Story = {
+  name: "Otro ticket elegido",
+  render: () => <MyTickets tickets={tickets} renderThread={renderThread} initial="T-2HX8LP" />,
 };
 
 export const SoloCerrados: Story = {
   name: "Sólo cerrados",
-  render: () => <MyTickets tickets={tickets.slice(3)} threads={threads} />,
+  render: () => <MyTickets tickets={tickets.slice(3)} renderThread={renderThread} />,
 };
 
 export const SinTickets: Story = {
   name: "Sin tickets",
-  render: () => <MyTickets tickets={[]} />,
+  render: () => <MyTickets tickets={[]} renderThread={renderThread} />,
 };
