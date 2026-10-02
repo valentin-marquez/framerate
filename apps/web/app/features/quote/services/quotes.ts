@@ -28,7 +28,7 @@ export const quotesService = {
   updateItem: (quoteId: string, itemId: number, data: UpdateQuoteItemRequest) =>
     api.patch<QuoteDetail>(`/v1/quotes/${quoteId}/items/${itemId}`, data),
 
-  removeItem: (quoteId: string, itemId: number) => api.delete<void>(`/v1/quotes/${quoteId}/items/${itemId}`),
+  removeItem: (quoteId: string, itemId: number) => api.delete<QuoteDetail>(`/v1/quotes/${quoteId}/items/${itemId}`),
 
   // ponytail: PATCH /v1/quotes/:id llega con la entrega 2 de #25. Hoy sólo lo usa el aviso al pegar un link
   // (apagado, ver quote-paste-dialog.tsx).

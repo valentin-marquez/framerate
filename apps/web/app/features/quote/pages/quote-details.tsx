@@ -1,15 +1,14 @@
-import type { QuoteItem } from "@framerate/contracts";
-import { useState } from "react";
+import { type QuoteDetail, type QuoteItem, quoteTotals } from "@framerate/contracts";
+import { useEffect, useRef, useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { QuoteActions } from "~/features/quote/components/quote-actions";
 import { QuoteHeader } from "~/features/quote/components/quote-header";
 import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
-import { useQuoteAddItem, useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/useQuotes";
+import { useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/useQuotes";
 import { quotesService } from "~/features/quote/services/quotes";
 import { copyToClipboard, exportToExcel } from "~/features/quote/utils/quote-export";
-import { SearchDialog } from "~/features/search/components/search-dialog";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import type { Route } from "./+types/quote-details";
 
@@ -39,47 +38,54 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
-  const { quote } = loaderData;
+  const [quote, setQuote] = useState(loaderData.quote);
+  // Una navegación o una recarga trae otra versión desde el loader.
+  useEffect(() => setQuote(loaderData.quote), [loaderData.quote]);
+  const inFlight = useRef(0);
   const user = useUser();
   const revalidator = useRevalidator();
-  const addItem = useQuoteAddItem();
   const updateItem = useQuoteUpdateItem();
   const removeItem = useQuoteRemoveItem();
   const { t } = useTranslation();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const isOwner = !!user && user.username === quote.author.username;
 
-  const handleAddProduct = (product: { id: number }) => {
-    addItem.mutate(
-      { quoteId: quote.id, data: { productId: product.id, quantity: 1 } },
-      {
-        onSuccess: () => {
-          setIsSearchOpen(false);
-          toast.success(t("product_added_short"));
-          revalidator.revalidate();
-        },
-        onError: () => toast.error(t("product_add_error")),
-      },
-    );
+  /**
+   * El cambio se ve al instante y la respuesta del servidor (que trae la cotización completa) lo confirma. Con
+   * varios clics seguidos sólo cuenta la última respuesta, para que el número no retroceda; si algo falla se
+   * vuelve a pedir la cotización.
+   */
+  const settle = (detail: QuoteDetail) => {
+    inFlight.current -= 1;
+    if (inFlight.current === 0) setQuote(detail);
   };
+  const fail = (message: string) => {
+    inFlight.current -= 1;
+    toast.error(message);
+    revalidator.revalidate();
+  };
+  const showItems = (items: QuoteItem[]) => setQuote((current) => ({ ...current, items, totals: quoteTotals(items) }));
 
   const handleChangeQuantity = (item: QuoteItem, quantity: number) => {
+    showItems(quote.items.map((i) => (i.id === item.id ? { ...i, quantity } : i)));
+    inFlight.current += 1;
     updateItem.mutate(
       { quoteId: quote.id, itemId: item.id, data: { quantity } },
-      { onSuccess: () => revalidator.revalidate(), onError: () => toast.error(t("update_quantity_error")) },
+      { onSuccess: settle, onError: () => fail(t("update_quantity_error")) },
     );
   };
 
   const handleRemove = (item: QuoteItem) => {
+    showItems(quote.items.filter((i) => i.id !== item.id));
+    inFlight.current += 1;
     removeItem.mutate(
       { quoteId: quote.id, itemId: item.id },
       {
-        onSuccess: () => {
+        onSuccess: (detail) => {
           toast.success(t("product_removed"));
-          revalidator.revalidate();
+          settle(detail);
         },
-        onError: () => toast.error(t("remove_product_error")),
+        onError: () => fail(t("remove_product_error")),
       },
     );
   };
@@ -109,7 +115,6 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           isOwner={isOwner}
           onChangeQuantity={handleChangeQuantity}
           onRemove={handleRemove}
-          onAdd={isOwner ? () => setIsSearchOpen(true) : undefined}
         />
 
         {quote.items.length > 0 && (
@@ -120,9 +125,6 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           />
         )}
       </div>
-      {isOwner && (
-        <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} onSelectProduct={handleAddProduct} />
-      )}
     </div>
   );
 }

@@ -79,14 +79,13 @@ export const ListaVacia: Story = {
       isOwner
       onChangeQuantity={noop}
       onRemove={noop}
-      onAdd={noop}
     />
   ),
 };
 
 export const ListaDelDueno: Story = {
   name: "Lista de componentes: dueño",
-  render: () => <QuoteItemsList quote={quote} isOwner onChangeQuantity={noop} onRemove={noop} onAdd={noop} />,
+  render: () => <QuoteItemsList quote={quote} isOwner onChangeQuantity={noop} onRemove={noop} />,
 };
 
 export const ListaDeVisitante: Story = {

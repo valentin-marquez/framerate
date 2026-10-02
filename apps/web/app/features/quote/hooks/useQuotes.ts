@@ -56,8 +56,8 @@ export function useQuoteRemoveItem() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ quoteId, itemId }: { quoteId: string; itemId: number }) => quotesService.removeItem(quoteId, itemId),
-    onSuccess: (_, { quoteId }) => {
-      queryClient.invalidateQueries({ queryKey: quoteKeys.detail(quoteId) });
+    onSuccess: (detail, { quoteId }) => {
+      queryClient.setQueryData(quoteKeys.detail(quoteId), detail);
       queryClient.invalidateQueries({ queryKey: quoteKeys.lists() });
     },
   });

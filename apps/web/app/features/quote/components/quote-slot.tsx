@@ -1,12 +1,16 @@
 import {
+  CATEGORIES,
+  CATEGORY_SLUGS,
   isAdditiveSlot,
   QUOTE_SLOT_LABELS,
   type QuoteItem as QuoteItemData,
   type QuoteSlot as QuoteSlotId,
+  SLOT_BY_CATEGORY,
 } from "@framerate/contracts";
 import { IconPlus } from "@tabler/icons-react";
+import { Link } from "react-router";
 import { QuoteItem } from "~/features/quote/components/quote-item";
-import { Button } from "~/shared/components/primitives/button";
+import { buttonVariants } from "~/shared/components/primitives/button";
 import { SLOT_SHORT_LABELS } from "~/shared/utils/slots";
 
 interface QuoteSlotProps {
@@ -16,10 +20,15 @@ interface QuoteSlotProps {
   isOwner: boolean;
   onChangeQuantity: (item: QuoteItemData, quantity: number) => void;
   onRemove: (item: QuoteItemData) => void;
-  onAdd?: () => void;
 }
 
-export function QuoteSlot({ slot, items, isOwner, onChangeQuantity, onRemove, onAdd }: QuoteSlotProps) {
+/** Agregar lleva a la página de la categoría del slot (en storage, la primera: SSD): ahí se elige y se agrega. */
+const categoryHref = (slot: QuoteSlotId) => {
+  const category = CATEGORIES.find((c) => SLOT_BY_CATEGORY[c] === slot);
+  return category ? `/categoria/${CATEGORY_SLUGS[category]}` : "/explorar";
+};
+
+export function QuoteSlot({ slot, items, isOwner, onChangeQuantity, onRemove }: QuoteSlotProps) {
   const shown = isAdditiveSlot(slot) ? items : items.filter((item) => item.isSelected);
   const alternatives = items.length - shown.length;
 
@@ -36,10 +45,13 @@ export function QuoteSlot({ slot, items, isOwner, onChangeQuantity, onRemove, on
             </span>
             <p className="text-sm text-muted-foreground">No seleccionado</p>
           </div>
-          {isOwner && onAdd && (
-            <Button variant="outline" size="sm" className="gap-2" onClick={onAdd}>
+          {isOwner && (
+            <Link
+              to={categoryHref(slot)}
+              className={buttonVariants({ variant: "outline", size: "sm", className: "gap-2" })}
+            >
               <IconPlus size={16} /> Agregar
-            </Button>
+            </Link>
           )}
         </div>
       </div>

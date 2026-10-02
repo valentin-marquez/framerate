@@ -8,10 +8,9 @@ interface QuoteItemsListProps {
   isOwner: boolean;
   onChangeQuantity: (item: QuoteItemData, quantity: number) => void;
   onRemove: (item: QuoteItemData) => void;
-  onAdd?: () => void;
 }
 
-export function QuoteItemsList({ quote, isOwner, onChangeQuantity, onRemove, onAdd }: QuoteItemsListProps) {
+export function QuoteItemsList({ quote, isOwner, onChangeQuantity, onRemove }: QuoteItemsListProps) {
   const { t } = useTranslation();
 
   return (
@@ -38,7 +37,6 @@ export function QuoteItemsList({ quote, isOwner, onChangeQuantity, onRemove, onA
             isOwner={isOwner}
             onChangeQuantity={onChangeQuantity}
             onRemove={onRemove}
-            onAdd={onAdd}
           />
         ))}
       </div>
