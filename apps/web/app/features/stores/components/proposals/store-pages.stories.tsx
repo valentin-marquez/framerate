@@ -48,7 +48,7 @@ const unclaimed: StoreDetail = {
   description: null,
   isClaimed: false,
   verifiedAt: null,
-  offerCount: 0,
+  offerCount: 38,
   memberCount: 0,
   rating: { average: null, count: 0, recent: { average: null, count: 0 } },
 };
@@ -111,9 +111,15 @@ export const TiendaVerificada: Story = {
 };
 
 export const TiendaSinReclamar: Story = {
-  name: "Tienda sin reclamar, sin productos ni reseñas",
+  name: "Tienda sin reclamar, con sus productos",
   decorators: [reviewData("dust2", [], noReviews)],
-  render: () => <StorePage store={unclaimed} categories={[]} viewerRole={null} />,
+  render: () => <StorePage store={unclaimed} categories={categories} viewerRole={null} />,
+};
+
+export const TiendaSinProductos: Story = {
+  name: "Tienda sin productos todavía",
+  decorators: [reviewData("dust2", [], noReviews)],
+  render: () => <StorePage store={{ ...unclaimed, offerCount: 0 }} categories={[]} viewerRole={null} />,
 };
 
 export const TiendaAdministrada: Story = {

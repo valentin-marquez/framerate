@@ -143,7 +143,7 @@ export function ReviewCard({ storeSlug, review, canManage = false, hasMarkedHelp
                     <IconPinFilled className={cn("size-4", full.is_pinned && "text-primary")} />
                   </Button>
                 )}
-                {(isAuthor || canManage) && (
+                {isAuthor && (
                   <Button
                     type="button"
                     variant="ghost"

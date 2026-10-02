@@ -23,12 +23,11 @@ interface StorePageProps {
 
 /**
  * /tiendas/:slug en el sistema nuevo (Trustpilot, Geizhals, idealo): cabecera de identidad con la nota a la derecha,
- * sin el banner de stock cuando la tienda no subió uno, y las secciones de productos y reseñas que ya existen.
+ * sin el banner de stock cuando la tienda no subió uno, las filas de productos por categoría y las reseñas.
  */
 export function StorePage({ store, categories, viewerRole }: StorePageProps) {
   const host = store.website ? new URL(store.website).hostname.replace(/^www\./, "") : null;
   const { rating } = store;
-  const total = categories.reduce((n, c) => n + c.count, 0);
 
   return (
     <main className="mx-auto max-w-6xl space-y-10 px-4 py-8">
@@ -53,8 +52,12 @@ export function StorePage({ store, categories, viewerRole }: StorePageProps) {
             {store.description && (
               <p className="max-w-2xl text-muted-foreground text-sm leading-relaxed">{store.description}</p>
             )}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-sm">
-              {host && (
+            <p className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
+              {store.offerCount > 0 && <span>{plural(store.offerCount, "producto", "productos")}</span>}
+              <span>En Framerate desde {since(store.createdAt)}</span>
+            </p>
+            {host && (
+              <div className="flex pt-1">
                 <OutboundLink
                   href={store.website ?? store.url}
                   source="store_page"
@@ -64,12 +67,8 @@ export function StorePage({ store, categories, viewerRole }: StorePageProps) {
                   Ir a {host}
                   <IconExternalLink className="size-3.5" />
                 </OutboundLink>
-              )}
-              {store.offerCount > 0 && (
-                <span className="text-muted-foreground">{plural(store.offerCount, "producto", "productos")}</span>
-              )}
-              <span className="text-muted-foreground">En Framerate desde {since(store.createdAt)}</span>
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -116,25 +115,23 @@ export function StorePage({ store, categories, viewerRole }: StorePageProps) {
         )
       )}
 
-      <section className="space-y-6">
-        <div className="space-y-1">
-          <h2 className="font-semibold text-foreground text-xl tracking-tight">Productos</h2>
-          <p className="text-muted-foreground text-sm">
-            {categories.length > 0
-              ? `${plural(total, "producto", "productos")} en ${plural(categories.length, "categoría", "categorías")}. El precio de cada tarjeta es el mejor entre todas las tiendas.`
-              : "Todavía no registramos productos de esta tienda en el catálogo."}
-          </p>
-        </div>
-        {categories.map((c, i) => (
-          <ProductRow
-            key={c.slug}
-            title={c.name}
-            href={`/categoria/${c.slug}`}
-            products={c.products}
-            priority={i === 0}
-          />
-        ))}
-      </section>
+      {categories.length > 0 ? (
+        <section className="space-y-6">
+          {categories.map((c, i) => (
+            <ProductRow
+              key={c.slug}
+              title={c.name}
+              href={`/categoria/${c.slug}`}
+              products={c.products}
+              priority={i === 0}
+            />
+          ))}
+        </section>
+      ) : (
+        <p className="rounded-3xl border border-border border-dashed px-6 py-10 text-center text-muted-foreground text-sm">
+          Todavía no registramos productos de esta tienda en el catálogo.
+        </p>
+      )}
 
       {/* La sección de reseñas ya trae su resumen y su título. */}
       <section id="resenas" className="scroll-mt-24">
