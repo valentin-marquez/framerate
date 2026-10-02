@@ -44,7 +44,7 @@ export function TicketThread({ ticket, token }: TicketThreadProps) {
 
   return (
     <div className="bg-background/40">
-      <div className="space-y-3 p-4">
+      <div className="space-y-3 p-3 sm:p-4">
         {messages.map((m, i) => (
           <Bubble key={m.id} message={m} isFirst={i === 0} />
         ))}
@@ -85,21 +85,22 @@ function Bubble({ message, isFirst }: { message: TicketMessage; isFirst: boolean
     <div className={cn("flex", isStaff ? "justify-start" : "justify-end")}>
       <div
         className={cn(
-          "max-w-[85%] rounded-2xl border px-4 py-3",
+          "max-w-[88%] rounded-2xl border px-3.5 py-3 sm:max-w-[85%] sm:px-4",
           isStaff
             ? "border-border bg-secondary/60 text-foreground"
             : "border-primary bg-primary text-primary-foreground",
         )}
       >
-        <div className="mb-1 flex items-center gap-2">
+        <div className="mb-1 flex flex-wrap items-center gap-x-2">
           <span className="font-medium text-[11px] uppercase tracking-wider opacity-80">
             {isStaff ? "Soporte" : message.authorRole === "system" ? "Sistema" : "Tú"}
             {isFirst && <span className="ml-2 opacity-70">consulta</span>}
           </span>
           {/* Zona fija: la página de seguimiento se renderiza en el servidor (UTC) y no debe cambiar al hidratar. */}
-          <span className="text-[11px] opacity-60">{formatDateTime(message.createdAt)}</span>
+          <span className="whitespace-nowrap text-[11px] opacity-60">{formatDateTime(message.createdAt)}</span>
         </div>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p>
+        {/* Texto claro sobre fondo oscuro se ve más fino de lo que es: un peso más en la burbuja propia. */}
+        <p className={cn("whitespace-pre-wrap text-sm leading-relaxed", !isStaff && "font-medium")}>{message.body}</p>
       </div>
     </div>
   );
