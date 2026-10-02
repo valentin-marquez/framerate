@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { useRequestInfo } from "~/shared/hooks/use-request-info";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { type Theme, useOptimisticThemeMode } from "~/shared/lib/client";
+import { DURATION, EASE_OUT } from "~/shared/lib/motion";
 import { cn } from "~/shared/lib/utils";
 import { SettingsBadge, SettingsGroup, SettingsRow, SettingsSection } from "../components/settings-parts";
 import type { Route } from "./+types/preferences";
@@ -170,7 +171,7 @@ function ThemeCard({
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
-                transition={{ duration: 0.15 }}
+                transition={{ duration: DURATION.fast, ease: EASE_OUT }}
                 className="inline-flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground"
               >
                 <IconCheck className="size-3" />

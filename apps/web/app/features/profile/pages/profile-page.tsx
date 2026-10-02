@@ -268,7 +268,7 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
                 return isNewOptimistic ? (
                   <div
                     key={quote.id}
-                    className="group block overflow-hidden bg-card border border-primary/30 rounded-2xl shadow-md shadow-primary/10 quote-item-enter quote-item-glow"
+                    className="group block overflow-hidden bg-card border border-primary/30 rounded-2xl shadow-md shadow-primary/10 animate-in fade-in-0 slide-in-from-top-2 duration-base ease-out"
                   >
                     {cardBody}
                   </div>
