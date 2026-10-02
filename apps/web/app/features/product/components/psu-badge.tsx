@@ -3,7 +3,7 @@ import { cn } from "~/shared/lib/utils";
 function PsuBadge({ certification }: { certification: string }) {
   const certLower = certification.toLowerCase();
 
-  if (!certLower.includes("80 plus") && !certLower.includes("80plus") && !certLower.includes("80+")) return null;
+  if (!/80 ?plus|80\+|white|bronze|bronce|silver|gold|platinum|titanium/.test(certLower)) return null;
 
   // Detectar nivel de certificación
   let level = "standard";
