@@ -132,7 +132,7 @@ function EditQuoteDialog({ quote, onChange }: QuoteOwnerBarProps) {
       <DialogContent className="sm:max-w-md bg-card">
         <DialogHeader>
           <DialogTitle>{t("edit_quote_title")}</DialogTitle>
-          <DialogDescription>{t("create_quote_desc")}</DialogDescription>
+          <DialogDescription>{t("edit_quote_desc")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4 py-2">
           <div className="grid gap-2">
