@@ -15,6 +15,11 @@ import { mergeRoutes } from "@/features/identity/merge.routes";
 import { credentialedCors, optionalUser, requireStaff, requireUser } from "@/features/identity/middleware";
 import type { Actor, SessionUser } from "@/features/identity/types";
 import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
+import {
+  moderationAdminRoutes,
+  reportsRoutes,
+  translationFeedbackRoutes,
+} from "@/features/moderation/moderation.routes";
 import { quotesRoutes } from "@/features/quotes/quotes.routes";
 import { myStoresRoutes } from "@/features/stores/my-stores.routes";
 import { storeManagementRoutes } from "@/features/stores/store-management.routes";
@@ -46,6 +51,7 @@ export type AppEnv = {
  *   /v1/me        perfil propio y unión de usuarios (`/v1/me/merge`). Requiere sesión.
  *   /v1/support   tickets de soporte: con sesión, o sin cuenta con Turnstile y el token del ticket.
  *   /v1/quotes    cotizaciones: las ajenas se leen según su visibilidad; escribir exige ser el dueño.
+ *   /v1/reports   reportes de contenido (sesión). /v1/translation-feedback: sugerencias de traducción.
  *   /v1/*         lectura pública (catálogo, perfiles públicos), con caché en el edge.
  *   /v1/admin/*   personal: moderador o superior (sesión), o el token de servicio.
  *
@@ -125,6 +131,18 @@ export function createApp() {
   commentsApi.use("*", optionalUser);
   commentsApi.route("/", commentsRoutes);
 
+  const reportsApi = new Hono<AppEnv>();
+  reportsApi.use("*", credentialedCors);
+  reportsApi.use("*", rateLimit);
+  reportsApi.use("*", requireUser);
+  reportsApi.route("/", reportsRoutes);
+
+  const translationFeedbackApi = new Hono<AppEnv>();
+  translationFeedbackApi.use("*", credentialedCors);
+  translationFeedbackApi.use("*", rateLimit);
+  translationFeedbackApi.use("*", optionalUser);
+  translationFeedbackApi.route("/", translationFeedbackRoutes);
+
   const publicApi = new Hono<AppEnv>();
   publicApi.use("*", credentialedCors);
   publicApi.use("*", rateLimit);
@@ -142,12 +160,15 @@ export function createApp() {
   adminApi.route("/", claimsAdminRoutes);
   adminApi.route("/support", supportAdminRoutes);
   adminApi.route("/users", usersAdminRoutes);
+  adminApi.route("/moderation", moderationAdminRoutes);
 
   app.route("/v1/auth", authApi);
   app.route("/v1/me", meApi);
   app.route("/v1/claims", claimsApi);
   app.route("/v1/support", supportApi);
   app.route("/v1/quotes", quotesApi);
+  app.route("/v1/reports", reportsApi);
+  app.route("/v1/translation-feedback", translationFeedbackApi);
   app.route("/v1/comments", commentsApi);
   app.route("/v1/products/:id/comments", productCommentsApi);
   app.route("/v1/admin", adminApi);
