@@ -279,3 +279,95 @@ describe("editar y borrar la cotización", () => {
     expect((await call(ana, `/v1/quotes/${quote.id}`, "DELETE")).status).toBe(404);
   });
 });
+
+describe("alternativa y tienda elegidas", () => {
+  const patchItem = (actor: string, quoteId: string, itemId: number, body: unknown) =>
+    call(actor, `/v1/quotes/${quoteId}/items/${itemId}`, "PATCH", body);
+  const itemOf = (quote: Awaited<ReturnType<typeof detail>>, productId: number) => {
+    const item = quote.items.find((i) => i.product.id === productId);
+    if (!item) throw new Error("falta el ítem");
+    return item;
+  };
+
+  test("elegir una alternativa la deja seleccionada y suelta a la anterior, sin tocar otros slots", async () => {
+    const quote = await createQuote(ana);
+    await addItem(ana, quote.id, seed.asus);
+    await addItem(ana, quote.id, seed.msi);
+    await addItem(ana, quote.id, seed.ryzen);
+    const before = await detail(ana, quote.id);
+    expect(itemOf(before, seed.asus).isSelected).toBe(true);
+
+    const res = await patchItem(ana, quote.id, itemOf(before, seed.msi).id, { isSelected: true });
+    expect(res.status).toBe(200);
+    const after = QuoteDetailSchema.parse(await res.json());
+    expect(itemOf(after, seed.msi).isSelected).toBe(true);
+    expect(itemOf(after, seed.asus).isSelected).toBe(false);
+    expect(itemOf(after, seed.ryzen).isSelected).toBe(true);
+    // La MSI no tiene stock: el total sólo cuenta el procesador.
+    expect(after.totals.cash).toBe(420_000);
+
+    // Y se puede volver atrás.
+    const back = QuoteDetailSchema.parse(
+      await (await patchItem(ana, quote.id, itemOf(before, seed.asus).id, { isSelected: true })).json(),
+    );
+    expect(back.items.filter((i) => i.slot === "gpu" && i.isSelected).map((i) => i.product.id)).toEqual([seed.asus]);
+  });
+
+  test("elegir una oferta cambia el precio del ítem, y null vuelve al mejor precio", async () => {
+    const quote = await createQuote(ana);
+    await addItem(ana, quote.id, seed.asus, 2);
+    const item = itemOf(await detail(ana, quote.id), seed.asus);
+    expect(item).toMatchObject({ chosenListingId: null, offer: { id: seed.listings.l4, priceCash: 599_990 } });
+
+    const chosen = QuoteDetailSchema.parse(
+      await (await patchItem(ana, quote.id, item.id, { listingId: seed.listings.l1 })).json(),
+    );
+    expect(itemOf(chosen, seed.asus)).toMatchObject({
+      chosenListingId: seed.listings.l1,
+      offer: { id: seed.listings.l1, priceCash: 650_000, store: { slug: "alfa" } },
+    });
+    expect(chosen.totals.cash).toBe(650_000 * 2);
+
+    const best = QuoteDetailSchema.parse(await (await patchItem(ana, quote.id, item.id, { listingId: null })).json());
+    expect(itemOf(best, seed.asus)).toMatchObject({ chosenListingId: null, offer: { id: seed.listings.l4 } });
+    expect(best.totals.cash).toBe(599_990 * 2);
+  });
+
+  test("si la oferta elegida se queda sin stock, el ítem vuelve a contar con el mejor precio", async () => {
+    const quote = await createQuote(ana);
+    await addItem(ana, quote.id, seed.asus);
+    const item = itemOf(await detail(ana, quote.id), seed.asus);
+    await patchItem(ana, quote.id, item.id, { listingId: seed.listings.l1 });
+    await db.query.updateTable("listings").set({ in_stock: 0 }).where("id", "=", seed.listings.l1).execute();
+
+    const result = itemOf(await detail(ana, quote.id), seed.asus);
+    expect(result).toMatchObject({ chosenListingId: seed.listings.l1, offer: { id: seed.listings.l4 } });
+  });
+
+  test("una oferta de otro producto o que no existe da 400; sin cambios o isSelected false también", async () => {
+    const quote = await createQuote(ana);
+    await addItem(ana, quote.id, seed.asus);
+    const item = itemOf(await detail(ana, quote.id), seed.asus);
+    const ryzenListing = await db.query
+      .selectFrom("listings")
+      .select("id")
+      .where("product_id", "=", seed.ryzen)
+      .executeTakeFirstOrThrow();
+
+    const foreign = await patchItem(ana, quote.id, item.id, { listingId: ryzenListing.id });
+    expect(foreign.status).toBe(400);
+    expect(await code(foreign)).toBe("invalid_listing");
+    expect((await patchItem(ana, quote.id, item.id, { listingId: 999_999 })).status).toBe(400);
+    expect((await patchItem(ana, quote.id, item.id, {})).status).toBe(400);
+    expect((await patchItem(ana, quote.id, item.id, { isSelected: false })).status).toBe(400);
+    expect(itemOf(await detail(ana, quote.id), seed.asus).chosenListingId).toBeNull();
+  });
+
+  test("sólo el dueño puede elegir", async () => {
+    const quote = await createQuote(ana);
+    await addItem(ana, quote.id, seed.asus);
+    const item = itemOf(await detail(ana, quote.id), seed.asus);
+    expect((await patchItem(beto, quote.id, item.id, { listingId: seed.listings.l1 })).status).toBe(404);
+    expect((await patchItem("anon", quote.id, item.id, { isSelected: true })).status).toBe(401);
+  });
+});

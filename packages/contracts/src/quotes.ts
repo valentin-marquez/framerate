@@ -98,6 +98,8 @@ export const QuoteItemSchema = z.object({
     category: CategorySchema,
     imageUrl: z.url().nullable(),
   }),
+  /** La oferta que eligió el usuario (null = mejor precio). Si ya no tiene stock, `offer` es la mejor disponible. */
+  chosenListingId: z.number().int().nullable(),
   /** null si ninguna tienda tiene el producto con stock: el ítem no suma al total. */
   offer: QuoteItemOfferSchema.nullable(),
 });
@@ -162,5 +164,15 @@ export const AddQuoteItemRequestSchema = z.object({
 });
 export type AddQuoteItemRequest = z.infer<typeof AddQuoteItemRequestSchema>;
 
-export const UpdateQuoteItemRequestSchema = z.object({ quantity: QuoteQuantitySchema });
+/** Cambios a un ítem, al menos uno. `isSelected: true` lo hace el elegido de su slot (suelta al anterior). */
+export const UpdateQuoteItemRequestSchema = z
+  .object({
+    quantity: QuoteQuantitySchema.optional(),
+    isSelected: z.literal(true).optional(),
+    /** La oferta que cuenta para este ítem; `null` vuelve al mejor precio. */
+    listingId: z.number().int().positive().nullable().optional(),
+  })
+  .refine((v) => v.quantity !== undefined || v.isSelected !== undefined || v.listingId !== undefined, {
+    message: "Nada que cambiar",
+  });
 export type UpdateQuoteItemRequest = z.infer<typeof UpdateQuoteItemRequestSchema>;

@@ -10,6 +10,7 @@ import {
   type QuoteVisibility,
   quoteTotals,
   SLOT_BY_CATEGORY,
+  type UpdateQuoteItemRequest,
   type UpdateQuoteRequest,
 } from "@framerate/contracts";
 import { type Db, toBool } from "@framerate/database";
@@ -85,6 +86,7 @@ const itemsQuery = (db: Db, publicId: string) =>
       "qi.quantity",
       "qi.is_selected",
       "qi.note",
+      "qi.listing_id as chosen_listing_id",
       "p.id as product_id",
       "p.slug",
       "p.name",
@@ -132,6 +134,7 @@ function toItem(r: ItemRow, assetsBaseUrl: string | undefined): QuoteItem {
     quantity: r.quantity,
     isSelected: toBool(r.is_selected),
     note: r.note,
+    chosenListingId: r.chosen_listing_id,
     product: {
       id: r.product_id,
       slug: r.slug,
@@ -367,36 +370,59 @@ const ownedItemQuery = (db: Db, publicId: string, ownerId: string, itemId: numbe
   db.query
     .selectFrom("quote_items as qi")
     .innerJoin("quotes as q", "q.id", "qi.quote_id")
-    .select(["qi.id", "qi.quote_id", "qi.slot", "qi.is_selected"])
+    .select(["qi.id", "qi.quote_id", "qi.product_id", "qi.slot", "qi.is_selected"])
     .where("q.public_id", "=", publicId)
     .where("q.owner_id", "=", ownerId)
     .where("qi.id", "=", itemId);
 
-export async function setItemQuantity(
+/**
+ * Cambia la cantidad de un ítem, lo hace el elegido de su slot y/o fija su oferta, y devuelve la cotización ya
+ * actualizada. `null` si el ítem no existe o no es del dueño; `"invalid_listing"` si la oferta no es de ese producto.
+ */
+export async function updateItem(
   db: Db,
   publicId: string,
   ownerId: string,
   itemId: number,
-  quantity: number,
+  changes: UpdateQuoteItemRequest,
   assetsBaseUrl: string | undefined,
   now: string,
-): Promise<QuoteDetail | null> {
-  // Un solo viaje: el UPDATE sólo toca el ítem si la cotización es del dueño, y el detalle dice si pasó.
-  const [, [row], itemRows] = await db.read([
+): Promise<QuoteDetail | "invalid_listing" | null> {
+  const { quantity, isSelected, listingId } = changes;
+  const [[item], [listing]] = await db.read([
+    ownedItemQuery(db, publicId, ownerId, itemId),
+    db.query
+      .selectFrom("listings")
+      .select(["id", "product_id"])
+      .where("id", "=", listingId ?? -1)
+      .where("is_active", "=", 1),
+  ]);
+  if (!item) return null;
+  if (listingId != null && listing?.product_id !== item.product_id) return "invalid_listing";
+
+  // En un slot exclusivo, elegir este suelta a los demás (antes del UPDATE: el índice sólo admite uno seleccionado).
+  const swap = isSelected === true && !isAdditiveSlot(item.slot);
+  const [, , [row], itemRows] = await db.read([
     db.query
       .updateTable("quote_items")
-      .set({ quantity, updated_at: now })
-      .where("id", "=", itemId)
-      .where(
-        "quote_id",
-        "=",
-        db.query.selectFrom("quotes").select("id").where("public_id", "=", publicId).where("owner_id", "=", ownerId),
-      ),
+      .set({ is_selected: 0, updated_at: now })
+      .where("quote_id", "=", item.quote_id)
+      .where("slot", "=", item.slot)
+      .where("id", "!=", itemId)
+      .where(sql<boolean>`${swap ? 1 : 0} = 1`),
+    db.query
+      .updateTable("quote_items")
+      .set({
+        ...(quantity !== undefined && { quantity }),
+        ...(isSelected && { is_selected: 1 }),
+        ...(listingId !== undefined && { listing_id: listingId }),
+        updated_at: now,
+      })
+      .where("id", "=", itemId),
     summariesQuery(db).where("q.public_id", "=", publicId),
     itemsQuery(db, publicId),
   ]);
-  if (!row || row.owner_id !== ownerId || !itemRows.some((r) => r.id === itemId)) return null;
-  return toDetail(row, itemRows, assetsBaseUrl);
+  return row ? toDetail(row, itemRows, assetsBaseUrl) : null;
 }
 
 /**

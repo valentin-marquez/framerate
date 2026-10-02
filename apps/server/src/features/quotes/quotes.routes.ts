@@ -20,7 +20,7 @@ import {
   listQuotes,
   loadQuote,
   removeItem,
-  setItemQuantity,
+  updateItem,
   updateQuote,
 } from "./quotes.repository";
 
@@ -95,18 +95,19 @@ export const quotesRoutes = new Hono<AppEnv>()
   })
   .patch("/:id/items/:itemId", async (c) => {
     const user = currentUser(c);
-    const { quantity } = UpdateQuoteItemRequestSchema.parse(await c.req.json().catch(() => ({})));
-    const detail = await setItemQuantity(
+    const changes = UpdateQuoteItemRequestSchema.parse(await c.req.json().catch(() => ({})));
+    const result = await updateItem(
       c.var.db,
       c.req.param("id"),
       user.id,
       ItemIdSchema.parse(c.req.param("itemId")),
-      quantity,
+      changes,
       c.env.ASSETS_BASE_URL,
       new Date().toISOString(),
     );
-    if (!detail) throw itemNotFound();
-    return c.json(detail);
+    if (!result) throw itemNotFound();
+    if (result === "invalid_listing") throw new AppError(400, "invalid_listing", "Esa oferta no es de este producto");
+    return c.json(result);
   })
   .delete("/:id/items/:itemId", async (c) => {
     const user = currentUser(c);
