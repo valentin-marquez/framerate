@@ -28,13 +28,13 @@ export const Tarjeta: Story = {
   ),
 };
 
-export const TarjetaParaReclamar: Story = {
-  name: "Tarjeta al reclamar una tienda",
+export const TarjetaParaVerificar: Story = {
+  name: "Tarjeta al verificar una tienda",
   render: () => (
     <Dialog>
       <div className="max-w-sm overflow-hidden rounded-3xl border border-border bg-card">
         <LoginCard
-          title="Inicia sesión para reclamar"
+          title="Inicia sesión para verificar tu tienda"
           description="Verifica la propiedad con una cuenta para gestionar la tienda después."
         />
       </div>

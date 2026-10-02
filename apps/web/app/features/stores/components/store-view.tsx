@@ -1,33 +1,37 @@
 import type { StoreDetail } from "@framerate/contracts";
 import { IconCircleCheckFilled, IconExternalLink, IconShieldCheck, IconSparkles } from "@tabler/icons-react";
 import { Link } from "react-router";
+import { LoginDialog } from "~/features/auth/components/login-dialog";
 import { ProductRow } from "~/features/home/components/product-row";
 import { RatingStars } from "~/features/store-reviews/components/rating-stars";
 import { StoreReviewsSection } from "~/features/store-reviews/components/store-reviews-section";
 import { OutboundLink } from "~/shared/components/outbound-link";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
-import type { StoreProductCategory } from "../../services/stores";
+import type { StoreProductCategory } from "../services/stores";
 
 const since = (iso: string) =>
   new Date(iso).toLocaleDateString("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" });
 const decimal = (n: number) => n.toLocaleString("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString("es-CL")} ${n === 1 ? one : many}`;
 
-interface StorePageProps {
+interface StoreViewProps {
   store: StoreDetail;
   categories: StoreProductCategory[];
   /** Rol de quien mira, si administra la tienda. */
   viewerRole: "owner" | "admin" | "editor" | null;
+  /** Sin sesión, verificar la tienda pide iniciarla y vuelve al asistente. */
+  isAuthenticated: boolean;
 }
 
 /**
- * /tiendas/:slug en el sistema nuevo (Trustpilot, Geizhals, idealo): cabecera de identidad con la nota a la derecha,
+ * /tiendas/:slug (Trustpilot, Geizhals, idealo): cabecera de identidad con la nota a la derecha,
  * sin el banner de stock cuando la tienda no subió uno, las filas de productos por categoría y las reseñas.
  */
-export function StorePage({ store, categories, viewerRole }: StorePageProps) {
+export function StoreView({ store, categories, viewerRole, isAuthenticated }: StoreViewProps) {
   const host = store.website ? new URL(store.website).hostname.replace(/^www\./, "") : null;
   const { rating } = store;
+  const claimHref = `/reclamar?store=${store.slug}`;
 
   return (
     <main className="mx-auto max-w-6xl space-y-10 px-4 py-8">
@@ -99,7 +103,7 @@ export function StorePage({ store, categories, viewerRole }: StorePageProps) {
       </header>
 
       {viewerRole ? (
-        <Notice icon={<IconShieldCheck className="size-5" />} text="Administras esta tienda.">
+        <Notice icon={<IconShieldCheck className="size-5" />} text={`Administras esta tienda como ${viewerRole}.`}>
           <Link to={`/tiendas/${store.slug}/admin`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
             Panel de la tienda
           </Link>
@@ -110,9 +114,22 @@ export function StorePage({ store, categories, viewerRole }: StorePageProps) {
             icon={<IconSparkles className="size-5" />}
             text="¿Es tu tienda? Verifica el dominio y podrás editar este perfil y responder reseñas."
           >
-            <Link to={`/reclamar?store=${store.slug}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
-              Verificar mi tienda
-            </Link>
+            {isAuthenticated ? (
+              <Link to={claimHref} className={buttonVariants({ variant: "secondary", size: "sm" })}>
+                Verificar mi tienda
+              </Link>
+            ) : (
+              <LoginDialog
+                returnTo={claimHref}
+                title="Inicia sesión para verificar tu tienda"
+                description="Necesitas una cuenta para verificar la propiedad y gestionar la tienda después."
+                trigger={
+                  <button type="button" className={buttonVariants({ variant: "secondary", size: "sm" })}>
+                    Verificar mi tienda
+                  </button>
+                }
+              />
+            )}
           </Notice>
         )
       )}

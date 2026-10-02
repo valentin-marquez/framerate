@@ -113,7 +113,7 @@ function StoreRow({
         {claimed ? (
           <span className="flex shrink-0 items-center gap-1 rounded-full bg-secondary/60 px-2 py-0.5 text-muted-foreground text-xs">
             <IconShieldCheck className="size-3.5" />
-            Ya reclamada
+            Ya verificada
           </span>
         ) : noDomain ? (
           <span className="shrink-0 rounded-full bg-secondary/60 px-2 py-0.5 text-muted-foreground text-xs">

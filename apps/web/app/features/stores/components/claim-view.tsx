@@ -1,12 +1,11 @@
-import type { Claim } from "@framerate/contracts";
 import { IconChevronRight } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
-import type { ClaimRequest } from "../../services/claims";
-import { ClaimWizard } from "../claim-wizard";
+import type { ClaimRequest } from "../services/claims";
 
-const STATUS: Record<Claim["status"], { label: string; tone: string }> = {
+const STATUS: Record<ClaimRequest["status"], { label: string; tone: string }> = {
   pending: { label: "Esperando el DNS", tone: "bg-warn/15 text-foreground" },
   verified: { label: "Dominio verificado", tone: "bg-success/15 text-success" },
   confirmed: { label: "Tienda tuya", tone: "bg-success/15 text-success" },
@@ -25,10 +24,19 @@ const STEPS = [
 ];
 
 /**
- * /reclamar (la ruta se mantiene) en el sistema nuevo: el asistente que ya existe va en la columna principal y al lado se explica en tres
- * pasos qué va a pasar. Las verificaciones anteriores quedan abajo, como filas de Ajustes.
+ * /reclamar (la ruta se mantiene): el asistente va en la columna principal y al lado se explica en tres pasos qué va
+ * a pasar. Las verificaciones anteriores quedan abajo, como filas.
  */
-export function ClaimPage({ claims, initialClaim }: { claims: Claim[]; initialClaim?: ClaimRequest }) {
+export function ClaimView({
+  claims,
+  wizard,
+  onContinue,
+}: {
+  claims: ClaimRequest[];
+  /** El asistente, con su estado (reanudar, tienda preseleccionada). */
+  wizard: ReactNode;
+  onContinue: (claim: ClaimRequest) => void;
+}) {
   return (
     <main className="mx-auto max-w-5xl space-y-10 px-4 py-8">
       <header className="max-w-2xl space-y-2">
@@ -39,9 +47,7 @@ export function ClaimPage({ claims, initialClaim }: { claims: Claim[]; initialCl
       </header>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_17rem]">
-        <section className="min-w-0 rounded-3xl border border-border bg-card p-5 sm:p-6">
-          <ClaimWizard initialClaim={initialClaim} />
-        </section>
+        <section className="min-w-0 rounded-3xl border border-border bg-card p-5 sm:p-6">{wizard}</section>
 
         <aside className="space-y-4">
           <h2 className="font-medium text-foreground text-sm">Cómo funciona</h2>
@@ -75,22 +81,26 @@ export function ClaimPage({ claims, initialClaim }: { claims: Claim[]; initialCl
               const status = STATUS[c.status];
               return (
                 <li key={c.id} className="flex flex-wrap items-center gap-3 px-4 py-3.5 sm:px-5">
-                  <StoreLogo store={{ name: c.storeName, slug: c.storeSlug }} className="size-9" />
+                  <StoreLogo store={{ name: c.store_name, slug: c.store_id }} className="size-9" />
                   <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-foreground">{c.storeName}</span>
+                      <span className="font-medium text-foreground">{c.store_name}</span>
                       <span className={cn("rounded-md px-1.5 py-0.5 font-medium text-[11px]", status.tone)}>
                         {status.label}
                       </span>
                     </p>
                     <p className="flex flex-wrap gap-x-3 text-muted-foreground text-xs">
-                      <span>{c.domain}</span>
-                      <span>Creado el {day(c.createdAt)}</span>
-                      {open && <span>Vence el {day(c.expiresAt)}</span>}
+                      <span>{c.claimed_domain}</span>
+                      <span>Creado el {day(c.created_at)}</span>
+                      {open && <span>Vence el {day(c.expires_at)}</span>}
                     </p>
                   </div>
                   {open && (
-                    <button type="button" className={buttonVariants({ variant: "secondary", size: "sm" })}>
+                    <button
+                      type="button"
+                      onClick={() => onContinue(c)}
+                      className={buttonVariants({ variant: "secondary", size: "sm" })}
+                    >
                       Continuar
                       <IconChevronRight className="size-4" />
                     </button>

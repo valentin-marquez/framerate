@@ -1,4 +1,4 @@
-import type { Claim, StoreDetail } from "@framerate/contracts";
+import type { StoreDetail } from "@framerate/contracts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   type StoreRatingStats,
@@ -7,13 +7,14 @@ import {
 } from "~/features/store-reviews/services/store-reviews";
 import { rowProducts, sessions } from "~/shared/storybook/fixtures";
 import { withQueryData } from "~/shared/storybook/with-query-data";
-import type { ClaimRequest } from "../../services/claims";
-import type { StoreProductCategory } from "../../services/stores";
-import { ClaimPage } from "./claim-page";
-import { StorePage } from "./store-page";
+import type { ClaimRequest } from "../services/claims";
+import type { StoreProductCategory } from "../services/stores";
+import { ClaimView } from "./claim-view";
+import { ClaimWizard } from "./claim-wizard";
+import { StoreView } from "./store-view";
 
-/** #50: tienda y reclamo en el sistema nuevo. Las historias del diseño anterior siguen en "Tiendas/Perfil y reclamo". */
-const meta = { title: "Tiendas/Tienda y reclamo: propuesta", parameters: { layout: "fullscreen" } } satisfies Meta;
+/** La página pública de una tienda y el asistente para verificarla. */
+const meta = { title: "Tiendas/Páginas", parameters: { layout: "fullscreen" } } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -107,19 +108,19 @@ const noReviews: StoreRatingStats = {
 export const TiendaVerificada: Story = {
   name: "Tienda verificada",
   decorators: [reviewData("tectec", reviews, stats)],
-  render: () => <StorePage store={store} categories={categories} viewerRole={null} />,
+  render: () => <StoreView isAuthenticated store={store} categories={categories} viewerRole={null} />,
 };
 
-export const TiendaSinReclamar: Story = {
-  name: "Tienda sin reclamar, con sus productos",
+export const TiendaSinVerificar: Story = {
+  name: "Tienda sin verificar, con sus productos",
   decorators: [reviewData("dust2", [], noReviews)],
-  render: () => <StorePage store={unclaimed} categories={categories} viewerRole={null} />,
+  render: () => <StoreView isAuthenticated store={unclaimed} categories={categories} viewerRole={null} />,
 };
 
 export const TiendaSinProductos: Story = {
   name: "Tienda sin productos todavía",
   decorators: [reviewData("dust2", [], noReviews)],
-  render: () => <StorePage store={{ ...unclaimed, offerCount: 0 }} categories={[]} viewerRole={null} />,
+  render: () => <StoreView isAuthenticated store={{ ...unclaimed, offerCount: 0 }} categories={[]} viewerRole={null} />,
 };
 
 export const TiendaAdministrada: Story = {
@@ -127,7 +128,8 @@ export const TiendaAdministrada: Story = {
   parameters: { session: sessions.user },
   decorators: [reviewData("tectec", reviews, stats)],
   render: () => (
-    <StorePage
+    <StoreView
+      isAuthenticated
       store={{ ...store, bannerUrl: "https://tectec.cl/wp-content/uploads/2022/03/RTX-3050-MSI-Ventus-2X-6gb_1.jpg" }}
       categories={categories}
       viewerRole="owner"
@@ -135,30 +137,36 @@ export const TiendaAdministrada: Story = {
   ),
 };
 
-const claim = (id: number, storeSlug: string, storeName: string, status: Claim["status"], created: string): Claim => ({
-  id,
-  storeSlug,
-  storeName,
-  domain: `${storeSlug}.cl`,
-  txtName: `_framerate-verify.${storeSlug}.cl`,
-  txtValue: "framerate-verify=7f3a9c2e41d84b6f",
+const claim = (
+  id: number,
+  storeSlug: string,
+  storeName: string,
+  status: ClaimRequest["status"],
+  created: string,
+): ClaimRequest => ({
+  id: String(id),
+  store_id: storeSlug,
+  store_name: storeName,
+  claimed_domain: `${storeSlug}.cl`,
+  txt_record_name: `_framerate-verify.${storeSlug}.cl`,
+  txt_record_value: "framerate-verify=7f3a9c2e41d84b6f",
   status,
   attempts: 3,
-  lastCheckedAt: null,
-  verifiedAt: null,
-  expiresAt: "2026-10-07T12:00:00Z",
-  createdAt: created,
-  dnsProvider: "cloudflare",
+  last_checked_at: null,
+  verified_at: null,
+  expires_at: "2026-10-07T12:00:00Z",
+  created_at: created,
+  dns_provider: "cloudflare",
+  dns_nameservers: [],
 });
 
-const claims: Claim[] = [
+const claims: ClaimRequest[] = [
   claim(3, "tectec", "TecTec", "pending", "2026-09-30T11:00:00Z"),
   claim(2, "nuevatec", "Nuevatec", "confirmed", "2026-08-02T11:00:00Z"),
   claim(1, "myshop", "MyShop", "expired", "2026-06-20T11:00:00Z"),
 ];
 
-// El asistente es el que ya existe y usa la forma de la web (snake_case); revisa el DNS contra la API cada pocos
-// segundos, así que sin API muestra el aviso de reintento.
+// El asistente revisa el DNS contra la API cada pocos segundos: sin API muestra el aviso de reintento.
 const pending: ClaimRequest = {
   id: "3",
   store_id: "tectec",
@@ -176,14 +184,14 @@ const pending: ClaimRequest = {
   dns_nameservers: ["ada.ns.cloudflare.com", "bob.ns.cloudflare.com"],
 };
 
-export const ReclamoElegir: Story = {
-  name: "Reclamo: elegir tienda",
+export const VerificarElegir: Story = {
+  name: "Verificar: elegir tienda",
   parameters: { session: sessions.user, path: "/reclamar" },
-  render: () => <ClaimPage claims={[]} />,
+  render: () => <ClaimView claims={[]} wizard={<ClaimWizard />} onContinue={() => {}} />,
 };
 
-export const ReclamoEnCurso: Story = {
-  name: "Reclamo: paso DNS con reclamos anteriores",
+export const VerificarEnCurso: Story = {
+  name: "Verificar: paso DNS con verificaciones anteriores",
   parameters: { session: sessions.user, path: "/reclamar" },
-  render: () => <ClaimPage claims={claims} initialClaim={pending} />,
+  render: () => <ClaimView claims={claims} wizard={<ClaimWizard initialClaim={pending} />} onContinue={() => {}} />,
 };

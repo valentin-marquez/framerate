@@ -1,11 +1,9 @@
-import { IconChevronRight } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { requireAuth } from "~/features/auth/services/auth.server";
-import { Button } from "~/shared/components/primitives/button";
 import { ApiError } from "~/shared/lib/api";
-import { cn } from "~/shared/lib/utils";
+import { ClaimView } from "../components/claim-view";
 import { ClaimWizard } from "../components/claim-wizard";
 import { type ClaimRequest, claimsService } from "../services/claims";
 import { type ClaimableStore, storesService } from "../services/stores";
@@ -56,19 +54,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { claims, preselectStore, preselectError };
 }
 
-const STATUS_LABEL: Record<ClaimRequest["status"], string> = {
-  pending: "Pendiente",
-  verified: "Verificado",
-  confirmed: "Confirmado",
-  expired: "Expirado",
-  revoked: "Revocado",
-  stale: "Sin revalidar",
-};
-
-function isResumable(status: ClaimRequest["status"]) {
-  return status === "pending" || status === "verified";
-}
-
 export default function ClaimPage({ loaderData }: Route.ComponentProps) {
   const { claims, preselectStore, preselectError } = loaderData;
   const { revalidate } = useRevalidator();
@@ -112,16 +97,10 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 p-4 pt-8">
-      <header>
-        <h1 className="font-semibold text-2xl tracking-tight">Verifica tu tienda</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Elige tu tienda del catálogo y verifica que el dominio es tuyo. Una vez verificado, podrás gestionar su
-          perfil, responder reseñas y más.
-        </p>
-      </header>
-
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <ClaimView
+      claims={claims}
+      onContinue={continueClaim}
+      wizard={
         <ClaimWizard
           key={wizardKey}
           initialClaim={resume ?? undefined}
@@ -129,50 +108,7 @@ export default function ClaimPage({ loaderData }: Route.ComponentProps) {
           onDone={revalidate}
           onCancel={reset}
         />
-      </section>
-
-      {claims.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="font-medium text-sm">Tus verificaciones</h2>
-          <ul className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border">
-            {claims.map((c: ClaimRequest) => {
-              const resumable = isResumable(c.status);
-              return (
-                <li key={c.id} className="flex items-center gap-3 p-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-sm">{c.store_name}</div>
-                    <div className="flex flex-wrap gap-x-3 text-muted-foreground text-xs">
-                      <span>{c.claimed_domain}</span>
-                      <span>Creado el {formatDate(c.created_at)}</span>
-                      {resumable && <span>Vence el {formatDate(c.expires_at)}</span>}
-                    </div>
-                  </div>
-                  <StatusBadge status={c.status} />
-                  {resumable && (
-                    <Button variant="secondary" size="sm" onClick={() => continueClaim(c)}>
-                      Continuar
-                      <IconChevronRight className="size-4" />
-                    </Button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-    </main>
+      }
+    />
   );
-}
-
-// react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-const formatDate = (iso: string) => new Date(iso).toLocaleDateString("es-CL", { timeZone: "America/Santiago" });
-
-function StatusBadge({ status }: { status: ClaimRequest["status"] }) {
-  const tone =
-    status === "verified"
-      ? "bg-primary/10 text-primary"
-      : status === "pending"
-        ? "bg-secondary/60 text-secondary-foreground/80"
-        : "bg-secondary/40 text-muted-foreground";
-  return <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs", tone)}>{STATUS_LABEL[status]}</span>;
 }

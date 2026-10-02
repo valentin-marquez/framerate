@@ -135,6 +135,8 @@ async function getProducts(slug: string, name: string): Promise<StoreProductsRes
 
 export const storesService = {
   get: async (slug: string) => toStoreDetail(await api.get<ApiStoreDetail>(`/v1/stores/${slug}`)),
+  /** Con la forma del contrato, para la página pública (el resto sigue con la heredada). */
+  getPublic: (slug: string) => api.get<ApiStoreDetail>(`/v1/stores/${slug}`),
   getProducts,
   listClaimable: async (q?: string): Promise<{ stores: ClaimableStore[] }> => {
     const { items } = await api.get<{ items: StoreListItem[] }>("/v1/stores", q ? { params: { q } } : undefined);

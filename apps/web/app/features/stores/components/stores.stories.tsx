@@ -1,83 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { rowProducts } from "~/shared/storybook/fixtures";
 import type { ClaimRequest } from "../services/claims";
-import type { StoreDetail, StoreMember, StoreProductCategory } from "../services/stores";
+import type { StoreMember } from "../services/stores";
 import { ClaimWizard } from "./claim-wizard";
 import { DnsInstructions } from "./dns-instructions";
-import { StoreHeader } from "./store-header";
 import { StoreMemberList } from "./store-member-list";
 import { StorePicker } from "./store-picker";
-import { StoreProductsSection } from "./store-products-section";
 import { VerifyStatus } from "./verify-status";
 
-const meta = { title: "Tiendas/Perfil y reclamo", parameters: { layout: "padded" } } satisfies Meta;
+const meta = { title: "Tiendas/Verificación y equipo", parameters: { layout: "padded" } } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-const store: StoreDetail = {
-  id: "tectec",
-  slug: "tectec",
-  name: "TecTec",
-  canonical_name: "TecTec",
-  display_name: null,
-  url: "https://tectec.cl",
-  website: "https://tectec.cl",
-  logo_url: null,
-  icon_url: null,
-  banner_url: null,
-  description: "Tienda de hardware en Santiago con despacho a todo Chile.",
-  social: {},
-  is_active: true,
-  appearance: "light",
-  is_claimed: true,
-  account: null,
-  owner_user_id: null,
-  verified_at: "2026-07-14T12:00:00.000Z",
-  created_at: "2026-01-10T12:00:00.000Z",
-  updated_at: "2026-09-01T12:00:00.000Z",
-  member_count: 2,
-  rating: { average: 4.3, count: 12, recent: { average: 3.8, count: 4 } },
-};
-
-export const Cabecera: Story = {
-  name: "Cabecera de tienda",
-  render: () => <StoreHeader store={store} productCount={128} />,
-};
-
-export const CabeceraSinReclamar: Story = {
-  name: "Cabecera de tienda sin reclamar ni reseñas",
-  render: () => (
-    <StoreHeader
-      store={{
-        ...store,
-        id: "dust2",
-        slug: "dust2",
-        name: "Dust2",
-        description: null,
-        website: null,
-        verified_at: null,
-        is_claimed: false,
-        member_count: 0,
-        rating: { average: null, count: 0, recent: { average: null, count: 0 } },
-      }}
-    />
-  ),
-};
-
-const productCategories: StoreProductCategory[] = [
-  { slug: "tarjetas-de-video", name: "Tarjetas de video", count: 48, products: rowProducts },
-  { slug: "fuentes-de-poder", name: "Fuentes de poder", count: 12, products: rowProducts.slice(4) },
-];
-
-export const Productos: Story = {
-  name: "Productos de la tienda",
-  render: () => <StoreProductsSection categories={productCategories} total={60} />,
-};
-
-export const ProductosVacio: Story = {
-  name: "Productos de la tienda: vacío",
-  render: () => <StoreProductsSection categories={[]} total={0} />,
-};
 
 const members: StoreMember[] = [
   {
@@ -171,13 +103,13 @@ const claim = (status: ClaimRequest["status"]): ClaimRequest => ({
   dns_nameservers: ["ada.ns.cloudflare.com", "bob.ns.cloudflare.com"],
 });
 
-export const ReclamoPasoDns: Story = {
-  name: "Reclamo: paso DNS",
+export const VerificacionPasoDns: Story = {
+  name: "Verificación: paso DNS",
   // El wizard revisa el DNS contra la API cada pocos segundos; sin API muestra el aviso de reintento.
   render: () => <ClaimWizard initialClaim={claim("pending")} />,
 };
 
-export const ReclamoVerificado: Story = {
-  name: "Reclamo: dominio verificado",
+export const VerificacionDominio: Story = {
+  name: "Verificación: dominio verificado",
   render: () => <ClaimWizard initialClaim={claim("verified")} />,
 };

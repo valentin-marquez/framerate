@@ -39,7 +39,7 @@ export function DnsInstructions({ txtName, txtValue, domain, dnsProvider, dnsNam
       </div>
 
       <p className="mt-3 text-muted-foreground text-xs">
-        La propagación puede tardar entre 1 minuto y 24 horas según tu proveedor. El reclamo expira en 7 días.
+        La propagación puede tardar entre 1 minuto y 24 horas según tu proveedor. La verificación expira en 7 días.
       </p>
 
       {provider && (

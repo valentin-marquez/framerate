@@ -218,7 +218,7 @@ export function ClaimWizard({ initialClaim, initialStore, onDone, onCancel }: Cl
           (initialStore && submitting ? (
             <div className="flex items-center justify-center gap-2 rounded-xl border border-border/40 bg-secondary/30 p-8 text-muted-foreground text-sm">
               <IconLoader2 className="size-4 animate-spin" />
-              Preparando reclamo para {initialStore.name}…
+              Preparando la verificación de {initialStore.name}…
             </div>
           ) : (
             <StorePicker onSelect={selectStore} busy={submitting} />
