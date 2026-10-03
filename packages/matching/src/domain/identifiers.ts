@@ -60,7 +60,7 @@ function hasValidGtinChecksum(digits: string): boolean {
 // "P/N GM-800B BK" y "P/N GM-800B WH" son productos distintos.
 const TITLE_CODE_FORMS = [
   /\[([^[\]]{4,60})\]/g,
-  /\b(?:p\s*\/\s*n|pn\s*[:#]|part\s*(?:number|no\.?)\s*:?|n[uú]mero de parte\s*:?)\s*([^()[\],|]{4,60})/gi,
+  /\b(?:p\s*\/\s*n\s*[:#]?|pn\s*[:#]|part\s*(?:number|no\.?)\s*:?|n[uú]mero de parte\s*:?)\s*([^()[\],|]{4,60})/gi,
   /\(([^()\s]{4,40})\)\s*$/g,
 ];
 const SPEC_CODE =
@@ -82,6 +82,8 @@ export function codesInTitle(title: string): { mpn: string | null; gtin: string 
           if (piece.replace(/\D/g, "").length >= 12) gtin ??= normalizeGtin(piece);
           continue;
         }
+        // Una palabra suelta ("Garantia", "Tarjeta") delata texto de marketing, no un código.
+        if (piece.split(/\s+/).some((t) => /^[a-záéíóúñ]{4,}$/i.test(t))) continue;
         const parts = piece.split("/").map((s) => s.toUpperCase().replace(/[\s\-_.]+/g, ""));
         if (parts.some((s) => !/\d/.test(s) || SPEC_CODE.test(s))) continue;
         const value = normalizeMpn(piece);

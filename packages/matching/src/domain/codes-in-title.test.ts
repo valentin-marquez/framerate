@@ -40,6 +40,18 @@ describe("códigos en el título", () => {
     expect(codesInTitle(title)).toEqual({ mpn: null, gtin: null });
   });
 
+  test.each([
+    "Fuente Gamemax [Garantia 12 meses]",
+    "Fuente Cougar [80 Plus Bronze 650W]",
+    "Placa MSI P/N X123456 Tarjeta Madre",
+  ])("rechaza texto con palabras: %s", (title) => {
+    expect(codesInTitle(title)).toEqual({ mpn: null, gtin: null });
+  });
+
+  test("P/N acepta dos puntos", () => {
+    expect(codesInTitle("Placa ASUS P/N: 90MB1500-M0EAY0").mpn).toBe("90MB1500M0EAY0");
+  });
+
   test("normalizeMpn ignora los guiones no separables de ETChile", () => {
     expect(normalizeMpn("AX5U5600C4616G‑DCLARBK")).toBe("AX5U5600C4616GDCLARBK");
   });
