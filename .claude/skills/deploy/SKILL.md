@@ -47,8 +47,15 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
 - **Un cambio en `packages/matching` va a ingest y server en la misma tanda.** Los dos corrigen las filas de
   `products` con su copia de los extractores al cargarlas; si quedan con versiones distintas, se pisan entre sí.
 - **La primera corrida tras un cambio de matching mueve ofertas en prod** (re-decide todos los vínculos). Antes de
-  desplegar, anotar la hora: si algo sale mal, `bunx wrangler d1 time-travel restore framerate --timestamp=<hora>`
-  desde `packages/database` vuelve la base a ese momento.
+  desplegar, anotar la hora. Para volver atrás, en este orden: primero `bunx wrangler rollback` en `apps/ingest` y en
+  `apps/server` (si no, el siguiente cron vuelve a aplicar el matching), y después
+  `bunx wrangler d1 time-travel restore framerate --timestamp=<hora>` desde `packages/database`. El restore descarta
+  toda escritura posterior a esa hora (usuarios, sesiones, cotizaciones, reclamos, revisiones resueltas en el admin):
+  hay que hacerlo pronto.
+- **Tras el primer ciclo posterior a un deploy de matching**, mirar `GET /v1/admin/crawls` y `/prod-health`. Revertir si
+  alguna corrida falló por límite de subrequests, o si las desvinculaciones del primer ciclo superan ~600 en total (la
+  simulación con datos de prod dio 283; se espera algo más porque las fuentes de Infor-Ingen ahora llegan por el crawl
+  de `psu` y las fichas Woo aportan códigos P/N).
 - **Los secretos no están en el repo.** Si falta uno (`BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, `DISCORD_CLIENT_ID`,
   `DISCORD_CLIENT_SECRET`), el dueño lo pone con `bunx wrangler secret put <NOMBRE>` en la carpeta del Worker.
 - `bun run test` a veces falla por timeout en el primer test de `claims` o de `users-admin` (pasan solos). Repetirlo
