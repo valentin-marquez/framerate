@@ -461,15 +461,43 @@ const generic: CategoryProfile = {
   extract: () => ({}),
 };
 
+// ─── Color (transversal) ─────────────────────────────────────────────────────
+
+const WHITE = / (white|blanc[oa]s?|wh|ice|snow)(?= )/;
+// En coolers "Ice Force" es una línea, no un color.
+const WHITE_SAID = / (white|blanc[oa]s?|wh|snow)(?= )/;
+const BLACK_SAID = / (black|negr[oa]s?|bk)(?= )/;
+// "80 Plus White" es una certificación.
+const CERTIFICATION_WHITE = / 80 ?\+? ?(?:plus )?white(?= )/g;
+
+/**
+ * - `standard`: donde la negra es la variante base que nadie escribe (GPU, fuente, RAM, placa), sin color = negra.
+ * - `said`: sólo cuenta si el título lo dice, porque hay tiendas que publican la blanca sin decirlo.
+ */
+function withColor(profile: CategoryProfile, mode: "standard" | "said"): CategoryProfile {
+  return {
+    ...profile,
+    discriminators: [...profile.discriminators, "color"],
+    extract(title) {
+      const a = profile.extract(title);
+      const t = prep(title).replace(CERTIFICATION_WHITE, " ");
+      if (mode === "standard") a.color = WHITE.test(t) ? "white" : "black";
+      else if (WHITE_SAID.test(t)) a.color = "white";
+      else if (BLACK_SAID.test(t)) a.color = "black";
+      return a;
+    },
+  };
+}
+
 export const PROFILES: Record<Category, CategoryProfile> = {
-  gpu,
+  gpu: withColor(gpu, "standard"),
   cpu,
-  ram,
+  ram: withColor(ram, "standard"),
   ssd,
   hdd,
-  psu,
-  motherboard,
-  cpu_cooler: generic,
-  case: generic,
-  case_fan: generic,
+  psu: withColor(psu, "standard"),
+  motherboard: withColor(motherboard, "standard"),
+  cpu_cooler: withColor(generic, "said"),
+  case: withColor(generic, "said"),
+  case_fan: withColor(generic, "said"),
 };

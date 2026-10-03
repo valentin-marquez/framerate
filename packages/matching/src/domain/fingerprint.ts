@@ -34,7 +34,7 @@ export interface FingerprintInput {
 }
 
 export function buildFingerprint(input: FingerprintInput): Fingerprint {
-  const brand = canonicalBrand(input.brand) ?? detectBrand(input.title);
+  const brand = resolveBrand(input);
   const attributes = PROFILES[input.category].extract(input.title);
   return {
     category: input.category,
@@ -45,6 +45,21 @@ export function buildFingerprint(input: FingerprintInput): Fingerprint {
     attributeKey: attributeKey(input.category, brand, attributes),
     tokens: distinctiveTokens(input.category, input.title, brand),
   };
+}
+
+const CHIP_MAKERS = new Set(["AMD", "NVIDIA", "Intel"]);
+
+/**
+ * En GPU y placas la tienda a veces declara el fabricante del chip o otro ensamblador; el del título manda. En el
+ * resto se respeta la marca declarada ("XPG Lancer RGB ROG" detectaría ASUS en una RAM).
+ */
+function resolveBrand(input: FingerprintInput): string | null {
+  const inTitle = detectBrand(input.title);
+  const assembled = input.category === "gpu" || input.category === "motherboard";
+  if (assembled && inTitle && !CHIP_MAKERS.has(inTitle)) return inTitle;
+  const brand = canonicalBrand(input.brand) ?? inTitle;
+  // Una placa "AMD" o "Intel" no dice quién la fabrica, y juntaría ensambladores distintos bajo una misma clave.
+  return input.category === "motherboard" && brand && CHIP_MAKERS.has(brand) ? null : brand;
 }
 
 /**

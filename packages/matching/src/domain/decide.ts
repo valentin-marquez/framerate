@@ -16,6 +16,7 @@ export interface Comparison {
   evidence: {
     identifier?: "mpn" | "gtin";
     mpnConflict?: boolean;
+    gtinConflict?: boolean;
     /** Códigos de modelo con el mismo prefijo y distinto número ("nv1" vs "nv3", "cl36" vs "cl28"). */
     modelConflict?: boolean;
     attributeKeyMatch?: boolean;
@@ -44,6 +45,8 @@ export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison 
   if (offer.gtin && candidate.gtin && offer.gtin === candidate.gtin) evidence.identifier = "gtin";
   else if (offer.mpn && candidate.mpn && offer.mpn === candidate.mpn) evidence.identifier = "mpn";
   else if (offer.mpn && candidate.mpn) evidence.mpnConflict = true;
+  // ASUS publica EAN y UPC distintos del mismo producto, pero casi siempre dos GTIN distintos son dos productos.
+  if (!evidence.identifier && offer.gtin && candidate.gtin) evidence.gtinConflict = true;
   if (modelCodeConflict(offer.tokens, candidate.tokens)) evidence.modelConflict = true;
 
   if (offer.attributeKey && candidate.attributeKey) {
@@ -58,7 +61,7 @@ export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison 
   if (evidence.brandMatch) score += 0.1;
   // Dos MPN o dos versiones de modelo distintas son señal fuerte en contra (aunque las tiendas a veces publican
   // códigos distintos del mismo producto): nunca fusión automática.
-  if (evidence.mpnConflict || evidence.modelConflict) score *= 0.6;
+  if (evidence.mpnConflict || evidence.gtinConflict || evidence.modelConflict) score *= 0.6;
 
   return { score: round(score), vetoes, evidence };
 }
@@ -103,7 +106,13 @@ export function decide(offer: Fingerprint, candidates: readonly Candidate[]): De
     return { kind: "link", productId: candidate.productId, method: "identifier", confidence: score, comparison };
   }
 
-  if (evidence.attributeKeyMatch && !evidence.mpnConflict && !evidence.modelConflict && !candidate.sameStore) {
+  if (
+    evidence.attributeKeyMatch &&
+    !evidence.mpnConflict &&
+    !evidence.gtinConflict &&
+    !evidence.modelConflict &&
+    !candidate.sameStore
+  ) {
     if (profile.keyIsUnique || score >= THRESHOLDS.autoAttributes) {
       return { kind: "link", productId: candidate.productId, method: "attributes", confidence: score, comparison };
     }

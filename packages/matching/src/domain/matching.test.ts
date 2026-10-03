@@ -56,6 +56,7 @@ describe("atributos por categoría", () => {
       line: "dual",
       oc: true,
       variant: "",
+      color: "black",
     });
     expect(PROFILES.gpu.extract("Gigabyte Radeon RX 7800 XT Gaming OC 16G").chipset).toBe("rx 7800 xt");
     expect(PROFILES.gpu.extract("Intel Arc B580 Limited Edition 12GB").chipset).toBe("arc b580");
@@ -86,6 +87,7 @@ describe("atributos por categoría", () => {
       formFactor: "dimm",
       line: "beast",
       rgb: false,
+      color: "black",
     });
     expect(PROFILES.ram.extract("Memoria Notebook SO-DIMM 16GB DDR4 3200 MHz")).toMatchObject({
       modules: 1,
@@ -108,6 +110,7 @@ describe("atributos por categoría", () => {
     expect(PROFILES.psu.extract("Fuente de Poder Corsair RM850e 850W 80 Plus Gold")).toEqual({
       wattage: 850,
       efficiency: "gold",
+      color: "black",
     });
     expect(PROFILES.motherboard.extract("Placa Madre MSI MAG B650M Mortar WiFi")).toEqual({
       chipset: "b650",
@@ -115,6 +118,7 @@ describe("atributos por categoría", () => {
       wifi: true,
       model: "b650m",
       line: "mortar",
+      color: "black",
     });
   });
 
@@ -140,6 +144,7 @@ describe("atributos por categoría", () => {
       formFactor: "dimm",
       line: "vengeance",
       rgb: true,
+      color: "black",
     });
     expect(PROFILES.ram.extract("Memoria RAM Kingston Fury Beast Black RGB EXPO 8G 6000M CL30")).toMatchObject({
       type: "ddr5",
@@ -188,6 +193,7 @@ describe("atributos por categoría", () => {
       formFactor: "matx",
       wifi: true,
       model: "a620amx",
+      color: "black",
     });
     expect(PROFILES.motherboard.extract("Placa Madre Gigabyte X870I AORUS PRO ICE, AM5, DDR5, mITX")).toMatchObject({
       chipset: "x870",
