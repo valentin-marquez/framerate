@@ -37,7 +37,7 @@ function outcome(pair: Pair) {
 }
 
 // Los topes sólo se mueven en la buena dirección, en el mismo commit que mejora el matching.
-const MAX_WRONG_MERGES = 7;
+const MAX_WRONG_MERGES = 3;
 const MIN_SAME_LINKED = 110;
 
 test("set etiquetado: fusiones erróneas (precisión) y vínculos correctos (recall)", () => {
