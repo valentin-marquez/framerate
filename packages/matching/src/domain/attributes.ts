@@ -170,11 +170,13 @@ const cpu: CategoryProfile = {
 
 // Líneas de RAM: Beast y Renegade comparten capacidad y velocidad pero son productos distintos.
 const RAM_LINES = [
+  "renegade pro",
   "renegade",
   "beast",
   "impact",
-  "vengeance",
+  "lpx",
   "dominator",
+  "vengeance",
   "trident",
   "ripjaws",
   "flare",
@@ -184,24 +186,34 @@ const RAM_LINES = [
   "caliber",
   "xlr8",
   "valueram",
+  "ballistix",
+  "predator",
+  "delta",
+  "vulcan",
 ] as const;
 
 const ram: CategoryProfile = {
   keyFields: ["type", "capacity", "modules", "speed", "formFactor"],
   // `line` no va en la clave (muchas tiendas no la escriben), pero si ambos lados la dicen y difiere, es otro producto.
-  discriminators: ["type", "capacity", "modules", "speed", "formFactor", "line"],
+  discriminators: ["type", "capacity", "modules", "speed", "formFactor", "line", "rgb"],
   keyIsUnique: false,
   extract(title) {
-    const t = prep(title);
+    // "2*16GB" (Tecnomas) es un kit; "Vegeance" (Infor-Ingen) es Vengeance.
+    const t = prep(title.replace(/\*/g, "x")).replace(/ (vegeance|vengance|vengence) /g, " vengeance ");
     const a: Attributes = {};
     const kit = t.match(/ (\d) ?x ?(\d{1,3}) ?(?:gb?)?(?= )/);
+    const reversed = t.match(/ (\d{1,3}) ?gb? ?x ?(\d)(?= )/);
+    const kitOf = t.match(/ kit (?:of |de )?(\d)(?= )/);
     if (kit?.[1] && kit[2]) {
       a.modules = Number(kit[1]);
       a.capacity = Number(kit[1]) * Number(kit[2]);
+    } else if (reversed?.[1] && reversed[2] && Number(reversed[2]) > 1) {
+      a.modules = Number(reversed[2]);
+      a.capacity = Number(reversed[1]) * Number(reversed[2]);
     } else {
       const cap = t.match(/ (\d{1,3}) ?gb?(?=[ x])/);
       if (cap?.[1]) a.capacity = Number(cap[1]);
-      a.modules = 1;
+      a.modules = kitOf?.[1] && Number(kitOf[1]) > 1 ? Number(kitOf[1]) : 1;
     }
     const speed = Number(t.match(/[ x](\d{4,5}) ?(?:mhz|mt s|mts|m)?(?= )/)?.[1] ?? 0);
     if (speed) a.speed = speed;
@@ -213,6 +225,9 @@ const ram: CategoryProfile = {
     a.formFactor = /so ?dimm|notebook|laptop/.test(t) ? "sodimm" : "dimm";
     const line = firstMatch(RAM_LINES, t);
     if (line) a.line = line;
+    // Sin línea no se sabe si es RGB: muchas tiendas truncan el título o usan uno genérico.
+    if (/rgb(?= )| rbg /.test(t) || line === "spectrix") a.rgb = true;
+    else if (line) a.rgb = false;
     return a;
   },
 };
@@ -293,9 +308,50 @@ const psu: CategoryProfile = {
 
 // ─── Placa madre ─────────────────────────────────────────────────────────────
 
+// Líneas de placa: la primera de la lista que aparece en el título.
+const MOBO_LINES = [
+  "rog strix",
+  "crosshair",
+  "maximus",
+  "tuf",
+  "proart",
+  "prime",
+  "mortar",
+  "tomahawk",
+  "carbon",
+  "edge",
+  "project zero",
+  "gaming plus",
+  "gaming pro",
+  "gaming x",
+  "gaming",
+  "elite",
+  "master",
+  "eagle",
+  "ds3h",
+  "d3hp",
+  "d2hp",
+  "s2h",
+  "ud",
+  "aero",
+  "aorus",
+  "steel legend",
+  "pro rs",
+  "pro4",
+  "riptide",
+  "lightning",
+  "phantom",
+  "hdv",
+  "hvs",
+  "taichi",
+  "livemixer",
+  "ayw",
+  "btf",
+] as const;
+
 const motherboard: CategoryProfile = {
   keyFields: ["chipset", "formFactor", "wifi"],
-  discriminators: ["chipset", "formFactor", "wifi"],
+  discriminators: ["chipset", "formFactor", "wifi", "model", "memory", "line"],
   keyIsUnique: false,
   extract(title) {
     const t = prep(title);
@@ -307,7 +363,15 @@ const motherboard: CategoryProfile = {
     else if (/ (?:mini ?|m)?itx /.test(t) || chip?.[3] === "i") a.formFactor = "itx";
     else if (/ micro ?atx | m ?atx | matx /.test(t) || chip?.[3]) a.formFactor = "matx";
     else if (/ atx /.test(t)) a.formFactor = "atx";
-    a.wifi = / wi ?fi| wifi/.test(t);
+    a.wifi = / wi ?fi| wifi| (ax\d?|ac)(?= )/.test(t);
+    // El sufijo de una letra separa modelos (H610M-A, H610M-K): el guion ya es un espacio y los tokens de una letra
+    // no cuentan en la similitud, así que va como atributo.
+    const model = t.match(/ ([abhxz]\d{3}e?(?:m|am|i)?[a-z0-9]{0,3})(?: ([a-z]))?(?= )/);
+    if (model?.[1]) a.model = model[1] + (model[2] ?? "");
+    const memory = t.match(/ddr([45])(?= )|(?<= )d([45])(?= )/);
+    if (memory) a.memory = `ddr${memory[1] ?? memory[2]}`;
+    const line = firstMatch(MOBO_LINES, t);
+    if (line) a.line = line;
     return a;
   },
 };

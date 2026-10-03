@@ -84,6 +84,7 @@ describe("atributos por categoría", () => {
       speed: 6000,
       formFactor: "dimm",
       line: "beast",
+      rgb: false,
     });
     expect(PROFILES.ram.extract("Memoria Notebook SO-DIMM 16GB DDR4 3200 MHz")).toMatchObject({
       modules: 1,
@@ -107,6 +108,8 @@ describe("atributos por categoría", () => {
       chipset: "b650",
       formFactor: "matx",
       wifi: true,
+      model: "b650m",
+      line: "mortar",
     });
   });
 
@@ -131,6 +134,7 @@ describe("atributos por categoría", () => {
       speed: 6000,
       formFactor: "dimm",
       line: "vengeance",
+      rgb: true,
     });
     expect(PROFILES.ram.extract("Memoria RAM Kingston Fury Beast Black RGB EXPO 8G 6000M CL30")).toMatchObject({
       type: "ddr5",
@@ -178,6 +182,7 @@ describe("atributos por categoría", () => {
       chipset: "a620",
       formFactor: "matx",
       wifi: true,
+      model: "a620amx",
     });
     expect(PROFILES.motherboard.extract("Placa Madre Gigabyte X870I AORUS PRO ICE, AM5, DDR5, mITX")).toMatchObject({
       chipset: "x870",
