@@ -266,7 +266,8 @@ export const STORES: readonly StoreDefinition[] = [
     slug: "mybox",
     name: "MyBox",
     url: "https://mybox.cl",
-    minIntervalMs: 1000,
+    // 429 en cpu_cooler y case_fan en cada ciclo: la cola corre dos categorías a la vez y 1000 ms por corrida son 2 requests/s.
+    minIntervalMs: 2500,
     adapter: createPrestaShopAdapter({
       baseUrl: "https://mybox.cl",
       reference: "mpn",
