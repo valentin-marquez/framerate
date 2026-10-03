@@ -251,3 +251,56 @@ describe("re-decisión de vínculos existentes", () => {
     expect((await listingOf(deps.db, "f")).product_id).toBe(product);
   });
 });
+
+describe("revisiones obsoletas", () => {
+  async function setupReview() {
+    const deps = testDeps(d1, steppingClock());
+    const alfa = fakeStore("alfa", { ram: ["ram"] });
+    const beta = fakeStore("beta", { ram: ["ram"] });
+    alfa.setOffers([
+      offer("alfa", "1", {
+        category: "ram",
+        title: "Corsair Vengeance 32GB 2x16GB DDR5 6000MHz Black",
+        priceCash: 180_000,
+      }),
+    ]);
+    const betaOffer = (title: string) =>
+      offer("beta", "2", { category: "ram", title, priceCash: 150_000, gtin: "0840006600008" });
+    beta.setOffers([betaOffer("Corsair Vengeance 32GB (2x16GB) DDR5 6000MHz CMK32GX5M2B6000C36")]);
+    await crawlCategory(deps, alfa.store, "ram");
+    await crawlCategory(deps, beta.store, "ram");
+    const [review] = await all(deps.db, "match_reviews");
+    if (review?.status !== "pending") throw new Error("sin revisión pendiente");
+    return { deps, beta, betaOffer, review };
+  }
+
+  test("una revisión cuyo par hoy se veta se cierra como rechazada", async () => {
+    const { deps, beta, betaOffer } = await setupReview();
+    beta.setOffers([betaOffer("Corsair Vengeance RGB 32GB (2x16GB) DDR5 6000MHz CMK32GX5M2B6000C36")]);
+    const result = await crawlCategory(deps, beta.store, "ram");
+    const [review] = await all(deps.db, "match_reviews");
+    expect(review?.status).toBe("rejected");
+    expect(review?.resolved_at).not.toBeNull();
+    expect(result.stats.reviewsClosed).toBe(1);
+  });
+
+  test("una revisión cuya oferta ya está en el candidato se cierra como aceptada", async () => {
+    const { deps, beta, review } = await setupReview();
+    await deps.db.query
+      .updateTable("listings")
+      .set({ product_id: review.candidate_product_id })
+      .where("id", "=", review.listing_id)
+      .execute();
+    await crawlCategory(deps, beta.store, "ram");
+    expect((await all(deps.db, "match_reviews"))[0]?.status).toBe("accepted");
+  });
+
+  test("una revisión que sigue vigente no se toca", async () => {
+    const { deps, beta } = await setupReview();
+    const decisions = (await all(deps.db, "match_decisions")).length;
+    const result = await crawlCategory(deps, beta.store, "ram");
+    expect((await all(deps.db, "match_reviews"))[0]?.status).toBe("pending");
+    expect(await all(deps.db, "match_decisions")).toHaveLength(decisions);
+    expect(result.stats.reviewsClosed).toBe(0);
+  });
+});

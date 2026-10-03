@@ -111,6 +111,7 @@ export async function crawlCategory(
         });
       }
       if (match.unlinked) stats.unlinked++;
+      if (match.reviewClosed) stats.reviewsClosed++;
       if (match.outcome === "linked") stats.linked++;
       else if (match.outcome === "new_product") stats.newProducts++;
       else if (match.outcome === "review") {

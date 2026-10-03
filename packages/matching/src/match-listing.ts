@@ -4,6 +4,7 @@ import type { Fingerprint } from "./domain/fingerprint";
 import { productNameFromTitle } from "./domain/product-name";
 import {
   attachIdentifiers,
+  closeObsoleteReview,
   createProduct,
   createReview,
   detachIdentifiers,
@@ -27,6 +28,13 @@ export interface MatchableOffer {
 
 export type MatchOutcome = "kept" | "linked" | "new_product" | "review";
 
+export interface MatchListingResult {
+  outcome: MatchOutcome;
+  unlinked: boolean;
+  categoryMismatch?: boolean;
+  reviewClosed?: "accepted" | "rejected";
+}
+
 export interface MatchListingInput {
   listingId: number;
   /** Producto actual de la oferta (si ya estaba vinculada). */
@@ -45,13 +53,12 @@ export interface MatchListingInput {
  * 2. Busca candidatos y decide: vincular, producto nuevo, o producto nuevo
  *    + revisión humana (la oferta queda visible mientras se revisa).
  */
-export async function matchListing(
-  db: Db,
-  input: MatchListingInput,
-): Promise<{ outcome: MatchOutcome; unlinked: boolean; categoryMismatch?: boolean }> {
+export async function matchListing(db: Db, input: MatchListingInput): Promise<MatchListingResult> {
   const { offer, listingId, now } = input;
   const decidedBy = input.decidedBy ?? "system";
   const fp = offer.fingerprint;
+  // Antes que todo: una revisión vieja cerrada deja lugar a la que pueda crear esta misma llamada.
+  const reviewClosed = (await closeObsoleteReview(db, listingId, fp, now)) ?? undefined;
   let unlinked = false;
 
   if (input.currentProductId !== null) {
@@ -65,16 +72,16 @@ export async function matchListing(
     const [current] = await loadCandidates(db, [productId], fp, ownOnly);
     // La tienda publica la misma oferta en dos categorías: re-decidir la sacaría del producto en cada corrida.
     if (current && current.fingerprint.category !== fp.category) {
-      return { outcome: "kept", unlinked, categoryMismatch: true };
+      return { outcome: "kept", unlinked, categoryMismatch: true, reviewClosed };
     }
-    if (link.method === "manual") return { outcome: "kept", unlinked };
+    if (link.method === "manual") return { outcome: "kept", unlinked, reviewClosed };
     const check = current && compare(fp, current.fingerprint);
     const vetoes = check ? check.vetoes : ["product_missing"];
     let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
     if (current && check && vetoes.length === 0) {
-      if (link.method === "new_product") return { outcome: "kept", unlinked };
+      if (link.method === "new_product") return { outcome: "kept", unlinked, reviewClosed };
       const again = decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
-      if (again.kind === "link") return { outcome: "kept", unlinked };
+      if (again.kind === "link") return { outcome: "kept", unlinked, reviewClosed };
       evidence = { ...evidence, redecided: again.kind, score: check.score, sameStore: link.olderSameStore };
     }
     await setListingProduct(db, {
@@ -105,7 +112,7 @@ export async function matchListing(
     // Enriquecer el producto: identificadores nuevos permiten matchear por id en el futuro.
     await attachIdentifiers(db, decision.productId, fp);
     await fillProductImage(db, decision.productId, offer.imageUrl, now);
-    return { outcome: "linked", unlinked };
+    return { outcome: "linked", unlinked, reviewClosed };
   }
 
   const product = await createProduct(db, {
@@ -132,7 +139,7 @@ export async function matchListing(
       evidence: { ...decision.comparison.evidence },
       now,
     });
-    return { outcome: "review", unlinked };
+    return { outcome: "review", unlinked, reviewClosed };
   }
-  return { outcome: "new_product", unlinked };
+  return { outcome: "new_product", unlinked, reviewClosed };
 }

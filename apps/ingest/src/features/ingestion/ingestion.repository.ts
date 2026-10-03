@@ -21,6 +21,7 @@ export interface CrawlStats {
   newProducts: number;
   reviews: number;
   unlinked: number;
+  reviewsClosed: number;
   /** true si se omitió desactivar ofertas no vistas porque la corrida parecía incompleta. */
   deactivationSkipped: boolean;
 }
@@ -38,6 +39,7 @@ export const emptyStats = (): CrawlStats => ({
   newProducts: 0,
   reviews: 0,
   unlinked: 0,
+  reviewsClosed: 0,
   deactivationSkipped: false,
 });
 

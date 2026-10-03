@@ -2,7 +2,7 @@ import type { Category } from "@framerate/contracts";
 import { type Db, type MatchMethod, parseJson, toJson } from "@framerate/database";
 import { fold, slugify } from "@framerate/kit";
 import { type Compilable, sql } from "kysely";
-import type { Candidate } from "./domain/decide";
+import { type Candidate, compare } from "./domain/decide";
 import { buildFingerprint, type Fingerprint } from "./domain/fingerprint";
 
 const MAX_CANDIDATES = 20;
@@ -398,6 +398,35 @@ export async function resolveReview(db: Db, id: number, status: "accepted" | "re
     .where("id", "=", id)
     .where("status", "=", "pending")
     .execute();
+}
+
+/**
+ * Cierra la revisión pendiente de una oferta cuando ya no hay nada que decidir: la oferta ya está en el candidato
+ * (accepted) o el matching de hoy veta el par (rejected). Sin esto, las revisiones viejas quedan para siempre y
+ * bloquean la nueva (hay una sola pendiente por oferta).
+ */
+export async function closeObsoleteReview(
+  db: Db,
+  listingId: number,
+  offer: Fingerprint,
+  now: string,
+): Promise<"accepted" | "rejected" | null> {
+  const review = await db.query
+    .selectFrom("match_reviews as r")
+    .innerJoin("listings as l", "l.id", "r.listing_id")
+    .select(["r.id", "r.candidate_product_id as candidateId", "l.product_id as productId"])
+    .where("r.listing_id", "=", listingId)
+    .where("r.status", "=", "pending")
+    .executeTakeFirst();
+  if (!review) return null;
+  let status: "accepted" | "rejected" | null = null;
+  if (review.productId === review.candidateId) status = "accepted";
+  else {
+    const [candidate] = await loadCandidates(db, [review.candidateId], offer);
+    if (!candidate || compare(offer, candidate.fingerprint).vetoes.length > 0) status = "rejected";
+  }
+  if (status) await resolveReview(db, review.id, status, now);
+  return status;
 }
 
 export async function getListingIdentity(db: Db, listingId: number) {
