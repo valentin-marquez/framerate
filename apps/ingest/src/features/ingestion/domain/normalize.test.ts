@@ -154,5 +154,7 @@ describe("categorías contaminadas", () => {
     expect(reason("case", "Xtech Micro ATX 600W USB 2,0")).toBe("ok");
     expect(reason("cpu_cooler", "Disipador CPU Intel Original con pasta térmica")).toBe("ok");
     expect(reason("case_fan", "KIT GAMEMAX KF300WH ARGB (INCLUYE HUB)")).toBe("ok");
+    expect(reason("case_fan", "Ventilador ARGB 120mm para gabinete Mid Tower")).toBe("ok");
+    expect(reason("case_fan", "Ventilador 140mm torre gamer")).toBe("ok");
   });
 });

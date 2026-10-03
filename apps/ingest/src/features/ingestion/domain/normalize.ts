@@ -106,7 +106,16 @@ const EXTERNAL_DRIVE = /\b(extern[oa]s?|portatil|portable|usb)\b/;
 const MISPLACED: Partial<Record<Category, Array<[misplaced: (title: string) => boolean, reason: string]>>> = {
   // Los coolers de CPU dicen CPU, torre, líquida…; un "Ventilador …" sin eso es de gabinete.
   cpu_cooler: [[(t) => FAN_TITLE.test(t) && !CPU_COOLER_CUE.test(t), "category:case_fan"]],
-  case_fan: [[(t) => CPU_COOLER_CUE.test(t) || /\bair cooler\b|^refrigeracion liquida/.test(t), "category:cpu_cooler"]],
+  // Sin torre/tower suelto: los ventiladores dicen "para gabinete Mid Tower".
+  case_fan: [
+    [
+      (t) =>
+        /\b(cpu|aio|disipador|heatpipes?|liquid[ao]|water|lga ?\d{4}|am[45])\b|\bair cooler\b|\b(single|dual) tower\b|^refrigeracion liquida/.test(
+          t,
+        ),
+      "category:cpu_cooler",
+    ],
+  ],
   ssd: [
     [(t) => EXTERNAL_DRIVE.test(t), "category:external_drive"],
     [(t) => /\bddr[345]\b|\b(pendrive|micro ?sd|sdxc|sdhc|tarjeta de memoria)\b/.test(t), "category:other_product"],
