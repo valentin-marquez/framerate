@@ -137,7 +137,7 @@ describe("matching entre tiendas", () => {
     const ram = (id: string, title: string) => offer("alfa", id, { category: "ram", title, priceCash: 45_000 });
     alfa.setOffers([
       ram("1", "Memoria RAM Kingston FURY Beast 16GB DDR4 3200MHz"),
-      ram("2", "Memoria RAM Kingston FURY Beast RGB 16GB DDR4 3200MHz"),
+      ram("2", "Memoria RAM Kingston FURY Beast 16GB DDR4 3200MHz Low Profile"),
     ]);
     await crawlCategory(deps, alfa.store, "ram");
     expect(await all(deps.db, "products")).toHaveLength(2);
@@ -210,14 +210,14 @@ describe("zona gris del matching", () => {
     alfa.setOffers([
       offer("alfa", "1", {
         category: "ram",
-        title: "Corsair Vengeance LPX 32GB 2x16GB DDR5 6000MHz Black",
+        title: "Corsair Vengeance 32GB 2x16GB DDR5 6000MHz Black",
         priceCash: 180_000,
       }),
     ]);
     beta.setOffers([
       offer("beta", "2", {
         category: "ram",
-        title: "Corsair Vengeance RGB 32GB (2x16GB) DDR5 6000MHz",
+        title: "Corsair Vengeance 32GB (2x16GB) DDR5 6000MHz CMK32GX5M2B6000C36",
         priceCash: 150_000,
         gtin: "0840006600008",
       }),
