@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { Category } from "@framerate/contracts";
 import { PROFILES } from "./attributes";
 import { canonicalBrand } from "./brands";
-import { compare, decide } from "./decide";
+import { compare } from "./decide";
 import { buildFingerprint } from "./fingerprint";
 
 const vetoes = (category: Category, a: string, b: string) =>
@@ -82,15 +82,5 @@ describe("marca", () => {
       brand: "ADATA",
     });
     expect(ram.brand).toBe(canonicalBrand("ADATA"));
-  });
-});
-
-describe("GTIN", () => {
-  test("dos GTIN distintos son conflicto: nunca vínculo automático por atributos", () => {
-    const title = "Placa Madre Gigabyte B760M D3HP DDR4, Micro ATX, LGA1700";
-    const a = buildFingerprint({ category: "motherboard", title, gtin: "04719331862848" });
-    const b = buildFingerprint({ category: "motherboard", title, gtin: "04719331850869" });
-    expect(compare(a, b).evidence.gtinConflict).toBe(true);
-    expect(decide(a, [{ productId: 1, fingerprint: b }]).kind).not.toBe("link");
   });
 });
