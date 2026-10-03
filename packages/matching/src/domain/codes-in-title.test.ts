@@ -35,6 +35,7 @@ describe("códigos en el título", () => {
     "Fuente Cougar Atlas 650W (2024)",
     "Memoria Kingston 16GB (1 x 16GB | SO-DIMM DDR4-3200)",
     "Tarjeta de Video Zotac (RTX4060TI)",
+    "Tarjeta de Video Asus (RTX4060TI-8G)",
     "Placa Madre MSI (B550M)",
   ])("rechaza especificaciones y nombres de chip: %s", (title) => {
     expect(codesInTitle(title)).toEqual({ mpn: null, gtin: null });

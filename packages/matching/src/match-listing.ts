@@ -48,8 +48,11 @@ export interface MatchListingInput {
  * Vincula una oferta a un producto canónico.
  *
  * 1. Si ya estaba vinculada, el vínculo sigue sólo si `decide` lo haría hoy (sin veto y sin contar los
- *    identificadores que aportó ella misma). Si no, se desvincula (queda auditado), se le quitan al producto los
- *    identificadores de la oferta y se vuelve a decidir.
+ *    identificadores que aportó ella misma). Si no, se desvincula (queda auditado), se le quitan al producto sólo los
+ *    identificadores que ninguna otra de sus ofertas publica y se vuelve a decidir. Excepciones: una decisión manual
+ *    no se toca; la fundadora (`new_product`) sólo sale ante un veto; si la categoría difiere, el vínculo se mantiene
+ *    y se avisa (`categoryMismatch`).
+ *    Antes de todo, la revisión pendiente que ya no tiene nada que decidir se cierra.
  * 2. Busca candidatos y decide: vincular, producto nuevo, o producto nuevo
  *    + revisión humana (la oferta queda visible mientras se revisa).
  */
@@ -78,7 +81,7 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     const check = current && compare(fp, current.fingerprint);
     const vetoes = check ? check.vetoes : ["product_missing"];
     let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
-    if (current && check && vetoes.length === 0) {
+    if (check && vetoes.length === 0) {
       if (link.method === "new_product") return { outcome: "kept", unlinked, reviewClosed };
       const again = decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
       if (again.kind === "link") return { outcome: "kept", unlinked, reviewClosed };

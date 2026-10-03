@@ -65,7 +65,7 @@ const TITLE_CODE_FORMS = [
 ];
 const SPEC_CODE =
   /^(\d+X\d+(GB)?|\d+(GB|TB|MB|W|MHZ|GHZ|MM|BITS?|V|MTS|CM|RPM|FANS?|PIN)|(LGA|S|AM|FM|SOCKET|SAM)\d+|G?DDR\d.*|PCIE.*|GEN\d|M2|ATX.*|\d{4})$/;
-const CHIP_NAME = /^(RTX|GTX|GT|RX|ARC|[ABHZX])\d{3,4}(TI|XT|XTX|SUPER|GRE|[A-Z])?$/;
+const CHIP_NAME = /^(RTX|GTX|GT|RX|ARC|[ABHZX])\d{3,4}(TI|XT|XTX|SUPER|GRE|[A-Z])?(\d{1,2}GB?)?$/;
 
 /**
  * MPN y GTIN que la tienda escribió en el título ("(CMK16GX5M1D6000Z38)", "P/N AD5U560016G-S",

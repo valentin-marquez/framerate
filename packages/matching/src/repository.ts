@@ -401,8 +401,8 @@ export async function resolveReview(db: Db, id: number, status: "accepted" | "re
 }
 
 /**
- * Cierra la revisión pendiente de una oferta cuando ya no hay nada que decidir: la oferta ya está en el candidato
- * (accepted) o el matching de hoy veta el par (rejected). Sin esto, las revisiones viejas quedan para siempre y
+ * Cierra la revisión pendiente de una oferta cuando ya no hay nada que decidir: el matching de hoy veta el par
+ * (rejected) o la oferta ya está en el candidato sin veto (accepted). Sin esto, las revisiones viejas quedan para siempre y
  * bloquean la nueva (hay una sola pendiente por oferta).
  */
 export async function closeObsoleteReview(
@@ -419,12 +419,9 @@ export async function closeObsoleteReview(
     .where("r.status", "=", "pending")
     .executeTakeFirst();
   if (!review) return null;
-  let status: "accepted" | "rejected" | null = null;
-  if (review.productId === review.candidateId) status = "accepted";
-  else {
-    const [candidate] = await loadCandidates(db, [review.candidateId], offer);
-    if (!candidate || compare(offer, candidate.fingerprint).vetoes.length > 0) status = "rejected";
-  }
+  const [candidate] = await loadCandidates(db, [review.candidateId], offer);
+  const vetoed = !candidate || compare(offer, candidate.fingerprint).vetoes.length > 0;
+  const status = vetoed ? "rejected" : review.productId === review.candidateId ? "accepted" : null;
   if (status) await resolveReview(db, review.id, status, now);
   return status;
 }

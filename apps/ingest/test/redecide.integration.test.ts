@@ -291,8 +291,11 @@ describe("revisiones obsoletas", () => {
       .set({ product_id: review.candidate_product_id })
       .where("id", "=", review.listing_id)
       .execute();
-    await crawlCategory(deps, beta.store, "ram");
-    expect((await all(deps.db, "match_reviews"))[0]?.status).toBe("accepted");
+    const result = await crawlCategory(deps, beta.store, "ram");
+    const [closed] = await all(deps.db, "match_reviews");
+    expect(closed?.status).toBe("accepted");
+    expect(closed?.resolved_at).not.toBeNull();
+    expect(result.stats.reviewsClosed).toBe(1);
   });
 
   test("una revisión que sigue vigente no se toca", async () => {

@@ -51,7 +51,7 @@ describe("color", () => {
     ).toEqual([]);
   });
 
-  // La certificación la arregla la tarea 4; aquí sólo importa que no se lea como color.
+  // La certificación se comprueba en los tests de fuentes; aquí sólo importa que no se lea como color.
   test("80 Plus White es certificación, no color", () => {
     expect(PROFILES.psu.extract("Fuente 700W EVGA 80+White").color).toBe("black");
     expect(PROFILES.psu.extract("Fuente EVGA 600W 80 Plus White").color).toBe("black");

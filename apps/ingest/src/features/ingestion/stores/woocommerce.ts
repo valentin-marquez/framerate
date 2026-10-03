@@ -1,6 +1,6 @@
 import type { Category } from "@framerate/contracts";
 import { stripHtml } from "@framerate/kit";
-import { normalizeGtin, normalizeMpn } from "@framerate/matching";
+import { codesInTitle, normalizeGtin, normalizeMpn } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
@@ -125,8 +125,9 @@ export function toRawOffer(
   const sku = p.sku.trim();
   const gtin = normalizeGtin(sku) ? sku : null;
   const skuMpn = !gtin && config.sku === "mpn" && sku ? sku : null;
-  const descriptionMpn =
-    gtin || normalizeMpn(skuMpn) ? null : (stripHtml(p.description).match(PART_NUMBER)?.[1] ?? null);
+  const skuIsMpn = normalizeMpn(skuMpn) !== null;
+  const partNumber = stripHtml(p.description).match(PART_NUMBER)?.[1];
+  const descriptionMpn = gtin || skuIsMpn || !partNumber ? null : codesInTitle(`P/N ${partNumber}`).mpn;
 
   return {
     externalId: String(p.id),
@@ -139,7 +140,7 @@ export function toRawOffer(
     inStock: p.is_in_stock,
     stockQuantity: p.is_in_stock ? (p.low_stock_remaining ?? null) : 0,
     brand: p.brands?.[0]?.name ?? brandFromAttributes(p) ?? null,
-    mpn: normalizeMpn(skuMpn) ? skuMpn : descriptionMpn,
+    mpn: skuIsMpn ? skuMpn : descriptionMpn,
     gtin,
     imageUrls: p.images.map((i) => i.src),
   };

@@ -1,14 +1,14 @@
 import { expect, test } from "bun:test";
 import type { Category } from "@framerate/contracts";
-import { decide } from "@framerate/matching";
+import { buildFingerprint, compare, decide, productNameFromTitle } from "@framerate/matching";
 import gold from "./match-gold.json";
 import { normalizeOffer } from "./normalize";
 
 type Pair = (typeof gold)[number];
 
 // Cada lado sigue el camino de una oferta real (limpieza del título, cuarentena, huella).
-function fingerprint(category: Category, side: Pair["a"]) {
-  const result = normalizeOffer(
+function normalized(category: Category, side: Pair["a"]) {
+  return normalizeOffer(
     {
       externalId: "gold",
       url: "https://example.cl/gold",
@@ -25,6 +25,10 @@ function fingerprint(category: Category, side: Pair["a"]) {
     },
     category,
   );
+}
+
+function fingerprint(category: Category, side: Pair["a"]) {
+  const result = normalized(category, side);
   return result.ok ? result.offer.fingerprint : null;
 }
 
@@ -49,4 +53,24 @@ test("set etiquetado: fusiones erróneas (precisión) y vínculos correctos (rec
   for (const p of wrong) console.log(`  ${p.category}: ${p.a.rawTitle} <> ${p.b.rawTitle}`);
   expect(wrong.length).toBeLessThanOrEqual(MAX_WRONG_MERGES);
   expect(linked).toBeGreaterThanOrEqual(MIN_SAME_LINKED);
+});
+
+test("la fundadora nunca se veta contra su propio producto", () => {
+  const vetoed: string[] = [];
+  for (const pair of gold) {
+    const category = pair.category as Category;
+    for (const side of [pair.a, pair.b]) {
+      const result = normalized(category, side);
+      if (!result.ok) continue;
+      const { offer } = result;
+      // Igual que createProduct + loadCandidates: el producto nace con el nombre limpio del título.
+      const product = buildFingerprint({
+        category,
+        title: productNameFromTitle(offer.title),
+        brand: offer.fingerprint.brand,
+      });
+      if (compare(offer.fingerprint, product).vetoes.length > 0) vetoed.push(side.rawTitle);
+    }
+  }
+  expect(vetoed).toEqual([]);
 });
