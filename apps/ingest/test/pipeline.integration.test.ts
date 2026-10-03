@@ -38,7 +38,7 @@ describe("ingesta", () => {
     expect(await all(deps.db, "products")).toHaveLength(2);
     expect(await all(deps.db, "price_points")).toHaveLength(2);
     const [q] = await all(deps.db, "quarantine");
-    expect(q?.reason).toBe("price:out_of_range");
+    expect(q?.reason).toBe("category:other_product");
   });
 
   test("segunda corrida: sólo registra precio si cambió y desactiva lo que desapareció", async () => {

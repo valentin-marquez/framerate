@@ -78,7 +78,7 @@ export const STORES: readonly StoreDefinition[] = [
         ssd: ["discos-duros-ssd", "m-2", "nvme"],
         hdd: ["discos-duros-pc"],
         cpu_cooler: ["aire-cpu", "refrigeracion-liquida-cpu"],
-        case: ["gabinetes"],
+        case: ["gabinetes-s-fuente"],
         case_fan: ["refrigeracion-gabinete"],
       },
     }),

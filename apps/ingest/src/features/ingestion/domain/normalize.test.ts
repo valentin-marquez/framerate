@@ -101,7 +101,7 @@ describe("normalizeOffer", () => {
     [{ title: "KIT MSI B650 Gaming + Tarjeta de Video RTX 4060 8GB" }, "bundle"],
     [{ title: "Notebook ASUS TUF RTX 4060 16GB" }, "category:other_product"],
     [{ priceCash: 990 }, "price:out_of_range"],
-    [{ title: "Soporte anti-sag para tarjeta de video" }, "attribute:missing:chipset"],
+    [{ title: "Soporte anti-sag para tarjeta de video" }, "category:other_product"],
     [{ category: "cpu" }, "category:unexpected"],
     [{ priceCash: -1 }, "schema:priceCash:too_small"],
     [{ url: "no-es-url" }, "schema:url:invalid_format"],
@@ -116,5 +116,43 @@ describe("normalizeOffer", () => {
       "gpu",
     );
     expect(result.ok && result.offer.title).toBe('ASUS Dual RTX 4070 SUPER 12GB "OC"');
+  });
+});
+
+describe("categorías contaminadas", () => {
+  const as = (category: RawOffer["category"], title: string) =>
+    normalizeOffer({ ...base, category, title, mpn: null, priceCash: 30_000, priceCard: 30_000 }, category);
+  const reason = (category: RawOffer["category"], title: string) => {
+    const r = as(category, title);
+    return r.ok ? "ok" : r.reason;
+  };
+
+  test("accesorios van a cuarentena en cualquier categoría", () => {
+    expect(reason("case", "Plataforma Giratoria Luminosa Cougar FV270 - Black")).toBe("category:other_product");
+    expect(reason("case", "SOPORTE PARA AUDIFONOS GEM")).toBe("category:other_product");
+    expect(reason("case", "KIT DE CABLES COOLER MASTER")).toBe("category:other_product");
+    expect(reason("cpu_cooler", "PASTA DISIPADORA ARCTIC COOLING MX-4 4G")).toBe("category:other_product");
+    expect(reason("cpu_cooler", "THERMAL PAD 100X100 2.0MM")).toBe("category:other_product");
+    expect(reason("case_fan", "Cable Splitter ARGB 3 vias")).toBe("category:other_product");
+  });
+
+  test("fuentes publicadas como gabinete, SSD como disco duro y coolers de CPU como ventilador", () => {
+    expect(reason("case", "FUENTE DE PODER GAMEMAX GP-650B 650W 80 PLUS BRONZE")).toBe("category:psu");
+    expect(reason("case", "EVGA SUPERNOVA 1000 P3 1000W 80 PLUS PLATINUM")).toBe("category:psu");
+    expect(reason("hdd", "DISCO SSD SATA ADATA SU650 1TB")).toBe("category:ssd");
+    expect(reason("case_fan", "Cougar Single Tower Air Cooler FORZA 50")).toBe("category:cpu_cooler");
+  });
+
+  test("packs con '+' son combos", () => {
+    expect(reason("cpu", "Pack AMD Ryzen 5 5500 + MSI A520-A PRO")).toBe("bundle");
+  });
+
+  test("productos reales que se parecen a un accesorio siguen entrando", () => {
+    expect(reason("case", "Gabinete Gamer Antec NX200 ATX – Soporte GPU 350 mm")).toBe("ok");
+    expect(reason("case", "GABINETE GAMEMAX VISTA AW 6 FAN HUB V4.0")).toBe("ok");
+    expect(reason("case", "Gabinete Xtech + Fuente 600W (AT880W)")).toBe("ok");
+    expect(reason("case", "Xtech Micro ATX 600W USB 2,0")).toBe("ok");
+    expect(reason("cpu_cooler", "Disipador CPU Intel Original con pasta térmica")).toBe("ok");
+    expect(reason("case_fan", "KIT GAMEMAX KF300WH ARGB (INCLUYE HUB)")).toBe("ok");
   });
 });

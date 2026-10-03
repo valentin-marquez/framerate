@@ -1,7 +1,6 @@
 import { type Category, CategorySchema } from "@framerate/contracts";
 import { collapseWhitespace, decodeEntities, fold } from "@framerate/kit";
-import type { Attributes } from "@framerate/matching";
-import { buildFingerprint, type Fingerprint } from "@framerate/matching";
+import { type Attributes, buildFingerprint, type Fingerprint, PROFILES } from "@framerate/matching";
 import { z } from "zod";
 
 /**
@@ -92,7 +91,10 @@ const NOT_NEW =
 const BUNDLE = /\b(combo|bundle|kit (pc|gamer)|pc armad[oa])\b/;
 // "Pack de…" o "KIT placa + memoria" juntan productos distintos ("80+ Bronze" y "Xeon 4416+" no llevan " + "), salvo
 // en ventiladores: un pack de tres o un kit con controladora es un producto de la categoría.
-const MULTI = /\bpack de\b|\bkit\b.*\s\+\s/;
+const MULTI = /\bpack de\b|\b(pack|kit)\b.*\s\+\s/;
+// Accesorios que las tiendas meten en cualquier categoría: el título empieza por lo que realmente son.
+const ACCESSORY =
+  /^(plataforma|soporte|kit de cables|cables?|hub|fan hub|controlador(a)?|adaptador|kit adaptador|kit de montaje|kit para|bracket|pasta|thermal pads?|tira led)\b/;
 const OTHER_PRODUCT = /\b(notebook|laptop|all in one|monitor|consola|tablet)\b/;
 // En RAM y SSD "notebook"/"laptop" suele ser compatibilidad (SO-DIMM, "para PC y Laptop"): sólo cuenta al inicio.
 const OTHER_PRODUCT_START = /^(notebook|laptop|all in one|monitor|consola|tablet)\b/;
@@ -103,17 +105,27 @@ const EXTERNAL_DRIVE = /\b(extern[oa]s?|portatil|portable|usb)\b/;
 /** Lo que las tiendas meten en la categoría equivocada, con el motivo de lo que realmente es. */
 const MISPLACED: Partial<Record<Category, Array<[misplaced: (title: string) => boolean, reason: string]>>> = {
   // Los coolers de CPU dicen CPU, torre, líquida…; un "Ventilador …" sin eso es de gabinete.
-  cpu_cooler: [
-    [(t) => FAN_TITLE.test(t) && !CPU_COOLER_CUE.test(t), "category:case_fan"],
-    [(t) => /^pasta termica/.test(t), "category:other_product"],
-  ],
-  case_fan: [[(t) => /\b(cpu|aio|disipador|heatpipes?)\b|^refrigeracion liquida/.test(t), "category:cpu_cooler"]],
+  cpu_cooler: [[(t) => FAN_TITLE.test(t) && !CPU_COOLER_CUE.test(t), "category:case_fan"]],
+  case_fan: [[(t) => CPU_COOLER_CUE.test(t) || /\bair cooler\b|^refrigeracion liquida/.test(t), "category:cpu_cooler"]],
   ssd: [
     [(t) => EXTERNAL_DRIVE.test(t), "category:external_drive"],
     [(t) => /\bddr[345]\b|\b(pendrive|micro ?sd|sdxc|sdhc|tarjeta de memoria)\b/.test(t), "category:other_product"],
   ],
-  hdd: [[(t) => EXTERNAL_DRIVE.test(t), "category:external_drive"]],
+  hdd: [
+    [(t) => EXTERNAL_DRIVE.test(t), "category:external_drive"],
+    [(t) => /\bssd\b/.test(t), "category:ssd"],
+  ],
+  // Fuentes que la tienda también publica como gabinete: empiezan por "fuente", o no nombran un gabinete y traen
+  // potencia y certificación.
+  case: [
+    [(t) => /^fuente\b/.test(t) || (!/\b(gabinete|case|chasis|torre|tower)\b/.test(t) && isPsu(t)), "category:psu"],
+  ],
 };
+
+function isPsu(title: string): boolean {
+  const a = PROFILES.psu.extract(title);
+  return a.wattage !== undefined && a.efficiency !== undefined;
+}
 
 /** Ruido de marketing que las tiendas meten en el título. */
 // Con límites de palabra: "Seminuevo" no debe perder "nuevo".
@@ -137,6 +149,7 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
   }
   const otherProduct = raw.category === "ram" || raw.category === "ssd" ? OTHER_PRODUCT_START : OTHER_PRODUCT;
   if (otherProduct.test(folded)) return { ok: false, externalId, reason: "category:other_product" };
+  if (ACCESSORY.test(folded)) return { ok: false, externalId, reason: "category:other_product" };
   const misplaced = MISPLACED[raw.category]?.find(([test]) => test(folded));
   if (misplaced) return { ok: false, externalId, reason: misplaced[1] };
 
