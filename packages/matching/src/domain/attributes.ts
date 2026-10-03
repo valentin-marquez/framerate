@@ -451,8 +451,10 @@ const motherboard: CategoryProfile = {
     if (memory) a.memory = `ddr${memory[1] ?? memory[2]}`;
     const line = firstMatch(MOBO_LINES, t);
     if (line) a.line = line;
-    // Siempre presente: MAX, II y CSM son otra placa (BIOS o revisión nueva) aunque la tienda base no lo escriba.
-    a.variant = t.match(/ (max ii|ii|max|csm)(?= )/)?.[1] ?? "";
+    // Siempre presente: MAX, II y CSM son otra placa (BIOS o revisión nueva) aunque la tienda base no lo escriba. Sólo
+    // entre los 3 tokens que siguen al modelo: "EZ PCIe Clip II", "SATA II" o "MAX 128GB" más lejos son otra cosa.
+    const afterModel = model ? t.slice((model.index ?? 0) + model[0].length) : "";
+    a.variant = afterModel.match(/^(?: [a-z0-9.+]+){0,2}? (max ii|ii|max|csm)(?= )/)?.[1] ?? "";
     return a;
   },
 };

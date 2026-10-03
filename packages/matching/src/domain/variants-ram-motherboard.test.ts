@@ -20,6 +20,12 @@ describe("placa madre", () => {
     expect(vetoes("motherboard", "M/B MSI B450M-A PRO MAX", "Placa Madre MSI B450M-A PRO MAX AM4 mATX")).toEqual([]);
   });
 
+  test("un II lejos del modelo no es variante", () => {
+    expect(vetoes("motherboard", "MSI PRO B840M-B EZ PCIe Clip II", "MSI PRO B840M-B, Micro-ATX, AM5, DDR5")).toEqual(
+      [],
+    );
+  });
+
   test.each([
     ["M/B ASUS PRIME H610M-A", "M/B ASUS PRIME H610M-K", "attribute:model"],
     ["Placa Madre Gigabyte A520M DS3H V2 AM4 DDR4 mATX", "Gigabyte A520M-K V2 MicroATX AMD AM4", "attribute:model"],
