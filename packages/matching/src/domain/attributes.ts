@@ -256,6 +256,9 @@ const SSD_LINES = [
   "spatium",
   "firecuda",
   "barracuda",
+  "nv1",
+  "nv2",
+  "nv3",
 ] as const;
 
 const ssd: CategoryProfile = {
@@ -278,7 +281,7 @@ const ssd: CategoryProfile = {
     if (gen) a.pcieGen = Number(gen);
     // "Legend 800" frente a "Legend 860": el número de serie empieza con dígito y la similitud lo ignora.
     const series = t.match(/ [a-z]+ (\d{3})(?! ?(?:gb?|tb?|mb|w|rpm|mhz|x))(?= )/)?.[1];
-    if (series && !/^(512|256|128)$/.test(series)) a.series = series;
+    if (series && !/^(512|256|128|120|240|480|960)$/.test(series)) a.series = series;
     const line = firstMatch(SSD_LINES, t);
     if (line) a.line = line;
     return a;
@@ -427,7 +430,7 @@ const MOBO_LINES = [
 
 const motherboard: CategoryProfile = {
   keyFields: ["chipset", "formFactor", "wifi"],
-  discriminators: ["chipset", "formFactor", "wifi", "model", "memory", "line"],
+  discriminators: ["chipset", "formFactor", "wifi", "model", "memory", "line", "variant"],
   keyIsUnique: false,
   extract(title) {
     const t = prep(title);
@@ -448,6 +451,8 @@ const motherboard: CategoryProfile = {
     if (memory) a.memory = `ddr${memory[1] ?? memory[2]}`;
     const line = firstMatch(MOBO_LINES, t);
     if (line) a.line = line;
+    // Siempre presente: MAX, II y CSM son otra placa (BIOS o revisión nueva) aunque la tienda base no lo escriba.
+    a.variant = t.match(/ (max ii|ii|max|csm)(?= )/)?.[1] ?? "";
     return a;
   },
 };

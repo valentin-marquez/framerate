@@ -74,6 +74,13 @@ describe("fuentes", () => {
 });
 
 describe("SSD", () => {
+  test("NV1 contra Renegade es otra línea, y 480 sin unidad no es una serie", () => {
+    expect(
+      vetoes("ssd", "DISCO DURO SSD NVMe KINGSTON NV1 1TB", "Disco Duro SSD M.2 NVME Kingston FURY Renegade 1 TB"),
+    ).toContain("attribute:line");
+    expect(PROFILES.ssd.extract("SSD Kingston 480 A400 sata").series).toBeUndefined();
+  });
+
   test.each([
     [
       "Kingston SSD 1TB NV3 M.2 2230 NVMe PCIe 4.0",

@@ -9,6 +9,18 @@ const vetoes = (category: Category, a: string, b: string, brandA?: string) =>
 
 describe("placa madre", () => {
   test.each([
+    ["M/B MSI B450M-A PRO MAX", "Placa Madre MSI B450M-A PRO MAX II Socket AM4"],
+    ["M/B ASUS PRIME A520M-A", "Placa Madre Asus Prime A520M-A II"],
+    ["M/B ASUS PRIME H610M-K", "Placa Madre ASUS PRIME H610M-K D4-CSM"],
+  ])("variante distinta: %s / %s", (a, b) => {
+    expect(vetoes("motherboard", a, b)).toContain("attribute:variant");
+  });
+
+  test("la misma variante escrita distinto no veta", () => {
+    expect(vetoes("motherboard", "M/B MSI B450M-A PRO MAX", "Placa Madre MSI B450M-A PRO MAX AM4 mATX")).toEqual([]);
+  });
+
+  test.each([
     ["M/B ASUS PRIME H610M-A", "M/B ASUS PRIME H610M-K", "attribute:model"],
     ["Placa Madre Gigabyte A520M DS3H V2 AM4 DDR4 mATX", "Gigabyte A520M-K V2 MicroATX AMD AM4", "attribute:model"],
     ["M/B MSI PRO B550M-P GEN3", "MSI B550M-A PRO, Micro ATX, AM4, DDR4", "attribute:model"],

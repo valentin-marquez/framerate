@@ -118,6 +118,7 @@ describe("atributos por categoría", () => {
       wifi: true,
       model: "b650m",
       line: "mortar",
+      variant: "",
       color: "black",
     });
   });
@@ -193,6 +194,7 @@ describe("atributos por categoría", () => {
       formFactor: "matx",
       wifi: true,
       model: "a620amx",
+      variant: "",
       color: "black",
     });
     expect(PROFILES.motherboard.extract("Placa Madre Gigabyte X870I AORUS PRO ICE, AM5, DDR5, mITX")).toMatchObject({
