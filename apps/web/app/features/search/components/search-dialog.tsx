@@ -1,11 +1,9 @@
 import type { CategoryItem, ProductSummary } from "@framerate/contracts";
 import { IconLoader2, IconPhoto, IconSearch, IconTag } from "@tabler/icons-react";
-import { type ButtonHTMLAttributes, type Ref, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { useCategories } from "~/features/category/hooks/useCategories";
 import { useQuickSearch } from "~/features/product/hooks/useProducts";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
-import { Button } from "~/shared/components/primitives/button";
 import {
   Command,
   CommandDialog,
@@ -20,6 +18,7 @@ import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 
 interface SearchDialogProps {
+  categories: CategoryItem[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSelectProduct?: (product: ProductSummary) => void;
@@ -42,7 +41,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDialogProps) {
+export function SearchDialog({ categories, open, onOpenChange, onSelectProduct }: SearchDialogProps) {
   const navigate = useNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,8 +76,6 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
     debouncedSearchQuery,
     8, // Límite de resultados para el autocomplete
   );
-
-  const { data: categories = [] } = useCategories();
 
   // Keyboard shortcut (Ctrl+K). Patrón ref-stash: useEffectEvent es experimental en
   // React 19.1 (types-only, sin runtime). Guardamos isOpen/setter en refs frescas y
@@ -121,6 +118,12 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
     },
     [navigate, handleSetIsOpen],
   );
+
+  const handleSearchAll = useCallback(() => {
+    handleSetIsOpen(false);
+    navigate(`/explorar?search=${encodeURIComponent(searchQuery.trim())}`);
+    setSearchQuery("");
+  }, [navigate, handleSetIsOpen, searchQuery]);
 
   // Filter categories based on search
   const filteredCategories = searchQuery
@@ -183,6 +186,15 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
               )}
             </div>
           </CommandEmpty>
+
+          {hasSearchQuery && (
+            <CommandGroup>
+              <CommandItem value="buscar-todo" onSelect={handleSearchAll} className="cursor-pointer">
+                <IconSearch className="text-muted-foreground shrink-0" />
+                <span className="line-clamp-1">Buscar «{searchQuery.trim()}» en el catálogo</span>
+              </CommandItem>
+            </CommandGroup>
+          )}
 
           {showCategories && (
             <div className="animate-in fade-in slide-in-from-top-2 duration-base ease-out">
@@ -273,37 +285,5 @@ export function SearchDialog({ open, onOpenChange, onSelectProduct }: SearchDial
         </div>
       </Command>
     </CommandDialog>
-  );
-}
-
-// React 19: `ref` ahora es un prop normal en function components, ya no necesitamos forwardRef.
-// Esto sigue permitiendo que un wrapper externo (e.g. <TooltipTrigger render={<SearchTrigger/>}>)
-// pase ref/props directamente al <button>, evitando el button-anidado-en-button que rompía hidratación.
-type SearchTriggerProps = ButtonHTMLAttributes<HTMLButtonElement> & { ref?: Ref<HTMLButtonElement> };
-
-export function SearchTrigger({ onClick, className, ref, ...rest }: SearchTriggerProps) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Button
-        ref={ref}
-        variant="ghost"
-        aria-label="Buscar"
-        size="icon"
-        {...rest}
-        className={cn(
-          "rounded-full transition-[color,background-color,scale] hover:scale-105 active:scale-95",
-          className,
-        )}
-        onClick={(e) => {
-          onClick?.(e);
-          setOpen(true);
-        }}
-      >
-        <IconSearch className="size-4 text-muted-foreground transition-colors" />
-      </Button>
-      <SearchDialog open={open} onOpenChange={setOpen} />
-    </>
   );
 }

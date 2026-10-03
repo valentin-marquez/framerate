@@ -1,15 +1,15 @@
 import type { CategoryItem } from "@framerate/contracts";
-import { IconCompass, IconCpu, IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react";
+import { IconCompass, IconCpu, IconLogout, IconSearch, IconSettings, IconUserCircle } from "@tabler/icons-react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { LoginDialog } from "~/features/auth/components/login-dialog";
 import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
+import { SearchDialog } from "~/features/search/components/search-dialog";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { AdminMenu } from "~/shared/components/layout/admin-menu";
 import { Logo } from "~/shared/components/layout/logo";
-import { NavClock, NavTab, navTabClass } from "~/shared/components/layout/nav-parts";
-import { SiteSearch } from "~/shared/components/layout/site-search";
+import { NavFps, NavTab, navTabClass } from "~/shared/components/layout/nav-parts";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { AsyncImage } from "../primitives/async-image";
@@ -104,8 +104,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   const onExplore = location.pathname.startsWith("/explorar");
   const onCategory = location.pathname.startsWith("/categoria");
 
-  // Sólo la home muestra el buscador en el navbar (reglas `.nav-search` de app.css); #107 lo extiende al resto.
-  const isHome = location.pathname === "/";
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -265,16 +264,32 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <button
+                type="button"
+                aria-label="Buscar"
+                onClick={() => setSearchOpen(true)}
+                className={navTabClass(false)}
+              >
+                <IconSearch className="size-4" stroke={1.75} />
+              </button>
             </div>
           </div>
 
-          {/* En la home, `.nav-search-start/end` apartan Explorar y Hardware para dejar sitio al buscador (app.css). */}
           <div className="hidden md:flex items-center gap-6 absolute inset-x-0 mx-auto w-max">
-            <div className={isHome ? "nav-search-start" : undefined}>
-              <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} />
-            </div>
+            <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} />
 
-            <div className={isHome ? "nav-search-end" : undefined}>
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="flex h-9 w-44 items-center gap-2 rounded-xl border border-border/60 bg-card px-3 text-muted-foreground text-sm shadow-sm transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:w-56"
+            >
+              <IconSearch className="size-4 shrink-0" />
+              <span>Buscar</span>
+              <kbd className="ml-auto hidden font-mono text-[10px] lg:inline">Ctrl K</kbd>
+            </button>
+
+            <div>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTabClass(onCategory)}>
                   <IconCpu className="size-4" stroke={1.75} />
@@ -299,7 +314,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <NavClock className="hidden lg:inline-block" />
+            <NavFps className="hidden lg:inline-block" />
             {user ? (
               <CreateQuoteDialog
                 trigger={
@@ -422,13 +437,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
         </div>
       </nav>
 
-      {/* Bajo lg el campo no cabe en el navbar: va en una segunda fila, encima del contenido para no correrlo. Desde lg
-          queda al centro del navbar. Se posiciona contra el <header> sticky de root.tsx. */}
-      {isHome && (
-        <div className="absolute inset-x-0 top-full bg-background/90 px-4 py-2.5 backdrop-blur-md lg:top-2 lg:z-50 lg:mx-auto lg:w-(--nav-search-w) lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-          <SiteSearch id="nav-search" className="h-9 rounded-xl" />
-        </div>
-      )}
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} categories={categories} />
     </>
   );
 }

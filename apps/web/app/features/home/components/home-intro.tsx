@@ -9,7 +9,7 @@ interface HomeIntroProps {
 /** Encabezado mínimo: dice qué es el sitio con cifras reales y deja los precios en el primer pliegue. */
 export function HomeIntro({ productCount, storeCount }: HomeIntroProps) {
   return (
-    <section className="space-y-1 pt-8 pb-8 md:pt-4 md:pb-10">
+    <section className="space-y-1 pt-4 pb-8 md:pb-10">
       <h1 className={cn("font-semibold text-2xl text-foreground tracking-tight md:text-3xl", enterClass())}>
         Hardware al <span className="text-primary">mejor precio</span>
       </h1>

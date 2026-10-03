@@ -1,5 +1,5 @@
 import type { Icon } from "@tabler/icons-react";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { cn } from "~/shared/lib/utils";
 
@@ -35,39 +35,37 @@ export function NavTab({ to, icon: TabIcon, label, active, iconOnly }: NavTabPro
   );
 }
 
-const formatter = new Intl.DateTimeFormat("es-CL", {
-  timeZone: "America/Santiago",
-  hour: "2-digit",
-  minute: "2-digit",
-  hourCycle: "h23",
-  timeZoneName: "shortOffset",
-});
-
-function subscribeToMinute(onChange: () => void) {
-  const timer = setInterval(onChange, 15_000);
-  return () => clearInterval(timer);
-}
-
-const santiagoTime = () =>
-  formatter
-    .formatToParts(new Date())
-    .filter((p) => p.type === "hour" || p.type === "minute" || p.type === "timeZoneName" || p.type === "literal")
-    .map((p) => p.value)
-    .join("")
-    .replace(/\s+/, " ");
-
 /**
- * Hora de Santiago. El servidor no sabe la hora del visitante: se dibuja vacía con el ancho reservado
- * y el cliente la completa, así no mueve nada al hidratar.
+ * Fotogramas por segundo de esta pestaña. Cuenta cuadros con requestAnimationFrame y escribe el texto una vez por
+ * segundo, sin setState por cuadro. El servidor lo dibuja vacío con el ancho reservado, así no mueve nada al hidratar.
  */
-export function NavClock({ className }: { className?: string }) {
-  const time = useSyncExternalStore(subscribeToMinute, santiagoTime, () => "");
+export function NavFps({ className }: { className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let frames = 0;
+    let last = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      frames++;
+      const elapsed = now - last;
+      if (elapsed >= 1000) {
+        // Tras una pestaña en segundo plano el intervalo es enorme y la lectura saldría en 0: se descarta.
+        if (elapsed < 2000) el.textContent = `${Math.round((frames * 1000) / elapsed)} FPS`;
+        frames = 0;
+        last = now;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
   return (
     <span
-      className={cn("inline-block min-w-[10ch] text-right text-foreground/40 text-sm tabular-nums", className)}
-      suppressHydrationWarning
-    >
-      {time}
-    </span>
+      ref={ref}
+      aria-hidden="true"
+      className={cn("inline-block min-w-[7ch] text-right text-foreground/40 text-sm tabular-nums", className)}
+    />
   );
 }

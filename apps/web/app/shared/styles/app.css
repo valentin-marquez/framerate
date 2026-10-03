@@ -414,22 +414,6 @@
   }
 }
 
-/* Buscador de la home en el navbar. En móvil es una fila que baja desde atrás del navbar; en escritorio queda al centro
-   y Explorar/Hardware se apartan. */
-:root {
-  --nav-search-w: clamp(256px, 26vw, 360px);
-}
-
-@media (width >= 64rem) {
-  .nav-search-start {
-    transform: translateX(calc(var(--nav-search-w) / -2));
-  }
-
-  .nav-search-end {
-    transform: translateX(calc(var(--nav-search-w) / 2));
-  }
-}
-
 @utility scrollbar-hide {
   scrollbar-width: none;
   &::-webkit-scrollbar {

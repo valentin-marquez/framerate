@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "../primitives/dropdown-menu";
 import { AdminMenu } from "./admin-menu";
-import { NavClock, NavTab } from "./nav-parts";
+import { NavFps, NavTab } from "./nav-parts";
 import { Navbar } from "./navbar";
 import { SiteFooter } from "./site-footer";
 
@@ -100,14 +100,14 @@ export const MenuDeCuenta: Story = {
 };
 
 export const Pestanas: Story = {
-  name: "Pestañas y reloj",
+  name: "Pestañas y FPS",
   parameters: { layout: "padded" },
   render: () => (
     <div className="flex items-center gap-6">
       <NavTab to="/explorar" icon={IconCompass} label="Explorar" active />
       <NavTab to="/categoria/tarjetas-de-video" icon={IconCpu} label="Hardware" active={false} />
       <NavTab to="/explorar" icon={IconCompass} label="Explorar" active={false} iconOnly />
-      <NavClock />
+      <NavFps />
     </div>
   ),
 };
