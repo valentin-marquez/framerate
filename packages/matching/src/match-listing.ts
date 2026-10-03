@@ -6,9 +6,11 @@ import {
   attachIdentifiers,
   createProduct,
   createReview,
+  detachIdentifiers,
   fillProductImage,
   findCandidates,
   loadCandidates,
+  loadLinkState,
   markSameStore,
   setListingProduct,
 } from "./repository";
@@ -37,34 +39,51 @@ export interface MatchListingInput {
 /**
  * Vincula una oferta a un producto canónico.
  *
- * 1. Si ya estaba vinculada, verifica que el vínculo siga siendo válido
- *    (la tienda pudo corregir el título o el MPN). Si ahora hay un veto,
- *    la desvincula (queda auditado) y vuelve a decidir.
+ * 1. Si ya estaba vinculada, el vínculo sigue sólo si `decide` lo haría hoy (sin veto y sin contar los
+ *    identificadores que aportó ella misma). Si no, se desvincula (queda auditado), se le quitan al producto los
+ *    identificadores de la oferta y se vuelve a decidir.
  * 2. Busca candidatos y decide: vincular, producto nuevo, o producto nuevo
  *    + revisión humana (la oferta queda visible mientras se revisa).
  */
 export async function matchListing(
   db: Db,
   input: MatchListingInput,
-): Promise<{ outcome: MatchOutcome; unlinked: boolean }> {
+): Promise<{ outcome: MatchOutcome; unlinked: boolean; categoryMismatch?: boolean }> {
   const { offer, listingId, now } = input;
   const decidedBy = input.decidedBy ?? "system";
   const fp = offer.fingerprint;
   let unlinked = false;
 
   if (input.currentProductId !== null) {
-    const [current] = await loadCandidates(db, [input.currentProductId], fp);
-    const check = current ? compare(fp, current.fingerprint) : null;
-    if (check && check.vetoes.length === 0) return { outcome: "kept", unlinked };
+    const productId = input.currentProductId;
+    const link = await loadLinkState(db, listingId, productId);
+    // Los identificadores que sólo aporta esta oferta no cuentan: si no, el vínculo se confirmaría solo.
+    const ownOnly = {
+      mpn: fp.mpn && !link.others.some((o) => o.mpn === fp.mpn) ? fp.mpn : null,
+      gtin: fp.gtin && !link.others.some((o) => o.gtin === fp.gtin) ? fp.gtin : null,
+    };
+    const [current] = await loadCandidates(db, [productId], fp, ownOnly);
+    // La tienda publica la misma oferta en dos categorías: re-decidir la sacaría del producto en cada corrida.
+    if (current && current.fingerprint.category !== fp.category) {
+      return { outcome: "kept", unlinked, categoryMismatch: true };
+    }
+    if (link.method === "manual") return { outcome: "kept", unlinked };
+    const vetoes = current ? compare(fp, current.fingerprint).vetoes : ["product_missing"];
+    if (current && vetoes.length === 0) {
+      if (link.method === "new_product") return { outcome: "kept", unlinked };
+      const again = decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
+      if (again.kind === "link" && again.productId === productId) return { outcome: "kept", unlinked };
+    }
     await setListingProduct(db, {
       listingId,
       productId: null,
       method: "unlinked",
       confidence: 1,
-      evidence: { previousProductId: input.currentProductId, vetoes: check?.vetoes ?? ["product_missing"] },
+      evidence: { previousProductId: productId, vetoes: vetoes.length > 0 ? vetoes : ["redecided"] },
       decidedBy,
       now,
     });
+    await detachIdentifiers(db, productId, fp, link.anchors);
     unlinked = true;
   }
 

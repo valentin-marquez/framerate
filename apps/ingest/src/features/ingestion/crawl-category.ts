@@ -97,20 +97,21 @@ export async function crawlCategory(
       else stats.updated++;
       if (upsert.priceChanged && !upsert.created) stats.priceChanges++;
 
-      if (upsert.identityChanged) {
-        const match = await matchListing(db, {
-          listingId: upsert.listingId,
-          currentProductId: upsert.productId,
-          offer,
-          now: now(),
-        });
-        if (match.unlinked) stats.unlinked++;
-        if (match.outcome === "linked") stats.linked++;
-        else if (match.outcome === "new_product") stats.newProducts++;
-        else if (match.outcome === "review") {
-          stats.newProducts++;
-          stats.reviews++;
-        }
+      const match = await matchListing(db, {
+        listingId: upsert.listingId,
+        currentProductId: upsert.productId,
+        offer,
+        now: now(),
+      });
+      if (match.categoryMismatch) {
+        log.warn("matching.category_mismatch", { listingId: upsert.listingId, productId: upsert.productId });
+      }
+      if (match.unlinked) stats.unlinked++;
+      if (match.outcome === "linked") stats.linked++;
+      else if (match.outcome === "new_product") stats.newProducts++;
+      else if (match.outcome === "review") {
+        stats.newProducts++;
+        stats.reviews++;
       }
     }
 

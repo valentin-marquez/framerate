@@ -115,8 +115,6 @@ export interface UpsertResult {
   priceChanged: boolean;
   /** Producto al que estaba vinculada antes de esta actualización. */
   productId: number | null;
-  /** Cambió algo que afecta el matching (título, marca, identificadores). */
-  identityChanged: boolean;
 }
 
 /**
@@ -192,7 +190,7 @@ export async function upsertListing(
       .where("store_id", "=", storeId)
       .where("external_id", "=", offer.externalId)
       .executeTakeFirstOrThrow();
-    return { listingId: inserted.id, created: true, priceChanged: true, productId: null, identityChanged: true };
+    return { listingId: inserted.id, created: true, priceChanged: true, productId: null };
   }
 
   // Una oferta que vuelve a aparecer tras estar inactiva también es un cambio observable.
@@ -201,12 +199,6 @@ export async function upsertListing(
     existing.price_card !== offer.priceCard ||
     toBool(existing.in_stock) !== offer.inStock ||
     !toBool(existing.is_active);
-  const identityChanged =
-    existing.title !== offer.title ||
-    existing.brand !== offer.brand ||
-    existing.mpn !== offer.mpn ||
-    existing.gtin !== offer.gtin ||
-    existing.product_id === null;
 
   const update = db.query.updateTable("listings").set(fields).where("id", "=", existing.id);
   await db.batch(
@@ -214,7 +206,7 @@ export async function upsertListing(
       ? [update, db.query.insertInto("price_points").values({ listing_id: existing.id, ...pricePoint })]
       : [update],
   );
-  return { listingId: existing.id, created: false, priceChanged, productId: existing.product_id, identityChanged };
+  return { listingId: existing.id, created: false, priceChanged, productId: existing.product_id };
 }
 
 export async function countActiveListings(db: Db, storeId: number, category: Category): Promise<number> {

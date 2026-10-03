@@ -1,8 +1,12 @@
+import type { Category } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import {
   attachIdentifiers,
+  buildFingerprint,
+  compare,
   getListingIdentity,
   getReview,
+  loadCandidates,
   moveIdentifiers,
   resolveReview,
   setListingProduct,
@@ -26,6 +30,18 @@ export async function resolveMatchReview(
   if (input.action === "accept") {
     const listing = await getListingIdentity(db, review.listing_id);
     if (!listing) throw new AppError(404, "listing_not_found", "La oferta ya no existe");
+    const fp = buildFingerprint({
+      category: listing.category as Category,
+      title: listing.title,
+      brand: listing.brand,
+      mpn: listing.mpn,
+      gtin: listing.gtin,
+    });
+    const [candidate] = await loadCandidates(db, [review.candidate_product_id], fp);
+    const vetoes = candidate ? compare(fp, candidate.fingerprint).vetoes : ["product_missing"];
+    if (vetoes.length > 0) {
+      throw new AppError(409, "review_vetoed", `El matching dice que son productos distintos (${vetoes.join(", ")})`);
+    }
     await setListingProduct(db, {
       listingId: listing.id,
       productId: review.candidate_product_id,

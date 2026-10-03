@@ -39,7 +39,7 @@ async function seedReview() {
       .values({ slug, name, category: "ram", brand: "Corsair", created_at: at, updated_at: at })
       .returning("id")
       .executeTakeFirstOrThrow();
-  const candidate = await product("corsair-dominator", "Corsair Dominator Titanium 32GB");
+  const candidate = await product("corsair-vengeance-ddr5", "Corsair Vengeance RGB 32GB DDR5");
   const provisional = await product("corsair-vengeance", "Corsair Vengeance RGB 32GB");
   await db.query
     .insertInto("product_identifiers")
@@ -120,6 +120,19 @@ describe("revisión de matches", () => {
     const listing = (await all(db, "listings")).find((l) => l.id === s.listing);
     expect(listing?.product_id).toBe(s.provisional);
     expect((await all(db, "match_reviews"))[0]?.status).toBe("rejected");
+  });
+
+  test("aceptar un par que el matching veta da 409 y no mueve nada", async () => {
+    const s = await seedReview();
+    await db.query
+      .updateTable("products")
+      .set({ name: "Corsair Dominator Titanium 32GB" })
+      .where("id", "=", s.candidate)
+      .execute();
+    const res = await send(`/v1/admin/reviews/${s.review}/accept`, "POST");
+    expect(res.status).toBe(409);
+    expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("review_vetoed");
+    expect((await all(db, "listings"))[0]?.product_id).toBe(s.provisional);
   });
 
   test("resolver dos veces o una inexistente da error claro", async () => {

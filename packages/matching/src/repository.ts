@@ -1,8 +1,7 @@
 import type { Category } from "@framerate/contracts";
 import { type Db, type MatchMethod, parseJson, toJson } from "@framerate/database";
 import { fold, slugify } from "@framerate/kit";
-import { sql } from "kysely";
-import type { Attributes } from "./domain/attributes";
+import { type Compilable, sql } from "kysely";
 import type { Candidate } from "./domain/decide";
 import { buildFingerprint, type Fingerprint } from "./domain/fingerprint";
 
@@ -87,32 +86,100 @@ export async function markSameStore(db: Db, listingId: number, candidates: Candi
   return candidates.map((c) => ({ ...c, sameStore: same.has(c.productId) }));
 }
 
-/** Reconstruye la huella de productos existentes. `offer` elige qué identificador comparar. */
-export async function loadCandidates(db: Db, productIds: number[], offer: Identifiers): Promise<Candidate[]> {
+/**
+ * Reconstruye la huella de productos existentes desde su nombre con los extractores de hoy, y corrige la fila si la
+ * guardada quedó vieja. `offer` elige qué identificador comparar; `ignore` deja fuera los que sólo aportó esa oferta.
+ */
+export async function loadCandidates(
+  db: Db,
+  productIds: number[],
+  offer: Identifiers,
+  ignore?: Identifiers,
+): Promise<Candidate[]> {
   if (productIds.length === 0) return [];
   const [rows, identifiers] = await Promise.all([
     db.query.selectFrom("products").selectAll().where("id", "in", productIds).execute(),
     db.query.selectFrom("product_identifiers").selectAll().where("product_id", "in", productIds).execute(),
   ]);
-  return rows.map((p): Candidate => {
-    const own = identifiers.filter((i) => i.product_id === p.id);
+  const stale: Compilable[] = [];
+  const candidates = rows.map((p): Candidate => {
+    const own = identifiers.filter((i) => i.product_id === p.id && ignore?.[i.kind] !== i.value);
     const mpns = own.filter((i) => i.kind === "mpn").map((i) => i.value);
     const gtins = own.filter((i) => i.kind === "gtin").map((i) => i.value);
     const base = buildFingerprint({ category: p.category as Category, title: p.name, brand: p.brand });
+    const attributes = toJson(base.attributes);
+    if (p.attribute_key !== base.attributeKey || p.attributes !== attributes || p.brand !== base.brand) {
+      stale.push(
+        db.query
+          .updateTable("products")
+          .set({ attribute_key: base.attributeKey, attributes, brand: base.brand })
+          .where("id", "=", p.id),
+      );
+    }
     return {
       productId: p.id,
       fingerprint: {
         ...base,
-        brand: p.brand,
         // Un producto puede tener varios MPN (variantes regionales); se compara con el
         // que coincide con la oferta si existe, si no con cualquiera (→ conflicto).
         mpn: offer.mpn && mpns.includes(offer.mpn) ? offer.mpn : (mpns[0] ?? null),
         gtin: offer.gtin && gtins.includes(offer.gtin) ? offer.gtin : (gtins[0] ?? null),
-        attributes: parseJson<Attributes>(p.attributes, {}),
-        attributeKey: p.attribute_key,
       },
     };
   });
+  if (stale.length > 0) await db.batch(stale);
+  return candidates;
+}
+
+export interface LinkState {
+  /** Última decisión de la oferta: `manual` no se re-decide; `new_product` es la fundadora del producto. */
+  method: string | null;
+  /** El producto ya tiene una oferta activa más antigua de la misma tienda. */
+  olderSameStore: boolean;
+  /** Identificadores que publican las demás ofertas del producto. */
+  others: Identifiers[];
+  /** Los de las fundadoras y las decisiones manuales: no se le quitan al producto. */
+  anchors: Identifiers[];
+}
+
+export async function loadLinkState(db: Db, listingId: number, productId: number): Promise<LinkState> {
+  const rows = await db.query
+    .selectFrom("listings as l")
+    .select((eb) => [
+      "l.id",
+      "l.store_id as storeId",
+      "l.is_active as isActive",
+      "l.mpn",
+      "l.gtin",
+      eb
+        .selectFrom("match_decisions as d")
+        .select("d.method")
+        .whereRef("d.listing_id", "=", "l.id")
+        .orderBy("d.id", "desc")
+        .limit(1)
+        .as("method"),
+    ])
+    .where("l.product_id", "=", productId)
+    .execute();
+  const self = rows.find((r) => r.id === listingId);
+  const others = rows.filter((r) => r.id !== listingId);
+  return {
+    method: self?.method ?? null,
+    olderSameStore: others.some((r) => r.storeId === self?.storeId && r.id < listingId && r.isActive === 1),
+    others,
+    anchors: others.filter((r) => r.method === "new_product" || r.method === "manual"),
+  };
+}
+
+/** Le quita al producto los identificadores de una oferta que se va, salvo los que también tienen sus fundadoras. */
+export async function detachIdentifiers(db: Db, productId: number, fp: Identifiers, keep: Identifiers[]) {
+  const pairs = identifierPairs(fp).filter((p) => !keep.some((k) => k[p.kind] === p.value));
+  if (pairs.length === 0) return;
+  await db.query
+    .deleteFrom("product_identifiers")
+    .where("product_id", "=", productId)
+    .where((eb) => eb.or(pairs.map((p) => eb.and([eb("kind", "=", p.kind), eb("value", "=", p.value)]))))
+    .execute();
 }
 
 export async function createProduct(
