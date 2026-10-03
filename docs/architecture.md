@@ -156,8 +156,17 @@ clave de atributos, o misma marca + texto similar por FTS):
 
 1. **Vetos duros** → nunca es el mismo producto: distinta categoría, distinta
    marca, o un atributo discriminante distinto (VRAM, capacidad, modelo de CPU,
-   chipset, OC vs no-OC…). Un veto gana incluso a un MPN igual.
-2. **Identificador** (MPN o GTIN normalizados iguales) → vínculo automático.
+   chipset, OC vs no-OC, color, modelo de placa con su sufijo, DDR4/DDR5, línea,
+   RGB, variante V2/EVO/MAX/II, revisión de fuente, formato y generación de SSD…).
+   Un veto gana incluso a un MPN igual. Dos semánticas: un campo "siempre presente"
+   tiene valor por defecto y veta aunque una tienda no lo escriba (sin color =
+   negra en GPU, fuente, RAM y placa; sin variante = la base); el resto veta sólo
+   si ambos lados lo dicen. En GPU y placas, el ensamblador del título gana a la
+   marca declarada (las tiendas declaran AMD o NVIDIA, o se equivocan de marca).
+2. **Identificador** (MPN o GTIN normalizados iguales) → vínculo automático. Si la
+   tienda no publica el código en su campo, se toma del título (`(…)` final,
+   `[…]`, `P/N`) o del `P/N:` de la ficha Woo, sólo en formas explícitas
+   (`codesInTitle`).
 3. **Clave de atributos** (`gpu|asus|rtx 4070 super|12|dual|true`):
    - En categorías donde la clave identifica un único producto (CPU) → vínculo.
    - En el resto, vínculo sólo si además la similitud de título es alta
@@ -168,20 +177,37 @@ clave de atributos, o misma marca + texto similar por FTS):
 4. **Zona gris** (score ≥ 0.6) → se crea producto propio (la oferta es visible
    de inmediato) + `match_review` proponiendo el candidato. Aceptar mueve la
    oferta y sus identificadores al candidato.
-5. Si una oferta ya vinculada cambia (la tienda corrige título/MPN) y ahora hay
-   un veto, se **desvincula** (auditado) y se vuelve a decidir.
+5. **Cada crawl vuelve a decidir cada oferta vinculada.** La huella del producto
+   se recalcula desde su nombre con los extractores de hoy (y se corrige la fila si
+   quedó vieja). El vínculo sigue sólo si `decide` lo haría hoy, sin contar los
+   identificadores que aportó esa misma oferta y contando las más antiguas de la
+   misma tienda. Si no, se **desvincula** (auditado), el producto pierde los
+   identificadores que ninguna otra de sus ofertas publica, y la oferta se decide de
+   nuevo. Excepciones: las decisiones manuales no se tocan, la fundadora sólo se va
+   por veto, y una oferta cuya categoría no es la de su producto (la tienda la
+   publica en dos) se deja y se registra (`matching.category_mismatch`).
+6. Una revisión pendiente que ya no tiene nada que decidir (el par hoy se veta, o
+   la oferta ya está en el candidato) se cierra sola. Aceptar una revisión que el
+   matching veta responde 409.
 
 Principio: **preferimos duplicados antes que fusiones erróneas.** Un duplicado
 se arregla revisando; una fusión errónea mezcla precios en silencio.
 
 Perfiles por categoría en `packages/matching/src/domain/attributes.ts`. Mejorar el matching
-de una categoría = mejorar su extractor + agregar casos al test.
+de una categoría = mejorar su extractor + agregar casos al test. **Se mide** con el set
+etiquetado de pares reales (`apps/ingest/src/features/ingestion/domain/match-gold.json`): su
+test falla si suben las fusiones erróneas o baja el recall, y sus topes sólo se mueven en la
+buena dirección en el mismo commit que mejora el matching.
 
 **Hash de imagen (pendiente, ADR-4):** se agregará como evidencia *positiva*
 dentro de la zona gris (nunca decide sola, porque variantes distintas comparten
 foto del fabricante).
 
-### Hacia la huella multicapa (próxima fase)
+### Huella multicapa
+
+La primera entrega (capas 1 y 2, recálculo y medición) está en
+[specs/2026-10-02-huella-multicapa-1.md](./specs/2026-10-02-huella-multicapa-1.md). Lo que sigue: hash de imagen
+(capa 4) y overrides persistentes.
 
 Es un concepto interno: el usuario nunca lo ve. La huella evalúa señales por capas, de la más confiable a la más
 difusa, para decidir si ofertas de tiendas distintas son el mismo producto:
@@ -189,7 +215,7 @@ difusa, para decidir si ofertas de tiendas distintas son el mismo producto:
 | Capa | Señales | Qué existe hoy |
 |---|---|---|
 | 1. Identificadores exactos | UPC, EAN, MPN | `product_identifiers` (PK `(kind, value)`). UPC y EAN se guardan como **GTIN-14**: son el mismo espacio de códigos, así un UPC y su EAN coinciden solos. `listings.mpn`/`gtin` guardan lo que publicó cada tienda |
-| 2. Texto normalizado | Marca, modelo, variante, capacidad | `fingerprint.ts` (tokens, marca canónica) y `attributes.ts` (atributos por categoría); `listings.raw_title` conserva el título crudo para volver a extraer |
+| 2. Texto normalizado | Marca, modelo, variante, capacidad | `fingerprint.ts` (tokens, marca canónica, marca del título en GPU y placas) y `attributes.ts` (atributos por categoría, con color, sufijo de modelo, línea, RGB, variante, revisión y formato); `listings.raw_title` conserva el título crudo para volver a extraer |
 | 3. Especificaciones | Chip, VRAM, frecuencia, conectividad | Atributos discriminantes = vetos duros. `products.specs` / `product_spec_values` existen pero todavía no se llenan |
 | 4. Imágenes | pHash/dHash (Hamming), similitud visual | `listings.image_urls` guarda todas las fotos; falta el hash |
 | 5. Evidencia contextual | Categoría, fabricante, historial | Bloqueo por categoría + marca (veto); historial append-only en `match_decisions` |
@@ -214,14 +240,14 @@ Reglas (ya decididas):
 2. **Fusiones reversibles.** Hoy "fusionar" es mover ofertas de un producto a otro (`accept` mueve la oferta y sus
    identificadores), así que revertir es devolverlas. `match_decisions` guarda el `previousProductId`, pero falta
    la operación "separar" en el admin.
-3. **Recalcular huellas.** Los productos guardan la clave y los atributos calculados con el extractor de su momento.
-   Cuando un extractor mejora, hace falta un job que recalcule `attribute_key`/`attributes` y vuelva a matchear.
+3. ~~Recalcular huellas.~~ Resuelto: cada crawl recalcula la huella del producto desde su nombre y vuelve a decidir
+   los vínculos (punto 5 de arriba).
 4. **Umbrales por categoría.** `THRESHOLDS` es global; el score configurable probablemente necesite perfiles por
    categoría (junto con `PROFILES` en `attributes.ts`).
 5. **Procedencia de los identificadores.** `product_identifiers` no dice qué oferta aportó cada código; se deduce
    de `listings.mpn`/`gtin`. Alcanza mientras cada oferta guarde lo que publicó.
-6. **Política de MPN en el título** (`[GV-N5060WF2OC-8GD]`, `p/n …`) y de SKU con prefijo: decidir en `normalize`,
-   no por tienda (ver [store-candidates.md](./store-candidates.md)).
+6. ~~Política de MPN en el título.~~ Resuelto en `normalize` con `codesInTitle` (formas explícitas, el campo de la
+   tienda siempre gana). Sigue pendiente el SKU con prefijo (ver [store-candidates.md](./store-candidates.md)).
 
 ## 6. Agregar una tienda
 

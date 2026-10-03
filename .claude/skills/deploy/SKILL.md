@@ -44,6 +44,11 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
   `VITE_TURNSTILE_SITE_KEY`, el formulario de soporte sin cuenta desaparece.
 - **Una migración aplica a los dos Workers a la vez.** Nunca desplegar un Worker que depende de columnas que la
   migración todavía no creó, ni escribir migraciones destructivas mientras el código viejo sigue desplegado.
+- **Un cambio en `packages/matching` va a ingest y server en la misma tanda.** Los dos corrigen las filas de
+  `products` con su copia de los extractores al cargarlas; si quedan con versiones distintas, se pisan entre sí.
+- **La primera corrida tras un cambio de matching mueve ofertas en prod** (re-decide todos los vínculos). Antes de
+  desplegar, anotar la hora: si algo sale mal, `bunx wrangler d1 time-travel restore framerate --timestamp=<hora>`
+  desde `packages/database` vuelve la base a ese momento.
 - **Los secretos no están en el repo.** Si falta uno (`BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, `DISCORD_CLIENT_ID`,
   `DISCORD_CLIENT_SECRET`), el dueño lo pone con `bunx wrangler secret put <NOMBRE>` en la carpeta del Worker.
 - `bun run test` a veces falla por timeout en el primer test de `claims` o de `users-admin` (pasan solos). Repetirlo
