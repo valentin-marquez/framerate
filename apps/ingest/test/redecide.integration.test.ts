@@ -37,7 +37,12 @@ async function productOf(db: Db, externalId: string): Promise<number> {
 }
 
 /** Reproduce una fusión hecha con el extractor viejo: la oferta pasa al producto ajeno y le deja sus identificadores. */
-async function forceLink(db: Db, externalId: string, productId: number) {
+async function forceLink(
+  db: Db,
+  externalId: string,
+  productId: number,
+  method: "identifier" | "attributes" = "identifier",
+) {
   const listing = await listingOf(db, externalId);
   await db.query
     .updateTable("product_identifiers")
@@ -50,7 +55,7 @@ async function forceLink(db: Db, externalId: string, productId: number) {
     .values({
       listing_id: listing.id,
       product_id: productId,
-      method: "identifier",
+      method,
       confidence: 0.99,
       evidence: "{}",
       decided_by: "system",
@@ -94,10 +99,12 @@ describe("re-decisión de vínculos existentes", () => {
     dust2.setOffers([offer("dust2", "b", BLACK)]);
     myshop.setOffers([offer("myshop", "w1", WHITE)]);
     for (const s of [dust2, myshop]) await crawlCategory(deps, s.store, "gpu");
-    await forceLink(deps.db, "w1", await productOf(deps.db, "b"));
+    const black = await productOf(deps.db, "b");
+    await forceLink(deps.db, "w1", black);
 
     clock.advance(6 * 3600_000);
     for (const s of [dust2, myshop]) await crawlCategory(deps, s.store, "gpu");
+    expect((await listingOf(deps.db, "w1")).product_id).not.toBe(black);
     const decisions = (await all(deps.db, "match_decisions")).length;
     clock.advance(6 * 3600_000);
     for (const s of [dust2, myshop]) await crawlCategory(deps, s.store, "gpu");
@@ -146,5 +153,101 @@ describe("re-decisión de vínculos existentes", () => {
     await crawlCategory(deps, infor.store, "case");
     expect((await listingOf(deps.db, "f1")).product_id).toBe(product);
     expect(await all(deps.db, "products")).toHaveLength(1);
+  });
+  test("sin veto, la oferta más nueva de la misma tienda deja el producto y la más antigua se queda", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const dust2 = fakeStore("dust2", { gpu: ["gpu"] });
+    dust2.setOffers([
+      offer("dust2", "old", { category: "gpu", title: "MSI GeForce RTX 5060 8G VENTUS 2X OC", priceCash: 383_490 }),
+      offer("dust2", "new", {
+        category: "gpu",
+        title: "Tarjeta de Video MSI RTX 5060 Ventus 2X OC 8GB",
+        priceCash: 379_990,
+      }),
+    ]);
+    await crawlCategory(deps, dust2.store, "gpu");
+    const product = await productOf(deps.db, "old");
+    await forceLink(deps.db, "new", product, "attributes");
+
+    clock.advance(6 * 3600_000);
+    await crawlCategory(deps, dust2.store, "gpu");
+    expect((await listingOf(deps.db, "old")).product_id).toBe(product);
+    expect((await listingOf(deps.db, "new")).product_id).not.toBe(product);
+  });
+
+  test("un vínculo que sólo sostiene el identificador que trajo la misma oferta se vuelve a decidir", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const infor = fakeStore("infor", { case: ["case"] });
+    const myshop = fakeStore("myshop", { case: ["case"] });
+    infor.setOffers([
+      offer("infor", "f", { category: "case", title: "Gabinete Lian Li O11 Dynamic EVO", priceCash: 150_000 }),
+    ]);
+    myshop.setOffers([
+      offer("myshop", "l", {
+        category: "case",
+        title: "Lian Li Lancool 207 Mesh",
+        priceCash: 90_000,
+        mpn: "G99.LAN207X.00",
+      }),
+    ]);
+    for (const s of [infor, myshop]) await crawlCategory(deps, s.store, "case");
+    const product = await productOf(deps.db, "f");
+    await forceLink(deps.db, "l", product);
+
+    clock.advance(6 * 3600_000);
+    for (const s of [infor, myshop]) await crawlCategory(deps, s.store, "case");
+    expect((await listingOf(deps.db, "f")).product_id).toBe(product);
+    expect((await listingOf(deps.db, "l")).product_id).not.toBe(product);
+    const ids = (await all(deps.db, "product_identifiers")).filter((i) => i.product_id === product);
+    expect(ids).toEqual([]);
+  });
+
+  test("la oferta vetada se va sin quitarle al producto el MPN que publican sus hermanas", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const mpn = "AX4U32008G16A-SWHD35";
+    const stores = [
+      fakeStore("infor", { ram: ["ram"] }),
+      fakeStore("pcfactory", { ram: ["ram"] }),
+      fakeStore("myshop", { ram: ["ram"] }),
+      fakeStore("notebookstore", { ram: ["ram"] }),
+    ] as const;
+    const [infor, pcfactory, myshop, notebookstore] = stores;
+    const ram = { category: "ram" as const, priceCash: 30_000 };
+    infor.setOffers([offer("infor", "f", { ...ram, title: "MEMORIA ADATA XPG GAMMIX D35 8GB 3200MHz WH" })]);
+    pcfactory.setOffers([
+      offer("pcfactory", "s1", { ...ram, title: "Memoria RAM DDR4 8 GB 3200 MHz UDIMM WHITE", mpn }),
+    ]);
+    myshop.setOffers([
+      offer("myshop", "s2", {
+        ...ram,
+        title: "Memoria RAM DIMM 8 GB - DDR4 3200 MT/s - XPG Gammix D35 White (AX4U32008G16A-SWHD35)",
+        mpn,
+      }),
+    ]);
+    // La tienda no escribe el color: el extractor la lee negra.
+    notebookstore.setOffers([
+      offer("notebookstore", "s3", { ...ram, title: "Memoria Ram 8GB DDR4 3200MHz CL16 Dimm Adata", mpn }),
+    ]);
+    for (const s of stores) await crawlCategory(deps, s.store, "ram");
+    const product = await productOf(deps.db, "f");
+    for (const id of ["s1", "s2", "s3"]) await forceLink(deps.db, id, product);
+    const mpnOwner = async () =>
+      (await all(deps.db, "product_identifiers")).find((i) => i.kind === "mpn" && i.value === "AX4U32008G16ASWHD35")
+        ?.product_id;
+    expect(await mpnOwner()).toBe(product);
+
+    clock.advance(6 * 3600_000);
+    for (const s of stores) await crawlCategory(deps, s.store, "ram");
+    expect((await listingOf(deps.db, "s3")).product_id).not.toBe(product);
+    expect(await mpnOwner()).toBe(product);
+
+    clock.advance(6 * 3600_000);
+    for (const s of stores) await crawlCategory(deps, s.store, "ram");
+    expect((await listingOf(deps.db, "s1")).product_id).toBe(product);
+    expect((await listingOf(deps.db, "s2")).product_id).toBe(product);
+    expect((await listingOf(deps.db, "f")).product_id).toBe(product);
   });
 });
