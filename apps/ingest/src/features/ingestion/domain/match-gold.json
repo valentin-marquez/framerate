@@ -1,0 +1,7331 @@
+[
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B760M D3HP vs B760M DS3H AX: placas distintas",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B760M D3HP DDR4, Micro ATX, LGA1700",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331862848"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B760M DS3H AX DDR4, Micro ATX, LGA1700",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331850869"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo Core Ultra 7 265K, GTIN de otra región",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Procesador Intel Core Ultra 7 265K 3.9GHz 30MB DDR5 LGA1851",
+      "brand": "Intel",
+      "mpn": null,
+      "gtin": "00735858550529"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Procesador Intel Core Ultra 7 265K 20 cores 3.9Ghz",
+      "brand": "Intel",
+      "mpn": null,
+      "gtin": "05032037282062"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRO B840M-P vs B840M GAMING",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO B840M-P WIFI6E DDR5, ATX, AM5",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377361804"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B840M GAMING WIFI6E, mATX, AM5",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377358668"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRO B760M-P vs PRO B760M-E (sufijo de una letra)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO B760M-P DDR4, Micro-ATX, LGA1700",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377030991"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO B760M-E DDR4 mATX LGA1700",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377026987"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "cpu",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Ryzen 5 5500 Bulk vs caja: ¿mismo producto para el comparador?",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Procesador AMD Ryzen 5 5500 Bulk",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Procesador AMD Ryzen 5 5500 6 nucleos 42 Ghz AM4",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": "00730143314121"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B550M Phantom Gaming 4 vs B550M-HDV",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASRock B550M Phantom Gaming 4, mATX, AM4",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": "04710483932755"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASRock B550M-HDV, mATX, AM4",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": "04710483931635"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Vengeance RGB Pro SL vs RGB Pro TUF",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "RAM Corsair Vengeance RGB Pro SL 16GB (2x8GB) DDR4 3200",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006632030"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "RAM Corsair Vengeance RGB PRO TUF 16GB (2x8GB) DDR4 3200MHz",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006643340"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "Z790 UD AC vs Z790 Eagle AX",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte Z790 UD AC LGA1700, DDR5, ATX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331850401"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte Z790 Eagle AX, LGA1700, DDR5 ATX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331860998"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Lancer Blade RGB blanca vs Lancer Blade sin RGB (GTIN distinto)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Lancer Blade RGB DDR5 16GB 6000 MTs Blanco",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711658152299"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM ADATA XPG Lancer Blade 16GB DDR5 6000MTs CL36",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711658152275"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B650M D3HP vs D3HP AX (AX = WiFi, el extractor no lo ve)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B650M D3HP",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331857851"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B650M D3HP AX, AM5, DDR5",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331859510"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Lancer Blade blanca vs Lancer RGB negra",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Lancer Blade DDR5 6400MTs 16GB Blanco",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711658153784"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Lancer DDR5 6400MTs 16GB RGB Negro",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085940742"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Lancer Blade blanca vs negra",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Lancer Blade DDR5 5600MTs 16GB Blanco",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085945426"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Lancer Blade DDR5 5600MTs 16GB Negro",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085945440"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "Prime B550M-A AC, GTIN de otra región",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME B550M-A AC, mATX, AM4, DDR4, PCIE4.0",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04718017837538"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS Prime B550M-A AC MicroATX AMD AM4",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04718017848404"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast CL40 vs CL36",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast Black 8GB 5200MHz DDR5 CL40",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617325966"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 8GB 5200MHz DDR5 CL36",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617331813"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast RGB vs sin RGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast RGB 8GB 5600MTs DDR5 CL36",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617331950"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston FURY Beast de 8GB DDR5 5600MHz DIMM",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617325942"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "Prime B650M-A AX II vs B650M-A II (sin WiFi)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS Prime B650M-A AX II MicroATX AM5",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387020487"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME B650M-A II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387025512"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast vs Fury Beast RGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 16GB 3600Mhz DDR4 CL18",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617319767"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston FURY Beast RGB 16GB 3600MT/s DDR4 CL18",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617337426"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Vengeance RGB vs Vengeance sin RGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM CORSAIR Vengeance RGB DDR5 RAM 16 GB 5600 MHz",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840440488460"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Corsair Vengeance DDR5 5600MT/s 16GB 1x16GB",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006693666"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B550M Aorus Elite vs Aorus Elite AX",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B550M AORUS ELITE, AM4, mATX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331809546"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B550M AORUS ELITE AX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331855055"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "A520M PRO vs A520M-A PRO",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI A520M PRO, AM4, Micro-ATX",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072755492"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI A520M-A PRO Socket AM4 DDR4",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072749927"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "same",
+    "confidence": "low",
+    "note": "Vengeance LPX 8GB 3200 negra en ambos, GTIN distinto",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria Ram Corsair Vengeance Lpx DDR4 8gb 3200mhz Black",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006629603"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Corsair Vengeance LPX 8GB DDR4 3200MHz CL16",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006608622"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Fury Beast 16GB 5600: GTIN sugiere CL36 vs CL40, el título no lo dice",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston FURY Beast DDR5 16GB 5600MHz",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617330809"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria Ram Kingston Fury Beast 1 x 16GB DDR5-5600MHz",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617325713"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME H610M-K vs H610M-E",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081565529"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME H610M-E D4-C S M LGA1700",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081514800"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast vs Fury Renegade",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 1 x 8GB DDR4-3200",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617319910"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Renegade RGB DDR4 8GB 3200Mhz",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617338201"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Pure Power 13 M vs Pure Power 12",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder be quiet! PURE POWER 13 M 1000W 80 PLUS Gold",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052192207"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder be quiet! PURE POWER 12 1000W 80 PLUS Gold",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052191200"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "Hiksemi Future Core vs Future S",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD M.2 NVMe Hiksemi Future Core 1TB Gen5 3D NAND",
+      "brand": "Hikvision",
+      "mpn": null,
+      "gtin": "06976695096953"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD M.2 Hiksemi Future S 1TB M.2 NVMe 2230",
+      "brand": "Hikvision",
+      "mpn": null,
+      "gtin": "06976695090203"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ssd",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "SN850X 1TB con y sin disipador (GTIN distinto)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD M.2 Western Digital WD Black SN850X 1TB NVMe",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": "00718037891392"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "SSD Western Digital WD Black SN850x 1TB M.2 NVMe PCIe Gen4",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": "00718037891385"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "SN850X vs SN7100",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD M.2 Western Digital WD Black SN850X 1TB NVMe",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": "00718037891392"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "SSD Western Digital WD Black SN7100 1TB M.2 NVMe PCIe Gen4",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": "00718037893204"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "GP-UD850GM PG5 V2 vs UD850GM original",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte GP-UD850GM PG5 V2 850W 80+ Gold",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331557072"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte GP-UD850GM 850W 80PLUS Gold Modular",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "NV3 500GB 2230 vs 2280",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD Kingston NV3, 500GB M.2 2230 PCIe 4.0 NVMe",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617349962"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD Kingston NV3 500GB M.2 2280 NVMe, PCIe 4.0",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617344806"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "UD750GM PG5 ICE (blanca) vs PG5",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte GP-UD750GM PG5 ICE 750W 80+ Gold",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331557065"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte GP-UD750GM PG5, 750W 80PLUS Gold",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331553623"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "P750BS = GP-P750BS",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte P750BS 750W 80 Plus Bronze",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331555245"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte GP-P750BS 750W 80 PLUS Bronze",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331555306"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "GP-P650G = P650G",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte GP-P650G 650W 80 PLUS Gold",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331556808"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente Gigabyte P650G 650W 80 Plus Gold",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331553777"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Dark Power Pro 13 1600W, GTIN de otra región",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder be quiet DARK POWER PRO 13 1600W 80 Titanium",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052189375"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder be quiet! DARK POWER PRO 13 1600W TITANIUM",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052190043"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Pure Power 13 M 1000W, GTIN de otra región",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder be quiet! PURE POWER 13 M 1000W 80 PLUS Gold",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052192207"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder be quiet! Pure Power 13 M 1000W 80 PLUS GOLD",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052192306"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "ROG Thor 1200W Platinum III vs Platinum II",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder ASUS ROG Thor 1200W Platinum III",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387610510"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Asus ROG Thor Platinum II de 1200 W",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081801047"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "5060 Ti Windforce OC vs Windforce Max OC",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte RTX 5060 Ti WINDFORCE OC 8 GB",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331356057"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte RTX 5060 Ti WINDFORCE Max OC 8GB",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331356682"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "5060 Ti Eagle OC vs Eagle OC ICE",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte RTX 5060 Ti Eagle OC 8GB",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331356101"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte RTX 5060 Ti Eagle OC 8GB ICE",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331356095"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "5050 Windforce OC vs Windforce OC V2",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte GeForce RTX 5050 WINDFORCE OC 8G",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331356743"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte RTX 5050 WINDFORCE OC V2 8 GB",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331356996"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "5080 Gaming Trio OC White vs negra",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI RTX 5080 16G GAMING TRIO OC WHITE",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377292177"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI GeForce RTX 5080 16G GAMING TRIO OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377292160"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "5060 Ti Ventus 2X OC Plus, GTIN de otra región",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta Grafica MSI GeForce RTX 5060Ti 16G VENTUS 2X OC PLUS",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377394710"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta Grafica MSI GeForce RTX 5060Ti 16G VENTUS 2X OC PLUS",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377334471"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Dual 5060 Ti EVO OC vs Dual OC",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASUS Dual RTX 5060 Ti EVO OC 16GB GDDR7",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711636335676"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASUS Dual GeForce RTX 5060 Ti 16GB GDDR7 OC",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711636014793"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "RX 9060 XT Gaming OC ICE vs Gaming OC",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte Radeon RX 9060XT GAMING OC ICE 16G",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331357047"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte RX 9060 XT GAMING OC 16G GDDR6",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331356248"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Dual 5060 EVO OC vs Dual OC",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASUS Dual GeForce RTX 5060 EVO OC 8GB GDDR7",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711636335645"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASUS Dual GeForce RTX 5060 OC 8GB",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711636057905"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "MAG A750GL vs A750GLS",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder MSI MAG A750GL PCIE5 750W 80+ Gold",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377084284"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder MSI MAG A750GLS PCIE5 80 Plus Gold",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377292276"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Pylon vs Pylon II",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder XPG Pylon 750W 80 Plus Bronze",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04710273776965"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder XPG Pylon II 750W, 80 Plus Bronze, ATX",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711658150875"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "NZXT C850 Gold negra vs blanca",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder NZXT C850 Gold ATX 3.1 - 850W, 80 Plus Gold",
+      "brand": "NZXT",
+      "mpn": null,
+      "gtin": "05056547204789"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder NZXT C850 Gold ATX 3.1, 850W, 80+ Gold White",
+      "brand": "NZXT",
+      "mpn": null,
+      "gtin": "05056547206400"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "4060 Ventus 2X Black vs White",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI RTX 4060 Ventus 2X Black 8G OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377115421"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI RTX 4060 Ventus 2X White 8GB OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377129480"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "MAG A650BN PCIE5 III vs A650BN",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder MSI MAG A650BN PCIE5 III 650W 80Plus Bronze",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377364348"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder MSI MAG A650BN 80 Plus Bronze",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072849627"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "4070 Super Gaming X Slim MLG vs Gaming X Slim",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI RTX 4070 Super 12G Gaming X Slim MLG",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377187015"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI RTX 4070 Super 12G Gaming X SLIM GDDR6X",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377171601"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "MWE Gold 750 V2 no modular vs Full Modular",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Cooler Master 750W G GOLD 750 V2",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": "04719512144435"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Cooler Master MWE Gold 750 V2 Full Modular",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": "04719512142349"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "misma 5060 Ti Gaming Trio OC White",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO MSI RTX 5060 Ti 8GB GAMING TRIO OC WHITE",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO MSI GEFORCE RTX 5060 TI GAMING TRIO OC 8GB WHITE",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KVR32N22S6/8",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Memoria RAM DDR4 8GB 3200MHz UDIMM",
+      "brand": "Kingston",
+      "mpn": "KVR32N22S68",
+      "gtin": null
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Memoria RAM DDR4 8 GB 3200MHz UDIMM",
+      "brand": "Kingston",
+      "mpn": "KVR32N22S68",
+      "gtin": null
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Prime A520M-K",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "Placa Madre ASUS Prime A520M-K, AMD Socket AM4, 2xDIMM DDR4, VGA, HDMI, M.2, 4xSATA, Micro-ATX",
+      "brand": "ASUS",
+      "mpn": "PRIMEA520MK",
+      "gtin": null
+    },
+    "b": {
+      "store": "sandos",
+      "rawTitle": "Tarjeta Madre ASUS/ micro ATX AMD A520 (Ryzen AM4)",
+      "brand": "ASUS",
+      "mpn": "PRIMEA520MK",
+      "gtin": null
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Pylon II 550W",
+    "a": {
+      "store": "pc-express",
+      "rawTitle": "Fuente de Poder XPG PYLON II 550W 80+ Bronze",
+      "brand": "ADATA",
+      "mpn": "PYLONII550BBKCCL",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER XPG PYLON II 550W 80+ BRONZE ATX 3.0",
+      "brand": "ADATA",
+      "mpn": "PYLONII550BBKCCL",
+      "gtin": null
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KF432C16BB/8 vs KF432C16BB2A/8 (RGB)",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 8GB DDR4 3200MHz DIMM CL16 Non-ECC 1.35V 288p KINGSTON FURY",
+      "brand": "Kingston",
+      "mpn": "KF432C16BB8",
+      "gtin": "00740617319910"
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 8GB DDR4 3200MHz DIMM CL16 Non-ECC 1.35V 288p Kingston Fury RGB",
+      "brand": "Kingston",
+      "mpn": "KF432C16BB2A8",
+      "gtin": "00740617337549"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "Prime A520M-K (MPN de modelo vs part number)",
+    "a": {
+      "store": "notebookstore",
+      "rawTitle": "Placa Madre ASUS Prime A520M-K AM4 AMD Ryzen A520, SATA 6Gb/s, M.2, HDMI, VGA, Micro-ATX, DDR4",
+      "brand": "ASUS",
+      "mpn": "PRIMEA520MK",
+      "gtin": "00192876826935"
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Placa Madre Asus Prime A520M-K Socket AM4/ Micro ATX",
+      "brand": "ASUS",
+      "mpn": "90MB1500M0EAY0",
+      "gtin": "04718017826921"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KF432C16BB2A/8 (RGB) vs KF432C16BB/8",
+    "a": {
+      "store": "notebookstore",
+      "rawTitle": "Memoria Ram 8GB DDR4 3200Mhz CL16 Dimm Kingston FURY Beast RGB Non-ECC XMP",
+      "brand": "Kingston",
+      "mpn": "KF432C16BB2A8",
+      "gtin": "00740617337549"
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Memoria Ram 8GB DDR4 3200Mhz CL16 Dimm Kingston FURY Beast, Unbuffered, 1.35V",
+      "brand": "Kingston",
+      "mpn": "KF432C16BB8",
+      "gtin": "00740617319910"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KVR56U46BS8-16 vs KCP556US8-16",
+    "a": {
+      "store": "notebookstore",
+      "rawTitle": "Memoria Ram 16GB DDR5 5600Mhz CL46 Dimm Non-ECC 1Rx8",
+      "brand": "Kingston",
+      "mpn": "KVR56U46BS816",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Memoria Ram 16GB DDR5 5600Mhz CL46 Dimm Kingston Non-ECC Unbuffered",
+      "brand": "Kingston",
+      "mpn": "KCP556US816",
+      "gtin": "00740617334357"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN TWSC 128GB",
+    "a": {
+      "store": "notebookstore",
+      "rawTitle": "Disco SSD 128GB interno | TWSC M.2 2280 NVME BULK",
+      "brand": "TWSC",
+      "mpn": "T33420F128",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Disco SSD 128GB interno | TWSC M.2 2280 NVMe PCIe 3.0 x4",
+      "brand": "TWSC",
+      "mpn": "T33420F128",
+      "gtin": null
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Hynix",
+    "a": {
+      "store": "tecnocam",
+      "rawTitle": "Memoria Ram Hynix 8gb Ddr4 2666mhz Udimm Pc4-21300 Oem",
+      "brand": "SK hynix",
+      "mpn": "HMA81GU6JJR8NVK",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnocam",
+      "rawTitle": "Memoria Ram Hynix 8gb Ddr4 2666mhz Udimm Pc4-21300 Oem",
+      "brand": "SK hynix",
+      "mpn": "HMA81GU6JJR8NVK",
+      "gtin": null
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "Cougar OmnyX blanco vs negro (la tienda repite el GTIN)",
+    "a": {
+      "store": "valrod",
+      "rawTitle": "Gabinete Gamer Cougar OMNYX White 4 ventiladores 160 mm ARGB incluidos",
+      "brand": "Cougar",
+      "mpn": "382WA300002",
+      "gtin": "04710483779459"
+    },
+    "b": {
+      "store": "valrod",
+      "rawTitle": "Gabinete Gamer Cougar OMNYX BLACK 4 ventiladores 160 mm ARGB incluidos",
+      "brand": "Cougar",
+      "mpn": "382WA300001",
+      "gtin": "04710483779459"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "Kingston Fury Renegade G5 PCIe 5.0 vs Renegade PCIe 4.0",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Unidad SSD Kingston FURY 2TB M.2 22*80 PCIe 5.0 Lec14700MB/s Esc14000 MB/s",
+      "brand": "Kingston",
+      "mpn": "SFYR2S2T0",
+      "gtin": "00740617349498"
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Unidad SSD Kingston FURY 2TB M.2 22*80 PCIe 4.0x4 NVMe Lec 7300MB/s Esc 7000MB/s",
+      "brand": "Kingston",
+      "mpn": "SFYRDK2000G",
+      "gtin": "00740617324464"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B550M PRO-VDH WIFI vs B550M-P WIFI6E",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B550M PRO-VDH WIFI",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072733698"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B550M-P WIFI6E DDR4 AM4 Micro-ATX",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377453530"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "ADATA Premier vs XPG Lancer Blade",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM ADATA Premier 1x8GB DDR5 5600MHz CL46",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085940179"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Memoria RAM XPG Lancer Blade DDR5 8GB 5600MHz Negro",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085947987"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B860M D3HP vs B860M K",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B860M D3HP, LGA1851, DDR5, mATX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331866860"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Placa Madre Gigabyte B860M K, Micro-ATX, LGA1851",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331868352"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "B550M DS3H AC",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B550M DS3H AC AMD AM4",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331810962"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B GIGABYTE B550M DS3H AC",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "Prime B650M-A AX II vs B650M-F",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS Prime B650M-A AX II MicroATX AM5",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387020487"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Placa Madre ASUS Prime B650M-F AM5, DDR5, mATX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387514597"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "A520M DS3H V2 vs A520M K V2",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte A520M DS3H V2 AM4 DDR4 mATX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331854690"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B GIGABYTE A520M K V2",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "PRO H610M-G DDR5",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO H610M-G DDR5",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072942663"
+    },
+    "b": {
+      "store": "nuevatec",
+      "rawTitle": "MSI PRO H610M-G, LGA 1700, DDR5",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "H510M H V2 vs H510M K V2",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte H510M H V2, LGA 1200, DDR4, Micro ATX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331854942"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B GIGABYTE H510M K V2",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "WD Green SN350 vs SN3000",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD Western Digital Green SN350 1TB M.2 2280 NVMe",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": "00718037880082"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Disco Duro SSD WD Green SN3000 1TB M.2 2280 NVMe PCIe 4.0",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": "00718037907154"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Xilence XN235 vs be quiet! System Power 11 (otra marca)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Xilence by be quiet! XN235 750W 80+ Bronze",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04044953502361"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Fuente de Poder be quiet! SYSTEM POWER 11 U 750W 80+ Bronze",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052193921"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "Hiksemi Wave vs Future Core",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD M.2 Hiksemi Wave 1TB NVMe PCle 3.0",
+      "brand": "Hikvision",
+      "mpn": null,
+      "gtin": "06974202725723"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Disco Duro SSD M.2 NVMe Hiksemi Future Core 1TB Gen5 3D NAND",
+      "brand": "Hikvision",
+      "mpn": null,
+      "gtin": "06976695096953"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "Legend 800 vs Legend 860",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Unidad SSD ADATA Legend 800 NVMe 1TB",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085940223"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Disco Duro SSD ADATA LEGEND 860 1TB M.2 PCIe Gen4 x4",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085949493"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "NV2 vs KC3000",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD Kingston NV2 M.2 1TB PCie 4.0",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617329919"
+    },
+    "b": {
+      "store": "tectec",
+      "rawTitle": "SSD 1TB | Kingston KC3000 | PCIe 4.0 NVMe M.2",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "be quiet! System Power 11 vs Xilence XN220",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder be quiet! SYSTEM POWER 11 U 650W BRONZE",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052192924"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Fuente de Poder Xilence by be quiet! XN220 650W 80+ Bronze",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04044953503436"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Vengeance RGB blanca vs Vengeance sin RGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Corsair Vengeance RGB 32GB (2×16) 6000MHz Blanco",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840440438618"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Corsair Vengeance 32GB (2x16GB) DDR5 6000MHz",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006684442"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Aorus AE1000PM PG5 vs Aorus 1000W Platinum ATX 3.0: no se sabe si es el mismo",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte AORUS AE1000PM PG5 80Plus Platinum",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331554545"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente Gigabyte 1000W Aorus G5 80+ Platinum Modular ATX 3.0",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331554675"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASRock RX 9060 Challenger ('CL')",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Tarjeta de Video AMD Radeon RX 9060 CL 8GB GDDR6 - Asrock Challenger - 128 bits - PCIe 5.0 - DisplayPort, HDMI",
+      "brand": "ASRock",
+      "mpn": "90GA5MZZ00UANZ",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASRock Radeon RX 9060 Challenger 8GB",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": "04711581491830"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "5080 Gaming Trio OC White",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Tarjeta de Video MSI GeForce RTX 5080 Gaming Trio White OC 16GB GDDR7",
+      "brand": "MSI",
+      "mpn": "G508016GTCW",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI RTX 5080 16G GAMING TRIO OC WHITE",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377292177"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASUS Dual RTX 3050 OC (pcfactory dice NVIDIA)",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Tarjeta de Video NVIDIA Dual GeForce RTX 3050 6GB OC Edition GDDR6",
+      "brand": "ASUS",
+      "mpn": "90YV0K60M0AA00",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASUS Dual GeForce RTX 3050 OC 6GB GDDR6",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387470640"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Gigabyte 5050 Windforce OC",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Tarjeta de Video NVIDIA GeForce RTX 5050 WINDFORCE OC 8G",
+      "brand": "Gigabyte",
+      "mpn": "GVN5050WF2OC8GD",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte GeForce RTX 5050 WINDFORCE OC 8G",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331356743"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI 5050 Gaming OC",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Tarjeta de Video NVIDIA GeForce RTX 5050 8G GAMING OC",
+      "brand": "MSI",
+      "mpn": "G50508GC",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI GeForce RTX 5050 8G GAMING OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377379946"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI 5050 Shadow 2X OC (dos esquemas de MPN de MSI)",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Tarjeta de Video NVIDIA Geforce RTX 5050  SHADOW 2X OC 8GB",
+      "brand": "MSI",
+      "mpn": "G50508S2C",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Tarjeta de Video GeForce RTX™ 5050 8G SHADOW 2X OC",
+      "brand": "MSI",
+      "mpn": "912V538008",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI 3050 Ventus 2X OC",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Tarjeta de Video NVIDIA RTX 3050 VENTUS 2X 6G OC",
+      "brand": "MSI",
+      "mpn": "912V812201",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI GeForce RTX 3050 VENTUS 2X 6G OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377176811"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI 5050 Shadow 2X OC",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Tarjeta de Video Nvidia GeForce MSI RTX 5050 8G Shadow 2X OC 8GB GDDR6",
+      "brand": "MSI",
+      "mpn": "GEFORCERTX50508GSHADOW2XOC",
+      "gtin": "04711377379960"
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Tarjeta de Video GeForce RTX™ 5050 8G SHADOW 2X OC",
+      "brand": "MSI",
+      "mpn": "912V538008",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI 5070 Ventus 3X OC",
+    "a": {
+      "store": "mybox",
+      "rawTitle": "Tarjeta de Video MSI RTX 5070 Ventus 3X 12G OC",
+      "brand": "MSI",
+      "mpn": "5070VENTUS3X12GOC",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI GeForce RTX 5070 12G VENTUS 3X OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377308281"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASUS Dual 5060 OC 8GB",
+    "a": {
+      "store": "mybox",
+      "rawTitle": "Tarjeta de Video Asus DUAL RTX 5060 OC 8GB",
+      "brand": "ASUS",
+      "mpn": "DUALRTX5060O8G",
+      "gtin": null
+    },
+    "b": {
+      "store": "tectec",
+      "rawTitle": "Nvidia RTX 5060 | 8GB GDDR6 | Asus Dual OC",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASUS Prime 5070 OC",
+    "a": {
+      "store": "notebookstore",
+      "rawTitle": "Tarjeta de Video ASUS PRIME GeForce RTX™ 5070 12GB GDDR7 OC Edition",
+      "brand": "ASUS",
+      "mpn": "90YV0M10M0AA00",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASUS Prime GeForce RTX 5070 OC 12GB",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387870402"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI 5060 Ventus 2X OC",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO MSI GEFORCE RTX 5060 VENTUS 2X OC 8GB GDDR7",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI GeForce RTX 5060 8G VENTUS 2X OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377344272"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Gigabyte 5070 Eagle OC SFF",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO GIGABYTE RTX 5070 EAGLE OC SFF 12GB DDR7",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Tarjeta de Video NVIDIA GeForce RTX 5070 12GB Eagle OC SFF",
+      "brand": "Gigabyte",
+      "mpn": "GVN5070EAGLEOC12GD",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Ryzen 9 9950X",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "CPU AMD RYZEN 9 9950X 4.3 GHz",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "AMD Ryzen 9 9950X Granite Ridge AM5 4.30GHz 16-Core",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": "00730143315272"
+    }
+  },
+  {
+    "source": "review",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Ryzen 9 9900X",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "CPU AMD RYZEN 9 9900X 4.4 GHz",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "tectec",
+      "rawTitle": "Procesador AMD Ryzen 9 9900X | 12 Núcleos 24 Hilos | Socket AM5",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Zotac 4060 Ti Twin Edge OC White vs negra",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO ZOTAC GAMING GEFORCE RTX 4060 TI TWIN EDGE OC WHITE 8GB GDDR6 DLSS3",
+      "brand": "Zotac",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO ZOTAC GAMING GEFORCE RTX 4060 TI TWIN EDGE OC 8GB GDDR6 DLSS3",
+      "brand": "Zotac",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Zotac 4060 Twin Edge OC White vs negra",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO ZOTAC GAMING GEFORCE RTX 4060 TWIN EDGE OC WHITE 8GB GDDR6 DLSS3",
+      "brand": "Zotac",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Zotac RTX 4060 Twin Edge OC 8GB GDDR6",
+      "brand": "Zotac",
+      "mpn": null,
+      "gtin": "04895173627361"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "MSI 4060 Ventus 2X White vs Black",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO MSI RTX 4060 VENTUS 2X WHITE OC 8GB GDDR6 DLSS3",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI RTX 4060 Ventus 2X Black 8G OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377115421"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "ASUS Dual 4070 OC vs Dual 4070 White OC",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO ASUS DUAl RTX 4070 12GB DDR6 OC",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO ASUS DUAL RTX 4070 WHITE 12GB DDR6 OC",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "i9 12900KF",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "INTEL CPU CORE I9 12900KF 3.2GHz",
+      "brand": "Intel",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "cclink",
+      "rawTitle": "Intel Core i9 12900KF 3.2 GHz 30MB LGA1700",
+      "brand": "Intel",
+      "mpn": "BX8071512900KF",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "TUF B850M-E WIFI vs TUF B850M-Plus WiFi",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS TUF GAMING B850M-E WIFI",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS TUF B850M Plus WiFi AM5",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387764916"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Dual RX 7600 V2 OC vs Dual RX 7600 EVO OC",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO ASUS DUAL RX 7600 V2 8GB DDR6 OC",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Tarjeta de Video ASUS Radeon RX 7600 Dual EVO OC 8GB GDDR6",
+      "brand": "ASUS",
+      "mpn": "DUALRX7600O8GEVO",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B850M Gaming Plus WIFI6E vs B850M Gaming WIFI6E",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI B850M GAMING PLUS WIFI6E",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B850M GAMING WIFI6E DDR5 AM5 mATX",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377399807"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME H610M-K (DDR5) vs H610M-K D4-CSM",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME H610M-K",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081565529"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME H610M-A vs H610M-K (sufijo de una letra)",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME H610M-A",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "nuevatec",
+      "rawTitle": "ASUS PRIME H610M-K",
+      "brand": "ASUS",
+      "mpn": "90MB1GA0MVAAY0",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Spectrix D35G 16GB blanca vs sin color",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM XPG SPECTRIX D35G 16 GB 3200MHZ DDR4 WHITE RGB",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM ADATA XPG Spectrix D35G RBG DDR4 3200 16GB",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085943316"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Spectrix D35G 8GB sin color vs blanca",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA ADATA XPG SPECTRIX D35G 8GB 3200MHz DDR4 RGB",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Spectrix D35g RGB DDR4 3200MHz 8GB Blanco",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085943293"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Gammix D35 8GB sin color vs blanca",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA ADATA XPG GAMMIX D35 8GB 3200MHz",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "etchile",
+      "rawTitle": "XPG Memoria RAM GAMMIX D35 8GB DDR4 3200MHz PC4-25600 WHITE",
+      "brand": "ADATA",
+      "mpn": "AX4U32008G16ASWHD35",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "low",
+    "note": "Vengeance RGB EXPO vs Vengeance (el GTIN es de la sin RGB)",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA KIT CORSAIR VEGEANCE 32GB (2X16GB) 5200MHz RGB AMD EXPO",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Corsair Vengeance DDR5 32GB (2x16GB) 5200MHz",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006659464"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "low",
+    "note": "PRIME B760M-A CSM vs B760M-A D4-CSM",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-A CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME B760M-A D4-CSM, mATX, LGA1700",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081984061"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Dominator Platinum vs Vengeance ('VEGEANCE' mal escrito)",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA KIT CORSAIR DOMINATOR PLATINUM 32GB (2X16GB) 6200MHz DDR5 WHITE",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA KIT CORSAIR VEGEANCE 32GB (2X16GB) 6200MHz RGB WHITE",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI PRO B760M-P DDR4",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI PRO B760M-P DDR4",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO B760M-P DDR4, Micro-ATX, LGA1700",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377030991"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI B650M Gaming Plus WIFI",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI B650M GAMING PLUS WIFI",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B650M GAMING PLUS WIFI",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377180955"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast RGB 32GB vs KF552C40BBK2-32 sin RGB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR5 5200MHz 32GB CL40",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "todoclick",
+      "rawTitle": "Kit de Memoria RAM Kingston Fury Beast de 32GB (16GB x2, DDR5, 5200Mhz, CL40, DIMM)",
+      "brand": "Kingston",
+      "mpn": "KF552C40BBK232",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "Fury Beast RGB 16GB 5200",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR5 5200MHz 16GB CL40",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston FURY Beast Black RGB 16GB DDR5 5200MHz",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617328639"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Renegade RGB vs Renegade",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY RENEGADE RGB DDR5 6000MHz 32GB 2x16GB CL32",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY RENEGADE DDR5 6000MHz 32GB 2x16GB CL32",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "PRIME B840M-A",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B840M-A",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Asus PRIME B840M-A DDR5 AM5",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387797198"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "HyperX Fury RGB vs Fury Beast sin RGB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON HYPERX FURY RGB BLACK 8GB DDR4 3200Mhz CL16",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 1 x 8GB DDR4-3200",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617319910"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B650M PG Lightning WiFi vs PG Riptide WiFi",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASROCK B650M PG Lightning WiFi",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASROCK B650M PG RIPTIDE WIFI",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "Fury Beast 8GB 5200 CL40",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY BEAST DDR5 5200MHz 8GB CL40",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast Black 8GB 5200MHz DDR5 CL40",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617325966"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRO H610M-S DDR4 vs PRO H610M-G DDR5",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI PRO H610M-S DDR4",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO H610M-G DDR5",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072942663"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "low",
+    "note": "PRO H610M-G (infor-ingen sólo escribe DDR4 cuando es DDR4)",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI PRO H610M-G",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO H610M-G DDR5",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072942663"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "TUF B850M-Plus WiFi",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS TUF GAMING B850M-PLUS WIFI",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS TUF B850M Plus WiFi AM5",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387764916"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B760M-A vs B760M-A AX6 II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-A",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "TARJETA MADRE ASUS PRIME PRIME B760M-A AX6 II",
+      "brand": "ASUS",
+      "mpn": "PRIMEB760MAAX6II",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast RGB vs Fury Beast sin RGB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR4 3200 MHz 8GB RGB",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 1 x 8GB DDR4-3200",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617319910"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast RGB vs Fury Beast",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR4 3200 MHz 16GB CL16",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 16GB DIMM DDR4 3200mhz",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617319859"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B650M Project Zero vs PRO B650M-P",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI B650M PROJECT ZERO HIDDEN CONNECTORS",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa base MSI PRO B650M-P",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377100953"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "low",
+    "note": "Hikvision 8GB genérica vs Hiksemi Armor White",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM HIKVISION 8GB 3200MHz DDR4 CL16",
+      "brand": "Hikvision",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Hiksemi Armor White 8GB 3200MHz DDR4",
+      "brand": "Hikvision",
+      "mpn": null,
+      "gtin": "06976695092740"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRO H610M-G DDR4 vs PRO H610M-G DDR5",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI PRO H610M-G DDR4",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO H610M-G DDR5",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072942663"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B650M-A II vs B650M-A AX II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B650M-A II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS Prime B650M-A AX II MicroATX AM5",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387020487"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B760M-A D4 vs B760M-A DDR5",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-A D4",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "central-gamer",
+      "rawTitle": "Placa Madre ASUS Prime B760M-A DDR5",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B760M-A AX vs B760M-A (sin WiFi)",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-A AX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "central-gamer",
+      "rawTitle": "Placa Madre ASUS Prime B760M-A DDR5",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "HyperX Fury Black vs Fury RGB Black",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON HYPERX FURY BLACK 8GB DDR4 3200Mhz CL16",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON HYPERX FURY RGB BLACK 8GB DDR4 3200Mhz CL16",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B650M-HDV/M.2 vs la White",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASROCK B650M-HDV/M.2",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASROCK B650M-HDV/M.2 WHITE",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "low",
+    "note": "PRIME B650M-A AX II vs AX6 II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B650M-A AX II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre Asus PRIME B650M-A AX6 II",
+      "brand": "ASUS",
+      "mpn": "B650MAAX6II",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "PRIME B650M-A WIFI II vs AX6 II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B650M-A WIFI II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME B650M-A AX6 II, AM5, DDR5, WiFi",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387607268"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "PRIME B760M-K D4",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-K D4",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "cclink",
+      "rawTitle": "ASUS PRIME B760M-K D4 LGA1700 DDR4",
+      "brand": "ASUS",
+      "mpn": "90MB1DS0M1EAY0",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRO A520M-C II/CSM vs PRIME A520M-A II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRO A520M-C II/CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME A520M-A II MicroATX AMD CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081135395"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B650M-A CSM vs B650M-A AX6 II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B650M-A CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre Asus PRIME B650M-A AX6 II",
+      "brand": "ASUS",
+      "mpn": "B650MAAX6II",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B450M-A PRO MAX vs PRO MAX II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI B450M-A PRO MAX",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B450M-A PRO MAX II Socket AM4",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377125291"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "MAG B650M Mortar WiFi vs B650M Gaming Plus WiFi",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI MAG B650M MORTAR WIFI",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B650M GAMING PLUS WIFI",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377180955"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRO B650M-A WIFI vs B650M Gaming Plus WIFI",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI PRO B650M-A WIFI",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B650M GAMING PLUS WIFI",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377180955"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B650M-A II-CSM vs B650M-A AX6 II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B650M-A II-CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre Asus PRIME B650M-A AX6 II",
+      "brand": "ASUS",
+      "mpn": "B650MAAX6II",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME H610M-A D4 CSM vs H610M-K D4-CSM",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME H610M-A D4 CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081565529"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "ASRock H610M-HDV (DDR4) vs H610M-HDV/M.2 D5",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASROCK H610M-HDV",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "PLACA MADRE ASROCK H610M HDV M2 D5 sLGA1700",
+      "brand": "ASRock",
+      "mpn": "H610M",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "TUF B550M-Plus vs PRIME B550M-K ARGB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS TUF GAMING B550M-PLUS",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B550M-K ARGB",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "PRIME A520M-A II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME A520M-A II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME A520M-A II MicroATX AMD CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081135395"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "TUF B550M-Plus WIFI II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS TUF GAMING B550M-PLUS WIFI II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS TUF GAMING B550M Plus WIFI II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081305705"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B550M DS3H vs B550M K",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B GIGABYTE B550M DS3H",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre Gigabyte B550M K DDR4",
+      "brand": "Gigabyte",
+      "mpn": "B550MKUD",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME H610M-E D4-CSM vs H610M-K D4-CSM",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME H610M-E D4-CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081565529"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "low",
+    "note": "PRIME H610M-K D4 vs H610M-K D4-CSM",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME H610M-K D4",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081565529"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "ASRock A520M/AC vs A520M Pro4",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASROCK A520M/AC",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASROCK A520M PRO4",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME A520M-A vs A520M-A II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME A520M-A",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "central-gamer",
+      "rawTitle": "Placa Madre Asus Prime A520M-A II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "PRIME A520M-K",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME A520M-K",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Placa Madre AMD PRIME A520M-K (sAM4)",
+      "brand": "ASUS",
+      "mpn": "90MB1500M0EAY0",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B550M-A/CSM vs B550M-A AC",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B550M-A/CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "central-gamer",
+      "rawTitle": "Placa Madre ASUS Prime B550M-A AC",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "ADATA Legend 800 1TB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO ADATA LEGEND 800 1TB NVME",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Unidad SSD ADATA Legend 800 NVMe 1TB",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085940223"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "Gammix S70 Blade vs Legend 710",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO ADATA GAMMIX S70 BLADE 512GB NVME",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD ADATA LEGEND 710 512GB PCIE Gen3 M.2 NVMe",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085937834"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "NV2 vs Fury Renegade",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO KINGSTON NV2 2TB SSD PCIe 4.0 NVMe GEN 4×4",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD M.2 NVME Kingston FURY Renegade 2 TB",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617324464"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "NV1 vs Fury Renegade",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO DURO SSD NVMe KINGSTON NV1 1TB",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD M.2 NVME Kingston FURY Renegade 1 TB",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617324556"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "low",
+    "note": "Patriot 480GB (P210) vs Patriot Elite 480GB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO DURO SSD PATRIOT 480GB SATA III 2.5\"",
+      "brand": "Patriot",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO DURO SSD PATRIOT ELITE 480GB SATA III 2.5\"",
+      "brand": "Patriot",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "ADATA Premier vs XPG Spectrix D35G",
+    "a": {
+      "store": "etchile",
+      "rawTitle": "ADATA Memoria RAM 8GB DDR4 3200 (22) U-DIMM 1.2v Desktop",
+      "brand": "ADATA",
+      "mpn": "AD4U32008GB22SGN",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Spectrix D35g RGB DDR4 3200MHz 8GB Blanco",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085943293"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "GP-UD850GM PG5 V2",
+    "a": {
+      "store": "etchile",
+      "rawTitle": "Gigabyte PSU Fuente De Poder UD850GM PG5 V2 850W PCI-EX GEN 5.1 ATX 3.1 80 Plus GOLD Full Modular",
+      "brand": "Gigabyte",
+      "mpn": "GPUD850GMPG5V2",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte GP-UD850GM PG5 V2 850W 80+ Gold",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331557072"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "Kingston NV3 2TB (SNV3S/2000G = 2280)",
+    "a": {
+      "store": "etchile",
+      "rawTitle": "Kingston Unidad de Estado Sólido SSD 2TB NV3 PCIe 4.0 NVMe M.2 6000MB/s",
+      "brand": "Kingston",
+      "mpn": "SNV3S2000G",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro Kingston NV3 M.2 2280 2TB PCIe 4.0 x4",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617344783"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "TUF Gaming 1000G vs ROG Strix 1000G",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "ASUS TUF Gaming 1000G 80 PLUS Gold",
+      "brand": "ASUS",
+      "mpn": "TUFGAMING1000G",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER ASUS ROG STRIX-1000G 1000W 80 PLUS GOLD F.MODULAR",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "NV3 1TB 2230 vs 2280",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Kingston SSD 1TB NV3 M.2 2230 NVMe PCIe 4.0",
+      "brand": "Kingston",
+      "mpn": "SNV3SM31T0",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "SSD Kingston NV3 M.2 2280 Nvme 4.0 Gen 4×4 Ultra Fast 1TB",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617344790"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "KC600 2TB",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Kingston KC600 SSD 2TB SATA 6Gb/s AES de 256 bits",
+      "brand": "Kingston",
+      "mpn": "SKC6002048G",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO SSD KINGSTON KC600 2TB SATA 2.5 SATA 3 3D TLC",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "KC600 1TB",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Kingston KC600 SSD 1TB SATA 6Gb/s AES de 256 bits",
+      "brand": "Kingston",
+      "mpn": "SKC6001024G",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO SSD KINGSTON KC600 1TB SATA 2.5 SATA 3 3D TLC",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "KC600 256GB",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Kingston KC600 SSD 256GB SATA 6Gb/s AES de 256 bits",
+      "brand": "Kingston",
+      "mpn": "SKC600256G",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO SSD KINGSTON KC600 256GB SATA 2.5 SATA 3 3D TLC",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "NV3 500GB 2230",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Kingston SSD 500GB NV3 M.2 2230 NVMe PCIe 4.0",
+      "brand": "Kingston",
+      "mpn": "SNV3SM3500G",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD Kingston NV3, 500GB M.2 2230 PCIe 4.0 NVMe",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617349962"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "GP-UD850GM vs UD850GM PG5 V2",
+    "a": {
+      "store": "progaming",
+      "rawTitle": "Fuente de Poder Gigabyte GP-UD850GM 850W 80PLUS Gold Modular",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte GP-UD850GM PG5 V2 850W 80+ Gold",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331557072"
+    }
+  },
+  {
+    "source": "review",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "i5-12400",
+    "a": {
+      "store": "central-gamer",
+      "rawTitle": "Procesador Intel Core i5-12400",
+      "brand": "Intel",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "INTEL CPU CORE I5 12400 2.5GHz",
+      "brand": "Intel",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Lancer Blade White sin decir RGB vs Lancer Blade RGB blanca",
+    "a": {
+      "store": "central-gamer",
+      "rawTitle": "Memoria Ram XPG Lancer Blade White 16GB DDR5 6000Mhz",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Lancer Blade RGB DDR5 16GB 6000 MTs Blanco",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711658152299"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "A520M-A PRO vs A520M PRO",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Placa Madre AMD MSI A520M-A PRO",
+      "brand": "MSI",
+      "mpn": "9117C96065",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI A520M PRO, AM4, Micro-ATX",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072755492"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "low",
+    "note": "AX5U5600C468G-SLABRBK (RGB) vs Lancer Blade negra sin RGB",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Memoria RAM DDR5 8GB 5600 MHz UDIMM BLACK RGB",
+      "brand": "ADATA",
+      "mpn": "AX5U5600C468GSLABRBK",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Lancer Blade DDR5 8GB 5600MHz Negro",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085947987"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Corsair 1500W Platinum CP-9020309 vs HX1500i: revisión no verificable",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Fuente de poder 1500W 80 Plus Platinum",
+      "brand": "Corsair",
+      "mpn": "CP9020309NA",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Corsair HX1500i F. Modular UltraLow Platinum",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006697497"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ROG Thor 1200W Platinum III",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Fuente de Poder ROG Thor 1200W Platinum III",
+      "brand": "ASUS",
+      "mpn": "90YE00V2B0SA00",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder ASUS ROG Thor 1200W Platinum III",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387610510"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "KF436C18BB/16 (GTIN de la otra coincide)",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Memoria RAM DDR4 16GB 3600MHz Beast",
+      "brand": "Kingston",
+      "mpn": "KF436C18BB16",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 16GB 3600Mhz DDR4 CL18",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617319767"
+    }
+  },
+  {
+    "source": "review",
+    "category": "cpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "pack Ryzen 7 5700 + placa vs procesador solo",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Pack AMD Ryzen 7 5700 + ASUS A520M-K",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "tectec",
+      "rawTitle": "Procesador AMD Ryzen 7 5700 - Socket AM4",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B550M H ARGB vs B550M K",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre sAM4 (AMD) - Gigabyte B550M H ARGB - 2x DDR4 - 1x M.2 - DisplayPort/HDMI - m-ATX",
+      "brand": "Gigabyte",
+      "mpn": "B550MHARGB",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B GIGABYTE B550M K",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "Prime B760M-A AX6 II vs TUF B760M-Plus WIFI II",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre LGA s1700 (Intel) - Asus Prime B760M-A AX6 II - 4x DDR5 - 3x M.2- Wi-Fi 6 - DisplayPort/HDMI - m-ATX",
+      "brand": "ASUS",
+      "mpn": "PRIMEB760MAAX6II",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS TUF GAMING B760M-PLUS WIFI II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B650M Aorus Elite AX vs B650M D3HP AX",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre sAM5 (AMD) - Gigabyte B650M AORUS Elite AX - 4x DDR5 - 2x M.2 - Wi-Fi 6E - DisplayPort/HDMI - m-ATX",
+      "brand": "Gigabyte",
+      "mpn": "B650MAORUSELITEAX",
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre sAM5 (AMD) - Gigabyte B650M D3HP AX - 4x DDR5 - 2x M.2- Wi-Fi 6E - DisplayPort/HDMI - m-ATX",
+      "brand": "Gigabyte",
+      "mpn": "B650MD3HPAX",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "KF432S20IB/8 (el MPN está en el título de la otra)",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM SODIMM 8 GB - DDR4 3200 MT/s - Kingston Fury (KF432S20IB/8)",
+      "brand": "Kingston",
+      "mpn": "KF432S20IB8",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON HYPERX 8GB 3200MHz DDR4 SODIMM KF432S20IB/8",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Cougar Atlas 650 vs Atlas 650 (2024), MPN distinto",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Fuente de Poder 650W - Cougar Atlas 650 - 80 Plus Bronze",
+      "brand": "Cougar",
+      "mpn": "31AA065001P01",
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Fuente de Poder 650W - Cougar Atlas 650 (2024) - 80 Plus Bronze",
+      "brand": "Cougar",
+      "mpn": "31AL065001P01",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "different",
+    "confidence": "low",
+    "note": "Cougar Atlas 750 (2024) vs Atlas 750 sin año",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Fuente de Poder 750W - Cougar Atlas 750 (2024) - 80 Plus Bronze",
+      "brand": "Cougar",
+      "mpn": "31AL075001P01",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Cougar ATLAS 750W 80 PLUS Bronze",
+      "brand": "Cougar",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "ValueRAM KVR32N22D8/16 vs HyperX Fury Black",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 16 GB - DDR4 3200 MT/s - Kingston (KVR32N22D8/16)",
+      "brand": "Kingston",
+      "mpn": "KVR32N22D816",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON HYPERX FURY BLACK 16GB DDR4 3200MHz",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Lancer Blade RGB White vs Lancer Blade White sin decir RGB",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 16 GB - DDR5 6000 MT/s - XPG Lancer Blade RGB White - Intel XMP/AMD EXPO (AX5U6000C4816G-SLABRWH)",
+      "brand": "ADATA",
+      "mpn": "AX5U6000C4816GSLABRWH",
+      "gtin": null
+    },
+    "b": {
+      "store": "central-gamer",
+      "rawTitle": "Memoria Ram XPG Lancer Blade White 16GB DDR5 6000Mhz",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Vengeance RGB 16GB 6000 CMH16GX5M1D6000Z38 vs GTIN sin verificar",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 16 GB DDR5 6000 MT/s - Corsair Vengeance RGB - Intel XMP/AMD EXPO (CMH16GX5M1D6000Z38)",
+      "brand": "Corsair",
+      "mpn": "CMH16GX5M1D6000Z38",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "RAM Corsair CORSAIR Vengeance RGB DDR5 RAM 16GB 6000MHz",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840440405344"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "CMH32GX5M2B5600Z40 = Vengeance RGB EXPO 32GB 5600",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 32 GB (Kit 2 x 16 GB) - DDR5 5600 MT/s - Corsair Vengeance RGB - Intel XMP/AMD EXPO (CMH32GX5M2B5600Z40)",
+      "brand": "Corsair",
+      "mpn": "CMH32GX5M2B5600Z40",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA KIT CORSAIR VEGEANCE 32GB (2X16GB) 5600MHz RGB AMD EXPO",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KCP556UD8-32 vs Fury Beast Black EXPO",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 32 GB - DDR5 5600MT/s - Kingston (KCP556UD8-32)",
+      "brand": "Kingston",
+      "mpn": "KCP556UD832",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria Ram 32GB DDR5 5600MT/s CL36 FURY Beast Black EXPO",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617331752"
+    }
+  },
+  {
+    "source": "review",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASUS Prime RX 9060 XT OC 16GB",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "Tarjeta de Video ASUS Prime Radeon RX 9060 XT OC 16GB GDDR6",
+      "brand": "ASUS",
+      "mpn": "PRIMERX9060XTO16G",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASUS Prime Radeon RX 9060 XT OC, 16GB GDDR6",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387998854"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "KF560C36BBE2AK2-32 vs Fury Beast Black RGB 32GB sin MPN",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "Kit Memoria RAM PC 32GB 6000MT/s DDR5 CL36 DIMM (Kit of 2) FU",
+      "brand": "Kingston",
+      "mpn": "KF560C36BBE2AK232",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast Black RGB 32GB DDR5 6000 MTs",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617342826"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "Hiksemi Future Core vs Wave",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "Unidad SSD HIKSEMI FUTURE CORE 1TB, PCIe Gen5x4 NVMe 2.0, M.2 2280, Lec.14300B/s, Esc.8800MB/s, Bulk",
+      "brand": "Hikvision",
+      "mpn": "HSSSDFUTURECORE1024G",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD M.2 Hiksemi Wave 1TB NVMe PCle 3.0",
+      "brand": "Hikvision",
+      "mpn": null,
+      "gtin": "06974202725723"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ROG Strix 1000W Platinum",
+    "a": {
+      "store": "mybox",
+      "rawTitle": "Fuente de Poder Asus ROG STRIX 1000W Platinum",
+      "brand": "ASUS",
+      "mpn": "ROGSTRIX1000WPL",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder ASUS ROG Strix 1000W Platinum",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387594452"
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "ASUS Prime B840M-A WIFI vs MSI PRO B840M-P WIFI6E",
+    "a": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre Asus Prime B840M-A WIFI",
+      "brand": "ASUS",
+      "mpn": "B840MAWIFIASUS",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI PRO B840M-P WIFI6E",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ROG Thor 1200W Platinum III",
+    "a": {
+      "store": "mybox",
+      "rawTitle": "Fuente de Poder Asus ROG Thor 1200W Platinum III",
+      "brand": "ASUS",
+      "mpn": "ROGTHOR1200WPIII",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder ASUS ROG Thor 1200W Platinum III",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387610510"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KTH-PL426E/16G (servidor HP) vs HyperX Fury",
+    "a": {
+      "store": "todoclick",
+      "rawTitle": "Memoria RAM Kingston 16 GB DDR4 DIMM 2666 MHz PC4-21300 CL19 1.2 V",
+      "brand": "Kingston",
+      "mpn": "KTHPL426E16G",
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON HYPERX FURY DDR4 2666 MHz 16GB DDR4",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "A520M DS3H vs A520M DS3H V2",
+    "a": {
+      "store": "todoclick",
+      "rawTitle": "Placa Madre Gigabyte A520M DS3H AM4 Ryzen DDR4, HDMI, DVI-D, PCI-e 3.0, M.2, USB 3.2 Micro-ATX (A520M-DS3H)",
+      "brand": "Gigabyte",
+      "mpn": "A520MDS3H",
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte A520M DS3H V2 AM4 DDR4 mATX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331854690"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Antec Mega 1000W vs NE1000G M",
+    "a": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER ANTEC MEGA 1000W 80+ GOLD FULL MODULAR ATX 3.1 PCIEX 5.1 P/N 0-761345-20188-9",
+      "brand": "Antec",
+      "mpn": null,
+      "gtin": "00761345201889"
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER ANTEC 1000w NE1000G M FULL MODULAR ATX3.0 80 PLUS GOLD EC 0-761345-11393-9",
+      "brand": "Antec",
+      "mpn": null,
+      "gtin": "00761345113939"
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "GameMax GM-800B blanca vs negra",
+    "a": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER GAMEMAX 800W 80 PLUS BRONZE MODULAR WHITE P/N GM-800B WH",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER GAMEMAX 800W 80 PLUS BRONZE MODULAR P/N GM-800B BK",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KCP432SD8/16 vs KVR32S22S8/16 (otro SKU)",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 16GB DDR4 3200MHz SO-DIMM CL22 Non-ECC 1.2V 260p - Kingston",
+      "brand": "Kingston",
+      "mpn": "KCP432SD816",
+      "gtin": "00740617310986"
+    },
+    "b": {
+      "store": "nuevatec",
+      "rawTitle": "Kingston KVR32S22S8/16 (1 x 16GB | SO-DIMM DDR4-3200)",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KCP556US6-8",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 8GB DDR5 5600MHz DIMM CL46 Non-ECC 1.2v 288p - Kingston",
+      "brand": "Kingston",
+      "mpn": "KCP556US68",
+      "gtin": "00740617334319"
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "MEMORIA DIMM KINGSTON DDR5 8GB 5600MT/S - KCP556US6-8",
+      "brand": "Kingston",
+      "mpn": "KCP556US68",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KF556C36BBEAK2-64",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 64GB (2*32GB) DDR5 5600MHz DIMM CL36 Non-ECC 1.25v 288p FuryBeastRG",
+      "brand": "Kingston",
+      "mpn": "KF556C36BBEAK264",
+      "gtin": "00740617331929"
+    },
+    "b": {
+      "store": "sandos",
+      "rawTitle": "Memoria KINGSTON 64GB 5600MT/s DDR5 CL36 DIMM FURY",
+      "brand": "Kingston",
+      "mpn": "KF556C36BBEAK264",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "hdd",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN WD80EFPX",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Disco Duro Western Digital Red Plus 8TB 3.5\" 5640RPM SATA III 6GB/s 256MB p/NAS",
+      "brand": "Western Digital",
+      "mpn": "WD80EFPX",
+      "gtin": "00718037899817"
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "DISCO DURO WESTERN DIGITAL RED 8TB 256mb 5640rpm P/N WD80EFPX",
+      "brand": "Western Digital",
+      "mpn": "WD80EFPX",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "psu",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "UD850GM ICE PG5 vs Gigabyte 850W Gold sin modelo",
+    "a": {
+      "store": "vgamers",
+      "rawTitle": "Fuente de Poder GIGABYTE UD850GM ice PG5 850W 80+ Gold Full Modular PCIe 5",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331553487"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Gigabyte 850W 80+ Gold Full Modular",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331552640"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KTD-PE556E/16G ECC vs Non-ECC",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 16GB DDR5 5600MHz DIMM CL46 ECC 1.1V 288p - Kingston",
+      "brand": "Kingston",
+      "mpn": "KTDPE556E16G",
+      "gtin": "00740617351750"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston 16GB DDR5 5600MHz DIMM CL46 Non-ECC",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617334357"
+    }
+  },
+  {
+    "source": "review",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KF560R32RBE-32",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Kingston Fury Renegade Pro KF560R32RBE-32 (1 x 32 GB | DIMM DDR5-6000 ECC)",
+      "brand": "Kingston",
+      "mpn": "KF560R32RBE32",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Memoria ram 32GB DDR5 6000Mhz CL32 RDimm Kingston Fury Renegade Pro Black Expo",
+      "brand": "Kingston",
+      "mpn": "KF560R32RBE32",
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "GameMax GS-750G vs GZ-750G",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX GS-750G 80PLUS GOLD 750W F.MODULAR ATX 3.1 PCIe 5.1",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX GZ-750G 80PLUS GOLD 750W F.MODULAR ATX 3.1 PCIe 5.1",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "GameMax GE-650 vs GE-550",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX GE-650 80PLUS BRONZE 650W ATX 3.1 PCIe 5.1",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX GE-550 80PLUS BRONZE 650W ATX 3.1",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "GameMax VP-500 RGB vs VP-500 ECO",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX VP-500 RGB 500W 80PLUS BRONZE",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX VP-500 ECO 500W 80 PLUS BRONZE",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "GameMax GP-500 vs VP-500 RGB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX GP-500 500W 80PLUS BRONZE",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX VP-500 RGB 500W 80PLUS BRONZE",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "ROG Loki 850W vs ROG Thor 850W",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER ASUS ROG LOKI SFX-L 850W 80PLUS PLATINUM F.MODULAR",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER ASUS ROG THOR 850W Platinum II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "Cooler Master V850 Platinum vs XG850 Platinum",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER COOLER MASTER V850 PLATINO 850W 80 PLUS PLATINUM F/MODULAR",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Cooler Master XG 850W 80 Platinum ARGB",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": "04719512112151"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Ryzen 7 5800X3D",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Procesador AMD Ryzen 7 5800X3D, 8-Core 16-Thread, 3.4GHz",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": "00730143318471"
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "CPU AMD Ryzen 7 5800X3D 3.4-4.5GHz Tur 96MB L3 Skt AM4 Sin FAN/G Aniv Edition",
+      "brand": "AMD",
+      "mpn": "100100000651POF",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Ryzen 5 8600G",
+    "a": {
+      "store": "tectec",
+      "rawTitle": "Procesador AMD Ryzen 5 8600G | AM5 | 6 Núcleos 12 Hilos | 16MB Caché L3 | Gráficos Integrados",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "sandos",
+      "rawTitle": "Procesador AMD Ryzen 5 8600G, AM5, 6 Nucleos, 12 Hilos, Gráficos Radeon 760M",
+      "brand": "AMD",
+      "mpn": "100100001237BOX",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Ryzen 5 7600",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "AMD Ryzen 5 7600 3.8 GHz AM5",
+      "brand": "AMD",
+      "mpn": "100100001015BOX",
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "CPU AMD - Socket AM5 - Ryzen 5 7600 - 3.8GHZ - 6 Core (100-100001015BOX)",
+      "brand": "AMD",
+      "mpn": "100100001015BOX",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Xtech Phobos",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Xtech Gaming Series PHOBOS Gabinete ATX Vidrio templado",
+      "brand": "Xtech",
+      "mpn": "XTGMR4",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "GABINETE XTECH PHOBOS XT-GMR4 - ATX/MICROATX - BLACK - SIDE GLASS WINDOW P/N XT-GMR4",
+      "brand": "Xtech",
+      "mpn": "XTGMR4",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI 4060 Ti Gaming X 8G",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta Gráfica MSI GeForce RTX 4060 Ti GAMING X 8G GDDR6",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377102544"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "TARJETA DE VIDEO MSI RTX 4060 Ti GAMING X 8G",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Elite 490",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "ELITE 490 - 3x ARGB Fans",
+      "brand": "Cooler Master",
+      "mpn": "E490KHNNS00",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Gabinete Cooler Master Elite 490 - Negro",
+      "brand": "Cooler Master",
+      "mpn": "E490KHNNS00",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "GameMax GP-750 (categoría gabinete por error de la tienda)",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX GP-750 750W 80PLUS BRONZE",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Fuente de Poder 750W - GameMax GP-750 - 80 Plus Bronze",
+      "brand": "GameMax",
+      "mpn": "GP750",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "low",
+    "note": "Corsair RM1000e (no se sabe si 2023 o 2025)",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER CORSAIR RM1000E 80 PLUS GOLD 1000W F.MODULAR",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Fuente de Poder 1000W 80Plus Gold RM1000e Fully Modular ATX 3.1",
+      "brand": "Corsair",
+      "mpn": "CP9020297NA",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Ryzen 5 5600GT",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Procesador AMD Ryzen 5 5600GT 6 Nucleos 36 GHz AM4",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": "00730143316002"
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "CPU AMD Ryzen 5 5600GT (AM4)",
+      "brand": "AMD",
+      "mpn": "100100001488BOX",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "gpu",
+    "label": "different",
+    "confidence": "high",
+    "note": "MSI 5060 Ventus 2X OC negra vs White",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI GeForce RTX 5060 8G VENTUS 2X OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377344272"
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Tarjeta de Video Nvidia GeForce RTX 5060 8G VENTUS 2X OC WHITE",
+      "brand": "MSI",
+      "mpn": "912V537018",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case_fan",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN GameMax FN12A",
+    "a": {
+      "store": "nuevatec",
+      "rawTitle": "GAMEMAX VENTILADOR 12CM PWM ARGB FN12A-N2 WHITE",
+      "brand": "GameMax",
+      "mpn": "FN12AN2WHITE",
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Ventilador 12 cm - GameMax PWM ARGB FN12A-N2 - Blanco",
+      "brand": "GameMax",
+      "mpn": "FN12AN2WHITE",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN A620M H",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte A620M H AM5 DDR5",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331855512"
+    },
+    "b": {
+      "store": "vgamers",
+      "rawTitle": "Placa Madre Gigabyte A620M H AMD Socket AM5, DDR5, M-ATX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331855512"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "MSI PRO H610M-G DDR4 vs H610M-G DDR5",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO H610M-G DDR4 LGA 1700 INTEL",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072925024"
+    },
+    "b": {
+      "store": "nuevatec",
+      "rawTitle": "MSI PRO H610M-G, LGA 1700, DDR5",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu_cooler",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Iceburg 120",
+    "a": {
+      "store": "nuevatec",
+      "rawTitle": "GAMEMAX ICEBURG 120 INFINITY WATER COOLING WHITE",
+      "brand": "GameMax",
+      "mpn": "ICEBURG120INFINITYWHITE",
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Refrigeración Líquida CPU - GameMax Iceburg 120 Infinity Blanco - 120 mm - 800 - 2000 rpm - 32 dB - 62.82 CFM",
+      "brand": "GameMax",
+      "mpn": "ICEBURG120INFINITYWHITE",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN TUF Z790-Plus WIFI",
+    "a": {
+      "store": "pc-express",
+      "rawTitle": "Placa Madre ASUS TUF Gaming Z790-PLUS WIFI DDR5 ATX, 90MB1D80-M1EAY0",
+      "brand": "ASUS",
+      "mpn": "TUFGAMINGZ790PLUSWIFI",
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre LGA s1700 (Intel) - Asus TUF Gaming Z790-PLUS WIFI - 4x DDR5 - 4x M.2 - Wi-Fi 6E - DisplayPort/HDMI - ATX",
+      "brand": "ASUS",
+      "mpn": "TUFGAMINGZ790PLUSWIFI",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN Cougar Duoface RGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Gabinete Cougar Duoface RGB Mid Tower Negro",
+      "brand": "Cougar",
+      "mpn": null,
+      "gtin": "04710483774409"
+    },
+    "b": {
+      "store": "valrod",
+      "rawTitle": "Gabinete Gamer Cougar Duoface RGB Black 3 ventiladores ARGB incluidos",
+      "brand": "Cougar",
+      "mpn": "385ZD100001",
+      "gtin": "04710483774409"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast Black sin RGB vs Fury Beast RGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast Black 8GB 5200MHz DDR5 CL40",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617325966"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY BEAST DDR5 RGB 5200MHz 8GB CL40",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "Cougar OmnyX blanco vs negro",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Gabinete (Modular) - Cougar OmnyX - S/Fuente - ATX - Blanco - Incluye 4 Fan x 160 mm 2 Fan ARGB frontales y 2 Fan ARGB posteriores",
+      "brand": "Cougar",
+      "mpn": "382WA300002",
+      "gtin": null
+    },
+    "b": {
+      "store": "valrod",
+      "rawTitle": "Gabinete Gamer Cougar OMNYX BLACK 4 ventiladores 160 mm ARGB incluidos",
+      "brand": "Cougar",
+      "mpn": "382WA300001",
+      "gtin": "04710483779459"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN MacroVIP 240GB",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Unidad SSD 240GB Sata III 2.5\"",
+      "brand": "Macrovip",
+      "mpn": "MV240GB",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "SSD MACROVIP SATA 3 2.5\"  SSD 240GB - MV240GB",
+      "brand": "Macrovip",
+      "mpn": "MV240GB",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu_cooler",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN ROG Ryuo IV 360",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "ASUS ROG RYUO IV 360 ARGB White",
+      "brand": "ASUS",
+      "mpn": "90RC01N2B0AAY0",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "ASUS Cooling system - 90RC01N2-B0AAY0",
+      "brand": "ASUS",
+      "mpn": "90RC01N2B0AAY0",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu_cooler",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN Redragon CCW3000",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Refrigeración Líquida Redragon CCW3000 Effect X, Negro",
+      "brand": "Redragon",
+      "mpn": null,
+      "gtin": "06950376781062"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Refrigeración Líquida Redragon CCW3000 Effect X, Negro",
+      "brand": "Redragon",
+      "mpn": null,
+      "gtin": "06950376781062"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI Spatium M450 1TB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO SSD NVME M.2 MSI SPATIUM M450 1TB M.2 PCIe 4.0",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "SSD M.2 (2280) - 1 TB - MSI Spatium M450 - NVMe PCIe 4.0 x4 (SPATIUM M450 PCIe 4.0 NVMe M.2)",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "00824142304174"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast RGB vs KF436C17BB/8 sin RGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast RGB DDR4 8GB 3600Mhz",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617337464"
+    },
+    "b": {
+      "store": "cclink",
+      "rawTitle": "Kingston FURY Beast 8GB DDR4 3600 MHz PC4-28800",
+      "brand": "Kingston",
+      "mpn": "KF436C17BB8",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN Antec ST10M",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "Gabinete Antec ST10M Negro",
+      "brand": "Antec",
+      "mpn": null,
+      "gtin": "00761345102353"
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "GABINETE ANTEC ST10M NEGRO P/N 0-761345-10235-3",
+      "brand": "Antec",
+      "mpn": null,
+      "gtin": "00761345102353"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN ESGAMING Y03",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Gabinete Gamer ESGAMING Y03-BK - Negro, E-ATX",
+      "brand": "EsGaming",
+      "mpn": null,
+      "gtin": "04012025090030"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Gabinete Gamer ESGAMING Y03-BK - Negro, E-ATX",
+      "brand": "EsGaming",
+      "mpn": null,
+      "gtin": "04012025090030"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN ESGAMING Mitra Pro",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Gabinete ESGAMING Gamer Mitra PRO 1101C, Mid Tower, ATX",
+      "brand": "EsGaming",
+      "mpn": null,
+      "gtin": "04012026060056"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Gabinete ESGAMING Gamer Mitra PRO 1101C, Mid Tower, ATX",
+      "brand": "EsGaming",
+      "mpn": null,
+      "gtin": "04012026060056"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "B840M Aorus Elite WIFI6E",
+    "a": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre Gigabyte B840M Aorus ELITE WIFI6E",
+      "brand": "Gigabyte",
+      "mpn": "B840MAELITEWIFI6E",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "PLACA MADRE GIGABYTE AORUS B840M ELITE WIFI 6E SAM5",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KCP432ND8/32",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "32GB DDR4 3200MT/s Non-ECC Unbuffered DIMM",
+      "brand": "Kingston",
+      "mpn": "KCP432ND832",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 32GB DDR4 3200MHz DIMM CL22 Non-ECC 1.2v 288p - Kingston",
+      "brand": "Kingston",
+      "mpn": "KCP432ND832",
+      "gtin": "00740617311457"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KF556S40IB-16",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM SODIMM 16 GB - DDR5 5600 MT/s - Kingston Fury Impact Black (KF556S40IB-16)",
+      "brand": "Kingston",
+      "mpn": "KF556S40IB16",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 16GB DDR5 5600MHz SO-DIMM CL40 Non-ECC 1.1v 262p KingstonFURYImpact",
+      "brand": "Kingston",
+      "mpn": "KF556S40IB16",
+      "gtin": "00740617331677"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Gigabyte RX 9070 Gaming OC",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte Radeon RX 9070 Gaming OC 16G",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331355531"
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Tarjeta de Video Gigabyte Radeon RX 9070 Gaming OC 16GB GDDR6",
+      "brand": "Gigabyte",
+      "mpn": "GVR9070GAMINGOC16GD",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI PRO B850M-B GEN4",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO B850M-B GEN4, Micro-ATX, AM5, DDR5",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377398602"
+    },
+    "b": {
+      "store": "cclink",
+      "rawTitle": "MSI PRO B850M-B GEN4 DDR5 AM5 mATX",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "00824142446348"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "Vengeance SODIMM 16GB 3200 CL22",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Corsair Vengeance 16GB x 3200Mhz SODIMM CL22",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006642299"
+    },
+    "b": {
+      "store": "etchile",
+      "rawTitle": "Corsair Memoria RAM VENGEANCE Series 16 GB (1 X 16 GB) DDR4 SODIMM 3200 MHz CL22",
+      "brand": "Corsair",
+      "mpn": "CMSX16GX4M1A3200C22",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASUS Prime AP-750G",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder ASUS Prime 750W Gold AP-750G",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387193037"
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Fuente de poder 750W 80 Plus Gold AP-750G",
+      "brand": "ASUS",
+      "mpn": "90YE00U1B0SA00",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Dell S4510",
+    "a": {
+      "store": "todoclick",
+      "rawTitle": "Unidad de Estado Sólido Dell S4510, SSD SATA 1.92TB, Lectura Intensiva 6Gbps (400-BDQS)",
+      "brand": "Dell",
+      "mpn": "400BDQS",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Disco SSD 1.92TB interno | Dell S4510 SATA 400-BDQS",
+      "brand": "Dell",
+      "mpn": "400BDQS",
+      "gtin": "00884116349761"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "KC3000 2TB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO KINGSTON KC3000 SSD 2TB M.2 PCIe 4.0 NVMe",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "todoclick",
+      "rawTitle": "Unidad de estado sólido Kingston KC3000 de 2TB (M.2 NVMe, PCIe 4.0, Hasta 7.000 MB/s)",
+      "brand": "Kingston",
+      "mpn": "SKC3000D2048G",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "TUF Z890-Plus WIFI",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS TUF GAMING Z890-PLUS WIFI, LGA 1851, ATX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387763926"
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre LGA s1851 (Intel) - Asus TUF Gaming Z890-PLUS WIFI - 4x DDR5 - 4x M.2 - Wi-Fi 7 - USB-C/DisplayPort/HDMI - ATX",
+      "brand": "ASUS",
+      "mpn": "TUFGAMINGZ890PLUSWIFI",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN Pure Power 13 M 550W",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder be quiet! PURE POWER 13 M 550W 80 PLUS Gold",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052192160"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Fuente de Poder be quiet! PURE POWER 13 M 550W 80 PLUS Gold",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052192160"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu_cooler",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN Redragon CCW-1018",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Refrigeración Líquida Redragon CCW-1018 - 360 - ARGB",
+      "brand": "Redragon",
+      "mpn": null,
+      "gtin": "06950376725486"
+    },
+    "b": {
+      "store": "vgamers",
+      "rawTitle": "Refrigeración Líquida Redragon CCW-1018 ARGB 360mm Intel LGA1700 AMD AM5 Black",
+      "brand": "Redragon",
+      "mpn": null,
+      "gtin": "06950376725486"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KF556C36BBE-64",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Kingston Fury - DDR5 SDRAM - 5600 MHz - CL36 - 64GB Beast Black",
+      "brand": "Kingston",
+      "mpn": "KF556C36BBE64",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 64GB DDR5 5600MHz DIMM CL36 Non-ECC 1.25v 288p KingstonFuryBeastBlac",
+      "brand": "Kingston",
+      "mpn": "KF556C36BBE64",
+      "gtin": "00740617350111"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Core Ultra 9 285K",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Procesador Intel Core Ultra 9 285K hasta 5.7GHz, LGA1851",
+      "brand": "Intel",
+      "mpn": null,
+      "gtin": "05032037281928"
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Procesador Intel Core Ultra 9 285K  3.7 GHz - 24-core - LGA1851",
+      "brand": "Intel",
+      "mpn": "BX80768285K",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Elite 481",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Gabinete - Cooler Master Elite 481 Wood - S/Fuente - m-ATX - Blanco - Incluye 3 ventiladores ARGB de 120 mm",
+      "brand": "Cooler Master",
+      "mpn": "E481WHNNS00",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "GABINETE GAMER COOLER MASTER CASE ELITE 481 WHITE E481-WHNN-S00",
+      "brand": "Cooler Master",
+      "mpn": "E481WHNNS00",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASRock B850M Riptide WiFi",
+    "a": {
+      "store": "tectec",
+      "rawTitle": "Placa Madre AMD AM5 B850M | ASRock Riptide WiFi | mATX",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASROCK B850M RIPTIDE WIFI",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KCP432NS8/8",
+    "a": {
+      "store": "pc-express",
+      "rawTitle": "MEMORIA KINGSTON 8GB 3200MHZ DDR4 P/N KCP432NS8/8",
+      "brand": "Kingston",
+      "mpn": "KCP432NS88",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Memoria Ram 8GB DDR4 3200MT/s CL22 Dimm Kingston",
+      "brand": "Kingston",
+      "mpn": "KCP432NS88",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "different",
+    "confidence": "low",
+    "note": "Fury Beast Black RGB vs Fury Beast sin decir RGB (infor-ingen lo escribe cuando lo es)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston FURY Beast Black RGB 16GB DDR5 5200MHz",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617328639"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY BEAST DDR5 5200MHz 16GB CL40",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "psu",
+    "label": "same",
+    "confidence": "low",
+    "note": "MWE Gold 850 V2 (no dice si es modular)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Cooler Master MWE Gold 850 V2 ATX",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": "04719512142646"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER COOLERMASTER MWE 850W V2 80 PLUS GOLD",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KF556R28RBE2-32",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "Memoria Ram DDR5 32GB 5600MT/s CL28 Kingston FURY Renegade Pro RDIMM Black EXPO",
+      "brand": "Kingston",
+      "mpn": "KF556R28RBE232",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 32GB DDR5 5600MHz DIMM CL28 Reg ECC 1.35v 288p Kingston p/Servidor",
+      "brand": "Kingston",
+      "mpn": "KF556R28RBE232",
+      "gtin": "00740617342178"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KF432C16BB/16 sin RGB vs KF432C16BB2A/16 RGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 16GB DIMM DDR4 3200mhz",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617319859"
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 16GB DDR4 3200MHz DIMM CL16 Non-ECC 1.35v 288p Kingston FuryBeastRGB",
+      "brand": "Kingston",
+      "mpn": "KF432C16BB2A16",
+      "gtin": "00740617337518"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "MAG A850GLS vs A850GL",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder MSI MAG A850GLS PCIE5 850W 80 Plus Gold",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377297783"
+    },
+    "b": {
+      "store": "valrod",
+      "rawTitle": "Fuente de poder MSI  850 W MAG A850GL PCIE5 ATX 3.0",
+      "brand": "MSI",
+      "mpn": "MAGA850GLPCIE5",
+      "gtin": "04711377084253"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KCP556US8-16",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 16 GB - DDR5 5600 MT/s - Kingston  - Intel XMP/AMD EXPO (KCP556US8-16)",
+      "brand": "Kingston",
+      "mpn": "KCP556US816",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "Memoria UDIMM 16GB DDR5 5600MT/s Non-ECC Unbuffered DIMM",
+      "brand": "Kingston",
+      "mpn": "KCP556US816",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN SU650 480GB",
+    "a": {
+      "store": "etchile",
+      "rawTitle": "ADATA Unidad de Estado Sólido SSD 480GB SATA III 2.5 6Gb/s SU650 520MB/s",
+      "brand": "ADATA",
+      "mpn": "ASU650SS480GTR",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Disco SSD 480GB interno | ADATA SU650 Azul",
+      "brand": "ADATA",
+      "mpn": "ASU650SS480GTR",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "hdd",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN IronWolf 4TB",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Seagate Ironwolf 4TB 5400RPM 256MB Nas",
+      "brand": "Seagate",
+      "mpn": "ST4000VN006",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "DISCO DURO 3.5\" 4TB SEAGATE IRONWOLF PARA NAS P/N ST4000VN006",
+      "brand": "Seagate",
+      "mpn": "ST4000VN006",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KVR32N22S8/16",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Memoria RAM DDR4 16GB 3200MHz UDIMM",
+      "brand": "Kingston",
+      "mpn": "KVR32N22S816",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "MEMORIA KINGSTON 16GB 3200MHZ DDR4 P/N KVR32N22S8/16",
+      "brand": "Kingston",
+      "mpn": "KVR32N22S816",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B650M-A CSM vs PRO B650M-CT-CSM",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B650M-A CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "ASUS PRO B650M-CT-CSM",
+      "brand": "ASUS",
+      "mpn": "90MB1EC0M0EAYC",
+      "gtin": "04711387164518"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "GP-UD850GM",
+    "a": {
+      "store": "progaming",
+      "rawTitle": "Fuente de Poder Gigabyte GP-UD850GM 850W 80PLUS Gold Modular",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER GIGABYTE UD850GM 850W - 80+ GOLD -  AC 100/240V P/N GP-UD850GM",
+      "brand": "Gigabyte",
+      "mpn": "GPUD850GM",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "i5-12600K",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "INTEL CPU CORE I5 12600K 3.7GHz",
+      "brand": "Intel",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "todoclick",
+      "rawTitle": "Procesador ITL i5-12600K Core 3.7GHz 20MB LGA1700 12th Gen",
+      "brand": "Intel",
+      "mpn": "BX8071512600K",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASUS Dual RTX 5050 OC",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASUS Dual RTX 5050 OC GDDR6 8G",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711636178525"
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "ASUS Dual GeForce RTX 5050 8GB GDDR6 OC Edition [DUAL-RTX5050-O8G]",
+      "brand": "ASUS",
+      "mpn": "DUALRTX5050O8G",
+      "gtin": "00199291178526"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN KF556C36BBEK2-32",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 32 GB (Kit 2 x 16GB) - DDR5 5600 MT/s - Kingston Fury Beast - Intel XMP/ AMD EXPO - (KF556C36BBEK2-32)",
+      "brand": "Kingston",
+      "mpn": "KF556C36BBEK232",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Memoria ram 32GB DDR5 5600Mhz CL36 Dimm Kingston (2x 16GB)",
+      "brand": "Kingston",
+      "mpn": "KF556C36BBEK232",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu_cooler",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN MAG CoreLiquid A15 240",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "MSI MAG CORELIQUID A15 240",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "00824142381298"
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Refrigeración Líquida MAG A15 240",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "00824142381298"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN ASUS Dual RTX 3050",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Tarjeta de Video NVIDIA Dual GeForce RTX 3050 6GB OC Edition GDDR6",
+      "brand": "ASUS",
+      "mpn": "90YV0K60M0AA00",
+      "gtin": null
+    },
+    "b": {
+      "store": "sandos",
+      "rawTitle": "Tarjeta de Video ASUS Dual Nvidia GeForce RTX 3050 OC Edition 6GB GDDR6,14 Gbps, 96-bit, PCIe 4.0",
+      "brand": "ASUS",
+      "mpn": "90YV0K60M0AA00",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "H510M K V2",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte H510M K V2",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331855253"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B GIGABYTE H510M K V2",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ssd",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN WD Green 1TB",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Unidad SSD 1TB 2.5\" SATA3 Western Digital Green",
+      "brand": "Western Digital",
+      "mpn": "WDS100T5G0A",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "DISCO WESTERN DE ESTADO SOLIDO SSD 1TB SATA 2.5\" GREEN SATA P/N WDS100T5G0A",
+      "brand": "Western Digital",
+      "mpn": "WDS100T5G0A",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Xtech XTQ-100",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Xtech Micro ATX 600W USB 2,0 HD Audio",
+      "brand": "Xtech",
+      "mpn": "XTQ100",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "GABINETE XTECH MICROATX 600W P/N XTQ-100",
+      "brand": "Xtech",
+      "mpn": "XTQ100",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Ryzen 5 9600",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Procesador AMD Ryzen 5 9600 6 Core 3.8GHz AM5",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": "00730143316934"
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Procesador AMD Ryzen 5 9600 AM5",
+      "brand": "AMD",
+      "mpn": "100100000718BOX",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo GTIN XPG Lander 300",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Gabinete XPG Lander 300 - Black, Mid Tower, Micro-ATX",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711658152596"
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Gabinete XPG Lander 300 - Black, Mid Tower, Micro-ATX",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711658152596"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI 5070 Ventus 3X OC",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video MSI GeForce RTX 5070 12G VENTUS 3X OC",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377308281"
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Tarjeta de Video MSI GeForce RTX 5070 Ventus 3X OC 12GB GDDR7",
+      "brand": "MSI",
+      "mpn": "912V532007",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "hdd",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN HPE 4TB",
+    "a": {
+      "store": "tecnomas",
+      "rawTitle": "Disco Duro HPE 4TB 3.5\" 7200RPM SATA III 6GB/s Non Hot-Plug Serv/ProliantGen8",
+      "brand": "HPE",
+      "mpn": "801888B21",
+      "gtin": "00889296078845"
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Disco duro 4TB interno | HPE Midline 3.5“ LFF SATA 6Gb/s",
+      "brand": "HPE",
+      "mpn": "801888B21",
+      "gtin": "00889296078845"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Gigabyte RX 9060 XT Gaming OC ICE",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video Gigabyte Radeon RX 9060XT GAMING OC ICE 16G",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331357047"
+    },
+    "b": {
+      "store": "etchile",
+      "rawTitle": "Gigabyte Tarjeta de Video GPU AMD RADEON RX 9060 XT GAMING OC ICE 16G",
+      "brand": "Gigabyte",
+      "mpn": "GVR906XGAMINGOCICE16GD",
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Spectrix D50 RGB blanca vs D50 sin color",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM XPG Spectrix D50 RGB DDR4 3600MHz 8GB Blanco",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085934604"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM XPG SPECTRIX D50 8GB 3600MHZ DDR4 CL18",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "linked",
+    "category": "hdd",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN WD Purple 2TB",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Disco Duro Purple 2TB CCTV 256mb Western Digital",
+      "brand": "Western Digital",
+      "mpn": "WD23PURZ",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Disco Duro Western Digital Purple 2TB 3.5\" 5400RPM SATA3 64MB p/Videovigilancia",
+      "brand": "Western Digital",
+      "mpn": "WD23PURZ",
+      "gtin": "00718037896199"
+    }
+  },
+  {
+    "source": "linked",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "mismo MPN Xeon Silver 4416+",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "Procesador Intel Xeon Silver 4416+ - 2 GHz - 20 núcleos - 40 hilos - 35.75 MB caché - FCLGA4677 Socket - para P/N: P53568-001",
+      "brand": "Intel",
+      "mpn": "P49611B21",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Procesador Intel Xeon Silver 4416+ | 2.0GHz 20-core 165W para HPE",
+      "brand": "Intel",
+      "mpn": "P49611B21",
+      "gtin": "00190017561561"
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B550M-A PRO vs PRO B550M-B",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B550M-A PRO, Micro ATX, AM4, DDR4",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072752613"
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre sAM4 (AMD) - MSI PRO B550M-B - 2x DDR4 - 2x M.2 - DisplayPort/HDMI - m-ATX",
+      "brand": "MSI",
+      "mpn": "9117D14024",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Ryzen 7 7800X3D",
+    "a": {
+      "store": "tectec",
+      "rawTitle": "Procesador AMD Ryzen 7 7800X3D | AM5 | 6 Núcleos 12 Hilos | 16MB Caché L3 | Gráficos Integrados",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Procesador AMD Ryzen 7 7800X3D",
+      "brand": "AMD",
+      "mpn": "1001000000910WOF",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "NV3 2TB vs SNVS/2000G (NV1)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro Kingston NV3 M.2 2280 2TB PCIe 4.0 x4",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617344783"
+    },
+    "b": {
+      "store": "todoclick",
+      "rawTitle": "Unidad de Estado Sólido Kingston SSD de 2 TB (NVMe, M.2 2280, 2100/1700 MB/s)",
+      "brand": "Kingston",
+      "mpn": "SNVS2000G",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "gpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASUS Dual RTX 5050 OC",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Tarjeta de Video ASUS Dual RTX 5050 OC GDDR6 8G",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711636178525"
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "Tarjeta de Video Asus Dual GeForce RTX5050 8GB OC",
+      "brand": "ASUS",
+      "mpn": "90YV0N72M0AA00",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "A400 vs DC450R",
+    "a": {
+      "store": "cclink",
+      "rawTitle": "Kingston SSD 480GB A400 2.5″ SATA 6Gb",
+      "brand": "Kingston",
+      "mpn": "SA400S37480G",
+      "gtin": null
+    },
+    "b": {
+      "store": "todoclick",
+      "rawTitle": "Disco estado sólido Kingston DC450R de 480GB (SSD, SATA, Cifrado, Alto rendimiento)",
+      "brand": "Kingston",
+      "mpn": "SEDC450R480G",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "low",
+    "note": "PRIME B760M-A-CSM vs PRIME B760M-A",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Asus PRIME B760M-A-C. S. M. LGA 1700 DDR5, mATX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387140710"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-A",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Vengeance sin RGB vs Vengeance RGB White",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Corsair Vengeance 32GB (2x16GB) DDR5 6000MHz",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006684442"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA KIT CORSAIR VEGEANCE 32GB (2X16GB) 6000MHz RGB WHITE",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B760M-A-CSM vs B760M-A AX",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Asus PRIME B760M-A-C. S. M. LGA 1700 DDR5, mATX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387140710"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-A AX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "Gigabyte B840M Aorus Elite WIFI6E (MPN armados por la tienda)",
+    "a": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre Gigabyte B840M Aorus ELITE WIFI6E",
+      "brand": "Gigabyte",
+      "mpn": "B840MAELITEWIFI6E",
+      "gtin": null
+    },
+    "b": {
+      "store": "thundertech",
+      "rawTitle": "Placa Madre Gigabyte B840M AORUS ELITE WIFI6E AM5 DDR5 Micro ATX",
+      "brand": "Gigabyte",
+      "mpn": "B840MAORUSELITEWIFI6E",
+      "gtin": "04719331866082"
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B850M Riptide WiFi vs B850M PRO-A WIFI",
+    "a": {
+      "store": "tectec",
+      "rawTitle": "Placa Madre AMD AM5 B850M | ASRock Riptide WiFi | mATX",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASROCK B850M PRO-A WIFI",
+      "brand": "ASRock",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "ROG Thor 1200W vs ROG Strix 1200P",
+    "a": {
+      "store": "notebookstore",
+      "rawTitle": "Fuente de Poder ASUS ROG Thor 1200W, Certificada 80+ Plus Platinum, ATX 3.1, Gaming Premium",
+      "brand": "ASUS",
+      "mpn": "90YE00V2B0SA00",
+      "gtin": null
+    },
+    "b": {
+      "store": "sandos",
+      "rawTitle": "Fuente de Poder ASUS ROG STRIX 1200P Gaming 1200W Certificada 80+ Plus Platinum ATX 3.1 Modular",
+      "brand": "ASUS",
+      "mpn": "90YE00W0BTAA00",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "low",
+    "note": "PRIME H610M-K DDR5",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME H610M-K",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "todoclick",
+      "rawTitle": "Placa Madre Asus H610M-K Prime Intel Micro ATX DDR5 LGA 1700 PCIe 4.0 M.2 (90MB1GA0-M0EAY0)",
+      "brand": "ASUS",
+      "mpn": "90MB1GA0M0EAY0",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "PRIME B860M-A",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME B860M-A, LGA1851, mATX, DDR5",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387819845"
+    },
+    "b": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre ASUS PRIME B860M-A",
+      "brand": "ASUS",
+      "mpn": "B860MAPRIME",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "GameMax GS-850G ATX vs SFX GS-850G White",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER GAMEMAX GS-850G 80PLUS GOLD 850W F.MODULAR ATX 3.1 PCIe 5.1",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER SLIM SFX GAMEMAX 850W GOLD SF850 WHITE 80+ GOLD P/N SFXGS-850GWHITE",
+      "brand": "GameMax",
+      "mpn": "SFXGS850GWHITE",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast RGB vs KVR32N22S8/16",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR4 3200 MHz 16GB CL16",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Memoria RAM DDR4 16GB 3200MHz UDIMM",
+      "brand": "Kingston",
+      "mpn": "KVR32N22S816",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI B850M Gaming WIFI6E",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B850M GAMING WIFI6E DDR5 AM5 mATX",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377399807"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI B850M GAMING WIFI6E",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B760M-A-CSM DDR5 vs B760M-A D4",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Asus PRIME B760M-A-C. S. M. LGA 1700 DDR5, mATX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387140710"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-A D4",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Spectrix D35 vs D35G RGB",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM XPG SPECTRIX D35 16 GB 3200MHZ DDR4 BLACK",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Memoria RAM DDR4 16GB 3200MHz RGB UDIMM",
+      "brand": "ADATA",
+      "mpn": "AX4U320016G16ASBKD35G",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast vs Renegade Pro RDIMM",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 32 GB - DDR5 5600 MT/s - Kingston Fury Beast Black - Intel XMP/AMD EXPO (KF556C36BBE-32)",
+      "brand": "Kingston",
+      "mpn": "KF556C36BBE32",
+      "gtin": null
+    },
+    "b": {
+      "store": "sandos",
+      "rawTitle": "Memoria Ram DDR5 32GB 5600MT/s CL28 Kingston FURY Renegade Pro RDIMM Black EXPO",
+      "brand": "Kingston",
+      "mpn": "KF556R28RBE232",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B650 D2HP vs B650M DS3H",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B650 D2HP AM5 DDR5 Micro-ATX",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331864019"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B GIGABYTE B650M DS3H",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast vs Renegade RGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 32G (2×16) 6000MTs DDR5 CL30",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617343229"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON FURY RENEGADE RGB DDR5 6000MHz 32GB 2x16GB CL32",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI B550M PRO-VDH WIFI",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B550M PRO-VDH WIFI",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072733698"
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "PLACA MADRE B550M PRO-VDH WIFI sAM4 DDR4 MICRO ATX P/N B550MPRO-VDHWIFI",
+      "brand": "MSI",
+      "mpn": "B550MPROVDHWIFI",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "SN850X vs SN8100",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD M.2 Western Digital WD Black SN850X 1TB NVMe",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": "00718037891392"
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Unidad SSD 1TB WD Black SN8100 NVMe",
+      "brand": "Western Digital",
+      "mpn": "WDS100T1X0M",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KF560C30BBE-32 vs KF560C36BBE2AK2-32",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 32 GB - DDR5 6000 MT/s - Kingston FURY Beast - Black - AMD EXPO (KF560C30BBE-32)",
+      "brand": "Kingston",
+      "mpn": "KF560C30BBE32",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 32GB (2*16GB) DDR5 6000MHz DIMM CL36 Non-ECC 1.35v 288p Fury Beast",
+      "brand": "Kingston",
+      "mpn": "KF560C36BBE2AK232",
+      "gtin": "00740617345902"
+    }
+  },
+  {
+    "source": "near",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "low",
+    "note": "i7 10700 (OEM con ventilador vs sin detalle)",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "INTEL CORE CPU I7 10700 2.9GHz",
+      "brand": "Intel",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "PROCESADOR INTEL CORE I7 10700 CACHE s1200 OEM MAS VENTILADOR ORIGINAL",
+      "brand": "Intel",
+      "mpn": "OEMBX8070110700",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B760M-A-CSM vs B760M-K D4",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Asus PRIME B760M-A-C. S. M. LGA 1700 DDR5, mATX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387140710"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-K D4",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME H610M-K vs H610M-F D4",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME H610M-K",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "nuevatec",
+      "rawTitle": "ASUS PRIME H610M-F D4",
+      "brand": "ASUS",
+      "mpn": "90MB1H70M0EAY0",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KF556C36BBE-16 vs KTL-TS556E-16G (ECC)",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Memoria RAM 16GB DDR5 5600 MHz UDIMM",
+      "brand": "Kingston",
+      "mpn": "KF556C36BBE16",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Kingston KTL-TS556E-16G (1 x 16 GB | DIMM DDR5-5600 ECC)",
+      "brand": "Kingston",
+      "mpn": "KTLTS556E16G",
+      "gtin": "00740617351712"
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "SN7100 vs SN570",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "SSD Western Digital WD Black SN7100 500GB M.2 NVMe PCIe Gen4",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": "00718037893662"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO NVME WESTERN DIGITAL BLUE SN570 500GB",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "XPG Pylon 750W",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder XPG Pylon 750W 80 Plus Bronze",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04710273776965"
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER ADATA XPG PYLON 750W BRONZE P/N PYLON750B-BKCEU",
+      "brand": "ADATA",
+      "mpn": "PYLON750BBKCEU",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "A520M-A PRO vs A520M PRO",
+    "a": {
+      "store": "etchile",
+      "rawTitle": "MSI Placa Madre A520M-A PRO RYZEN 5000 SERIES SOCKET AM4",
+      "brand": "MSI",
+      "mpn": "MSIA520MAPRO1",
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre sAM4 (AMD) - MSI A520M PRO - 2x DDR4 - 1x M.2 - DisplayPort/HDMI/VGA - m-ATX",
+      "brand": "MSI",
+      "mpn": "9117D14020",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B450M-A PRO MAX II vs B450M PRO-VDH MAX",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI B450M-A PRO MAX II Socket AM4",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377125291"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI B450M PRO-VDH MAX",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "B550M DS3H AC vs B550M H ARGB",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre Gigabyte B550M DS3H AC AMD AM4",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331810962"
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre sAM4 (AMD) - Gigabyte B550M H ARGB - 2x DDR4 - 1x M.2 - DisplayPort/HDMI - m-ATX",
+      "brand": "Gigabyte",
+      "mpn": "B550MHARGB",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Kingston 8GB 3200 CL22 genérica vs KVR32N22S6/8",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "MEMORIA RAM KINGSTON 3200MHz 8GB CL22",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Memoria RAM DDR4 8 GB 3200MHz UDIMM",
+      "brand": "Kingston",
+      "mpn": "KVR32N22S68VN",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRO H610M-G DDR4 vs PRO H610M-S DDR4",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre MSI PRO H610M-G DDR4 LGA 1700 INTEL",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04719072925024"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B MSI PRO H610M-S DDR4",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "Vengeance 32GB 6000 (GTIN) vs CMK32GX5M2D6000Z38",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Corsair Vengeance 32GB (2x16GB) DDR5 6000MHz",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006684442"
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 32 GB (Kit 2 x 16 GB) DDR5 6000 MT/s - Corsair Vengeance - Intel XMP/AMD EXPO (CMK32GX5M2D6000Z38)",
+      "brand": "Corsair",
+      "mpn": "CMK32GX5M2D6000Z38",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "NV2 vs NV1",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Disco Duro SSD Kingston NV2 M.2 1TB PCie 4.0",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617329919"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO DURO SSD NVMe KINGSTON NV1 1TB",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "cpu",
+    "label": "different",
+    "confidence": "low",
+    "note": "Core Ultra 5 225 vs MPN BX80768225F (225F)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Procesador Intel Core Ultra 5 225 4.9GHz LGA1851",
+      "brand": "Intel",
+      "mpn": null,
+      "gtin": "05032037282352"
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Procesador Intel Core Ultra 5 225 (20M Cache, up to 4.90 GHz) FCLGA18W, Socket LGA 1851, 65W, sin Video",
+      "brand": "Intel",
+      "mpn": "BX80768225F",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "ROG Thor 1200W Platinum sin versión vs Platinum III",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER ASUS ROG THOR 1200W 80PLUS PLATINUM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "mybox",
+      "rawTitle": "Fuente de Poder Asus ROG Thor 1200W Platinum III",
+      "brand": "ASUS",
+      "mpn": "ROGTHOR1200WPIII",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast RGB vs Renegade Pro RDIMM",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 32 GB - DDR5 6000 MT/s - Kingston Fury Beast RGB Black - Intel XMP/AMD EXPO - (KF560C30BBEA-32)",
+      "brand": "Kingston",
+      "mpn": "KF560C30BBEA32",
+      "gtin": null
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Memoria ram 32GB DDR5 6000Mhz CL32 RDimm Kingston Fury Renegade Pro Black Expo",
+      "brand": "Kingston",
+      "mpn": "KF560R32RBE32",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "Antec Atom B650 vs NE650M V2",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Fuente de Poder ATOM B650 Bronze",
+      "brand": "Antec",
+      "mpn": "B650EC",
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER ANTEC NE650M V2 EC 80PLUS  BRONZE",
+      "brand": "Antec",
+      "mpn": "NE650MV2",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KF556C36BBE-32 vs KTD-PE556D8/32G",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 32 GB - DDR5 5600 MT/s - Kingston Fury Beast Black - Intel XMP/AMD EXPO (KF556C36BBE-32)",
+      "brand": "Kingston",
+      "mpn": "KF556C36BBE32",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 32GB DDR5 5600MHz DIMM CL46 ECC-Reg 1.1v 288p pServ Dell",
+      "brand": "Kingston",
+      "mpn": "KTDPE556D832G",
+      "gtin": "00740617341881"
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "MAG A650GL vs A650GN II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER MSI MAG A650GL 650W 80 PLUS GOLD MODULAR",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER MSI 650W GOLD NO MODULAR MAGA650GNII P/N MAG650GNII",
+      "brand": "MSI",
+      "mpn": "MAG650GNII",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "different",
+    "confidence": "low",
+    "note": "Corsair RM850e vs RM850",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder Corsair RM850e 850W Modular Gold",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006691242"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER CORSAIR RM850 850W 80 PLUS GOLD F/MODULAR",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI MAG A850GN PCIE5",
+    "a": {
+      "store": "central-gamer",
+      "rawTitle": "Fuente de Poder MSI MAG A850GN 850W PCIE5 Gold",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "FUENTE DE PODER MSI 850W GOLD NO MODULAR MAG A850GN P/N MAG A850GN PCIE5",
+      "brand": "MSI",
+      "mpn": "MAG850GNPCIE5",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "SanDisk GX Pro 8100 vs WD Blue SN5100",
+    "a": {
+      "store": "pcfactory",
+      "rawTitle": "Unidad SSD 1TB GX PRO 8100 OPTIMUS M.2 NVMe",
+      "brand": "SanDisk",
+      "mpn": "SDSP82100TAN000E0",
+      "gtin": null
+    },
+    "b": {
+      "store": "todoclick",
+      "rawTitle": "SSD Western Digital WD Blue SN5100 1 TB NVMe M-2 PCle 4.0",
+      "brand": "SanDisk",
+      "mpn": "WDS100T5B0E",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "low",
+    "note": "Prime B760M-A AX6 II vs B760M-A AX",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS Prime B760M-A AX6 ll",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387624852"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-A AX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KF556R28RBE2-32 vs KF556R36RB-32",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "Memoria Ram DDR5 32GB 5600MT/s CL28 Kingston FURY Renegade Pro RDIMM Black EXPO",
+      "brand": "Kingston",
+      "mpn": "KF556R28RBE232",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 32GB DDR5 5600MHz DIMM CL36  Non-ECC 1.25v 288p KingstonFURYRenegPro",
+      "brand": "Kingston",
+      "mpn": "KF556R36RB32",
+      "gtin": "00740617335576"
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "ADATA Premier vs XPG Spectrix D35G",
+    "a": {
+      "store": "etchile",
+      "rawTitle": "ADATA Memoria RAM 8GB DDR4 3200 (22) U-DIMM 1.2v Desktop",
+      "brand": "ADATA",
+      "mpn": "AD4U32008GB22SGN",
+      "gtin": null
+    },
+    "b": {
+      "store": "nuevatec",
+      "rawTitle": "A-DATA XPG Spectrix D35G AX4U32008G16A-SBKD35G (1 x 8 GB | DIMM DDR4-3200)",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "Crucial P310 vs E100",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO SSD M.2 CRUCIAL P310 1TB NVMe PCIe 4.0",
+      "brand": "Crucial",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "etchile",
+      "rawTitle": "Crucial Unidad de Almacenamiento SSD PCIe M2 NVME 2280 Gen4 E100 1TB 5000mbps",
+      "brand": "Crucial",
+      "mpn": "CT1000E100SSD8",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "unsure",
+    "confidence": "low",
+    "note": "NV3 1TB sin formato vs NV3 1TB 2230",
+    "a": {
+      "store": "tectec",
+      "rawTitle": "Unidad de Estado Sólido 1TB Kingston NV3 PCIe 4.0 NVMe M.2",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "cclink",
+      "rawTitle": "Kingston SSD 1TB NV3 M.2 2230 NVMe PCIe 4.0",
+      "brand": "Kingston",
+      "mpn": "SNV3SM31T0",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "cpu",
+    "label": "same",
+    "confidence": "high",
+    "note": "Ryzen 5 7600",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Procesador AMD Ryzen 5 7600 6 Nucleos 3.8Ghz AM5",
+      "brand": "AMD",
+      "mpn": null,
+      "gtin": "00730143314572"
+    },
+    "b": {
+      "store": "cclink",
+      "rawTitle": "AMD Ryzen 5 7600 3.8 GHz AM5",
+      "brand": "AMD",
+      "mpn": "100100001015BOX",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "SN570 vs SN3000",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO NVME WESTERN DIGITAL BLUE SN570 500GB",
+      "brand": "Western Digital",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pcfactory",
+      "rawTitle": "Unidad SSD 500GB SN3000 NVMe SSD Green NVMe Performance",
+      "brand": "Western Digital",
+      "mpn": "WDS500G4G0E00CPS0",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "TUF X870 Gaming Plus WiFi vs PRIME X870-P WIFI",
+    "a": {
+      "store": "tectec",
+      "rawTitle": "Placa Madre AMD AM5| X870 ASUS TUF Gaming Plus WiFi |ATX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "pc-express",
+      "rawTitle": "PLACA MADRE ASUS PRIME X870-P WIFI - ATX - SAM5  P/N PRIMEX870-PWIFI",
+      "brand": "ASUS",
+      "mpn": "PRIMEX870PWIFI",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRO A520M-C II/CSM vs PRIME A520M-A II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRO A520M-C II/CSM",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "central-gamer",
+      "rawTitle": "Placa Madre Asus Prime A520M-A II",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KF560C36BBE-32 (1x32) vs KF560C36BBE2K2-32 (2x16)",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 32 GB - DDR5 6000 MT/s - Kingston FURY Beast Black - Intel XMP/AMD EXPO (KF560C36BBE-32)",
+      "brand": "Kingston",
+      "mpn": "KF560C36BBE32",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 32GB (2*16GB) DDR5 6000MHz DIMM CL36 Non-ECC 1.35v 288p FURYBeastBl",
+      "brand": "Kingston",
+      "mpn": "KF560C36BBE2K232",
+      "gtin": "00740617345841"
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "PRIME B760M-A D4-CSM vs B760M-K D4",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME B760M-A D4-CSM, mATX, LGA1700",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711081984061"
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "M/B ASUS PRIME B760M-K D4",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Vengeance LPX vs Vengeance RGB Pro",
+    "a": {
+      "store": "etchile",
+      "rawTitle": "Corsair Memoria RAM VENGEANCE LPX 8GB DDR4 3200 MHz C16 – Negro [CMK8GX4M1E3200C16]",
+      "brand": "Corsair",
+      "mpn": "CMK8GX4M1E3200C16",
+      "gtin": null
+    },
+    "b": {
+      "store": "todoclick",
+      "rawTitle": "Memoria Ram DDR4 8GB 3200MHz Corsair Vengeance RGB Pro DIMM, PC4-25600, CL16, 1.35V",
+      "brand": "Corsair",
+      "mpn": "CMW8GX4M1Z3200C16",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Vengeance RGB RS vs LPX",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Corsair Vengeance RGB RS 8GB x 3200Mhz DDR4",
+      "brand": "Corsair",
+      "mpn": null,
+      "gtin": "00840006652199"
+    },
+    "b": {
+      "store": "etchile",
+      "rawTitle": "Corsair Memoria RAM VENGEANCE LPX 8GB DDR4 3200 MHz C16 – Negro [CMK8GX4M1E3200C16]",
+      "brand": "Corsair",
+      "mpn": "CMK8GX4M1E3200C16",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "Fury Beast vs Fury Renegade",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Memoria RAM Kingston Fury Beast 1 x 8GB DDR4-3200",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": "00740617319910"
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Memoria RAM DIMM 8 GB - DDR4 3200 MT/s - Kingston Fury Renegade Black (KF432C16RB2/8)",
+      "brand": "Kingston",
+      "mpn": "KF432C16RB28",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "XPG Pylon 550W",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Fuente de Poder XPG Pylon 550W 80 Plus Bronze",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04710273776781"
+    },
+    "b": {
+      "store": "notebookstore",
+      "rawTitle": "Fuente de Poder 550W XPG Pylon 80+ Bronze",
+      "brand": "ADATA",
+      "mpn": "PYLON550BBKCCL",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "different",
+    "confidence": "high",
+    "note": "MAG A650GL vs A650GN II",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER MSI MAG A650GL 650W 80 PLUS GOLD MODULAR",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "Fuente de Poder 650W - MSI MAG A650GN II - 80 Plus Gold",
+      "brand": "MSI",
+      "mpn": "3067ZPBZ23CE0",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "ram",
+    "label": "different",
+    "confidence": "high",
+    "note": "KCP556US6-8 vs KVR56S46BS6-8",
+    "a": {
+      "store": "sandos",
+      "rawTitle": "Memoria Ram Notebook Kingston KCP556US6-8 1 x 8 GB | SO-DIMM DDR5-5600",
+      "brand": "Kingston",
+      "mpn": "KCP556US68",
+      "gtin": null
+    },
+    "b": {
+      "store": "tecnomas",
+      "rawTitle": "Memoria RAM 8GB DDR5 5600MHz SO-DIMM CL46 Non-ECC 1.1v 262p - Kingston",
+      "brand": "Kingston",
+      "mpn": "KVR56S46BS68",
+      "gtin": "00740617334074"
+    }
+  },
+  {
+    "source": "near",
+    "category": "ssd",
+    "label": "different",
+    "confidence": "high",
+    "note": "NV2 vs KC3000",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "DISCO KINGSTON NV2 2TB SSD PCIe 4.0 NVMe GEN 4×4",
+      "brand": "Kingston",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "myshop",
+      "rawTitle": "SSD M.2 (2280) - 2 TB - Kingston KC3000 - NVMe PCIe 4.0 x4 (SKC3000D/2048G)",
+      "brand": "Kingston",
+      "mpn": "SKC3000D2048G",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "PRIME B840M-A WIFI",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME B840M-A WIFI",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387797143"
+    },
+    "b": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre Asus Prime B840M-A WIFI",
+      "brand": "ASUS",
+      "mpn": "B840MAWIFIASUS",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "same",
+    "confidence": "high",
+    "note": "PRIME A620M-K",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Placa Madre ASUS PRIME A620M-K, AM5, DDR5, mATX",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": "04711387242087"
+    },
+    "b": {
+      "store": "mybox",
+      "rawTitle": "Placa Madre Asus Prime A620M-K (DDR5)",
+      "brand": "ASUS",
+      "mpn": "A620MKD5PRIME",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "motherboard",
+    "label": "different",
+    "confidence": "high",
+    "note": "X870E Aorus Elite X3D ICE vs X870E Aero X3D",
+    "a": {
+      "store": "myshop",
+      "rawTitle": "Placa Madre sAM5 (AMD) - Gigabyte X870E AORUS ELITE X3D ICE - 4x DDR5 - 4x M.2- Wi-Fi 7 - USB-C/HDMI - ATX",
+      "brand": "Gigabyte",
+      "mpn": "X870EAELITEXICE",
+      "gtin": null
+    },
+    "b": {
+      "store": "vgamers",
+      "rawTitle": "Placa Madre Gigabyte X870E AERO X3D Dark Wood AM5 ATX DDR5 WiFi 7 PCIe 5",
+      "brand": "Gigabyte",
+      "mpn": null,
+      "gtin": "04719331880637"
+    }
+  },
+  {
+    "source": "near",
+    "category": "psu",
+    "label": "same",
+    "confidence": "high",
+    "note": "ASUS Prime AP-850G",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "FUENTE DE PODER ASUS PRIME AP-850G 850W 80PLUS GOLD F.MODULAR",
+      "brand": "ASUS",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "mybox",
+      "rawTitle": "Fuente de Poder Asus Prime 850W GOLD",
+      "brand": "ASUS",
+      "mpn": "AP850G",
+      "gtin": null
+    }
+  }
+]
