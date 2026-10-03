@@ -104,7 +104,11 @@ export async function crawlCategory(
         now: now(),
       });
       if (match.categoryMismatch) {
-        log.warn("matching.category_mismatch", { listingId: upsert.listingId, productId: upsert.productId });
+        log.info("matching.category_mismatch", {
+          feature: "matching",
+          listingId: upsert.listingId,
+          productId: upsert.productId,
+        });
       }
       if (match.unlinked) stats.unlinked++;
       if (match.outcome === "linked") stats.linked++;

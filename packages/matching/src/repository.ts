@@ -133,13 +133,11 @@ export async function loadCandidates(
 
 export interface LinkState {
   /** Última decisión de la oferta: `manual` no se re-decide; `new_product` es la fundadora del producto. */
-  method: string | null;
+  method: MatchMethod | null;
   /** El producto ya tiene una oferta activa más antigua de la misma tienda. */
   olderSameStore: boolean;
   /** Identificadores que publican las demás ofertas del producto. */
   others: Identifiers[];
-  /** Los de las fundadoras y las decisiones manuales: no se le quitan al producto. */
-  anchors: Identifiers[];
 }
 
 export async function loadLinkState(db: Db, listingId: number, productId: number): Promise<LinkState> {
@@ -167,18 +165,39 @@ export async function loadLinkState(db: Db, listingId: number, productId: number
     method: self?.method ?? null,
     olderSameStore: others.some((r) => r.storeId === self?.storeId && r.id < listingId && r.isActive === 1),
     others,
-    anchors: others.filter((r) => r.method === "new_product" || r.method === "manual"),
   };
 }
 
-/** Le quita al producto los identificadores de una oferta que se va, salvo los que también tienen sus fundadoras. */
-export async function detachIdentifiers(db: Db, productId: number, fp: Identifiers, keep: Identifiers[]) {
-  const pairs = identifierPairs(fp).filter((p) => !keep.some((k) => k[p.kind] === p.value));
+/**
+ * Le quita al producto los identificadores de una oferta que ya se desvinculó, salvo los que todavía publica otra
+ * oferta del producto. La condición va dentro del DELETE: dos crawls en paralelo no se pisan entre la lectura y el
+ * borrado.
+ */
+export async function detachIdentifiers(db: Db, productId: number, fp: Identifiers) {
+  const pairs = identifierPairs(fp);
   if (pairs.length === 0) return;
   await db.query
     .deleteFrom("product_identifiers")
     .where("product_id", "=", productId)
-    .where((eb) => eb.or(pairs.map((p) => eb.and([eb("kind", "=", p.kind), eb("value", "=", p.value)]))))
+    .where((eb) =>
+      eb.or(
+        pairs.map((p) =>
+          eb.and([
+            eb("kind", "=", p.kind),
+            eb("value", "=", p.value),
+            eb.not(
+              eb.exists(
+                eb
+                  .selectFrom("listings")
+                  .select("listings.id")
+                  .where("listings.product_id", "=", productId)
+                  .where(`listings.${p.kind}`, "=", p.value),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    )
     .execute();
 }
 

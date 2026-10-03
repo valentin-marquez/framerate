@@ -133,6 +133,7 @@ describe("revisión de matches", () => {
     expect(res.status).toBe(409);
     expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("review_vetoed");
     expect((await all(db, "listings"))[0]?.product_id).toBe(s.provisional);
+    expect((await all(db, "match_reviews"))[0]?.status).toBe("pending");
   });
 
   test("resolver dos veces o una inexistente da error claro", async () => {

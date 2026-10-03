@@ -68,22 +68,25 @@ export async function matchListing(
       return { outcome: "kept", unlinked, categoryMismatch: true };
     }
     if (link.method === "manual") return { outcome: "kept", unlinked };
-    const vetoes = current ? compare(fp, current.fingerprint).vetoes : ["product_missing"];
-    if (current && vetoes.length === 0) {
+    const check = current && compare(fp, current.fingerprint);
+    const vetoes = check ? check.vetoes : ["product_missing"];
+    let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
+    if (current && check && vetoes.length === 0) {
       if (link.method === "new_product") return { outcome: "kept", unlinked };
       const again = decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
-      if (again.kind === "link" && again.productId === productId) return { outcome: "kept", unlinked };
+      if (again.kind === "link") return { outcome: "kept", unlinked };
+      evidence = { ...evidence, redecided: again.kind, score: check.score, sameStore: link.olderSameStore };
     }
     await setListingProduct(db, {
       listingId,
       productId: null,
       method: "unlinked",
       confidence: 1,
-      evidence: { previousProductId: productId, vetoes: vetoes.length > 0 ? vetoes : ["redecided"] },
+      evidence,
       decidedBy,
       now,
     });
-    await detachIdentifiers(db, productId, fp, link.anchors);
+    await detachIdentifiers(db, productId, fp);
     unlinked = true;
   }
 
