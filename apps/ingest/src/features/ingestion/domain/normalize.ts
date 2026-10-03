@@ -1,6 +1,14 @@
 import { type Category, CategorySchema } from "@framerate/contracts";
 import { collapseWhitespace, decodeEntities, fold } from "@framerate/kit";
-import { type Attributes, buildFingerprint, type Fingerprint, PROFILES } from "@framerate/matching";
+import {
+  type Attributes,
+  buildFingerprint,
+  codesInTitle,
+  type Fingerprint,
+  normalizeGtin,
+  normalizeMpn,
+  PROFILES,
+} from "@framerate/matching";
 import { z } from "zod";
 
 /**
@@ -168,12 +176,13 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
   const [min, max] = PRICE_RANGE[raw.category];
   if (priceCash < min || priceCard > max) return { ok: false, externalId, reason: "price:out_of_range" };
 
+  const inTitle = codesInTitle(raw.title);
   const fingerprint = buildFingerprint({
     category: raw.category,
     title,
     brand: raw.brand,
-    mpn: raw.mpn,
-    gtin: raw.gtin,
+    mpn: normalizeMpn(raw.mpn) ?? inTitle.mpn,
+    gtin: normalizeGtin(raw.gtin) ?? inTitle.gtin,
   });
   for (const field of REQUIRED_ATTRIBUTES[raw.category]) {
     if (fingerprint.attributes[field] === undefined) {

@@ -19,7 +19,7 @@ export function normalizeMpn(raw: string | null | undefined): string | null {
   const value = raw
     .normalize("NFKC")
     .toUpperCase()
-    .replace(/[\s\-_./\\#]+/g, "");
+    .replace(/[\s\-_./\\#‐-―]+/g, "");
   if (!/^[A-Z0-9]+$/.test(value)) return null;
   if (value.length < 5 || value.length > 40) return null;
   if (JUNK_VALUES.has(value)) return null;
@@ -54,4 +54,42 @@ function hasValidGtinChecksum(digits: string): boolean {
     sum += i % 2 === 0 ? d * 3 : d;
   }
   return (10 - (sum % 10)) % 10 === check;
+}
+
+// Formas explícitas de un código en el título. "P/N" toma hasta el final o el próximo delimitador, porque
+// "P/N GM-800B BK" y "P/N GM-800B WH" son productos distintos.
+const TITLE_CODE_FORMS = [
+  /\[([^[\]]{4,60})\]/g,
+  /\b(?:p\s*\/\s*n|pn\s*[:#]|part\s*(?:number|no\.?)\s*:?|n[uú]mero de parte\s*:?)\s*([^()[\],|]{4,60})/gi,
+  /\(([^()\s]{4,40})\)\s*$/g,
+];
+const SPEC_CODE =
+  /^(\d+X\d+(GB)?|\d+(GB|TB|MB|W|MHZ|GHZ|MM|BITS?|V|MTS|CM|RPM|FANS?|PIN)|(LGA|S|AM|FM|SOCKET|SAM)\d+|G?DDR\d.*|PCIE.*|GEN\d|M2|ATX.*|\d{4})$/;
+const CHIP_NAME = /^(RTX|GTX|GT|RX|ARC|[ABHZX])\d{3,4}(TI|XT|XTX|SUPER|GRE|[A-Z])?$/;
+
+/**
+ * MPN y GTIN que la tienda escribió en el título ("(CMK16GX5M1D6000Z38)", "P/N AD5U560016G-S",
+ * "[PRIME-RX9060XT-O16G]"). Sólo formas explícitas: un código suelto se confunde con el nombre del chip.
+ */
+export function codesInTitle(title: string): { mpn: string | null; gtin: string | null } {
+  let mpn: string | null = null;
+  let gtin: string | null = null;
+  for (const form of TITLE_CODE_FORMS) {
+    for (const match of title.matchAll(form)) {
+      for (const piece of (match[1] ?? "").split(/\s+\/\s+/).map((p) => p.trim())) {
+        if (/^[\d\s-]+$/.test(piece)) {
+          // Un GTIN-8 pasa el checksum por azar 1 de cada 10: en el título sólo EAN/UPC.
+          if (piece.replace(/\D/g, "").length >= 12) gtin ??= normalizeGtin(piece);
+          continue;
+        }
+        const parts = piece.split("/").map((s) => s.toUpperCase().replace(/[\s\-_.]+/g, ""));
+        if (parts.some((s) => !/\d/.test(s) || SPEC_CODE.test(s))) continue;
+        const value = normalizeMpn(piece);
+        if (!value || value.length < 8 || !/[A-Z]/.test(value) || SPEC_CODE.test(value) || CHIP_NAME.test(value))
+          continue;
+        mpn ??= value;
+      }
+    }
+  }
+  return { mpn, gtin };
 }

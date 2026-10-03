@@ -6,7 +6,7 @@ import { normalizeOffer } from "../domain/normalize";
 import products from "./__fixtures__/woocommerce-products.json";
 import type { CrawlContext } from "./adapter";
 import { createHttpClient, HttpError } from "./http";
-import { createWooCommerceAdapter } from "./woocommerce";
+import { createWooCommerceAdapter, toRawOffer } from "./woocommerce";
 
 function fakeContext(pages: Record<string, { body: unknown; totalPages?: number }>) {
   const requested: string[] = [];
@@ -119,6 +119,23 @@ describe("adaptador WooCommerce", () => {
     const { ctx, requested } = fakeContext({});
     expect(await Array.fromAsync(adapter.crawlCategory("case", ctx))).toEqual([]);
     expect(requested).toEqual([]);
+  });
+
+  test("toma el P/N de la ficha cuando la tienda no publica el código", () => {
+    const product: Parameters<typeof toRawOffer>[0] = {
+      id: 1,
+      name: "TARJETA DE VIDEO ZOTAC RTX 5060 8GB",
+      permalink: "https://tienda.cl/p/1",
+      sku: "69606",
+      is_in_stock: true,
+      prices: { price: "399900", regular_price: "399900", currency_minor_unit: 0 },
+      images: [],
+      attributes: [],
+      description: "<p>P/N: 288-1N754-210Z6 ⚡ Tarjeta de video</p>",
+    };
+    expect(toRawOffer(product, "gpu", { sku: "internal" }).mpn).toBe("288-1N754-210Z6");
+    expect(toRawOffer({ ...product, sku: "ZT-B50600H-10M" }, "gpu", { sku: "mpn" }).mpn).toBe("ZT-B50600H-10M");
+    expect(toRawOffer({ ...product, description: "" }, "gpu", { sku: "internal" }).mpn).toBeNull();
   });
 });
 

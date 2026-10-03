@@ -158,3 +158,24 @@ describe("categorías contaminadas", () => {
     expect(reason("case_fan", "Ventilador 140mm torre gamer")).toBe("ok");
   });
 });
+
+describe("identificadores del título", () => {
+  test("llenan el MPN que la tienda no publica", () => {
+    const r = normalizeOffer(
+      {
+        ...base,
+        category: "ram",
+        brand: "Corsair",
+        mpn: null,
+        title: "Memoria RAM DIMM 16 GB DDR5 6000 MT/s - Corsair Vengeance (CMK16GX5M1D6000Z38)",
+      },
+      "ram",
+    );
+    expect(r.ok && r.offer.mpn).toBe("CMK16GX5M1D6000Z38");
+  });
+
+  test("el MPN publicado por la tienda gana al del título", () => {
+    const r = normalizeOffer({ ...base, title: `${base.title} [DUAL-RTX4070S-12G]` }, "gpu");
+    expect(r.ok && r.offer.mpn).toBe("DUALRTX4070SO12G");
+  });
+});

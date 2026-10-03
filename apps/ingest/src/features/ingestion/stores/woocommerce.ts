@@ -1,6 +1,6 @@
 import type { Category } from "@framerate/contracts";
 import { stripHtml } from "@framerate/kit";
-import { normalizeGtin } from "@framerate/matching";
+import { normalizeGtin, normalizeMpn } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
@@ -41,6 +41,7 @@ const WcProductSchema = z.object({
   name: z.string(),
   permalink: z.url(),
   sku: z.string().optional().default(""),
+  description: z.string().optional().default(""),
   is_in_stock: z.boolean(),
   low_stock_remaining: z.number().nullable().optional(),
   prices: z.object({
@@ -100,6 +101,10 @@ function parseItems(text: string): unknown[] {
   return data;
 }
 
+// Infor-Ingen y ETChile escriben el código del fabricante en la ficha ("P/N: 288-1N754-210Z6 ⚡ Tarjeta…"). Sólo la
+// etiqueta explícita: "Modelo" y `short_description` traen nombres, no códigos.
+const PART_NUMBER = /\b(?:p\s*\/\s*n|part\s*number|n[uú]mero de parte)\s*[:#]?\s*([A-Za-z0-9][\w\-./]{3,40})/i;
+
 export function toRawOffer(
   p: WcProduct,
   category: Category,
@@ -119,6 +124,9 @@ export function toRawOffer(
       : null;
   const sku = p.sku.trim();
   const gtin = normalizeGtin(sku) ? sku : null;
+  const skuMpn = !gtin && config.sku === "mpn" && sku ? sku : null;
+  const descriptionMpn =
+    gtin || normalizeMpn(skuMpn) ? null : (stripHtml(p.description).match(PART_NUMBER)?.[1] ?? null);
 
   return {
     externalId: String(p.id),
@@ -131,7 +139,7 @@ export function toRawOffer(
     inStock: p.is_in_stock,
     stockQuantity: p.is_in_stock ? (p.low_stock_remaining ?? null) : 0,
     brand: p.brands?.[0]?.name ?? brandFromAttributes(p) ?? null,
-    mpn: !gtin && config.sku === "mpn" && sku ? sku : null,
+    mpn: normalizeMpn(skuMpn) ? skuMpn : descriptionMpn,
     gtin,
     imageUrls: p.images.map((i) => i.src),
   };
