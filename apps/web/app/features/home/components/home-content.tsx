@@ -1,16 +1,16 @@
 import type { HomeData } from "../types";
 import { CategoryLinks } from "./category-links";
-import { CompactSearchHero } from "./compact-search-hero";
 import { CategoryMosaic, StoresStrip } from "./home-blocks";
+import { HomeIntro } from "./home-intro";
 import { ProductRow } from "./product-row";
 
-/** Home: buscador, lo más popular, categorías, tiendas y una fila por categoría. */
+/** Home: encabezado con cifras, lo más popular, categorías, tiendas y una fila por categoría. */
 export function HomeContent({ categories, rows, trendingIds, stores }: HomeData) {
   const trending = new Set(trendingIds);
   const [popular, ...byCategory] = rows;
   return (
     <>
-      <CompactSearchHero categories={categories} />
+      <HomeIntro productCount={categories.reduce((sum, c) => sum + c.productCount, 0)} storeCount={stores.length} />
       <div className="flex flex-col gap-10 pb-16 md:gap-12">
         {popular && <ProductRow title={popular.title} href={popular.href} products={popular.products} priority />}
         <CategoryMosaic categories={categories} />

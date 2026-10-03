@@ -414,50 +414,27 @@
   }
 }
 
-/* Buscador de la home: el del hero va en el flujo y, cuando pasa bajo el navbar, `data-search-docked` en <html> (lo pone
-   un IntersectionObserver del hero) muestra `.nav-search`. En móvil es una fila que baja desde atrás del navbar; en
-   escritorio el campo aparece al centro y Explorar/Hardware se apartan. `visibility` lo saca del foco cuando no se ve. */
+/* Buscador de la home en el navbar. En móvil es una fila que baja desde atrás del navbar; en escritorio queda al centro
+   y Explorar/Hardware se apartan. */
 :root {
   --nav-search-w: clamp(256px, 26vw, 360px);
 }
 
-.nav-search {
-  visibility: hidden;
-  transform: translateY(-100%);
-  transition:
-    transform var(--transition-duration-base) var(--ease-in-out),
-    visibility 0s var(--transition-duration-base);
-}
-
 @media (width >= 64rem) {
-  .nav-search {
-    opacity: 0;
-    transform: translateY(8px);
-    transition:
-      opacity var(--transition-duration-base) var(--ease-in-out),
-      transform var(--transition-duration-base) var(--ease-in-out),
-      visibility 0s var(--transition-duration-base);
-  }
-
-  .nav-search-start,
-  .nav-search-end {
-    transition: transform var(--transition-duration-base) var(--ease-in-out);
-  }
-
-  [data-search-docked] .nav-search-start {
+  .nav-search-start {
     transform: translateX(calc(var(--nav-search-w) / -2));
   }
 
-  [data-search-docked] .nav-search-end {
+  .nav-search-end {
     transform: translateX(calc(var(--nav-search-w) / 2));
   }
 }
 
-[data-search-docked] .nav-search {
-  visibility: visible;
-  opacity: 1;
-  transform: none;
-  transition-delay: 0s;
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Scrollbar fino y discreto para contenedores scrolleables internos

@@ -115,8 +115,7 @@ export const Pestanas: Story = {
 export const Pie: Story = { render: () => <SiteFooter /> };
 
 /**
- * El armado de `root.tsx` con el home: navbar fija y pie. Al bajar, cuando el buscador del hero pasa bajo el navbar,
- * aparece el del navbar.
+ * El armado de `root.tsx` con el home: navbar fija con el buscador y pie.
  */
 export const EstructuraDelSitio: Story = {
   name: "Estructura del sitio (home)",

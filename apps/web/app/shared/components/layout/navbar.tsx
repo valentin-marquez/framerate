@@ -104,7 +104,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   const onExplore = location.pathname.startsWith("/explorar");
   const onCategory = location.pathname.startsWith("/categoria");
 
-  // Sólo la home tiene el buscador del hero que se acopla al navbar (reglas `.nav-search` de app.css).
+  // Sólo la home muestra el buscador en el navbar (reglas `.nav-search` de app.css); #107 lo extiende al resto.
   const isHome = location.pathname === "/";
 
   const [isLogoHovered, setIsLogoHovered] = useState(false);
@@ -268,13 +268,13 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             </div>
           </div>
 
-          {/* En la home, con el buscador acoplado, `.nav-search-start/end` apartan Explorar y Hardware (app.css). */}
+          {/* En la home, `.nav-search-start/end` apartan Explorar y Hardware para dejar sitio al buscador (app.css). */}
           <div className="hidden md:flex items-center gap-6 absolute inset-x-0 mx-auto w-max">
-            <div className="nav-search-start">
+            <div className={isHome ? "nav-search-start" : undefined}>
               <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} />
             </div>
 
-            <div className="nav-search-end">
+            <div className={isHome ? "nav-search-end" : undefined}>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTabClass(onCategory)}>
                   <IconCpu className="size-4" stroke={1.75} />
@@ -425,7 +425,7 @@ export function Navbar({ categories, blurred }: NavbarProps) {
       {/* Bajo lg el campo no cabe en el navbar: va en una segunda fila, encima del contenido para no correrlo. Desde lg
           queda al centro del navbar. Se posiciona contra el <header> sticky de root.tsx. */}
       {isHome && (
-        <div className="nav-search absolute inset-x-0 top-full bg-background/90 px-4 py-2.5 backdrop-blur-md lg:top-2 lg:z-50 lg:mx-auto lg:w-(--nav-search-w) lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+        <div className="absolute inset-x-0 top-full bg-background/90 px-4 py-2.5 backdrop-blur-md lg:top-2 lg:z-50 lg:mx-auto lg:w-(--nav-search-w) lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           <SiteSearch id="nav-search" className="h-9 rounded-xl" />
         </div>
       )}
