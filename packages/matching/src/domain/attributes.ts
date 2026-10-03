@@ -98,7 +98,7 @@ const GPU_LINES = [
 
 const gpu: CategoryProfile = {
   keyFields: ["chipset", "vram", "line", "oc"],
-  discriminators: ["chipset", "vram", "line", "oc"],
+  discriminators: ["chipset", "vram", "line", "oc", "variant"],
   keyIsUnique: false,
   extract(title) {
     const t = prep(title);
@@ -129,6 +129,8 @@ const gpu: CategoryProfile = {
     if (line) a.line = line;
     // "OC" o el patrón de MPN de ASUS "O12G" dentro del título.
     a.oc = / oc /.test(t) || /o\d{1,2}g /.test(t);
+    // Siempre presente, como `oc`: una V2, EVO o MAX es otra tarjeta aunque la tienda de la base no lo escriba.
+    a.variant = t.match(/ (v ?2|evo|max|plus)(?= )/)?.[1]?.replace(" ", "") ?? "";
     return a;
   },
 };
@@ -242,9 +244,23 @@ function capacityGb(t: string): number | undefined {
   return m[2] === "t" ? Math.round(n * 1000) : Math.round(n);
 }
 
+const SSD_LINES = [
+  "renegade",
+  "legend",
+  "gammix",
+  "spectrix",
+  "wave",
+  "future",
+  "elite",
+  "viper",
+  "spatium",
+  "firecuda",
+  "barracuda",
+] as const;
+
 const ssd: CategoryProfile = {
   keyFields: ["capacity", "interface"],
-  discriminators: ["capacity", "interface"],
+  discriminators: ["capacity", "interface", "formFactor", "pcieGen", "series", "line"],
   keyIsUnique: false,
   extract(title) {
     const t = prep(title);
@@ -253,6 +269,18 @@ const ssd: CategoryProfile = {
     if (cap) a.capacity = cap;
     if (/ nvme | pci/.test(t)) a.interface = "nvme";
     else if (/ sata /.test(t)) a.interface = "sata";
+    const formFactor = t.match(/ 22 ?(30|42|80|110)(?= )/)?.[1];
+    if (formFactor) a.formFactor = `22${formFactor}`;
+    else if (/ 2\.5/.test(t)) a.formFactor = "2.5";
+    const gen =
+      t.match(/ (?:pcie|pci e|pci express|pcle|pci) ?(?:gen ?)?([345])(?:\.0)?(?= | ?x)/)?.[1] ??
+      t.match(/ gen ?([345])(?= | ?x)/)?.[1];
+    if (gen) a.pcieGen = Number(gen);
+    // "Legend 800" frente a "Legend 860": el número de serie empieza con dígito y la similitud lo ignora.
+    const series = t.match(/ [a-z]+ (\d{3})(?! ?(?:gb?|tb?|mb|w|rpm|mhz|x))(?= )/)?.[1];
+    if (series && !/^(512|256|128)$/.test(series)) a.series = series;
+    const line = firstMatch(SSD_LINES, t);
+    if (line) a.line = line;
     return a;
   },
 };
@@ -276,9 +304,49 @@ const hdd: CategoryProfile = {
 
 // ─── PSU ─────────────────────────────────────────────────────────────────────
 
+const PSU_LINES = [
+  "rog thor",
+  "thor",
+  "rog strix",
+  "strix",
+  "loki",
+  "tuf",
+  "prime",
+  "pure power",
+  "system power",
+  "dark power",
+  "straight power",
+  "xilence",
+  "elite",
+  "mwe",
+  "xg",
+  "pylon",
+  "kyber",
+  "core reactor",
+  "cybercore",
+  "probe",
+  "atlas",
+  "focus",
+  "vertex",
+  "atom",
+  "cuprum",
+  "aura",
+  "helios",
+  "hydra",
+  "hummer",
+  "supernova",
+  "toughpower",
+  "smart",
+  "mag",
+  "meg",
+  "mpg",
+  "sfx",
+] as const;
+const EFFICIENCY_ALIASES: Record<string, string> = { bronce: "bronze", platino: "platinum", platinium: "platinum" };
+
 const psu: CategoryProfile = {
   keyFields: ["wattage", "efficiency"],
-  discriminators: ["wattage", "efficiency"],
+  discriminators: ["wattage", "efficiency", "line", "revision"],
   keyIsUnique: false,
   extract(title) {
     const t = prep(title);
@@ -299,9 +367,17 @@ const psu: CategoryProfile = {
         }
       }
     }
-    const eff = t.match(/ (white|bronze|silver|gold|platinum|titanium)(?= )/);
-    if (eff?.[1]) a.efficiency = eff[1];
-    else if (/ 80 ?\+? ?plus(?! (?:white|bronze|silver|gold|platinum|titanium))/.test(t)) a.efficiency = "white";
+    // "White" suelto es el color; la certificación White sólo cuenta como "80 Plus" sin otro nivel.
+    const eff = t.match(/(?: |plus|\+)(bronze|bronce|silver|gold|platinum|platino|platinium|titanium)(?=[ +])/)?.[1];
+    if (eff) a.efficiency = EFFICIENCY_ALIASES[eff] ?? eff;
+    else if (/ 80 ?\+? ?plus| 80 ?\+ ?white/.test(t)) a.efficiency = "white";
+    const line = firstMatch(PSU_LINES, t);
+    if (line) {
+      const generation = t.match(new RegExp(` ${line} (\\d{1,2})(?= )`))?.[1];
+      a.line = generation ? `${line} ${generation}` : line;
+    }
+    const revision = t.match(/ (ii|iii|iv|v ?[2-5])(?= )/)?.[1];
+    if (revision) a.revision = revision.replace(" ", "");
     return a;
   },
 };

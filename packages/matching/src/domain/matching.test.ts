@@ -55,6 +55,7 @@ describe("atributos por categoría", () => {
       vram: 12,
       line: "dual",
       oc: true,
+      variant: "",
     });
     expect(PROFILES.gpu.extract("Gigabyte Radeon RX 7800 XT Gaming OC 16G").chipset).toBe("rx 7800 xt");
     expect(PROFILES.gpu.extract("Intel Arc B580 Limited Edition 12GB").chipset).toBe("arc b580");
@@ -94,7 +95,11 @@ describe("atributos por categoría", () => {
   });
 
   test("almacenamiento, PSU y placa madre", () => {
-    expect(PROFILES.ssd.extract("SSD Samsung 990 PRO 2TB NVMe M.2")).toEqual({ capacity: 2000, interface: "nvme" });
+    expect(PROFILES.ssd.extract("SSD Samsung 990 PRO 2TB NVMe M.2")).toEqual({
+      capacity: 2000,
+      interface: "nvme",
+      series: "990",
+    });
     expect(PROFILES.hdd.extract('Disco Duro Seagate Barracuda 2TB 7200RPM 3.5"')).toEqual({
       capacity: 2000,
       rpm: 7200,
@@ -197,6 +202,7 @@ describe("atributos por categoría", () => {
     expect(PROFILES.ssd.extract("Disco Duro SSD M.2 Kingston PCI 4.0 KC3000 1024G")).toEqual({
       capacity: 1024,
       interface: "nvme",
+      pcieGen: 4,
     });
   });
 
