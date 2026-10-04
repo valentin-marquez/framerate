@@ -23,6 +23,12 @@ import { categoriesService } from "~/features/category/services/categories";
 import { meToProfile } from "~/features/profile/services/profiles";
 import { Logo } from "~/shared/components/layout/logo";
 import { Navbar } from "~/shared/components/layout/navbar";
+import {
+  NavbarPrototype,
+  navVariantFromCookie,
+  PrototypeSwitcher,
+  prototypeShell,
+} from "~/shared/components/layout/navbar-prototype";
 import { SiteFooter } from "~/shared/components/layout/site-footer";
 import { Button } from "~/shared/components/primitives/button";
 import { Toaster } from "~/shared/components/primitives/sonner";
@@ -115,6 +121,8 @@ export async function loader({ request }: Route.LoaderArgs) {
       profile,
       providers,
       categories,
+      // PROTOTIPO (#108): variante del navbar, sólo en desarrollo.
+      navVariant: import.meta.env.DEV ? navVariantFromCookie(request.headers.get("Cookie")) : null,
       requestInfo: {
         clientEnv,
         userPrefs: { theme: getTheme(request), lang },
@@ -183,7 +191,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { categories: initialCategories } = loaderData;
+  const { categories: initialCategories, navVariant } = loaderData;
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
@@ -224,15 +232,22 @@ export default function App({ loaderData }: Route.ComponentProps) {
           navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300",
         )}
       />
-      <header className="sticky top-0 z-50 w-full">
-        <Navbar categories={categories ?? []} blurred={scrolled} />
-      </header>
+      {navVariant ? (
+        <NavbarPrototype variant={navVariant} categories={categories ?? []} blurred={scrolled} />
+      ) : (
+        <header className="sticky top-0 z-50 w-full">
+          <Navbar categories={categories ?? []} blurred={scrolled} />
+        </header>
+      )}
 
-      <main className="container mx-auto px-4 flex-1 pt-11">
-        <Outlet />
-      </main>
+      <div className={cn("flex flex-1 flex-col", navVariant && prototypeShell[navVariant])}>
+        <main className="container mx-auto px-4 flex-1 pt-11">
+          <Outlet />
+        </main>
 
-      <SiteFooter />
+        <SiteFooter />
+      </div>
+      {navVariant && <PrototypeSwitcher current={navVariant} />}
     </div>
   );
 }
