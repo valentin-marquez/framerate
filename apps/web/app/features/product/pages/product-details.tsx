@@ -88,10 +88,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         () => true,
         () => false,
       );
-      throw redirect(
-        exists ? `/producto/${legacy.base}` : `/explorar?search=${encodeURIComponent(legacy.search)}`,
-        301,
-      );
+      throw redirect(exists ? `/producto/${legacy.base}` : `/buscar?q=${encodeURIComponent(legacy.search)}`, 301);
     }
 
     throw new Response("Producto no encontrado", { status: 404 });

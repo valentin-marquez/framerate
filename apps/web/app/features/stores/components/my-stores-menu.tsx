@@ -64,12 +64,10 @@ export function MyStoresMenu({ enabled }: MyStoresMenuProps) {
         <span>Mis tiendas</span>
       </DropdownMenuLabel>
       {stores.map((s) => (
-        <DropdownMenuItem key={s.id}>
-          <Link to={`/tiendas/${s.slug}/admin`} className="flex w-full items-center gap-2.5" prefetch="intent">
-            <StoreLogo store={{ name: s.name, slug: s.slug, icon_url: s.icon_url }} className="size-6 rounded-md" />
-            <span className="truncate">{s.name}</span>
-            {s.role ? <span className="ml-auto text-xs text-muted-foreground/80">{ROLE_LABEL[s.role]}</span> : null}
-          </Link>
+        <DropdownMenuItem key={s.id} render={<Link to={`/tiendas/${s.slug}/admin`} prefetch="intent" />}>
+          <StoreLogo store={{ name: s.name, slug: s.slug, icon_url: s.icon_url }} className="size-6 rounded-md" />
+          <span className="truncate">{s.name}</span>
+          {s.role ? <span className="ml-auto text-xs text-muted-foreground/80">{ROLE_LABEL[s.role]}</span> : null}
         </DropdownMenuItem>
       ))}
     </>

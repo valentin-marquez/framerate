@@ -30,7 +30,7 @@ export function CategoryLinks({ categories }: CategoryLinksProps) {
           </Link>
         ))}
         <Link
-          to="/explorar"
+          to="/buscar"
           prefetch="intent"
           className="text-sm font-medium text-foreground hover:text-primary transition-colors py-1"
         >

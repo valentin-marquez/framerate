@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { IconCompass, IconCpu, IconUserCircle } from "@tabler/icons-react";
+import { IconUserCircle } from "@tabler/icons-react";
 import { HomeContent } from "~/features/home/components/home-content";
 import type { MyStore } from "~/features/profile/services/profiles";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "../primitives/dropdown-menu";
 import { AdminMenu } from "./admin-menu";
-import { NavFps, NavTab } from "./nav-parts";
+import { NavFps, NavSearch } from "./nav-parts";
 import { Navbar } from "./navbar";
 import { SiteFooter } from "./site-footer";
 
@@ -43,7 +43,7 @@ export const NavbarVisitante: Story = {
 export const NavbarConSesion: Story = {
   name: "Navbar: con sesión",
   // La sesión llega por los datos del loader raíz (ver `.storybook/preview.tsx`).
-  parameters: { session: sessions.user, path: "/explorar" },
+  parameters: { session: sessions.user, path: "/buscar" },
   render: () => (
     <div className="h-40">
       <Navbar categories={categories} />
@@ -99,14 +99,13 @@ export const MenuDeCuenta: Story = {
   ),
 };
 
-export const Pestanas: Story = {
-  name: "Pestañas y FPS",
-  parameters: { layout: "padded" },
+export const BuscadorYFps: Story = {
+  name: "Buscador con consulta y FPS",
+  // En `/buscar` el campo muestra la consulta de la URL.
+  parameters: { layout: "padded", path: "/buscar?q=rtx+5060" },
   render: () => (
     <div className="flex items-center gap-6">
-      <NavTab to="/explorar" icon={IconCompass} label="Explorar" active />
-      <NavTab to="/categoria/tarjetas-de-video" icon={IconCpu} label="Hardware" active={false} />
-      <NavTab to="/explorar" icon={IconCompass} label="Explorar" active={false} iconOnly />
+      <NavSearch className="w-96" />
       <NavFps />
     </div>
   ),
@@ -115,7 +114,7 @@ export const Pestanas: Story = {
 export const Pie: Story = { render: () => <SiteFooter /> };
 
 /**
- * El armado de `root.tsx` con el home: navbar fija con el buscador y pie.
+ * El armado de `root.tsx` con el home: navbar fija (buscador y categorías) y pie.
  */
 export const EstructuraDelSitio: Story = {
   name: "Estructura del sitio (home)",
@@ -130,7 +129,7 @@ export const EstructuraDelSitio: Story = {
           stores={stores}
           trendingIds={[rowProducts[2].id]}
           rows={[
-            { key: "popular", title: "Lo más popular", href: "/explorar", products: rowProducts },
+            { key: "popular", title: "Lo más popular", href: "/buscar", products: rowProducts },
             {
               key: "gpu",
               title: "Tarjetas de video",

@@ -185,7 +185,7 @@ function ActiveChips({ brands }: { brands: BrandCount[] }) {
   if (params.get("min_price") || params.get("max_price")) {
     chips.push({ label: "Rango de precio", clear: { min_price: null, max_price: null } });
   }
-  if (params.get("search")) chips.push({ label: `“${params.get("search")}”`, clear: { search: null } });
+  if (params.get("q")) chips.push({ label: `“${params.get("q")}”`, clear: { q: null } });
   if (chips.length === 0) return null;
 
   return (
@@ -203,7 +203,7 @@ function ActiveChips({ brands }: { brands: BrandCount[] }) {
       ))}
       <button
         type="button"
-        onClick={() => update({ brand: null, min_price: null, max_price: null, search: null })}
+        onClick={() => update({ brand: null, min_price: null, max_price: null, q: null })}
         className="text-muted-foreground text-xs transition-colors hover:text-foreground"
       >
         Limpiar todo

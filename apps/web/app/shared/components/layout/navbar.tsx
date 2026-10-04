@@ -1,15 +1,14 @@
 import type { CategoryItem } from "@framerate/contracts";
-import { IconCompass, IconCpu, IconLogout, IconSearch, IconSettings, IconUserCircle } from "@tabler/icons-react";
+import { IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react";
 import { useEffect, useReducer, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link } from "react-router";
 import { LoginDialog } from "~/features/auth/components/login-dialog";
 import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
-import { SearchDialog } from "~/features/search/components/search-dialog";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { AdminMenu } from "~/shared/components/layout/admin-menu";
 import { Logo } from "~/shared/components/layout/logo";
-import { NavFps, NavTab, navTabClass } from "~/shared/components/layout/nav-parts";
+import { NavCategories, NavFps, NavSearch } from "~/shared/components/layout/nav-parts";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { AsyncImage } from "../primitives/async-image";
@@ -100,12 +99,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   const user = useUser();
   const profile = useProfile();
   const { t } = useTranslation();
-  const location = useLocation();
-  const onExplore = location.pathname.startsWith("/explorar");
-  const onCategory = location.pathname.startsWith("/categoria");
-
-  const [searchOpen, setSearchOpen] = useState(false);
-
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [state, dispatch] = useReducer(navReducer, initialNavState);
@@ -115,8 +108,6 @@ export function Navbar({ categories, blurred }: NavbarProps) {
   // cambio de idioma sin perder el último traductor disponible.
   const tRef = useRef(t);
   tRef.current = t;
-
-  void categories;
 
   useEffect(() => {
     const tick = () => {
@@ -196,6 +187,8 @@ export function Navbar({ categories, blurred }: NavbarProps) {
     }
   }, []);
 
+  const profileHref = profile?.username ? `/u/${profile.username}` : "/perfil";
+
   return (
     <>
       <div
@@ -211,109 +204,38 @@ export function Navbar({ categories, blurred }: NavbarProps) {
 
       <nav
         className={cn(
-          "sticky top-0 z-40 h-13 w-full transition-all duration-300 ease-in-out overflow-hidden border-b",
-          // Al hacer scroll deja de ser blur translúcido (se sentía débil) y
-          // pasa a la misma superficie sólida que la barra de búsqueda móvil.
+          "w-full border-b transition-colors duration-300",
+          // Al hacer scroll deja de ser transparente y pasa a una superficie sólida.
           blurred ? "bg-background/90 backdrop-blur-md border-border" : "border-transparent",
         )}
       >
-        <div className="flex size-full items-center justify-between px-4 relative z-10">
-          <div className="flex items-center gap-3">
-            <Tooltip open={showGreeting}>
-              <TooltipTrigger
-                render={
-                  <Link
-                    to="/"
-                    className="flex items-center gap-0 group focus:outline-none"
-                    onMouseEnter={() => setIsLogoHovered(true)}
-                    onMouseLeave={() => setIsLogoHovered(false)}
-                    prefetch="intent"
-                  />
-                }
-              >
-                <Logo
-                  className="size-4 md:size-6 text-muted-foreground group-hover:text-foreground group-focus:text-foreground transition-colors duration-300 group-hover:duration-200 ease-in-out delay-200 group-hover:delay-75"
-                  isHovered={isLogoHovered}
+        <div className="flex h-13 items-center gap-3 px-4 md:gap-6">
+          <Tooltip open={showGreeting}>
+            <TooltipTrigger
+              render={
+                <Link
+                  to="/"
+                  className="flex shrink-0 items-center group focus:outline-none"
+                  onMouseEnter={() => setIsLogoHovered(true)}
+                  onMouseLeave={() => setIsLogoHovered(false)}
+                  prefetch="intent"
                 />
-                <span className="sr-only">Framerate</span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={8} className="max-w-70 md:max-w-none text-center">
-                {greetingMessage}
-              </TooltipContent>
-            </Tooltip>
-
-            <div className="flex items-center gap-3 md:hidden">
-              <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} iconOnly />
-
-              <DropdownMenu>
-                <DropdownMenuTrigger aria-label={t("hardware")} className={navTabClass(onCategory)}>
-                  <IconCpu className="size-4" stroke={1.75} />
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="start" className="w-56 mt-2">
-                  {categories && categories.length > 0 ? (
-                    categories.map((c) => (
-                      <DropdownMenuItem key={c.id}>
-                        <Link to={`/categoria/${c.slug}`} viewTransition className="cursor-pointer" prefetch="intent">
-                          {c.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <button
-                type="button"
-                aria-label="Buscar"
-                onClick={() => setSearchOpen(true)}
-                className={navTabClass(false)}
-              >
-                <IconSearch className="size-4" stroke={1.75} />
-              </button>
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center gap-6 absolute inset-x-0 mx-auto w-max">
-            <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} />
-
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              className="flex h-9 w-44 items-center gap-2 rounded-xl border border-border/60 bg-card px-3 text-muted-foreground text-sm shadow-sm transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:w-56"
+              }
             >
-              <IconSearch className="size-4 shrink-0" />
-              <span>Buscar</span>
-              <kbd className="ml-auto hidden font-mono text-[10px] lg:inline">Ctrl K</kbd>
-            </button>
+              <Logo
+                className="size-5 md:size-6 text-muted-foreground group-hover:text-foreground group-focus:text-foreground transition-colors duration-300 group-hover:duration-200 ease-in-out delay-200 group-hover:delay-75"
+                isHovered={isLogoHovered}
+              />
+              <span className="sr-only">Framerate</span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" sideOffset={8} className="max-w-70 md:max-w-none text-center">
+              {greetingMessage}
+            </TooltipContent>
+          </Tooltip>
 
-            <div>
-              <DropdownMenu>
-                <DropdownMenuTrigger className={navTabClass(onCategory)}>
-                  <IconCpu className="size-4" stroke={1.75} />
-                  <span>{t("hardware")}</span>
-                </DropdownMenuTrigger>
+          <NavSearch className="mx-auto max-w-2xl flex-1" />
 
-                <DropdownMenuContent align="center" className="w-56 mt-2">
-                  {categories && categories.length > 0 ? (
-                    categories.map((c) => (
-                      <DropdownMenuItem key={c.id}>
-                        <Link to={`/categoria/${c.slug}`} viewTransition className="cursor-pointer" prefetch="intent">
-                          {c.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
+          <div className="flex shrink-0 items-center gap-4">
             <NavFps className="hidden lg:inline-block" />
             {user ? (
               <CreateQuoteDialog
@@ -356,52 +278,39 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end" className="w-69 mt-2 text-base rounded-xl">
-                  <DropdownMenuItem className="cursor-default select-none p-0">
-                    <Link
-                      to={profile?.username ? `/u/${profile.username}` : "/perfil"}
-                      className="block"
-                      prefetch="intent"
-                    >
-                      <div className="flex items-center gap-3 p-3">
-                        {profile?.avatar_url ? (
-                          <AsyncImage
-                            src={profile?.avatar_url}
-                            alt={profile?.full_name || user.email || "avatar"}
-                            className="size-12 rounded-full object-cover shrink-0"
-                          />
-                        ) : (
-                          <div className="size-12 rounded-full bg-muted flex items-center justify-center shrink-0">
-                            <IconUserCircle className="size-7 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <p className="text-base font-medium truncate">
-                            {profile?.full_name || profile?.username || t("user")}
-                          </p>
-                          {user.email && <p className="text-sm text-muted-foreground truncate">{user.email}</p>}
-                        </div>
+                  <DropdownMenuItem
+                    className="flex items-center gap-3 p-3"
+                    render={<Link to={profileHref} prefetch="intent" />}
+                  >
+                    {profile?.avatar_url ? (
+                      <AsyncImage
+                        src={profile?.avatar_url}
+                        alt={profile?.full_name || user.email || "avatar"}
+                        className="size-12 rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="size-12 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <IconUserCircle className="size-7 text-muted-foreground" />
                       </div>
-                    </Link>
+                    )}
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <p className="text-base font-medium text-foreground truncate">
+                        {profile?.full_name || profile?.username || t("user")}
+                      </p>
+                      {user.email && <p className="text-sm text-muted-foreground truncate">{user.email}</p>}
+                    </div>
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
 
                   <DropdownMenuGroup>
-                    <DropdownMenuItem>
-                      <Link
-                        to={profile?.username ? `/u/${profile.username}` : "/perfil"}
-                        className="flex items-center gap-2.5 w-full"
-                        prefetch="intent"
-                      >
-                        <IconUserCircle className="size-5" />
-                        <span>{t("profile")}</span>
-                      </Link>
+                    <DropdownMenuItem render={<Link to={profileHref} prefetch="intent" />}>
+                      <IconUserCircle className="size-5" />
+                      <span>{t("profile")}</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link to="/ajustes" className="flex items-center gap-2.5 w-full" prefetch="intent">
-                        <IconSettings className="size-5" />
-                        <span>{t("settings")}</span>
-                      </Link>
+                    <DropdownMenuItem render={<Link to="/ajustes" prefetch="intent" />}>
+                      <IconSettings className="size-5" />
+                      <span>{t("settings")}</span>
                     </DropdownMenuItem>
 
                     {/* Sólo se monta cuando el dropdown está abierto: evita un */}
@@ -409,13 +318,16 @@ export function Navbar({ categories, blurred }: NavbarProps) {
                     {userMenuOpen && <MyStoresMenu enabled={userMenuOpen} />}
                     {userMenuOpen && <AdminMenu enabled={userMenuOpen} />}
 
+                    <DropdownMenuSeparator />
                     <form method="post" action="/action/auth">
                       <input type="hidden" name="action" value="logout" />
-                      <DropdownMenuItem className={"cursor-pointer"}>
-                        <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
-                          <IconLogout className="size-5" />
-                          <span>{t("logout")}</span>
-                        </button>
+                      <DropdownMenuItem
+                        nativeButton
+                        className="w-full cursor-pointer"
+                        render={<button type="submit" />}
+                      >
+                        <IconLogout className="size-5" />
+                        <span>{t("logout")}</span>
                       </DropdownMenuItem>
                     </form>
                   </DropdownMenuGroup>
@@ -435,9 +347,9 @@ export function Navbar({ categories, blurred }: NavbarProps) {
             )}
           </div>
         </div>
-      </nav>
 
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} categories={categories} />
+        <NavCategories categories={categories} />
+      </nav>
     </>
   );
 }

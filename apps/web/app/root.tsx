@@ -269,8 +269,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         <Button size="lg" nativeButton={false} render={<Link to="/" />}>
           Ir al inicio
         </Button>
-        <Button size="lg" variant="outline" nativeButton={false} render={<Link to="/explorar" />}>
-          Explorar productos
+        <Button size="lg" variant="outline" nativeButton={false} render={<Link to="/buscar" />}>
+          Ver el catálogo
         </Button>
       </div>
       {stack && (

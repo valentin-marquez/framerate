@@ -17,7 +17,7 @@ export function loader({ request }: LoaderFunctionArgs) {
     "Framerate.cl agrega precios y disponibilidad de componentes de PC desde más de 20 tiendas de Chile (PC Factory, PC Express, MyShop y Dust2, entre otras), permitiendo comparar ofertas por tienda, con precio en efectivo y con tarjeta, y revisar el historial de precios. Los precios se actualizan automáticamente. El sitio sirve a una audiencia chilena: precios en CLP y contenido en español.",
     "",
     "## Navegación principal",
-    `- [Explorar productos](${origin}/explorar): catálogo completo con filtros por categoría, marca y precio`,
+    `- [Catálogo y búsqueda](${origin}/buscar): catálogo completo con filtros por categoría, marca y precio`,
     `- [Reclamar una tienda](${origin}/reclamar): flujo para que los dueños reclamen el perfil de su tienda`,
     "",
     "## Para agentes",

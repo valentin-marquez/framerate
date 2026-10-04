@@ -10,12 +10,12 @@ const PAGE_SIZE = 24;
 const number = (value: string | null) => (value && Number.isFinite(Number(value)) ? Number(value) : undefined);
 
 /**
- * Datos de la vista de catálogo. La comparten `/explorar` (todo el catálogo, con búsqueda) y
+ * Datos de la vista de catálogo. La comparten `/buscar` (todo el catálogo, con búsqueda) y
  * `/categoria/:slug` (una categoría): los filtros salen de la URL, así cada vista se puede compartir.
  */
 export async function loadCatalog(request: Request, category?: string) {
   const params = new URL(request.url).searchParams;
-  const search = params.get("search")?.trim() || undefined;
+  const search = params.get("q")?.trim() || undefined;
   const brand = params.get("brand") || undefined;
   const minPrice = number(params.get("min_price"));
   const maxPrice = number(params.get("max_price"));

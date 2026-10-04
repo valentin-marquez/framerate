@@ -29,30 +29,22 @@ export function AdminMenu({ enabled }: AdminMenuProps) {
         <IconShieldCheck className="size-4" />
         <span>Administración</span>
       </DropdownMenuLabel>
-      <DropdownMenuItem>
-        <Link to="/admin/estado" className="flex items-center gap-2.5 w-full" prefetch="intent">
-          <IconActivityHeartbeat className="size-5" />
-          <span>Estado</span>
-        </Link>
+      <DropdownMenuItem render={<Link to="/admin/estado" prefetch="intent" />}>
+        <IconActivityHeartbeat className="size-5" />
+        <span>Estado</span>
       </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link to="/admin/support" className="flex items-center gap-2.5 w-full" prefetch="intent">
-          <IconLifebuoy className="size-5" />
-          <span>Soporte</span>
-        </Link>
+      <DropdownMenuItem render={<Link to="/admin/support" prefetch="intent" />}>
+        <IconLifebuoy className="size-5" />
+        <span>Soporte</span>
       </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link to="/admin/moderation" className="flex items-center gap-2.5 w-full" prefetch="intent">
-          <IconGavel className="size-5" />
-          <span>Moderación</span>
-        </Link>
+      <DropdownMenuItem render={<Link to="/admin/moderation" prefetch="intent" />}>
+        <IconGavel className="size-5" />
+        <span>Moderación</span>
       </DropdownMenuItem>
       {role === "admin" && (
-        <DropdownMenuItem>
-          <Link to="/admin/users" className="flex items-center gap-2.5 w-full" prefetch="intent">
-            <IconUsers className="size-5" />
-            <span>Usuarios</span>
-          </Link>
+        <DropdownMenuItem render={<Link to="/admin/users" prefetch="intent" />}>
+          <IconUsers className="size-5" />
+          <span>Usuarios</span>
         </DropdownMenuItem>
       )}
     </>

@@ -32,13 +32,6 @@ function listParams(filters: ProductFilters): Record<string, string> {
 export const productsService = {
   getAll: (filters: ProductFilters = {}) => api.get<ProductPage>("/v1/products", { params: listParams(filters) }),
 
-  // Búsqueda rápida para el buscador (autocompletado).
-  quickSearch: async (query: string, limit = 10) => {
-    const q = searchable(query);
-    if (!q) return [];
-    return (await api.get<ProductPage>("/v1/products", { params: { q, pageSize: String(limit) } })).items;
-  },
-
   // Aún no hay ranking de tendencia.
   getTrending: async (_limit?: number): Promise<{ ids: number[] }> => ({ ids: [] }),
 

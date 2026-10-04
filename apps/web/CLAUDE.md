@@ -50,7 +50,7 @@ ven en Storybook, Fundamentos/Movimiento.
 - Sistema de diseño en `.github/instructions/web.instructions.md` y en Storybook (`apps/web`): tipografía Satoshi,
   paleta neutra estilo Luma, superficies en capas (`bg-background` / `bg-card` / `bg-secondary`), radios squircle
   (`rounded-md` inputs, `rounded-xl`/`rounded-2xl` tarjetas, `rounded-3xl` modales).
-- **URLs públicas en español** (`/tiendas/:slug`, `/reclamar`, `/explorar`, `/categoria/:slug`, `/producto/:slug`,
+- **URLs públicas en español** (`/tiendas/:slug`, `/reclamar`, `/buscar`, `/categoria/:slug`, `/producto/:slug`,
   `/cotizacion/:slug`). Al renombrar una ruta, la versión vieja queda como redirect 301
   (`apps/web/app/features/stores/pages/redirect-old-*.tsx`). APIs, tablas y código, en inglés.
 - El estado de los filtros vive en los search params de la URL.

@@ -84,7 +84,7 @@ export async function loader() {
 
   // "Mejores ofertas" vuelve cuando exista precio de referencia (hoy repetiría "Lo más popular").
   const rowDefs: { key: string; title: string; href: string }[] = [
-    { key: "popular", title: "Lo más popular", href: "/explorar" },
+    { key: "popular", title: "Lo más popular", href: "/buscar" },
     ...rowCategories.map((c) => ({ key: c.slug, title: c.label, href: `/categoria/${c.slug}` })),
   ];
 
