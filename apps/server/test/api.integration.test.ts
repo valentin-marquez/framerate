@@ -208,6 +208,9 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
     try {
       expect((await get("/v1/products/amd-ryzen-7-7800x3d/view", { method: "POST" })).status).toBe(204);
       expect(points).toEqual([{ indexes: ["amd-ryzen-7-7800x3d"], blobs: ["view", "amd-ryzen-7-7800x3d"] }]);
+      expect((await get(`/v1/products/${"a".repeat(101)}/view`, { method: "POST" })).status).toBe(400);
+      expect((await get("/v1/products/Hola%20Mundo/view", { method: "POST" })).status).toBe(400);
+      expect(points).toHaveLength(1);
     } finally {
       env.ANALYTICS = undefined;
     }

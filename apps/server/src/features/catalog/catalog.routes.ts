@@ -111,7 +111,8 @@ export const catalogRoutes = new Hono<AppEnv>()
   .post("/products/:slug/view", async (c) => {
     // Sin validar contra D1: un slug que no existe no cruza con ningún producto al agregar `views_7d` en ingest.
     const slug = c.req.param("slug");
-    if (slug.length > 200) throw new AppError(400, "invalid_request", "slug demasiado largo");
+    // Formato de `slugify` (más el sufijo de desempate): acota la basura que puede llegar a Analytics Engine.
+    if (!/^[a-z0-9-]{1,100}$/.test(slug)) throw new AppError(400, "invalid_request", "slug inválido");
     c.env.ANALYTICS?.writeDataPoint({ indexes: [slug], blobs: ["view", slug] });
     return c.body(null, 204);
   });

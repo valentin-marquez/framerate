@@ -2,8 +2,10 @@ import { bumpCatalogVersionQuery, type Db } from "@framerate/database";
 import { CompiledQuery } from "kysely";
 
 // `_sample_interval`: Analytics Engine muestrea con mucho tráfico; cada fila vale por las que representa.
+// El LIMIT acota lo que va al parámetro JSON de D1 (2 MB) aunque llenen el dataset de slugs inventados; el catálogo
+// tiene ~4.500 productos. ponytail: si pasa de 10.000, la cola larga queda en 0 vistas.
 const VIEWS_7D_SQL = `SELECT blob2 AS slug, SUM(_sample_interval) AS views FROM framerate_events
-WHERE blob1 = 'view' AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY slug FORMAT JSON`;
+WHERE blob1 = 'view' AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY slug ORDER BY views DESC LIMIT 10000 FORMAT JSON`;
 
 /** Vistas de ficha de los últimos 7 días por slug, desde el dataset que escribe apps/server. */
 export async function fetchViews7d(accountId: string, token: string, fetcher: typeof fetch = fetch) {
