@@ -754,6 +754,14 @@
   animation-timing-function: var(--ease-out);
 }
 
+/* El riel no participa del fundido de las páginas que lo usan: se ve en vivo, sin la captura vieja encima. */
+::view-transition-old(nav-rail) {
+  display: none;
+}
+::view-transition-new(nav-rail) {
+  animation: none;
+}
+
 ::view-transition-group(category-photo),
 ::view-transition-group(product-photo) {
   animation-timing-function: var(--ease-in-out);

@@ -85,7 +85,8 @@ function RailLink({
         to={to}
         end={end}
         prefetch="intent"
-        viewTransition
+        // Sin viewTransition: mientras dura una, Chrome manda los clics a la raíz y los clics rápidos en el riel se
+        // perdían. La píldora y la entrada de resultados ya dan la continuidad.
         onClick={onClick}
         aria-label={collapsed ? label : undefined}
         className={(state) =>
@@ -236,6 +237,7 @@ export function Navbar({
       <aside
         // Con el ancho animado (equipos holgados) la píldora se vuelve a medir al terminar el cambio.
         onTransitionEnd={(e) => e.target === e.currentTarget && e.propertyName === "width" && measureIndicator()}
+        style={{ viewTransitionName: "nav-rail" }}
         className={cn(
           "t-resize fixed inset-y-0 left-0 z-40 hidden flex-col gap-4 border-border/60 border-r bg-card/40 py-3 lg:flex",
           collapsed ? "w-16 items-center px-2" : "w-64 px-3",
