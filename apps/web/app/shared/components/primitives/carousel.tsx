@@ -19,6 +19,9 @@ type CarouselContextType = {
   sync: () => void;
 };
 
+/** Cuánto sigue un lanzamiento: distancia = velocidad al soltar (px/ms) × esto. Más alto, más lejos llega. */
+const FLING_MS = 320;
+
 const CarouselContext = createContext<CarouselContextType | undefined>(undefined);
 
 function useCarousel() {
@@ -81,7 +84,7 @@ export type CarouselContentProps = {
 
 function CarouselContent({ children, className }: CarouselContentProps) {
   const { scroller, sync, disableDrag } = useCarousel();
-  const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null);
+  const drag = useRef<{ x: number; left: number; moved: boolean; samples: { x: number; t: number }[] } | null>(null);
 
   // Estado de flechas e indicador: con el scroll (pasivo, una vez por cuadro) y con cambios de tamaño.
   useEffect(() => {
@@ -104,10 +107,16 @@ function CarouselContent({ children, className }: CarouselContentProps) {
   }, [scroller, sync]);
 
   const endDrag = (el: HTMLDivElement) => {
-    // Al soltar vuelve el imán y el carrusel se asienta en la tarjeta más cercana.
+    // Lanzamiento: la velocidad de los últimos ~100 ms proyecta hasta dónde llegaría con fricción, y el scroll
+    // nativo (suave, en el compositor) lo lleva hasta ahí; con el imán de vuelta, se asienta en la tarjeta más cercana.
+    const samples = drag.current?.moved ? drag.current.samples : [];
+    const first = samples[0];
+    const last = samples[samples.length - 1];
+    const velocity = first && last && last.t > first.t ? (last.x - first.x) / (last.t - first.t) : 0;
     el.style.scrollSnapType = "";
     el.style.scrollBehavior = "";
     drag.current = null;
+    if (Math.abs(velocity) > 0.2) el.scrollBy({ left: -velocity * FLING_MS, behavior: "smooth" });
   };
 
   return (
@@ -125,13 +134,20 @@ function CarouselContent({ children, className }: CarouselContentProps) {
       onDragStart={(e) => e.preventDefault()}
       onPointerDown={(e) => {
         if (disableDrag || e.pointerType !== "mouse" || e.button !== 0) return;
-        drag.current = { x: e.clientX, left: e.currentTarget.scrollLeft, moved: false };
+        drag.current = {
+          x: e.clientX,
+          left: e.currentTarget.scrollLeft,
+          moved: false,
+          samples: [{ x: e.clientX, t: e.timeStamp }],
+        };
       }}
       onPointerMove={(e) => {
         const d = drag.current;
         if (!d) return;
         const dx = e.clientX - d.x;
-        if (!d.moved && Math.abs(dx) < 6) return;
+        d.samples.push({ x: e.clientX, t: e.timeStamp });
+        while (d.samples.length > 2 && e.timeStamp - d.samples[0].t > 100) d.samples.shift();
+        if (!d.moved && Math.abs(dx) < 3) return;
         if (!d.moved) {
           d.moved = true;
           // Sin imán mientras se arrastra: si no, el navegador corrige la posición en cada movimiento.
