@@ -5,7 +5,9 @@ import { api } from "~/shared/lib/api";
 export const categoriesService = {
   getAll: async () => (await api.get<{ items: CategoryItem[] }>("/v1/categories")).items,
 
-  getBrands: async (slug: string) => (await api.get<{ items: BrandCount[] }>(`/v1/categories/${slug}/brands`)).items,
+  /** Marcas con su conteo, con los mismos filtros del listado salvo la propia marca (en /cyber, sólo las bajas). */
+  getBrands: async (slug: string, filters: Omit<ProductFilters, "category" | "page" | "limit" | "sort"> = {}) =>
+    (await api.get<{ items: BrandCount[] }>(`/v1/categories/${slug}/brands`, { params: listParams(filters) })).items,
 
   getPriceRange: (slug: string) => api.get<PriceRange>(`/v1/categories/${slug}/price-range`),
 

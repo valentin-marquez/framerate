@@ -412,12 +412,15 @@ export async function categoryCounts(db: Db) {
 }
 
 /** Marcas con productos activos en una categoría, con su conteo. */
-export async function listBrands(db: Db, category: Category): Promise<BrandCount[]> {
-  const rows = await db.query
-    .selectFrom("products as p")
-    .innerJoin(offerAggregate(db), "agg.product_id", "p.id")
-    .select(["p.brand", (eb) => eb.fn.countAll<number>().as("count")])
-    .where("p.category", "=", category)
+/**
+ * Marcas con productos con stock en una categoría, con su conteo. Acepta los filtros del listado (texto, precio,
+ * spec, ofertas) salvo la propia marca, como las facetas: así /cyber cuenta sólo las bajas.
+ */
+export async function listBrands(db: Db, category: Category, filters: ListFilters = {}): Promise<BrandCount[]> {
+  const build = await filteredProducts(db, { ...filters, brand: undefined, category });
+  if (!build) return [];
+  const rows = await build()
+    .base.select(["p.brand", (eb) => eb.fn.countAll<number>().as("count")])
     .where("p.brand", "is not", null)
     .groupBy("p.brand")
     .orderBy("count", "desc")

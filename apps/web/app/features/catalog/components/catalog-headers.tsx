@@ -29,7 +29,7 @@ export function CategoryHeader({
         src={getCategoryImage(category)}
         alt=""
         fetchPriority="high"
-        className="parallax-y absolute inset-0 -z-10 size-full object-cover opacity-90 [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_92%)]"
+        className="parallax-y absolute inset-0 -z-10 size-full object-cover opacity-90 grayscale [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_92%)]"
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/60 to-transparent md:via-background/40" />
       <div className="flex min-h-56 flex-col justify-end gap-3 p-6 pt-24 md:min-h-72 md:p-10 md:pt-32">

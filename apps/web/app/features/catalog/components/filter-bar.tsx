@@ -325,12 +325,8 @@ export function CategoryChips({ categories }: { categories: CategoryItem[] }) {
 /** Filtros aplicados, cada uno con su quitar. Sólo aparece cuando hay alguno. */
 function ActiveChips({ brands, definitions }: { brands: BrandCount[]; definitions: FacetDefinition[] }) {
   const { params, update } = useFilterParams();
-  const [leaving, setLeaving] = useState<{ labels: string[]; change: Record<string, string | string[] | null> } | null>(
-    null,
-  );
-  // Con la URL nueva los chips quitados ya no existen: se olvida la salida.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: se limpia en cada cambio de filtros.
-  useEffect(() => setLeaving(null), [params]);
+  // Chips recién quitados: el filtro ya se aplicó (al instante); sólo quedan para animar su salida.
+  const [ghosts, setGhosts] = useState<{ label: string; index: number; delay: number }[]>([]);
   const chips: { label: string; clear: Record<string, string[] | null> }[] = [];
   const brand = params.get("brand");
   if (brand) chips.push({ label: brands.find((b) => b.slug === brand)?.name ?? brand, clear: { brand: null } });
@@ -345,55 +341,71 @@ function ActiveChips({ brands, definitions }: { brands: BrandCount[]; definition
     chips.push({ label, clear: { spec: specs.filter((t) => t !== token) } });
   }
   if (params.get("q")) chips.push({ label: `“${params.get("q")}”`, clear: { q: null } });
-  if (chips.length === 0) return null;
 
-  // Salida: los chips quitados encogen y se apagan, y la URL cambia al terminar la última (con movimiento reducido
-  // la animación dura ~0 y el filtro se aplica de inmediato).
-  const remove = (labels: string[], change: Parameters<typeof update>[0]) => setLeaving({ labels, change });
-  const leavingIndex = (label: string) => leaving?.labels.indexOf(label) ?? -1;
-  const lastLeaving = leaving?.labels.at(-1);
+  const remove = (labels: string[], change: Parameters<typeof update>[0]) => {
+    setGhosts(
+      labels.map((label, i) => ({
+        label,
+        index: chips.findIndex((c) => c.label === label),
+        delay: Math.min(i, 5) * 30,
+      })),
+    );
+    update(change);
+  };
   const clearAll = { brand: null, min_price: null, max_price: null, q: null, spec: null };
+
+  // Los fantasmas vuelven a su posición anterior entre los chips que siguen activos.
+  type Item =
+    | { kind: "chip"; label: string; clear: Record<string, string[] | null> }
+    | { kind: "ghost"; label: string; delay: number };
+  const items: Item[] = chips.map((c) => ({ kind: "chip", ...c }));
+  for (const g of [...ghosts].sort((a, b) => a.index - b.index)) {
+    if (!chips.some((c) => c.label === g.label)) {
+      items.splice(Math.min(g.index, items.length), 0, { kind: "ghost", label: g.label, delay: g.delay });
+    }
+  }
+  if (items.length === 0) return null;
 
   return (
     <div className="-mt-3 flex flex-wrap items-center gap-2">
-      {chips.map((c) => {
-        const out = leavingIndex(c.label);
-        return (
-          <button
-            key={c.label}
-            type="button"
-            disabled={!!leaving}
-            onClick={() => remove([c.label], c.clear)}
-            onAnimationEnd={() => out >= 0 && c.label === lastLeaving && leaving && update(leaving.change)}
-            style={out >= 0 ? { animationDelay: `${Math.min(out, 5) * 30}ms` } : undefined}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full bg-secondary/60 px-3 py-1 text-foreground text-xs transition-colors hover:bg-secondary",
-              out >= 0
-                ? "fade-out-0 zoom-out-90 animate-out fill-mode-forwards duration-100"
-                : "fade-in-0 zoom-in-90 animate-in duration-fast",
-            )}
+      {items.map((item) =>
+        item.kind === "ghost" ? (
+          <span
+            key={`ghost-${item.label}`}
+            aria-hidden="true"
+            onAnimationEnd={() => setGhosts((gs) => gs.filter((g) => g.label !== item.label))}
+            style={{ animationDelay: `${item.delay}ms` }}
+            className="pointer-events-none inline-flex items-center gap-1 rounded-full bg-secondary/60 px-3 py-1 text-foreground text-xs fade-out-0 zoom-out-90 animate-out fill-mode-forwards duration-100"
           >
-            {c.label}
+            {item.label}
+            <IconX className="size-3 text-muted-foreground" />
+          </span>
+        ) : (
+          <button
+            key={item.label}
+            type="button"
+            onClick={() => remove([item.label], item.clear)}
+            className="inline-flex items-center gap-1 rounded-full bg-secondary/60 px-3 py-1 text-foreground text-xs transition-colors hover:bg-secondary fade-in-0 zoom-in-90 animate-in duration-fast"
+          >
+            {item.label}
             <IconX className="size-3 text-muted-foreground" />
           </button>
-        );
-      })}
-      <button
-        type="button"
-        disabled={!!leaving}
-        onClick={() =>
-          remove(
-            chips.map((c) => c.label),
-            clearAll,
-          )
-        }
-        className={cn(
-          "text-muted-foreground text-xs transition-[color,opacity] hover:text-foreground",
-          leaving && leaving.labels.length === chips.length && "opacity-0",
-        )}
-      >
-        Limpiar todo
-      </button>
+        ),
+      )}
+      {chips.length > 0 && (
+        <button
+          type="button"
+          onClick={() =>
+            remove(
+              chips.map((c) => c.label),
+              clearAll,
+            )
+          }
+          className="text-muted-foreground text-xs transition-colors hover:text-foreground"
+        >
+          Limpiar todo
+        </button>
+      )}
     </div>
   );
 }

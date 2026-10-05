@@ -71,8 +71,9 @@ export const catalogRoutes = new Hono<AppEnv>()
       })),
     });
   })
-  .get("/categories/:slug/brands", edgeCache(3600), async (c) => {
-    return c.json({ items: await listBrands(c.var.db, categoryParam(c.req.param("slug"))) });
+  .get("/categories/:slug/brands", edgeCache(300), async (c) => {
+    const category = categoryParam(c.req.param("slug"));
+    return c.json({ items: await listBrands(c.var.db, category, listQuery(c, category)) });
   })
   .get("/categories/:slug/price-range", edgeCache(3600), async (c) => {
     return c.json(await priceRange(c.var.db, categoryParam(c.req.param("slug"))));

@@ -68,7 +68,9 @@ export async function loadCatalog(request: Request, category?: string, { deals =
   try {
     const [{ items: products, total }, brands, priceRange, facets, categories, trending] = await Promise.all([
       productsService.getAll({ ...shared, page, limit: PAGE_SIZE, category, sort }),
-      category ? categoriesService.getBrands(category).catch(() => empty.brands) : Promise.resolve(empty.brands),
+      category
+        ? categoriesService.getBrands(category, shared).catch(() => empty.brands)
+        : Promise.resolve(empty.brands),
       category ? categoriesService.getPriceRange(category).catch(() => null) : Promise.resolve(null),
       category && keys.size > 0
         ? categoriesService.getFacets(category, shared).catch(() => empty.facets)
