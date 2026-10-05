@@ -415,6 +415,24 @@
 }
 
 /*
+ * Dos íconos en el mismo lugar (transitions.dev, "icon swap"): se cruzan con opacidad y escala. Sin el desenfoque
+ * del original, que anima `filter`. El visible lleva data-on="true".
+ */
+.t-icon-swap {
+  display: inline-grid;
+}
+.t-icon-swap > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--transition-duration-fast) var(--ease-in-out),
+    transform var(--transition-duration-fast) var(--ease-in-out);
+}
+.t-icon-swap > [data-on="false"] {
+  opacity: 0;
+  transform: scale(0.25);
+}
+
+/*
  * Haz de luz del buscador (border beam): una línea en el borde inferior y su resplandor hacia adentro, que van y
  * vienen despacio. Pasivo: tenue en reposo, más presente con foco o mientras busca. Sólo anima transform; la
  * opacidad cambia con transición. Con movimiento reducido queda quieto al centro.

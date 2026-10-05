@@ -95,7 +95,7 @@ function RailLink({
         {icon}
         {!collapsed && (
           <>
-            <span className="truncate">{label}</span>
+            <span className="truncate fade-in-0 slide-in-from-left-1 animate-in duration-base">{label}</span>
             {count !== undefined && <span className="ml-auto text-muted-foreground text-xs tabular-nums">{count}</span>}
           </>
         )}
@@ -175,14 +175,13 @@ export function Navbar({
       onClick={() => onCollapsedChange(!collapsed)}
       aria-label={collapsed ? "Desplegar menú" : "Plegar menú"}
       aria-expanded={!collapsed}
-      // Manija a media altura sobre el borde del riel: deja la fila de arriba para la marca.
-      className="absolute top-1/2 right-0 grid size-6 translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      // Manija sobre el borde del riel, a la altura de la marca.
+      className="absolute top-8 right-0 grid size-6 translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      {collapsed ? (
-        <IconChevronRight className="size-3.5" stroke={2} />
-      ) : (
-        <IconChevronLeft className="size-3.5" stroke={2} />
-      )}
+      <span className="t-icon-swap">
+        <IconChevronLeft data-on={!collapsed} className="size-3.5" stroke={2} />
+        <IconChevronRight data-on={collapsed} className="size-3.5" stroke={2} />
+      </span>
     </button>
   );
 
@@ -294,7 +293,8 @@ export function Navbar({
       </nav>
 
       <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
-        <DialogContent className="top-auto bottom-0 max-h-[80dvh] w-full max-w-none translate-y-0 overflow-y-auto rounded-t-3xl rounded-b-none border-x-0 border-b-0 p-3 pb-8 lg:hidden">
+        {/* Hoja que sube desde abajo (transitions.dev, "panel reveal"): se desliza en vez de crecer desde el centro. */}
+        <DialogContent className="top-auto bottom-0 max-h-[80dvh] w-full max-w-none translate-y-0 overflow-y-auto rounded-t-3xl rounded-b-none border-x-0 border-b-0 p-3 pb-8 zoom-in-100 zoom-out-100 slide-in-from-bottom-24 slide-out-to-bottom-24 lg:hidden">
           <DialogTitle className="px-2.5 pt-2 pb-3">Categorías</DialogTitle>
           {categories.map((c) => (
             <RailLink

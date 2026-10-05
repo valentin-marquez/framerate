@@ -75,11 +75,13 @@ export function SearchField({ className }: { className?: string }) {
         <span className="search-beam-glow" />
         <span className="search-beam-line" />
       </span>
-      {loading ? (
-        <IconLoader2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 animate-spin text-foreground" />
-      ) : (
-        <IconSearch className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-      )}
+      {/* El giro va en el ícono y la escala del cruce en su envoltorio: las dos usan transform. */}
+      <span className="t-icon-swap pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
+        <IconSearch data-on={!loading} className="size-4 text-muted-foreground" />
+        <span data-on={loading}>
+          <IconLoader2 className="size-4 animate-spin text-foreground" />
+        </span>
+      </span>
       <input
         data-search-field
         type="search"
@@ -95,19 +97,24 @@ export function SearchField({ className }: { className?: string }) {
         }}
         className="h-10 w-full rounded-xl border border-border/70 bg-background pr-9 pl-9 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground hover:border-foreground/20 focus:border-foreground/30 [&::-webkit-search-cancel-button]:appearance-none"
       />
-      {value && (
-        <button
-          type="button"
-          aria-label="Borrar búsqueda"
-          onClick={() => {
-            setValue("");
-            focusSearchField();
-          }}
-          className="absolute top-1/2 right-2 grid size-6 -translate-y-1/2 cursor-pointer place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-        >
-          <IconX className="size-3.5" stroke={2} />
-        </button>
-      )}
+      {/* Siempre montado para que entre y salga con escala, no de golpe. */}
+      <button
+        type="button"
+        aria-label="Borrar búsqueda"
+        aria-hidden={!value}
+        tabIndex={value ? 0 : -1}
+        onClick={() => {
+          setValue("");
+          focusSearchField();
+        }}
+        className={cn(
+          "absolute top-1/2 right-2 grid size-6 -translate-y-1/2 cursor-pointer place-items-center rounded-full text-muted-foreground",
+          "transition-[opacity,scale,background-color,color] duration-fast ease-out hover:bg-secondary hover:text-foreground",
+          value ? "scale-100 opacity-100" : "pointer-events-none scale-50 opacity-0",
+        )}
+      >
+        <IconX className="size-3.5" stroke={2} />
+      </button>
     </form>
   );
 }

@@ -52,15 +52,21 @@ export function CategoryHeader({
 export function SearchHeader({ total, search }: { total: number; search: string | null }) {
   return (
     <header className={cn("space-y-1 pt-2", enterClass())}>
+      {/* Al buscar mientras se escribe, título y conteo cambian en el lugar: la key los vuelve a montar y entran
+          con un deslizamiento corto (transitions.dev, "text states swap" y "number pop-in", sin desenfoque). */}
       <h1 className="font-semibold text-3xl text-foreground tracking-tight md:text-4xl">
-        {search ? `“${search}”` : "Todo el catálogo"}
+        <span key={search ?? ""} className="inline-block slide-in-from-bottom-1 fade-in-0 animate-in duration-fast">
+          {search ? `“${search}”` : "Todo el catálogo"}
+        </span>
       </h1>
       <p className="text-muted-foreground text-sm">
-        {total > 0
-          ? `${total.toLocaleString("es-CL")} ${total === 1 ? "producto" : "productos"} de las tiendas de Chile`
-          : search
-            ? "No encontramos productos con esa búsqueda"
-            : "Compara precios de hardware en Chile"}
+        <span key={total} className="inline-block slide-in-from-bottom-1 fade-in-0 animate-in duration-fast">
+          {total > 0
+            ? `${total.toLocaleString("es-CL")} ${total === 1 ? "producto" : "productos"} de las tiendas de Chile`
+            : search
+              ? "No encontramos productos con esa búsqueda"
+              : "Compara precios de hardware en Chile"}
+        </span>
       </p>
     </header>
   );
