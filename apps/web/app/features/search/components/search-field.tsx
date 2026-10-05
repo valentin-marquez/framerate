@@ -83,10 +83,10 @@ export function SearchField({ className }: { className?: string }) {
       <span
         aria-hidden="true"
         data-active={loading}
-        className="search-beam pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-xl"
+        className="beam pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-xl"
       >
-        <span className="search-beam-glow" />
-        <span className="search-beam-line" />
+        <span className="beam-glow" />
+        <span className="beam-line" />
       </span>
       {/* El giro va en el ícono y la escala del cruce en su envoltorio: las dos usan transform. */}
       <span className="t-icon-swap pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">

@@ -1,4 +1,13 @@
-import { CATEGORY_LABELS, CATEGORY_SLUGS, type CategoryItem, type Me, type ProductSummary } from "@framerate/contracts";
+import {
+  CATEGORY_LABELS,
+  CATEGORY_SLUGS,
+  type CategoryItem,
+  type Facet,
+  type Freshness,
+  type Me,
+  nextCrawlAt,
+  type ProductSummary,
+} from "@framerate/contracts";
 import type { Profile } from "~/features/profile/services/profiles";
 import type { ClaimableStore } from "~/features/stores/services/stores";
 
@@ -24,6 +33,7 @@ const gpu = (
   bestCardPrice: price,
   offerCount: 1,
   mpn: null,
+  referencePrice: null,
 });
 
 export const products = [
@@ -76,7 +86,9 @@ export const productStates = {
     bestCardPrice: 129_990,
     offerCount: 4,
     mpn: null,
+    referencePrice: null,
   },
+  conBaja: { ...base3, referencePrice: 519_990, offerCount: 3 },
   nombreLargo: {
     ...base0,
     name: "Tarjeta de video Nvidia GeForce RTX 3050 MSI Ventus 2X OC Edition 6GB GDDR6 128-bit PCIe 4.0 con ventilación doble",
@@ -85,6 +97,7 @@ export const productStates = {
 
 export const cardCases: { label: string; product: ProductSummary; trending?: boolean }[] = [
   { label: "Precio tarjeta distinto", product: productStates.tarjetaDistinta, trending: true },
+  { label: "Bajó de precio", product: productStates.conBaja },
   { label: "Sin stock", product: productStates.sinStock },
   { label: "Normal", product: productStates.normal },
   { label: "Fuente, sin imagen", product: productStates.fuenteDePoder },
@@ -151,3 +164,45 @@ export const brands = [
   { name: "ASUS", slug: "asus", count: 2 },
   { name: "Zotac", slug: "zotac", count: 2 },
 ];
+
+/** Facetas de tarjetas de video, con la forma de `GET /v1/categories/:slug/facets`. */
+export const gpuFacets: Facet[] = [
+  {
+    key: "vram",
+    label: "Memoria",
+    values: [
+      { value: "6", label: "6 GB", count: 1 },
+      { value: "8", label: "8 GB", count: 5 },
+      { value: "12", label: "12 GB", count: 2 },
+      { value: "16", label: "16 GB", count: 3 },
+    ],
+    unknownCount: 12,
+  },
+  {
+    key: "chipset",
+    label: "Modelo",
+    values: [
+      { value: "rtx 3050", label: "RTX 3050", count: 1 },
+      { value: "rtx 5050", label: "RTX 5050", count: 1 },
+      { value: "rtx 5060", label: "RTX 5060", count: 2 },
+    ],
+    unknownCount: 0,
+  },
+];
+
+/** Resultado filtrado por especificación: dos cumplen y el resto no tiene el dato. */
+export const specMatchProducts: ProductSummary[] = rowProducts
+  .slice(0, 5)
+  .map((p, i) => ({ ...p, specMatch: i < 2 ? "match" : "unknown" }));
+
+/** Bajas de precio para `/cyber` y la fila de la home. */
+export const dropProducts: ProductSummary[] = rowProducts.map((p, i) => ({
+  ...p,
+  referencePrice: Math.round((p.bestPrice ?? 0) * (1.25 - i * 0.03)),
+}));
+
+/** Frescura relativa a ahora: actualizadas hace 23 min. */
+export const freshness: Freshness = {
+  updatedAt: new Date(Date.now() - 23 * 60_000).toISOString(),
+  nextUpdateAt: nextCrawlAt(new Date()).toISOString(),
+};

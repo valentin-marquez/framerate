@@ -597,6 +597,42 @@
   animation-delay: 150ms;
 }
 
+/* Valores de un popover de filtro: la primera vez que se abre en la página entran escalonados (máx. 6 tiempos). */
+@keyframes t-pop-item {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@keyframes t-pop-item-rich {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+    filter: blur(2px);
+  }
+}
+.t-pop-items li {
+  animation: t-pop-item var(--transition-duration-fast) var(--ease-out) both;
+}
+:root[data-motion="rich"] .t-pop-items li {
+  animation-name: t-pop-item-rich;
+}
+.t-pop-items li:nth-child(2) {
+  animation-delay: 25ms;
+}
+.t-pop-items li:nth-child(3) {
+  animation-delay: 50ms;
+}
+.t-pop-items li:nth-child(4) {
+  animation-delay: 75ms;
+}
+.t-pop-items li:nth-child(5) {
+  animation-delay: 100ms;
+}
+.t-pop-items li:nth-child(n + 6) {
+  animation-delay: 125ms;
+}
+
 /* Sin resultados (momento raro: se permite rebote): el ícono cae girando y se asienta, el texto lo sigue. */
 @keyframes t-empty-icon {
   0% {
@@ -660,34 +696,34 @@
 }
 
 /*
- * Haz de luz del buscador (border beam): una línea en el borde inferior y su resplandor hacia adentro, que van y
- * vienen despacio. Pasivo: tenue en reposo, más presente con foco o mientras busca. Sólo anima transform; la
- * opacidad cambia con transición. Con movimiento reducido queda quieto al centro.
+ * Haz de luz (border beam) del buscador y de la entrada Cyber del riel: una línea en el borde inferior y su resplandor
+ * hacia adentro, que van y vienen despacio. Pasivo: tenue en reposo, más presente con foco o mientras busca. Sólo
+ * anima transform; la opacidad cambia con transición. Con movimiento reducido queda quieto al centro.
  */
-.search-beam {
+.beam {
   opacity: 0.45;
   transition: opacity var(--transition-duration-base) var(--ease-out);
 }
 /* Hover: un poco de luz; foco o búsqueda en curso: toda. */
-:hover > .search-beam {
+:hover > .beam {
   opacity: 0.75;
 }
-.search-beam[data-active="true"],
-:focus-within > .search-beam {
+.beam[data-active="true"],
+:focus-within > .beam {
   opacity: 1;
 }
-.search-beam > span {
+.beam > span {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 45%;
-  animation: search-beam 7s var(--ease-in-out) infinite alternate;
+  animation: beam 7s var(--ease-in-out) infinite alternate;
 }
-.search-beam-line {
+.beam-line {
   height: 1px;
   background: linear-gradient(90deg, transparent, #a78bfa 25%, #f472b6 50%, #60a5fa 75%, transparent);
 }
-.search-beam-glow {
+.beam-glow {
   height: 18px;
   background: radial-gradient(
     ellipse 50% 100% at 50% 100%,
@@ -696,7 +732,30 @@
     transparent
   );
 }
-@keyframes search-beam {
+/* Destacado (Cyber): más presente en reposo, con una segunda línea arriba que va en contra y los colores del evento. */
+.beam[data-variant="cyber"] {
+  opacity: 0.8;
+}
+:hover > .beam[data-variant="cyber"] {
+  opacity: 1;
+}
+.beam[data-variant="cyber"] > .beam-line {
+  background: linear-gradient(90deg, transparent, #2c65ef 25%, #f61c36 75%, transparent);
+}
+.beam[data-variant="cyber"] > .beam-glow {
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 100%,
+    rgb(246 28 54 / 0.22),
+    rgb(44 101 239 / 0.14) 55%,
+    transparent
+  );
+}
+.beam > .beam-top {
+  top: 0;
+  bottom: auto;
+  animation-direction: alternate-reverse;
+}
+@keyframes beam {
   from {
     transform: translateX(-30%);
   }
@@ -705,7 +764,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .search-beam > span {
+  .beam > span {
     animation: none;
     transform: translateX(61%);
   }

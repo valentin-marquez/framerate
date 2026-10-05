@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { rowProducts, stores } from "~/shared/storybook/fixtures";
+import { dropProducts, rowProducts, stores } from "~/shared/storybook/fixtures";
 import { StoresStrip } from "./home-blocks";
 import { HomeIntro } from "./home-intro";
 import { ProductRow } from "./product-row";
@@ -24,6 +24,11 @@ export const FilaDeProductos: Story = {
       trendingIds={new Set([rowProducts[0].id])}
     />
   ),
+};
+
+export const BajasDePrecio: Story = {
+  name: "Fila de bajas de precio",
+  render: () => <ProductRow title="Bajas de precio" href="/cyber" more="Ver todas" products={dropProducts} />,
 };
 
 export const Tiendas: Story = { render: () => <StoresStrip stores={stores} /> };

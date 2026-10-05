@@ -1,5 +1,6 @@
 import type { ProductSummary } from "@framerate/contracts";
-import { IconMoodEmpty } from "@tabler/icons-react";
+import { IconHelpCircle, IconMoodEmpty } from "@tabler/icons-react";
+import { Fragment } from "react";
 import { PRODUCT_GRID_CLASS, ProductGridSkeleton } from "~/features/explore/components/product-grid-skeleton";
 import { ProductCard } from "~/features/product/components/product-card";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
@@ -11,9 +12,27 @@ interface ProductGridProps {
   className?: string;
   /** Ids en tendencia (ranking server-side) para pintar el badge. */
   trendingIds?: Set<number>;
+  /** Con filtros por especificación: qué dato les falta a los "unknown" ("memoria o modelo"). */
+  missingSpec?: string;
+  /** Texto propio para cuando no hay resultados. */
+  empty?: { title: string; text: string };
 }
 
-export function ProductGrid({ products, isLoading, className, trendingIds }: ProductGridProps) {
+/** Separa los que cumplen el filtro de los que no tienen el dato y podrían cumplirlo (van al final). */
+export function UnknownDivider({ missing }: { missing: string }) {
+  return (
+    <div className="col-span-full flex items-center gap-3 pt-4 pb-1 text-sm">
+      <IconHelpCircle className="size-4 shrink-0 text-muted-foreground" stroke={1.75} />
+      <p className="text-pretty">
+        <span className="font-medium text-foreground">No sabemos si estos cumplen el filtro</span>
+        <span className="text-muted-foreground">: les falta el dato de {missing}.</span>
+      </p>
+      <span aria-hidden className="hidden h-px min-w-8 flex-1 bg-border sm:block" />
+    </div>
+  );
+}
+
+export function ProductGrid({ products, isLoading, className, trendingIds, missingSpec, empty }: ProductGridProps) {
   if (isLoading) {
     return <ProductGridSkeleton count={12} />;
   }
@@ -22,29 +41,35 @@ export function ProductGrid({ products, isLoading, className, trendingIds }: Pro
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <IconMoodEmpty className="t-empty-icon size-16 text-muted-foreground mb-4" />
-        <h3 className="t-empty-text text-lg font-medium text-foreground mb-2">No se encontraron productos</h3>
+        <h3 className="t-empty-text text-lg font-medium text-foreground mb-2">
+          {empty?.title ?? "No se encontraron productos"}
+        </h3>
         <p className="t-empty-text text-sm text-muted-foreground max-w-md">
-          Intenta ajustar los filtros o buscar con otros términos para encontrar lo que necesitas.
+          {empty?.text ?? "Intenta ajustar los filtros o buscar con otros términos para encontrar lo que necesitas."}
         </p>
       </div>
     );
   }
 
+  const firstUnknown = missingSpec ? products.findIndex((p) => p.specMatch === "unknown") : -1;
+
   return (
     <div className={cn(PRODUCT_GRID_CLASS, className)}>
       {products.map((product, index) => (
-        <div
-          key={product.id}
-          className={cn("h-full", index < 8 && enterClass())}
-          style={index < 8 ? enterStyle(240 + Math.min(index, 6) * 50) : undefined}
-        >
-          <ProductCard
-            product={product}
-            priority={index < 8}
-            trending={trendingIds?.has(product.id)}
-            className="h-full"
-          />
-        </div>
+        <Fragment key={product.id}>
+          {index === firstUnknown && missingSpec && <UnknownDivider missing={missingSpec} />}
+          <div
+            className={cn("h-full", index < 8 && enterClass())}
+            style={index < 8 ? enterStyle(240 + Math.min(index, 6) * 50) : undefined}
+          >
+            <ProductCard
+              product={product}
+              priority={index < 8}
+              trending={trendingIds?.has(product.id)}
+              className="h-full"
+            />
+          </div>
+        </Fragment>
       ))}
     </div>
   );

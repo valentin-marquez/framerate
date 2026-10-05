@@ -1,5 +1,9 @@
+import { type Freshness, nextCrawlAt } from "@framerate/contracts";
+import { IconClock } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "~/shared/lib/utils";
+import { formatSpan } from "~/shared/utils/format";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
 
 /**
  * Fotogramas por segundo de esta pestaña. Cuenta cuadros con requestAnimationFrame y escribe el texto una vez por
@@ -70,5 +74,72 @@ export function TimeGradient() {
       className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-50 fade-in-0 animate-in duration-700 ease-out"
       style={{ background: GRADIENTS[time] }}
     />
+  );
+}
+
+/** Hace cuánto se actualizaron las ofertas y cuánto falta para la próxima vuelta. */
+function freshnessText({ updatedAt, nextUpdateAt }: Freshness, now: number) {
+  // Pasada la hora prevista (riel abierto mucho rato), la cuenta sigue con la vuelta siguiente del cron.
+  const next = Date.parse(nextUpdateAt) > now ? Date.parse(nextUpdateAt) : nextCrawlAt(new Date(now)).getTime();
+  const last = updatedAt ? Date.parse(updatedAt) : null;
+  return {
+    updated: last ? `Ofertas actualizadas hace ${formatSpan(now - last)}` : "Ofertas sin actualizar aún",
+    next: `Próxima en ${formatSpan(next - now)}`,
+    progress: last ? Math.min(1, Math.max(0, (now - last) / (next - last))) : 0,
+  };
+}
+
+/**
+ * Frescura de las ofertas en el pie del riel. El tiempo relativo cambia entre el servidor y el cliente: se calcula
+ * sólo en el cliente, una vez por minuto, y el servidor deja el alto reservado para no mover el riel al hidratar.
+ */
+export function OfferFreshness({ freshness, collapsed }: { freshness: Freshness; collapsed: boolean }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  const text = now === null ? null : freshnessText(freshness, now);
+
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <button
+              type="button"
+              aria-label={text ? `${text.updated}. ${text.next}` : "Frescura de las ofertas"}
+              className="grid size-9 place-items-center rounded-xl text-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          }
+        >
+          <IconClock className="size-[18px]" stroke={1.75} />
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={10}>
+          {text ? (
+            <>
+              {text.updated}
+              <span className="block opacity-70">{text.next}</span>
+            </>
+          ) : (
+            "Ofertas"
+          )}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <div className="w-full space-y-1.5 px-1 text-xs">
+      <p className="h-4 truncate text-muted-foreground">{text?.updated}</p>
+      <div aria-hidden className="h-0.5 overflow-hidden rounded-full bg-border/60">
+        <div
+          className="h-full origin-left rounded-full bg-foreground/30 transition-transform duration-base"
+          style={{ transform: `scaleX(${text?.progress ?? 0})` }}
+        />
+      </div>
+      <p className="h-4 truncate text-foreground/40">{text?.next}</p>
+    </div>
   );
 }
