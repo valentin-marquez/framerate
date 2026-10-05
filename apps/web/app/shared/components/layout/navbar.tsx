@@ -256,23 +256,26 @@ export function Navbar({
     return () => window.removeEventListener("keydown", onKeyDown);
   });
 
+  // Mismo alto y radio que el resto del riel (36 px, rounded-xl); plegado, ícono con tooltip como los enlaces.
   const quoteButton = (iconOnly: boolean) =>
     user && (
-      <CreateQuoteDialog
-        trigger={
-          <button
-            type="button"
-            aria-label={iconOnly ? t("create_quote") : undefined}
-            className={cn(
-              "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-foreground font-medium text-background text-sm transition-opacity hover:opacity-85",
-              iconOnly ? "w-10" : "flex-1 px-3.5",
-            )}
-          >
-            <IconPlus className="size-4" stroke={2.25} />
-            {!iconOnly && t("create_quote")}
-          </button>
-        }
-      />
+      <RailHint label={t("create_quote")} collapsed={iconOnly}>
+        <CreateQuoteDialog
+          trigger={
+            <button
+              type="button"
+              aria-label={iconOnly ? t("create_quote") : undefined}
+              className={cn(
+                "inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-foreground font-medium text-background text-sm transition-[opacity,scale] hover:opacity-85 active:scale-[0.97]",
+                iconOnly ? "w-9" : "flex-1 px-3",
+              )}
+            >
+              <IconPlus className="size-4" stroke={2.25} />
+              {!iconOnly && t("create_quote")}
+            </button>
+          }
+        />
+      </RailHint>
     );
 
   const toggle = (
@@ -397,7 +400,8 @@ export function Navbar({
             <UserMenu
               align="start"
               side={collapsed ? "right" : "top"}
-              loginClassName={collapsed ? "h-10 px-2.5" : "h-10 flex-1"}
+              compact={collapsed}
+              loginClassName={collapsed ? "size-9 rounded-xl px-0" : "h-9 flex-1 rounded-xl"}
             />
           </div>
         </div>

@@ -67,7 +67,7 @@ function ProductStage({
 
   if (!product.imageUrl) {
     return (
-      <div className="absolute inset-y-0 right-0 flex w-[58%] items-center justify-end pr-8 text-foreground/20">
+      <div className="relative col-start-1 row-start-1 flex w-[58%] items-center justify-end justify-self-end pr-8 text-foreground/20">
         <IconPhotoOff className="size-8" stroke={1.25} role="img" aria-label="Sin imagen" />
         {psu && (
           <div className="absolute top-2 right-2">
@@ -80,7 +80,7 @@ function ProductStage({
 
   return (
     <div
-      className="absolute inset-y-0 right-0 isolate w-[58%] overflow-hidden"
+      className="relative col-start-1 row-start-1 isolate w-[58%] justify-self-end overflow-hidden"
       // El producto va alineado a la derecha: el orbe y la apertura nacen ahí, no en el centro del panel.
       style={{ "--reveal-x": "68%", viewTransitionName: morphing ? "product-photo" : undefined } as React.CSSProperties}
     >
@@ -146,10 +146,12 @@ export function ProductCard({ product, priority = false, trending = false, class
         className,
       )}
     >
-      <div className="relative flex min-h-36">
+      {/* Texto y foto comparten celda (se superponen) sin un contenedor posicionado: así el ::after del enlace
+          se ancla al <article> y toda la tarjeta es clicable, no sólo la columna del texto. */}
+      <div className="grid min-h-36">
         <ProductStage product={product} priority={priority} psu={psu} cardId={cardId} />
 
-        <div className="relative flex w-[58%] min-w-0 flex-col gap-1.5 p-3 pt-3.5 pb-2.5">
+        <div className="z-[2] col-start-1 row-start-1 flex w-[58%] min-w-0 flex-col gap-1.5 p-3 pt-3.5 pb-2.5">
           <div className="flex h-5 items-center gap-2">
             {product.brand && <span className="truncate text-muted-foreground text-xs">{product.brand}</span>}
             {drop && (
