@@ -12,7 +12,8 @@ export default [
   route("soporte/:id", "features/support/pages/ticket-page.tsx"),
 
   // Products & Categories
-  route("explorar", "features/explore/pages/explore-page.tsx"),
+  route("buscar", "features/search/pages/search-page.tsx"),
+  route("explorar", "features/search/pages/redirect-old-explore.tsx"),
   route("categoria/:slug", "features/category/pages/category-page.tsx"),
   route("producto/:slug", "features/product/pages/product-details.tsx"),
 

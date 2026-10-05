@@ -33,14 +33,28 @@ function useFilterParams() {
 
 const chip = (active: boolean) =>
   cn(
-    "inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 font-medium text-sm transition-colors",
+    "inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 font-medium text-sm transition-[color,background-color,scale] active:scale-[0.97]",
     active ? "bg-primary/10 text-primary" : "bg-secondary/50 text-secondary-foreground hover:bg-secondary",
   );
 
 /** Botón con panel flotante: se cierra al hacer clic fuera o con Escape. */
 function Popover({ label, active, children }: { label: string; active: boolean; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
+  const [closing, setClosing] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // Al cerrar queda .is-closing lo que dura la salida, para que encoja en vez de saltar a su escala de reposo.
+  const setOpen = useCallback(
+    (next: boolean | ((v: boolean) => boolean)) =>
+      setOpenState((prev) => {
+        const value = typeof next === "function" ? next(prev) : next;
+        if (prev && !value) {
+          setClosing(true);
+          setTimeout(() => setClosing(false), 150);
+        }
+        return value;
+      }),
+    [],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -52,7 +66,7 @@ function Popover({ label, active, children }: { label: string; active: boolean; 
       document.removeEventListener("pointerdown", onPointer);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, setOpen]);
 
   return (
     <div ref={ref} className="relative">
@@ -60,11 +74,16 @@ function Popover({ label, active, children }: { label: string; active: boolean; 
         {label}
         <IconChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
       </button>
-      {open && (
-        <div className="enter-up absolute top-full left-0 z-50 mt-2 min-w-56 rounded-2xl border border-border/60 bg-popover p-2 shadow-lg">
-          {children}
-        </div>
-      )}
+      <div
+        inert={!open}
+        className={cn(
+          "t-dropdown absolute top-full left-0 z-50 mt-2 min-w-56 rounded-2xl border border-border/60 bg-popover p-2 shadow-lg",
+          open && "is-open",
+          closing && "is-closing",
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -185,11 +204,11 @@ function ActiveChips({ brands }: { brands: BrandCount[] }) {
   if (params.get("min_price") || params.get("max_price")) {
     chips.push({ label: "Rango de precio", clear: { min_price: null, max_price: null } });
   }
-  if (params.get("search")) chips.push({ label: `“${params.get("search")}”`, clear: { search: null } });
+  if (params.get("q")) chips.push({ label: `“${params.get("q")}”`, clear: { q: null } });
   if (chips.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="-mt-3 flex flex-wrap items-center gap-2">
       {chips.map((c) => (
         <button
           key={c.label}
@@ -203,7 +222,7 @@ function ActiveChips({ brands }: { brands: BrandCount[] }) {
       ))}
       <button
         type="button"
-        onClick={() => update({ brand: null, min_price: null, max_price: null, search: null })}
+        onClick={() => update({ brand: null, min_price: null, max_price: null, q: null })}
         className="text-muted-foreground text-xs transition-colors hover:text-foreground"
       >
         Limpiar todo
@@ -220,8 +239,9 @@ interface FilterBarProps {
 
 export function FilterBar({ brands, priceRange, total }: FilterBarProps) {
   return (
-    <div className="space-y-3">
-      <div className="sticky top-13 z-30 -mx-4 flex flex-wrap items-center gap-2 border-border/40 border-b bg-background/80 px-4 py-2.5 backdrop-blur-md md:mx-0 md:rounded-2xl md:border md:px-3">
+    // `contents`: la barra se pega dentro de la columna del catálogo; en un envoltorio de su mismo alto no se pegaba.
+    <div className="contents">
+      <div className="sticky top-14 z-30 lg:top-3 -mx-4 flex flex-wrap items-center gap-2 border-border/40 border-b bg-background/80 px-4 py-2.5 backdrop-blur-md md:mx-0 md:rounded-2xl md:border md:px-3">
         {brands.length > 0 && <BrandFilter brands={brands} />}
         <PriceFilter priceRange={priceRange} />
         <div className="ml-auto flex items-center gap-3">

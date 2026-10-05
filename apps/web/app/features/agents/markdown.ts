@@ -68,6 +68,6 @@ export function homeMarkdown(categories: CategoryItem[], origin: string): string
       `- [${category.label}](${origin}/categoria/${category.slug}): ${category.productCount} productos con stock`,
     );
   }
-  lines.push("", `Explorar todo: ${origin}/explorar`);
+  lines.push("", `Todo el catálogo: ${origin}/buscar`);
   return `${lines.join("\n")}\n`;
 }

@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { Logo } from "./logo";
 
 const LINKS = [
-  { to: "/explorar", label: "Explorar" },
+  { to: "/buscar", label: "Catálogo" },
   { to: "/reclamar", label: "Para tiendas" },
   { to: "/terminos", label: "Términos" },
   { to: "/privacidad", label: "Privacidad" },

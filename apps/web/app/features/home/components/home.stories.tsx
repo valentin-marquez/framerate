@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { categories, rowProducts, stores } from "~/shared/storybook/fixtures";
-import { CategoryLinks } from "./category-links";
-import { CategoryMosaic, StoresStrip } from "./home-blocks";
+import { rowProducts, stores } from "~/shared/storybook/fixtures";
+import { StoresStrip } from "./home-blocks";
 import { HomeIntro } from "./home-intro";
 import { ProductRow } from "./product-row";
 
@@ -27,14 +26,4 @@ export const FilaDeProductos: Story = {
   ),
 };
 
-export const MosaicoDeCategorias: Story = {
-  name: "Mosaico de categorías",
-  render: () => <CategoryMosaic categories={categories} />,
-};
-
 export const Tiendas: Story = { render: () => <StoresStrip stores={stores} /> };
-
-export const EnlacesDeCategoria: Story = {
-  name: "Enlaces de categoría",
-  render: () => <CategoryLinks categories={categories} />,
-};

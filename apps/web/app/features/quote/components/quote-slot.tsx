@@ -32,7 +32,7 @@ interface QuoteSlotProps {
 /** Agregar lleva a la página de la categoría del slot (en storage, la primera: SSD): ahí se elige y se agrega. */
 const categoryHref = (slot: QuoteSlotId) => {
   const category = CATEGORIES.find((c) => SLOT_BY_CATEGORY[c] === slot);
-  return category ? `/categoria/${CATEGORY_SLUGS[category]}` : "/explorar";
+  return category ? `/categoria/${CATEGORY_SLUGS[category]}` : "/buscar";
 };
 
 export function QuoteSlot({

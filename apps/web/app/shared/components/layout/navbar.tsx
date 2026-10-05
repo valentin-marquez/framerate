@@ -1,443 +1,397 @@
 import type { CategoryItem } from "@framerate/contracts";
-import { IconCompass, IconCpu, IconLogout, IconSearch, IconSettings, IconUserCircle } from "@tabler/icons-react";
-import { useEffect, useReducer, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
-import { LoginDialog } from "~/features/auth/components/login-dialog";
-import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
+import {
+  IconCategory,
+  IconChevronLeft,
+  IconChevronRight,
+  IconHome,
+  IconLayoutGrid,
+  IconPlus,
+  IconSearch,
+} from "@tabler/icons-react";
+import { createContext, type ReactNode, use, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation, useNavigation } from "react-router";
+import { useUser } from "~/features/auth/hooks/useAuth";
+import { CategoryIcon } from "~/features/category/components/category-icon";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
-import { SearchDialog } from "~/features/search/components/search-dialog";
-import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
-import { AdminMenu } from "~/shared/components/layout/admin-menu";
-import { Logo } from "~/shared/components/layout/logo";
-import { NavFps, NavTab, navTabClass } from "~/shared/components/layout/nav-parts";
+import { focusSearchField, SearchField, startSearchSpotlight } from "~/features/search/components/search-field";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
-import { AsyncImage } from "../primitives/async-image";
-import { buttonVariants } from "../primitives/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../primitives/dropdown-menu";
+import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
+import { Logo } from "./logo";
+import { NavFps, TimeGradient } from "./nav-parts";
+import { UserMenu } from "./user-menu";
 
-interface NavbarProps {
+const railLink = (current: boolean) =>
+  cn(
+    "relative flex h-9 items-center gap-3 rounded-xl px-2.5 text-sm transition-[color,background-color,scale] active:scale-[0.985]",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    current ? "bg-secondary text-foreground" : "text-foreground/65 hover:bg-secondary/60 hover:text-foreground",
+  );
+
+/**
+ * Hacia dónde va el riel: lo último que se tocó (estado urgente, se dibuja en el mismo cuadro del clic), si no la
+ * navegación pendiente, si no la página actual. Píldora, texto activo y la sección que se apaga siguen este destino,
+ * así el clic se ve completo de una vez y no en dos tiempos.
+ */
+const RailTarget = createContext<{ target: string; select: (to: string) => void }>({
+  target: "",
+  select: () => {},
+});
+
+const iconButton =
+  "grid size-9 shrink-0 cursor-pointer place-items-center rounded-xl text-foreground/65 transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+const tabClass = (active: boolean) =>
+  cn(
+    "flex flex-col items-center justify-center gap-0.5 font-medium text-[11px] transition-[color,scale] active:scale-[0.94]",
+    active ? "text-foreground" : "text-foreground/50",
+  );
+
+function Brand({ compact }: { compact?: boolean }) {
+  return (
+    <Link to="/" prefetch="intent" className="flex shrink-0 items-center gap-2 text-foreground">
+      <Logo className="size-6" />
+      <span className={cn("font-semibold text-lg tracking-tight", compact && "sr-only")}>framerate</span>
+    </Link>
+  );
+}
+
+/** Plegado sólo queda el ícono: la etiqueta pasa a un tooltip a la derecha. */
+function RailHint({ label, collapsed, children }: { label: string; collapsed: boolean; children: ReactNode }) {
+  if (!collapsed) return children;
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<div />}>{children}</TooltipTrigger>
+      <TooltipContent side="right" sideOffset={10}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+function RailLink({
+  to,
+  end,
+  label,
+  icon,
+  count,
+  collapsed,
+  onClick,
+  large,
+}: {
+  to: string;
+  end?: boolean;
+  label: string;
+  icon: ReactNode;
+  count?: number;
+  collapsed?: boolean;
+  onClick?: () => void;
+  large?: boolean;
+}) {
+  const { target, select } = use(RailTarget);
+  const current = end ? target === to : target === to || target.startsWith(`${to}/`);
+  return (
+    <RailHint label={label} collapsed={!!collapsed}>
+      <NavLink
+        to={to}
+        end={end}
+        prefetch="intent"
+        // Sin viewTransition: mientras dura una, Chrome manda los clics a la raíz y los clics rápidos en el riel se
+        // perdían. La píldora y la entrada de resultados ya dan la continuidad.
+        onClick={(e) => {
+          // Ctrl/Cmd/Shift+clic abre otra pestaña: este riel no navega.
+          if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) select(to);
+          onClick?.();
+        }}
+        aria-label={collapsed ? label : undefined}
+        data-current={current}
+        className={cn(railLink(current), large && "h-12", collapsed && "w-9 justify-center px-0")}
+      >
+        {icon}
+        {!collapsed && (
+          <>
+            <span className="truncate fade-in-0 slide-in-from-left-1 animate-in duration-base">{label}</span>
+            {count !== undefined && <span className="ml-auto text-muted-foreground text-xs tabular-nums">{count}</span>}
+          </>
+        )}
+      </NavLink>
+    </RailHint>
+  );
+}
+
+/**
+ * Navegación del sitio. En escritorio, un riel fijo a la izquierda con el buscador y las categorías siempre a la
+ * vista, que se pliega a sólo íconos; en teléfono, una barra superior con el buscador y pestañas abajo.
+ */
+export function Navbar({
+  categories,
+  collapsed,
+  onCollapsedChange,
+}: {
   categories: CategoryItem[];
-  blurred?: boolean;
-}
-
-type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
-
-const GRADIENTS: Record<TimeOfDay, string> = {
-  morning: "linear-gradient(rgba(255, 183, 77, 0.2) 0%, rgba(255, 213, 79, 0.1) 50%, rgba(249, 230, 203, 0) 100%)",
-  afternoon: "linear-gradient(rgba(126, 60, 142, 0.2) 0%, rgba(227, 154, 101, 0.1) 50%, rgba(249, 230, 203, 0) 100%)",
-  evening: "linear-gradient(rgba(255, 87, 34, 0.2) 0%, rgba(233, 30, 99, 0.1) 50%, rgba(249, 230, 203, 0) 100%)",
-  night: "linear-gradient(rgba(63, 81, 181, 0.2) 0%, rgba(48, 63, 159, 0.1) 50%, rgba(26, 35, 126, 0) 100%)",
-};
-
-function getTimeOfDay(): TimeOfDay {
-  const hour = new Date().getHours();
-
-  if (hour >= 6 && hour < 12) return "morning";
-  if (hour >= 12 && hour < 18) return "afternoon";
-  if (hour >= 18 && hour < 21) return "evening";
-  return "night";
-}
-
-const GRADIENT_FADE_MS = 700;
-
-// --- Reducer para colapsar el grupo de estados time-of-day / greeting / gradient.
-// Antes había 5 useState que se actualizaban en cascada dentro de un mismo useEffect,
-// generando renders redundantes. Ahora cada transición es un único dispatch atómico.
-
-type NavState = {
-  timeOfDay: TimeOfDay;
-  greetingMessage: string;
-  showGreeting: boolean;
-  visibleGradient: string;
-  gradientVisible: boolean;
-};
-
-type NavAction =
-  | { type: "tick"; timeOfDay: TimeOfDay; greeting: string }
-  | { type: "show-greeting" }
-  | { type: "hide-greeting" }
-  | { type: "gradient-replace"; target: string; visible: boolean }
-  | { type: "gradient-fade-out" }
-  | { type: "gradient-fade-in"; visible: boolean };
-
-const initialNavState: NavState = {
-  timeOfDay: "afternoon",
-  greetingMessage: "",
-  showGreeting: false,
-  visibleGradient: "transparent",
-  gradientVisible: false,
-};
-
-function navReducer(state: NavState, action: NavAction): NavState {
-  switch (action.type) {
-    case "tick":
-      return { ...state, timeOfDay: action.timeOfDay, greetingMessage: action.greeting };
-    case "show-greeting":
-      return state.showGreeting ? state : { ...state, showGreeting: true };
-    case "hide-greeting":
-      return state.showGreeting ? { ...state, showGreeting: false } : state;
-    case "gradient-replace":
-      return { ...state, visibleGradient: action.target, gradientVisible: action.visible };
-    case "gradient-fade-out":
-      return state.gradientVisible ? { ...state, gradientVisible: false } : state;
-    case "gradient-fade-in":
-      return state.gradientVisible === action.visible ? state : { ...state, gradientVisible: action.visible };
-    default:
-      return state;
-  }
-}
-
-export function Navbar({ categories, blurred }: NavbarProps) {
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+}) {
   const user = useUser();
-  const profile = useProfile();
   const { t } = useTranslation();
-  const location = useLocation();
-  const onExplore = location.pathname.startsWith("/explorar");
-  const onCategory = location.pathname.startsWith("/categoria");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [focusAfterExpand, setFocusAfterExpand] = useState(false);
+  const { pathname } = useLocation();
+  const pendingPath = useNavigation().location?.pathname;
+  const [selected, setSelected] = useState<string | null>(null);
+  // Cuando la URL llega (o la navegación se cancela) manda la navegación real.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: se limpia en cada cambio de página o de pendiente.
+  useEffect(() => setSelected(null), [pathname, pendingPath]);
+  const railTarget = { target: selected ?? pendingPath ?? pathname, select: setSelected };
+  const railRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState({
+    ready: false,
+    animate: false,
+    visible: false,
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
 
-  const [searchOpen, setSearchOpen] = useState(false);
+  // Mide el enlace activo sólo cuando cambia la página o el ancho del riel, nunca durante la animación.
+  const measureIndicator = () => {
+    // Al hacer clic la píldora ya va hacia el destino (pendiente) sin esperar a que cargue la página.
+    const rail = railRef.current;
+    const active = rail?.querySelector<HTMLElement>('a[data-current="true"]');
+    setIndicator((prev) =>
+      active
+        ? {
+            ready: true,
+            // La primera vez se ubica sin deslizarse.
+            animate: prev.ready,
+            visible: true,
+            x: active.offsetLeft,
+            y: active.offsetTop,
+            width: active.offsetWidth,
+            height: active.offsetHeight,
+          }
+        : { ...prev, visible: false },
+    );
+  };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: el destino y el plegado cambian qué enlace y dónde.
+  useLayoutEffect(measureIndicator, [railTarget.target, collapsed]);
 
-  const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [state, dispatch] = useReducer(navReducer, initialNavState);
-  const { timeOfDay, greetingMessage, showGreeting, visibleGradient, gradientVisible } = state;
-
-  // mantenemos en ref el `t` actual para que el setInterval no se recree en cada
-  // cambio de idioma sin perder el último traductor disponible.
-  const tRef = useRef(t);
-  tRef.current = t;
-
-  void categories;
-
+  // Buscar con el riel plegado lo despliega; el campo recién existe en el render siguiente.
   useEffect(() => {
-    const tick = () => {
-      const newTimeOfDay = getTimeOfDay();
-      const randomIndex = Math.floor(Math.random() * 5) + 1;
-      dispatch({
-        type: "tick",
-        timeOfDay: newTimeOfDay,
-        greeting: tRef.current(`greeting_${newTimeOfDay}_${randomIndex}`),
-      });
-    };
+    if (!collapsed && focusAfterExpand) {
+      focusSearchField();
+      setFocusAfterExpand(false);
+    }
+  }, [collapsed, focusAfterExpand]);
 
-    tick();
-    const interval = setInterval(tick, 60000);
-    return () => clearInterval(interval);
-  }, []);
+  const openSearch = () => {
+    if (collapsed && window.matchMedia("(min-width: 64rem)").matches) {
+      onCollapsedChange(false);
+      setFocusAfterExpand(true);
+    } else focusSearchField();
+  };
 
+  // `/` o Ctrl+K enfocan el buscador desde cualquier parte.
   useEffect(() => {
-    const target = GRADIENTS[timeOfDay] ?? "transparent";
-    let fadeOutTimer: number | undefined;
-    let fadeInTimer: number | undefined;
-
-    if (visibleGradient === "transparent" && !gradientVisible) {
-      dispatch({ type: "gradient-replace", target, visible: false });
-      fadeInTimer = window.setTimeout(() => dispatch({ type: "gradient-fade-in", visible: true }), 50);
-      return () => {
-        if (fadeInTimer) clearTimeout(fadeInTimer);
-      };
-    }
-
-    if (visibleGradient === target) {
-      dispatch({ type: "gradient-fade-in", visible: true });
-      return;
-    }
-
-    dispatch({ type: "gradient-fade-out" });
-    fadeOutTimer = window.setTimeout(() => {
-      dispatch({ type: "gradient-replace", target, visible: false });
-      fadeInTimer = window.setTimeout(() => dispatch({ type: "gradient-fade-in", visible: true }), 50);
-    }, GRADIENT_FADE_MS);
-
-    return () => {
-      if (fadeOutTimer) clearTimeout(fadeOutTimer);
-      if (fadeInTimer) clearTimeout(fadeInTimer);
+    const onKeyDown = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]");
+      const shortcut = e.key === "k" && (e.ctrlKey || e.metaKey);
+      if (shortcut || (e.key === "/" && !typing)) {
+        e.preventDefault();
+        openSearch();
+        // Ctrl+K además desenfoca la página para centrar la atención en el campo.
+        if (shortcut) startSearchSpotlight();
+      }
     };
-  }, [timeOfDay, gradientVisible, visibleGradient]);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
 
-  // mostrar mensaje despues de que la pagina haya cargado completamente
-  useEffect(() => {
-    const SHOW_DELAY = 500;
-    const VISIBLE_MS = 12000;
+  const quoteButton = (iconOnly: boolean) =>
+    user && (
+      <CreateQuoteDialog
+        trigger={
+          <button
+            type="button"
+            aria-label={iconOnly ? t("create_quote") : undefined}
+            className={cn(
+              "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-foreground font-medium text-background text-sm transition-opacity hover:opacity-85",
+              iconOnly ? "w-10" : "flex-1 px-3.5",
+            )}
+          >
+            <IconPlus className="size-4" stroke={2.25} />
+            {!iconOnly && t("create_quote")}
+          </button>
+        }
+      />
+    );
 
-    const showSequence = () => {
-      const showTimer = setTimeout(() => dispatch({ type: "show-greeting" }), SHOW_DELAY);
-      const hideTimer = setTimeout(() => dispatch({ type: "hide-greeting" }), SHOW_DELAY + VISIBLE_MS);
-
-      return () => {
-        clearTimeout(showTimer);
-        clearTimeout(hideTimer);
-      };
-    };
-
-    if (document.readyState === "complete") {
-      const cleanup = showSequence();
-      return cleanup;
-    } else {
-      let cleanupFn: (() => void) | undefined;
-      const handleLoad = () => {
-        cleanupFn = showSequence();
-      };
-
-      window.addEventListener("load", handleLoad);
-      return () => {
-        window.removeEventListener("load", handleLoad);
-        if (cleanupFn) cleanupFn();
-      };
-    }
-  }, []);
+  const toggle = (
+    <button
+      type="button"
+      onClick={() => onCollapsedChange(!collapsed)}
+      aria-label={collapsed ? "Desplegar menú" : "Plegar menú"}
+      aria-expanded={!collapsed}
+      // Manija sobre el borde del riel, a la altura de la marca.
+      className="absolute top-8 right-0 grid size-6 translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className="t-icon-swap">
+        <IconChevronLeft data-on={!collapsed} className="size-3.5" stroke={2} />
+        <IconChevronRight data-on={collapsed} className="size-3.5" stroke={2} />
+      </span>
+    </button>
+  );
 
   return (
-    <>
-      <div
-        aria-hidden="true"
+    <RailTarget value={railTarget}>
+      <TimeGradient />
+      {/* El ancho (w-64 o w-16) lo repite root.tsx como padding del contenido. */}
+      <aside
+        // Con el ancho animado (equipos holgados) la píldora se vuelve a medir al terminar el cambio.
+        onTransitionEnd={(e) => e.target === e.currentTarget && e.propertyName === "width" && measureIndicator()}
+        style={{ viewTransitionName: "nav-rail" }}
         className={cn(
-          "fixed left-0 right-0 top-0 pointer-events-none -z-10 h-50 transition-opacity duration-700 ease-in-out",
-          gradientVisible ? "opacity-100" : "opacity-0",
-        )}
-        style={{
-          background: visibleGradient,
-        }}
-      />
-
-      <nav
-        className={cn(
-          "sticky top-0 z-40 h-13 w-full transition-all duration-300 ease-in-out overflow-hidden border-b",
-          // Al hacer scroll deja de ser blur translúcido (se sentía débil) y
-          // pasa a la misma superficie sólida que la barra de búsqueda móvil.
-          blurred ? "bg-background/90 backdrop-blur-md border-border" : "border-transparent",
+          "t-resize fixed inset-y-0 left-0 z-40 hidden flex-col gap-4 border-border/60 border-r bg-card/40 py-3 lg:flex",
+          collapsed ? "w-16 items-center px-2" : "w-64 px-3",
         )}
       >
-        <div className="flex size-full items-center justify-between px-4 relative z-10">
-          <div className="flex items-center gap-3">
-            <Tooltip open={showGreeting}>
-              <TooltipTrigger
-                render={
-                  <Link
-                    to="/"
-                    className="flex items-center gap-0 group focus:outline-none"
-                    onMouseEnter={() => setIsLogoHovered(true)}
-                    onMouseLeave={() => setIsLogoHovered(false)}
-                    prefetch="intent"
-                  />
-                }
-              >
-                <Logo
-                  className="size-4 md:size-6 text-muted-foreground group-hover:text-foreground group-focus:text-foreground transition-colors duration-300 group-hover:duration-200 ease-in-out delay-200 group-hover:delay-75"
-                  isHovered={isLogoHovered}
-                />
-                <span className="sr-only">Framerate</span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={8} className="max-w-70 md:max-w-none text-center">
-                {greetingMessage}
-              </TooltipContent>
-            </Tooltip>
-
-            <div className="flex items-center gap-3 md:hidden">
-              <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} iconOnly />
-
-              <DropdownMenu>
-                <DropdownMenuTrigger aria-label={t("hardware")} className={navTabClass(onCategory)}>
-                  <IconCpu className="size-4" stroke={1.75} />
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="start" className="w-56 mt-2">
-                  {categories && categories.length > 0 ? (
-                    categories.map((c) => (
-                      <DropdownMenuItem key={c.id}>
-                        <Link to={`/categoria/${c.slug}`} viewTransition className="cursor-pointer" prefetch="intent">
-                          {c.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <button
-                type="button"
-                aria-label="Buscar"
-                onClick={() => setSearchOpen(true)}
-                className={navTabClass(false)}
-              >
-                <IconSearch className="size-4" stroke={1.75} />
-              </button>
-            </div>
+        {toggle}
+        {collapsed ? (
+          <div className="pt-2">
+            <Brand compact />
           </div>
+        ) : (
+          <div className="flex items-center gap-2 px-2 pt-2">
+            <Brand />
+            <NavFps className="ml-auto" />
+          </div>
+        )}
 
-          <div className="hidden md:flex items-center gap-6 absolute inset-x-0 mx-auto w-max">
-            <NavTab to="/explorar" icon={IconCompass} label={t("explore")} active={onExplore} />
-
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              className="flex h-9 w-44 items-center gap-2 rounded-xl border border-border/60 bg-card px-3 text-muted-foreground text-sm shadow-sm transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:w-56"
-            >
-              <IconSearch className="size-4 shrink-0" />
-              <span>Buscar</span>
-              <kbd className="ml-auto hidden font-mono text-[10px] lg:inline">Ctrl K</kbd>
+        {collapsed ? (
+          <RailHint label="Buscar" collapsed>
+            <button type="button" onClick={openSearch} aria-label="Buscar" className={iconButton}>
+              <IconSearch className="size-[18px]" stroke={1.75} />
             </button>
+          </RailHint>
+        ) : (
+          <SearchField />
+        )}
 
-            <div>
-              <DropdownMenu>
-                <DropdownMenuTrigger className={navTabClass(onCategory)}>
-                  <IconCpu className="size-4" stroke={1.75} />
-                  <span>{t("hardware")}</span>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="center" className="w-56 mt-2">
-                  {categories && categories.length > 0 ? (
-                    categories.map((c) => (
-                      <DropdownMenuItem key={c.id}>
-                        <Link to={`/categoria/${c.slug}`} viewTransition className="cursor-pointer" prefetch="intent">
-                          {c.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <DropdownMenuItem disabled>{t("no_categories")}</DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <NavFps className="hidden lg:inline-block" />
-            {user ? (
-              <CreateQuoteDialog
-                trigger={
-                  <button
-                    type="button"
-                    className="hidden cursor-pointer font-medium text-foreground/60 text-sm transition-colors hover:text-foreground sm:block"
-                  >
-                    {t("create_quote")}
-                  </button>
-                }
-              />
-            ) : null}
-
-            {user ? (
-              // `key` distinta por rama: ambas ramas del ternario renderizan
-              // <DropdownMenu> en la misma posición JSX. Sin keys, React reusa
-              // la misma instancia de MenuRoot al cambiar `user` y el prop
-              // `open` salta controlled↔uncontrolled (warning de Base UI).
-              <DropdownMenu key="user-menu" open={userMenuOpen} onOpenChange={setUserMenuOpen}>
-                <DropdownMenuTrigger
-                  aria-label={t("user")}
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "icon" }),
-                    "rounded-full p-0",
-                    // Suaviza el foco: el ring de 3px + border-ring de buttonVariants
-                    // se ve muy fuerte (blanco puro en dark) alrededor del avatar.
-                    "focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-transparent",
-                  )}
-                >
-                  {profile?.avatar_url ? (
-                    <AsyncImage
-                      src={profile?.avatar_url}
-                      alt={profile?.full_name || user.email || "avatar"}
-                      className="size-6 rounded-full object-cover"
-                    />
-                  ) : (
-                    <IconUserCircle className="size-6 text-muted-foreground" />
-                  )}
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end" className="w-69 mt-2 text-base rounded-xl">
-                  <DropdownMenuItem className="cursor-default select-none p-0">
-                    <Link
-                      to={profile?.username ? `/u/${profile.username}` : "/perfil"}
-                      className="block"
-                      prefetch="intent"
-                    >
-                      <div className="flex items-center gap-3 p-3">
-                        {profile?.avatar_url ? (
-                          <AsyncImage
-                            src={profile?.avatar_url}
-                            alt={profile?.full_name || user.email || "avatar"}
-                            className="size-12 rounded-full object-cover shrink-0"
-                          />
-                        ) : (
-                          <div className="size-12 rounded-full bg-muted flex items-center justify-center shrink-0">
-                            <IconUserCircle className="size-7 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <p className="text-base font-medium truncate">
-                            {profile?.full_name || profile?.username || t("user")}
-                          </p>
-                          {user.email && <p className="text-sm text-muted-foreground truncate">{user.email}</p>}
-                        </div>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem>
-                      <Link
-                        to={profile?.username ? `/u/${profile.username}` : "/perfil"}
-                        className="flex items-center gap-2.5 w-full"
-                        prefetch="intent"
-                      >
-                        <IconUserCircle className="size-5" />
-                        <span>{t("profile")}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link to="/ajustes" className="flex items-center gap-2.5 w-full" prefetch="intent">
-                        <IconSettings className="size-5" />
-                        <span>{t("settings")}</span>
-                      </Link>
-                    </DropdownMenuItem>
-
-                    {/* Sólo se monta cuando el dropdown está abierto: evita un */}
-                    {/* fetch innecesario al cargar la navbar para users sin tiendas. */}
-                    {userMenuOpen && <MyStoresMenu enabled={userMenuOpen} />}
-                    {userMenuOpen && <AdminMenu enabled={userMenuOpen} />}
-
-                    <form method="post" action="/action/auth">
-                      <input type="hidden" name="action" value="logout" />
-                      <DropdownMenuItem className={"cursor-pointer"}>
-                        <button type="submit" className="flex items-center gap-2.5 w-full cursor-pointer">
-                          <IconLogout className="size-5" />
-                          <span>{t("logout")}</span>
-                        </button>
-                      </DropdownMenuItem>
-                    </form>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <LoginDialog
-                trigger={
-                  <button
-                    type="button"
-                    className="inline-flex h-8 cursor-pointer items-center rounded-full bg-secondary px-3.5 font-medium text-foreground text-sm transition-colors hover:bg-primary hover:text-primary-foreground"
-                  >
-                    {t("login")}
-                  </button>
-                }
-              />
+        {/* Una sola píldora detrás de los enlaces marca la sección activa y se desliza a la nueva al navegar. */}
+        <div
+          ref={railRef}
+          data-ready={indicator.ready}
+          className={cn(
+            "relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto",
+            "data-[ready=true]:[&_a[data-current=true]]:bg-transparent",
+            collapsed ? "items-center" : "-mx-1 px-1",
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className={cn(
+              "pointer-events-none absolute top-0 left-0 rounded-xl bg-secondary",
+              indicator.animate && "transition-[transform,opacity] duration-300 ease-[var(--badge-pop-ease)]",
             )}
-          </div>
+            style={{
+              width: indicator.width,
+              height: indicator.height,
+              transform: `translate(${indicator.x}px, ${indicator.y}px)`,
+              opacity: indicator.visible ? 1 : 0,
+            }}
+          />
+          <nav aria-label="Principal" className="flex flex-col gap-0.5">
+            <RailLink
+              to="/"
+              end
+              label="Inicio"
+              collapsed={collapsed}
+              icon={<IconHome className="size-[18px] shrink-0" stroke={1.75} />}
+            />
+            <RailLink
+              to="/buscar"
+              label="Todo el catálogo"
+              collapsed={collapsed}
+              icon={<IconLayoutGrid className="size-[18px] shrink-0" stroke={1.75} />}
+            />
+          </nav>
+
+          <nav aria-label="Categorías" className="flex flex-col gap-0.5">
+            {collapsed ? (
+              <span className="mx-auto mb-1 h-px w-6 bg-border" />
+            ) : (
+              <p className="px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
+                Categorías
+              </p>
+            )}
+            {categories.map((c) => (
+              <RailLink
+                key={c.id}
+                to={`/categoria/${c.slug}`}
+                label={c.label}
+                count={c.productCount}
+                collapsed={collapsed}
+                icon={<CategoryIcon category={c.id} />}
+              />
+            ))}
+          </nav>
         </div>
+
+        <div
+          className={cn("flex items-center gap-2 border-border/60 border-t pt-3", collapsed ? "flex-col" : "w-full")}
+        >
+          {quoteButton(collapsed)}
+          <UserMenu
+            align="start"
+            side={collapsed ? "right" : "top"}
+            loginClassName={collapsed ? "h-10 px-2.5" : "h-10 flex-1"}
+          />
+        </div>
+      </aside>
+
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-border/60 border-b bg-background/85 px-3 backdrop-blur-md lg:hidden">
+        <Brand compact />
+        <SearchField className="flex-1" />
+        <UserMenu />
+      </header>
+
+      <nav
+        aria-label="Atajos"
+        className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-3 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
+      >
+        <NavLink to="/" end prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
+          <IconHome className="size-5" stroke={1.75} />
+          Inicio
+        </NavLink>
+        <button type="button" className={tabClass(sheetOpen)} onClick={() => setSheetOpen(true)}>
+          <IconCategory className="size-5" stroke={1.75} />
+          Categorías
+        </button>
+        <button type="button" className={tabClass(false)} onClick={focusSearchField}>
+          <IconSearch className="size-5" stroke={1.75} />
+          Buscar
+        </button>
       </nav>
 
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} categories={categories} />
-    </>
+      <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
+        {/* Hoja que sube desde abajo (transitions.dev, "panel reveal"): se desliza en vez de crecer desde el centro. */}
+        <DialogContent className="top-auto bottom-0 max-h-[80dvh] w-full max-w-none translate-y-0 overflow-y-auto rounded-t-3xl rounded-b-none border-x-0 border-b-0 p-3 pb-8 zoom-in-100 zoom-out-100 slide-in-from-bottom-24 slide-out-to-bottom-24 lg:hidden">
+          <DialogTitle className="px-2.5 pt-2 pb-3">Categorías</DialogTitle>
+          {categories.map((c) => (
+            <RailLink
+              key={c.id}
+              to={`/categoria/${c.slug}`}
+              label={c.label}
+              count={c.productCount}
+              large
+              onClick={() => setSheetOpen(false)}
+              icon={<CategoryIcon category={c.id} className="size-5" />}
+            />
+          ))}
+        </DialogContent>
+      </Dialog>
+    </RailTarget>
   );
 }

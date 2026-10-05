@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { IconCompass, IconCpu, IconUserCircle } from "@tabler/icons-react";
+import { IconUserCircle } from "@tabler/icons-react";
 import { HomeContent } from "~/features/home/components/home-content";
 import type { MyStore } from "~/features/profile/services/profiles";
+import { SearchField } from "~/features/search/components/search-field";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { categories, rowProducts, sessions, stores } from "~/shared/storybook/fixtures";
 import { withQueryData } from "~/shared/storybook/with-query-data";
@@ -14,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "../primitives/dropdown-menu";
 import { AdminMenu } from "./admin-menu";
-import { NavFps, NavTab } from "./nav-parts";
+import { NavFps } from "./nav-parts";
 import { Navbar } from "./navbar";
 import { SiteFooter } from "./site-footer";
 
@@ -34,8 +35,8 @@ const withMyStores = withQueryData([[["profile", "me", "stores"], myStores]]);
 export const NavbarVisitante: Story = {
   name: "Navbar: visitante",
   render: () => (
-    <div className="h-40">
-      <Navbar categories={categories} />
+    <div className="h-screen">
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -43,10 +44,20 @@ export const NavbarVisitante: Story = {
 export const NavbarConSesion: Story = {
   name: "Navbar: con sesión",
   // La sesión llega por los datos del loader raíz (ver `.storybook/preview.tsx`).
-  parameters: { session: sessions.user, path: "/explorar" },
+  parameters: { session: sessions.user, path: "/buscar" },
   render: () => (
-    <div className="h-40">
-      <Navbar categories={categories} />
+    <div className="h-screen">
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
+    </div>
+  ),
+};
+
+export const NavbarPlegado: Story = {
+  name: "Navbar: riel plegado",
+  parameters: { session: sessions.user, path: "/categoria/tarjetas-de-video" },
+  render: () => (
+    <div className="h-screen">
+      <Navbar categories={categories} collapsed onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -59,8 +70,8 @@ export const NavbarAdminConMenu: Story = {
     await userEvent.click(await canvas.findByRole("button", { name: "Usuario" }));
   },
   render: () => (
-    <div className="h-[36rem]">
-      <Navbar categories={categories} />
+    <div className="h-screen">
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -70,8 +81,8 @@ export const NavbarMovil: Story = {
   globals: { viewport: { value: "mobile1", isRotated: false } },
   parameters: { session: sessions.user },
   render: () => (
-    <div className="h-40">
-      <Navbar categories={categories} />
+    <div className="h-screen">
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -99,14 +110,13 @@ export const MenuDeCuenta: Story = {
   ),
 };
 
-export const Pestanas: Story = {
-  name: "Pestañas y FPS",
-  parameters: { layout: "padded" },
+export const BuscadorYFps: Story = {
+  name: "Buscador con consulta y FPS",
+  // En `/buscar` el campo muestra la consulta de la URL.
+  parameters: { layout: "padded", path: "/buscar?q=rtx+5060" },
   render: () => (
     <div className="flex items-center gap-6">
-      <NavTab to="/explorar" icon={IconCompass} label="Explorar" active />
-      <NavTab to="/categoria/tarjetas-de-video" icon={IconCpu} label="Hardware" active={false} />
-      <NavTab to="/explorar" icon={IconCompass} label="Explorar" active={false} iconOnly />
+      <SearchField className="w-72" />
       <NavFps />
     </div>
   ),
@@ -115,32 +125,32 @@ export const Pestanas: Story = {
 export const Pie: Story = { render: () => <SiteFooter /> };
 
 /**
- * El armado de `root.tsx` con el home: navbar fija con el buscador y pie.
+ * El armado de `root.tsx` con el home: riel fijo con el buscador y las categorías, contenido desplazado y pie.
  */
 export const EstructuraDelSitio: Story = {
   name: "Estructura del sitio (home)",
   render: () => (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full">
-        <Navbar categories={categories} />
-      </header>
-      <main className="container mx-auto flex-1 px-4 pt-11">
-        <HomeContent
-          categories={categories}
-          stores={stores}
-          trendingIds={[rowProducts[2].id]}
-          rows={[
-            { key: "popular", title: "Lo más popular", href: "/explorar", products: rowProducts },
-            {
-              key: "gpu",
-              title: "Tarjetas de video",
-              href: "/categoria/tarjetas-de-video",
-              products: rowProducts.slice(2),
-            },
-          ]}
-        />
-      </main>
-      <SiteFooter />
+    <div className="flex min-h-screen flex-col pb-16">
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
+      <div className="flex flex-1 flex-col lg:pl-64">
+        <main className="container mx-auto flex-1 px-4 pt-6 lg:pt-11">
+          <HomeContent
+            categories={categories}
+            stores={stores}
+            trendingIds={[rowProducts[2].id]}
+            rows={[
+              { key: "popular", title: "Lo más popular", href: "/buscar", products: rowProducts },
+              {
+                key: "gpu",
+                title: "Tarjetas de video",
+                href: "/categoria/tarjetas-de-video",
+                products: rowProducts.slice(2),
+              },
+            ]}
+          />
+        </main>
+        <SiteFooter />
+      </div>
     </div>
   ),
 };

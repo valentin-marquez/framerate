@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { categoryKeys } from "~/shared/lib/query-keys";
-import { brands, categories, rowProducts } from "~/shared/storybook/fixtures";
-import { withQueryData } from "~/shared/storybook/with-query-data";
+import { brands, rowProducts } from "~/shared/storybook/fixtures";
 import type { CatalogData } from "../load-catalog";
-import { CategoryHeader, ExploreHeader } from "./catalog-headers";
+import { CategoryHeader, SearchHeader } from "./catalog-headers";
 import { CatalogView } from "./catalog-view";
 import { FilterBar } from "./filter-bar";
 
@@ -23,15 +21,15 @@ export const CabeceraDeCategoriaVacia: Story = {
   render: () => <CategoryHeader category="procesadores" total={0} priceRange={null} brandCount={0} />,
 };
 
-export const CabeceraDeExplorar: Story = {
-  name: "Cabecera de explorar",
-  render: () => <ExploreHeader total={8} search={null} categories={categories} />,
+export const CabeceraDeBusqueda: Story = {
+  name: "Cabecera de búsqueda sin consulta",
+  render: () => <SearchHeader total={8} search={null} />,
 };
 
-export const CabeceraDeExplorarConBusqueda: Story = {
-  name: "Cabecera de explorar con búsqueda",
-  parameters: { path: "/explorar?search=rtx+5060" },
-  render: () => <ExploreHeader total={2} search="rtx 5060" categories={categories} />,
+export const CabeceraDeBusquedaConConsulta: Story = {
+  name: "Cabecera de búsqueda con consulta",
+  parameters: { path: "/buscar?q=rtx+5060" },
+  render: () => <SearchHeader total={2} search="rtx 5060" />,
 };
 
 export const BarraDeFiltros: Story = {
@@ -61,24 +59,19 @@ const catalog = (overrides: Partial<CatalogData> = {}): CatalogData => ({
   ...overrides,
 });
 
-const withCategories = withQueryData([[categoryKeys.all, categories]]);
-
 export const VistaDeCategoria: Story = {
   name: "Vista completa: categoría",
-  decorators: [withCategories],
   render: () => <CatalogView data={catalog()} />,
 };
 
-export const VistaDeExplorar: Story = {
-  name: "Vista completa: explorar",
-  decorators: [withCategories],
+export const VistaDeBusqueda: Story = {
+  name: "Vista completa: búsqueda",
   render: () => <CatalogView data={catalog({ category: null, brands: [], priceRange: null })} />,
 };
 
 export const VistaSinResultados: Story = {
   name: "Vista completa: sin resultados",
-  decorators: [withCategories],
-  parameters: { path: "/explorar?search=rtx+9090" },
+  parameters: { path: "/buscar?q=rtx+9090" },
   render: () => (
     <CatalogView
       data={catalog({
@@ -95,7 +88,6 @@ export const VistaSinResultados: Story = {
 
 export const VistaSaturada: Story = {
   name: "Vista completa: API saturada (429)",
-  decorators: [withCategories],
   render: () => (
     <CatalogView
       data={catalog({

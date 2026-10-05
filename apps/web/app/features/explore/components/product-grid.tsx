@@ -21,9 +21,9 @@ export function ProductGrid({ products, isLoading, className, trendingIds }: Pro
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <IconMoodEmpty className="size-16 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium text-foreground mb-2">No se encontraron productos</h3>
-        <p className="text-sm text-muted-foreground max-w-md">
+        <IconMoodEmpty className="t-empty-icon size-16 text-muted-foreground mb-4" />
+        <h3 className="t-empty-text text-lg font-medium text-foreground mb-2">No se encontraron productos</h3>
+        <p className="t-empty-text text-sm text-muted-foreground max-w-md">
           Intenta ajustar los filtros o buscar con otros términos para encontrar lo que necesitas.
         </p>
       </div>
@@ -103,7 +103,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage <= 1}
         className={cn(
-          "h-9 px-3 text-sm font-medium rounded-xl transition-colors",
+          "h-9 px-3 text-sm font-medium rounded-xl transition-[color,background-color,scale] active:scale-[0.95]",
           currentPage <= 1 ? "text-muted-foreground cursor-not-allowed" : "text-foreground hover:bg-secondary/50",
         )}
       >
@@ -125,7 +125,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
               type="button"
               onClick={() => onPageChange(page)}
               className={cn(
-                "size-9 text-sm font-medium rounded-xl transition-colors",
+                "size-9 text-sm font-medium rounded-xl transition-[color,background-color,scale] active:scale-[0.95]",
                 currentPage === page ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-secondary/50",
               )}
             >
@@ -140,7 +140,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= totalPages}
         className={cn(
-          "h-9 px-3 text-sm font-medium rounded-xl transition-colors",
+          "h-9 px-3 text-sm font-medium rounded-xl transition-[color,background-color,scale] active:scale-[0.95]",
           currentPage >= totalPages
             ? "text-muted-foreground cursor-not-allowed"
             : "text-foreground hover:bg-secondary/50",

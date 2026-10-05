@@ -1,21 +1,24 @@
-import { useNavigation, useSearchParams } from "react-router";
-import { useCategories } from "~/features/category/hooks/useCategories";
+import { useLocation, useNavigation, useSearchParams } from "react-router";
 import { Pagination, ProductGrid } from "~/features/explore/components";
+import { enterClass } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 import type { CatalogData } from "../load-catalog";
-import { CategoryHeader, ExploreHeader } from "./catalog-headers";
+import { CategoryHeader, SearchHeader } from "./catalog-headers";
 import { FilterBar } from "./filter-bar";
 
 /**
- * Vista de catálogo: cabecera (foto de la categoría o buscador con fichas), barra de filtros fija y grilla
- * paginada. Con `category` es `/categoria/:slug`; sin ella, `/explorar`.
+ * Vista de catálogo: cabecera (foto de la categoría o la consulta buscada), barra de filtros fija y grilla
+ * paginada. Con `category` es `/categoria/:slug`; sin ella, `/buscar`.
  */
 export function CatalogView({ data }: { data: CatalogData }) {
   const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited } = data;
   const [params, setParams] = useSearchParams();
-  const { data: categories } = useCategories();
   const loading = useNavigation().state === "loading";
   const trending = new Set(trendingIds);
+  // Pasada la carga inicial (que ya tiene su cascada), cada resultado nuevo (búsqueda, filtro, página u otra
+  // categoría) entra escalonado: la key vuelve a montar la grilla para repetir la entrada.
+  const resultsKey = useLocation().search;
+  const fresh = enterClass() === "";
 
   const goToPage = (page: number) => {
     const next = new URLSearchParams(params);
@@ -40,13 +43,13 @@ export function CatalogView({ data }: { data: CatalogData }) {
           brandCount={brands.length}
         />
       ) : (
-        <ExploreHeader total={meta.total} search={search} categories={categories ?? []} />
+        <SearchHeader total={meta.total} search={search} />
       )}
 
       <FilterBar brands={brands} priceRange={priceRange} total={meta.total} />
 
       <div className={cn("transition-opacity duration-200", loading && "opacity-50")}>
-        <ProductGrid products={products} trendingIds={trending} />
+        <ProductGrid key={resultsKey} products={products} trendingIds={trending} className={cn(fresh && "t-results")} />
       </div>
 
       {meta.totalPages > 1 && (

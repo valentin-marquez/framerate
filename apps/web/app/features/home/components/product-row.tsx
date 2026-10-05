@@ -7,7 +7,7 @@ import { cn } from "~/shared/lib/utils";
 
 interface ProductRowProps {
   title: string;
-  /** Destino del enlace "Ver todos" (ej: /explorar?category=...). */
+  /** Destino del enlace "Ver todos" (ej: /categoria/tarjetas-de-video). */
   href: string;
   products: ProductSummary[];
   /** Primera fila visible: carga sus imágenes con prioridad (LCP) y entra en cascada al cargar la página. */

@@ -1,7 +1,7 @@
 import "~/shared/styles/app.css";
 import type { AuthProviders } from "@framerate/contracts";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   data,
   isRouteErrorResponse,
@@ -115,6 +115,8 @@ export async function loader({ request }: Route.LoaderArgs) {
       profile,
       providers,
       categories,
+      // Riel del navbar plegado: lo sabe el servidor para no mover el layout al hidratar.
+      railCollapsed: /(?:^|;\s*)rail=collapsed/.test(request.headers.get("Cookie") ?? ""),
       requestInfo: {
         clientEnv,
         userPrefs: { theme: getTheme(request), lang },
@@ -183,13 +185,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { categories: initialCategories } = loaderData;
+  const { categories: initialCategories, railCollapsed } = loaderData;
+  const [collapsed, setCollapsed] = useState(railCollapsed);
+  const contentRef = useRef<HTMLDivElement>(null);
+  // Al plegar el riel el contenido cambia su padding de una vez (un solo layout) y se desliza desde donde estaba con
+  // transform (FLIP), en vez de animar el padding y recalcular la grilla en cada cuadro.
+  const slideContent = (next: boolean) => {
+    const rich = document.documentElement.dataset.motion === "rich";
+    const desktop = window.matchMedia("(min-width: 64rem)").matches;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!rich || !desktop || reduced) return;
+    const delta = next ? 192 : -192; // w-64 − w-16
+    contentRef.current?.animate([{ transform: `translateX(${delta}px)` }, { transform: "none" }], {
+      duration: 300,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+    });
+  };
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
 
   const navigating = useNavigation().state !== "idle";
-  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -204,19 +220,15 @@ export default function App({ loaderData }: Route.ComponentProps) {
   }, [theme]);
 
   useEffect(() => {
+    // Efectos caros (desenfoque, transiciones de ancho) sólo en equipos holgados; ver data-motion en app.css.
+    const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+    if ((navigator.hardwareConcurrency ?? 4) >= 8 && memory >= 8) document.documentElement.dataset.motion = "rich";
     const timer = setTimeout(markInitialLoadDone, 1600);
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
-    <div className="flex flex-col min-h-screen pb-16">
+    <div className="flex min-h-screen flex-col overflow-x-clip pb-16">
       <div
         aria-hidden="true"
         className={cn(
@@ -224,15 +236,25 @@ export default function App({ loaderData }: Route.ComponentProps) {
           navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300",
         )}
       />
-      <header className="sticky top-0 z-50 w-full">
-        <Navbar categories={categories ?? []} blurred={scrolled} />
-      </header>
+      <Navbar
+        categories={categories ?? []}
+        collapsed={collapsed}
+        onCollapsedChange={(next) => {
+          setCollapsed(next);
+          slideContent(next);
+          // biome-ignore lint/suspicious/noDocumentCookie: preferencia de interfaz sin datos sensibles.
+          document.cookie = `rail=${next ? "collapsed" : "open"}; path=/; max-age=31536000; samesite=lax`;
+        }}
+      />
 
-      <main className="container mx-auto px-4 flex-1 pt-11">
-        <Outlet />
-      </main>
+      {/* El riel del navbar mide w-64 (w-16 plegado) en escritorio. */}
+      <div ref={contentRef} className={cn("page-content flex flex-1 flex-col", collapsed ? "lg:pl-16" : "lg:pl-64")}>
+        <main className="container mx-auto px-4 flex-1 pt-6 lg:pt-11">
+          <Outlet />
+        </main>
 
-      <SiteFooter />
+        <SiteFooter />
+      </div>
     </div>
   );
 }
@@ -269,8 +291,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         <Button size="lg" nativeButton={false} render={<Link to="/" />}>
           Ir al inicio
         </Button>
-        <Button size="lg" variant="outline" nativeButton={false} render={<Link to="/explorar" />}>
-          Explorar productos
+        <Button size="lg" variant="outline" nativeButton={false} render={<Link to="/buscar" />}>
+          Ver el catálogo
         </Button>
       </div>
       {stack && (

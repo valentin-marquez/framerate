@@ -1,8 +1,3 @@
-export const productKeys = {
-  all: ["products"] as const,
-  quickSearch: (query: string) => [...productKeys.all, "quick-search", query] as const,
-};
-
 export const categoryKeys = {
   all: ["categories"] as const,
 };
