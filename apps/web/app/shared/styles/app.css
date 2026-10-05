@@ -197,6 +197,27 @@
     @apply font-sans;
     scrollbar-gutter: stable;
   }
+  /* Tailwind v4 dejó los botones con cursor de flecha: todo lo clicable vuelve a la mano, y lo deshabilitado lo dice. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="tab"],
+  summary,
+  select:not(:disabled),
+  label[for],
+  label:has(input[type="checkbox"]:not(:disabled), input[type="radio"]:not(:disabled)),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="range"]:not(:disabled),
+  input[type="file"]:not(:disabled)::file-selector-button {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled,
+  input:disabled {
+    cursor: not-allowed;
+  }
 }
 
 /*
