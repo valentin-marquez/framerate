@@ -4,7 +4,7 @@ import { HomeContent } from "~/features/home/components/home-content";
 import type { MyStore } from "~/features/profile/services/profiles";
 import { SearchField } from "~/features/search/components/search-field";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
-import { categories, rowProducts, sessions, stores } from "~/shared/storybook/fixtures";
+import { categories, dropProducts, freshness, rowProducts, sessions, stores } from "~/shared/storybook/fixtures";
 import { withQueryData } from "~/shared/storybook/with-query-data";
 import { Button } from "../primitives/button";
 import {
@@ -36,7 +36,7 @@ export const NavbarVisitante: Story = {
   name: "Navbar: visitante",
   render: () => (
     <div className="h-screen">
-      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
+      <Navbar categories={categories} freshness={freshness} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -47,7 +47,7 @@ export const NavbarConSesion: Story = {
   parameters: { session: sessions.user, path: "/buscar" },
   render: () => (
     <div className="h-screen">
-      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
+      <Navbar categories={categories} freshness={freshness} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -57,7 +57,7 @@ export const NavbarPlegado: Story = {
   parameters: { session: sessions.user, path: "/categoria/tarjetas-de-video" },
   render: () => (
     <div className="h-screen">
-      <Navbar categories={categories} collapsed onCollapsedChange={() => {}} />
+      <Navbar categories={categories} freshness={freshness} collapsed onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -71,7 +71,7 @@ export const NavbarAdminConMenu: Story = {
   },
   render: () => (
     <div className="h-screen">
-      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
+      <Navbar categories={categories} freshness={freshness} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -82,7 +82,7 @@ export const NavbarMovil: Story = {
   parameters: { session: sessions.user },
   render: () => (
     <div className="h-screen">
-      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
+      <Navbar categories={categories} freshness={freshness} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -122,6 +122,16 @@ export const BuscadorYFps: Story = {
   ),
 };
 
+export const CyberActivo: Story = {
+  name: "Navbar: en /cyber",
+  parameters: { path: "/cyber" },
+  render: () => (
+    <div className="min-h-screen">
+      <Navbar categories={categories} freshness={freshness} collapsed={false} onCollapsedChange={() => {}} />
+    </div>
+  ),
+};
+
 export const Pie: Story = { render: () => <SiteFooter /> };
 
 /**
@@ -131,13 +141,14 @@ export const EstructuraDelSitio: Story = {
   name: "Estructura del sitio (home)",
   render: () => (
     <div className="flex min-h-screen flex-col pb-16">
-      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
+      <Navbar categories={categories} freshness={freshness} collapsed={false} onCollapsedChange={() => {}} />
       <div className="flex flex-1 flex-col lg:pl-64">
         <main className="container mx-auto flex-1 px-4 pt-6 lg:pt-11">
           <HomeContent
             categories={categories}
             stores={stores}
             trendingIds={[rowProducts[2].id]}
+            drops={dropProducts}
             rows={[
               { key: "popular", title: "Lo más popular", href: "/buscar", products: rowProducts },
               {

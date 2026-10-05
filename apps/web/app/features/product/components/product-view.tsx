@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
+import { priceDrop } from "../utils/price-drop";
 
 interface ProductViewProps {
   product: ProductDetail;
@@ -93,6 +94,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
                 <p className="font-semibold text-4xl text-foreground tabular-nums tracking-tight">
                   {formatCLP(best.priceCash)}
                 </p>
+                <PriceDropLine price={best.priceCash} reference={product.referencePrice} />
                 <p className="text-muted-foreground text-sm">
                   Con transferencia en {best.store.name}
                   {product.bestCardPrice !== null && product.bestCardPrice > best.priceCash && (
@@ -408,4 +410,19 @@ function specRows(attributes: ProductDetail["attributes"]): [string, string][] {
     if (key === "efficiency") return [[label, `80 Plus ${value[0]?.toUpperCase()}${value.slice(1)}`]];
     return [[label, UPPER.has(key) ? value.toUpperCase() : `${value[0]?.toUpperCase()}${value.slice(1)}`]];
   });
+}
+
+/** Precio habitual tachado y cuánto bajó; nada si la baja es menor al 3%. */
+function PriceDropLine({ price, reference }: { price: number; reference: number | null }) {
+  const drop = priceDrop(price, reference);
+  if (!drop || !reference) return null;
+  return (
+    <p className="flex flex-wrap items-baseline gap-x-2 text-sm tabular-nums">
+      <s className="text-muted-foreground">{formatCLP(reference)}</s>
+      <span className="font-medium text-emerald-700 dark:text-emerald-400">
+        Bajó {formatCLP(drop.amount)} ({drop.percent}%)
+      </span>
+      <span className="text-muted-foreground text-xs">bajo su precio habitual</span>
+    </p>
+  );
 }

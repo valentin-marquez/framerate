@@ -2,6 +2,7 @@ import type { ProductSummary } from "@framerate/contracts";
 import { IconPhotoOff, IconTrendingUp } from "@tabler/icons-react";
 import { useEffect, useId, useState } from "react";
 import { Link, useViewTransitionState } from "react-router";
+import { priceDrop } from "~/features/product/utils/price-drop";
 import { getSpecsSummary } from "~/features/product/utils/specs";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { Skeleton } from "~/shared/components/primitives/skeleton";
@@ -136,6 +137,7 @@ export function ProductCard({ product, priority = false, trending = false, class
   const efficiency = product.attributes.efficiency;
   const psu = product.category === "psu" && typeof efficiency === "string" ? efficiency : null;
   const cardId = useId();
+  const drop = priceDrop(bestPrice, product.referencePrice);
 
   return (
     <article
@@ -150,7 +152,12 @@ export function ProductCard({ product, priority = false, trending = false, class
         <div className="relative flex w-[58%] min-w-0 flex-col gap-1.5 p-3 pt-3.5 pb-2.5">
           <div className="flex h-5 items-center gap-2">
             {product.brand && <span className="truncate text-muted-foreground text-xs">{product.brand}</span>}
-            {trending && (
+            {drop && (
+              <span className="shrink-0 rounded-full bg-emerald-500/10 px-1.5 py-0.5 font-medium text-[11px] text-emerald-700 tabular-nums dark:text-emerald-400">
+                Bajó {formatCLP(drop.amount)} ({drop.percent}%)
+              </span>
+            )}
+            {trending && !drop && (
               <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary px-1.5 py-0.5 font-medium text-[11px] text-foreground">
                 <IconTrendingUp className="size-3" stroke={2} />
                 Tendencia
@@ -190,7 +197,14 @@ export function ProductCard({ product, priority = false, trending = false, class
         <div className="min-w-0 space-y-0.5">
           <div className="flex flex-wrap items-baseline gap-x-2">
             {bestPrice ? (
-              <span className="font-semibold text-foreground tabular-nums">{formatCLP(bestPrice)}</span>
+              <>
+                <span className="font-semibold text-foreground tabular-nums">{formatCLP(bestPrice)}</span>
+                {drop && product.referencePrice && (
+                  <s className="text-muted-foreground text-xs tabular-nums" title="Precio habitual">
+                    {formatCLP(product.referencePrice)}
+                  </s>
+                )}
+              </>
             ) : (
               <span className="text-muted-foreground text-sm">Ver tiendas</span>
             )}

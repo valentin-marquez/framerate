@@ -9,6 +9,8 @@ interface ProductRowProps {
   title: string;
   /** Destino del enlace "Ver todos" (ej: /categoria/tarjetas-de-video). */
   href: string;
+  /** Texto del enlace a la lista completa. */
+  more?: string;
   products: ProductSummary[];
   /** Primera fila visible: carga sus imágenes con prioridad (LCP) y entra en cascada al cargar la página. */
   priority?: boolean;
@@ -22,7 +24,14 @@ interface ProductRowProps {
  * y un carrusel de cards compactas. Reutilizable para Lo más popular
  * y cada categoría en la home.
  */
-export function ProductRow({ title, href, products, priority = false, trendingIds }: ProductRowProps) {
+export function ProductRow({
+  title,
+  href,
+  more = "Ver todos",
+  products,
+  priority = false,
+  trendingIds,
+}: ProductRowProps) {
   if (products.length === 0) return null;
 
   return (
@@ -39,7 +48,7 @@ export function ProductRow({ title, href, products, priority = false, trendingId
           prefetch="intent"
           className="shrink-0 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
         >
-          Ver todos
+          {more}
         </Link>
       </div>
 

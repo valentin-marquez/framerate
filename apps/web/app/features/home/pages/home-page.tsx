@@ -82,7 +82,6 @@ export async function loader() {
   // No se piden filas de categorías que no llenarían el carrusel: cada una es una llamada a la API.
   const rowCategories = categories.filter((c) => c.productCount >= MIN_ROW_PRODUCTS);
 
-  // "Mejores ofertas" vuelve cuando exista precio de referencia (hoy repetiría "Lo más popular").
   const rowDefs: { key: string; title: string; href: string }[] = [
     { key: "popular", title: "Lo más popular", href: "/buscar" },
     ...rowCategories.map((c) => ({ key: c.slug, title: c.label, href: `/categoria/${c.slug}` })),
@@ -94,8 +93,12 @@ export async function loader() {
   ];
 
   // allSettled aísla fallos/rate-limit: una fila que falla simplemente no se renderiza.
-  const [settled, trending, stores] = await Promise.all([
+  const [settled, drops, trending, stores] = await Promise.all([
     Promise.allSettled(fetches),
+    productsService.getDrops(12).catch((error) => {
+      if (!isRateLimitError(error)) console.error("Failed to fetch home drops", error);
+      return [];
+    }),
     productsService.getTrending(40).catch(() => ({ ids: [] as number[] })),
     storesService.listClaimable().then(
       (r) => r.stores,
@@ -117,7 +120,7 @@ export async function loader() {
     }
   });
 
-  return { categories, rows, trendingIds: trending.ids, stores } satisfies HomeData;
+  return { categories, rows, drops, trendingIds: trending.ids, stores } satisfies HomeData;
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {

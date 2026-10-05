@@ -1,6 +1,6 @@
 import "~/shared/styles/app.css";
-import type { AuthProviders } from "@framerate/contracts";
-import { QueryClientProvider } from "@tanstack/react-query";
+import type { AuthProviders, Freshness } from "@framerate/contracts";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
   data,
@@ -74,7 +74,7 @@ export function shouldRevalidate({ formMethod, defaultShouldRevalidate }: Should
 
 export async function loader({ request }: Route.LoaderArgs) {
   const clientEnv = getClientEnv();
-  const [{ user, headers: authHeaders }, categories, providers] = await Promise.all([
+  const [{ user, headers: authHeaders }, categories, providers, freshness] = await Promise.all([
     getAuthUser(request),
     categoriesService.getAll().catch((error) => {
       // 429 (rate limit) es esperado bajo carga; degradamos a lista vacía y el cliente revalida.
@@ -85,6 +85,10 @@ export async function loader({ request }: Route.LoaderArgs) {
       .get<AuthProviders>("/v1/auth/providers")
       .then((response) => response.items)
       .catch(() => []),
+    // Sin frescura el riel simplemente no la muestra.
+    api
+      .get<Freshness>("/v1/freshness")
+      .catch(() => null),
   ]);
 
   const profile = user ? meToProfile(user) : null;
@@ -115,6 +119,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       profile,
       providers,
       categories,
+      freshness,
       // Riel del navbar plegado: lo sabe el servidor para no mover el layout al hidratar.
       railCollapsed: /(?:^|;\s*)rail=collapsed/.test(request.headers.get("Cookie") ?? ""),
       requestInfo: {
@@ -204,6 +209,14 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
+  // El root no se vuelve a pedir al navegar: la frescura se refresca sola mientras la pestaña sigue abierta.
+  const { data: freshness } = useQuery({
+    queryKey: ["freshness"],
+    queryFn: () => api.get<Freshness>("/v1/freshness"),
+    initialData: loaderData.freshness ?? undefined,
+    staleTime: 60_000,
+    refetchInterval: 10 * 60_000,
+  });
 
   const navigating = useNavigation().state !== "idle";
 
@@ -238,6 +251,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       />
       <Navbar
         categories={categories ?? []}
+        freshness={freshness}
         collapsed={collapsed}
         onCollapsedChange={(next) => {
           setCollapsed(next);

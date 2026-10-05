@@ -3,8 +3,8 @@ import { StoresStrip } from "./home-blocks";
 import { HomeIntro } from "./home-intro";
 import { ProductRow } from "./product-row";
 
-/** Home: encabezado con cifras, lo más popular, tiendas y una fila por categoría (las categorías viven en el riel). */
-export function HomeContent({ categories, rows, trendingIds, stores }: HomeData) {
+/** Home: encabezado con cifras, lo más popular, bajas de precio, tiendas y una fila por categoría (las categorías viven en el riel). */
+export function HomeContent({ categories, rows, drops, trendingIds, stores }: HomeData) {
   const trending = new Set(trendingIds);
   const [popular, ...byCategory] = rows;
   return (
@@ -12,6 +12,7 @@ export function HomeContent({ categories, rows, trendingIds, stores }: HomeData)
       <HomeIntro productCount={categories.reduce((sum, c) => sum + c.productCount, 0)} storeCount={stores.length} />
       <div className="flex flex-col gap-10 pb-16 md:gap-12">
         {popular && <ProductRow title={popular.title} href={popular.href} products={popular.products} priority />}
+        <ProductRow title="Bajas de precio" href="/cyber" more="Ver todas" products={drops} />
         <StoresStrip stores={stores} />
         {byCategory.map((row) => (
           <ProductRow key={row.key} title={row.title} href={row.href} products={row.products} trendingIds={trending} />

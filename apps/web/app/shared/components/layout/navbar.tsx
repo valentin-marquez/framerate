@@ -1,4 +1,4 @@
-import type { CategoryItem } from "@framerate/contracts";
+import type { CategoryItem, Freshness } from "@framerate/contracts";
 import {
   IconCategory,
   IconChevronLeft,
@@ -6,6 +6,7 @@ import {
   IconHome,
   IconLayoutGrid,
   IconPlus,
+  IconRosetteDiscount,
   IconSearch,
 } from "@tabler/icons-react";
 import { createContext, type ReactNode, use, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -19,7 +20,7 @@ import { cn } from "~/shared/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
 import { Logo } from "./logo";
-import { NavFps, TimeGradient } from "./nav-parts";
+import { NavFps, OfferFreshness, TimeGradient } from "./nav-parts";
 import { UserMenu } from "./user-menu";
 
 const railLink = (current: boolean) =>
@@ -121,15 +122,61 @@ function RailLink({
 }
 
 /**
+ * Entrada destacada de `/cyber`: tarjeta propia con el haz de luz del buscador (`.beam`, variante con los colores del
+ * evento). Sin el logo de cyber.cl: es marca de la CCS y haría parecer que somos participante oficial. Es un enlace
+ * directo hijo del riel, así la píldora de sección activa la mide igual que a los demás.
+ */
+function CyberLink({ collapsed, onClick }: { collapsed?: boolean; onClick?: () => void }) {
+  const { target, select } = use(RailTarget);
+  const current = target === "/cyber";
+  return (
+    <RailHint label="Cyber Monday" collapsed={!!collapsed}>
+      <NavLink
+        to="/cyber"
+        prefetch="intent"
+        onClick={(e) => {
+          if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) select("/cyber");
+          onClick?.();
+        }}
+        aria-label={collapsed ? "Cyber Monday" : undefined}
+        data-current={current}
+        className={cn(
+          "relative flex items-center gap-3 overflow-hidden rounded-xl border border-border/70 transition-[color,background-color,scale] active:scale-[0.985]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          current ? "bg-secondary" : "bg-card/60 hover:bg-secondary/60",
+          collapsed ? "size-9 justify-center" : "h-14 w-full px-2.5",
+        )}
+      >
+        <span aria-hidden="true" data-variant="cyber" className="beam pointer-events-none absolute inset-0 rounded-xl">
+          <span className="beam-glow" />
+          <span className="beam-line" />
+          <span className="beam-line beam-top" />
+        </span>
+        <IconRosetteDiscount className="size-[18px] shrink-0 text-[#2c65ef] dark:text-[#6b93f5]" stroke={1.75} />
+        {!collapsed && (
+          <span className="flex min-w-0 flex-col fade-in-0 slide-in-from-left-1 animate-in duration-base">
+            <span className="truncate font-bold text-foreground text-sm tracking-tight">Cyber Monday</span>
+            <span className="truncate text-muted-foreground text-xs">5 al 7 de octubre</span>
+          </span>
+        )}
+      </NavLink>
+    </RailHint>
+  );
+}
+
+/**
  * Navegación del sitio. En escritorio, un riel fijo a la izquierda con el buscador y las categorías siempre a la
  * vista, que se pliega a sólo íconos; en teléfono, una barra superior con el buscador y pestañas abajo.
  */
 export function Navbar({
   categories,
+  freshness,
   collapsed,
   onCollapsedChange,
 }: {
   categories: CategoryItem[];
+  /** Sin dato (la API falló) no se muestra. */
+  freshness?: Freshness;
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
 }) {
@@ -318,6 +365,8 @@ export function Navbar({
             />
           </nav>
 
+          <CyberLink collapsed={collapsed} />
+
           <nav aria-label="Categorías" className="flex flex-col gap-0.5">
             {collapsed ? (
               <span className="mx-auto mb-1 h-px w-6 bg-border" />
@@ -340,14 +389,17 @@ export function Navbar({
         </div>
 
         <div
-          className={cn("flex items-center gap-2 border-border/60 border-t pt-3", collapsed ? "flex-col" : "w-full")}
+          className={cn("flex flex-col gap-3 border-border/60 border-t pt-3", collapsed ? "items-center" : "w-full")}
         >
-          {quoteButton(collapsed)}
-          <UserMenu
-            align="start"
-            side={collapsed ? "right" : "top"}
-            loginClassName={collapsed ? "h-10 px-2.5" : "h-10 flex-1"}
-          />
+          {freshness && <OfferFreshness freshness={freshness} collapsed={collapsed} />}
+          <div className={cn("flex items-center gap-2", collapsed ? "flex-col" : "w-full")}>
+            {quoteButton(collapsed)}
+            <UserMenu
+              align="start"
+              side={collapsed ? "right" : "top"}
+              loginClassName={collapsed ? "h-10 px-2.5" : "h-10 flex-1"}
+            />
+          </div>
         </div>
       </aside>
 
@@ -378,7 +430,10 @@ export function Navbar({
       <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
         {/* Hoja que sube desde abajo (transitions.dev, "panel reveal"): se desliza en vez de crecer desde el centro. */}
         <DialogContent className="top-auto bottom-0 max-h-[80dvh] w-full max-w-none translate-y-0 overflow-y-auto rounded-t-3xl rounded-b-none border-x-0 border-b-0 p-3 pb-8 zoom-in-100 zoom-out-100 slide-in-from-bottom-24 slide-out-to-bottom-24 lg:hidden">
-          <DialogTitle className="px-2.5 pt-2 pb-3">Categorías</DialogTitle>
+          <div className="px-1 pt-2 pb-3">
+            <CyberLink onClick={() => setSheetOpen(false)} />
+          </div>
+          <DialogTitle className="px-2.5 pb-3">Categorías</DialogTitle>
           {categories.map((c) => (
             <RailLink
               key={c.id}

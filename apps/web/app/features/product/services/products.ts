@@ -1,4 +1,10 @@
-import { categoryFromSlug, type PricePoint, type ProductDetail, type ProductPage } from "@framerate/contracts";
+import {
+  categoryFromSlug,
+  type PricePoint,
+  type ProductDetail,
+  type ProductPage,
+  type ProductSort,
+} from "@framerate/contracts";
 import { api } from "~/shared/lib/api";
 
 export interface ProductFilters {
@@ -9,14 +15,18 @@ export interface ProductFilters {
   search?: string;
   min_price?: number;
   max_price?: number;
-  sort?: "price_asc" | "price_desc" | "popularity" | "name";
+  sort?: ProductSort;
+  /** `clave:valor`, repetible (ver `facets.ts` del contrato). */
+  spec?: string[];
+  /** Sólo productos bajo su precio habitual. */
+  deals?: boolean;
 }
 
 /** La API no acepta búsquedas de menos de 2 caracteres. */
 const searchable = (q: string | undefined) => (q && q.trim().length >= 2 ? q.trim() : undefined);
 
-function listParams(filters: ProductFilters): Record<string, string> {
-  const params: Record<string, string> = {};
+export function listParams(filters: ProductFilters): Record<string, string | string[]> {
+  const params: Record<string, string | string[]> = {};
   if (filters.page) params.page = String(filters.page);
   if (filters.limit) params.pageSize = String(filters.limit);
   if (filters.category) params.category = categoryFromSlug(filters.category) ?? filters.category;
@@ -26,11 +36,15 @@ function listParams(filters: ProductFilters): Record<string, string> {
   if (filters.min_price) params.minPrice = String(filters.min_price);
   if (filters.max_price) params.maxPrice = String(filters.max_price);
   if (filters.sort) params.sort = filters.sort;
+  if (filters.spec?.length) params.spec = filters.spec;
+  if (filters.deals) params.deals = "1";
   return params;
 }
 
 export const productsService = {
   getAll: (filters: ProductFilters = {}) => api.get<ProductPage>("/v1/products", { params: listParams(filters) }),
+
+  getDrops: async (limit = 12) => (await productsService.getAll({ deals: true, sort: "discount", limit })).items,
 
   // Aún no hay ranking de tendencia.
   getTrending: async (_limit?: number): Promise<{ ids: number[] }> => ({ ids: [] }),

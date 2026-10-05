@@ -1,9 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { brands, rowProducts } from "~/shared/storybook/fixtures";
+import { ProductGrid } from "~/features/explore/components";
+import {
+  brands,
+  categories,
+  dropProducts,
+  gpuFacets,
+  rowProducts,
+  specMatchProducts,
+} from "~/shared/storybook/fixtures";
 import type { CatalogData } from "../load-catalog";
-import { CategoryHeader, SearchHeader } from "./catalog-headers";
+import { CategoryHeader, CyberHeader, SearchHeader } from "./catalog-headers";
 import { CatalogView } from "./catalog-view";
-import { FilterBar } from "./filter-bar";
+import { FacetFilter, FilterBar } from "./filter-bar";
 
 const meta = { title: "Catálogo/Cabeceras y filtros", id: "catalogo" } satisfies Meta;
 export default meta;
@@ -46,18 +54,122 @@ export const BarraDeFiltrosActivos: Story = {
   render: () => <FilterBar brands={brands} priceRange={{ min: 279_990, max: 939_990 }} total={3} />,
 };
 
-const catalog = (overrides: Partial<CatalogData> = {}): CatalogData => ({
-  products: rowProducts,
-  meta: { page: 2, limit: 24, total: 180, totalPages: 8 },
-  brands,
-  priceRange: { min: 279_990, max: 939_990 },
-  trendingIds: [rowProducts[0].id],
-  rateLimited: false,
-  category: "tarjetas-de-video",
-  search: null,
-  brand: null,
-  ...overrides,
-});
+export const BarraConFacetas: Story = {
+  name: "Barra de filtros con facetas",
+  parameters: { path: "/categoria/tarjetas-de-video?spec=vram:12&spec=vram:16&brand=msi" },
+  render: () => (
+    <FilterBar
+      brands={brands}
+      priceRange={{ min: 279_990, max: 939_990 }}
+      total={5}
+      category="tarjetas-de-video"
+      facets={gpuFacets}
+    />
+  ),
+};
+
+export const ChipDeFaceta: Story = {
+  name: "Chip de faceta (abre el popover)",
+  parameters: { path: "/categoria/tarjetas-de-video?spec=vram:8" },
+  // Ábrelo con un clic: muestra valores con conteo, selección múltiple y la nota de los que no tienen el dato.
+  render: () => (
+    <div className="h-80">
+      <FacetFilter facet={gpuFacets[0]} />
+    </div>
+  ),
+};
+
+export const SeparadorDeDesconocidos: Story = {
+  name: "Grilla con desconocidos al final",
+  render: () => <ProductGrid products={specMatchProducts} missingSpec="memoria" />,
+};
+
+export const SoloDesconocidos: Story = {
+  name: "Grilla con todos desconocidos",
+  render: () => (
+    <ProductGrid
+      products={specMatchProducts.map((p) => ({ ...p, specMatch: "unknown" }))}
+      missingSpec="memoria o modelo"
+    />
+  ),
+};
+
+export const CabeceraCyber: Story = {
+  name: "Cabecera de Cyber",
+  render: () => <CyberHeader total={128} />,
+};
+
+const catalog = (overrides: Partial<CatalogData> = {}): CatalogData =>
+  ({
+    products: rowProducts,
+    meta: { page: 2, limit: 24, total: 180, totalPages: 8 },
+    brands,
+    priceRange: { min: 279_990, max: 939_990 },
+    facets: [],
+    categories: [],
+    trendingIds: [rowProducts[0].id],
+    rateLimited: false,
+    category: "tarjetas-de-video",
+    search: null,
+    brand: null,
+    spec: [],
+    deals: false,
+    defaultSort: "price_asc",
+    ...overrides,
+  }) as CatalogData;
+
+export const VistaCyber: Story = {
+  name: "Vista completa: Cyber",
+  parameters: { path: "/cyber" },
+  render: () => (
+    <CatalogView
+      data={catalog({
+        products: dropProducts,
+        meta: { page: 1, limit: 24, total: 8, totalPages: 1 },
+        category: null,
+        brands: [],
+        priceRange: null,
+        categories,
+        deals: true,
+        defaultSort: "discount",
+      })}
+    />
+  ),
+};
+
+export const VistaCyberVacia: Story = {
+  name: "Vista completa: Cyber sin bajas",
+  parameters: { path: "/cyber" },
+  render: () => (
+    <CatalogView
+      data={catalog({
+        products: [],
+        meta: { page: 1, limit: 24, total: 0, totalPages: 0 },
+        category: null,
+        brands: [],
+        priceRange: null,
+        categories,
+        deals: true,
+        defaultSort: "discount",
+      })}
+    />
+  ),
+};
+
+export const VistaConFacetas: Story = {
+  name: "Vista completa: filtrada por especificación",
+  parameters: { path: "/categoria/tarjetas-de-video?spec=vram:8" },
+  render: () => (
+    <CatalogView
+      data={catalog({
+        products: specMatchProducts,
+        meta: { page: 1, limit: 24, total: 5, totalPages: 1 },
+        facets: gpuFacets,
+        spec: ["vram:8"],
+      })}
+    />
+  ),
+};
 
 export const VistaDeCategoria: Story = {
   name: "Vista completa: categoría",

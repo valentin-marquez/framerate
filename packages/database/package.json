@@ -11,7 +11,8 @@
     "check-types": "tsc --noEmit",
     "test": "bun test",
     "db:migrate:local": "wrangler d1 migrations apply framerate --local --persist-to ../../.wrangler/state",
-    "db:migrate:remote": "wrangler d1 migrations apply framerate --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply framerate --remote",
+    "db:backfill-prices:local": "wrangler d1 execute framerate --local --persist-to ../../.wrangler/state --file=scripts/backfill-price-daily.sql"
   },
   "dependencies": {
     "kysely": "^0.29.6",

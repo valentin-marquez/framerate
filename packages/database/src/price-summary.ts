@@ -1,0 +1,66 @@
+import { CompiledQuery } from "kysely";
+import type { Db } from "./client";
+
+/**
+ * Resumen de precios de `products` y fila del día en `product_price_daily`, recalculados desde `listings` de todas
+ * las tiendas. Se recalcula desde cero (no se suma) para que reintentos de la cola y corridas paralelas den lo mismo.
+ * `scripts/backfill-price-daily.sql` repite estas sentencias para todos los productos: mantenerlos iguales.
+ */
+
+/** `scope` es una subconsulta que devuelve ids de producto. Sólo ofertas activas; el precio sólo de las con stock. */
+const summarySql = (scope: string) => `
+UPDATE products SET
+  (best_price, best_price_card, offer_count, in_stock_offer_count) = (
+    SELECT MIN(CASE WHEN in_stock = 1 THEN price_cash END), MIN(CASE WHEN in_stock = 1 THEN price_card END),
+      COUNT(*), COALESCE(SUM(in_stock), 0)
+    FROM listings WHERE product_id = products.id AND is_active = 1),
+  prices_updated_at = ?4
+WHERE id IN (${scope})`;
+
+/** El mínimo del día es el menor visto en cualquier corrida del día, no sólo el de la última. */
+const dailySql = (scope: string) => `
+INSERT INTO product_price_daily (product_id, day, min_cash, min_card, offer_count)
+SELECT id, ?5, best_price, best_price_card, in_stock_offer_count
+FROM products WHERE id IN (${scope}) AND best_price IS NOT NULL
+ON CONFLICT (product_id, day) DO UPDATE SET
+  min_cash = MIN(min_cash, excluded.min_cash),
+  min_card = MIN(min_card, excluded.min_card),
+  offer_count = excluded.offer_count`;
+
+/**
+ * Precio habitual: promedio del mínimo diario entre hoy−32 y hoy−3 (excluye los últimos días para que una baja
+ * reciente no se compare consigo misma), con al menos 3 días de datos. El máximo premiaba inflar antes de un evento.
+ */
+const referenceSql = (scope: string) => `
+UPDATE products SET reference_price = (
+  SELECT CASE WHEN COUNT(*) >= 3 THEN CAST(ROUND(AVG(min_cash)) AS INTEGER) END
+  FROM product_price_daily
+  WHERE product_id = products.id AND day BETWEEN date(?5, '-32 days') AND date(?5, '-3 days'))
+WHERE id IN (${scope})`;
+
+/** Productos tocados por una corrida: los de sus ofertas (también desactivadas) y los que perdieron una oferta. */
+const CRAWL_SCOPE = `SELECT product_id FROM listings WHERE store_id = ?1 AND category = ?2 AND product_id IS NOT NULL
+  UNION SELECT value FROM json_each(?3)`;
+
+/** Día calendario en Chile (con su horario de verano). */
+export const santiagoDay = (date: Date) => date.toLocaleDateString("sv-SE", { timeZone: "America/Santiago" });
+
+export async function refreshPriceSummary(
+  db: Db,
+  input: { storeId: number; category: string; previousProductIds: Iterable<number>; now: Date },
+) {
+  const params = [
+    input.storeId,
+    input.category,
+    JSON.stringify([...input.previousProductIds]),
+    input.now.toISOString(),
+    santiagoDay(input.now),
+  ];
+  // Las tres en un batch (una transacción): el reference_price lee la fila del día recién escrita.
+  // D1 rechaza más valores que el mayor ?N de la sentencia: el resumen no usa el día (?5).
+  await db.batch(
+    [[summarySql, params.slice(0, 4)] as const, [dailySql, params] as const, [referenceSql, params] as const].map(
+      ([build, values]) => ({ compile: () => CompiledQuery.raw(build(CRAWL_SCOPE), values) }),
+    ),
+  );
+}

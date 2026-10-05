@@ -1,27 +1,35 @@
-import type { BrandCount } from "@framerate/contracts";
+import {
+  type BrandCount,
+  type CategoryItem,
+  type Facet,
+  type FacetDefinition,
+  facetValueLabel,
+} from "@framerate/contracts";
 import { IconCheck, IconChevronDown, IconX } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
-import type { CatalogData } from "../load-catalog";
+import { type CatalogData, categoryFacets } from "../load-catalog";
 
 const SORT_OPTIONS = [
   { value: "price_asc", label: "Precio: menor a mayor" },
   { value: "price_desc", label: "Precio: mayor a menor" },
   { value: "popularity", label: "Más populares" },
   { value: "name", label: "Nombre" },
+  { value: "discount", label: "Mayor baja" },
 ] as const;
 
 /** Actualiza la URL (fuente de verdad de los filtros) y vuelve a la primera página. */
 function useFilterParams() {
   const [params, setParams] = useSearchParams();
   const update = useCallback(
-    (changes: Record<string, string | null>) => {
+    (changes: Record<string, string | string[] | null>) => {
       const next = new URLSearchParams(params);
       for (const [key, value] of Object.entries(changes)) {
-        if (value === null || value === "") next.delete(key);
-        else next.set(key, value);
+        next.delete(key);
+        // Un arreglo es un parámetro repetible (`spec=vram:12&spec=vram:16`).
+        for (const v of [value ?? []].flat()) if (v !== "") next.append(key, v);
       }
       next.delete("page");
       setParams(next, { preventScrollReset: true });
@@ -38,15 +46,29 @@ const chip = (active: boolean) =>
   );
 
 /** Botón con panel flotante: se cierra al hacer clic fuera o con Escape. */
-function Popover({ label, active, children }: { label: string; active: boolean; children: React.ReactNode }) {
+function Popover({
+  label,
+  active,
+  end,
+  children,
+}: {
+  label: string;
+  active: boolean;
+  /** Alineado a la derecha del botón: el del orden, pegado al borde, si no se saldría de la pantalla. */
+  end?: boolean;
+  children: React.ReactNode;
+}) {
   const [open, setOpenState] = useState(false);
   const [closing, setClosing] = useState(false);
+  // Los valores entran escalonados sólo la primera vez que se abre: después ya se conocen y estorbaría.
+  const [opens, setOpens] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   // Al cerrar queda .is-closing lo que dura la salida, para que encoja en vez de saltar a su escala de reposo.
   const setOpen = useCallback(
     (next: boolean | ((v: boolean) => boolean)) =>
       setOpenState((prev) => {
         const value = typeof next === "function" ? next(prev) : next;
+        if (!prev && value) setOpens((n) => n + 1);
         if (prev && !value) {
           setClosing(true);
           setTimeout(() => setClosing(false), 150);
@@ -71,20 +93,47 @@ function Popover({ label, active, children }: { label: string; active: boolean; 
   return (
     <div ref={ref} className="relative">
       <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} className={chip(active)}>
-        {label}
+        {/* Text swap: al activarse ("Memoria" a "Memoria: 12 GB") la etiqueta nueva sube con un fundido corto. */}
+        <span key={label} className="inline-block fade-in-0 slide-in-from-bottom-1 animate-in duration-fast">
+          {label}
+        </span>
         <IconChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
       </button>
       <div
         inert={!open}
+        style={end ? { transformOrigin: "top right" } : undefined}
         className={cn(
-          "t-dropdown absolute top-full left-0 z-50 mt-2 min-w-56 rounded-2xl border border-border/60 bg-popover p-2 shadow-lg",
+          "t-dropdown absolute top-full z-50 mt-2 min-w-56 rounded-2xl border border-border/60 bg-popover p-2 shadow-lg",
+          end ? "right-0" : "left-0",
           open && "is-open",
+          open && opens === 1 && "t-pop-items",
           closing && "is-closing",
         )}
       >
         {children}
       </div>
     </div>
+  );
+}
+
+/** Check con su lugar reservado: aparece y se va con escala y fundido (icon swap) sin mover el texto. */
+function Check({ on }: { on: boolean }) {
+  return (
+    <span className="t-icon-swap">
+      <IconCheck data-on={on} className="size-4" />
+    </span>
+  );
+}
+
+/** Conteo que cambia al filtrar: el valor nuevo entra con un pop-in corto. */
+function Count({ value }: { value: number }) {
+  return (
+    <span
+      key={value}
+      className="inline-block text-muted-foreground text-xs tabular-nums fade-in-0 zoom-in-90 slide-in-from-bottom-0.5 animate-in duration-fast"
+    >
+      {value.toLocaleString("es-CL")}
+    </span>
   );
 }
 
@@ -106,10 +155,10 @@ function BrandFilter({ brands }: { brands: BrandCount[] }) {
               )}
             >
               <span className="flex items-center gap-2">
-                {b.slug === current && <IconCheck className="size-4" />}
+                <Check on={b.slug === current} />
                 {b.name}
               </span>
-              <span className="text-muted-foreground text-xs">{b.count}</span>
+              <Count value={b.count} />
             </button>
           </li>
         ))}
@@ -168,25 +217,25 @@ function PriceFilter({ priceRange }: { priceRange: CatalogData["priceRange"] }) 
   );
 }
 
-function SortMenu() {
+function SortMenu({ defaultSort }: { defaultSort: string }) {
   const { params, update } = useFilterParams();
-  const current = params.get("sort") ?? "price_asc";
+  const current = params.get("sort") ?? defaultSort;
   const label = SORT_OPTIONS.find((o) => o.value === current)?.label ?? "Ordenar";
   return (
-    <Popover label={label} active={false}>
+    <Popover label={label} active={false} end>
       <ul className="w-52">
         {SORT_OPTIONS.map((o) => (
           <li key={o.value}>
             <button
               type="button"
-              onClick={() => update({ sort: o.value === "price_asc" ? null : o.value })}
+              onClick={() => update({ sort: o.value === defaultSort ? null : o.value })}
               className={cn(
                 "flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors",
                 o.value === current ? "bg-primary/10 font-medium text-primary" : "hover:bg-secondary/50",
               )}
             >
               {o.label}
-              {o.value === current && <IconCheck className="size-4" />}
+              <Check on={o.value === current} />
             </button>
           </li>
         ))}
@@ -195,35 +244,153 @@ function SortMenu() {
   );
 }
 
-/** Filtros aplicados, cada uno con su quitar. Sólo aparece cuando hay alguno. */
-function ActiveChips({ brands }: { brands: BrandCount[] }) {
+const specValue = (token: string, key: string) => (token.startsWith(`${key}:`) ? token.slice(key.length + 1) : null);
+
+/** Una faceta (Memoria, Chipset...): selección múltiple; varios valores de la misma son "o". */
+export function FacetFilter({ facet }: { facet: Facet }) {
   const { params, update } = useFilterParams();
-  const chips: { label: string; clear: Record<string, null> }[] = [];
+  const all = params.getAll("spec");
+  const selected = all.map((t) => specValue(t, facet.key)).filter((v) => v !== null);
+  const labelOf = (value: string) => facet.values.find((v) => v.value === value)?.label ?? value;
+  const label = selected.length
+    ? `${facet.label}: ${labelOf(selected[0])}${selected.length > 1 ? ` +${selected.length - 1}` : ""}`
+    : facet.label;
+  const toggle = (value: string) => {
+    const token = `${facet.key}:${value}`;
+    update({ spec: all.includes(token) ? all.filter((t) => t !== token) : [...all, token] });
+  };
+
+  return (
+    <Popover label={label} active={selected.length > 0}>
+      <ul className="max-h-64 overflow-y-auto">
+        {facet.values.map((v) => {
+          const on = selected.includes(v.value);
+          return (
+            <li key={v.value}>
+              <button
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggle(v.value)}
+                className={cn(
+                  "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors",
+                  on ? "bg-primary/10 font-medium text-primary" : "hover:bg-secondary/50",
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <Check on={on} />
+                  {v.label}
+                </span>
+                <Count value={v.count} />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {facet.unknownCount > 0 && (
+        <p className="mt-1 border-border/60 border-t px-3 pt-2 pb-1 text-muted-foreground text-xs">
+          {facet.unknownCount.toLocaleString("es-CL")} sin este dato {facet.unknownCount === 1 ? "aparece" : "aparecen"}{" "}
+          al final
+        </p>
+      )}
+    </Popover>
+  );
+}
+
+/** Filtro de categoría para vistas que mezclan categorías (`/cyber`). Cambiarla borra los filtros propios de la otra. */
+export function CategoryChips({ categories }: { categories: CategoryItem[] }) {
+  const { params, update } = useFilterParams();
+  const current = params.get("category");
+  const choose = (slug: string | null) =>
+    update({ category: slug, brand: null, min_price: null, max_price: null, spec: null });
+  return (
+    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
+      <button type="button" onClick={() => choose(null)} className={cn(chip(!current), "shrink-0")}>
+        Todas
+      </button>
+      {categories.map((c) => (
+        <button
+          key={c.id}
+          type="button"
+          aria-pressed={c.slug === current}
+          onClick={() => choose(c.slug === current ? null : c.slug)}
+          className={cn(chip(c.slug === current), "shrink-0")}
+        >
+          {c.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Filtros aplicados, cada uno con su quitar. Sólo aparece cuando hay alguno. */
+function ActiveChips({ brands, definitions }: { brands: BrandCount[]; definitions: FacetDefinition[] }) {
+  const { params, update } = useFilterParams();
+  const [leaving, setLeaving] = useState<{ labels: string[]; change: Record<string, string | string[] | null> } | null>(
+    null,
+  );
+  // Con la URL nueva los chips quitados ya no existen: se olvida la salida.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: se limpia en cada cambio de filtros.
+  useEffect(() => setLeaving(null), [params]);
+  const chips: { label: string; clear: Record<string, string[] | null> }[] = [];
   const brand = params.get("brand");
   if (brand) chips.push({ label: brands.find((b) => b.slug === brand)?.name ?? brand, clear: { brand: null } });
   if (params.get("min_price") || params.get("max_price")) {
     chips.push({ label: "Rango de precio", clear: { min_price: null, max_price: null } });
   }
+  const specs = params.getAll("spec");
+  for (const token of specs) {
+    const facet = definitions.find((f) => specValue(token, f.key) !== null);
+    if (!facet) continue;
+    const label = `${facet.label}: ${facetValueLabel(facet, specValue(token, facet.key) ?? "")}`;
+    chips.push({ label, clear: { spec: specs.filter((t) => t !== token) } });
+  }
   if (params.get("q")) chips.push({ label: `“${params.get("q")}”`, clear: { q: null } });
   if (chips.length === 0) return null;
 
+  // Salida: los chips quitados encogen y se apagan, y la URL cambia al terminar la última (con movimiento reducido
+  // la animación dura ~0 y el filtro se aplica de inmediato).
+  const remove = (labels: string[], change: Parameters<typeof update>[0]) => setLeaving({ labels, change });
+  const leavingIndex = (label: string) => leaving?.labels.indexOf(label) ?? -1;
+  const lastLeaving = leaving?.labels.at(-1);
+  const clearAll = { brand: null, min_price: null, max_price: null, q: null, spec: null };
+
   return (
     <div className="-mt-3 flex flex-wrap items-center gap-2">
-      {chips.map((c) => (
-        <button
-          key={c.label}
-          type="button"
-          onClick={() => update(c.clear)}
-          className="inline-flex items-center gap-1 rounded-full bg-secondary/60 px-3 py-1 text-foreground text-xs transition-colors hover:bg-secondary"
-        >
-          {c.label}
-          <IconX className="size-3 text-muted-foreground" />
-        </button>
-      ))}
+      {chips.map((c) => {
+        const out = leavingIndex(c.label);
+        return (
+          <button
+            key={c.label}
+            type="button"
+            disabled={!!leaving}
+            onClick={() => remove([c.label], c.clear)}
+            onAnimationEnd={() => out >= 0 && c.label === lastLeaving && leaving && update(leaving.change)}
+            style={out >= 0 ? { animationDelay: `${Math.min(out, 5) * 30}ms` } : undefined}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full bg-secondary/60 px-3 py-1 text-foreground text-xs transition-colors hover:bg-secondary",
+              out >= 0
+                ? "fade-out-0 zoom-out-90 animate-out fill-mode-forwards duration-100"
+                : "fade-in-0 zoom-in-90 animate-in duration-fast",
+            )}
+          >
+            {c.label}
+            <IconX className="size-3 text-muted-foreground" />
+          </button>
+        );
+      })}
       <button
         type="button"
-        onClick={() => update({ brand: null, min_price: null, max_price: null, q: null })}
-        className="text-muted-foreground text-xs transition-colors hover:text-foreground"
+        disabled={!!leaving}
+        onClick={() =>
+          remove(
+            chips.map((c) => c.label),
+            clearAll,
+          )
+        }
+        className={cn(
+          "text-muted-foreground text-xs transition-[color,opacity] hover:text-foreground",
+          leaving && leaving.labels.length === chips.length && "opacity-0",
+        )}
       >
         Limpiar todo
       </button>
@@ -235,23 +402,40 @@ interface FilterBarProps {
   brands: BrandCount[];
   priceRange: CatalogData["priceRange"];
   total: number;
+  /** Slug de la categoría: define qué facetas tienen etiqueta en los chips activos. */
+  category?: string | null;
+  facets?: Facet[];
+  defaultSort?: string;
 }
 
-export function FilterBar({ brands, priceRange, total }: FilterBarProps) {
+export function FilterBar({
+  brands,
+  priceRange,
+  total,
+  category,
+  facets = [],
+  defaultSort = "price_asc",
+}: FilterBarProps) {
+  const specs = useSearchParams()[0].getAll("spec");
   return (
     // `contents`: la barra se pega dentro de la columna del catálogo; en un envoltorio de su mismo alto no se pegaba.
     <div className="contents">
       <div className="sticky top-14 z-30 lg:top-3 -mx-4 flex flex-wrap items-center gap-2 border-border/40 border-b bg-background/80 px-4 py-2.5 backdrop-blur-md md:mx-0 md:rounded-2xl md:border md:px-3">
         {brands.length > 0 && <BrandFilter brands={brands} />}
         <PriceFilter priceRange={priceRange} />
+        {facets
+          .filter((f) => f.values.length > 0 || specs.some((t) => specValue(t, f.key) !== null))
+          .map((f) => (
+            <FacetFilter key={f.key} facet={f} />
+          ))}
         <div className="ml-auto flex items-center gap-3">
           <span className="hidden text-muted-foreground text-sm sm:block">
             {total.toLocaleString("es-CL")} {total === 1 ? "producto" : "productos"}
           </span>
-          <SortMenu />
+          <SortMenu defaultSort={defaultSort} />
         </div>
       </div>
-      <ActiveChips brands={brands} />
+      <ActiveChips brands={brands} definitions={categoryFacets(category)} />
     </div>
   );
 }

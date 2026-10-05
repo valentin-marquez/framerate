@@ -52,6 +52,7 @@ export const product: ProductDetail = {
     "https://dust2.gg/wp-content/uploads/2026/02/new-project-2026-02-23t171641294-33567d97-fa1b-4189-8699-47d27642ef2c.jpg",
   bestPrice: 533_520,
   bestCardPrice: 561_600,
+  referencePrice: 589_990,
   mpn: "DUAL-RX9060XT-16G",
   attributes: { chipset: "rx 9060 xt", vram: 16, line: "dual", oc: false },
   offerCount: offers.length,

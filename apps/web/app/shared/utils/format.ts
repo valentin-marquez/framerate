@@ -25,4 +25,14 @@ const formatDateTime = (iso: string) => {
   return `${part.day}-${part.month}-${part.year} ${part.hour}:${part.minute}`;
 };
 
-export { formatCLP, formatDateTime };
+/** Duración corta para el riel: "menos de 1 min", "23 min", "4 h 12 min", "2 días". */
+const formatSpan = (ms: number) => {
+  const minutes = Math.floor(Math.max(0, ms) / 60_000);
+  if (minutes < 1) return "menos de 1 min";
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours >= 48) return `${Math.floor(hours / 24)} días`;
+  return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`;
+};
+
+export { formatCLP, formatDateTime, formatSpan };

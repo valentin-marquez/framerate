@@ -1,5 +1,5 @@
 import type { Category } from "@framerate/contracts";
-import type { Db } from "@framerate/database";
+import { type Db, refreshPriceSummary } from "@framerate/database";
 import type { Clock, Logger } from "@framerate/kit";
 import { matchListing } from "@framerate/matching";
 import { normalizeOffer } from "./domain/normalize";
@@ -66,6 +66,8 @@ export async function crawlCategory(
   log.info("crawl.started", { previousActive });
 
   const seen = new Set<string>();
+  // Productos que perdieron una oferta por re-matching: también hay que recalcularles el precio.
+  const previousProductIds = new Set<number>();
   try {
     for await (const raw of store.adapter.crawlCategory(category, deps.createContext(runId))) {
       stats.seen++;
@@ -110,6 +112,9 @@ export async function crawlCategory(
           productId: upsert.productId,
         });
       }
+      if (upsert.productId !== null && (match.unlinked || match.outcome !== "kept")) {
+        previousProductIds.add(upsert.productId);
+      }
       if (match.unlinked) stats.unlinked++;
       if (match.reviewClosed) stats.reviewsClosed++;
       if (match.outcome === "linked") stats.linked++;
@@ -130,6 +135,7 @@ export async function crawlCategory(
       log.warn("crawl.deactivation_skipped", { valid: stats.valid, previousActive });
     }
 
+    await refreshPriceSummary(db, { storeId: storeRow.id, category, previousProductIds, now: clock() });
     await finishRun(db, runId, { status: "succeeded", stats, now: now() });
     log.info("crawl.succeeded", { ...stats });
     return { runId, status: "succeeded", stats };
