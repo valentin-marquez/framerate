@@ -65,5 +65,7 @@ describe("niceTicks", () => {
   test("marcas redondas que cubren el rango", () => {
     expect(niceTicks(514_299, 738_591)).toEqual([500_000, 550_000, 600_000, 650_000, 700_000, 750_000]);
     expect(niceTicks(100, 100).length).toBeGreaterThan(1);
+    // Un rango angosto (precio casi plano) no se llena de marcas.
+    expect(niceTicks(525_000, 570_000).length).toBeLessThanOrEqual(6);
   });
 });

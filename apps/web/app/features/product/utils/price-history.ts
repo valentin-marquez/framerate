@@ -100,7 +100,8 @@ export function summarizeHistory(
 export function niceTicks(min: number, max: number, count = 4): number[] {
   const raw = (max - min) / count || Math.abs(max) / 10 || 1;
   const pow = 10 ** Math.floor(Math.log10(raw));
-  const step = ([5, 2.5, 2, 1].find((m) => m * pow <= raw) ?? 1) * pow;
+  const m = [1, 2, 2.5, 5, 10].reduce((a, b) => (Math.abs(b * pow - raw) < Math.abs(a * pow - raw) ? b : a));
+  const step = m * pow;
   const ticks: number[] = [];
   for (let v = Math.floor(min / step) * step; v <= max + step * 0.001; v += step) ticks.push(v);
   while (ticks.length < 2 || (ticks.at(-1) ?? 0) < max) ticks.push((ticks.at(-1) ?? 0) + step);
