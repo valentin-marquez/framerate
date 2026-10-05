@@ -742,6 +742,41 @@
 }
 
 /*
+ * Riel lateral: un solo diseño para plegado y desplegado (navbar.tsx). Angosto, las etiquetas se desvanecen rápido
+ * mientras el ancho se cierra; al abrir aparecen con un pequeño retraso, cuando ya hay espacio, así nunca se ven
+ * apretadas. Sólo opacidad.
+ */
+.rail-label,
+.rail-icon {
+  white-space: nowrap;
+  transition: opacity var(--transition-duration-fast) var(--ease-out);
+}
+[data-wide="true"] .rail-label {
+  transition-delay: 120ms;
+}
+[data-wide="false"] .rail-label,
+[data-wide="true"] .rail-icon {
+  opacity: 0;
+  pointer-events: none;
+}
+[data-wide="false"] [data-search-field]::placeholder {
+  opacity: 0;
+}
+[data-wide="false"] [data-search-field] ~ button {
+  opacity: 0;
+  pointer-events: none;
+}
+/* La manija sigue el borde del riel con transform (16rem o 4rem); con equipo holgado, al mismo ritmo que el ancho. */
+.t-rail-handle {
+  transform: translate(calc(var(--rail) - 50%), -50%);
+}
+:root[data-motion="rich"] .t-rail-handle {
+  transition:
+    transform var(--resize-dur) var(--resize-ease),
+    color var(--transition-duration-fast) var(--ease-out);
+}
+
+/*
  * Dos íconos en el mismo lugar (transitions.dev, "icon swap"): se cruzan con opacidad y escala. Sin el desenfoque
  * del original, que anima `filter`. El visible lleva data-on="true".
  */

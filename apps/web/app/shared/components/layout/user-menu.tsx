@@ -21,7 +21,7 @@ import {
 /** Avatar con el menú de cuenta, o el botón de ingreso sin sesión. */
 export function UserMenu({
   loginClassName,
-  compact,
+  railLabel,
   align = "end",
   side = "bottom",
 }: {
@@ -29,8 +29,8 @@ export function UserMenu({
   side?: "top" | "bottom" | "right";
   /** Clases extra del botón de ingreso (sin sesión). */
   loginClassName?: string;
-  /** Sin sesión, el botón de ingreso es sólo un ícono (riel plegado). */
-  compact?: boolean;
+  /** En el riel: ícono más etiqueta que se desvanece cuando el riel está angosto (.rail-label). */
+  railLabel?: boolean;
 }) {
   const user = useUser();
   const profile = useProfile();
@@ -119,13 +119,20 @@ export function UserMenu({
       trigger={
         <button
           type="button"
-          aria-label={compact ? t("login") : undefined}
+          aria-label={railLabel ? t("login") : undefined}
           className={cn(
             "inline-flex h-8 cursor-pointer items-center justify-center rounded-full bg-secondary px-3.5 font-medium text-foreground text-sm transition-colors hover:bg-primary hover:text-primary-foreground",
             loginClassName,
           )}
         >
-          {compact ? <IconLogin className="size-[18px]" stroke={1.75} /> : t("login")}
+          {railLabel ? (
+            <>
+              <IconLogin className="size-[18px] shrink-0" stroke={1.75} />
+              <span className="rail-label">{t("login")}</span>
+            </>
+          ) : (
+            t("login")
+          )}
         </button>
       }
     />

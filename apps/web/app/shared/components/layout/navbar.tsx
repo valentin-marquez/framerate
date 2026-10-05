@@ -40,9 +40,6 @@ const RailTarget = createContext<{ target: string; select: (to: string) => void 
   select: () => {},
 });
 
-const iconButton =
-  "grid size-9 shrink-0 cursor-pointer place-items-center rounded-xl text-foreground/65 transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 const tabClass = (active: boolean) =>
   cn(
     "flex flex-col items-center justify-center gap-0.5 font-medium text-[11px] transition-[color,scale] active:scale-[0.94]",
@@ -58,12 +55,14 @@ function Brand({ compact }: { compact?: boolean }) {
   );
 }
 
-/** Plegado sólo queda el ícono: la etiqueta pasa a un tooltip a la derecha. */
+/**
+ * Angosto, sólo se ve el ícono y la etiqueta pasa a un tooltip a la derecha. El árbol es siempre el mismo (el tooltip
+ * sólo se habilita): plegar no vuelve a montar los enlaces.
+ */
 function RailHint({ label, collapsed, children }: { label: string; collapsed: boolean; children: ReactNode }) {
-  if (!collapsed) return children;
   return (
-    <Tooltip>
-      <TooltipTrigger render={<div />}>{children}</TooltipTrigger>
+    <Tooltip disabled={!collapsed}>
+      <TooltipTrigger render={<div className="w-full" />}>{children}</TooltipTrigger>
       <TooltipContent side="right" sideOffset={10}>
         {label}
       </TooltipContent>
@@ -107,14 +106,12 @@ function RailLink({
         }}
         aria-label={collapsed ? label : undefined}
         data-current={current}
-        className={cn(railLink(current), large && "h-12", collapsed && "w-9 justify-center px-0")}
+        className={cn(railLink(current), large && "h-12")}
       >
         {icon}
-        {!collapsed && (
-          <>
-            <span className="truncate fade-in-0 slide-in-from-left-1 animate-in duration-base">{label}</span>
-            {count !== undefined && <span className="ml-auto text-muted-foreground text-xs tabular-nums">{count}</span>}
-          </>
+        <span className="rail-label truncate">{label}</span>
+        {count !== undefined && (
+          <span className="rail-label ml-auto text-muted-foreground text-xs tabular-nums">{count}</span>
         )}
       </NavLink>
     </RailHint>
@@ -144,7 +141,7 @@ function CyberLink({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =
           "relative flex items-center gap-3 overflow-hidden rounded-xl border border-border/70 transition-[color,background-color,scale] active:scale-[0.985]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           current ? "bg-secondary" : "bg-card/60 hover:bg-secondary/60",
-          collapsed ? "size-9 justify-center" : "h-14 w-full px-2.5",
+          "h-14 w-full px-2.5",
         )}
       >
         <span aria-hidden="true" data-variant="cyber" className="beam pointer-events-none absolute inset-0 rounded-xl">
@@ -153,12 +150,10 @@ function CyberLink({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =
           <span className="beam-line beam-top" />
         </span>
         <IconRosetteDiscount className="size-[18px] shrink-0 text-[#2c65ef] dark:text-[#6b93f5]" stroke={1.75} />
-        {!collapsed && (
-          <span className="flex min-w-0 flex-col fade-in-0 slide-in-from-left-1 animate-in duration-base">
-            <span className="truncate font-bold text-foreground text-sm tracking-tight">Cyber Monday</span>
-            <span className="truncate text-muted-foreground text-xs">5 al 7 de octubre</span>
-          </span>
-        )}
+        <span className="rail-label flex min-w-0 flex-col">
+          <span className="truncate font-bold text-foreground text-sm tracking-tight">Cyber Monday</span>
+          <span className="truncate text-muted-foreground text-xs">5 al 7 de octubre</span>
+        </span>
       </NavLink>
     </RailHint>
   );
@@ -183,7 +178,10 @@ export function Navbar({
   const user = useUser();
   const { t } = useTranslation();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [focusAfterExpand, setFocusAfterExpand] = useState(false);
+  // Asomarse: con el riel plegado, buscar lo abre por encima del contenido (sin moverlo ni cambiar la preferencia) y
+  // se vuelve a plegar al salir del riel.
+  const [peek, setPeek] = useState(false);
+  const wide = !collapsed || peek;
   const { pathname } = useLocation();
   const pendingPath = useNavigation().location?.pathname;
   const [selected, setSelected] = useState<string | null>(null);
@@ -192,63 +190,30 @@ export function Navbar({
   useEffect(() => setSelected(null), [pathname, pendingPath]);
   const railTarget = { target: selected ?? pendingPath ?? pathname, select: setSelected };
   const railRef = useRef<HTMLDivElement>(null);
-  const [indicator, setIndicator] = useState({
-    ready: false,
-    animate: false,
-    visible: false,
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  });
-
-  // Mide el enlace activo sólo cuando cambia la página o el ancho del riel, nunca durante la animación.
-  const measureIndicator = () => {
-    // Al hacer clic la píldora ya va hacia el destino (pendiente) sin esperar a que cargue la página.
-    const rail = railRef.current;
-    const active = rail?.querySelector<HTMLElement>('a[data-current="true"]');
+  // La píldora ocupa el ancho del riel por CSS (también mientras cambia); sólo se mide su posición vertical, que
+  // plegar no cambia: se mide al navegar y nada más.
+  const [indicator, setIndicator] = useState({ ready: false, animate: false, visible: false, y: 0, height: 0 });
+  // biome-ignore lint/correctness/useExhaustiveDependencies: el destino cambia qué enlace está activo.
+  useLayoutEffect(() => {
+    const active = railRef.current?.querySelector<HTMLElement>('a[data-current="true"]');
     setIndicator((prev) =>
       active
-        ? {
-            ready: true,
-            // La primera vez se ubica sin deslizarse.
-            animate: prev.ready,
-            visible: true,
-            x: active.offsetLeft,
-            y: active.offsetTop,
-            width: active.offsetWidth,
-            height: active.offsetHeight,
-          }
+        ? // La primera vez se ubica sin deslizarse.
+          { ready: true, animate: prev.ready, visible: true, y: active.offsetTop, height: active.offsetHeight }
         : { ...prev, visible: false },
     );
-  };
-  // biome-ignore lint/correctness/useExhaustiveDependencies: el destino y el plegado cambian qué enlace y dónde.
-  useLayoutEffect(measureIndicator, [railTarget.target, collapsed]);
+  }, [railTarget.target]);
 
-  // Buscar con el riel plegado lo despliega; el campo recién existe en el render siguiente.
-  useEffect(() => {
-    if (!collapsed && focusAfterExpand) {
-      focusSearchField();
-      setFocusAfterExpand(false);
-    }
-  }, [collapsed, focusAfterExpand]);
-
-  const openSearch = () => {
-    if (collapsed && window.matchMedia("(min-width: 64rem)").matches) {
-      onCollapsedChange(false);
-      setFocusAfterExpand(true);
-    } else focusSearchField();
-  };
-
-  // `/` o Ctrl+K enfocan el buscador desde cualquier parte.
+  // `/` o Ctrl+K enfocan el buscador desde cualquier parte; con el riel plegado, se asoma. El campo existe siempre
+  // (angosto sólo se recorta), así que el foco y el desenfoque de Ctrl+K son inmediatos.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const typing = e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]");
       const shortcut = e.key === "k" && (e.ctrlKey || e.metaKey);
       if (shortcut || (e.key === "/" && !typing)) {
         e.preventDefault();
-        openSearch();
-        // Ctrl+K además desenfoca la página para centrar la atención en el campo.
+        if (collapsed && window.matchMedia("(min-width: 64rem)").matches) setPeek(true);
+        focusSearchField();
         if (shortcut) startSearchSpotlight();
       }
     };
@@ -256,99 +221,94 @@ export function Navbar({
     return () => window.removeEventListener("keydown", onKeyDown);
   });
 
-  // Mismo alto y radio que el resto del riel (36 px, rounded-xl); plegado, ícono con tooltip como los enlaces.
-  const quoteButton = (iconOnly: boolean) =>
-    user && (
-      <RailHint label={t("create_quote")} collapsed={iconOnly}>
-        <CreateQuoteDialog
-          trigger={
-            <button
-              type="button"
-              aria-label={iconOnly ? t("create_quote") : undefined}
-              className={cn(
-                "inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-foreground font-medium text-background text-sm transition-[opacity,scale] hover:opacity-85 active:scale-[0.97]",
-                iconOnly ? "w-9" : "flex-1 px-3",
-              )}
-            >
-              <IconPlus className="size-4" stroke={2.25} />
-              {!iconOnly && t("create_quote")}
-            </button>
-          }
-        />
-      </RailHint>
-    );
-
-  const toggle = (
-    <button
-      type="button"
-      onClick={() => onCollapsedChange(!collapsed)}
-      aria-label={collapsed ? "Desplegar menú" : "Plegar menú"}
-      aria-expanded={!collapsed}
-      // Manija sobre el borde del riel, a la altura de la marca.
-      className="absolute top-8 right-0 grid size-6 translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <span className="t-icon-swap">
-        <IconChevronLeft data-on={!collapsed} className="size-3.5" stroke={2} />
-        <IconChevronRight data-on={collapsed} className="size-3.5" stroke={2} />
-      </span>
-    </button>
+  // Mismo alto y radio que el resto del riel; angosto sólo se ve el ícono, en la misma columna que los demás.
+  const quoteButton = user && (
+    <RailHint label={t("create_quote")} collapsed={!wide}>
+      <CreateQuoteDialog
+        trigger={
+          <button
+            type="button"
+            aria-label={wide ? undefined : t("create_quote")}
+            className="inline-flex h-9 w-full cursor-pointer items-center gap-2 overflow-hidden rounded-xl bg-foreground px-3 font-medium text-background text-sm transition-[opacity,scale] hover:opacity-85 active:scale-[0.97]"
+          >
+            <IconPlus className="size-4 shrink-0" stroke={2.25} />
+            <span className="rail-label truncate">{t("create_quote")}</span>
+          </button>
+        }
+      />
+    </RailHint>
   );
 
   return (
     <RailTarget value={railTarget}>
       <TimeGradient />
-      {/* El ancho (w-64 o w-16) lo repite root.tsx como padding del contenido. */}
-      <aside
-        // Con el ancho animado (equipos holgados) la píldora se vuelve a medir al terminar el cambio.
-        onTransitionEnd={(e) => e.target === e.currentTarget && e.propertyName === "width" && measureIndicator()}
-        style={{ viewTransitionName: "nav-rail" }}
+      {/* Manija fuera del riel (que recorta su contenido): sigue su borde con transform, no con left. */}
+      <button
+        type="button"
+        onClick={() => {
+          setPeek(false);
+          onCollapsedChange(!collapsed);
+        }}
+        aria-label={collapsed ? "Desplegar menú" : "Plegar menú"}
+        aria-expanded={!collapsed}
         className={cn(
-          "t-resize fixed inset-y-0 left-0 z-40 hidden flex-col gap-4 border-border/60 border-r bg-card/40 py-3 lg:flex",
-          collapsed ? "w-16 items-center px-2" : "w-64 px-3",
+          "t-rail-handle fixed top-8 left-0 z-50 hidden size-6 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:grid",
+          wide ? "[--rail:16rem]" : "[--rail:4rem]",
         )}
       >
-        {toggle}
-        {collapsed ? (
-          <div className="pt-2">
-            <Brand compact />
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 px-2 pt-2">
-            <Brand />
-            <NavFps className="ml-auto" />
-          </div>
+        <span className="t-icon-swap">
+          <IconChevronLeft data-on={wide} className="size-3.5" stroke={2} />
+          <IconChevronRight data-on={!wide} className="size-3.5" stroke={2} />
+        </span>
+      </button>
+      {/*
+        Un solo diseño para plegado y desplegado: los íconos quedan en la misma columna (centro a 32 px) y sólo cambia
+        el ancho; lo que no cabe se recorta y las etiquetas se desvanecen (.rail-label en app.css). root.tsx desplaza
+        el contenido según `collapsed` (asomarse no lo mueve).
+      */}
+      <aside
+        data-wide={wide}
+        style={{ viewTransitionName: "nav-rail" }}
+        onFocus={(e) => {
+          if (collapsed && (e.target as HTMLElement).matches("input[data-search-field]")) setPeek(true);
+        }}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPeek(false);
+        }}
+        className={cn(
+          "t-resize fixed inset-y-0 left-0 z-40 hidden flex-col gap-4 overflow-x-hidden border-border/60 border-r bg-card/40 px-3 py-3 lg:flex",
+          wide ? "w-64" : "w-16",
+          peek && "bg-card shadow-2xl",
         )}
+      >
+        <div className="flex h-10 shrink-0 items-center gap-2 px-2">
+          <Link to="/" prefetch="intent" className="flex shrink-0 items-center gap-2 text-foreground">
+            <Logo className="size-6 shrink-0" />
+            <span className="rail-label font-semibold text-lg tracking-tight">framerate</span>
+          </Link>
+          <NavFps className="rail-label ml-auto" />
+        </div>
 
-        {collapsed ? (
-          <RailHint label="Buscar" collapsed>
-            <button type="button" onClick={openSearch} aria-label="Buscar" className={iconButton}>
-              <IconSearch className="size-[18px]" stroke={1.75} />
-            </button>
-          </RailHint>
-        ) : (
-          <SearchField />
-        )}
+        <SearchField className="shrink-0" />
 
         {/* Una sola píldora detrás de los enlaces marca la sección activa y se desliza a la nueva al navegar. */}
         <div
           ref={railRef}
           data-ready={indicator.ready}
           className={cn(
-            "relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto",
+            "relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden",
             "data-[ready=true]:[&_a[data-current=true]]:bg-transparent",
-            collapsed ? "items-center" : "-mx-1 px-1",
           )}
         >
           <span
             aria-hidden="true"
             className={cn(
-              "pointer-events-none absolute top-0 left-0 rounded-xl bg-secondary",
+              "pointer-events-none absolute inset-x-0 top-0 rounded-xl bg-secondary",
               indicator.animate && "transition-[transform,opacity] duration-300 ease-[var(--badge-pop-ease)]",
             )}
             style={{
-              width: indicator.width,
               height: indicator.height,
-              transform: `translate(${indicator.x}px, ${indicator.y}px)`,
+              transform: `translateY(${indicator.y}px)`,
               opacity: indicator.visible ? 1 : 0,
             }}
           />
@@ -357,53 +317,59 @@ export function Navbar({
               to="/"
               end
               label="Inicio"
-              collapsed={collapsed}
+              collapsed={!wide}
               icon={<IconHome className="size-[18px] shrink-0" stroke={1.75} />}
             />
             <RailLink
               to="/buscar"
               label="Todo el catálogo"
-              collapsed={collapsed}
+              collapsed={!wide}
               icon={<IconLayoutGrid className="size-[18px] shrink-0" stroke={1.75} />}
             />
           </nav>
 
-          <CyberLink collapsed={collapsed} />
+          <CyberLink collapsed={!wide} />
 
           <nav aria-label="Categorías" className="flex flex-col gap-0.5">
-            {collapsed ? (
-              <span className="mx-auto mb-1 h-px w-6 bg-border" />
-            ) : (
-              <p className="px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
+            {/* Angosto, el título cede su lugar a una línea en la columna de íconos. */}
+            <div className="relative">
+              <p className="rail-label px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
                 Categorías
               </p>
-            )}
+              <span aria-hidden="true" className="rail-icon absolute top-1/2 left-2 h-px w-6 bg-border" />
+            </div>
             {categories.map((c) => (
               <RailLink
                 key={c.id}
                 to={`/categoria/${c.slug}`}
                 label={c.label}
                 count={c.productCount}
-                collapsed={collapsed}
+                collapsed={!wide}
                 icon={<CategoryIcon category={c.id} />}
               />
             ))}
           </nav>
         </div>
 
-        <div
-          className={cn("flex flex-col gap-3 border-border/60 border-t pt-3", collapsed ? "items-center" : "w-full")}
-        >
-          {freshness && <OfferFreshness freshness={freshness} collapsed={collapsed} />}
-          <div className={cn("flex items-center gap-2", collapsed ? "flex-col" : "w-full")}>
-            {quoteButton(collapsed)}
-            <UserMenu
-              align="start"
-              side={collapsed ? "right" : "top"}
-              compact={collapsed}
-              loginClassName={collapsed ? "size-9 rounded-xl px-0" : "h-9 flex-1 rounded-xl"}
-            />
-          </div>
+        <div className="flex shrink-0 flex-col gap-3 border-border/60 border-t pt-3">
+          {freshness && (
+            // Ancho: el texto con la barra; angosto: el reloj (o la llama) en la columna de íconos, en el mismo lugar.
+            <div className="relative">
+              <div className="rail-label">
+                <OfferFreshness freshness={freshness} collapsed={false} />
+              </div>
+              <div className="rail-icon absolute top-0 left-0.5">
+                <OfferFreshness freshness={freshness} collapsed />
+              </div>
+            </div>
+          )}
+          {quoteButton}
+          <UserMenu
+            align="start"
+            side={wide ? "top" : "right"}
+            railLabel
+            loginClassName="h-9 w-full justify-start gap-2 overflow-hidden rounded-xl px-2.5"
+          />
         </div>
       </aside>
 
