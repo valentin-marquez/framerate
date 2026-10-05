@@ -5,17 +5,13 @@ import {
   IconChevronRight,
   IconHome,
   IconLayoutGrid,
-  IconPlus,
   IconRosetteDiscount,
   IconSearch,
 } from "@tabler/icons-react";
 import { createContext, type ReactNode, use, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigation } from "react-router";
-import { useUser } from "~/features/auth/hooks/useAuth";
 import { CategoryIcon } from "~/features/category/components/category-icon";
-import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
 import { focusSearchField, SearchField, startSearchSpotlight } from "~/features/search/components/search-field";
-import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
@@ -181,8 +177,6 @@ export function Navbar({
     // biome-ignore lint/suspicious/noDocumentCookie: preferencia de interfaz sin datos sensibles.
     document.cookie = `rail=${next ? "collapsed" : "open"}; path=/; max-age=31536000; samesite=lax`;
   };
-  const user = useUser();
-  const { t } = useTranslation();
   const [sheetOpen, setSheetOpen] = useState(false);
   // Asomarse: con el riel plegado, buscar lo abre por encima del contenido (sin moverlo ni cambiar la preferencia) y
   // se vuelve a plegar al salir del riel.
@@ -235,24 +229,6 @@ export function Navbar({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   });
-
-  // Mismo alto y radio que el resto del riel; angosto sólo se ve el ícono, en la misma columna que los demás.
-  const quoteButton = user && (
-    <RailHint label={t("create_quote")} collapsed={!wide}>
-      <CreateQuoteDialog
-        trigger={
-          <button
-            type="button"
-            aria-label={wide ? undefined : t("create_quote")}
-            className="inline-flex h-9 w-full cursor-pointer items-center gap-2 overflow-hidden rounded-xl bg-foreground px-3 font-medium text-background text-sm transition-[opacity,scale] hover:opacity-85 active:scale-[0.97]"
-          >
-            <IconPlus className="size-4 shrink-0" stroke={2.25} />
-            <span className="rail-label truncate">{t("create_quote")}</span>
-          </button>
-        }
-      />
-    </RailHint>
-  );
 
   return (
     <RailTarget value={railTarget}>
@@ -378,7 +354,6 @@ export function Navbar({
               </div>
             </div>
           )}
-          {quoteButton}
           <UserMenu
             align="start"
             side={wide ? "top" : "right"}

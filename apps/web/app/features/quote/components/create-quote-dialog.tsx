@@ -20,10 +20,16 @@ import { useTranslation } from "~/shared/hooks/use-translation";
 interface CreateQuoteDialogProps {
   trigger?: React.ReactNode;
   onSuccess?: (quoteId: string) => void;
+  /** Controlado desde afuera (p. ej. un ítem de menú): sin `trigger`, no se dibuja botón. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function CreateQuoteDialog({ trigger, onSuccess, open, onOpenChange }: CreateQuoteDialogProps) {
+  const [ownOpen, setOwnOpen] = useState(false);
+  const controlled = open !== undefined;
+  const isOpen = controlled ? open : ownOpen;
+  const setIsOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setOwnOpen(next));
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const createQuote = useCreateQuote();
@@ -66,14 +72,16 @@ export function CreateQuoteDialog({ trigger, onSuccess }: CreateQuoteDialogProps
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="default" className="gap-2">
-            <IconPlus className="size-4" />
-            {t("create_quote")}
-          </Button>
-        )}
-      </DialogTrigger>
+      {(trigger || !controlled) && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button variant="default" className="gap-2">
+              <IconPlus className="size-4" />
+              {t("create_quote")}
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-106.25 bg-card">
         <DialogHeader>
           <DialogTitle>{t("create_new_quote_title")}</DialogTitle>
