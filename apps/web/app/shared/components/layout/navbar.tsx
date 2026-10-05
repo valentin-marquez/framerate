@@ -1,10 +1,10 @@
 import type { CategoryItem } from "@framerate/contracts";
 import {
   IconCategory,
+  IconChevronLeft,
+  IconChevronRight,
   IconHome,
   IconLayoutGrid,
-  IconLayoutSidebarLeftCollapse,
-  IconLayoutSidebarLeftExpand,
   IconPlus,
   IconSearch,
 } from "@tabler/icons-react";
@@ -175,12 +175,13 @@ export function Navbar({
       onClick={() => onCollapsedChange(!collapsed)}
       aria-label={collapsed ? "Desplegar menú" : "Plegar menú"}
       aria-expanded={!collapsed}
-      className={iconButton}
+      // Manija a media altura sobre el borde del riel: deja la fila de arriba para la marca.
+      className="absolute top-1/2 right-0 grid size-6 translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {collapsed ? (
-        <IconLayoutSidebarLeftExpand className="size-[18px]" stroke={1.75} />
+        <IconChevronRight className="size-3.5" stroke={2} />
       ) : (
-        <IconLayoutSidebarLeftCollapse className="size-[18px]" stroke={1.75} />
+        <IconChevronLeft className="size-3.5" stroke={2} />
       )}
     </button>
   );
@@ -195,16 +196,15 @@ export function Navbar({
           collapsed ? "w-16 items-center px-2" : "w-64 px-3",
         )}
       >
+        {toggle}
         {collapsed ? (
-          <div className="flex flex-col items-center gap-3 pt-2">
+          <div className="pt-2">
             <Brand compact />
-            {toggle}
           </div>
         ) : (
-          <div className="flex items-center gap-2 pt-1 pl-2">
+          <div className="flex items-center gap-2 px-2 pt-2">
             <Brand />
             <NavFps className="ml-auto" />
-            {toggle}
           </div>
         )}
 
