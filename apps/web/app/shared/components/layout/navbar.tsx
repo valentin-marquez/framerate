@@ -166,15 +166,21 @@ function CyberLink({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =
 export function Navbar({
   categories,
   freshness,
-  collapsed,
-  onCollapsedChange,
+  initialCollapsed,
 }: {
   categories: CategoryItem[];
   /** Sin dato (la API falló) no se muestra. */
   freshness?: Freshness;
-  collapsed: boolean;
-  onCollapsedChange: (collapsed: boolean) => void;
+  initialCollapsed: boolean;
 }) {
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  // El hueco del contenido lo pone `data-rail` en el <html> (app.css): plegar no vuelve a renderizar la página.
+  const onCollapsedChange = (next: boolean) => {
+    setCollapsed(next);
+    document.documentElement.dataset.rail = next ? "collapsed" : "open";
+    // biome-ignore lint/suspicious/noDocumentCookie: preferencia de interfaz sin datos sensibles.
+    document.cookie = `rail=${next ? "collapsed" : "open"}; path=/; max-age=31536000; samesite=lax`;
+  };
   const user = useUser();
   const { t } = useTranslation();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -272,8 +278,8 @@ export function Navbar({
       </button>
       {/*
         Un solo diseño para plegado y desplegado: los íconos quedan en la misma columna (centro a 32 px) y sólo cambia
-        el ancho; lo que no cabe se recorta y las etiquetas se desvanecen (.rail-label en app.css). root.tsx desplaza
-        el contenido según `collapsed` (asomarse no lo mueve).
+        el ancho; lo que no cabe se recorta y las etiquetas se desvanecen (.rail-label en app.css). `data-rail`
+        desplaza el contenido (asomarse no lo mueve).
       */}
       <aside
         data-wide={wide}

@@ -14,6 +14,7 @@ import {
   type ShouldRevalidateFunctionArgs,
   useLocation,
   useNavigation,
+  useRouteLoaderData,
 } from "react-router";
 
 import { AuthFlash } from "~/features/auth/components/auth-flash";
@@ -143,6 +144,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Tema guardado (cookie) para pintar el <html> ya correcto en el HTML del servidor. Se fija una sola vez: después
   // la clase la maneja el efecto de App, y así React no la pisa al cambiar de tema.
   const [savedTheme] = useState(() => requestInfo?.userPrefs.theme ?? null);
+  // Igual con el riel plegado: después lo cambia el Navbar directo en el <html>, sin volver a renderizar la página.
+  const rootData = useRouteLoaderData<typeof loader>("root");
+  const [railCollapsed] = useState(() => rootData?.railCollapsed ?? false);
 
   // URL canónica self-referencing: origin + pathname, sin query params, para
   // que las variantes con filtros (estado en search params) consoliden en una
@@ -151,7 +155,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const canonical = requestInfo?.origin ? requestInfo.origin + pathname : null;
 
   return (
-    <html lang={lang} className={savedTheme ?? undefined} data-theme={savedTheme ?? "system"} suppressHydrationWarning>
+    <html
+      lang={lang}
+      className={savedTheme ?? undefined}
+      data-theme={savedTheme ?? "system"}
+      data-rail={railCollapsed ? "collapsed" : "open"}
+      suppressHydrationWarning
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -191,7 +201,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const { categories: initialCategories, railCollapsed } = loaderData;
-  const [collapsed, setCollapsed] = useState(railCollapsed);
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
@@ -235,19 +244,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
           navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300",
         )}
       />
-      <Navbar
-        categories={categories ?? []}
-        freshness={freshness}
-        collapsed={collapsed}
-        onCollapsedChange={(next) => {
-          setCollapsed(next);
-          // biome-ignore lint/suspicious/noDocumentCookie: preferencia de interfaz sin datos sensibles.
-          document.cookie = `rail=${next ? "collapsed" : "open"}; path=/; max-age=31536000; samesite=lax`;
-        }}
-      />
+      <Navbar categories={categories ?? []} freshness={freshness} initialCollapsed={railCollapsed} />
 
-      {/* El riel del navbar mide w-64 (w-16 plegado) en escritorio. */}
-      <div className={cn("page-content flex flex-1 flex-col", collapsed ? "lg:pl-16" : "lg:pl-64")}>
+      {/* El hueco del riel (w-64, o w-16 plegado) sale de `data-rail` en app.css. */}
+      <div className="page-content flex flex-1 flex-col">
         <main className="container mx-auto px-4 flex-1 pt-6 lg:pt-11">
           <Outlet />
         </main>

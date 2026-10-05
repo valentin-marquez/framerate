@@ -686,6 +686,14 @@
 .page-content {
   transition: opacity var(--transition-duration-base) var(--ease-out);
 }
+@media (min-width: 64rem) {
+  .page-content {
+    padding-left: 16rem;
+  }
+  :root[data-rail="collapsed"] .page-content {
+    padding-left: 4rem;
+  }
+}
 :root[data-search-spotlight] .page-content {
   opacity: 0.4;
 }
