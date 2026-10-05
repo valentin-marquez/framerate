@@ -20,6 +20,7 @@
     "check-types": "turbo run check-types --skipLibCheck",
     "db:migrate:local": "bun run --cwd packages/database db:migrate:local",
     "db:migrate:remote": "bun run --cwd packages/database db:migrate:remote",
+    "db:backfill-prices:local": "bun run --cwd packages/database db:backfill-prices:local",
     "dev": "turbo run dev",
     "dev:ingest": "turbo run dev --filter=ingest",
     "dev:server": "turbo run dev --filter=server",

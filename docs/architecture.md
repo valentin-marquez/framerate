@@ -287,6 +287,10 @@ bunx wrangler queues create framerate-crawl-dlq
 # Cada cambio de esquema (afecta a ambos Workers)
 bun run db:migrate:remote
 
+# Historia de precios (product_price_daily, best_price, reference_price) desde price_points. Ingest la mantiene
+# tras cada corrida; esto se corre una vez al desplegar ese cambio, o para reparar días. Es idempotente.
+cd packages/database && bunx wrangler d1 execute framerate --remote --file=scripts/backfill-price-daily.sql
+
 # Deploy (sin CI: desde la máquina del desarrollador) — ingest primero: server lo referencia por service binding.
 # server queda en https://api.framerate.cl (custom domain en su wrangler.jsonc).
 bun run --cwd apps/ingest deploy
@@ -353,9 +357,9 @@ asistida.
 6. ✅ Legado retirado del repo (30-09-2026).
 7. ✅ TecTec y Dust2 verificadas con datos reales: precio tarjeta por recargo verificado, SKU correcto, extractores
    ajustados con la cuarentena real. Las listas sólo muestran productos con stock.
-8. **Resumen de precios** tras cada corrida: `products.best_price`, `offer_count`, `reference_price` y
-   `product_price_daily`. Hoy el catálogo agrega desde `listings` en cada request, y sin esto no hay "mejores
-   ofertas" ni descuento real.
+8. ✅ **Resumen de precios** tras cada corrida (`database/src/price-summary.ts`): `products.best_price`,
+   `offer_count`, `reference_price` (promedio del mínimo diario entre hoy−32 y hoy−3, con 3 días o más) y
+   `product_price_daily`. Backfill desde `price_points`: `database/scripts/backfill-price-daily.sql`.
 9. **Más tiendas**, en el orden de [store-candidates.md](./store-candidates.md) (MyShop y Sandos primero).
 10. **Huella multicapa** (§5): overrides persistentes, separar fusiones, recalcular huellas, hash de imagen.
 11. **Refresco liviano** de precio y stock de URLs conocidas (hoy hay hasta 6 h de atraso).
