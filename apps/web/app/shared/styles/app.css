@@ -686,12 +686,22 @@
 .page-content {
   transition: opacity var(--transition-duration-base) var(--ease-out);
 }
+/* La barra de carga va bajo la barra superior en teléfono (top-14) y, en escritorio, desde el borde del riel. */
+.load-bar {
+  left: 0;
+}
 @media (min-width: 64rem) {
   .page-content {
     padding-left: 16rem;
   }
   :root[data-rail="collapsed"] .page-content {
     padding-left: 4rem;
+  }
+  .load-bar {
+    left: 16rem;
+  }
+  :root[data-rail="collapsed"] .load-bar {
+    left: 4rem;
   }
 }
 :root[data-search-spotlight] .page-content {

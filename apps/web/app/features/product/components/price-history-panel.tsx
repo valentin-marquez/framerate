@@ -76,7 +76,7 @@ function Segmented<T extends string>({
           aria-pressed={o.value === value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "cursor-pointer rounded-lg px-2.5 py-1 font-medium text-xs transition-colors",
+            "flex-1 cursor-pointer whitespace-nowrap rounded-lg px-2.5 py-1 font-medium text-xs transition-colors sm:flex-none",
             o.value === value
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
@@ -222,6 +222,7 @@ export function PriceHistoryPanel({
 
         <Segmented
           {...mark("periods")}
+          className="flex w-full sm:inline-flex sm:w-auto"
           label="Período"
           options={periodOptions}
           value={period.key}
@@ -237,7 +238,7 @@ export function PriceHistoryPanel({
         />
 
         {s && (
-          <dl {...mark("stats")} className="grid grid-cols-3 gap-2 text-sm">
+          <dl {...mark("stats")} className="grid gap-1.5 text-sm sm:grid-cols-3 sm:gap-2">
             <Stat label="Más bajo" value={s.min?.v} day={s.min?.day} />
             <Stat label="Habitual" value={s.usual} />
             <Stat label="Más alto" value={s.max?.v} day={s.max?.day} />
@@ -271,11 +272,12 @@ export function PriceHistoryPanel({
   );
 }
 
+// En teléfono, una línea por dato (etiqueta a la izquierda, valor a la derecha): tres cajas no caben con precios millonarios.
 function Stat({ label, value, day }: { label: string; value?: number; day?: string }) {
   return (
-    <div className="rounded-xl bg-secondary/60 px-3 py-2">
+    <div className="flex items-baseline justify-between gap-2 rounded-xl bg-secondary/60 px-3 py-2 sm:block">
       <dt className="text-muted-foreground text-xs">{label}</dt>
-      <dd className="font-medium text-foreground tabular-nums">
+      <dd className="ml-auto font-medium text-foreground tabular-nums sm:ml-0">
         {value === undefined ? "Faltan datos" : formatCLP(value)}
       </dd>
       {day && <dd className="text-muted-foreground text-xs">{dayLabel(day)}</dd>}

@@ -240,7 +240,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <div
         aria-hidden="true"
         className={cn(
-          "fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary transition-[opacity,transform]",
+          "load-bar fixed right-0 top-14 z-[60] h-0.5 origin-left bg-primary transition-[opacity,transform] lg:top-0",
           navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300",
         )}
       />

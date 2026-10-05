@@ -132,7 +132,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
               ))}
 
             {best && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <OutboundLink
                   href={best.url}
                   source="product_details_hero"
@@ -146,7 +146,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
                   {best.inStock ? `Ir a ${best.store.name}` : `Ver en ${best.store.name}`}
                   <IconExternalLink className="size-4" />
                 </OutboundLink>
-                <AddToQuote product={product} label="long" className="h-10" />
+                <AddToQuote product={product} label="long" className="h-10 flex-1 sm:flex-none" />
               </div>
             )}
           </section>
@@ -308,7 +308,7 @@ function PriceContext({
 
 function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: number; now: number }) {
   return (
-    <li className="relative flex items-center gap-3 px-4 py-3 transition-colors hover:bg-secondary/40">
+    <li className="relative flex items-center gap-2.5 px-3 py-3 transition-colors hover:bg-secondary/40 sm:gap-3 sm:px-4">
       <StoreLogo
         store={{ ...o.store, icon_url: o.store.iconUrl }}
         className={cn("size-9", !o.inStock && "opacity-50")}
@@ -323,8 +323,8 @@ function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: numbe
         >
           {o.store.name}
         </OutboundLink>
-        <p className="flex flex-wrap items-center gap-x-3 whitespace-nowrap text-muted-foreground text-xs">
-          <span className="inline-flex items-center gap-1.5">
+        <p className="flex flex-wrap items-center gap-x-3 text-muted-foreground text-xs">
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
             <span
               aria-hidden
               className={cn("size-1.5 shrink-0 rounded-full", o.inStock ? "bg-success" : "bg-foreground/25")}
@@ -334,13 +334,13 @@ function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: numbe
           <span>{seenAgo(o.lastSeenAt, now)}</span>
         </p>
       </div>
-      <div className="text-right tabular-nums">
+      <div className="shrink-0 text-right tabular-nums">
         <p className={cn("font-semibold", o.inStock ? "text-foreground" : "text-muted-foreground")}>
           {formatCLP(o.priceCash)}
         </p>
         <p className="text-muted-foreground text-xs">Tarjeta {formatCLP(o.priceCard)}</p>
       </div>
-      <IconExternalLink aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+      <IconExternalLink aria-hidden className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
     </li>
   );
 }

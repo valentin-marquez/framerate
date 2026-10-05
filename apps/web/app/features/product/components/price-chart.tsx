@@ -212,8 +212,9 @@ export function PriceChart({
                       className="fill-muted-foreground tabular-nums"
                     >
                       {g.minP?.v === g.maxP?.v
-                        ? "mismo precio todo el período"
-                        : `${k === 0 ? "más alto" : "más bajo"} ${formatCLP(p.v)}, ${dayLabel(days[p.i]?.day ?? "")}`}
+                        ? "sin cambios"
+                        : // Angosto, sin monto ni fecha: el resumen de abajo los da y aquí chocarían con el precio de hoy.
+                          `${k === 0 ? "más alto" : "más bajo"}${width < 400 ? "" : ` ${formatCLP(p.v)}`}${width < 480 ? "" : `, ${dayLabel(days[p.i]?.day ?? "")}`}`}
                     </text>
                   </g>
                 ))}
