@@ -116,6 +116,7 @@ cuarentena por motivo.
 **Descartadas o en pausa tras el sondeo del 30-09-2026:**
 
 - Centrale: plugin anti-scraping para los precios (ver arriba).
+- TYT Gamer: pausada (`pausedReason` en el registro). Desde el 01-10-2026 responde 403 a todas las corridas desde Workers; desde una red residencial respondía 200. No se cambia el user agent para pasar el bloqueo. Para reactivarla, probar desde un Worker (`wrangler dev --remote`) o pedirle a la tienda que habilite `FramerateBot`, y quitar `pausedReason` (#81).
 - KDTEC: la Store API respondió a las primeras peticiones y después dejó de responder (timeout); reintentar otro día.
 - Tecno Shopping: la Store API ahora devuelve HTML en vez de JSON.
 - Tecno Master: la ficha muestra la tarjeta más barata que la transferencia (4.495.621 contra 4.616.610); aclarar antes de integrar.

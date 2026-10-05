@@ -33,6 +33,7 @@ export async function enqueueAllCrawls(
   const requestedAt = new Date().toISOString();
   const messages: CrawlMessage[] = [];
   for (const store of STORES) {
+    if (store.pausedReason) continue;
     if (filter?.store && store.slug !== filter.store) continue;
     for (const [category, slugs] of Object.entries(store.adapter.categories)) {
       if (!slugs?.length) continue;

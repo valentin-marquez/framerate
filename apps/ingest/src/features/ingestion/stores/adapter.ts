@@ -38,4 +38,6 @@ export interface StoreDefinition {
   adapter: StoreAdapter;
   /** Espera mínima entre requests a esta tienda, si su rate limit pide más que el valor por defecto del cliente HTTP. */
   minIntervalMs?: number;
+  /** Motivo por el que no se rastrea (el cron la salta). La tienda sigue registrada: sus ofertas y su ficha se conservan. */
+  pausedReason?: string;
 }

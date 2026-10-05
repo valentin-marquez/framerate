@@ -319,6 +319,7 @@ export const STORES: readonly StoreDefinition[] = [
     name: "TYT Gamer",
     url: "https://tytgamer.cl/tienda",
     minIntervalMs: 1000,
+    pausedReason: "tytgamer.cl responde 403 a los Workers desde el 01-10-2026 (#81)",
     adapter: createPrestaShopAdapter({
       baseUrl: "https://tytgamer.cl/tienda",
       // La referencia es el id del producto. El listado tampoco trae la marca.
