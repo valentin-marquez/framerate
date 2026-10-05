@@ -36,7 +36,7 @@ export const NavbarVisitante: Story = {
   name: "Navbar: visitante",
   render: () => (
     <div className="h-screen">
-      <Navbar categories={categories} />
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -47,7 +47,17 @@ export const NavbarConSesion: Story = {
   parameters: { session: sessions.user, path: "/buscar" },
   render: () => (
     <div className="h-screen">
-      <Navbar categories={categories} />
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
+    </div>
+  ),
+};
+
+export const NavbarPlegado: Story = {
+  name: "Navbar: riel plegado",
+  parameters: { session: sessions.user, path: "/categoria/tarjetas-de-video" },
+  render: () => (
+    <div className="h-screen">
+      <Navbar categories={categories} collapsed onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -61,7 +71,7 @@ export const NavbarAdminConMenu: Story = {
   },
   render: () => (
     <div className="h-screen">
-      <Navbar categories={categories} />
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -72,7 +82,7 @@ export const NavbarMovil: Story = {
   parameters: { session: sessions.user },
   render: () => (
     <div className="h-screen">
-      <Navbar categories={categories} />
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
     </div>
   ),
 };
@@ -106,7 +116,7 @@ export const BuscadorYFps: Story = {
   parameters: { layout: "padded", path: "/buscar?q=rtx+5060" },
   render: () => (
     <div className="flex items-center gap-6">
-      <SearchField categories={categories} className="w-72" panelClassName="absolute top-full mt-2 w-[30rem]" />
+      <SearchField className="w-72" />
       <NavFps />
     </div>
   ),
@@ -121,7 +131,7 @@ export const EstructuraDelSitio: Story = {
   name: "Estructura del sitio (home)",
   render: () => (
     <div className="flex min-h-screen flex-col pb-16">
-      <Navbar categories={categories} />
+      <Navbar categories={categories} collapsed={false} onCollapsedChange={() => {}} />
       <div className="flex flex-1 flex-col lg:pl-64">
         <main className="container mx-auto flex-1 px-4 pt-6 lg:pt-11">
           <HomeContent

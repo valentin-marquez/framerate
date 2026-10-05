@@ -115,6 +115,8 @@ export async function loader({ request }: Route.LoaderArgs) {
       profile,
       providers,
       categories,
+      // Riel del navbar plegado: lo sabe el servidor para no mover el layout al hidratar.
+      railCollapsed: /(?:^|;\s*)rail=collapsed/.test(request.headers.get("Cookie") ?? ""),
       requestInfo: {
         clientEnv,
         userPrefs: { theme: getTheme(request), lang },
@@ -183,7 +185,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { categories: initialCategories } = loaderData;
+  const { categories: initialCategories, railCollapsed } = loaderData;
+  const [collapsed, setCollapsed] = useState(railCollapsed);
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
@@ -216,10 +219,18 @@ export default function App({ loaderData }: Route.ComponentProps) {
           navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300",
         )}
       />
-      <Navbar categories={categories ?? []} />
+      <Navbar
+        categories={categories ?? []}
+        collapsed={collapsed}
+        onCollapsedChange={(next) => {
+          setCollapsed(next);
+          // biome-ignore lint/suspicious/noDocumentCookie: preferencia de interfaz sin datos sensibles.
+          document.cookie = `rail=${next ? "collapsed" : "open"}; path=/; max-age=31536000; samesite=lax`;
+        }}
+      />
 
-      {/* El riel del navbar mide w-64 en escritorio. */}
-      <div className="flex flex-1 flex-col lg:pl-64">
+      {/* El riel del navbar mide w-64 (w-16 plegado) en escritorio. */}
+      <div className={cn("flex flex-1 flex-col", collapsed ? "lg:pl-16" : "lg:pl-64")}>
         <main className="container mx-auto px-4 flex-1 pt-6 lg:pt-11">
           <Outlet />
         </main>
