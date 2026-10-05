@@ -23,6 +23,7 @@
     "db:backfill-prices:local": "bun run --cwd packages/database db:backfill-prices:local",
     "dev": "turbo run dev",
     "dev:ingest": "turbo run dev --filter=ingest",
+    "dev:match": "turbo run dev --filter=match",
     "dev:server": "turbo run dev --filter=server",
     "dev:web": "turbo run dev --filter=web",
     "lint": "turbo run biome:lint",

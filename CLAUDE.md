@@ -12,6 +12,8 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
   `users-admin`, `crawl-admin` y `match-review`. No tiene Cron ni colas.
 - **`apps/ingest`**: Worker de scraping (Cron + Queues + R2 + RPC): adaptadores de tienda, normalización y
   matching. No tiene HTTP público; `server` le pide crawls por RPC tipado.
+- **`apps/match`**: Worker que verifica las revisiones del Gatekeeper con Workers AI (Cron + Queue, sin HTTP).
+  Empieza en modo sombra (`MATCH_MODE`); ver #117.
 - **`apps/web`**: React Router v7 (SSR) en Workers. Sólo habla con la API (`/v1/*`), nunca con la base.
 - **`packages/contracts`**: esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.
 - **`packages/database`**: dueño del esquema: migraciones SQL, tipos Kysely, cliente D1 y utilidades de test
@@ -39,6 +41,7 @@ bun install
 bun run db:migrate:local      # aplica packages/database/migrations en la D1 local, compartida por server e ingest (.wrangler/state en la raíz)
 bun run dev:server            # API (wrangler dev)
 bun run dev:ingest            # scraping (Cron/Queue/RPC)
+bun run dev:match             # verificación del Gatekeeper (Cron/Queue/Workers AI, remoto)
 bun run dev:web               # frontend
 bun run test                  # check-types + tests de todo el monorepo (red de seguridad antes de desplegar)
 bun test path/to/file.test.ts # un archivo (dentro de la app)

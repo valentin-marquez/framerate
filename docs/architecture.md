@@ -24,7 +24,8 @@ organizado por *feature*, no por tipo de archivo.
 
 ## 2. Vista general
 
-Tres Workers con responsabilidades separadas (más uno propuesto, punteado), que comparten la misma base D1.
+Cuatro Workers con responsabilidades separadas, que comparten la misma base D1. Lo punteado es `framerate-match`
+(#117), que todavía no está desplegado.
 Cada caja dice el nombre real del recurso en Cloudflare y su tecnología.
 
 ```mermaid
@@ -54,8 +55,9 @@ flowchart TB
     snap[("R2 framerate-snapshots<br/>respuestas crudas de tiendas")]
     assets[("R2 framerate-assets<br/>fotos de producto<br/>cdn.framerate.cl")]
 
-    matchQ[["Queue<br/>framerate-match-verify<br/>(propuesta, #117)"]]
-    match["<b>framerate-match</b><br/>Worker (propuesto, #117)<br/>verifica revisiones del Gatekeeper"]
+    matchCron(("Cron Trigger<br/>47 */6 * * *"))
+    matchQ[["Queue<br/>framerate-match-verify<br/>(DLQ framerate-match-verify-dlq)"]]
+    match["<b>framerate-match</b><br/>Worker sin HTTP (#117)<br/>verifica revisiones del Gatekeeper<br/>MATCH_MODE shadow o live"]
     ai["Workers AI<br/>gemma-4-26b-a4b-it<br/>10.000 neurons/día"]
   end
 
@@ -79,13 +81,14 @@ flowchart TB
   ingest --> emailSend
   user -. "imágenes" .-> assets
 
-  ingest -. "send() al crear revisión" .-> matchQ
+  matchCron -.-> match
+  match -. "encola las pendientes<br/>que caben en el presupuesto" .-> matchQ
   matchQ -. "consumer, 1 a la vez" .-> match
   match -.-> ai
   match -. "acepta, rechaza o deja pendiente" .-> d1
 
   classDef proposed stroke-dasharray: 5 5
-  class matchQ,match,ai proposed
+  class matchCron,matchQ,match,ai proposed
 ```
 
 Código compartido (las apps no se importan entre sí):
@@ -104,8 +107,9 @@ cada Worker sólo tiene los permisos que usa (la API no ve la cola ni los
 snapshots; `ingest` no recibe tráfico público). Cuesta lo mismo: Workers no cobra
 por cantidad de Workers.
 
-`framerate-match` (#117) sale de `ingest` por lo mismo: si Workers AI falla o se acaba el presupuesto diario de
-neurons, los crawls siguen y las revisiones esperan en su cola.
+`framerate-match` (#117) está aparte por lo mismo: si Workers AI falla o se acaba el presupuesto diario de neurons,
+los crawls siguen y las revisiones esperan. No depende de `ingest`: su Cron corre 30 minutos después del de los
+crawls y barre las revisiones pendientes sin veredicto, así que también cubre las que ya existían.
 
 `apps/web` (React Router en Workers) consume `/v1/*` y comparte tipos vía
 `@framerate/contracts`.

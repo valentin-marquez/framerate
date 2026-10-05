@@ -1,0 +1,45 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "framerate-match",
+  "account_id": "3f50a4a123ebcbcb917dababff3ef8b5",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "keep_vars": true,
+  "observability": { "enabled": true },
+
+  // 30 minutos después del cron de ingest (17 */6): recoge las revisiones que dejaron esos crawls.
+  "triggers": { "crons": ["47 */6 * * *"] },
+
+  "vars": {
+    // shadow: guarda en evidence lo que haría, sin resolver. live: acepta y rechaza (#117).
+    "MATCH_MODE": "shadow",
+    // Parte de los 10.000 neurons gratis al día de Workers AI que puede usar este Worker.
+    "MATCH_DAILY_NEURONS": "5000"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "framerate",
+      "database_id": "6537cc10-7e7b-4dba-9c01-ce80e6a840eb"
+    }
+  ],
+
+  "ai": { "binding": "AI" },
+
+  "queues": {
+    "producers": [{ "binding": "VERIFY_QUEUE", "queue": "framerate-match-verify" }],
+    "consumers": [
+      {
+        "queue": "framerate-match-verify",
+        "max_batch_size": 10,
+        // De a uno: no pasar el límite de pedidos por minuto de Workers AI.
+        "max_concurrency": 1,
+        "max_retries": 3,
+        "dead_letter_queue": "framerate-match-verify-dlq"
+      }
+    ]
+  }
+}

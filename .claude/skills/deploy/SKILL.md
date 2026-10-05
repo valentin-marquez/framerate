@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: Sube a git.nozz.skin y despliega los Workers de Framerate (ingest, server, web) con wrangler, aplicando antes las migraciones D1. Sólo cuando el dueño pide "pushear", "desplegar" o "subir a producción".
+description: Sube a git.nozz.skin y despliega los Workers de Framerate (ingest, match, server, web) con wrangler, aplicando antes las migraciones D1. Sólo cuando el dueño pide "pushear", "desplegar" o "subir a producción".
 disable-model-invocation: true
 ---
 
@@ -23,8 +23,11 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
    1. Migraciones: `bun run db:migrate:remote`. Van primero porque el código nuevo ya escribe en las columnas nuevas.
    2. `apps/ingest`: `bunx wrangler@latest deploy`. Va antes que server, porque server lo referencia por service
       binding.
-   3. `apps/server`: `bunx wrangler deploy`.
-   4. `apps/web`: `VITE_API_URL=https://api.framerate.cl VITE_TURNSTILE_SITE_KEY=0x4AAAAAAFLjXEJIhds4HQZi bun run build`
+   3. `apps/match`: `bunx wrangler@latest deploy`. La primera vez, crear antes sus colas:
+      `bunx wrangler@latest queues create framerate-match-verify` y `... framerate-match-verify-dlq`. Para pasar de
+      sombra a decidir solo, cambiar `MATCH_MODE` a `live` en su `wrangler.jsonc` y volver a desplegar.
+   4. `apps/server`: `bunx wrangler deploy`.
+   5. `apps/web`: `VITE_API_URL=https://api.framerate.cl VITE_TURNSTILE_SITE_KEY=0x4AAAAAAFLjXEJIhds4HQZi bun run build`
       y luego `bunx wrangler deploy`. La site key de Turnstile es pública (va en el JS del sitio); su secreto vive en
       `framerate-server` (`TURNSTILE_SECRET_KEY`). Sin ella, el soporte sin cuenta no muestra el formulario.
 5. Verificar: `bunx wrangler tail framerate-ingest` (o `framerate-server`) y, si cambió el scraping, pedir un crawl
@@ -44,7 +47,7 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
   `VITE_TURNSTILE_SITE_KEY`, el formulario de soporte sin cuenta desaparece.
 - **Una migración aplica a los dos Workers a la vez.** Nunca desplegar un Worker que depende de columnas que la
   migración todavía no creó, ni escribir migraciones destructivas mientras el código viejo sigue desplegado.
-- **Un cambio en `packages/matching` va a ingest y server en la misma tanda.** Los dos corrigen las filas de
+- **Un cambio en `packages/matching` va a ingest, match y server en la misma tanda.** Ingest y server corrigen las filas de
   `products` con su copia de los extractores al cargarlas; si quedan con versiones distintas, se pisan entre sí.
 - **La primera corrida tras un cambio de matching mueve ofertas en prod** (re-decide todos los vínculos). Antes de
   desplegar, anotar la hora. Para volver atrás, en este orden: primero `bunx wrangler rollback` en `apps/ingest` y en

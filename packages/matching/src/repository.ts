@@ -355,6 +355,8 @@ export async function listPendingReviews(db: Db, limit: number) {
       "p.image_url as candidateImageUrl",
     ])
     .where("r.status", "=", "pending")
+    // Con veredicto de framerate-match (#117), lo más probable de ser el mismo producto primero; sin él, al final.
+    .orderBy(sql`coalesce(min(json_extract(r.evidence, '$.ai.pAB'), json_extract(r.evidence, '$.ai.pBA')), -1)`, "desc")
     .orderBy("r.score", "desc")
     .limit(limit)
     .execute();
