@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CategorySchema } from "./categories";
+import { SpecFilterSchema } from "./facets";
 
 /**
  * Contratos de la API pública de catálogo (`/v1/*`). El servidor valida sus
@@ -45,6 +46,16 @@ export const ProductSummarySchema = z.object({
   /** Atributos extraídos del título (chipset, VRAM, capacidad…). */
   attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
   offerCount: z.number().int().nonnegative(),
+  /**
+   * Precio habitual (promedio del mejor precio diario de los 30 días previos, sin los 2 últimos); null sin historia
+   * suficiente. Si `bestPrice` está bajo él, la diferencia es una baja real.
+   */
+  referencePrice: z.number().int().nonnegative().nullable(),
+  /**
+   * Sólo cuando la consulta filtra por especificación: "match" cumple con el dato conocido; "unknown" no tiene el
+   * dato y va al final (podría cumplir).
+   */
+  specMatch: z.enum(["match", "unknown"]).optional(),
 });
 export type ProductSummary = z.infer<typeof ProductSummarySchema>;
 
@@ -63,7 +74,16 @@ export const PricePointSchema = z.object({
 });
 export type PricePoint = z.infer<typeof PricePointSchema>;
 
-export const ProductSortSchema = z.enum(["relevance", "price_asc", "price_desc", "newest", "popularity", "name"]);
+/** `discount`: mayor baja en pesos (`referencePrice − bestPrice`) primero. */
+export const ProductSortSchema = z.enum([
+  "relevance",
+  "price_asc",
+  "price_desc",
+  "newest",
+  "popularity",
+  "name",
+  "discount",
+]);
 export type ProductSort = z.infer<typeof ProductSortSchema>;
 
 export const ProductListQuerySchema = z.object({
@@ -73,6 +93,13 @@ export const ProductListQuerySchema = z.object({
   q: z.string().trim().min(2).max(100).optional(),
   minPrice: z.coerce.number().int().min(0).optional(),
   maxPrice: z.coerce.number().int().min(0).optional(),
+  /** Filtros por especificación (`spec=vram:12`, repetible): ver facets.ts. */
+  spec: z.preprocess((v) => (v === undefined ? undefined : [v].flat()), z.array(SpecFilterSchema).max(20)).optional(),
+  /** Sólo productos bajo su precio habitual (página de ofertas). */
+  deals: z
+    .enum(["1", "true"])
+    .transform(() => true)
+    .optional(),
   sort: ProductSortSchema.default("relevance"),
   page: z.coerce.number().int().min(1).max(500).default(1),
   pageSize: z.coerce.number().int().min(1).max(60).default(24),
@@ -88,7 +115,10 @@ export function pageSchema<T extends z.ZodType>(item: T) {
   });
 }
 
-export const ProductPageSchema = pageSchema(ProductSummarySchema);
+export const ProductPageSchema = pageSchema(ProductSummarySchema).extend({
+  /** Con filtros por especificación: cuántos del total son "unknown" (van al final). */
+  specUnknown: z.number().int().nonnegative().optional(),
+});
 export type ProductPage = z.infer<typeof ProductPageSchema>;
 
 export const CategoryItemSchema = z.object({
@@ -124,3 +154,24 @@ export const ApiErrorSchema = z.object({
   }),
 });
 export type ApiError = z.infer<typeof ApiErrorSchema>;
+
+/** Cron de la ingesta (`apps/ingest/wrangler.jsonc`): cada 6 horas, a los :17 en UTC. */
+export const CRAWL_EVERY_HOURS = 6;
+export const CRAWL_MINUTE_UTC = 17;
+
+/** Próxima corrida programada después de `now`. */
+export function nextCrawlAt(now: Date): Date {
+  const next = new Date(now);
+  next.setUTCMinutes(CRAWL_MINUTE_UTC, 0, 0);
+  next.setUTCHours(Math.floor(now.getUTCHours() / CRAWL_EVERY_HOURS) * CRAWL_EVERY_HOURS);
+  while (next <= now) next.setUTCHours(next.getUTCHours() + CRAWL_EVERY_HOURS);
+  return next;
+}
+
+/** `GET /v1/freshness`: cuándo se actualizaron las ofertas por última vez y cuándo toca la próxima vez. */
+export const FreshnessSchema = z.object({
+  /** Fin de la última corrida exitosa de cualquier tienda; null si nunca hubo una. */
+  updatedAt: z.iso.datetime().nullable(),
+  nextUpdateAt: z.iso.datetime(),
+});
+export type Freshness = z.infer<typeof FreshnessSchema>;

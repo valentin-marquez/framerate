@@ -1,6 +1,7 @@
 import type {
   BrandCount,
   Category,
+  FacetList,
   Offer,
   PricePoint,
   PriceRange,
@@ -10,7 +11,7 @@ import type {
   ProductSummary,
   Sitemap,
 } from "@framerate/contracts";
-import { CATEGORY_SLUGS } from "@framerate/contracts";
+import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel } from "@framerate/contracts";
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { slugify } from "@framerate/kit";
 import { titleTokens } from "@framerate/matching";
@@ -75,30 +76,89 @@ export function productImageUrl(
   return `${assetsBaseUrl.replace(/\/+$/, "")}/${product.image_key}`;
 }
 
+/** Filtros del listado que también acotan las facetas. */
+type ListFilters = Pick<
+  ProductListQuery,
+  "category" | "brand" | "store" | "q" | "minPrice" | "maxPrice" | "spec" | "deals"
+>;
+
+/**
+ * Valor de un atributo como texto comparable con `spec=clave:valor`: booleanos 'true'/'false' (`json_extract` da
+ * 1/0), enteros sin decimales y strings tal cual. NULL si el producto no tiene el dato.
+ */
+function specValue(key: string) {
+  const path = `$.${key}`;
+  return sql<string | null>`(CASE json_type(p.attributes, ${path})
+    WHEN 'true' THEN 'true' WHEN 'false' THEN 'false'
+    WHEN 'integer' THEN CAST(json_extract(p.attributes, ${path}) AS TEXT)
+    WHEN 'real' THEN CASE WHEN json_extract(p.attributes, ${path}) = CAST(json_extract(p.attributes, ${path}) AS INTEGER)
+      THEN CAST(CAST(json_extract(p.attributes, ${path}) AS INTEGER) AS TEXT) ELSE CAST(json_extract(p.attributes, ${path}) AS TEXT) END
+    WHEN 'text' THEN json_extract(p.attributes, ${path}) END)`;
+}
+
+/** Valores pedidos por clave: OR dentro de una clave, AND entre claves. */
+function specGroups(spec: ListFilters["spec"]): Map<string, string[]> {
+  const groups = new Map<string, string[]>();
+  for (const { key, value } of spec ?? []) groups.set(key, [...(groups.get(key) ?? []), value]);
+  return groups;
+}
+
+/**
+ * Productos con stock (join con `offerAggregate`) que pasan los filtros. `skipSpecKey` deja fuera el filtro de esa
+ * faceta (sus conteos). Un producto sin el dato de una clave filtrada no se excluye: queda "unknown".
+ */
+async function filteredProducts(db: Db, filters: ListFilters) {
+  let match: string | null = null;
+  if (filters.q) {
+    match = ftsQuery(filters.q);
+    if (!match) return null;
+  }
+  const brand = filters.brand ? await resolveBrand(db, filters.brand, filters.category) : null;
+  return (skipSpecKey?: string) => filteredQuery(db, filters, brand, match, skipSpecKey);
+}
+
+function filteredQuery(db: Db, filters: ListFilters, brand: string | null, match: string | null, skipSpecKey?: string) {
+  let base = db.query.selectFrom("products as p").innerJoin(offerAggregate(db), "agg.product_id", "p.id");
+  if (filters.category) base = base.where("p.category", "=", filters.category);
+  if (brand) base = base.where(sql<boolean>`lower(p.brand) = lower(${brand})`);
+  if (filters.store) {
+    base = base.where(
+      sql<boolean>`p.id IN (SELECT l.product_id FROM listings l JOIN stores st ON st.id = l.store_id WHERE l.is_active = 1 AND l.in_stock = 1 AND st.slug = ${filters.store})`,
+    );
+  }
+  if (filters.minPrice !== undefined) base = base.where("agg.best_price", ">=", filters.minPrice);
+  if (filters.maxPrice !== undefined) base = base.where("agg.best_price", "<=", filters.maxPrice);
+  if (match)
+    base = base.where(sql<boolean>`p.id IN (SELECT rowid FROM products_fts WHERE products_fts MATCH ${match})`);
+  // Baja de al menos 3 % bajo el precio habitual, en enteros para no depender de flotantes.
+  if (filters.deals)
+    base = base.where(sql<boolean>`p.reference_price IS NOT NULL AND agg.best_price * 100 <= p.reference_price * 97`);
+
+  const unknown: ReturnType<typeof specValue>[] = [];
+  for (const [key, values] of specGroups(filters.spec)) {
+    if (key === skipSpecKey) continue;
+    const value = specValue(key);
+    base = base.where(sql<boolean>`(${value} IS NULL OR ${value} IN (${sql.join(values)}))`);
+    unknown.push(value);
+  }
+  const isUnknown =
+    unknown.length > 0
+      ? sql<number>`(${sql.join(
+          unknown.map((v) => sql`${v} IS NULL`),
+          sql` OR `,
+        )})`
+      : null;
+  return { base, isUnknown };
+}
+
 export async function listProducts(
   db: Db,
   query: ProductListQuery,
   assetsBaseUrl: string | undefined,
 ): Promise<ProductPage> {
-  let match: string | null = null;
-  if (query.q) {
-    match = ftsQuery(query.q);
-    if (!match) return { items: [], page: query.page, pageSize: query.pageSize, total: 0 };
-  }
-  const brand = query.brand ? await resolveBrand(db, query.brand, query.category) : null;
-
-  let base = db.query.selectFrom("products as p").innerJoin(offerAggregate(db), "agg.product_id", "p.id");
-  if (query.category) base = base.where("p.category", "=", query.category);
-  if (brand) base = base.where(sql<boolean>`lower(p.brand) = lower(${brand})`);
-  if (query.store) {
-    base = base.where(
-      sql<boolean>`p.id IN (SELECT l.product_id FROM listings l JOIN stores st ON st.id = l.store_id WHERE l.is_active = 1 AND l.in_stock = 1 AND st.slug = ${query.store})`,
-    );
-  }
-  if (query.minPrice !== undefined) base = base.where("agg.best_price", ">=", query.minPrice);
-  if (query.maxPrice !== undefined) base = base.where("agg.best_price", "<=", query.maxPrice);
-  if (match)
-    base = base.where(sql<boolean>`p.id IN (SELECT rowid FROM products_fts WHERE products_fts MATCH ${match})`);
+  const build = await filteredProducts(db, query);
+  if (!build) return { items: [], page: query.page, pageSize: query.pageSize, total: 0 };
+  const { base, isUnknown } = build();
 
   let page = base.select([
     "p.id",
@@ -109,11 +169,15 @@ export async function listProducts(
     "p.image_url",
     "p.image_key",
     "p.attributes",
+    "p.reference_price as referencePrice",
     "agg.best_price as bestPrice",
     "agg.best_card_price as bestCardPrice",
     "agg.offer_count as offerCount",
     mpnOf.as("mpn"),
+    (isUnknown ?? sql<number>`0`).as("unknown"),
   ]);
+  // Los que cumplen con el dato conocido antes que los que no lo tienen; dentro de cada grupo, el orden pedido.
+  if (isUnknown) page = page.orderBy(isUnknown);
   switch (query.sort) {
     case "relevance":
       page = page.orderBy("agg.offer_count", "desc").orderBy("agg.best_price").orderBy("p.name");
@@ -133,24 +197,68 @@ export async function listProducts(
     case "name":
       page = page.orderBy("p.name");
       break;
+    case "discount":
+      // En SQLite NULL es el menor valor: en DESC los sin referencia quedan al final.
+      page = page.orderBy(sql`p.reference_price - agg.best_price`, "desc").orderBy("p.name");
+      break;
   }
 
   const [rows, [totalRow]] = await db.read([
     page.limit(query.pageSize).offset((query.page - 1) * query.pageSize),
-    base.select((eb) => eb.fn.countAll<number>().as("total")),
+    base.select((eb) => [
+      eb.fn.countAll<number>().as("total"),
+      sql<number>`coalesce(sum(${isUnknown ?? sql`0`}), 0)`.as("unknown"),
+    ]),
   ]);
 
   return {
-    items: rows.map(({ image_url, image_key, ...r }) => ({
+    items: rows.map(({ image_url, image_key, unknown, ...r }) => ({
       ...r,
       imageUrl: productImageUrl({ image_url, image_key }, assetsBaseUrl),
       category: r.category as Category,
       attributes: parseJson<ProductSummary["attributes"]>(r.attributes, {}),
       offerCount: Number(r.offerCount),
+      ...(isUnknown && { specMatch: Number(unknown) ? ("unknown" as const) : ("match" as const) }),
     })),
     page: query.page,
     pageSize: query.pageSize,
     total: Number(totalRow?.total ?? 0),
+    ...(isUnknown && { specUnknown: Number(totalRow?.unknown ?? 0) }),
+  };
+}
+
+/**
+ * Valores de cada faceta de la categoría con su conteo (sólo con stock). Cada faceta aplica todos los filtros menos
+ * el suyo, para poder sumar valores de la misma faceta. Una consulta por faceta, en un solo viaje.
+ */
+export async function listFacets(db: Db, category: Category, filters: ListFilters): Promise<FacetList> {
+  const facets = CATEGORY_FACETS[category];
+  const build = await filteredProducts(db, { ...filters, category });
+  const queries = build
+    ? facets.map((facet) => {
+        const value = specValue(facet.key);
+        return build(facet.key)
+          .base.select([value.as("value"), (eb) => eb.fn.countAll<number>().as("count")])
+          .groupBy(value);
+      })
+    : [];
+  const results = queries.length > 0 ? await db.read(queries) : [];
+  return {
+    items: facets.map((facet, i) => {
+      const rows = results[i] ?? [];
+      const values = rows
+        .filter((r): r is { value: string; count: number } => r.value !== null && Number(r.count) > 0)
+        .map((r) => ({ value: r.value, label: facetValueLabel(facet, r.value), count: Number(r.count) }));
+      values.sort((a, b) =>
+        facet.unit ? Number(a.value) - Number(b.value) : b.count - a.count || a.value.localeCompare(b.value, "es"),
+      );
+      return {
+        key: facet.key,
+        label: facet.label,
+        values,
+        unknownCount: Number(rows.find((r) => r.value === null)?.count ?? 0),
+      };
+    }),
   };
 }
 
@@ -214,6 +322,7 @@ export async function getProduct(
     mpn: product.mpn,
     attributes: parseJson<ProductSummary["attributes"]>(product.attributes, {}),
     offerCount: offers.length,
+    referencePrice: product.reference_price,
   };
   return { ...summary, offers };
 }
@@ -278,6 +387,16 @@ export async function listStores(db: Db, q?: string) {
     isClaimed: organization_id !== null,
     offerCount: Number(r.offerCount),
   }));
+}
+
+/** Fin de la última corrida de ingesta exitosa (de cualquier tienda): cuándo se actualizaron las ofertas. */
+export async function lastCrawlAt(db: Db) {
+  const row = await db.query
+    .selectFrom("crawl_runs")
+    .select(sql<string | null>`max(finished_at)`.as("at"))
+    .where("status", "=", "succeeded")
+    .executeTakeFirst();
+  return row?.at ?? null;
 }
 
 export async function categoryCounts(db: Db) {
