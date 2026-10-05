@@ -18,7 +18,7 @@ export function CategoryHeader({
 }) {
   const stats = [
     total > 0 && `${total.toLocaleString("es-CL")} ${total === 1 ? "producto" : "productos"}`,
-    priceRange?.max && `${formatCLP(priceRange.min ?? 0)} – ${formatCLP(priceRange.max)}`,
+    priceRange?.max && `${formatCLP(priceRange.min ?? 0)} a ${formatCLP(priceRange.max)}`,
     brandCount > 0 && `${brandCount} ${brandCount === 1 ? "marca" : "marcas"}`,
   ].filter(Boolean);
 
