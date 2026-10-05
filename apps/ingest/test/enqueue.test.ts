@@ -5,7 +5,7 @@ import { testEnv } from "./helpers";
 
 /** El pedido de crawls que hace la API (RPC) y el cron: valida y encola un mensaje por (tienda, categoría). */
 
-const totalJobs = STORES.reduce(
+const totalJobs = STORES.filter((s) => !s.pausedReason).reduce(
   (n, s) => n + Object.values(s.adapter.categories).filter((slugs) => slugs?.length).length,
   0,
 );
@@ -17,6 +17,14 @@ describe("requestCrawls", () => {
     expect(result).toEqual({ ok: true, enqueued: totalJobs });
     expect(sent).toHaveLength(totalJobs);
     expect(sent.every((m) => m.type === "crawl.category" && m.requestedBy === "cron")).toBe(true);
+  });
+
+  test("no encola las tiendas pausadas", async () => {
+    const { env, sent } = testEnv({} as D1Database);
+    await requestCrawls(env, { requestedBy: "cron" });
+    const paused = STORES.filter((s) => s.pausedReason).map((s) => s.slug);
+    expect(paused).toContain("tytgamer");
+    expect(sent.some((m) => paused.includes(m.store))).toBe(false);
   });
 
   test("filtra por tienda y categoría", async () => {

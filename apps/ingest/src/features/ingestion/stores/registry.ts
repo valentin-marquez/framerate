@@ -496,6 +496,29 @@ export const STORES: readonly StoreDefinition[] = [
       exclude: { cpu_cooler: ["Gabinetes Gamer"] },
     }),
   },
+  {
+    slug: "tecnoshopping",
+    name: "Tecno Shopping",
+    url: "https://www.tecnoshopping.cl",
+    minIntervalMs: 1000,
+    adapter: createWooCommerceAdapter({
+      // Con www: el apex redirige sin conservar la ruta y la API terminaba en la home HTML.
+      baseUrl: "https://www.tecnoshopping.cl",
+      // Mezcla MPN y UPC (el adaptador usa el UPC como GTIN).
+      sku: "mpn",
+      // `price` es tarjeta; la ficha muestra transferencia −3,47 % (verificado en la ficha, oct. 2026).
+      cashDiscount: 0.0347,
+      // Sin SSD ni HDD ("almacenamiento" mezcla NAS y vigilancia), ni case (sólo un rack de redes) ni case_fan (vacía).
+      categories: {
+        gpu: ["tarjetas-graficas"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madre"],
+        ram: ["memorias-ram"],
+        psu: ["fuentes-de-poder"],
+        cpu_cooler: ["refrigeracion"],
+      },
+    }),
+  },
 ];
 
 export function findStore(slug: string): StoreDefinition | undefined {
