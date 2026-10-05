@@ -89,10 +89,9 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
 - **Las tareas salen del tablero de Forgejo**, no de `TODO.md`: issues de `valentin/framerate` con milestones y labels,
   en el orden del Roadmap fijado (#67). Desde la raíz del repo `tea` usa el login de quien lo corre. Listar:
   `tea issues --repo valentin/framerate`; leer uno: `tea api /repos/valentin/framerate/issues/<n>`.
-- **Dos frentes en paralelo** (detalle en "Cómo nos repartimos" del Roadmap). Valentín (`valentin`): web, diseño y lo
-  marcado `requiere-dueño` (cuentas personales: consola de Google, Supabase). Ignacio: backend e ingesta, es decir
-  issues con label `server`, `ingest` o `matching` sin `requiere-dueño`; diseño no. Si quien trabaja es Ignacio y el
-  issue es de diseño, decirlo y proponer otro del Roadmap.
+- **Quién toma qué:** cualquiera puede tomar cualquier issue del Roadmap, incluidos `server`, `ingest` y `matching`; lo
+  que manda es la asignación (abajo). Lo marcado `requiere-dueño` (cuentas personales: consola de Google, Supabase,
+  Cloudflare) es de Valentín (`valentin`). Ignacio no toma diseño.
 - **Reclamar el issue antes de tocarlo**, cada vez: trabajan dos personas, cada una con su Claude.
   1. Ver si alguien lo tiene: `tea api /repos/valentin/framerate/issues/<n> | jq '[.assignees[]?.login]'`. Si
      está asignado a otra persona, no se toca: elegir otro del Roadmap y decirlo.

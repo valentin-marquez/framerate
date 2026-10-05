@@ -24,43 +24,88 @@ organizado por *feature*, no por tipo de archivo.
 
 ## 2. Vista general
 
-Dos Workers con responsabilidades separadas, que comparten la misma base D1:
+Tres Workers con responsabilidades separadas (más uno propuesto, punteado), que comparten la misma base D1.
+Cada caja dice el nombre real del recurso en Cloudflare y su tecnología.
 
+```mermaid
+flowchart TB
+  user(["Usuario<br/>navegador"])
+  admin(["Admin<br/>/admin/*"])
+  mail(["Correo entrante<br/>soporte@framerate.cl"])
+  stores(["Tiendas chilenas<br/>WooCommerce, Shopify, JSON, HTML"])
+  oauth(["Discord y Google<br/>OAuth"])
+
+  subgraph CF["Cloudflare (cuenta 3f50a4…, Workers Paid)"]
+    direction TB
+
+    web["<b>framerate</b><br/>Worker: React Router v7 SSR<br/>framerate.cl"]
+
+    server["<b>framerate-server</b><br/>Worker: Hono + Better Auth<br/>api.framerate.cl"]
+    rl["Rate Limiting<br/>PUBLIC_RATE_LIMITER<br/>600 req/min"]
+    emailRouting["Email Routing<br/>→ handler email()"]
+    emailSend["Email Service<br/>send_email EMAIL"]
+
+    cron(("Cron Trigger<br/>17 */6 * * *"))
+    crawlQ[["Queue<br/>framerate-crawl<br/>(DLQ framerate-crawl-dlq)"]]
+    ingest["<b>framerate-ingest</b><br/>Worker sin HTTP público<br/>adaptadores, normalizar, matching<br/>RPC IngestRpc"]
+    images["Images<br/>IMAGES"]
+
+    d1[("D1 framerate<br/>SQLite: usuarios, catálogo,<br/>ofertas, precios, revisiones")]
+    snap[("R2 framerate-snapshots<br/>respuestas crudas de tiendas")]
+    assets[("R2 framerate-assets<br/>fotos de producto<br/>cdn.framerate.cl")]
+
+    matchQ[["Queue<br/>framerate-match-verify<br/>(propuesta, #117)"]]
+    match["<b>framerate-match</b><br/>Worker (propuesto, #117)<br/>verifica revisiones del Gatekeeper"]
+    ai["Workers AI<br/>gemma-4-26b-a4b-it<br/>10.000 neurons/día"]
+  end
+
+  user --> web
+  admin --> web
+  web -- "service binding API<br/>/v1/*" --> server
+  server --> rl
+  server -- "lee y escribe" --> d1
+  server -- "RPC enqueueCrawls()" --> ingest
+  server --> emailSend
+  server -. "login" .-> oauth
+  mail --> emailRouting --> server
+
+  cron --> ingest
+  ingest -- "1 mensaje = tienda + categoría" --> crawlQ
+  crawlQ -- "consumer, 2 en paralelo" --> ingest
+  ingest -- "fetch" --> stores
+  ingest -- "escribe catálogo" --> d1
+  ingest --> snap
+  ingest -- "achica fotos" --> images --> assets
+  ingest --> emailSend
+  user -. "imágenes" .-> assets
+
+  ingest -. "send() al crear revisión" .-> matchQ
+  matchQ -. "consumer, 1 a la vez" .-> match
+  match -.-> ai
+  match -. "acepta, rechaza o deja pendiente" .-> d1
+
+  classDef proposed stroke-dasharray: 5 5
+  class matchQ,match,ai proposed
 ```
-                          ┌────────────────────┐
-        Usuario ────────► │      apps/web      │  React Router (SSR)
-                          └─────────┬──────────┘
-                                    │ /v1/*
-                                    ▼
- ┌───────────────────────────────────────────────────────────────────┐
- │ apps/server   "lo que ve y toca el usuario"  (sólo HTTP)          │
- │  · catálogo público (cache en el edge)   · cuentas, cotizaciones… │
- │  · admin: corridas, cuarentena, revisión de matches               │
- │  Bindings: D1 · rate limit · INGEST (RPC) · EMAIL ← sin cola ni R2│
- └──────┬────────────────────────────────────────────┬───────────────┘
-        │ lee/escribe                                │ RPC: enqueueCrawls()
-        ▼                                            ▼
- ┌────────────────────┐                 ┌───────────────────────────────┐
- │   D1  (SQLite)     │                 │ Queues  crawl (+ DLQ)         │◄── Cron 6 h
- │ usuarios, catálogo │                 └───────────────┬───────────────┘
- └─────────▲──────────┘                                 │ 1 mensaje = tienda + categoría
-           │ escribe catálogo e ingesta                 ▼
- ┌─────────┴─────────────────────────────────────────────────────────────┐
- │ apps/ingest   "todo lo que toca tiendas externas"  (sin HTTP público) │
- │                                                                       │
- │  adaptador de tienda ─► normalizar ─► matching ─► oferta + precio     │
- │  (JSON / HTML)          (cuarentena)   (huella)                       │
- │  Bindings: D1 · R2 snapshots y assets · cola (producir y consumir)    │
- └────────┬───────────────────────────────────┬──────────────────────────┘
-          │ fetch                             │ tiendas que exigen JavaScript
-          ▼                                   ▼
-   tiendas (WooCommerce, JSON, HTML)    Browser Rendering / GitHub Actions
+
+Código compartido (las apps no se importan entre sí):
+
+```mermaid
+flowchart LR
+  web["apps/web"] --> contracts["packages/contracts<br/>Zod: API y RPC"]
+  server["apps/server"] --> contracts & database & matching & kit
+  ingest["apps/ingest"] --> contracts & database & matching & kit
+  matching["packages/matching<br/>huella y decide()"] --> database["packages/database<br/>migraciones SQL, Kysely, D1"]
+  kit["packages/kit<br/>texto, reloj, logger, DNS"]
 ```
 
 Por qué dos y no uno: un bug o un deploy del scraping no toca la API pública; y
 cada Worker sólo tiene los permisos que usa (la API no ve la cola ni los
 snapshots; `ingest` no recibe tráfico público). Cuesta lo mismo: Workers no cobra
 por cantidad de Workers.
+
+`framerate-match` (#117) sale de `ingest` por lo mismo: si Workers AI falla o se acaba el presupuesto diario de
+neurons, los crawls siguen y las revisiones esperan en su cola.
 
 `apps/web` (React Router en Workers) consume `/v1/*` y comparte tipos vía
 `@framerate/contracts`.
