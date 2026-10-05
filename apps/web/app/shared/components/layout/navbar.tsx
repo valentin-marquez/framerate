@@ -8,7 +8,7 @@ import {
   IconPlus,
   IconSearch,
 } from "@tabler/icons-react";
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createContext, type ReactNode, use, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigation } from "react-router";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { CategoryIcon } from "~/features/category/components/category-icon";
@@ -22,12 +22,22 @@ import { Logo } from "./logo";
 import { NavFps, TimeGradient } from "./nav-parts";
 import { UserMenu } from "./user-menu";
 
-const railLink = ({ isActive }: { isActive: boolean }) =>
+const railLink = (current: boolean) =>
   cn(
     "relative flex h-9 items-center gap-3 rounded-xl px-2.5 text-sm transition-[color,background-color,scale] active:scale-[0.985]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-    isActive ? "bg-secondary text-foreground" : "text-foreground/65 hover:bg-secondary/60 hover:text-foreground",
+    current ? "bg-secondary text-foreground" : "text-foreground/65 hover:bg-secondary/60 hover:text-foreground",
   );
+
+/**
+ * Hacia dónde va el riel: lo último que se tocó (estado urgente, se dibuja en el mismo cuadro del clic), si no la
+ * navegación pendiente, si no la página actual. Píldora, texto activo y la sección que se apaga siguen este destino,
+ * así el clic se ve completo de una vez y no en dos tiempos.
+ */
+const RailTarget = createContext<{ target: string; select: (to: string) => void }>({
+  target: "",
+  select: () => {},
+});
 
 const iconButton =
   "grid size-9 shrink-0 cursor-pointer place-items-center rounded-xl text-foreground/65 transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -79,6 +89,8 @@ function RailLink({
   onClick?: () => void;
   large?: boolean;
 }) {
+  const { target, select } = use(RailTarget);
+  const current = end ? target === to : target === to || target.startsWith(`${to}/`);
   return (
     <RailHint label={label} collapsed={!!collapsed}>
       <NavLink
@@ -87,16 +99,14 @@ function RailLink({
         prefetch="intent"
         // Sin viewTransition: mientras dura una, Chrome manda los clics a la raíz y los clics rápidos en el riel se
         // perdían. La píldora y la entrada de resultados ya dan la continuidad.
-        onClick={onClick}
+        onClick={(e) => {
+          // Ctrl/Cmd/Shift+clic abre otra pestaña: este riel no navega.
+          if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) select(to);
+          onClick?.();
+        }}
         aria-label={collapsed ? label : undefined}
-        className={(state) =>
-          cn(
-            railLink(state),
-            large && "h-12",
-            collapsed && "w-9 justify-center px-0",
-            state.isPending && "rail-pending",
-          )
-        }
+        data-current={current}
+        className={cn(railLink(current), large && "h-12", collapsed && "w-9 justify-center px-0")}
       >
         {icon}
         {!collapsed && (
@@ -129,6 +139,11 @@ export function Navbar({
   const [focusAfterExpand, setFocusAfterExpand] = useState(false);
   const { pathname } = useLocation();
   const pendingPath = useNavigation().location?.pathname;
+  const [selected, setSelected] = useState<string | null>(null);
+  // Cuando la URL llega (o la navegación se cancela) manda la navegación real.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: se limpia en cada cambio de página o de pendiente.
+  useEffect(() => setSelected(null), [pathname, pendingPath]);
+  const railTarget = { target: selected ?? pendingPath ?? pathname, select: setSelected };
   const railRef = useRef<HTMLDivElement>(null);
   const [indicator, setIndicator] = useState({
     ready: false,
@@ -144,8 +159,7 @@ export function Navbar({
   const measureIndicator = () => {
     // Al hacer clic la píldora ya va hacia el destino (pendiente) sin esperar a que cargue la página.
     const rail = railRef.current;
-    const active =
-      rail?.querySelector<HTMLElement>("a.rail-pending") ?? rail?.querySelector<HTMLElement>('a[aria-current="page"]');
+    const active = rail?.querySelector<HTMLElement>('a[data-current="true"]');
     setIndicator((prev) =>
       active
         ? {
@@ -161,8 +175,8 @@ export function Navbar({
         : { ...prev, visible: false },
     );
   };
-  // biome-ignore lint/correctness/useExhaustiveDependencies: la página, la pendiente y el plegado cambian qué enlace y dónde.
-  useLayoutEffect(measureIndicator, [pathname, collapsed, pendingPath]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: el destino y el plegado cambian qué enlace y dónde.
+  useLayoutEffect(measureIndicator, [railTarget.target, collapsed]);
 
   // Buscar con el riel plegado lo despliega; el campo recién existe en el render siguiente.
   useEffect(() => {
@@ -231,7 +245,7 @@ export function Navbar({
   );
 
   return (
-    <>
+    <RailTarget value={railTarget}>
       <TimeGradient />
       {/* El ancho (w-64 o w-16) lo repite root.tsx como padding del contenido. */}
       <aside
@@ -271,7 +285,7 @@ export function Navbar({
           data-ready={indicator.ready}
           className={cn(
             "relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto",
-            "data-[ready=true]:[&_a[aria-current=page]]:bg-transparent",
+            "data-[ready=true]:[&_a[data-current=true]]:bg-transparent",
             collapsed ? "items-center" : "-mx-1 px-1",
           )}
         >
@@ -378,6 +392,6 @@ export function Navbar({
           ))}
         </DialogContent>
       </Dialog>
-    </>
+    </RailTarget>
   );
 }
