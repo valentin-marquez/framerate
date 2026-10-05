@@ -1,7 +1,7 @@
 import "~/shared/styles/app.css";
 import type { AuthProviders, Freshness } from "@framerate/contracts";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   data,
   isRouteErrorResponse,
@@ -192,20 +192,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App({ loaderData }: Route.ComponentProps) {
   const { categories: initialCategories, railCollapsed } = loaderData;
   const [collapsed, setCollapsed] = useState(railCollapsed);
-  const contentRef = useRef<HTMLDivElement>(null);
-  // Al plegar el riel el contenido cambia su padding de una vez (un solo layout) y se desliza desde donde estaba con
-  // transform (FLIP), en vez de animar el padding y recalcular la grilla en cada cuadro.
-  const slideContent = (next: boolean) => {
-    const rich = document.documentElement.dataset.motion === "rich";
-    const desktop = window.matchMedia("(min-width: 64rem)").matches;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!rich || !desktop || reduced) return;
-    const delta = next ? 192 : -192; // w-64 − w-16
-    contentRef.current?.animate([{ transform: `translateX(${delta}px)` }, { transform: "none" }], {
-      duration: 300,
-      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-    });
-  };
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
@@ -255,14 +241,13 @@ export default function App({ loaderData }: Route.ComponentProps) {
         collapsed={collapsed}
         onCollapsedChange={(next) => {
           setCollapsed(next);
-          slideContent(next);
           // biome-ignore lint/suspicious/noDocumentCookie: preferencia de interfaz sin datos sensibles.
           document.cookie = `rail=${next ? "collapsed" : "open"}; path=/; max-age=31536000; samesite=lax`;
         }}
       />
 
       {/* El riel del navbar mide w-64 (w-16 plegado) en escritorio. */}
-      <div ref={contentRef} className={cn("page-content flex flex-1 flex-col", collapsed ? "lg:pl-16" : "lg:pl-64")}>
+      <div className={cn("page-content flex flex-1 flex-col", collapsed ? "lg:pl-16" : "lg:pl-64")}>
         <main className="container mx-auto px-4 flex-1 pt-6 lg:pt-11">
           <Outlet />
         </main>

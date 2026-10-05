@@ -59,7 +59,11 @@ export function ProductGrid({ products, isLoading, className, trendingIds, missi
         <Fragment key={product.id}>
           {index === firstUnknown && missingSpec && <UnknownDivider missing={missingSpec} />}
           <div
-            className={cn("h-full", index < 8 && enterClass())}
+            // Fuera de pantalla no se dibuja ni se recalcula (también mientras el riel cambia el ancho del contenido).
+            className={cn(
+              "h-full [contain-intrinsic-size:auto_209px] [content-visibility:auto]",
+              index < 8 && enterClass(),
+            )}
             style={index < 8 ? enterStyle(240 + Math.min(index, 6) * 50) : undefined}
           >
             <ProductCard

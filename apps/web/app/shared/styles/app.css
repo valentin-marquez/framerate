@@ -566,10 +566,11 @@
   }
 }
 
-/* Card resize (transitions.dev): el riel cambia de ancho. Sólo con equipo holgado: recalcula el layout del riel en
-   cada cuadro (es fijo y chico; el contenido no se reflowea, se desliza con transform desde root.tsx). */
+/* Card resize (transitions.dev): el riel cambia de ancho y el contenido lo acompaña con su padding, con la misma
+   curva y duración (un elemento que se mueve en pantalla: ease-in-out, base). Recalcula el layout en cada cuadro,
+   por eso sólo con equipo holgado. Antes el contenido saltaba de ancho y se deslizaba (FLIP): se veía en dos tiempos. */
 :root[data-motion="rich"] .t-resize {
-  transition: width var(--resize-dur) var(--resize-ease);
+  transition: width var(--transition-duration-base) var(--ease-in-out);
 }
 @media (prefers-reduced-motion: reduce) {
   .t-resize {
@@ -691,7 +692,8 @@
 :root[data-motion="rich"] .page-content {
   transition:
     opacity var(--transition-duration-base) var(--ease-out),
-    filter var(--transition-duration-base) var(--ease-out);
+    filter var(--transition-duration-base) var(--ease-out),
+    padding var(--transition-duration-base) var(--ease-in-out);
 }
 :root[data-motion="rich"][data-search-spotlight] .page-content {
   opacity: 0.55;
@@ -772,7 +774,7 @@
 }
 :root[data-motion="rich"] .t-rail-handle {
   transition:
-    transform var(--resize-dur) var(--resize-ease),
+    transform var(--transition-duration-base) var(--ease-in-out),
     color var(--transition-duration-fast) var(--ease-out);
 }
 

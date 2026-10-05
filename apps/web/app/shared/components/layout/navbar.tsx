@@ -204,11 +204,20 @@ export function Navbar({
     );
   }, [railTarget.target]);
 
-  // `/` o Ctrl+K enfocan el buscador desde cualquier parte; con el riel plegado, se asoma. El campo existe siempre
+  // `/` o Ctrl+K enfocan el buscador desde cualquier parte; con el riel plegado, se asoma. Ctrl+B pliega y despliega. El campo existe siempre
   // (angosto sólo se recorta), así que el foco y el desenfoque de Ctrl+K son inmediatos.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const typing = e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]");
+      // Ctrl/Cmd+B pliega o despliega el riel (y cierra uno asomado). Sin preventDefault, Firefox abre los marcadores.
+      if (e.key === "b" && (e.ctrlKey || e.metaKey) && window.matchMedia("(min-width: 64rem)").matches) {
+        e.preventDefault();
+        if (peek) {
+          setPeek(false);
+          (document.activeElement as HTMLElement | null)?.blur();
+        } else onCollapsedChange(!collapsed);
+        return;
+      }
       const shortcut = e.key === "k" && (e.ctrlKey || e.metaKey);
       if (shortcut || (e.key === "/" && !typing)) {
         e.preventDefault();
