@@ -8,9 +8,6 @@
   "workers_dev": false,
   "keep_vars": true,
   "observability": { "enabled": true },
-  // D1 vive en ENAM: correr cerca de la base paga un viaje largo por request y no uno por consulta.
-  // Sólo afecta al fetch (incluido el service binding de la web), no al RPC.
-  "placement": { "mode": "smart" },
 
   // Este Worker sólo atiende HTTP. Ni Cron ni colas ni R2 de scraping: eso es de apps/ingest.
 
