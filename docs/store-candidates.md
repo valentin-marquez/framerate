@@ -82,7 +82,7 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | MyBox | Adaptador `prestashop` (JSON del listado con `X-Requested-With`), referencia = MPN, `cashDiscount: 0.05` | `price_amount` es tarjeta; transferencia = precio − round(precio × 5 %). Stock por `add_to_cart_url` |
 | Todoclick | Mismo adaptador, tarjeta +1,7 % ("Otros medios de pago") | `price_amount` = "Precio Khipu" (transferencia). Catálogo con mucho agotado y SSD mezclados con RAM y externos (`normalize` los aparta) |
 | TYT Gamer | Mismo adaptador, referencia interna, tarjeta +5 % | Sin marca en el JSON. SSD y HDD vienen de la raíz "Almacenamiento" |
-| Tecno Shopping | Mismo adaptador, `sku: "mpn"` (a veces UPC, que se usa como GTIN), `cashDiscount: 0.0347` | El apex redirige a `www` sin conservar la ruta: `baseUrl` con `www`. ~40 componentes; sin SSD/HDD ("almacenamiento" mezcla NAS y vigilancia), case ni case_fan. Los productos variables traen `sku` vacío |
+| Tecno Shopping (**pausada**) | Mismo adaptador, `sku: "mpn"` (a veces UPC, que se usa como GTIN), `cashDiscount: 0.0347` | El apex redirige a `www` sin conservar la ruta: `baseUrl` con `www`. ~40 componentes; sin SSD/HDD ("almacenamiento" mezcla NAS y vigilancia), case ni case_fan. Los productos variables traen `sku` vacío |
 | Wei | Adaptador `wei`: listado HTML (`perpage=100`, `page` desde 0) y una ficha por producto (~210 peticiones por ciclo) | Part Number en la ficha (≈100 %), tarjeta = transferencia / 0,95. La marca va delante del título. Todo nuevo. Mezcla servidores y NVR (`normalize` los aparta) |
 | Tecno Saga | Adaptador `tecnosaga`: `POST /productos/listadoajax` (formulario, exige `X-Requested-With`), JSON con ambos precios y stock por sucursal | Sin MPN (el `sku` es interno): sale del título, ~35-40 %. Las subcategorías vienen contaminadas (placas madre en "Tarjetas de video"); `normalize` las aparta. Sin HDD ni SSD |
 | Eylstore | Adaptador `eylstore`: listado SSR (`/categorias/<slug>?page=N`), sin ficha; su robots.txt prohíbe `/api` | Código = MPN sólo ~31 % ("SKU no informado" o un número interno el resto). Tarjeta = transferencia × 1,05. Muchos accesorios en las categorías. Sin placas madre ni SSD (0 % de MPN: quedarían duplicadas) |
@@ -113,7 +113,7 @@ cuarentena por motivo.
 | 9 | ~~PC Express~~ | 519 | Integrada | JSON-LD con MPN y marca |
 | 10 | ~~NotebookStore y otras Jumpseller~~ | 389 + | Integradas (adaptador `jumpseller`) | Después sirve para Thundertech, Tecnocam, Valrod y V Gamers |
 | 11 | ~~MyBox, Todoclick, TYT Gamer~~ | 150 + 38 + 28 | Integradas (adaptador `prestashop`) | AllTec descartada: PrestaShop 1.6 sin JSON y casi sin componentes |
-| 12 | WooCommerce chicas con MPN | — | Configuración | Integradas Nuevatec, CCLink, Progaming y Tecno Shopping; quedan DazBog (vende usados) y Tecno Master (en pausa) |
+| 12 | WooCommerce chicas con MPN | — | Configuración | Integradas Nuevatec, CCLink y Progaming; quedan DazBog (vende usados), Tecno Master y Tecno Shopping (en pausa) |
 | 13 | ~~Wei, Eylstore, Tecno Saga~~ | 170 + 147 + 145 | Parsers HTML | Integradas (oct. 2026): ver la tabla de adaptadores |
 | 14 | El resto | — | — | SKU interno, títulos pobres o usados |
 
@@ -122,6 +122,7 @@ cuarentena por motivo.
 - Centrale: plugin anti-scraping para los precios (ver arriba).
 - TYT Gamer: pausada (`pausedReason` en el registro). Desde el 01-10-2026 responde 403 a todas las corridas desde Workers; desde una red residencial respondía 200. No se cambia el user agent para pasar el bloqueo. Para reactivarla, probar desde un Worker (`wrangler dev --remote`) o pedirle a la tienda que habilite `FramerateBot`, y quitar `pausedReason` (#81).
 - KDTEC: la Store API respondió a las 3 primeras peticiones y después cortó la conexión TCP (sin 403 ni 429; ¿límite por IP o servidor sobrecargado?). Reintentar otro día con `perPage` 20 y una petición cada 5 s; su robots.txt pide no rastrear filtros. Hay que leer la marca del atributo "Marca".
+- Tecno Shopping: el adaptador funciona (con `www` y desde una red residencial: 43 ofertas válidas), pero desde un Worker el captcha de SiteGround responde con un meta refresh a `/.well-known/sgcaptcha/` (HTML con 200, y el crawl falla con "Unexpected token <"). Es un bloqueo anti-bot por IP de Cloudflare: no se evade. Pausada con `pausedReason` el 05-10-2026; reactivar si la tienda permite el tráfico de `FramerateBot`.
 - Tecno Master: la ficha muestra la tarjeta más barata que la transferencia (4.495.621 contra 4.616.610); aclarar antes de integrar. Oct. 2026: su web está "en construcción" (`Retry-After: 86400`) y no se ve la ficha; la Store API sí responde (364 productos), con `brands` vacío (marca sólo en el título).
 - Notebooksya: casi todo son notebooks; pocos componentes.
 - AllTec: PrestaShop 1.6 (no devuelve JSON) y casi sin componentes.
