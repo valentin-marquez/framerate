@@ -73,6 +73,8 @@ export interface ClaimableStore {
   /** Dominio verificable derivado de `stores.url`. null => no reclamable por DNS. */
   domain: string | null;
   is_claimed: boolean;
+  /** Ofertas activas; sólo viene del listado. 0 en una tienda pausada o que aún no aporta. */
+  offer_count?: number;
 }
 
 /** Una categoría de productos que la tienda tiene listados. */
@@ -148,6 +150,7 @@ export const storesService = {
         icon_url: s.iconUrl,
         domain: s.domain,
         is_claimed: s.isClaimed,
+        offer_count: s.offerCount,
       })),
     };
   },

@@ -101,7 +101,7 @@ export async function loader() {
     }),
     productsService.getTrending(40).catch(() => ({ ids: [] as number[] })),
     storesService.listClaimable().then(
-      (r) => r.stores,
+      (r) => r.stores.filter((s) => (s.offer_count ?? 0) > 0),
       () => [],
     ),
   ]);
