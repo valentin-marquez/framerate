@@ -1,8 +1,9 @@
 import type { CategoryItem } from "@framerate/contracts";
 import { fold } from "@framerate/kit";
-import { IconArrowUpRight, IconClock, IconSearch } from "@tabler/icons-react";
+import { IconArrowUpRight, IconClock, IconLoader2, IconSearch } from "@tabler/icons-react";
 import { useId } from "react";
 import { getCategoryImage } from "~/features/category/utils/categories";
+import { Skeleton } from "~/shared/components/primitives/skeleton";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import { type SearchSuggestions, type Suggestion, useSearchSuggestions } from "../hooks/use-search-suggestions";
@@ -46,7 +47,11 @@ export function SearchField({
           e.preventDefault();
         }}
       >
-        <IconSearch className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        {search.loading ? (
+          <IconLoader2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 animate-spin text-foreground" />
+        ) : (
+          <IconSearch className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        )}
         <input
           data-search-field
           type="search"
@@ -64,11 +69,8 @@ export function SearchField({
           onFocus={() => search.setOpen(true)}
           onBlur={search.close}
           onKeyDown={search.onKeyDown}
-          className="peer h-10 w-full rounded-xl border border-border/70 bg-background pr-9 pl-9 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-foreground/30"
+          className="peer h-10 w-full rounded-xl border border-border/70 bg-background pr-3 pl-9 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-foreground/30"
         />
-        <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 font-mono text-muted-foreground text-xs peer-focus:opacity-0 lg:inline">
-          /
-        </kbd>
       </form>
 
       {search.open && search.items.length > 0 && (
@@ -99,7 +101,30 @@ export function SearchField({
                 </div>
               );
             })}
+            {search.loading && !search.items.some((item) => item.kind === "product") && (
+              <div aria-hidden="true">
+                <p className="px-3 pt-3 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
+                  Buscando productos…
+                </p>
+                {[0, 1, 2].map((n) => (
+                  <div key={n} className="flex items-center gap-3 px-3 py-1.5">
+                    <Skeleton className="size-9 shrink-0 rounded-lg" />
+                    <Skeleton className="h-3.5 flex-1 rounded-full" style={{ maxWidth: `${80 - n * 15}%` }} />
+                    <Skeleton className="h-3.5 w-16 shrink-0 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            )}
+            {search.empty && (
+              <p className="px-3 pt-3 pb-2 text-muted-foreground text-sm">
+                No hay productos que coincidan con <span className="text-foreground">“{search.typed}”</span>. Prueba con
+                el modelo completo o la marca.
+              </p>
+            )}
           </div>
+          <p aria-live="polite" className="sr-only">
+            {search.loading ? "Buscando…" : search.empty ? "Sin productos" : ""}
+          </p>
           <div className="hidden items-center gap-4 border-border/60 border-t px-4 py-2 text-[11px] text-muted-foreground md:flex">
             <span>
               <kbd className="font-mono">↑↓</kbd> moverse

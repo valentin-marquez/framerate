@@ -1,7 +1,7 @@
 import type { CategoryItem, ProductSummary } from "@framerate/contracts";
 import { fold } from "@framerate/kit";
 import { type KeyboardEvent, useEffect, useState } from "react";
-import { useFetcher, useLocation, useNavigate, useSearchParams } from "react-router";
+import { useFetcher, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 import type { CatalogData } from "~/features/catalog/load-catalog";
 
 const RECENT_KEY = "framerate:recent-searches";
@@ -63,7 +63,13 @@ export function useSearchSuggestions(categories: CategoryItem[]) {
   useEffect(() => {
     if (query.length >= 2) load(searchUrl(query));
   }, [query, load]);
-  const products = query.length >= 2 && fetcher.data?.search === query ? fetcher.data.products : [];
+  const fresh = query.length >= 2 && fetcher.data?.search === query;
+  const products = fresh ? (fetcher.data?.products ?? []) : [];
+  // Buscando: mientras se escribe (antes del debounce), mientras llegan las sugerencias o mientras carga /buscar.
+  const navigation = useNavigation();
+  const loading =
+    (typed.length >= 2 && (typed !== query || fetcher.state !== "idle" || !fresh)) ||
+    navigation.location?.pathname === "/buscar";
 
   const items: Suggestion[] = [];
   if (!typed) {
@@ -128,6 +134,10 @@ export function useSearchSuggestions(categories: CategoryItem[]) {
 
   return {
     value,
+    typed,
+    loading,
+    /** Ya respondió la búsqueda de lo escrito y no trajo productos. */
+    empty: typed.length >= 2 && !loading && products.length === 0,
     change: (next: string) => {
       setValue(next);
       setActive(-1);

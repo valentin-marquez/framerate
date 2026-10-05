@@ -84,8 +84,9 @@ export function Navbar({ categories }: { categories: CategoryItem[] }) {
       <TimeGradient />
       {/* w-64: root.tsx desplaza el contenido lo mismo (lg:pl-64). */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col gap-4 border-border/60 border-r bg-card/40 p-3 lg:flex">
-        <div className="px-2 pt-2">
+        <div className="flex items-center justify-between px-2 pt-2">
           <Brand />
+          <NavFps />
         </div>
         <SearchField categories={categories} panelClassName="absolute top-0 left-full ml-3 w-[30rem]" />
         <nav aria-label="Principal" className="flex flex-col gap-0.5">
@@ -112,7 +113,7 @@ export function Navbar({ categories }: { categories: CategoryItem[] }) {
               trigger={
                 <button
                   type="button"
-                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full bg-foreground px-3.5 font-medium text-background text-sm transition-opacity hover:opacity-85"
+                  className="inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-foreground px-3.5 font-medium text-background text-sm transition-opacity hover:opacity-85"
                 >
                   <IconPlus className="size-4" stroke={2.25} />
                   {t("create_quote")}
@@ -120,8 +121,7 @@ export function Navbar({ categories }: { categories: CategoryItem[] }) {
               }
             />
           )}
-          <NavFps className="ml-auto" />
-          <UserMenu align="start" side="top" />
+          <UserMenu align="start" side="top" loginClassName="h-10 flex-1" />
         </div>
       </aside>
 
