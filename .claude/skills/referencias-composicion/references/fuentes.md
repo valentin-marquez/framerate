@@ -41,7 +41,12 @@ Las galerías también sirven para descubrir sitios: cuando algo sirve, visita y
 
 ## Sitios reales por rubro
 
-Para institucional, gobierno y datos (el caso más común en proyectos del Estado):
+Para comparadores de precios y tiendas de hardware (el caso de Framerate):
+
+- **Comparadores:** PCPartPicker, Pangoly, Solotodo, Google Shopping.
+- **Tiendas:** Newegg, Micro Center, PC Factory.
+
+Para institucional, gobierno y datos:
 
 - **Gobierno:** gov.uk (y su sistema de diseño), gob.cl y digital.gob.cl, gub.uy, gobiernos de Nueva Zelanda, Estonia y Canadá.
 - **Organismos internacionales:** ONU (`un.org/en/climatechange`), CEPAL (`cepal.org`), FAO, PNUD, IPCC, Agencia Europea de Medio Ambiente (`eea.europa.eu`), Agencia Internacional de Energía (`iea.org`).

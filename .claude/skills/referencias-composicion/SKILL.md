@@ -11,7 +11,7 @@ El estilo (color, tipografía, radios, sombras, íconos) ya lo decidió el dise�
 
 ### 1. Definir qué se está armando
 
-Antes de buscar, escribe en una línea qué es: tipo de página, audiencia, acción principal y qué contenido real hay para llenarla. Por ejemplo: "Índice histórico de eventos de un ministerio; público ciudadano y técnico; acción principal: encontrar un evento pasado y sus materiales; los eventos no tienen foto propia".
+Antes de buscar, escribe en una línea qué es: tipo de página, audiencia, acción principal y qué contenido real hay para llenarla. Por ejemplo: "Comparador de precios de componentes de PC; público chileno que decide una compra; acción principal: ver el mejor precio y pasar a la tienda; cada producto tiene foto y varias ofertas".
 
 El contenido real importa porque condiciona qué referencias sirven: una grilla de tarjetas con foto no sirve si los elementos no tienen imagen. Si falta algo de esa línea y no se deduce del contexto, pregúntalo antes de seguir.
 

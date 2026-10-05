@@ -3,11 +3,11 @@ applyTo: "apps/web/**"
 ---
 # Web Application Guidelines (apps/web)
 
-This document outlines the architectural principles and coding standards for the frontend application of Framerate.cl, based on the technical architecture document.
+Architectural principles and coding standards for the Framerate.cl frontend.
 
 ## 1. Architecture Overview
 - **Framework**: React Router v7.
-- **Deployment**: Cloudflare Pages (Edge-First).
+- **Deployment**: Cloudflare Workers (edge-first).
 - **Rendering Strategy**: Server-Side Rendering (SSR) at the Edge.
 - **Language**: TypeScript.
 - **Styling**: Tailwind CSS v4.
@@ -15,18 +15,18 @@ This document outlines the architectural principles and coding standards for the
 ## 2. Data Access & Security
 - **Data Fetching**: Use React Router `loaders` for server-side data fetching.
 - **Mutations**: Use React Router `actions` for form submissions and data mutations.
-- **No Direct Database Access**: The frontend MUST NEVER access the database (D1) directly.
+- **No direct database access**: the frontend never touches D1; everything goes through the API.
 - **API Gateway**: All data fetching must go through the v2 API (`apps/server`, `/v1/*`), typed with `@framerate/contracts`.
 - **Credentials**: Do not store any secrets or API keys with write access in the frontend code.
 
 ## 3. Project Structure & Modularization
 - **Routing**: File-based routing using React Router v7 conventions (`routes.ts` or `app/routes/`).
-- **Shared Types**: Use types defined in `packages/db` and `packages/utils` to ensure consistency.
+- **Shared types**: use the schemas and types from `@framerate/contracts`.
 - **Component Design**: Follow atomic design principles or feature-based folder structure.
 - **Lazy Loading**: Implement lazy loading for routes and heavy components to optimize initial load time.
 
 ## 4. Performance Optimization
-- **SEO**: Critical priority. Ensure all product and category pages have dynamic meta tags and structured data (JSON-LD).
+- **SEO**: product and category pages carry dynamic meta tags and JSON-LD structured data.
 - **Edge Caching**: Leverage Cloudflare's caching capabilities for static assets and API responses where appropriate.
 - **Images**:
     - Use thumbnails for initial views.
@@ -67,8 +67,8 @@ Adoptamos el patrón de **"Estado Pasivo Sutil → Estado Activo Fuerte"**.
 ### 7.3. Reglas de Color y Opacidad (OKLCH)
 
 * **Light Mode (Pureza):** Abuso intencionado del blanco y transparencias bajas. Los bordes deben ser `border-border/40` para que parezcan dibujados con un lápiz fino.
-* **Dark Mode (Profundidad):** No usar negro puro (#000) para superficies, sino el tono oklch de `reference.css`. La profundidad se da subiendo ligeramente la luminosidad en cada capa superior.
-* **Translucidez (Glassmorphism):** Todo lo que flote (modales, tooltips, dropdowns) DEBE llevar `backdrop-blur-md` y una opacidad de fondo entre el 70% y 85%.
+* **Dark Mode (Profundidad):** No usar negro puro (#000) para superficies, sino los tokens oklch de `apps/web/app/shared/styles/app.css`. La profundidad se da subiendo ligeramente la luminosidad en cada capa superior.
+* **Translucidez (Glassmorphism):** Lo que flote (paneles de modales, tooltips, dropdowns) lleva `backdrop-blur-md` y fondo entre 70% y 85% de opacidad. El velo del diálogo va sin desenfoque (`bg-black/50`) y sin fundido: ver `apps/web/CLAUDE.md`.
 
 ### 7.4. Radios de Borde (The Squircle Rule)
 
