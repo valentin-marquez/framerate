@@ -573,14 +573,13 @@ export const STORES: readonly StoreDefinition[] = [
     adapter: createEylstoreAdapter({
       baseUrl: "https://www.eylstore.cl",
       // Tarjeta = transferencia × 1,05 (en el listado). "tarjetas-de-video" trae también soportes, risers y cables.
+      // Sin placas madre ni SSD: casi nunca traen MPN y quedarían duplicadas.
       categories: {
         gpu: ["tarjetas-de-video"],
         cpu: ["procesadores"],
-        motherboard: ["placas-madres"],
         ram: ["memorias-ram"],
         psu: ["fuentes-de-poder"],
         case: ["gabinetes"],
-        ssd: ["discos-nvme"],
         cpu_cooler: ["por-aire", "liquida"],
       },
     }),
