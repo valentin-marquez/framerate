@@ -545,12 +545,10 @@
   }
 }
 
-/* Card resize (transitions.dev): el riel cambia de ancho y el contenido lo acompaña. Sólo con equipo holgado:
-   anima width/padding, que recalcula el layout de la página en cada cuadro. */
+/* Card resize (transitions.dev): el riel cambia de ancho. Sólo con equipo holgado: recalcula el layout del riel en
+   cada cuadro (es fijo y chico; el contenido no se reflowea, se desliza con transform desde root.tsx). */
 :root[data-motion="rich"] .t-resize {
-  transition:
-    width var(--resize-dur) var(--resize-ease),
-    padding var(--resize-dur) var(--resize-ease);
+  transition: width var(--resize-dur) var(--resize-ease);
 }
 @media (prefers-reduced-motion: reduce) {
   .t-resize {
@@ -620,6 +618,27 @@
 }
 .t-empty-text {
   animation: t-empty-text 400ms var(--ease-out) 120ms both;
+}
+
+/*
+ * Foco del buscador (Ctrl+K): el contenido retrocede para que la atención quede en el campo. En equipos holgados se
+ * desenfoca; en el resto sólo se atenúa. El reposo es `filter: none` y no `blur(0)`: un filtro permanente crearía
+ * una capa y un bloque contenedor para todo lo que va adentro.
+ */
+.page-content {
+  transition: opacity var(--transition-duration-base) var(--ease-out);
+}
+:root[data-search-spotlight] .page-content {
+  opacity: 0.4;
+}
+:root[data-motion="rich"] .page-content {
+  transition:
+    opacity var(--transition-duration-base) var(--ease-out),
+    filter var(--transition-duration-base) var(--ease-out);
+}
+:root[data-motion="rich"][data-search-spotlight] .page-content {
+  opacity: 0.55;
+  filter: blur(8px);
 }
 
 /*

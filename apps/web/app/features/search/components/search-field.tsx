@@ -12,6 +12,19 @@ export function focusSearchField() {
     ?.focus();
 }
 
+const stopSpotlight = () => delete document.documentElement.dataset.searchSpotlight;
+
+/**
+ * Foco de atención (Ctrl+K): mientras el campo está vacío, el contenido se desenfoca y se atenúa (ver
+ * `[data-search-spotlight]` en app.css). Se levanta al escribir, al salir del campo o con Esc.
+ */
+export function startSearchSpotlight() {
+  const input = [...document.querySelectorAll<HTMLInputElement>("input[data-search-field]")].find(
+    (el) => el.offsetParent !== null,
+  );
+  if (input && !input.value) document.documentElement.dataset.searchSpotlight = "true";
+}
+
 /**
  * Buscador que filtra mientras se escribe: tras una pausa corta lleva a `/buscar?q=` y la página de resultados se
  * actualiza en su lugar (como el buscador de 21st). La primera búsqueda deja una entrada en el historial; las
@@ -91,7 +104,11 @@ export function SearchField({ className }: { className?: string }) {
         enterKeyHint="search"
         placeholder="Buscar modelo o marca"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          setValue(e.target.value);
+          if (e.target.value) stopSpotlight();
+        }}
+        onBlur={stopSpotlight}
         onKeyDown={(e) => {
           if (e.key === "Escape") e.currentTarget.blur();
         }}

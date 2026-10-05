@@ -13,7 +13,7 @@ import { Link, NavLink, useLocation, useNavigation } from "react-router";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { CategoryIcon } from "~/features/category/components/category-icon";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
-import { focusSearchField, SearchField } from "~/features/search/components/search-field";
+import { focusSearchField, SearchField, startSearchSpotlight } from "~/features/search/components/search-field";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
@@ -24,11 +24,9 @@ import { UserMenu } from "./user-menu";
 
 const railLink = ({ isActive }: { isActive: boolean }) =>
   cn(
-    "relative flex h-9 items-center gap-3 rounded-xl px-2.5 text-sm transition-[color,background-color,scale] active:scale-[0.97]",
+    "relative flex h-9 items-center gap-3 rounded-xl px-2.5 text-sm transition-[color,background-color,scale] active:scale-[0.985]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-    isActive
-      ? "bg-secondary font-medium text-foreground"
-      : "text-foreground/65 hover:bg-secondary/60 hover:text-foreground",
+    isActive ? "bg-secondary text-foreground" : "text-foreground/65 hover:bg-secondary/60 hover:text-foreground",
   );
 
 const iconButton =
@@ -184,9 +182,12 @@ export function Navbar({
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const typing = e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]");
-      if ((e.key === "k" && (e.ctrlKey || e.metaKey)) || (e.key === "/" && !typing)) {
+      const shortcut = e.key === "k" && (e.ctrlKey || e.metaKey);
+      if (shortcut || (e.key === "/" && !typing)) {
         e.preventDefault();
         openSearch();
+        // Ctrl+K además desenfoca la página para centrar la atención en el campo.
+        if (shortcut) startSearchSpotlight();
       }
     };
     window.addEventListener("keydown", onKeyDown);
