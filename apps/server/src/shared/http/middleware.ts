@@ -45,6 +45,30 @@ export function edgeCache(maxAgeSeconds: number): MiddlewareHandler<AppEnv> {
 const CATALOG_EDGE_TTL = 6 * 3600;
 const VERSION_MEMO_MS = 60_000;
 let versionMemo: { version: number; readAt: number } | undefined;
+let versionRefreshing = false;
+
+/**
+ * Sólo la primera petición del isolate espera a D1. Después la versión se renueva en segundo plano: un viaje a D1
+ * desde Chile a veces tarda segundos, y no puede bloquear peticiones que son aciertos de caché.
+ */
+async function currentCatalogVersion(c: Context<AppEnv>): Promise<number> {
+  if (!versionMemo) {
+    versionMemo = { version: await catalogVersion(c.var.db), readAt: Date.now() };
+  } else if (Date.now() - versionMemo.readAt > VERSION_MEMO_MS && !versionRefreshing) {
+    versionRefreshing = true;
+    c.executionCtx.waitUntil(
+      catalogVersion(c.var.db)
+        .then((version) => {
+          versionMemo = { version, readAt: Date.now() };
+        })
+        .catch(() => {})
+        .finally(() => {
+          versionRefreshing = false;
+        }),
+    );
+  }
+  return versionMemo.version;
+}
 
 /**
  * Como `edgeCache`, pero con `catalog_version` en la clave: el edge guarda horas y un precio nuevo se ve apenas termina
@@ -52,12 +76,8 @@ let versionMemo: { version: number; readAt: number } | undefined;
  */
 export function catalogCache(maxAgeSeconds: number): MiddlewareHandler<AppEnv> {
   return cached(maxAgeSeconds, CATALOG_EDGE_TTL, async (c) => {
-    const now = Date.now();
-    if (!versionMemo || now - versionMemo.readAt > VERSION_MEMO_MS) {
-      versionMemo = { version: await catalogVersion(c.var.db), readAt: now };
-    }
     const url = new URL(c.req.url);
-    url.searchParams.set("__v", String(versionMemo.version));
+    url.searchParams.set("__v", String(await currentCatalogVersion(c)));
     return url.toString();
   });
 }
