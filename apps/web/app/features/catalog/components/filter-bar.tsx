@@ -33,14 +33,28 @@ function useFilterParams() {
 
 const chip = (active: boolean) =>
   cn(
-    "inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 font-medium text-sm transition-colors",
+    "inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 font-medium text-sm transition-[color,background-color,scale] active:scale-[0.97]",
     active ? "bg-primary/10 text-primary" : "bg-secondary/50 text-secondary-foreground hover:bg-secondary",
   );
 
 /** Botón con panel flotante: se cierra al hacer clic fuera o con Escape. */
 function Popover({ label, active, children }: { label: string; active: boolean; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
+  const [closing, setClosing] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // Al cerrar queda .is-closing lo que dura la salida, para que encoja en vez de saltar a su escala de reposo.
+  const setOpen = useCallback(
+    (next: boolean | ((v: boolean) => boolean)) =>
+      setOpenState((prev) => {
+        const value = typeof next === "function" ? next(prev) : next;
+        if (prev && !value) {
+          setClosing(true);
+          setTimeout(() => setClosing(false), 150);
+        }
+        return value;
+      }),
+    [],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -52,7 +66,7 @@ function Popover({ label, active, children }: { label: string; active: boolean; 
       document.removeEventListener("pointerdown", onPointer);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, setOpen]);
 
   return (
     <div ref={ref} className="relative">
@@ -60,11 +74,16 @@ function Popover({ label, active, children }: { label: string; active: boolean; 
         {label}
         <IconChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
       </button>
-      {open && (
-        <div className="enter-up absolute top-full left-0 z-50 mt-2 min-w-56 rounded-2xl border border-border/60 bg-popover p-2 shadow-lg">
-          {children}
-        </div>
-      )}
+      <div
+        inert={!open}
+        className={cn(
+          "t-dropdown absolute top-full left-0 z-50 mt-2 min-w-56 rounded-2xl border border-border/60 bg-popover p-2 shadow-lg",
+          open && "is-open",
+          closing && "is-closing",
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }

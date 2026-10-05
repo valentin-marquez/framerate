@@ -206,6 +206,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
   }, [theme]);
 
   useEffect(() => {
+    // Efectos caros (desenfoque, transiciones de ancho) sólo en equipos holgados; ver data-motion en app.css.
+    const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+    if ((navigator.hardwareConcurrency ?? 4) >= 8 && memory >= 8) document.documentElement.dataset.motion = "rich";
     const timer = setTimeout(markInitialLoadDone, 1600);
     return () => clearTimeout(timer);
   }, []);
@@ -230,7 +233,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       />
 
       {/* El riel del navbar mide w-64 (w-16 plegado) en escritorio. */}
-      <div className={cn("flex flex-1 flex-col", collapsed ? "lg:pl-16" : "lg:pl-64")}>
+      <div className={cn("t-resize flex flex-1 flex-col", collapsed ? "lg:pl-16" : "lg:pl-64")}>
         <main className="container mx-auto px-4 flex-1 pt-6 lg:pt-11">
           <Outlet />
         </main>
