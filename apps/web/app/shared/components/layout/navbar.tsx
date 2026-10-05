@@ -411,11 +411,26 @@ export function Navbar({
 
       <nav
         aria-label="Atajos"
-        className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-3 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         <NavLink to="/" end prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
           <IconHome className="size-5" stroke={1.75} />
           Inicio
+        </NavLink>
+        <NavLink to="/cyber" prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
+          {/* El destacado del evento también en el teléfono: la pastilla lleva el haz azul a rojo del riel. */}
+          <span className="relative -my-1 grid h-7 w-11 place-items-center overflow-hidden rounded-full border border-border/70 bg-card/60">
+            <span
+              aria-hidden="true"
+              data-variant="cyber"
+              className="beam pointer-events-none absolute inset-0 rounded-full"
+            >
+              <span className="beam-glow" />
+              <span className="beam-line" />
+            </span>
+            <IconRosetteDiscount className="relative size-[18px] text-[#2c65ef] dark:text-[#6b93f5]" stroke={1.75} />
+          </span>
+          Cyber
         </NavLink>
         <button type="button" className={tabClass(sheetOpen)} onClick={() => setSheetOpen(true)}>
           <IconCategory className="size-5" stroke={1.75} />

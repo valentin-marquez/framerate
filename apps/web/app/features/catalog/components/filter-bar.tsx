@@ -303,7 +303,7 @@ export function CategoryChips({ categories }: { categories: CategoryItem[] }) {
   const choose = (slug: string | null) =>
     update({ category: slug, brand: null, min_price: null, max_price: null, spec: null });
   return (
-    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
+    <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
       <button type="button" onClick={() => choose(null)} className={cn(chip(!current), "shrink-0")}>
         Todas
       </button>

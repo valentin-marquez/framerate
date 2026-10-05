@@ -677,6 +677,49 @@
   filter: blur(8px);
 }
 
+/* Contador de frescura en los últimos minutos antes de la actualización: la llama titila y un brillo recorre la
+   barra. Sólo transform; con movimiento reducido la llama queda quieta y el brillo no se ve. */
+@keyframes flame-flicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(-3deg);
+  }
+  35% {
+    transform: scale(1.15) rotate(4deg);
+  }
+  70% {
+    transform: scale(0.95) rotate(-1deg);
+  }
+}
+.flame-flicker {
+  transform-origin: 50% 90%;
+  animation: flame-flicker 900ms var(--ease-in-out) infinite;
+}
+@keyframes heat-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+.heat-shimmer {
+  position: absolute;
+  inset: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.7), transparent);
+  animation: heat-shimmer 1.4s var(--ease-in-out) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flame-flicker,
+  .heat-shimmer {
+    animation: none;
+  }
+  .heat-shimmer {
+    display: none;
+  }
+}
+
 /*
  * Dos íconos en el mismo lugar (transitions.dev, "icon swap"): se cruzan con opacidad y escala. Sin el desenfoque
  * del original, que anima `filter`. El visible lleva data-on="true".
