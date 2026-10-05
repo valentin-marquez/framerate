@@ -1,10 +1,13 @@
 import type { StoreDefinition } from "./adapter";
+import { createEylstoreAdapter } from "./eylstore";
 import { createJumpsellerAdapter } from "./jumpseller";
 import { createMyShopAdapter } from "./myshop";
 import { createPcExpressAdapter } from "./pc-express";
 import { createPcFactoryAdapter } from "./pcfactory";
 import { createPrestaShopAdapter } from "./prestashop";
 import { createTecnomasAdapter } from "./tecnomas";
+import { createTecnoSagaAdapter } from "./tecnosaga";
+import { createWeiAdapter } from "./wei";
 import { createWooCommerceAdapter } from "./woocommerce";
 
 /**
@@ -516,6 +519,69 @@ export const STORES: readonly StoreDefinition[] = [
         ram: ["memorias-ram"],
         psu: ["fuentes-de-poder"],
         cpu_cooler: ["refrigeracion"],
+      },
+    }),
+  },
+  {
+    slug: "wei",
+    name: "Wei",
+    url: "https://www.wei.cl",
+    minIntervalMs: 1000,
+    adapter: createWeiAdapter({
+      baseUrl: "https://www.wei.cl",
+      // Tarjeta = transferencia / 0,95 (verificado en la ficha, oct. 2026). Su "Refrigeración | Ventiladores"
+      // (1162) trae ventiladores de gabinete y de CPU: `normalize` separa por título.
+      categories: {
+        gpu: ["1305"],
+        cpu: ["886", "1117"],
+        motherboard: ["1272", "1126"],
+        ram: ["1238"],
+        psu: ["1222", "890"],
+        ssd: ["1243", "515"],
+        hdd: ["511"],
+        case: ["1219", "729"],
+        cpu_cooler: ["1162"],
+        case_fan: ["1162"],
+      },
+    }),
+  },
+  {
+    slug: "tecnosaga",
+    name: "Tecno Saga",
+    url: "https://tecnosaga.cl",
+    minIntervalMs: 1000,
+    adapter: createTecnoSagaAdapter({
+      baseUrl: "https://tecnosaga.cl",
+      // "categoría/subcategoría". Sin HDD ni SSD (vacías). Sin la 8/53 "fuente genérica".
+      categories: {
+        gpu: ["8/91"],
+        cpu: ["8/66", "8/67"],
+        motherboard: ["8/63", "8/64"],
+        ram: ["10/73"],
+        psu: ["8/52"],
+        case: ["8/55", "8/54"],
+        cpu_cooler: ["8/68"],
+        case_fan: ["8/68"],
+      },
+    }),
+  },
+  {
+    slug: "eylstore",
+    name: "Eylstore",
+    url: "https://www.eylstore.cl",
+    minIntervalMs: 1000,
+    adapter: createEylstoreAdapter({
+      baseUrl: "https://www.eylstore.cl",
+      // Tarjeta = transferencia × 1,05 (en el listado). "tarjetas-de-video" trae también soportes, risers y cables.
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madres"],
+        ram: ["memorias-ram"],
+        psu: ["fuentes-de-poder"],
+        case: ["gabinetes"],
+        ssd: ["discos-nvme"],
+        cpu_cooler: ["por-aire", "liquida"],
       },
     }),
   },
