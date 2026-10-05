@@ -373,7 +373,7 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
             </div>
           </header>
 
-          <div ref={messagesRef} className="thread-scroll px-6 py-4 space-y-4 max-h-[55vh] overflow-y-auto">
+          <div ref={messagesRef} className="scrollbar-slim px-6 py-4 space-y-4 max-h-[55vh] overflow-y-auto">
             {messages.map((m, i) => (
               <MessageBubble
                 key={m.id}

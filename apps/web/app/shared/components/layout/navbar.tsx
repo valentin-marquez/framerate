@@ -156,6 +156,49 @@ function CyberLink({ collapsed, onClick }: { collapsed?: boolean; onClick?: () =
 }
 
 /**
+ * Zona del riel con su propia píldora de sección activa, que se desliza al enlace nuevo. Hay una por zona porque la
+ * lista de categorías scrollea aparte y la píldora tiene que viajar con ella. La píldora ocupa el ancho por CSS
+ * (también mientras el riel cambia); sólo se mide su posición vertical, que plegar no cambia: se mide al navegar.
+ */
+function RailGroup({ className, children }: { className?: string; children: ReactNode }) {
+  const { target } = use(RailTarget);
+  const ref = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState({ ready: false, animate: false, visible: false, y: 0, height: 0 });
+  // biome-ignore lint/correctness/useExhaustiveDependencies: el destino cambia qué enlace está activo.
+  useLayoutEffect(() => {
+    const active = ref.current?.querySelector<HTMLElement>('a[data-current="true"]');
+    setIndicator((prev) =>
+      active
+        ? // La primera vez se ubica sin deslizarse.
+          { ready: true, animate: prev.ready, visible: true, y: active.offsetTop, height: active.offsetHeight }
+        : { ...prev, visible: false },
+    );
+  }, [target]);
+
+  return (
+    <div
+      ref={ref}
+      data-ready={indicator.ready}
+      className={cn("relative data-[ready=true]:[&_a[data-current=true]]:bg-transparent", className)}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 rounded-xl bg-secondary",
+          indicator.animate && "transition-[transform,opacity] duration-300 ease-[var(--badge-pop-ease)]",
+        )}
+        style={{
+          height: indicator.height,
+          transform: `translateY(${indicator.y}px)`,
+          opacity: indicator.visible ? 1 : 0,
+        }}
+      />
+      {children}
+    </div>
+  );
+}
+
+/**
  * Navegación del sitio. En escritorio, un riel fijo a la izquierda con el buscador y las categorías siempre a la
  * vista, que se pliega a sólo íconos; en teléfono, una barra superior con el buscador y pestañas abajo.
  */
@@ -189,20 +232,6 @@ export function Navbar({
   // biome-ignore lint/correctness/useExhaustiveDependencies: se limpia en cada cambio de página o de pendiente.
   useEffect(() => setSelected(null), [pathname, pendingPath]);
   const railTarget = { target: selected ?? pendingPath ?? pathname, select: setSelected };
-  const railRef = useRef<HTMLDivElement>(null);
-  // La píldora ocupa el ancho del riel por CSS (también mientras cambia); sólo se mide su posición vertical, que
-  // plegar no cambia: se mide al navegar y nada más.
-  const [indicator, setIndicator] = useState({ ready: false, animate: false, visible: false, y: 0, height: 0 });
-  // biome-ignore lint/correctness/useExhaustiveDependencies: el destino cambia qué enlace está activo.
-  useLayoutEffect(() => {
-    const active = railRef.current?.querySelector<HTMLElement>('a[data-current="true"]');
-    setIndicator((prev) =>
-      active
-        ? // La primera vez se ubica sin deslizarse.
-          { ready: true, animate: prev.ready, visible: true, y: active.offsetTop, height: active.offsetHeight }
-        : { ...prev, visible: false },
-    );
-  }, [railTarget.target]);
 
   // `/` o Ctrl+K enfocan el buscador desde cualquier parte; con el riel plegado, se asoma. Ctrl+B pliega y despliega. El campo existe siempre
   // (angosto sólo se recorta), así que el foco y el desenfoque de Ctrl+K son inmediatos.
@@ -267,7 +296,7 @@ export function Navbar({
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPeek(false);
         }}
         className={cn(
-          "t-resize fixed inset-y-0 left-0 z-40 hidden flex-col gap-4 overflow-x-hidden border-border/60 border-r bg-card/40 px-3 py-3 lg:flex",
+          "t-resize fixed inset-y-0 left-0 z-40 hidden scrollbar-slim flex-col gap-4 overflow-y-auto overflow-x-hidden border-border/60 border-r bg-card/40 px-3 py-3 lg:flex",
           wide ? "w-64" : "w-16",
           peek && "bg-card shadow-2xl",
         )}
@@ -282,27 +311,8 @@ export function Navbar({
 
         <SearchField className="shrink-0" />
 
-        {/* Una sola píldora detrás de los enlaces marca la sección activa y se desliza a la nueva al navegar. */}
-        <div
-          ref={railRef}
-          data-ready={indicator.ready}
-          className={cn(
-            "relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden",
-            "data-[ready=true]:[&_a[data-current=true]]:bg-transparent",
-          )}
-        >
-          <span
-            aria-hidden="true"
-            className={cn(
-              "pointer-events-none absolute inset-x-0 top-0 rounded-xl bg-secondary",
-              indicator.animate && "transition-[transform,opacity] duration-300 ease-[var(--badge-pop-ease)]",
-            )}
-            style={{
-              height: indicator.height,
-              transform: `translateY(${indicator.y}px)`,
-              opacity: indicator.visible ? 1 : 0,
-            }}
-          />
+        {/* Fijo: sólo scrollea la lista de categorías. Cada zona lleva su píldora de sección activa. */}
+        <RailGroup className="flex shrink-0 flex-col gap-4">
           <nav aria-label="Principal" className="flex flex-col gap-0.5">
             <RailLink
               to="/"
@@ -320,15 +330,18 @@ export function Navbar({
           </nav>
 
           <CyberLink collapsed={!wide} />
+        </RailGroup>
 
-          <nav aria-label="Categorías" className="flex flex-col gap-0.5">
-            {/* Angosto, el título cede su lugar a una línea en la columna de íconos. */}
-            <div className="relative">
-              <p className="rail-label px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
-                Categorías
-              </p>
-              <span aria-hidden="true" className="rail-icon absolute top-1/2 left-2 h-px w-6 bg-border" />
-            </div>
+        {/* El alto mínimo hace que, en una ventana muy baja, scrollee el riel entero y no se aplaste la lista. */}
+        <nav aria-label="Categorías" className="flex min-h-40 flex-1 flex-col">
+          {/* Angosto, el título cede su lugar a una línea en la columna de íconos. */}
+          <div className="relative shrink-0">
+            <p className="rail-label px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
+              Categorías
+            </p>
+            <span aria-hidden="true" className="rail-icon absolute top-1/2 left-2 h-px w-6 bg-border" />
+          </div>
+          <RailGroup className="scrollbar-slim flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
             {categories.map((c) => (
               <RailLink
                 key={c.id}
@@ -339,8 +352,8 @@ export function Navbar({
                 icon={<CategoryIcon category={c.id} />}
               />
             ))}
-          </nav>
-        </div>
+          </RailGroup>
+        </nav>
 
         <div className="flex shrink-0 flex-col gap-3 border-border/60 border-t pt-3">
           {freshness && (
