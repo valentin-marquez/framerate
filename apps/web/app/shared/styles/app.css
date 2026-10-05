@@ -414,6 +414,54 @@
   }
 }
 
+/*
+ * Haz de luz del buscador (border beam): una línea en el borde inferior y su resplandor hacia adentro, que van y
+ * vienen despacio. Pasivo: tenue en reposo, más presente con foco o mientras busca. Sólo anima transform; la
+ * opacidad cambia con transición. Con movimiento reducido queda quieto al centro.
+ */
+.search-beam {
+  opacity: 0.45;
+  transition: opacity var(--transition-duration-base) var(--ease-out);
+}
+.search-beam[data-active="true"],
+:focus-within > .search-beam {
+  opacity: 1;
+}
+.search-beam > span {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  animation: search-beam 7s var(--ease-in-out) infinite alternate;
+}
+.search-beam-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a78bfa 25%, #f472b6 50%, #60a5fa 75%, transparent);
+}
+.search-beam-glow {
+  height: 18px;
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 100%,
+    rgb(244 114 182 / 0.28),
+    rgb(96 165 250 / 0.12) 55%,
+    transparent
+  );
+}
+@keyframes search-beam {
+  from {
+    transform: translateX(-30%);
+  }
+  to {
+    transform: translateX(152%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .search-beam > span {
+    animation: none;
+    transform: translateX(61%);
+  }
+}
+
 @utility scrollbar-hide {
   scrollbar-width: none;
   &::-webkit-scrollbar {

@@ -67,6 +67,14 @@ export function SearchField({ className }: { className?: string }) {
         search(value);
       }}
     >
+      <span
+        aria-hidden="true"
+        data-active={loading}
+        className="search-beam pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-xl"
+      >
+        <span className="search-beam-glow" />
+        <span className="search-beam-line" />
+      </span>
       {loading ? (
         <IconLoader2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 animate-spin text-foreground" />
       ) : (
