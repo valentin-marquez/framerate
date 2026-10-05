@@ -34,7 +34,7 @@ export async function computeHealth(db: Db, now = new Date()): Promise<Health> {
     db.query
       .selectFrom("crawl_runs as r")
       .innerJoin("stores as s", "s.id", "r.store_id")
-      .select(["s.slug", "s.name", "r.category", "r.status", "r.started_at", "r.finished_at", "r.error"])
+      .select(["s.slug", "s.name", "r.category", "r.status", "r.started_at", "r.finished_at", "r.error", "r.stats"])
       .where("s.is_active", "=", 1)
       .where("r.started_at", ">=", iso(t - RUN_WINDOW_MS))
       .where(
@@ -111,6 +111,15 @@ export async function computeHealth(db: Db, now = new Date()): Promise<Health> {
         severity: "warning",
         detail: `Sin corrida exitosa hace ${hours(t - Date.parse(r.finished_at))} h`,
         at: r.finished_at,
+        durationMs: null,
+      });
+    } else if (r.status === "succeeded" && JSON.parse(r.stats).deactivationSkipped) {
+      incidents.scraping.push({
+        ...base,
+        id: id("partial"),
+        severity: "warning",
+        detail: "Trajo menos de la mitad de las ofertas conocidas: no se desactivó nada",
+        at: r.finished_at ?? r.started_at,
         durationMs: null,
       });
     }

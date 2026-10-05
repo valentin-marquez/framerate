@@ -42,7 +42,7 @@ const run = (
   category: string,
   status: "running" | "succeeded" | "failed",
   startedAgo: number,
-  extra: { finishedAgo?: number; error?: string } = {},
+  extra: { finishedAgo?: number; error?: string; stats?: object } = {},
 ) =>
   db.query
     .insertInto("crawl_runs")
@@ -54,6 +54,7 @@ const run = (
       started_at: ago(startedAgo),
       finished_at: extra.finishedAgo === undefined ? null : ago(extra.finishedAgo),
       error: extra.error ?? null,
+      stats: JSON.stringify(extra.stats ?? {}),
     })
     .execute();
 
@@ -109,6 +110,15 @@ describe("scraping", () => {
     // El historial va de la más antigua a la más nueva, con el estado de cada corrida.
     expect(system(h, "scraping")?.history?.at(-1)).toBe("succeeded");
     expect(system(h, "scraping")?.history).toContain("running");
+  });
+
+  test("una corrida exitosa que saltó la desactivación avisa; la siguiente corrida sana lo limpia", async () => {
+    await run(seed.alfa, "gpu", "succeeded", 2, { finishedAgo: 1.9, stats: { deactivationSkipped: true } });
+    const partial = (await get()).incidents.filter((i) => i.system === "scraping");
+    expect(partial.map((i) => [i.id, i.severity])).toEqual([["scraping:alfa:gpu:partial", "warning"]]);
+
+    await run(seed.alfa, "gpu", "succeeded", 1, { finishedAgo: 0.9, stats: { deactivationSkipped: false } });
+    expect((await get()).incidents).toEqual([]);
   });
 
   test("una tienda inactiva no cuenta", async () => {
