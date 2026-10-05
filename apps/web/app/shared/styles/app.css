@@ -703,6 +703,24 @@
     filter var(--transition-duration-base) var(--ease-out),
     padding var(--transition-duration-base) var(--ease-in-out);
 }
+/*
+ * Tutorial del gráfico de precios: lo que no explica el paso actual se apaga, y en equipos holgados además se
+ * desenfoca, para que la vista vaya a la parte que se explica.
+ */
+[data-tour-active] [data-tour] {
+  transition: opacity var(--transition-duration-base) var(--ease-out);
+}
+[data-tour-active] [data-tour]:not([data-tour-current]) {
+  opacity: 0.25;
+}
+:root[data-motion="rich"] [data-tour-active] [data-tour] {
+  transition:
+    opacity var(--transition-duration-base) var(--ease-out),
+    filter var(--transition-duration-base) var(--ease-out);
+}
+:root[data-motion="rich"] [data-tour-active] [data-tour]:not([data-tour-current]) {
+  filter: blur(3px);
+}
 :root[data-motion="rich"][data-search-spotlight] .page-content {
   opacity: 0.55;
   filter: blur(8px);

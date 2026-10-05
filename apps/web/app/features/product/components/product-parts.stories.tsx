@@ -4,8 +4,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { quoteKeys } from "~/shared/lib/query-keys";
 import { products, sessions } from "~/shared/storybook/fixtures";
+import { PERIODS } from "../utils/price-history";
 import { AddToQuote, AddToQuoteDialog } from "./add-to-quote";
-import { PriceHistoryChart } from "./price-history-chart";
+import { PriceHistoryPanel } from "./price-history-panel";
 
 const meta = { title: "Producto/Detalle", parameters: { layout: "padded" } } satisfies Meta;
 export default meta;
@@ -34,24 +35,33 @@ const history = [
   ...series("pc-express", "PC Express", 489_990, 200, 3),
 ];
 
-export const HistorialDePrecios: Story = {
-  name: "Historial de precios",
-  render: () => <PriceHistoryChart points={history} days={30} className="max-w-3xl" />,
-};
+const NOW = START + 29 * DAY + 3_600_000;
+const panel = (points: PricePoint[]) => (
+  <div className="max-w-3xl">
+    <PriceHistoryPanel
+      productName="ASUS Dual Radeon RX 9060 XT 16GB"
+      history={points}
+      offers={[]}
+      period={PERIODS[0]}
+      now={NOW}
+      onPeriod={() => {}}
+    />
+  </div>
+);
+
+export const HistorialDePrecios: Story = { name: "Historial de precios", render: () => panel(history) };
 
 export const HistorialUnaTienda: Story = {
   name: "Historial de precios: una tienda al alza",
-  render: () => (
-    <PriceHistoryChart points={series("tectec", "TecTec", 429_990, 1_200, 0)} days={30} className="max-w-3xl" />
-  ),
+  render: () => panel(series("tectec", "TecTec", 429_990, 1_200, 0)),
 };
 
 export const HistorialVacio: Story = {
   name: "Historial de precios sin datos",
   render: () => (
     <div className="space-y-2">
-      <PriceHistoryChart points={[]} days={30} />
-      <p className="text-muted-foreground text-xs">Sin puntos el gráfico no se dibuja (devuelve null).</p>
+      {panel([])}
+      <p className="text-muted-foreground text-xs">Sin puntos el panel no se dibuja (devuelve null).</p>
     </div>
   ),
 };

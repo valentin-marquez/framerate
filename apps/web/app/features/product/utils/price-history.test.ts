@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Offer, PricePoint } from "@framerate/contracts";
-import { periodFromParam, priceVerdict, summarizeHistory } from "./price-history";
+import { bestOf, historyDays, niceTicks, periodFromParam, priceVerdict, summarizeHistory } from "./price-history";
 
 const NOW = Date.parse("2026-09-10T15:00:00Z");
 
@@ -50,4 +50,20 @@ test("periodFromParam cae en el último mes si el valor no es uno de los períod
   expect(periodFromParam("6m").days).toBe(180);
   expect(periodFromParam("99m").days).toBe(30);
   expect(periodFromParam(null).days).toBe(30);
+});
+
+describe("historyDays y bestOf", () => {
+  test("el mejor precio de cada día sale de la tienda con stock más barata, y llega hasta hoy", () => {
+    const points = [point("a", 7, 500), point("b", 7, 450), point("b", 9, 450, false)];
+    const ds = historyDays(points, [offer("a", 500), offer("b", 450, false)], 30, NOW);
+    expect(ds.map((d) => d.day)).toEqual(["2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10"]);
+    expect(ds.map((d) => bestOf(d, "cash")?.store)).toEqual(["b", "b", "a", "a"]);
+  });
+});
+
+describe("niceTicks", () => {
+  test("marcas redondas que cubren el rango", () => {
+    expect(niceTicks(514_299, 738_591)).toEqual([500_000, 550_000, 600_000, 650_000, 700_000, 750_000]);
+    expect(niceTicks(100, 100).length).toBeGreaterThan(1);
+  });
 });

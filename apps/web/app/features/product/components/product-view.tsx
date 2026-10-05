@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigation, useSearchParams } from "react-router"
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { ReportButton } from "~/features/moderation";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
-import { PriceHistoryChart } from "~/features/product/components/price-history-chart";
+import { PriceHistoryPanel } from "~/features/product/components/price-history-panel";
 import {
   type HistorySummary,
   PERIODS,
@@ -196,16 +196,14 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
               className={cn("space-y-3 transition-opacity", changingPeriod && "opacity-60")}
             >
               <h2 className="font-semibold text-foreground text-lg tracking-tight">Cómo se ha movido el precio</h2>
-              <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
-                {summary && (
-                  <dl className="grid grid-cols-3 gap-2 text-sm">
-                    <Stat label="Más bajo" value={summary.min} />
-                    <Stat label="Habitual" value={summary.usual} />
-                    <Stat label="Más alto" value={summary.max} />
-                  </dl>
-                )}
-                <PriceHistoryChart points={history} days={period.days} />
-              </div>
+              <PriceHistoryPanel
+                productName={product.name}
+                history={history}
+                offers={offers}
+                period={period}
+                now={now}
+                onPeriod={choosePeriod}
+              />
             </section>
           )}
         </div>
@@ -304,15 +302,6 @@ function PriceContext({
           <span>{formatCLP(summary.max)}</span>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl bg-secondary/60 px-3 py-2">
-      <dt className="text-muted-foreground text-xs">{label}</dt>
-      <dd className="font-medium text-foreground tabular-nums">{formatCLP(value)}</dd>
     </div>
   );
 }
