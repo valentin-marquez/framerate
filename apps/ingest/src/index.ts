@@ -13,12 +13,14 @@ import { copyProductImages } from "@/features/images/product-images";
 import { purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
 import { enqueueAllCrawls, requestCrawls, runCrawlMessage } from "@/features/ingestion/runtime";
+import { applyViews7d, fetchViews7d } from "@/features/popularity/views";
 import { emailSender } from "@/shared/email";
 
 /**
  * Worker de ingesta: todo lo que toca tiendas externas. No recibe tráfico
  * público; sus disparadores son:
- *  - scheduled: Cron → encola un crawl por (tienda, categoría) y copia a R2 las fotos de producto pendientes.
+ *  - scheduled: Cron → encola un crawl por (tienda, categoría), copia a R2 las fotos de producto pendientes y
+ *               recalcula `views_7d` desde Analytics Engine.
  *  - queue:     consume crawls (uno por mensaje, con reintentos y DLQ).
  *  - RPC:       `IngestRpc`, que usa apps/server para "crawlear ahora".
  */
@@ -45,6 +47,12 @@ export default {
       "images.copied",
       await copyProductImages(createDb(env.DB), env.ASSETS, env.IMAGES, new Date().toISOString(), imageLog),
     );
+    if (env.CF_ACCOUNT_ID && env.ANALYTICS_API_TOKEN) {
+      const views = await fetchViews7d(env.CF_ACCOUNT_ID, env.ANALYTICS_API_TOKEN);
+      log.info("popularity.updated", await applyViews7d(createDb(env.DB), views));
+    } else {
+      log.warn("popularity.skipped", { reason: "sin CF_ACCOUNT_ID o ANALYTICS_API_TOKEN" });
+    }
   },
 
   async queue(batch, env) {

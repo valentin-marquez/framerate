@@ -196,13 +196,21 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
     expect((await list("category=gpu&brand=msi")).total).toBe(0);
   });
 
-  test("ordena por nombre y por popularidad (vistas de los últimos 7 días)", async () => {
+  test("ordena por nombre y por popularidad (views_7d)", async () => {
     expect(names(await list("sort=name"))).toEqual(["AMD Ryzen 7 7800X3D", "ASUS Dual RTX 4070 SUPER OC 12GB"]);
-    for (let i = 0; i < 3; i++) {
-      expect((await get("/v1/products/amd-ryzen-7-7800x3d/view", { method: "POST" })).status).toBe(204);
-    }
+    await db.query.updateTable("products").set({ views_7d: 3 }).where("slug", "=", "amd-ryzen-7-7800x3d").execute();
     expect(names(await list("sort=popularity"))[0]).toBe("AMD Ryzen 7 7800X3D");
-    expect((await get("/v1/products/no-existe/view", { method: "POST" })).status).toBe(404);
+  });
+
+  test("una vista de ficha va a Analytics Engine, no a D1", async () => {
+    const points: AnalyticsEngineDataPoint[] = [];
+    env.ANALYTICS = { writeDataPoint: (p) => p && points.push(p) };
+    try {
+      expect((await get("/v1/products/amd-ryzen-7-7800x3d/view", { method: "POST" })).status).toBe(204);
+      expect(points).toEqual([{ indexes: ["amd-ryzen-7-7800x3d"], blobs: ["view", "amd-ryzen-7-7800x3d"] }]);
+    } finally {
+      env.ANALYTICS = undefined;
+    }
   });
 
   test("marcas con conteo y rango de precios de una categoría, sólo con stock", async () => {

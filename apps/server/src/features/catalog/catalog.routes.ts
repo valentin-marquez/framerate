@@ -26,7 +26,6 @@ import {
   priceRange,
   resolveRedirect,
   sitemap,
-  trackView,
 } from "./catalog.queries";
 
 function categoryParam(slug: string | undefined) {
@@ -110,8 +109,9 @@ export const catalogRoutes = new Hono<AppEnv>()
     return c.json({ items: points });
   })
   .post("/products/:slug/view", async (c) => {
-    if (!(await trackView(c.var.db, c.req.param("slug")))) {
-      throw new AppError(404, "product_not_found", "Producto no encontrado");
-    }
+    // Sin validar contra D1: un slug que no existe no cruza con ningún producto al agregar `views_7d` en ingest.
+    const slug = c.req.param("slug");
+    if (slug.length > 200) throw new AppError(400, "invalid_request", "slug demasiado largo");
+    c.env.ANALYTICS?.writeDataPoint({ indexes: [slug], blobs: ["view", slug] });
     return c.body(null, 204);
   });

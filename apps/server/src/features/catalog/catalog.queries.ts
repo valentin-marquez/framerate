@@ -52,10 +52,7 @@ const mpnOf = sql<
   string | null
 >`(select value from product_identifiers pi where pi.product_id = p.id and pi.kind = 'mpn' limit 1)`;
 
-/** Vistas de los últimos 7 días (popularidad). */
-const views7d = sql<number>`coalesce((select sum(v.views) from product_views_daily v where v.product_id = p.id and v.day >= ${daysAgoDate(7)}), 0)`;
-
-function daysAgoDate(days: number): string {
+function _daysAgoDate(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 }
 
@@ -192,7 +189,7 @@ export async function listProducts(
       page = page.orderBy("p.created_at", "desc").orderBy("p.id");
       break;
     case "popularity":
-      page = page.orderBy(views7d, "desc").orderBy("agg.offer_count", "desc").orderBy("p.name");
+      page = page.orderBy("p.views_7d", "desc").orderBy("agg.offer_count", "desc").orderBy("p.name");
       break;
     case "name":
       page = page.orderBy("p.name");
@@ -449,18 +446,6 @@ export async function resolveRedirect(db: Db, oldSlug: string): Promise<string |
     .where("r.old_slug", "=", oldSlug)
     .executeTakeFirst();
   return row?.slug ?? null;
-}
-
-/** Suma una vista del día al producto. Devuelve false si no existe. */
-export async function trackView(db: Db, slug: string): Promise<boolean> {
-  const product = await db.query.selectFrom("products").select("id").where("slug", "=", slug).executeTakeFirst();
-  if (!product) return false;
-  await db.query
-    .insertInto("product_views_daily")
-    .values({ product_id: product.id, day: daysAgoDate(0), views: 1 })
-    .onConflict((oc) => oc.columns(["product_id", "day"]).doUpdateSet({ views: sql`views + 1` }))
-    .execute();
-  return true;
 }
 
 export async function sitemap(db: Db): Promise<Sitemap> {

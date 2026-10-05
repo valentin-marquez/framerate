@@ -14,6 +14,9 @@
   // Crawl completo cada 6 horas (UTC). Encola un mensaje por (tienda, categoría).
   "triggers": { "crons": ["17 */6 * * *"] },
 
+  // `views_7d` sale de la API SQL de Analytics Engine; el token va aparte: wrangler secret put ANALYTICS_API_TOKEN.
+  "vars": { "CF_ACCOUNT_ID": "3f50a4a123ebcbcb917dababff3ef8b5" },
+
   // Los crawls consumen CPU parseando JSON; subir el límite por invocación.
   "limits": { "cpu_ms": 120000 },
 

@@ -295,12 +295,6 @@ export interface QuarantineTable {
   created_at: string;
 }
 
-export interface ProductViewsDailyTable {
-  product_id: number;
-  day: string;
-  views: Defaulted<number>;
-}
-
 export type ClickSource =
   | "product_hero"
   | "product_comparison"
@@ -587,7 +581,6 @@ export interface Database {
   product_spec_values: ProductSpecValuesTable;
   product_slug_redirects: ProductSlugRedirectsTable;
   product_price_daily: ProductPriceDailyTable;
-  product_views_daily: ProductViewsDailyTable;
   outbound_clicks: OutboundClicksTable;
   store_profiles: StoreProfilesTable;
   store_claims: StoreClaimsTable;

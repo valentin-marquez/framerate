@@ -12,4 +12,9 @@ export interface Env {
   CRAWL_QUEUE: Queue<CrawlMessage>;
   /** Correos de la plataforma (avisos de reclamos); sin binding (tests) no se envía nada. */
   EMAIL?: SendEmail;
+  /** Cuenta de Cloudflare, para la API SQL de Analytics Engine. */
+  CF_ACCOUNT_ID?: string;
+  /** Token con permiso "Account Analytics: Read". `wrangler secret put ANALYTICS_API_TOKEN`. Sin él no se recalcula
+   * `views_7d`. */
+  ANALYTICS_API_TOKEN?: string;
 }

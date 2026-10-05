@@ -35,6 +35,9 @@
     }
   ],
 
+  // Vistas de ficha y clics a tiendas: nunca a D1 (una escritura por visita). Ingest agrega `views_7d` desde acá.
+  "analytics_engine_datasets": [{ "binding": "ANALYTICS", "dataset": "framerate_events" }],
+
   // RPC hacia apps/ingest ("crawlear ahora"). Requiere desplegar ingest primero.
   "services": [{ "binding": "INGEST", "service": "framerate-ingest", "entrypoint": "IngestRpc" }],
 

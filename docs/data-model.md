@@ -56,7 +56,7 @@ erDiagram
 | **comments** | `comments`, `comment_likes` | sección de comentarios del producto |
 | **moderation** | `reports`, `moderation_actions`, `translation_feedback` | `/admin/moderation`, botón reportar, feedback de traducciones |
 | **support** | `support_tickets`, `support_messages` | `/settings/tickets`, `/admin/support`, formulario de contacto |
-| **analytics** | `product_views_daily`, `outbound_clicks` | tendencias/popularidad, analítica para tiendas reclamadas |
+| **analytics** | `outbound_clicks` (las vistas, en Analytics Engine) | tendencias/popularidad, analítica para tiendas reclamadas |
 
 ---
 
@@ -231,8 +231,9 @@ Ver [architecture.md](./architecture.md) §4–5 para matching e ingesta. Lo nue
 
 ## analytics
 
-- **`product_views_daily`**: vistas por día. La popularidad (`views_7d`) usa
-  una ventana. Antes era un contador histórico que además se duplicaba.
+- **Vistas de ficha**: no están en D1. `POST /v1/products/:slug/view` escribe en
+  Analytics Engine (dataset `framerate_events`, `blob1 = 'view'`, `blob2` = slug) y
+  el Cron de ingest recalcula `products.views_7d` (popularidad) con su API SQL.
 - **`outbound_clicks`**: clics hacia tiendas, con `store_id` obligatorio. Antes
   la página de producto no lo enviaba. Es la base de la analítica para tiendas
   reclamadas.

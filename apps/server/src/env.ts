@@ -6,6 +6,8 @@ export interface Env {
   /** `apps/ingest` por RPC (service binding): la API le pide "crawlear ahora", no toca la cola. */
   INGEST: Service & IngestService;
   PUBLIC_RATE_LIMITER?: RateLimit;
+  /** Dataset `framerate_events` de Analytics Engine (`blob1` = tipo de evento). Ausente en tests. */
+  ANALYTICS?: AnalyticsEngineDataset;
   /** Token de servicio para scripts contra `/v1/admin/*` (equivale a rol admin). `wrangler secret put ADMIN_TOKEN`. */
   ADMIN_TOKEN: string;
   /** Tokens de admin adicionales, uno por persona: `nombre:token,nombre:token`. Se revocan sin tocar ADMIN_TOKEN. */
