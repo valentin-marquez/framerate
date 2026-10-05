@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { IconUserCircle } from "@tabler/icons-react";
 import { HomeContent } from "~/features/home/components/home-content";
 import type { MyStore } from "~/features/profile/services/profiles";
+import { SearchField } from "~/features/search/components/search-field";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { categories, rowProducts, sessions, stores } from "~/shared/storybook/fixtures";
 import { withQueryData } from "~/shared/storybook/with-query-data";
@@ -14,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "../primitives/dropdown-menu";
 import { AdminMenu } from "./admin-menu";
-import { NavFps, NavSearch } from "./nav-parts";
+import { NavFps } from "./nav-parts";
 import { Navbar } from "./navbar";
 import { SiteFooter } from "./site-footer";
 
@@ -34,7 +35,7 @@ const withMyStores = withQueryData([[["profile", "me", "stores"], myStores]]);
 export const NavbarVisitante: Story = {
   name: "Navbar: visitante",
   render: () => (
-    <div className="h-40">
+    <div className="h-screen">
       <Navbar categories={categories} />
     </div>
   ),
@@ -45,7 +46,7 @@ export const NavbarConSesion: Story = {
   // La sesión llega por los datos del loader raíz (ver `.storybook/preview.tsx`).
   parameters: { session: sessions.user, path: "/buscar" },
   render: () => (
-    <div className="h-40">
+    <div className="h-screen">
       <Navbar categories={categories} />
     </div>
   ),
@@ -59,7 +60,7 @@ export const NavbarAdminConMenu: Story = {
     await userEvent.click(await canvas.findByRole("button", { name: "Usuario" }));
   },
   render: () => (
-    <div className="h-[36rem]">
+    <div className="h-screen">
       <Navbar categories={categories} />
     </div>
   ),
@@ -70,7 +71,7 @@ export const NavbarMovil: Story = {
   globals: { viewport: { value: "mobile1", isRotated: false } },
   parameters: { session: sessions.user },
   render: () => (
-    <div className="h-40">
+    <div className="h-screen">
       <Navbar categories={categories} />
     </div>
   ),
@@ -105,7 +106,7 @@ export const BuscadorYFps: Story = {
   parameters: { layout: "padded", path: "/buscar?q=rtx+5060" },
   render: () => (
     <div className="flex items-center gap-6">
-      <NavSearch className="w-96" />
+      <SearchField categories={categories} className="w-72" panelClassName="absolute top-full mt-2 w-[30rem]" />
       <NavFps />
     </div>
   ),
@@ -114,32 +115,32 @@ export const BuscadorYFps: Story = {
 export const Pie: Story = { render: () => <SiteFooter /> };
 
 /**
- * El armado de `root.tsx` con el home: navbar fija (buscador y categorías) y pie.
+ * El armado de `root.tsx` con el home: riel fijo con el buscador y las categorías, contenido desplazado y pie.
  */
 export const EstructuraDelSitio: Story = {
   name: "Estructura del sitio (home)",
   render: () => (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full">
-        <Navbar categories={categories} />
-      </header>
-      <main className="container mx-auto flex-1 px-4 pt-11">
-        <HomeContent
-          categories={categories}
-          stores={stores}
-          trendingIds={[rowProducts[2].id]}
-          rows={[
-            { key: "popular", title: "Lo más popular", href: "/buscar", products: rowProducts },
-            {
-              key: "gpu",
-              title: "Tarjetas de video",
-              href: "/categoria/tarjetas-de-video",
-              products: rowProducts.slice(2),
-            },
-          ]}
-        />
-      </main>
-      <SiteFooter />
+    <div className="flex min-h-screen flex-col pb-16">
+      <Navbar categories={categories} />
+      <div className="flex flex-1 flex-col lg:pl-64">
+        <main className="container mx-auto flex-1 px-4 pt-6 lg:pt-11">
+          <HomeContent
+            categories={categories}
+            stores={stores}
+            trendingIds={[rowProducts[2].id]}
+            rows={[
+              { key: "popular", title: "Lo más popular", href: "/buscar", products: rowProducts },
+              {
+                key: "gpu",
+                title: "Tarjetas de video",
+                href: "/categoria/tarjetas-de-video",
+                products: rowProducts.slice(2),
+              },
+            ]}
+          />
+        </main>
+        <SiteFooter />
+      </div>
     </div>
   ),
 };

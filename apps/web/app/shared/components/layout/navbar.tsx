@@ -1,244 +1,162 @@
 import type { CategoryItem } from "@framerate/contracts";
-import { useEffect, useReducer, useRef, useState } from "react";
-import { Link } from "react-router";
+import { IconCategory, IconHome, IconLayoutGrid, IconPlus, IconSearch } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { Link, NavLink } from "react-router";
 import { useUser } from "~/features/auth/hooks/useAuth";
+import { getCategoryImage } from "~/features/category/utils/categories";
 import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
-import { Logo } from "~/shared/components/layout/logo";
-import { NavCategories, NavFps, NavSearch } from "~/shared/components/layout/nav-parts";
+import { focusSearchField, SearchField } from "~/features/search/components/search-field";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
+import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
+import { Logo } from "./logo";
+import { NavFps, TimeGradient } from "./nav-parts";
 import { UserMenu } from "./user-menu";
 
-interface NavbarProps {
-  categories: CategoryItem[];
-  blurred?: boolean;
+const railLink = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    "flex h-9 items-center gap-3 rounded-xl px-2.5 text-sm transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    isActive
+      ? "bg-secondary font-medium text-foreground"
+      : "text-foreground/65 hover:bg-secondary/60 hover:text-foreground",
+  );
+
+const tabClass = (active: boolean) =>
+  cn(
+    "flex flex-col items-center justify-center gap-0.5 font-medium text-[11px] transition-colors",
+    active ? "text-foreground" : "text-foreground/50",
+  );
+
+function Brand({ compact }: { compact?: boolean }) {
+  return (
+    <Link to="/" prefetch="intent" className="flex shrink-0 items-center gap-2 text-foreground">
+      <Logo className="size-6" />
+      <span className={cn("font-semibold text-lg tracking-tight", compact && "sr-only")}>framerate</span>
+    </Link>
+  );
 }
 
-type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
-
-const GRADIENTS: Record<TimeOfDay, string> = {
-  morning: "linear-gradient(rgba(255, 183, 77, 0.2) 0%, rgba(255, 213, 79, 0.1) 50%, rgba(249, 230, 203, 0) 100%)",
-  afternoon: "linear-gradient(rgba(126, 60, 142, 0.2) 0%, rgba(227, 154, 101, 0.1) 50%, rgba(249, 230, 203, 0) 100%)",
-  evening: "linear-gradient(rgba(255, 87, 34, 0.2) 0%, rgba(233, 30, 99, 0.1) 50%, rgba(249, 230, 203, 0) 100%)",
-  night: "linear-gradient(rgba(63, 81, 181, 0.2) 0%, rgba(48, 63, 159, 0.1) 50%, rgba(26, 35, 126, 0) 100%)",
-};
-
-function getTimeOfDay(): TimeOfDay {
-  const hour = new Date().getHours();
-
-  if (hour >= 6 && hour < 12) return "morning";
-  if (hour >= 12 && hour < 18) return "afternoon";
-  if (hour >= 18 && hour < 21) return "evening";
-  return "night";
+function CategoryLink({ category, onClick, large }: { category: CategoryItem; onClick?: () => void; large?: boolean }) {
+  return (
+    <NavLink
+      to={`/categoria/${category.slug}`}
+      prefetch="intent"
+      viewTransition
+      onClick={onClick}
+      className={(state) => cn(railLink(state), large && "h-12")}
+    >
+      <img
+        src={getCategoryImage(category.slug)}
+        alt=""
+        className={cn("shrink-0 object-cover", large ? "size-8 rounded-lg" : "size-6 rounded-md")}
+      />
+      <span className="truncate">{category.label}</span>
+      <span className="ml-auto text-muted-foreground text-xs tabular-nums">{category.productCount}</span>
+    </NavLink>
+  );
 }
 
-const GRADIENT_FADE_MS = 700;
-
-// --- Reducer para colapsar el grupo de estados time-of-day / greeting / gradient.
-// Antes había 5 useState que se actualizaban en cascada dentro de un mismo useEffect,
-// generando renders redundantes. Ahora cada transición es un único dispatch atómico.
-
-type NavState = {
-  timeOfDay: TimeOfDay;
-  greetingMessage: string;
-  showGreeting: boolean;
-  visibleGradient: string;
-  gradientVisible: boolean;
-};
-
-type NavAction =
-  | { type: "tick"; timeOfDay: TimeOfDay; greeting: string }
-  | { type: "show-greeting" }
-  | { type: "hide-greeting" }
-  | { type: "gradient-replace"; target: string; visible: boolean }
-  | { type: "gradient-fade-out" }
-  | { type: "gradient-fade-in"; visible: boolean };
-
-const initialNavState: NavState = {
-  timeOfDay: "afternoon",
-  greetingMessage: "",
-  showGreeting: false,
-  visibleGradient: "transparent",
-  gradientVisible: false,
-};
-
-function navReducer(state: NavState, action: NavAction): NavState {
-  switch (action.type) {
-    case "tick":
-      return { ...state, timeOfDay: action.timeOfDay, greetingMessage: action.greeting };
-    case "show-greeting":
-      return state.showGreeting ? state : { ...state, showGreeting: true };
-    case "hide-greeting":
-      return state.showGreeting ? { ...state, showGreeting: false } : state;
-    case "gradient-replace":
-      return { ...state, visibleGradient: action.target, gradientVisible: action.visible };
-    case "gradient-fade-out":
-      return state.gradientVisible ? { ...state, gradientVisible: false } : state;
-    case "gradient-fade-in":
-      return state.gradientVisible === action.visible ? state : { ...state, gradientVisible: action.visible };
-    default:
-      return state;
-  }
-}
-
-export function Navbar({ categories, blurred }: NavbarProps) {
+/**
+ * Navegación del sitio. En escritorio, un riel fijo a la izquierda con el buscador y las categorías siempre a la
+ * vista; en teléfono, una barra superior con el buscador y pestañas abajo.
+ */
+export function Navbar({ categories }: { categories: CategoryItem[] }) {
   const user = useUser();
   const { t } = useTranslation();
-  const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const [state, dispatch] = useReducer(navReducer, initialNavState);
-  const { timeOfDay, greetingMessage, showGreeting, visibleGradient, gradientVisible } = state;
+  const [sheetOpen, setSheetOpen] = useState(false);
 
-  // mantenemos en ref el `t` actual para que el setInterval no se recree en cada
-  // cambio de idioma sin perder el último traductor disponible.
-  const tRef = useRef(t);
-  tRef.current = t;
-
+  // `/` o Ctrl+K enfocan el buscador desde cualquier parte.
   useEffect(() => {
-    const tick = () => {
-      const newTimeOfDay = getTimeOfDay();
-      const randomIndex = Math.floor(Math.random() * 5) + 1;
-      dispatch({
-        type: "tick",
-        timeOfDay: newTimeOfDay,
-        greeting: tRef.current(`greeting_${newTimeOfDay}_${randomIndex}`),
-      });
+    const onKeyDown = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]");
+      if ((e.key === "k" && (e.ctrlKey || e.metaKey)) || (e.key === "/" && !typing)) {
+        e.preventDefault();
+        focusSearchField();
+      }
     };
-
-    tick();
-    const interval = setInterval(tick, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const target = GRADIENTS[timeOfDay] ?? "transparent";
-    let fadeOutTimer: number | undefined;
-    let fadeInTimer: number | undefined;
-
-    if (visibleGradient === "transparent" && !gradientVisible) {
-      dispatch({ type: "gradient-replace", target, visible: false });
-      fadeInTimer = window.setTimeout(() => dispatch({ type: "gradient-fade-in", visible: true }), 50);
-      return () => {
-        if (fadeInTimer) clearTimeout(fadeInTimer);
-      };
-    }
-
-    if (visibleGradient === target) {
-      dispatch({ type: "gradient-fade-in", visible: true });
-      return;
-    }
-
-    dispatch({ type: "gradient-fade-out" });
-    fadeOutTimer = window.setTimeout(() => {
-      dispatch({ type: "gradient-replace", target, visible: false });
-      fadeInTimer = window.setTimeout(() => dispatch({ type: "gradient-fade-in", visible: true }), 50);
-    }, GRADIENT_FADE_MS);
-
-    return () => {
-      if (fadeOutTimer) clearTimeout(fadeOutTimer);
-      if (fadeInTimer) clearTimeout(fadeInTimer);
-    };
-  }, [timeOfDay, gradientVisible, visibleGradient]);
-
-  // mostrar mensaje despues de que la pagina haya cargado completamente
-  useEffect(() => {
-    const SHOW_DELAY = 500;
-    const VISIBLE_MS = 12000;
-
-    const showSequence = () => {
-      const showTimer = setTimeout(() => dispatch({ type: "show-greeting" }), SHOW_DELAY);
-      const hideTimer = setTimeout(() => dispatch({ type: "hide-greeting" }), SHOW_DELAY + VISIBLE_MS);
-
-      return () => {
-        clearTimeout(showTimer);
-        clearTimeout(hideTimer);
-      };
-    };
-
-    if (document.readyState === "complete") {
-      const cleanup = showSequence();
-      return cleanup;
-    } else {
-      let cleanupFn: (() => void) | undefined;
-      const handleLoad = () => {
-        cleanupFn = showSequence();
-      };
-
-      window.addEventListener("load", handleLoad);
-      return () => {
-        window.removeEventListener("load", handleLoad);
-        if (cleanupFn) cleanupFn();
-      };
-    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   return (
     <>
-      <div
-        aria-hidden="true"
-        className={cn(
-          "fixed left-0 right-0 top-0 pointer-events-none -z-10 h-50 transition-opacity duration-700 ease-in-out",
-          gradientVisible ? "opacity-100" : "opacity-0",
-        )}
-        style={{
-          background: visibleGradient,
-        }}
-      />
+      <TimeGradient />
+      {/* w-64: root.tsx desplaza el contenido lo mismo (lg:pl-64). */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col gap-4 border-border/60 border-r bg-card/40 p-3 lg:flex">
+        <div className="px-2 pt-2">
+          <Brand />
+        </div>
+        <SearchField categories={categories} panelClassName="absolute top-0 left-full ml-3 w-[30rem]" />
+        <nav aria-label="Principal" className="flex flex-col gap-0.5">
+          <NavLink to="/" end prefetch="intent" className={railLink}>
+            <IconHome className="size-[18px]" stroke={1.75} />
+            Inicio
+          </NavLink>
+          <NavLink to="/buscar" prefetch="intent" className={railLink}>
+            <IconLayoutGrid className="size-[18px]" stroke={1.75} />
+            Todo el catálogo
+          </NavLink>
+        </nav>
+        <nav aria-label="Categorías" className="-mx-1 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-1">
+          <p className="px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
+            Categorías
+          </p>
+          {categories.map((c) => (
+            <CategoryLink key={c.id} category={c} />
+          ))}
+        </nav>
+        <div className="flex items-center gap-2 border-border/60 border-t pt-3">
+          {user && (
+            <CreateQuoteDialog
+              trigger={
+                <button
+                  type="button"
+                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full bg-foreground px-3.5 font-medium text-background text-sm transition-opacity hover:opacity-85"
+                >
+                  <IconPlus className="size-4" stroke={2.25} />
+                  {t("create_quote")}
+                </button>
+              }
+            />
+          )}
+          <NavFps className="ml-auto" />
+          <UserMenu align="start" side="top" />
+        </div>
+      </aside>
+
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-border/60 border-b bg-background/85 px-3 backdrop-blur-md lg:hidden">
+        <Brand compact />
+        <SearchField categories={categories} className="flex-1" panelClassName="fixed inset-x-3 top-16" />
+        <UserMenu />
+      </header>
 
       <nav
-        className={cn(
-          "w-full border-b transition-colors duration-300",
-          // Al hacer scroll deja de ser transparente y pasa a una superficie sólida.
-          blurred ? "bg-background/90 backdrop-blur-md border-border" : "border-transparent",
-        )}
+        aria-label="Atajos"
+        className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-3 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
-        <div className="flex h-13 items-center gap-3 px-4 md:gap-6">
-          <Tooltip open={showGreeting}>
-            <TooltipTrigger
-              render={
-                <Link
-                  to="/"
-                  className="flex shrink-0 items-center group focus:outline-none"
-                  onMouseEnter={() => setIsLogoHovered(true)}
-                  onMouseLeave={() => setIsLogoHovered(false)}
-                  prefetch="intent"
-                />
-              }
-            >
-              <Logo
-                className="size-5 md:size-6 text-muted-foreground group-hover:text-foreground group-focus:text-foreground transition-colors duration-300 group-hover:duration-200 ease-in-out delay-200 group-hover:delay-75"
-                isHovered={isLogoHovered}
-              />
-              <span className="sr-only">Framerate</span>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={8} className="max-w-70 md:max-w-none text-center">
-              {greetingMessage}
-            </TooltipContent>
-          </Tooltip>
-
-          <NavSearch className="mx-auto max-w-2xl flex-1" />
-
-          <div className="flex shrink-0 items-center gap-4">
-            <NavFps className="hidden lg:inline-block" />
-            {user ? (
-              <CreateQuoteDialog
-                trigger={
-                  <button
-                    type="button"
-                    className="hidden cursor-pointer font-medium text-foreground/60 text-sm transition-colors hover:text-foreground sm:block"
-                  >
-                    {t("create_quote")}
-                  </button>
-                }
-              />
-            ) : null}
-
-            <UserMenu />
-          </div>
-        </div>
-
-        <NavCategories categories={categories} />
+        <NavLink to="/" end prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
+          <IconHome className="size-5" stroke={1.75} />
+          Inicio
+        </NavLink>
+        <button type="button" className={tabClass(sheetOpen)} onClick={() => setSheetOpen(true)}>
+          <IconCategory className="size-5" stroke={1.75} />
+          Categorías
+        </button>
+        <button type="button" className={tabClass(false)} onClick={focusSearchField}>
+          <IconSearch className="size-5" stroke={1.75} />
+          Buscar
+        </button>
       </nav>
+
+      <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
+        <DialogContent className="top-auto bottom-0 max-h-[80dvh] w-full max-w-none translate-y-0 overflow-y-auto rounded-t-3xl rounded-b-none border-x-0 border-b-0 p-3 pb-8 lg:hidden">
+          <DialogTitle className="px-2.5 pt-2 pb-3">Categorías</DialogTitle>
+          {categories.map((c) => (
+            <CategoryLink key={c.id} category={c} large onClick={() => setSheetOpen(false)} />
+          ))}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

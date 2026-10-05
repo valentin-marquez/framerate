@@ -1,4 +1,3 @@
-// PROTOTIPO (#108): lógica del buscador compartida por las variantes A, B y C. Se reescribe al elegir una.
 import type { CategoryItem, ProductSummary } from "@framerate/contracts";
 import { fold } from "@framerate/kit";
 import { type KeyboardEvent, useEffect, useState } from "react";
@@ -6,6 +5,8 @@ import { useFetcher, useLocation, useNavigate, useSearchParams } from "react-rou
 import type { CatalogData } from "~/features/catalog/load-catalog";
 
 const RECENT_KEY = "framerate:recent-searches";
+const MAX_RECENT = 4;
+const MAX_PRODUCTS = 4;
 
 export type Suggestion =
   | { kind: "recent"; label: string; to: string }
@@ -14,14 +15,16 @@ export type Suggestion =
   | { kind: "category"; category: CategoryItem; to: string }
   | { kind: "product"; product: ProductSummary; to: string };
 
-// Una variante puede montar dos campos (escritorio y teléfono): se enfoca el que está a la vista.
-const focus = () =>
-  [...document.querySelectorAll<HTMLInputElement>('input[role="combobox"][name="q"]')]
-    .find((el) => el.offsetParent !== null)
-    ?.focus();
-const blur = () => (document.activeElement as HTMLElement | null)?.blur();
+export const searchUrl = (q: string) => (q ? `/buscar?q=${encodeURIComponent(q)}` : "/buscar");
 
-const searchUrl = (q: string) => (q ? `/buscar?q=${encodeURIComponent(q)}` : "/buscar");
+function readRecent(): string[] {
+  try {
+    const value = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    return Array.isArray(value) ? value.filter((v) => typeof v === "string").slice(0, MAX_RECENT) : [];
+  } catch {
+    return [];
+  }
+}
 
 function useDebounced<T>(value: T, ms: number) {
   const [debounced, setDebounced] = useState(value);
@@ -32,7 +35,11 @@ function useDebounced<T>(value: T, ms: number) {
   return debounced;
 }
 
-export function useNavSearch(categories: CategoryItem[]) {
+/**
+ * Estado del buscador como combobox: con el campo vacío ofrece recientes y categorías; al escribir, la búsqueda,
+ * la misma acotada a la categoría del primer resultado y algunos productos. Enter sin opción activa va a `/buscar`.
+ */
+export function useSearchSuggestions(categories: CategoryItem[]) {
   const { pathname } = useLocation();
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -43,32 +50,28 @@ export function useNavSearch(categories: CategoryItem[]) {
   const [active, setActive] = useState(-1);
   const [recent, setRecent] = useState<string[]>([]);
 
+  // En /buscar el campo muestra la consulta de la URL (y la sigue al ir atrás o adelante).
   useEffect(() => setValue(urlQuery), [urlQuery]);
-  useEffect(() => {
-    try {
-      setRecent(JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]"));
-    } catch {}
-  }, []);
+  useEffect(() => setRecent(readRecent()), []);
 
-  const query = useDebounced(value.trim(), 180);
-  // Por el loader de /buscar: corre en el servidor de la web, sin depender del CORS de la API.
-  const fetcher = useFetcher<CatalogData>({ key: "nav-search" });
+  const typed = value.trim();
+  const query = useDebounced(typed, 180);
+  // Por el loader de /buscar y no directo a la API: la misma consulta que verá la página de resultados.
+  // ponytail: trae la página completa del catálogo (24 productos y marcas); un endpoint de sugerencias si pesa.
+  const fetcher = useFetcher<CatalogData>({ key: "search-suggestions" });
   const { load } = fetcher;
   useEffect(() => {
     if (query.length >= 2) load(searchUrl(query));
   }, [query, load]);
-  const products = query.length >= 2 ? (fetcher.data?.products ?? []) : [];
-  const isFetching = fetcher.state === "loading";
+  const products = query.length >= 2 && fetcher.data?.search === query ? fetcher.data.products : [];
 
-  const typed = value.trim();
   const items: Suggestion[] = [];
   if (!typed) {
     for (const label of recent) items.push({ kind: "recent", label, to: searchUrl(label) });
     for (const category of categories) items.push({ kind: "category", category, to: `/categoria/${category.slug}` });
   } else {
     items.push({ kind: "query", label: typed, to: searchUrl(typed) });
-    const top = query.length >= 2 ? products[0]?.category : undefined;
-    const scope = top && categories.find((c) => c.id === top);
+    const scope = products[0] && categories.find((c) => c.id === products[0].category);
     if (scope)
       items.push({
         kind: "scoped",
@@ -80,35 +83,34 @@ export function useNavSearch(categories: CategoryItem[]) {
     for (const category of categories)
       if (fold(category.label).includes(folded))
         items.push({ kind: "category", category, to: `/categoria/${category.slug}` });
-    if (query.length >= 2)
-      for (const product of products.slice(0, 4))
-        items.push({ kind: "product", product, to: `/producto/${product.slug}` });
+    for (const product of products.slice(0, MAX_PRODUCTS))
+      items.push({ kind: "product", product, to: `/producto/${product.slug}` });
   }
 
-  const remember = (label: string) => {
-    const next = [label, ...recent.filter((r) => r !== label)].slice(0, 4);
-    setRecent(next);
-    try {
-      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-    } catch {}
+  const close = () => {
+    setOpen(false);
+    setActive(-1);
   };
 
   const go = (item: Suggestion) => {
-    if (item.kind === "query" || item.kind === "recent" || item.kind === "scoped") remember(item.label);
-    setOpen(false);
-    setActive(-1);
-    blur();
+    if (item.kind === "query" || item.kind === "recent" || item.kind === "scoped") {
+      const next = [item.label, ...recent.filter((r) => r !== item.label)].slice(0, MAX_RECENT);
+      setRecent(next);
+      try {
+        localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      } catch {}
+    }
+    close();
+    (document.activeElement as HTMLElement | null)?.blur();
     navigate(item.to);
   };
-
-  const submit = () => go({ kind: "query", label: typed, to: searchUrl(typed) });
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       setOpen(true);
       const step = e.key === "ArrowDown" ? 1 : -1;
-      // -1 es el campo: el ciclo pasa por él, como en un combobox.
+      // -1 es el campo: el recorrido pasa por él, como en un combobox.
       setActive((i) => {
         const next = i + step;
         if (next >= items.length) return -1;
@@ -117,49 +119,29 @@ export function useNavSearch(categories: CategoryItem[]) {
       });
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const item = items[active];
-      if (item) go(item);
-      else submit();
+      go(items[active] ?? { kind: "query", label: typed, to: searchUrl(typed) });
     } else if (e.key === "Escape") {
-      setOpen(false);
-      setActive(-1);
-      blur();
+      close();
+      e.currentTarget.blur();
     }
   };
 
-  // `/` y Ctrl+K enfocan el campo desde cualquier parte.
-  useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) => {
-      const typing = e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]");
-      if ((e.key === "k" && (e.ctrlKey || e.metaKey)) || (e.key === "/" && !typing)) {
-        e.preventDefault();
-        focus();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
   return {
     value,
-    setValue: (v: string) => {
-      setValue(v);
+    change: (next: string) => {
+      setValue(next);
       setActive(-1);
       setOpen(true);
     },
     open,
     setOpen,
+    close,
     items,
-    active: active >= items.length ? -1 : active,
+    active: active < items.length ? active : -1,
     setActive,
-    loading: isFetching,
-    hasRecent: recent.length > 0,
-    focus,
-    blur,
     go,
-    submit,
     onKeyDown,
   };
 }
 
-export type NavSearch = ReturnType<typeof useNavSearch>;
+export type SearchSuggestions = ReturnType<typeof useSearchSuggestions>;

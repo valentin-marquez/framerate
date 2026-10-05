@@ -189,7 +189,7 @@ function ActiveChips({ brands }: { brands: BrandCount[] }) {
   if (chips.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="-mt-3 flex flex-wrap items-center gap-2">
       {chips.map((c) => (
         <button
           key={c.label}
@@ -220,8 +220,9 @@ interface FilterBarProps {
 
 export function FilterBar({ brands, priceRange, total }: FilterBarProps) {
   return (
-    <div className="space-y-3">
-      <div className="sticky top-13 z-30 -mx-4 flex flex-wrap items-center gap-2 border-border/40 border-b bg-background/80 px-4 py-2.5 backdrop-blur-md md:mx-0 md:rounded-2xl md:border md:px-3">
+    // `contents`: la barra se pega dentro de la columna del catálogo; en un envoltorio de su mismo alto no se pegaba.
+    <div className="contents">
+      <div className="sticky top-14 z-30 lg:top-3 -mx-4 flex flex-wrap items-center gap-2 border-border/40 border-b bg-background/80 px-4 py-2.5 backdrop-blur-md md:mx-0 md:rounded-2xl md:border md:px-3">
         {brands.length > 0 && <BrandFilter brands={brands} />}
         <PriceFilter priceRange={priceRange} />
         <div className="ml-auto flex items-center gap-3">

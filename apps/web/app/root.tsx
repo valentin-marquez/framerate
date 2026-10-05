@@ -23,12 +23,6 @@ import { categoriesService } from "~/features/category/services/categories";
 import { meToProfile } from "~/features/profile/services/profiles";
 import { Logo } from "~/shared/components/layout/logo";
 import { Navbar } from "~/shared/components/layout/navbar";
-import {
-  NavbarPrototype,
-  navVariantFromCookie,
-  PrototypeSwitcher,
-  prototypeShell,
-} from "~/shared/components/layout/navbar-prototype";
 import { SiteFooter } from "~/shared/components/layout/site-footer";
 import { Button } from "~/shared/components/primitives/button";
 import { Toaster } from "~/shared/components/primitives/sonner";
@@ -121,8 +115,6 @@ export async function loader({ request }: Route.LoaderArgs) {
       profile,
       providers,
       categories,
-      // PROTOTIPO (#108): variante del navbar, sólo en desarrollo.
-      navVariant: import.meta.env.DEV ? navVariantFromCookie(request.headers.get("Cookie")) : null,
       requestInfo: {
         clientEnv,
         userPrefs: { theme: getTheme(request), lang },
@@ -191,13 +183,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { categories: initialCategories, navVariant } = loaderData;
+  const { categories: initialCategories } = loaderData;
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
 
   const navigating = useNavigation().state !== "idle";
-  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -216,13 +207,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <div className="flex flex-col min-h-screen pb-16">
       <div
@@ -232,22 +216,16 @@ export default function App({ loaderData }: Route.ComponentProps) {
           navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300",
         )}
       />
-      {navVariant ? (
-        <NavbarPrototype variant={navVariant} categories={categories ?? []} blurred={scrolled} />
-      ) : (
-        <header className="sticky top-0 z-50 w-full">
-          <Navbar categories={categories ?? []} blurred={scrolled} />
-        </header>
-      )}
+      <Navbar categories={categories ?? []} />
 
-      <div className={cn("flex flex-1 flex-col", navVariant && prototypeShell[navVariant])}>
-        <main className="container mx-auto px-4 flex-1 pt-11">
+      {/* El riel del navbar mide w-64 en escritorio. */}
+      <div className="flex flex-1 flex-col lg:pl-64">
+        <main className="container mx-auto px-4 flex-1 pt-6 lg:pt-11">
           <Outlet />
         </main>
 
         <SiteFooter />
       </div>
-      {navVariant && <PrototypeSwitcher current={navVariant} />}
     </div>
   );
 }
