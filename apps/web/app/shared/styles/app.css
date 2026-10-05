@@ -423,6 +423,10 @@
   opacity: 0.45;
   transition: opacity var(--transition-duration-base) var(--ease-out);
 }
+/* Hover: un poco de luz; foco o búsqueda en curso: toda. */
+:hover > .search-beam {
+  opacity: 0.75;
+}
 .search-beam[data-active="true"],
 :focus-within > .search-beam {
   opacity: 1;

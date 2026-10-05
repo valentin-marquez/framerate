@@ -93,7 +93,7 @@ export function SearchField({ className }: { className?: string }) {
         onKeyDown={(e) => {
           if (e.key === "Escape") e.currentTarget.blur();
         }}
-        className="h-10 w-full rounded-xl border border-border/70 bg-background pr-9 pl-9 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-foreground/30 [&::-webkit-search-cancel-button]:appearance-none"
+        className="h-10 w-full rounded-xl border border-border/70 bg-background pr-9 pl-9 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground hover:border-foreground/20 focus:border-foreground/30 [&::-webkit-search-cancel-button]:appearance-none"
       />
       {value && (
         <button
