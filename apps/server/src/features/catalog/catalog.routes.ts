@@ -13,7 +13,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
 import { AppError } from "@/shared/http/errors";
-import { edgeCache } from "@/shared/http/middleware";
+import { catalogCache, edgeCache } from "@/shared/http/middleware";
 import {
   categoryCounts,
   getPriceHistory,
@@ -60,7 +60,7 @@ function listQuery(c: Context<AppEnv>, category?: Category) {
 
 /** API pública de lectura (montada bajo `/v1`). */
 export const catalogRoutes = new Hono<AppEnv>()
-  .get("/categories", edgeCache(3600), async (c) => {
+  .get("/categories", catalogCache(3600), async (c) => {
     const counts = new Map((await categoryCounts(c.var.db)).map((r) => [r.category, r.products]));
     return c.json({
       items: CATEGORIES.map((id) => ({
@@ -71,39 +71,39 @@ export const catalogRoutes = new Hono<AppEnv>()
       })),
     });
   })
-  .get("/categories/:slug/brands", edgeCache(300), async (c) => {
+  .get("/categories/:slug/brands", catalogCache(300), async (c) => {
     const category = categoryParam(c.req.param("slug"));
     return c.json({ items: await listBrands(c.var.db, category, listQuery(c, category)) });
   })
-  .get("/categories/:slug/price-range", edgeCache(3600), async (c) => {
+  .get("/categories/:slug/price-range", catalogCache(3600), async (c) => {
     return c.json(await priceRange(c.var.db, categoryParam(c.req.param("slug"))));
   })
-  .get("/categories/:slug/facets", edgeCache(300), async (c) => {
+  .get("/categories/:slug/facets", catalogCache(300), async (c) => {
     const category = categoryParam(c.req.param("slug"));
     return c.json(await listFacets(c.var.db, category, listQuery(c, category)));
   })
   .get("/stores", edgeCache(60), async (c) =>
     c.json({ items: await listStores(c.var.db, c.req.query("q")?.trim() || undefined) }),
   )
-  .get("/sitemap", edgeCache(3600), async (c) => c.json(await sitemap(c.var.db)))
+  .get("/sitemap", catalogCache(3600), async (c) => c.json(await sitemap(c.var.db)))
   .get("/freshness", edgeCache(60), async (c) => {
     const updatedAt = await lastCrawlAt(c.var.db);
     return c.json({ updatedAt, nextUpdateAt: nextCrawlAt(new Date()).toISOString() });
   })
-  .get("/products", edgeCache(300), async (c) => {
+  .get("/products", catalogCache(300), async (c) => {
     return c.json(await listProducts(c.var.db, listQuery(c), c.env.ASSETS_BASE_URL));
   })
-  .get("/products/redirects/:slug", edgeCache(3600), async (c) => {
+  .get("/products/redirects/:slug", catalogCache(3600), async (c) => {
     const slug = await resolveRedirect(c.var.db, c.req.param("slug"));
     if (!slug) throw new AppError(404, "redirect_not_found", "Sin redirección");
     return c.json({ slug });
   })
-  .get("/products/:slug", edgeCache(300), async (c) => {
+  .get("/products/:slug", catalogCache(300), async (c) => {
     const product = await getProduct(c.var.db, c.req.param("slug"), c.env.ASSETS_BASE_URL);
     if (!product) throw new AppError(404, "product_not_found", "Producto no encontrado");
     return c.json(product);
   })
-  .get("/products/:slug/price-history", edgeCache(1800), async (c) => {
+  .get("/products/:slug/price-history", catalogCache(1800), async (c) => {
     const { days } = z.object({ days: z.coerce.number().int().min(1).max(365).default(90) }).parse(c.req.query());
     const points = await getPriceHistory(c.var.db, c.req.param("slug"), days);
     if (!points) throw new AppError(404, "product_not_found", "Producto no encontrado");

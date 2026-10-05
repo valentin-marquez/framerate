@@ -1,4 +1,5 @@
 import { CompiledQuery } from "kysely";
+import { bumpCatalogVersionQuery } from "./catalog-version";
 import type { Db } from "./client";
 
 /**
@@ -56,11 +57,13 @@ export async function refreshPriceSummary(
     input.now.toISOString(),
     santiagoDay(input.now),
   ];
-  // Las tres en un batch (una transacción): el reference_price lee la fila del día recién escrita.
+  // Las tres en un batch (una transacción): el reference_price lee la fila del día recién escrita. La versión del
+  // catálogo sube en la misma transacción, así la caché del server no ve precios nuevos con la versión vieja.
   // D1 rechaza más valores que el mayor ?N de la sentencia: el resumen no usa el día (?5).
-  await db.batch(
-    [[summarySql, params.slice(0, 4)] as const, [dailySql, params] as const, [referenceSql, params] as const].map(
+  await db.batch([
+    ...[[summarySql, params.slice(0, 4)] as const, [dailySql, params] as const, [referenceSql, params] as const].map(
       ([build, values]) => ({ compile: () => CompiledQuery.raw(build(CRAWL_SCOPE), values) }),
     ),
-  );
+    { compile: () => bumpCatalogVersionQuery },
+  ]);
 }

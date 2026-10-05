@@ -1,5 +1,5 @@
 import type { Category } from "@framerate/contracts";
-import type { Db } from "@framerate/database";
+import { bumpCatalogVersion, type Db } from "@framerate/database";
 import { compare } from "./domain/decide";
 import { buildFingerprint } from "./domain/fingerprint";
 import {
@@ -58,6 +58,7 @@ export async function resolveMatchReview(
       await moveIdentifiers(db, listing.productId, review.candidate_product_id, identifiers);
     }
     await attachIdentifiers(db, review.candidate_product_id, identifiers);
+    await bumpCatalogVersion(db);
   }
 
   await resolveReview(db, review.id, input.action === "accept" ? "accepted" : "rejected", input.now);

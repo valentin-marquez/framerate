@@ -567,7 +567,13 @@ export interface SupportMessagesTable {
   created_at: string;
 }
 
+export interface CatalogVersionTable {
+  id: number;
+  version: number;
+}
+
 export interface Database {
+  catalog_version: CatalogVersionTable;
   users: UsersTable;
   auth_accounts: AuthAccountsTable;
   auth_sessions: AuthSessionsTable;
