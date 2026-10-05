@@ -96,7 +96,7 @@ function ProductStage({
         reveal="none"
         onReady={(fromCache) => setStage(fromCache ? "open" : "opening")}
         data-state={stage === "opening" ? "open" : undefined}
-        className="stage-image size-full object-contain object-right p-3 pl-0 mix-blend-multiply"
+        className="stage-image absolute inset-0 size-full object-contain object-right p-3 pl-0 mix-blend-multiply"
       />
       <div aria-hidden className="scrim-card-to-r absolute inset-y-0 left-0 w-3/5" />
       {/* En oscuro el panel es más claro que el pie: se funde también hacia abajo para no cortar en seco. */}
