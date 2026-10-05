@@ -15,6 +15,8 @@ export const StoreSummarySchema = z.object({
   slug: z.string(),
   name: z.string(),
   url: z.url(),
+  /** Ícono cuadrado espejado en el CDN; null si la tienda no tiene. */
+  iconUrl: z.string().nullable(),
 });
 export type StoreSummary = z.infer<typeof StoreSummarySchema>;
 

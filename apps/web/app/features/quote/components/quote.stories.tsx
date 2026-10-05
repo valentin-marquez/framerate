@@ -36,7 +36,7 @@ const item = (
       ? null
       : {
           id: id * 10,
-          store: { slug: "tectec", name: "TecTec", url: "https://tectec.cl" },
+          store: { slug: "tectec", name: "TecTec", url: "https://tectec.cl", iconUrl: null },
           url: `https://tectec.cl/p/${id}`,
           priceCash,
           priceCard: Math.round(priceCash * 1.05),

@@ -20,7 +20,7 @@ const offer = (
   stockQuantity: number | null = null,
 ): Offer => ({
   id,
-  store: { slug, name, url: `https://${slug}.cl` },
+  store: { slug, name, url: `https://${slug}.cl`, iconUrl: null },
   url: `https://${slug}.cl/producto/asus-dual-radeon-rx-9060-xt-16gb`,
   title: `ASUS Dual Radeon RX 9060 XT 16GB GDDR6 (${name})`,
   priceCash,

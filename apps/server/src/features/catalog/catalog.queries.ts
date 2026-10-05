@@ -278,6 +278,7 @@ export async function getProduct(
         "s.slug as storeSlug",
         "s.name as storeName",
         "s.url as storeUrl",
+        "s.scraped_icon_url as storeIconUrl",
         "l.url",
         "l.title",
         "l.price_cash",
@@ -300,7 +301,7 @@ export async function getProduct(
     .filter((o) => toBool(o.is_active))
     .map((o) => ({
       id: o.id,
-      store: { slug: o.storeSlug, name: o.storeName, url: o.storeUrl },
+      store: { slug: o.storeSlug, name: o.storeName, url: o.storeUrl, iconUrl: o.storeIconUrl },
       url: o.url,
       title: o.title,
       priceCash: o.price_cash,

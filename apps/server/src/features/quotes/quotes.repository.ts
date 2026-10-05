@@ -101,6 +101,7 @@ const itemsQuery = (db: Db, publicId: string) =>
       "s.slug as store_slug",
       "s.name as store_name",
       "s.url as store_url",
+      "s.scraped_icon_url as store_icon_url",
     ])
     .where("q.public_id", "=", publicId);
 
@@ -120,7 +121,7 @@ function offerOf(r: ItemRow): QuoteItemOffer | null {
   }
   return {
     id: r.offer_id,
-    store: { slug: r.store_slug, name: r.store_name, url: r.store_url },
+    store: { slug: r.store_slug, name: r.store_name, url: r.store_url, iconUrl: r.store_icon_url },
     url: r.offer_url,
     priceCash: r.price_cash,
     priceCard: r.price_card,
