@@ -8,6 +8,8 @@ export interface AiEvidence extends Judgement {
   at: string;
   /** Vetos de `compare()` que impidieron aceptar en modo live. */
   vetoes?: string[];
+  /** Motivo por el que `acceptGuard` frenó una aceptación del modelo. */
+  guard?: string;
 }
 
 /**

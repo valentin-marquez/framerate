@@ -1,6 +1,7 @@
 import type { Db } from "@framerate/database";
 import type { Logger } from "@framerate/kit";
 import { resolveMatchReview } from "@framerate/matching";
+import { acceptGuard } from "./guard";
 import { judge, MODEL } from "./judge";
 import { type AiEvidence, loadPair, neuronsSpentSince, reviewsToVerify, saveAiEvidence } from "./reviews.repository";
 
@@ -45,7 +46,10 @@ export async function verifyReview(db: Db, ai: Ai, reviewId: number, config: Ver
   // reject: sólo rechaza, que deja un duplicado; aceptar mezcla precios y espera la auditoría de las pendientes reales.
   const applies =
     config.mode === "live" ? evidence.verdict !== "pending" : config.mode === "reject" && evidence.verdict === "reject";
-  if (applies && evidence.verdict !== "pending") {
+  // La guarda sólo frena aceptaciones: rechazar deja un duplicado, que es el error barato.
+  const guard = evidence.verdict === "accept" ? acceptGuard(pair.listing, pair.candidate) : { ok: true as const };
+  if (!guard.ok) evidence.guard = guard.reason;
+  if (applies && evidence.verdict !== "pending" && guard.ok) {
     const result = await resolveMatchReview(db, {
       reviewId,
       action: evidence.verdict,

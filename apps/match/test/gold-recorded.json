@@ -1,0 +1,3299 @@
+[
+  {
+    "i": 0,
+    "a": "Placa Madre Gigabyte B760M D3HP DDR4, Micro ATX, LGA1700",
+    "b": "Placa Madre Gigabyte B760M DS3H AX DDR4, Micro ATX, LGA1700",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 1,
+    "a": "Procesador Intel Core Ultra 7 265K 3.9GHz 30MB DDR5 LGA1851",
+    "b": "Procesador Intel Core Ultra 7 265K 20 cores 3.9Ghz",
+    "pAB": 0.9999491573227516,
+    "pBA": 0.9999988634497664
+  },
+  {
+    "i": 2,
+    "a": "Placa Madre MSI PRO B840M-P WIFI6E DDR5, ATX, AM5",
+    "b": "Placa Madre MSI B840M GAMING WIFI6E, mATX, AM5",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 3,
+    "a": "Placa Madre MSI PRO B760M-P DDR4, Micro-ATX, LGA1700",
+    "b": "Placa Madre MSI PRO B760M-E DDR4 mATX LGA1700",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 4,
+    "a": "Procesador AMD Ryzen 5 5500 Bulk",
+    "b": "Procesador AMD Ryzen 5 5500 6 nucleos 42 Ghz AM4",
+    "pAB": 0.0000075963315420403525,
+    "pBA": 3.273796433944132e-7
+  },
+  {
+    "i": 5,
+    "a": "Placa Madre ASRock B550M Phantom Gaming 4, mATX, AM4",
+    "b": "Placa Madre ASRock B550M-HDV, mATX, AM4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 6,
+    "a": "RAM Corsair Vengeance RGB Pro SL 16GB (2x8GB) DDR4 3200",
+    "b": "RAM Corsair Vengeance RGB PRO TUF 16GB (2x8GB) DDR4 3200MHz",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 7,
+    "a": "Placa Madre Gigabyte Z790 UD AC LGA1700, DDR5, ATX",
+    "b": "Placa Madre Gigabyte Z790 Eagle AX, LGA1700, DDR5 ATX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 8,
+    "a": "Memoria RAM XPG Lancer Blade RGB DDR5 16GB 6000 MTs Blanco",
+    "b": "Memoria RAM ADATA XPG Lancer Blade 16GB DDR5 6000MTs CL36",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 9,
+    "a": "Placa Madre Gigabyte B650M D3HP",
+    "b": "Placa Madre Gigabyte B650M D3HP AX, AM5, DDR5",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 10,
+    "a": "Memoria RAM XPG Lancer Blade DDR5 6400MTs 16GB Blanco",
+    "b": "Memoria RAM XPG Lancer DDR5 6400MTs 16GB RGB Negro",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 11,
+    "a": "Memoria RAM XPG Lancer Blade DDR5 5600MTs 16GB Blanco",
+    "b": "Memoria RAM XPG Lancer Blade DDR5 5600MTs 16GB Negro",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 12,
+    "a": "Placa Madre ASUS PRIME B550M-A AC, mATX, AM4, DDR4, PCIE4.0",
+    "b": "Placa Madre ASUS Prime B550M-A AC MicroATX AMD AM4",
+    "pAB": 0.9999989475969482,
+    "pBA": 0.9999999486448801
+  },
+  {
+    "i": 13,
+    "a": "Memoria RAM Kingston Fury Beast Black 8GB 5200MHz DDR5 CL40",
+    "b": "Memoria RAM Kingston Fury Beast 8GB 5200MHz DDR5 CL36",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 14,
+    "a": "Memoria RAM Kingston Fury Beast RGB 8GB 5600MTs DDR5 CL36",
+    "b": "Memoria RAM Kingston FURY Beast de 8GB DDR5 5600MHz DIMM",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 15,
+    "a": "Placa Madre ASUS Prime B650M-A AX II MicroATX AM5",
+    "b": "Placa Madre ASUS PRIME B650M-A II",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 16,
+    "a": "Memoria RAM Kingston Fury Beast 16GB 3600Mhz DDR4 CL18",
+    "b": "Memoria RAM Kingston FURY Beast RGB 16GB 3600MT/s DDR4 CL18",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 17,
+    "a": "Memoria RAM CORSAIR Vengeance RGB DDR5 RAM 16 GB 5600 MHz",
+    "b": "Memoria RAM Corsair Vengeance DDR5 5600MT/s 16GB 1x16GB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 18,
+    "a": "Placa Madre Gigabyte B550M AORUS ELITE, AM4, mATX",
+    "b": "Placa Madre Gigabyte B550M AORUS ELITE AX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 19,
+    "a": "Placa Madre MSI A520M PRO, AM4, Micro-ATX",
+    "b": "Placa Madre MSI A520M-A PRO Socket AM4 DDR4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 20,
+    "a": "Memoria Ram Corsair Vengeance Lpx DDR4 8gb 3200mhz Black",
+    "b": "Memoria RAM Corsair Vengeance LPX 8GB DDR4 3200MHz CL16",
+    "pAB": 0.00011490838295322284,
+    "pBA": 0.9967861564368007
+  },
+  {
+    "i": 21,
+    "a": "Memoria RAM Kingston FURY Beast DDR5 16GB 5600MHz",
+    "b": "Memoria Ram Kingston Fury Beast 1 x 16GB DDR5-5600MHz",
+    "pAB": 0.9999888025518352,
+    "pBA": 0.7591763248181802
+  },
+  {
+    "i": 22,
+    "a": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+    "b": "Placa Madre ASUS PRIME H610M-E D4-C S M LGA1700",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 23,
+    "a": "Memoria RAM Kingston Fury Beast 1 x 8GB DDR4-3200",
+    "b": "Memoria RAM Kingston Fury Renegade RGB DDR4 8GB 3200Mhz",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 24,
+    "a": "Fuente de Poder be quiet! PURE POWER 13 M 1000W 80 PLUS Gold",
+    "b": "Fuente de Poder be quiet! PURE POWER 12 1000W 80 PLUS Gold",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 25,
+    "a": "Disco Duro SSD M.2 NVMe Hiksemi Future Core 1TB Gen5 3D NAND",
+    "b": "Disco Duro SSD M.2 Hiksemi Future S 1TB M.2 NVMe 2230",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 26,
+    "a": "Disco Duro SSD M.2 Western Digital WD Black SN850X 1TB NVMe",
+    "b": "SSD Western Digital WD Black SN850x 1TB M.2 NVMe PCIe Gen4",
+    "pAB": 0.9999993334457401,
+    "pBA": 0.9999988984860015
+  },
+  {
+    "i": 27,
+    "a": "Disco Duro SSD M.2 Western Digital WD Black SN850X 1TB NVMe",
+    "b": "SSD Western Digital WD Black SN7100 1TB M.2 NVMe PCIe Gen4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 28,
+    "a": "Fuente de Poder Gigabyte GP-UD850GM PG5 V2 850W 80+ Gold",
+    "b": "Fuente de Poder Gigabyte GP-UD850GM 850W 80PLUS Gold Modular",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 29,
+    "a": "Disco Duro SSD Kingston NV3, 500GB M.2 2230 PCIe 4.0 NVMe",
+    "b": "Disco Duro SSD Kingston NV3 500GB M.2 2280 NVMe, PCIe 4.0",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 30,
+    "a": "Fuente de Poder Gigabyte GP-UD750GM PG5 ICE 750W 80+ Gold",
+    "b": "Fuente de Poder Gigabyte GP-UD750GM PG5, 750W 80PLUS Gold",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 31,
+    "a": "Fuente de Poder Gigabyte P750BS 750W 80 Plus Bronze",
+    "b": "Fuente de Poder Gigabyte GP-P750BS 750W 80 PLUS Bronze",
+    "pAB": 0.9999696274549946,
+    "pBA": 0
+  },
+  {
+    "i": 32,
+    "a": "Fuente de Poder Gigabyte GP-P650G 650W 80 PLUS Gold",
+    "b": "Fuente Gigabyte P650G 650W 80 Plus Gold",
+    "pAB": 0,
+    "pBA": 0.9999993674292021
+  },
+  {
+    "i": 33,
+    "a": "Fuente de Poder be quiet DARK POWER PRO 13 1600W 80 Titanium",
+    "b": "Fuente de Poder be quiet! DARK POWER PRO 13 1600W TITANIUM",
+    "pAB": 0.9999618791109003,
+    "pBA": 0.9979856712947459
+  },
+  {
+    "i": 34,
+    "a": "Fuente de Poder be quiet! PURE POWER 13 M 1000W 80 PLUS Gold",
+    "b": "Fuente de Poder be quiet! Pure Power 13 M 1000W 80 PLUS GOLD",
+    "pAB": 0.9999999545877345,
+    "pBA": 0.9999999130013876
+  },
+  {
+    "i": 35,
+    "a": "Fuente de Poder ASUS ROG Thor 1200W Platinum III",
+    "b": "Fuente de Poder Asus ROG Thor Platinum II de 1200 W",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 36,
+    "a": "Tarjeta de Video Gigabyte RTX 5060 Ti WINDFORCE OC 8 GB",
+    "b": "Tarjeta de Video Gigabyte RTX 5060 Ti WINDFORCE Max OC 8GB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 37,
+    "a": "Tarjeta de Video Gigabyte RTX 5060 Ti Eagle OC 8GB",
+    "b": "Tarjeta de Video Gigabyte RTX 5060 Ti Eagle OC 8GB ICE",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 38,
+    "a": "Tarjeta de Video Gigabyte GeForce RTX 5050 WINDFORCE OC 8G",
+    "b": "Tarjeta de Video Gigabyte RTX 5050 WINDFORCE OC V2 8 GB",
+    "pAB": 0,
+    "pBA": 1.9750267714076103e-7
+  },
+  {
+    "i": 39,
+    "a": "Tarjeta de Video MSI RTX 5080 16G GAMING TRIO OC WHITE",
+    "b": "Tarjeta de Video MSI GeForce RTX 5080 16G GAMING TRIO OC",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 40,
+    "a": "Tarjeta Grafica MSI GeForce RTX 5060Ti 16G VENTUS 2X OC PLUS",
+    "b": "Tarjeta Grafica MSI GeForce RTX 5060Ti 16G VENTUS 2X OC PLUS",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 41,
+    "a": "Tarjeta de Video ASUS Dual RTX 5060 Ti EVO OC 16GB GDDR7",
+    "b": "Tarjeta de Video ASUS Dual GeForce RTX 5060 Ti 16GB GDDR7 OC",
+    "pAB": 0.7641649877140536,
+    "pBA": 0
+  },
+  {
+    "i": 42,
+    "a": "Tarjeta de Video Gigabyte Radeon RX 9060XT GAMING OC ICE 16G",
+    "b": "Tarjeta de Video Gigabyte RX 9060 XT GAMING OC 16G GDDR6",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 43,
+    "a": "Tarjeta de Video ASUS Dual GeForce RTX 5060 EVO OC 8GB GDDR7",
+    "b": "Tarjeta de Video ASUS Dual GeForce RTX 5060 OC 8GB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 44,
+    "a": "Fuente de Poder MSI MAG A750GL PCIE5 750W 80+ Gold",
+    "b": "Fuente de Poder MSI MAG A750GLS PCIE5 80 Plus Gold",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 45,
+    "a": "Fuente de Poder XPG Pylon 750W 80 Plus Bronze",
+    "b": "Fuente de Poder XPG Pylon II 750W, 80 Plus Bronze, ATX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 46,
+    "a": "Fuente de Poder NZXT C850 Gold ATX 3.1 - 850W, 80 Plus Gold",
+    "b": "Fuente de Poder NZXT C850 Gold ATX 3.1, 850W, 80+ Gold White",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 47,
+    "a": "Tarjeta de Video MSI RTX 4060 Ventus 2X Black 8G OC",
+    "b": "Tarjeta de Video MSI RTX 4060 Ventus 2X White 8GB OC",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 48,
+    "a": "Fuente de Poder MSI MAG A650BN PCIE5 III 650W 80Plus Bronze",
+    "b": "Fuente de Poder MSI MAG A650BN 80 Plus Bronze",
+    "pAB": 0.000023348079775753533,
+    "pBA": 0.12675761119940498
+  },
+  {
+    "i": 49,
+    "a": "Tarjeta de Video MSI RTX 4070 Super 12G Gaming X Slim MLG",
+    "b": "Tarjeta de Video MSI RTX 4070 Super 12G Gaming X SLIM GDDR6X",
+    "pAB": 0.9968764147029987,
+    "pBA": 0
+  },
+  {
+    "i": 50,
+    "a": "Fuente de Poder Cooler Master 750W G GOLD 750 V2",
+    "b": "Fuente de Poder Cooler Master MWE Gold 750 V2 Full Modular",
+    "pAB": 1.4747794751328692e-7,
+    "pBA": 0.9995700272614191
+  },
+  {
+    "i": 51,
+    "a": "TARJETA DE VIDEO MSI RTX 5060 Ti 8GB GAMING TRIO OC WHITE",
+    "b": "TARJETA DE VIDEO MSI GEFORCE RTX 5060 TI GAMING TRIO OC 8GB WHITE",
+    "pAB": 0.9999760217874321,
+    "pBA": 0.9999780864734509
+  },
+  {
+    "i": 52,
+    "a": "Memoria RAM DDR4 8GB 3200MHz UDIMM",
+    "b": "Memoria RAM DDR4 8 GB 3200MHz UDIMM",
+    "pAB": 0.9999999953010204,
+    "pBA": 1
+  },
+  {
+    "i": 53,
+    "a": "Placa Madre ASUS Prime A520M-K, AMD Socket AM4, 2xDIMM DDR4, VGA, HDMI, M.2, 4xSATA, Micro-ATX",
+    "b": "Tarjeta Madre ASUS/ micro ATX AMD A520 (Ryzen AM4)",
+    "pAB": 0.9968964606603665,
+    "pBA": 1
+  },
+  {
+    "i": 54,
+    "a": "Fuente de Poder XPG PYLON II 550W 80+ Bronze",
+    "b": "FUENTE DE PODER XPG PYLON II 550W 80+ BRONZE ATX 3.0",
+    "pAB": 0.9999531450933908,
+    "pBA": 0.9999999793832616
+  },
+  {
+    "i": 55,
+    "a": "Memoria RAM 8GB DDR4 3200MHz DIMM CL16 Non-ECC 1.35V 288p KINGSTON FURY",
+    "b": "Memoria RAM 8GB DDR4 3200MHz DIMM CL16 Non-ECC 1.35V 288p Kingston Fury RGB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 56,
+    "a": "Placa Madre ASUS Prime A520M-K AM4 AMD Ryzen A520, SATA 6Gb/s, M.2, HDMI, VGA, Micro-ATX, DDR4",
+    "b": "Placa Madre Asus Prime A520M-K Socket AM4/ Micro ATX",
+    "pAB": 0.9999762063934481,
+    "pBA": 0.9999151509372837
+  },
+  {
+    "i": 57,
+    "a": "Memoria Ram 8GB DDR4 3200Mhz CL16 Dimm Kingston FURY Beast RGB Non-ECC XMP",
+    "b": "Memoria Ram 8GB DDR4 3200Mhz CL16 Dimm Kingston FURY Beast, Unbuffered, 1.35V",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 58,
+    "a": "Memoria Ram 16GB DDR5 5600Mhz CL46 Dimm Non-ECC 1Rx8",
+    "b": "Memoria Ram 16GB DDR5 5600Mhz CL46 Dimm Kingston Non-ECC Unbuffered",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 59,
+    "a": "Disco SSD 128GB interno | TWSC M.2 2280 NVME BULK",
+    "b": "Disco SSD 128GB interno | TWSC M.2 2280 NVMe PCIe 3.0 x4",
+    "pAB": 0.9999999972603745,
+    "pBA": 0.9979592985431487
+  },
+  {
+    "i": 60,
+    "a": "Memoria Ram Hynix 8gb Ddr4 2666mhz Udimm Pc4-21300 Oem",
+    "b": "Memoria Ram Hynix 8gb Ddr4 2666mhz Udimm Pc4-21300 Oem",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 61,
+    "a": "Gabinete Gamer Cougar OMNYX White 4 ventiladores 160 mm ARGB incluidos",
+    "b": "Gabinete Gamer Cougar OMNYX BLACK 4 ventiladores 160 mm ARGB incluidos",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 62,
+    "a": "Unidad SSD Kingston FURY 2TB M.2 22*80 PCIe 5.0 Lec14700MB/s Esc14000 MB/s",
+    "b": "Unidad SSD Kingston FURY 2TB M.2 22*80 PCIe 4.0x4 NVMe Lec 7300MB/s Esc 7000MB/s",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 63,
+    "a": "Placa Madre MSI B550M PRO-VDH WIFI",
+    "b": "Placa Madre MSI B550M-P WIFI6E DDR4 AM4 Micro-ATX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 64,
+    "a": "Memoria RAM ADATA Premier 1x8GB DDR5 5600MHz CL46",
+    "b": "Memoria RAM XPG Lancer Blade DDR5 8GB 5600MHz Negro",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 65,
+    "a": "Placa Madre Gigabyte B860M D3HP, LGA1851, DDR5, mATX",
+    "b": "Placa Madre Gigabyte B860M K, Micro-ATX, LGA1851",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 66,
+    "a": "Placa Madre Gigabyte B550M DS3H AC AMD AM4",
+    "b": "M/B GIGABYTE B550M DS3H AC",
+    "pAB": 0.9999999526565306,
+    "pBA": 0.999999663820466
+  },
+  {
+    "i": 67,
+    "a": "Placa Madre ASUS Prime B650M-A AX II MicroATX AM5",
+    "b": "Placa Madre ASUS Prime B650M-F AM5, DDR5, mATX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 68,
+    "a": "Placa Madre Gigabyte A520M DS3H V2 AM4 DDR4 mATX",
+    "b": "M/B GIGABYTE A520M K V2",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 69,
+    "a": "Placa Madre MSI PRO H610M-G DDR5",
+    "b": "MSI PRO H610M-G, LGA 1700, DDR5",
+    "pAB": 0.9999995597051752,
+    "pBA": 0.9999969960874017
+  },
+  {
+    "i": 70,
+    "a": "Placa Madre Gigabyte H510M H V2, LGA 1200, DDR4, Micro ATX",
+    "b": "M/B GIGABYTE H510M K V2",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 71,
+    "a": "Disco Duro SSD Western Digital Green SN350 1TB M.2 2280 NVMe",
+    "b": "Disco Duro SSD WD Green SN3000 1TB M.2 2280 NVMe PCIe 4.0",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 72,
+    "a": "Fuente de Poder Xilence by be quiet! XN235 750W 80+ Bronze",
+    "b": "Fuente de Poder be quiet! SYSTEM POWER 11 U 750W 80+ Bronze",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 73,
+    "a": "Disco Duro SSD M.2 Hiksemi Wave 1TB NVMe PCle 3.0",
+    "b": "Disco Duro SSD M.2 NVMe Hiksemi Future Core 1TB Gen5 3D NAND",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 74,
+    "a": "Unidad SSD ADATA Legend 800 NVMe 1TB",
+    "b": "Disco Duro SSD ADATA LEGEND 860 1TB M.2 PCIe Gen4 x4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 75,
+    "a": "Disco Duro SSD Kingston NV2 M.2 1TB PCie 4.0",
+    "b": "SSD 1TB | Kingston KC3000 | PCIe 4.0 NVMe M.2",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 76,
+    "a": "Fuente de Poder be quiet! SYSTEM POWER 11 U 650W BRONZE",
+    "b": "Fuente de Poder Xilence by be quiet! XN220 650W 80+ Bronze",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 77,
+    "a": "Memoria RAM Corsair Vengeance RGB 32GB (2×16) 6000MHz Blanco",
+    "b": "Memoria RAM Corsair Vengeance 32GB (2x16GB) DDR5 6000MHz",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 78,
+    "a": "Fuente de Poder Gigabyte AORUS AE1000PM PG5 80Plus Platinum",
+    "b": "Fuente Gigabyte 1000W Aorus G5 80+ Platinum Modular ATX 3.0",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 79,
+    "a": "Tarjeta de Video AMD Radeon RX 9060 CL 8GB GDDR6 - Asrock Challenger - 128 bits - PCIe 5.0 - DisplayPort, HDMI",
+    "b": "Tarjeta de Video ASRock Radeon RX 9060 Challenger 8GB",
+    "pAB": 0.9149052967336945,
+    "pBA": 0.9993901298121031
+  },
+  {
+    "i": 80,
+    "a": "Tarjeta de Video MSI GeForce RTX 5080 Gaming Trio White OC 16GB GDDR7",
+    "b": "Tarjeta de Video MSI RTX 5080 16G GAMING TRIO OC WHITE",
+    "pAB": 0.999975787413366,
+    "pBA": 0.9999484082135824
+  },
+  {
+    "i": 81,
+    "a": "Tarjeta de Video NVIDIA Dual GeForce RTX 3050 6GB OC Edition GDDR6",
+    "b": "Tarjeta de Video ASUS Dual GeForce RTX 3050 OC 6GB GDDR6",
+    "pAB": 0.9955618267283347,
+    "pBA": 0.000003392040067694395
+  },
+  {
+    "i": 82,
+    "a": "Tarjeta de Video NVIDIA GeForce RTX 5050 WINDFORCE OC 8G",
+    "b": "Tarjeta de Video Gigabyte GeForce RTX 5050 WINDFORCE OC 8G",
+    "pAB": 0.9995120648815228,
+    "pBA": 0.9964114653375891
+  },
+  {
+    "i": 83,
+    "a": "Tarjeta de Video NVIDIA GeForce RTX 5050 8G GAMING OC",
+    "b": "Tarjeta de Video MSI GeForce RTX 5050 8G GAMING OC",
+    "pAB": 0.9999869316296298,
+    "pBA": 0.009816762098380592
+  },
+  {
+    "i": 84,
+    "a": "Tarjeta de Video NVIDIA Geforce RTX 5050  SHADOW 2X OC 8GB",
+    "b": "Tarjeta de Video GeForce RTX™ 5050 8G SHADOW 2X OC",
+    "pAB": 0.08145680439630078,
+    "pBA": 5.174646266549523e-7
+  },
+  {
+    "i": 85,
+    "a": "Tarjeta de Video NVIDIA RTX 3050 VENTUS 2X 6G OC",
+    "b": "Tarjeta de Video MSI GeForce RTX 3050 VENTUS 2X 6G OC",
+    "pAB": 0.9999997938973094,
+    "pBA": 0.000007833364965844766
+  },
+  {
+    "i": 86,
+    "a": "Tarjeta de Video Nvidia GeForce MSI RTX 5050 8G Shadow 2X OC 8GB GDDR6",
+    "b": "Tarjeta de Video GeForce RTX™ 5050 8G SHADOW 2X OC",
+    "pAB": 0.7784936124620454,
+    "pBA": 0.9998403320206967
+  },
+  {
+    "i": 87,
+    "a": "Tarjeta de Video MSI RTX 5070 Ventus 3X 12G OC",
+    "b": "Tarjeta de Video MSI GeForce RTX 5070 12G VENTUS 3X OC",
+    "pAB": 0.999999876271108,
+    "pBA": 0.9998381707778744
+  },
+  {
+    "i": 88,
+    "a": "Tarjeta de Video Asus DUAL RTX 5060 OC 8GB",
+    "b": "Nvidia RTX 5060 | 8GB GDDR6 | Asus Dual OC",
+    "pAB": 0.7058051101940443,
+    "pBA": 0.9697722444742584
+  },
+  {
+    "i": 89,
+    "a": "Tarjeta de Video ASUS PRIME GeForce RTX™ 5070 12GB GDDR7 OC Edition",
+    "b": "Tarjeta de Video ASUS Prime GeForce RTX 5070 OC 12GB",
+    "pAB": 0.5232114017059433,
+    "pBA": 0.9989565292985078
+  },
+  {
+    "i": 90,
+    "a": "TARJETA DE VIDEO MSI GEFORCE RTX 5060 VENTUS 2X OC 8GB GDDR7",
+    "b": "Tarjeta de Video MSI GeForce RTX 5060 8G VENTUS 2X OC",
+    "pAB": 0.9934243764448628,
+    "pBA": 0.9925351882959825
+  },
+  {
+    "i": 91,
+    "a": "TARJETA DE VIDEO GIGABYTE RTX 5070 EAGLE OC SFF 12GB DDR7",
+    "b": "Tarjeta de Video NVIDIA GeForce RTX 5070 12GB Eagle OC SFF",
+    "pAB": 0.999981422087399,
+    "pBA": 0.9997130695535779
+  },
+  {
+    "i": 92,
+    "a": "CPU AMD RYZEN 9 9950X 4.3 GHz",
+    "b": "AMD Ryzen 9 9950X Granite Ridge AM5 4.30GHz 16-Core",
+    "pAB": 0.9999996414992969,
+    "pBA": 0.9999993206479164
+  },
+  {
+    "i": 93,
+    "a": "CPU AMD RYZEN 9 9900X 4.4 GHz",
+    "b": "Procesador AMD Ryzen 9 9900X | 12 Núcleos 24 Hilos | Socket AM5",
+    "pAB": 0.9999999875683716,
+    "pBA": 0.9999999343024396
+  },
+  {
+    "i": 94,
+    "a": "TARJETA DE VIDEO ZOTAC GAMING GEFORCE RTX 4060 TI TWIN EDGE OC WHITE 8GB GDDR6 DLSS3",
+    "b": "TARJETA DE VIDEO ZOTAC GAMING GEFORCE RTX 4060 TI TWIN EDGE OC 8GB GDDR6 DLSS3",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 95,
+    "a": "TARJETA DE VIDEO ZOTAC GAMING GEFORCE RTX 4060 TWIN EDGE OC WHITE 8GB GDDR6 DLSS3",
+    "b": "Tarjeta de Video Zotac RTX 4060 Twin Edge OC 8GB GDDR6",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 96,
+    "a": "TARJETA DE VIDEO MSI RTX 4060 VENTUS 2X WHITE OC 8GB GDDR6 DLSS3",
+    "b": "Tarjeta de Video MSI RTX 4060 Ventus 2X Black 8G OC",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 97,
+    "a": "TARJETA DE VIDEO ASUS DUAl RTX 4070 12GB DDR6 OC",
+    "b": "TARJETA DE VIDEO ASUS DUAL RTX 4070 WHITE 12GB DDR6 OC",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 98,
+    "a": "INTEL CPU CORE I9 12900KF 3.2GHz",
+    "b": "Intel Core i9 12900KF 3.2 GHz 30MB LGA1700",
+    "pAB": 0.9999998900400036,
+    "pBA": 0.9942730992386812
+  },
+  {
+    "i": 99,
+    "a": "M/B ASUS TUF GAMING B850M-E WIFI",
+    "b": "Placa Madre ASUS TUF B850M Plus WiFi AM5",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 100,
+    "a": "TARJETA DE VIDEO ASUS DUAL RX 7600 V2 8GB DDR6 OC",
+    "b": "Tarjeta de Video ASUS Radeon RX 7600 Dual EVO OC 8GB GDDR6",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 101,
+    "a": "M/B MSI B850M GAMING PLUS WIFI6E",
+    "b": "Placa Madre MSI B850M GAMING WIFI6E DDR5 AM5 mATX",
+    "pAB": 0.000010073201878946326,
+    "pBA": 0
+  },
+  {
+    "i": 102,
+    "a": "M/B ASUS PRIME H610M-K",
+    "b": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+    "pAB": 1.207946378470333e-7,
+    "pBA": 0.9971633849107098
+  },
+  {
+    "i": 103,
+    "a": "M/B ASUS PRIME H610M-A",
+    "b": "ASUS PRIME H610M-K",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 104,
+    "a": "MEMORIA RAM XPG SPECTRIX D35G 16 GB 3200MHZ DDR4 WHITE RGB",
+    "b": "Memoria RAM ADATA XPG Spectrix D35G RBG DDR4 3200 16GB",
+    "pAB": 0.0000477199638142062,
+    "pBA": 0
+  },
+  {
+    "i": 105,
+    "a": "MEMORIA ADATA XPG SPECTRIX D35G 8GB 3200MHz DDR4 RGB",
+    "b": "Memoria RAM XPG Spectrix D35g RGB DDR4 3200MHz 8GB Blanco",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 106,
+    "a": "MEMORIA ADATA XPG GAMMIX D35 8GB 3200MHz",
+    "b": "XPG Memoria RAM GAMMIX D35 8GB DDR4 3200MHz PC4-25600 WHITE",
+    "pAB": 0,
+    "pBA": 2.1749275155227834e-7
+  },
+  {
+    "i": 107,
+    "a": "MEMORIA KIT CORSAIR VEGEANCE 32GB (2X16GB) 5200MHz RGB AMD EXPO",
+    "b": "Memoria RAM Corsair Vengeance DDR5 32GB (2x16GB) 5200MHz",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 108,
+    "a": "M/B ASUS PRIME B760M-A CSM",
+    "b": "Placa Madre ASUS PRIME B760M-A D4-CSM, mATX, LGA1700",
+    "pAB": 0,
+    "pBA": 0.9998641816205505
+  },
+  {
+    "i": 109,
+    "a": "MEMORIA KIT CORSAIR DOMINATOR PLATINUM 32GB (2X16GB) 6200MHz DDR5 WHITE",
+    "b": "MEMORIA KIT CORSAIR VEGEANCE 32GB (2X16GB) 6200MHz RGB WHITE",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 110,
+    "a": "M/B MSI PRO B760M-P DDR4",
+    "b": "Placa Madre MSI PRO B760M-P DDR4, Micro-ATX, LGA1700",
+    "pAB": 0.9999999801444241,
+    "pBA": 0.9999999852637713
+  },
+  {
+    "i": 111,
+    "a": "M/B MSI B650M GAMING PLUS WIFI",
+    "b": "Placa Madre MSI B650M GAMING PLUS WIFI",
+    "pAB": 1,
+    "pBA": 0.9999999956560435
+  },
+  {
+    "i": 112,
+    "a": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR5 5200MHz 32GB CL40",
+    "b": "Kit de Memoria RAM Kingston Fury Beast de 32GB (16GB x2, DDR5, 5200Mhz, CL40, DIMM)",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 113,
+    "a": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR5 5200MHz 16GB CL40",
+    "b": "Memoria RAM Kingston FURY Beast Black RGB 16GB DDR5 5200MHz",
+    "pAB": 0,
+    "pBA": 2.110778961743396e-7
+  },
+  {
+    "i": 114,
+    "a": "MEMORIA RAM KINGSTON FURY RENEGADE RGB DDR5 6000MHz 32GB 2x16GB CL32",
+    "b": "MEMORIA RAM KINGSTON FURY RENEGADE DDR5 6000MHz 32GB 2x16GB CL32",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 115,
+    "a": "M/B ASUS PRIME B840M-A",
+    "b": "Placa Madre Asus PRIME B840M-A DDR5 AM5",
+    "pAB": 0.9999879071941049,
+    "pBA": 0.9999991908986998
+  },
+  {
+    "i": 116,
+    "a": "MEMORIA RAM KINGSTON HYPERX FURY RGB BLACK 8GB DDR4 3200Mhz CL16",
+    "b": "Memoria RAM Kingston Fury Beast 1 x 8GB DDR4-3200",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 117,
+    "a": "M/B ASROCK B650M PG Lightning WiFi",
+    "b": "M/B ASROCK B650M PG RIPTIDE WIFI",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 118,
+    "a": "MEMORIA RAM KINGSTON FURY BEAST DDR5 5200MHz 8GB CL40",
+    "b": "Memoria RAM Kingston Fury Beast Black 8GB 5200MHz DDR5 CL40",
+    "pAB": 0.9981389044055085,
+    "pBA": 0.7959507011364786
+  },
+  {
+    "i": 119,
+    "a": "M/B MSI PRO H610M-S DDR4",
+    "b": "Placa Madre MSI PRO H610M-G DDR5",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 120,
+    "a": "M/B MSI PRO H610M-G",
+    "b": "Placa Madre MSI PRO H610M-G DDR5",
+    "pAB": 0,
+    "pBA": 0.43609544182070464
+  },
+  {
+    "i": 121,
+    "a": "M/B ASUS TUF GAMING B850M-PLUS WIFI",
+    "b": "Placa Madre ASUS TUF B850M Plus WiFi AM5",
+    "pAB": 0.9998248397959258,
+    "pBA": 0.9999312986896326
+  },
+  {
+    "i": 122,
+    "a": "M/B ASUS PRIME B760M-A",
+    "b": "TARJETA MADRE ASUS PRIME PRIME B760M-A AX6 II",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 123,
+    "a": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR4 3200 MHz 8GB RGB",
+    "b": "Memoria RAM Kingston Fury Beast 1 x 8GB DDR4-3200",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 124,
+    "a": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR4 3200 MHz 16GB CL16",
+    "b": "Memoria RAM Kingston Fury Beast 16GB DIMM DDR4 3200mhz",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 125,
+    "a": "M/B MSI B650M PROJECT ZERO HIDDEN CONNECTORS",
+    "b": "Placa base MSI PRO B650M-P",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 126,
+    "a": "MEMORIA RAM HIKVISION 8GB 3200MHz DDR4 CL16",
+    "b": "Memoria RAM Hiksemi Armor White 8GB 3200MHz DDR4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 127,
+    "a": "M/B MSI PRO H610M-G DDR4",
+    "b": "Placa Madre MSI PRO H610M-G DDR5",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 128,
+    "a": "M/B ASUS PRIME B650M-A II",
+    "b": "Placa Madre ASUS Prime B650M-A AX II MicroATX AM5",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 129,
+    "a": "M/B ASUS PRIME B760M-A D4",
+    "b": "Placa Madre ASUS Prime B760M-A DDR5",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 130,
+    "a": "M/B ASUS PRIME B760M-A AX",
+    "b": "Placa Madre ASUS Prime B760M-A DDR5",
+    "pAB": 7.330888007466521e-8,
+    "pBA": 0
+  },
+  {
+    "i": 131,
+    "a": "MEMORIA RAM KINGSTON HYPERX FURY BLACK 8GB DDR4 3200Mhz CL16",
+    "b": "MEMORIA RAM KINGSTON HYPERX FURY RGB BLACK 8GB DDR4 3200Mhz CL16",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 132,
+    "a": "M/B ASROCK B650M-HDV/M.2",
+    "b": "M/B ASROCK B650M-HDV/M.2 WHITE",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 133,
+    "a": "M/B ASUS PRIME B650M-A AX II",
+    "b": "Placa Madre Asus PRIME B650M-A AX6 II",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 134,
+    "a": "M/B ASUS PRIME B650M-A WIFI II",
+    "b": "Placa Madre ASUS PRIME B650M-A AX6 II, AM5, DDR5, WiFi",
+    "pAB": 0.000035174419312290163,
+    "pBA": 8.394332917459944e-7
+  },
+  {
+    "i": 135,
+    "a": "M/B ASUS PRIME B760M-K D4",
+    "b": "ASUS PRIME B760M-K D4 LGA1700 DDR4",
+    "pAB": 0.9999999124039528,
+    "pBA": 0.9999999770434431
+  },
+  {
+    "i": 136,
+    "a": "M/B ASUS PRO A520M-C II/CSM",
+    "b": "Placa Madre ASUS PRIME A520M-A II MicroATX AMD CSM",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 137,
+    "a": "M/B ASUS PRIME B650M-A CSM",
+    "b": "Placa Madre Asus PRIME B650M-A AX6 II",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 138,
+    "a": "M/B MSI B450M-A PRO MAX",
+    "b": "Placa Madre MSI B450M-A PRO MAX II Socket AM4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 139,
+    "a": "M/B MSI MAG B650M MORTAR WIFI",
+    "b": "Placa Madre MSI B650M GAMING PLUS WIFI",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 140,
+    "a": "M/B MSI PRO B650M-A WIFI",
+    "b": "Placa Madre MSI B650M GAMING PLUS WIFI",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 141,
+    "a": "M/B ASUS PRIME B650M-A II-CSM",
+    "b": "Placa Madre Asus PRIME B650M-A AX6 II",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 142,
+    "a": "M/B ASUS PRIME H610M-A D4 CSM",
+    "b": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 143,
+    "a": "M/B ASROCK H610M-HDV",
+    "b": "PLACA MADRE ASROCK H610M HDV M2 D5 sLGA1700",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 144,
+    "a": "M/B ASUS TUF GAMING B550M-PLUS",
+    "b": "M/B ASUS PRIME B550M-K ARGB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 145,
+    "a": "M/B ASUS PRIME A520M-A II",
+    "b": "Placa Madre ASUS PRIME A520M-A II MicroATX AMD CSM",
+    "pAB": 0.999937518112568,
+    "pBA": 0.999999827274715
+  },
+  {
+    "i": 146,
+    "a": "M/B ASUS TUF GAMING B550M-PLUS WIFI II",
+    "b": "Placa Madre ASUS TUF GAMING B550M Plus WIFI II",
+    "pAB": 0.999979368591143,
+    "pBA": 0.9998086118913307
+  },
+  {
+    "i": 147,
+    "a": "M/B GIGABYTE B550M DS3H",
+    "b": "Placa Madre Gigabyte B550M K DDR4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 148,
+    "a": "M/B ASUS PRIME H610M-E D4-CSM",
+    "b": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 149,
+    "a": "M/B ASUS PRIME H610M-K D4",
+    "b": "Placa Madre ASUS PRIME H610M-K D4-CSM",
+    "pAB": 0,
+    "pBA": 0.9804363082706242
+  },
+  {
+    "i": 150,
+    "a": "M/B ASROCK A520M/AC",
+    "b": "M/B ASROCK A520M PRO4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 151,
+    "a": "M/B ASUS PRIME A520M-A",
+    "b": "Placa Madre Asus Prime A520M-A II",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 152,
+    "a": "M/B ASUS PRIME A520M-K",
+    "b": "Placa Madre AMD PRIME A520M-K (sAM4)",
+    "pAB": 0.9999995286426214,
+    "pBA": 0.9999998916730575
+  },
+  {
+    "i": 153,
+    "a": "M/B ASUS PRIME B550M-A/CSM",
+    "b": "Placa Madre ASUS Prime B550M-A AC",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 154,
+    "a": "DISCO ADATA LEGEND 800 1TB NVME",
+    "b": "Unidad SSD ADATA Legend 800 NVMe 1TB",
+    "pAB": 0.9999998884782837,
+    "pBA": 0.9999997762034178
+  },
+  {
+    "i": 155,
+    "a": "DISCO ADATA GAMMIX S70 BLADE 512GB NVME",
+    "b": "Disco Duro SSD ADATA LEGEND 710 512GB PCIE Gen3 M.2 NVMe",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 156,
+    "a": "DISCO KINGSTON NV2 2TB SSD PCIe 4.0 NVMe GEN 4×4",
+    "b": "Disco Duro SSD M.2 NVME Kingston FURY Renegade 2 TB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 157,
+    "a": "DISCO DURO SSD NVMe KINGSTON NV1 1TB",
+    "b": "Disco Duro SSD M.2 NVME Kingston FURY Renegade 1 TB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 158,
+    "a": "DISCO DURO SSD PATRIOT 480GB SATA III 2.5\"",
+    "b": "DISCO DURO SSD PATRIOT ELITE 480GB SATA III 2.5\"",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 159,
+    "a": "ADATA Memoria RAM 8GB DDR4 3200 (22) U-DIMM 1.2v Desktop",
+    "b": "Memoria RAM XPG Spectrix D35g RGB DDR4 3200MHz 8GB Blanco",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 160,
+    "a": "Gigabyte PSU Fuente De Poder UD850GM PG5 V2 850W PCI-EX GEN 5.1 ATX 3.1 80 Plus GOLD Full Modular",
+    "b": "Fuente de Poder Gigabyte GP-UD850GM PG5 V2 850W 80+ Gold",
+    "pAB": 0.9999949213185365,
+    "pBA": 0.999447128136014
+  },
+  {
+    "i": 161,
+    "a": "Kingston Unidad de Estado Sólido SSD 2TB NV3 PCIe 4.0 NVMe M.2 6000MB/s",
+    "b": "Disco Duro Kingston NV3 M.2 2280 2TB PCIe 4.0 x4",
+    "pAB": 0.9998683141003073,
+    "pBA": 0.9999863730798165
+  },
+  {
+    "i": 162,
+    "a": "ASUS TUF Gaming 1000G 80 PLUS Gold",
+    "b": "FUENTE DE PODER ASUS ROG STRIX-1000G 1000W 80 PLUS GOLD F.MODULAR",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 163,
+    "a": "Kingston SSD 1TB NV3 M.2 2230 NVMe PCIe 4.0",
+    "b": "SSD Kingston NV3 M.2 2280 Nvme 4.0 Gen 4×4 Ultra Fast 1TB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 164,
+    "a": "Kingston KC600 SSD 2TB SATA 6Gb/s AES de 256 bits",
+    "b": "DISCO SSD KINGSTON KC600 2TB SATA 2.5 SATA 3 3D TLC",
+    "pAB": 0.9902950477185096,
+    "pBA": 0.9997866589142386
+  },
+  {
+    "i": 165,
+    "a": "Kingston KC600 SSD 1TB SATA 6Gb/s AES de 256 bits",
+    "b": "DISCO SSD KINGSTON KC600 1TB SATA 2.5 SATA 3 3D TLC",
+    "pAB": 0.9999952299499516,
+    "pBA": 0.9999648808071945
+  },
+  {
+    "i": 166,
+    "a": "Kingston KC600 SSD 256GB SATA 6Gb/s AES de 256 bits",
+    "b": "DISCO SSD KINGSTON KC600 256GB SATA 2.5 SATA 3 3D TLC",
+    "pAB": 0.9999978483470399,
+    "pBA": 0.999998721530427
+  },
+  {
+    "i": 167,
+    "a": "Kingston SSD 500GB NV3 M.2 2230 NVMe PCIe 4.0",
+    "b": "Disco Duro SSD Kingston NV3, 500GB M.2 2230 PCIe 4.0 NVMe",
+    "pAB": 0.9999915213891992,
+    "pBA": 0.9996089089796064
+  },
+  {
+    "i": 168,
+    "a": "Fuente de Poder Gigabyte GP-UD850GM 850W 80PLUS Gold Modular",
+    "b": "Fuente de Poder Gigabyte GP-UD850GM PG5 V2 850W 80+ Gold",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 169,
+    "a": "Procesador Intel Core i5-12400",
+    "b": "INTEL CPU CORE I5 12400 2.5GHz",
+    "pAB": 0.9999999706612993,
+    "pBA": 0.9999995947522254
+  },
+  {
+    "i": 170,
+    "a": "Memoria Ram XPG Lancer Blade White 16GB DDR5 6000Mhz",
+    "b": "Memoria RAM XPG Lancer Blade RGB DDR5 16GB 6000 MTs Blanco",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 171,
+    "a": "Placa Madre AMD MSI A520M-A PRO",
+    "b": "Placa Madre MSI A520M PRO, AM4, Micro-ATX",
+    "pAB": 0,
+    "pBA": 0.0006825917936585299
+  },
+  {
+    "i": 172,
+    "a": "Memoria RAM DDR5 8GB 5600 MHz UDIMM BLACK RGB",
+    "b": "Memoria RAM XPG Lancer Blade DDR5 8GB 5600MHz Negro",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 173,
+    "a": "Fuente de poder 1500W 80 Plus Platinum",
+    "b": "Fuente de Poder Corsair HX1500i F. Modular UltraLow Platinum",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 174,
+    "a": "Fuente de Poder ROG Thor 1200W Platinum III",
+    "b": "Fuente de Poder ASUS ROG Thor 1200W Platinum III",
+    "pAB": 0.9999999869959427,
+    "pBA": 0.9999980924716962
+  },
+  {
+    "i": 175,
+    "a": "Memoria RAM DDR4 16GB 3600MHz Beast",
+    "b": "Memoria RAM Kingston Fury Beast 16GB 3600Mhz DDR4 CL18",
+    "pAB": 0.9999963880956242,
+    "pBA": 0.5242836191634268
+  },
+  {
+    "i": 176,
+    "a": "Pack AMD Ryzen 7 5700 + ASUS A520M-K",
+    "b": "Procesador AMD Ryzen 7 5700 - Socket AM4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 177,
+    "a": "Placa Madre sAM4 (AMD) - Gigabyte B550M H ARGB - 2x DDR4 - 1x M.2 - DisplayPort/HDMI - m-ATX",
+    "b": "M/B GIGABYTE B550M K",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 178,
+    "a": "Placa Madre LGA s1700 (Intel) - Asus Prime B760M-A AX6 II - 4x DDR5 - 3x M.2- Wi-Fi 6 - DisplayPort/HDMI - m-ATX",
+    "b": "M/B ASUS TUF GAMING B760M-PLUS WIFI II",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 179,
+    "a": "Placa Madre sAM5 (AMD) - Gigabyte B650M AORUS Elite AX - 4x DDR5 - 2x M.2 - Wi-Fi 6E - DisplayPort/HDMI - m-ATX",
+    "b": "Placa Madre sAM5 (AMD) - Gigabyte B650M D3HP AX - 4x DDR5 - 2x M.2- Wi-Fi 6E - DisplayPort/HDMI - m-ATX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 180,
+    "a": "Memoria RAM SODIMM 8 GB - DDR4 3200 MT/s - Kingston Fury (KF432S20IB/8)",
+    "b": "MEMORIA RAM KINGSTON HYPERX 8GB 3200MHz DDR4 SODIMM KF432S20IB/8",
+    "pAB": 0.9999999883381263,
+    "pBA": 0.9999999856928398
+  },
+  {
+    "i": 181,
+    "a": "Fuente de Poder 650W - Cougar Atlas 650 - 80 Plus Bronze",
+    "b": "Fuente de Poder 650W - Cougar Atlas 650 (2024) - 80 Plus Bronze",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 182,
+    "a": "Fuente de Poder 750W - Cougar Atlas 750 (2024) - 80 Plus Bronze",
+    "b": "Fuente de Poder Cougar ATLAS 750W 80 PLUS Bronze",
+    "pAB": 0.0002582310016320094,
+    "pBA": 0.0002965203302501633
+  },
+  {
+    "i": 183,
+    "a": "Memoria RAM DIMM 16 GB - DDR4 3200 MT/s - Kingston (KVR32N22D8/16)",
+    "b": "MEMORIA RAM KINGSTON HYPERX FURY BLACK 16GB DDR4 3200MHz",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 184,
+    "a": "Memoria RAM DIMM 16 GB - DDR5 6000 MT/s - XPG Lancer Blade RGB White - Intel XMP/AMD EXPO (AX5U6000C4816G-SLABRWH)",
+    "b": "Memoria Ram XPG Lancer Blade White 16GB DDR5 6000Mhz",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 185,
+    "a": "Memoria RAM DIMM 16 GB DDR5 6000 MT/s - Corsair Vengeance RGB - Intel XMP/AMD EXPO (CMH16GX5M1D6000Z38)",
+    "b": "RAM Corsair CORSAIR Vengeance RGB DDR5 RAM 16GB 6000MHz",
+    "pAB": 0,
+    "pBA": 0.9768808191775942
+  },
+  {
+    "i": 186,
+    "a": "Memoria RAM DIMM 32 GB (Kit 2 x 16 GB) - DDR5 5600 MT/s - Corsair Vengeance RGB - Intel XMP/AMD EXPO (CMH32GX5M2B5600Z40)",
+    "b": "MEMORIA KIT CORSAIR VEGEANCE 32GB (2X16GB) 5600MHz RGB AMD EXPO",
+    "pAB": 0.020338610140384676,
+    "pBA": 0.9987232735485182
+  },
+  {
+    "i": 187,
+    "a": "Memoria RAM DIMM 32 GB - DDR5 5600MT/s - Kingston (KCP556UD8-32)",
+    "b": "Memoria Ram 32GB DDR5 5600MT/s CL36 FURY Beast Black EXPO",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 188,
+    "a": "Tarjeta de Video ASUS Prime Radeon RX 9060 XT OC 16GB GDDR6",
+    "b": "Tarjeta de Video ASUS Prime Radeon RX 9060 XT OC, 16GB GDDR6",
+    "pAB": 0.9999996396415067,
+    "pBA": 0.9999999804447243
+  },
+  {
+    "i": 189,
+    "a": "Kit Memoria RAM PC 32GB 6000MT/s DDR5 CL36 DIMM (Kit of 2) FU",
+    "b": "Memoria RAM Kingston Fury Beast Black RGB 32GB DDR5 6000 MTs",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 190,
+    "a": "Unidad SSD HIKSEMI FUTURE CORE 1TB, PCIe Gen5x4 NVMe 2.0, M.2 2280, Lec.14300B/s, Esc.8800MB/s, Bulk",
+    "b": "Disco Duro SSD M.2 Hiksemi Wave 1TB NVMe PCle 3.0",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 191,
+    "a": "Fuente de Poder Asus ROG STRIX 1000W Platinum",
+    "b": "Fuente de Poder ASUS ROG Strix 1000W Platinum",
+    "pAB": 0.9999983722372678,
+    "pBA": 0.9999999339492397
+  },
+  {
+    "i": 192,
+    "a": "Placa Madre Asus Prime B840M-A WIFI",
+    "b": "M/B MSI PRO B840M-P WIFI6E",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 193,
+    "a": "Fuente de Poder Asus ROG Thor 1200W Platinum III",
+    "b": "Fuente de Poder ASUS ROG Thor 1200W Platinum III",
+    "pAB": 0.9999999557515153,
+    "pBA": 0.9999999861332056
+  },
+  {
+    "i": 194,
+    "a": "Memoria RAM Kingston 16 GB DDR4 DIMM 2666 MHz PC4-21300 CL19 1.2 V",
+    "b": "MEMORIA RAM KINGSTON HYPERX FURY DDR4 2666 MHz 16GB DDR4",
+    "pAB": 2.837153733786309e-7,
+    "pBA": 0
+  },
+  {
+    "i": 195,
+    "a": "Placa Madre Gigabyte A520M DS3H AM4 Ryzen DDR4, HDMI, DVI-D, PCI-e 3.0, M.2, USB 3.2 Micro-ATX (A520M-DS3H)",
+    "b": "Placa Madre Gigabyte A520M DS3H V2 AM4 DDR4 mATX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 196,
+    "a": "FUENTE DE PODER ANTEC MEGA 1000W 80+ GOLD FULL MODULAR ATX 3.1 PCIEX 5.1 P/N 0-761345-20188-9",
+    "b": "FUENTE DE PODER ANTEC 1000w NE1000G M FULL MODULAR ATX3.0 80 PLUS GOLD EC 0-761345-11393-9",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 197,
+    "a": "FUENTE DE PODER GAMEMAX 800W 80 PLUS BRONZE MODULAR WHITE P/N GM-800B WH",
+    "b": "FUENTE DE PODER GAMEMAX 800W 80 PLUS BRONZE MODULAR P/N GM-800B BK",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 198,
+    "a": "Memoria RAM 16GB DDR4 3200MHz SO-DIMM CL22 Non-ECC 1.2V 260p - Kingston",
+    "b": "Kingston KVR32S22S8/16 (1 x 16GB | SO-DIMM DDR4-3200)",
+    "pAB": 0.023011503094682844,
+    "pBA": 0
+  },
+  {
+    "i": 199,
+    "a": "Memoria RAM 8GB DDR5 5600MHz DIMM CL46 Non-ECC 1.2v 288p - Kingston",
+    "b": "MEMORIA DIMM KINGSTON DDR5 8GB 5600MT/S - KCP556US6-8",
+    "pAB": 0.9999107671629182,
+    "pBA": 0.9999999586007795
+  },
+  {
+    "i": 200,
+    "a": "Memoria RAM 64GB (2*32GB) DDR5 5600MHz DIMM CL36 Non-ECC 1.25v 288p FuryBeastRG",
+    "b": "Memoria KINGSTON 64GB 5600MT/s DDR5 CL36 DIMM FURY",
+    "pAB": 0.999999244378331,
+    "pBA": 0.9999998269733887
+  },
+  {
+    "i": 201,
+    "a": "Disco Duro Western Digital Red Plus 8TB 3.5\" 5640RPM SATA III 6GB/s 256MB p/NAS",
+    "b": "DISCO DURO WESTERN DIGITAL RED 8TB 256mb 5640rpm P/N WD80EFPX",
+    "pAB": 0.9999958451018346,
+    "pBA": 0.38604208428685516
+  },
+  {
+    "i": 202,
+    "a": "Fuente de Poder GIGABYTE UD850GM ice PG5 850W 80+ Gold Full Modular PCIe 5",
+    "b": "Fuente de Poder Gigabyte 850W 80+ Gold Full Modular",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 203,
+    "a": "Memoria RAM 16GB DDR5 5600MHz DIMM CL46 ECC 1.1V 288p - Kingston",
+    "b": "Memoria RAM Kingston 16GB DDR5 5600MHz DIMM CL46 Non-ECC",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 204,
+    "a": "Kingston Fury Renegade Pro KF560R32RBE-32 (1 x 32 GB | DIMM DDR5-6000 ECC)",
+    "b": "Memoria ram 32GB DDR5 6000Mhz CL32 RDimm Kingston Fury Renegade Pro Black Expo",
+    "pAB": 0.9999972434076373,
+    "pBA": 0.9997653009282382
+  },
+  {
+    "i": 205,
+    "a": "FUENTE DE PODER GAMEMAX GS-750G 80PLUS GOLD 750W F.MODULAR ATX 3.1 PCIe 5.1",
+    "b": "FUENTE DE PODER GAMEMAX GZ-750G 80PLUS GOLD 750W F.MODULAR ATX 3.1 PCIe 5.1",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 206,
+    "a": "FUENTE DE PODER GAMEMAX GE-650 80PLUS BRONZE 650W ATX 3.1 PCIe 5.1",
+    "b": "FUENTE DE PODER GAMEMAX GE-550 80PLUS BRONZE 650W ATX 3.1",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 207,
+    "a": "FUENTE DE PODER GAMEMAX VP-500 RGB 500W 80PLUS BRONZE",
+    "b": "FUENTE DE PODER GAMEMAX VP-500 ECO 500W 80 PLUS BRONZE",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 208,
+    "a": "FUENTE DE PODER GAMEMAX GP-500 500W 80PLUS BRONZE",
+    "b": "FUENTE DE PODER GAMEMAX VP-500 RGB 500W 80PLUS BRONZE",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 209,
+    "a": "FUENTE DE PODER ASUS ROG LOKI SFX-L 850W 80PLUS PLATINUM F.MODULAR",
+    "b": "FUENTE DE PODER ASUS ROG THOR 850W Platinum II",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 210,
+    "a": "FUENTE DE PODER COOLER MASTER V850 PLATINO 850W 80 PLUS PLATINUM F/MODULAR",
+    "b": "Fuente de Poder Cooler Master XG 850W 80 Platinum ARGB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 211,
+    "a": "Procesador AMD Ryzen 7 5800X3D, 8-Core 16-Thread, 3.4GHz",
+    "b": "CPU AMD Ryzen 7 5800X3D 3.4-4.5GHz Tur 96MB L3 Skt AM4 Sin FAN/G Aniv Edition",
+    "pAB": 0.006798919985935048,
+    "pBA": 0.00001358578494106119
+  },
+  {
+    "i": 212,
+    "a": "Procesador AMD Ryzen 5 8600G | AM5 | 6 Núcleos 12 Hilos | 16MB Caché L3 | Gráficos Integrados",
+    "b": "Procesador AMD Ryzen 5 8600G, AM5, 6 Nucleos, 12 Hilos, Gráficos Radeon 760M",
+    "pAB": 0.9999964301962383,
+    "pBA": 0.9999970863589303
+  },
+  {
+    "i": 213,
+    "a": "AMD Ryzen 5 7600 3.8 GHz AM5",
+    "b": "CPU AMD - Socket AM5 - Ryzen 5 7600 - 3.8GHZ - 6 Core (100-100001015BOX)",
+    "pAB": 0.9999999971578885,
+    "pBA": 0.9999997279313242
+  },
+  {
+    "i": 214,
+    "a": "Xtech Gaming Series PHOBOS Gabinete ATX Vidrio templado",
+    "b": "GABINETE XTECH PHOBOS XT-GMR4 - ATX/MICROATX - BLACK - SIDE GLASS WINDOW P/N XT-GMR4",
+    "pAB": 0.9999999940307671,
+    "pBA": 0.9999515373808779
+  },
+  {
+    "i": 215,
+    "a": "Tarjeta Gráfica MSI GeForce RTX 4060 Ti GAMING X 8G GDDR6",
+    "b": "TARJETA DE VIDEO MSI RTX 4060 Ti GAMING X 8G",
+    "pAB": 0.9999957773916954,
+    "pBA": 0.9999998838019327
+  },
+  {
+    "i": 216,
+    "a": "ELITE 490 - 3x ARGB Fans",
+    "b": "Gabinete Cooler Master Elite 490 - Negro",
+    "pAB": 0.9999336840861865,
+    "pBA": 0.9999990237480504
+  },
+  {
+    "i": 217,
+    "a": "FUENTE DE PODER GAMEMAX GP-750 750W 80PLUS BRONZE",
+    "b": "Fuente de Poder 750W - GameMax GP-750 - 80 Plus Bronze",
+    "pAB": 0.9999999868978771,
+    "pBA": 0.9999999315915581
+  },
+  {
+    "i": 218,
+    "a": "FUENTE DE PODER CORSAIR RM1000E 80 PLUS GOLD 1000W F.MODULAR",
+    "b": "Fuente de Poder 1000W 80Plus Gold RM1000e Fully Modular ATX 3.1",
+    "pAB": 0.007052744475431576,
+    "pBA": 0.9961867572828068
+  },
+  {
+    "i": 219,
+    "a": "Procesador AMD Ryzen 5 5600GT 6 Nucleos 36 GHz AM4",
+    "b": "CPU AMD Ryzen 5 5600GT (AM4)",
+    "pAB": 0.999999310655292,
+    "pBA": 0.9999998266606194
+  },
+  {
+    "i": 220,
+    "a": "Tarjeta de Video MSI GeForce RTX 5060 8G VENTUS 2X OC",
+    "b": "Tarjeta de Video Nvidia GeForce RTX 5060 8G VENTUS 2X OC WHITE",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 221,
+    "a": "GAMEMAX VENTILADOR 12CM PWM ARGB FN12A-N2 WHITE",
+    "b": "Ventilador 12 cm - GameMax PWM ARGB FN12A-N2 - Blanco",
+    "pAB": 1,
+    "pBA": 0.999999998130572
+  },
+  {
+    "i": 222,
+    "a": "Placa Madre Gigabyte A620M H AM5 DDR5",
+    "b": "Placa Madre Gigabyte A620M H AMD Socket AM5, DDR5, M-ATX",
+    "pAB": 0.9999996072311508,
+    "pBA": 0.999978723746246
+  },
+  {
+    "i": 223,
+    "a": "Placa Madre MSI PRO H610M-G DDR4 LGA 1700 INTEL",
+    "b": "MSI PRO H610M-G, LGA 1700, DDR5",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 224,
+    "a": "GAMEMAX ICEBURG 120 INFINITY WATER COOLING WHITE",
+    "b": "Refrigeración Líquida CPU - GameMax Iceburg 120 Infinity Blanco - 120 mm - 800 - 2000 rpm - 32 dB - 62.82 CFM",
+    "pAB": 1,
+    "pBA": 0.9999999888236862
+  },
+  {
+    "i": 225,
+    "a": "Placa Madre ASUS TUF Gaming Z790-PLUS WIFI DDR5 ATX, 90MB1D80-M1EAY0",
+    "b": "Placa Madre LGA s1700 (Intel) - Asus TUF Gaming Z790-PLUS WIFI - 4x DDR5 - 4x M.2 - Wi-Fi 6E - DisplayPort/HDMI - ATX",
+    "pAB": 0.9999999150546337,
+    "pBA": 0.999999889678242
+  },
+  {
+    "i": 226,
+    "a": "Gabinete Cougar Duoface RGB Mid Tower Negro",
+    "b": "Gabinete Gamer Cougar Duoface RGB Black 3 ventiladores ARGB incluidos",
+    "pAB": 0.9892281694161736,
+    "pBA": 2.619897750386415e-7
+  },
+  {
+    "i": 227,
+    "a": "Memoria RAM Kingston Fury Beast Black 8GB 5200MHz DDR5 CL40",
+    "b": "MEMORIA RAM KINGSTON FURY BEAST DDR5 RGB 5200MHz 8GB CL40",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 228,
+    "a": "Gabinete (Modular) - Cougar OmnyX - S/Fuente - ATX - Blanco - Incluye 4 Fan x 160 mm 2 Fan ARGB frontales y 2 Fan ARGB posteriores",
+    "b": "Gabinete Gamer Cougar OMNYX BLACK 4 ventiladores 160 mm ARGB incluidos",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 229,
+    "a": "Unidad SSD 240GB Sata III 2.5\"",
+    "b": "SSD MACROVIP SATA 3 2.5\"  SSD 240GB - MV240GB",
+    "pAB": 1,
+    "pBA": 0.9999918645686653
+  },
+  {
+    "i": 230,
+    "a": "ASUS ROG RYUO IV 360 ARGB White",
+    "b": "ASUS Cooling system - 90RC01N2-B0AAY0",
+    "pAB": 0.00010392869757396133,
+    "pBA": 0.9997694091512739
+  },
+  {
+    "i": 231,
+    "a": "Refrigeración Líquida Redragon CCW3000 Effect X, Negro",
+    "b": "Refrigeración Líquida Redragon CCW3000 Effect X, Negro",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 232,
+    "a": "DISCO SSD NVME M.2 MSI SPATIUM M450 1TB M.2 PCIe 4.0",
+    "b": "SSD M.2 (2280) - 1 TB - MSI Spatium M450 - NVMe PCIe 4.0 x4 (SPATIUM M450 PCIe 4.0 NVMe M.2)",
+    "pAB": 0.9999998584965113,
+    "pBA": 0.9999998362783564
+  },
+  {
+    "i": 233,
+    "a": "Memoria RAM Kingston Fury Beast RGB DDR4 8GB 3600Mhz",
+    "b": "Kingston FURY Beast 8GB DDR4 3600 MHz PC4-28800",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 234,
+    "a": "Gabinete Antec ST10M Negro",
+    "b": "GABINETE ANTEC ST10M NEGRO P/N 0-761345-10235-3",
+    "pAB": 0.9999999466416036,
+    "pBA": 0.9999995230498134
+  },
+  {
+    "i": 235,
+    "a": "Gabinete Gamer ESGAMING Y03-BK - Negro, E-ATX",
+    "b": "Gabinete Gamer ESGAMING Y03-BK - Negro, E-ATX",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 236,
+    "a": "Gabinete ESGAMING Gamer Mitra PRO 1101C, Mid Tower, ATX",
+    "b": "Gabinete ESGAMING Gamer Mitra PRO 1101C, Mid Tower, ATX",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 237,
+    "a": "Placa Madre Gigabyte B840M Aorus ELITE WIFI6E",
+    "b": "PLACA MADRE GIGABYTE AORUS B840M ELITE WIFI 6E SAM5",
+    "pAB": 0.9966489306013147,
+    "pBA": 0.005276501343350556
+  },
+  {
+    "i": 238,
+    "a": "32GB DDR4 3200MT/s Non-ECC Unbuffered DIMM",
+    "b": "Memoria RAM 32GB DDR4 3200MHz DIMM CL22 Non-ECC 1.2v 288p - Kingston",
+    "pAB": 0.9999999983260446,
+    "pBA": 0.9999999494407249
+  },
+  {
+    "i": 239,
+    "a": "Memoria RAM SODIMM 16 GB - DDR5 5600 MT/s - Kingston Fury Impact Black (KF556S40IB-16)",
+    "b": "Memoria RAM 16GB DDR5 5600MHz SO-DIMM CL40 Non-ECC 1.1v 262p KingstonFURYImpact",
+    "pAB": 0.9999999089650742,
+    "pBA": 0.9985895698983573
+  },
+  {
+    "i": 240,
+    "a": "Tarjeta de Video Gigabyte Radeon RX 9070 Gaming OC 16G",
+    "b": "Tarjeta de Video Gigabyte Radeon RX 9070 Gaming OC 16GB GDDR6",
+    "pAB": 0.9999975388844488,
+    "pBA": 0.988312764510102
+  },
+  {
+    "i": 241,
+    "a": "Placa Madre MSI PRO B850M-B GEN4, Micro-ATX, AM5, DDR5",
+    "b": "MSI PRO B850M-B GEN4 DDR5 AM5 mATX",
+    "pAB": 0.9999999004247803,
+    "pBA": 0.9999987359077074
+  },
+  {
+    "i": 242,
+    "a": "Memoria RAM Corsair Vengeance 16GB x 3200Mhz SODIMM CL22",
+    "b": "Corsair Memoria RAM VENGEANCE Series 16 GB (1 X 16 GB) DDR4 SODIMM 3200 MHz CL22",
+    "pAB": 0.9999195055455948,
+    "pBA": 0.9974113530940225
+  },
+  {
+    "i": 243,
+    "a": "Fuente de Poder ASUS Prime 750W Gold AP-750G",
+    "b": "Fuente de poder 750W 80 Plus Gold AP-750G",
+    "pAB": 0.9999996516144039,
+    "pBA": 0.9999998942847674
+  },
+  {
+    "i": 244,
+    "a": "Unidad de Estado Sólido Dell S4510, SSD SATA 1.92TB, Lectura Intensiva 6Gbps (400-BDQS)",
+    "b": "Disco SSD 1.92TB interno | Dell S4510 SATA 400-BDQS",
+    "pAB": 0.9999999945633133,
+    "pBA": 0.9999999747518861
+  },
+  {
+    "i": 245,
+    "a": "DISCO KINGSTON KC3000 SSD 2TB M.2 PCIe 4.0 NVMe",
+    "b": "Unidad de estado sólido Kingston KC3000 de 2TB (M.2 NVMe, PCIe 4.0, Hasta 7.000 MB/s)",
+    "pAB": 0.9999991318071793,
+    "pBA": 0.9999961932788259
+  },
+  {
+    "i": 246,
+    "a": "Placa Madre ASUS TUF GAMING Z890-PLUS WIFI, LGA 1851, ATX",
+    "b": "Placa Madre LGA s1851 (Intel) - Asus TUF Gaming Z890-PLUS WIFI - 4x DDR5 - 4x M.2 - Wi-Fi 7 - USB-C/DisplayPort/HDMI - ATX",
+    "pAB": 0.9999999800857556,
+    "pBA": 0.9999408732473194
+  },
+  {
+    "i": 247,
+    "a": "Fuente de Poder be quiet! PURE POWER 13 M 550W 80 PLUS Gold",
+    "b": "Fuente de Poder be quiet! PURE POWER 13 M 550W 80 PLUS Gold",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 248,
+    "a": "Refrigeración Líquida Redragon CCW-1018 - 360 - ARGB",
+    "b": "Refrigeración Líquida Redragon CCW-1018 ARGB 360mm Intel LGA1700 AMD AM5 Black",
+    "pAB": 0.9998813225101655,
+    "pBA": 0.9999763438406645
+  },
+  {
+    "i": 249,
+    "a": "Kingston Fury - DDR5 SDRAM - 5600 MHz - CL36 - 64GB Beast Black",
+    "b": "Memoria RAM 64GB DDR5 5600MHz DIMM CL36 Non-ECC 1.25v 288p KingstonFuryBeastBlac",
+    "pAB": 1,
+    "pBA": 0.9999999968472395
+  },
+  {
+    "i": 250,
+    "a": "Procesador Intel Core Ultra 9 285K hasta 5.7GHz, LGA1851",
+    "b": "Procesador Intel Core Ultra 9 285K  3.7 GHz - 24-core - LGA1851",
+    "pAB": 0.9999831584563916,
+    "pBA": 0.9999995335670656
+  },
+  {
+    "i": 251,
+    "a": "Gabinete - Cooler Master Elite 481 Wood - S/Fuente - m-ATX - Blanco - Incluye 3 ventiladores ARGB de 120 mm",
+    "b": "GABINETE GAMER COOLER MASTER CASE ELITE 481 WHITE E481-WHNN-S00",
+    "pAB": 0.9999998432049414,
+    "pBA": 0.9371349830971358
+  },
+  {
+    "i": 252,
+    "a": "Placa Madre AMD AM5 B850M | ASRock Riptide WiFi | mATX",
+    "b": "M/B ASROCK B850M RIPTIDE WIFI",
+    "pAB": 0.999917552478315,
+    "pBA": 0.9999937593346273
+  },
+  {
+    "i": 253,
+    "a": "MEMORIA KINGSTON 8GB 3200MHZ DDR4 P/N KCP432NS8/8",
+    "b": "Memoria Ram 8GB DDR4 3200MT/s CL22 Dimm Kingston",
+    "pAB": 0.9999990048091565,
+    "pBA": 0.9999612858190843
+  },
+  {
+    "i": 254,
+    "a": "Memoria RAM Kingston FURY Beast Black RGB 16GB DDR5 5200MHz",
+    "b": "MEMORIA RAM KINGSTON FURY BEAST DDR5 5200MHz 16GB CL40",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 255,
+    "a": "Fuente de Poder Cooler Master MWE Gold 850 V2 ATX",
+    "b": "FUENTE DE PODER COOLERMASTER MWE 850W V2 80 PLUS GOLD",
+    "pAB": 0.9893719429732244,
+    "pBA": 0.2615057327879664
+  },
+  {
+    "i": 256,
+    "a": "Memoria Ram DDR5 32GB 5600MT/s CL28 Kingston FURY Renegade Pro RDIMM Black EXPO",
+    "b": "Memoria RAM 32GB DDR5 5600MHz DIMM CL28 Reg ECC 1.35v 288p Kingston p/Servidor",
+    "pAB": 0.9999994058492371,
+    "pBA": 0.999999920513682
+  },
+  {
+    "i": 257,
+    "a": "Memoria RAM Kingston Fury Beast 16GB DIMM DDR4 3200mhz",
+    "b": "Memoria RAM 16GB DDR4 3200MHz DIMM CL16 Non-ECC 1.35v 288p Kingston FuryBeastRGB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 258,
+    "a": "Fuente de Poder MSI MAG A850GLS PCIE5 850W 80 Plus Gold",
+    "b": "Fuente de poder MSI  850 W MAG A850GL PCIE5 ATX 3.0",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 259,
+    "a": "Memoria RAM DIMM 16 GB - DDR5 5600 MT/s - Kingston  - Intel XMP/AMD EXPO (KCP556US8-16)",
+    "b": "Memoria UDIMM 16GB DDR5 5600MT/s Non-ECC Unbuffered DIMM",
+    "pAB": 0.999999943201603,
+    "pBA": 0.9999577215885412
+  },
+  {
+    "i": 260,
+    "a": "ADATA Unidad de Estado Sólido SSD 480GB SATA III 2.5 6Gb/s SU650 520MB/s",
+    "b": "Disco SSD 480GB interno | ADATA SU650 Azul",
+    "pAB": 0.9999999434148207,
+    "pBA": 0.999999989638334
+  },
+  {
+    "i": 261,
+    "a": "Seagate Ironwolf 4TB 5400RPM 256MB Nas",
+    "b": "DISCO DURO 3.5\" 4TB SEAGATE IRONWOLF PARA NAS P/N ST4000VN006",
+    "pAB": 1,
+    "pBA": 0.9999998909493983
+  },
+  {
+    "i": 262,
+    "a": "Memoria RAM DDR4 16GB 3200MHz UDIMM",
+    "b": "MEMORIA KINGSTON 16GB 3200MHZ DDR4 P/N KVR32N22S8/16",
+    "pAB": 0.9997765095436592,
+    "pBA": 0.9999849818601763
+  },
+  {
+    "i": 263,
+    "a": "M/B ASUS PRIME B650M-A CSM",
+    "b": "ASUS PRO B650M-CT-CSM",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 264,
+    "a": "Fuente de Poder Gigabyte GP-UD850GM 850W 80PLUS Gold Modular",
+    "b": "FUENTE DE PODER GIGABYTE UD850GM 850W - 80+ GOLD -  AC 100/240V P/N GP-UD850GM",
+    "pAB": 0.9999999431418635,
+    "pBA": 0.9999998620223345
+  },
+  {
+    "i": 265,
+    "a": "INTEL CPU CORE I5 12600K 3.7GHz",
+    "b": "Procesador ITL i5-12600K Core 3.7GHz 20MB LGA1700 12th Gen",
+    "pAB": 0.9999943484379981,
+    "pBA": 0.9894206454079948
+  },
+  {
+    "i": 266,
+    "a": "Tarjeta de Video ASUS Dual RTX 5050 OC GDDR6 8G",
+    "b": "ASUS Dual GeForce RTX 5050 8GB GDDR6 OC Edition [DUAL-RTX5050-O8G]",
+    "pAB": 0.9999826000823063,
+    "pBA": 0.999653948752044
+  },
+  {
+    "i": 267,
+    "a": "Memoria RAM DIMM 32 GB (Kit 2 x 16GB) - DDR5 5600 MT/s - Kingston Fury Beast - Intel XMP/ AMD EXPO - (KF556C36BBEK2-32)",
+    "b": "Memoria ram 32GB DDR5 5600Mhz CL36 Dimm Kingston (2x 16GB)",
+    "pAB": 0.999996133061945,
+    "pBA": 0.18261651671759796
+  },
+  {
+    "i": 268,
+    "a": "MSI MAG CORELIQUID A15 240",
+    "b": "Refrigeración Líquida MAG A15 240",
+    "pAB": 0.9948993353950816,
+    "pBA": 0.9974276309210675
+  },
+  {
+    "i": 269,
+    "a": "Tarjeta de Video NVIDIA Dual GeForce RTX 3050 6GB OC Edition GDDR6",
+    "b": "Tarjeta de Video ASUS Dual Nvidia GeForce RTX 3050 OC Edition 6GB GDDR6,14 Gbps, 96-bit, PCIe 4.0",
+    "pAB": 0.9999999794985507,
+    "pBA": 0.9999989283949829
+  },
+  {
+    "i": 270,
+    "a": "Placa Madre Gigabyte H510M K V2",
+    "b": "M/B GIGABYTE H510M K V2",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 271,
+    "a": "Unidad SSD 1TB 2.5\" SATA3 Western Digital Green",
+    "b": "DISCO WESTERN DE ESTADO SOLIDO SSD 1TB SATA 2.5\" GREEN SATA P/N WDS100T5G0A",
+    "pAB": 1,
+    "pBA": 0.9999999707013945
+  },
+  {
+    "i": 272,
+    "a": "Xtech Micro ATX 600W USB 2,0 HD Audio",
+    "b": "GABINETE XTECH MICROATX 600W P/N XTQ-100",
+    "pAB": 0.999999958602509,
+    "pBA": 0.9999955536639804
+  },
+  {
+    "i": 273,
+    "a": "Procesador AMD Ryzen 5 9600 6 Core 3.8GHz AM5",
+    "b": "Procesador AMD Ryzen 5 9600 AM5",
+    "pAB": 0.9999491814798761,
+    "pBA": 0.9995754492307056
+  },
+  {
+    "i": 274,
+    "a": "Gabinete XPG Lander 300 - Black, Mid Tower, Micro-ATX",
+    "b": "Gabinete XPG Lander 300 - Black, Mid Tower, Micro-ATX",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 275,
+    "a": "Tarjeta de Video MSI GeForce RTX 5070 12G VENTUS 3X OC",
+    "b": "Tarjeta de Video MSI GeForce RTX 5070 Ventus 3X OC 12GB GDDR7",
+    "pAB": 0.9973682991100061,
+    "pBA": 0.9998650458751482
+  },
+  {
+    "i": 276,
+    "a": "Disco Duro HPE 4TB 3.5\" 7200RPM SATA III 6GB/s Non Hot-Plug Serv/ProliantGen8",
+    "b": "Disco duro 4TB interno | HPE Midline 3.5“ LFF SATA 6Gb/s",
+    "pAB": 0.9999999354077689,
+    "pBA": 0.9999999656971598
+  },
+  {
+    "i": 277,
+    "a": "Tarjeta de Video Gigabyte Radeon RX 9060XT GAMING OC ICE 16G",
+    "b": "Gigabyte Tarjeta de Video GPU AMD RADEON RX 9060 XT GAMING OC ICE 16G",
+    "pAB": 0.9999998746515304,
+    "pBA": 0.9999826750780971
+  },
+  {
+    "i": 278,
+    "a": "Memoria RAM XPG Spectrix D50 RGB DDR4 3600MHz 8GB Blanco",
+    "b": "MEMORIA RAM XPG SPECTRIX D50 8GB 3600MHZ DDR4 CL18",
+    "pAB": 1.4228243790634926e-7,
+    "pBA": 0
+  },
+  {
+    "i": 279,
+    "a": "Disco Duro Purple 2TB CCTV 256mb Western Digital",
+    "b": "Disco Duro Western Digital Purple 2TB 3.5\" 5400RPM SATA3 64MB p/Videovigilancia",
+    "pAB": 0.00010432531945424213,
+    "pBA": 0.00046748903301336247
+  },
+  {
+    "i": 280,
+    "a": "Procesador Intel Xeon Silver 4416+ - 2 GHz - 20 núcleos - 40 hilos - 35.75 MB caché - FCLGA4677 Socket - para P/N: P53568-001",
+    "b": "Procesador Intel Xeon Silver 4416+ | 2.0GHz 20-core 165W para HPE",
+    "pAB": 0.999995422051207,
+    "pBA": 0.9999997367246363
+  },
+  {
+    "i": 281,
+    "a": "Placa Madre MSI B550M-A PRO, Micro ATX, AM4, DDR4",
+    "b": "Placa Madre sAM4 (AMD) - MSI PRO B550M-B - 2x DDR4 - 2x M.2 - DisplayPort/HDMI - m-ATX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 282,
+    "a": "Procesador AMD Ryzen 7 7800X3D | AM5 | 6 Núcleos 12 Hilos | 16MB Caché L3 | Gráficos Integrados",
+    "b": "Procesador AMD Ryzen 7 7800X3D",
+    "pAB": 0.9999937492358065,
+    "pBA": 0.9999995269378495
+  },
+  {
+    "i": 283,
+    "a": "Disco Duro Kingston NV3 M.2 2280 2TB PCIe 4.0 x4",
+    "b": "Unidad de Estado Sólido Kingston SSD de 2 TB (NVMe, M.2 2280, 2100/1700 MB/s)",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 284,
+    "a": "Tarjeta de Video ASUS Dual RTX 5050 OC GDDR6 8G",
+    "b": "Tarjeta de Video Asus Dual GeForce RTX5050 8GB OC",
+    "pAB": 0.9724398813781027,
+    "pBA": 0.9997822555793228
+  },
+  {
+    "i": 285,
+    "a": "Kingston SSD 480GB A400 2.5″ SATA 6Gb",
+    "b": "Disco estado sólido Kingston DC450R de 480GB (SSD, SATA, Cifrado, Alto rendimiento)",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 286,
+    "a": "Placa Madre Asus PRIME B760M-A-C. S. M. LGA 1700 DDR5, mATX",
+    "b": "M/B ASUS PRIME B760M-A",
+    "pAB": 0,
+    "pBA": 0.032025974232747334
+  },
+  {
+    "i": 287,
+    "a": "Memoria RAM Corsair Vengeance 32GB (2x16GB) DDR5 6000MHz",
+    "b": "MEMORIA KIT CORSAIR VEGEANCE 32GB (2X16GB) 6000MHz RGB WHITE",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 288,
+    "a": "Placa Madre Asus PRIME B760M-A-C. S. M. LGA 1700 DDR5, mATX",
+    "b": "M/B ASUS PRIME B760M-A AX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 289,
+    "a": "Placa Madre Gigabyte B840M Aorus ELITE WIFI6E",
+    "b": "Placa Madre Gigabyte B840M AORUS ELITE WIFI6E AM5 DDR5 Micro ATX",
+    "pAB": 0.9999912854486166,
+    "pBA": 0
+  },
+  {
+    "i": 290,
+    "a": "Placa Madre AMD AM5 B850M | ASRock Riptide WiFi | mATX",
+    "b": "M/B ASROCK B850M PRO-A WIFI",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 291,
+    "a": "Fuente de Poder ASUS ROG Thor 1200W, Certificada 80+ Plus Platinum, ATX 3.1, Gaming Premium",
+    "b": "Fuente de Poder ASUS ROG STRIX 1200P Gaming 1200W Certificada 80+ Plus Platinum ATX 3.1 Modular",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 292,
+    "a": "M/B ASUS PRIME H610M-K",
+    "b": "Placa Madre Asus H610M-K Prime Intel Micro ATX DDR5 LGA 1700 PCIe 4.0 M.2 (90MB1GA0-M0EAY0)",
+    "pAB": 0.0000020579839347432955,
+    "pBA": 0.0010801181509192263
+  },
+  {
+    "i": 293,
+    "a": "Placa Madre ASUS PRIME B860M-A, LGA1851, mATX, DDR5",
+    "b": "Placa Madre ASUS PRIME B860M-A",
+    "pAB": 0.9999982670021695,
+    "pBA": 0.9999996843911864
+  },
+  {
+    "i": 294,
+    "a": "FUENTE DE PODER GAMEMAX GS-850G 80PLUS GOLD 850W F.MODULAR ATX 3.1 PCIe 5.1",
+    "b": "FUENTE DE PODER SLIM SFX GAMEMAX 850W GOLD SF850 WHITE 80+ GOLD P/N SFXGS-850GWHITE",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 295,
+    "a": "MEMORIA RAM KINGSTON FURY BEAST RGB DDR4 3200 MHz 16GB CL16",
+    "b": "Memoria RAM DDR4 16GB 3200MHz UDIMM",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 296,
+    "a": "Placa Madre MSI B850M GAMING WIFI6E DDR5 AM5 mATX",
+    "b": "M/B MSI B850M GAMING WIFI6E",
+    "pAB": 0.9999316045790899,
+    "pBA": 0.9999987318755481
+  },
+  {
+    "i": 297,
+    "a": "Placa Madre Asus PRIME B760M-A-C. S. M. LGA 1700 DDR5, mATX",
+    "b": "M/B ASUS PRIME B760M-A D4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 298,
+    "a": "MEMORIA RAM XPG SPECTRIX D35 16 GB 3200MHZ DDR4 BLACK",
+    "b": "Memoria RAM DDR4 16GB 3200MHz RGB UDIMM",
+    "pAB": 0.0000017035413608489201,
+    "pBA": 0.9991479985179849
+  },
+  {
+    "i": 299,
+    "a": "Memoria RAM DIMM 32 GB - DDR5 5600 MT/s - Kingston Fury Beast Black - Intel XMP/AMD EXPO (KF556C36BBE-32)",
+    "b": "Memoria Ram DDR5 32GB 5600MT/s CL28 Kingston FURY Renegade Pro RDIMM Black EXPO",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 300,
+    "a": "Placa Madre Gigabyte B650 D2HP AM5 DDR5 Micro-ATX",
+    "b": "M/B GIGABYTE B650M DS3H",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 301,
+    "a": "Memoria RAM Kingston Fury Beast 32G (2×16) 6000MTs DDR5 CL30",
+    "b": "MEMORIA RAM KINGSTON FURY RENEGADE RGB DDR5 6000MHz 32GB 2x16GB CL32",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 302,
+    "a": "Placa Madre MSI B550M PRO-VDH WIFI",
+    "b": "PLACA MADRE B550M PRO-VDH WIFI sAM4 DDR4 MICRO ATX P/N B550MPRO-VDHWIFI",
+    "pAB": 0.9999999877625753,
+    "pBA": 0.9999961486680301
+  },
+  {
+    "i": 303,
+    "a": "Disco Duro SSD M.2 Western Digital WD Black SN850X 1TB NVMe",
+    "b": "Unidad SSD 1TB WD Black SN8100 NVMe",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 304,
+    "a": "Memoria RAM DIMM 32 GB - DDR5 6000 MT/s - Kingston FURY Beast - Black - AMD EXPO (KF560C30BBE-32)",
+    "b": "Memoria RAM 32GB (2*16GB) DDR5 6000MHz DIMM CL36 Non-ECC 1.35v 288p Fury Beast",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 305,
+    "a": "INTEL CORE CPU I7 10700 2.9GHz",
+    "b": "PROCESADOR INTEL CORE I7 10700 CACHE s1200 OEM MAS VENTILADOR ORIGINAL",
+    "pAB": 0.22948930667463097,
+    "pBA": 0.18248414536171692
+  },
+  {
+    "i": 306,
+    "a": "Placa Madre Asus PRIME B760M-A-C. S. M. LGA 1700 DDR5, mATX",
+    "b": "M/B ASUS PRIME B760M-K D4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 307,
+    "a": "M/B ASUS PRIME H610M-K",
+    "b": "ASUS PRIME H610M-F D4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 308,
+    "a": "Memoria RAM 16GB DDR5 5600 MHz UDIMM",
+    "b": "Kingston KTL-TS556E-16G (1 x 16 GB | DIMM DDR5-5600 ECC)",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 309,
+    "a": "SSD Western Digital WD Black SN7100 500GB M.2 NVMe PCIe Gen4",
+    "b": "DISCO NVME WESTERN DIGITAL BLUE SN570 500GB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 310,
+    "a": "Fuente de Poder XPG Pylon 750W 80 Plus Bronze",
+    "b": "FUENTE DE PODER ADATA XPG PYLON 750W BRONZE P/N PYLON750B-BKCEU",
+    "pAB": 0.9999999061345822,
+    "pBA": 0.6091553820417831
+  },
+  {
+    "i": 311,
+    "a": "MSI Placa Madre A520M-A PRO RYZEN 5000 SERIES SOCKET AM4",
+    "b": "Placa Madre sAM4 (AMD) - MSI A520M PRO - 2x DDR4 - 1x M.2 - DisplayPort/HDMI/VGA - m-ATX",
+    "pAB": 0.9950968679640606,
+    "pBA": 0
+  },
+  {
+    "i": 312,
+    "a": "Placa Madre MSI B450M-A PRO MAX II Socket AM4",
+    "b": "M/B MSI B450M PRO-VDH MAX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 313,
+    "a": "Placa Madre Gigabyte B550M DS3H AC AMD AM4",
+    "b": "Placa Madre sAM4 (AMD) - Gigabyte B550M H ARGB - 2x DDR4 - 1x M.2 - DisplayPort/HDMI - m-ATX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 314,
+    "a": "MEMORIA RAM KINGSTON 3200MHz 8GB CL22",
+    "b": "Memoria RAM DDR4 8 GB 3200MHz UDIMM",
+    "pAB": 0.9991952293761228,
+    "pBA": 0.9995317330007342
+  },
+  {
+    "i": 315,
+    "a": "Placa Madre MSI PRO H610M-G DDR4 LGA 1700 INTEL",
+    "b": "M/B MSI PRO H610M-S DDR4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 316,
+    "a": "Memoria RAM Corsair Vengeance 32GB (2x16GB) DDR5 6000MHz",
+    "b": "Memoria RAM DIMM 32 GB (Kit 2 x 16 GB) DDR5 6000 MT/s - Corsair Vengeance - Intel XMP/AMD EXPO (CMK32GX5M2D6000Z38)",
+    "pAB": 0.9968258506676831,
+    "pBA": 1.10420059159706e-7
+  },
+  {
+    "i": 317,
+    "a": "Disco Duro SSD Kingston NV2 M.2 1TB PCie 4.0",
+    "b": "DISCO DURO SSD NVMe KINGSTON NV1 1TB",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 318,
+    "a": "Procesador Intel Core Ultra 5 225 4.9GHz LGA1851",
+    "b": "Procesador Intel Core Ultra 5 225 (20M Cache, up to 4.90 GHz) FCLGA18W, Socket LGA 1851, 65W, sin Video",
+    "pAB": 0.9211319349117824,
+    "pBA": 0.4326823176135281
+  },
+  {
+    "i": 319,
+    "a": "FUENTE DE PODER ASUS ROG THOR 1200W 80PLUS PLATINUM",
+    "b": "Fuente de Poder Asus ROG Thor 1200W Platinum III",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 320,
+    "a": "Memoria RAM DIMM 32 GB - DDR5 6000 MT/s - Kingston Fury Beast RGB Black - Intel XMP/AMD EXPO - (KF560C30BBEA-32)",
+    "b": "Memoria ram 32GB DDR5 6000Mhz CL32 RDimm Kingston Fury Renegade Pro Black Expo",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 321,
+    "a": "Fuente de Poder ATOM B650 Bronze",
+    "b": "FUENTE DE PODER ANTEC NE650M V2 EC 80PLUS  BRONZE",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 322,
+    "a": "Memoria RAM DIMM 32 GB - DDR5 5600 MT/s - Kingston Fury Beast Black - Intel XMP/AMD EXPO (KF556C36BBE-32)",
+    "b": "Memoria RAM 32GB DDR5 5600MHz DIMM CL46 ECC-Reg 1.1v 288p pServ Dell",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 323,
+    "a": "FUENTE DE PODER MSI MAG A650GL 650W 80 PLUS GOLD MODULAR",
+    "b": "FUENTE DE PODER MSI 650W GOLD NO MODULAR MAGA650GNII P/N MAG650GNII",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 324,
+    "a": "Fuente de Poder Corsair RM850e 850W Modular Gold",
+    "b": "FUENTE DE PODER CORSAIR RM850 850W 80 PLUS GOLD F/MODULAR",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 325,
+    "a": "Fuente de Poder MSI MAG A850GN 850W PCIE5 Gold",
+    "b": "FUENTE DE PODER MSI 850W GOLD NO MODULAR MAG A850GN P/N MAG A850GN PCIE5",
+    "pAB": 0.9999999649482653,
+    "pBA": 0.999996293827839
+  },
+  {
+    "i": 326,
+    "a": "Unidad SSD 1TB GX PRO 8100 OPTIMUS M.2 NVMe",
+    "b": "SSD Western Digital WD Blue SN5100 1 TB NVMe M-2 PCle 4.0",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 327,
+    "a": "Placa Madre ASUS Prime B760M-A AX6 ll",
+    "b": "M/B ASUS PRIME B760M-A AX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 328,
+    "a": "Memoria Ram DDR5 32GB 5600MT/s CL28 Kingston FURY Renegade Pro RDIMM Black EXPO",
+    "b": "Memoria RAM 32GB DDR5 5600MHz DIMM CL36  Non-ECC 1.25v 288p KingstonFURYRenegPro",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 329,
+    "a": "ADATA Memoria RAM 8GB DDR4 3200 (22) U-DIMM 1.2v Desktop",
+    "b": "A-DATA XPG Spectrix D35G AX4U32008G16A-SBKD35G (1 x 8 GB | DIMM DDR4-3200)",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 330,
+    "a": "DISCO SSD M.2 CRUCIAL P310 1TB NVMe PCIe 4.0",
+    "b": "Crucial Unidad de Almacenamiento SSD PCIe M2 NVME 2280 Gen4 E100 1TB 5000mbps",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 331,
+    "a": "Unidad de Estado Sólido 1TB Kingston NV3 PCIe 4.0 NVMe M.2",
+    "b": "Kingston SSD 1TB NV3 M.2 2230 NVMe PCIe 4.0",
+    "pAB": 1.855321850032955e-7,
+    "pBA": 0.9944321564463323
+  },
+  {
+    "i": 332,
+    "a": "Procesador AMD Ryzen 5 7600 6 Nucleos 3.8Ghz AM5",
+    "b": "AMD Ryzen 5 7600 3.8 GHz AM5",
+    "pAB": 0.9999991415566936,
+    "pBA": 0.9999963742819608
+  },
+  {
+    "i": 333,
+    "a": "DISCO NVME WESTERN DIGITAL BLUE SN570 500GB",
+    "b": "Unidad SSD 500GB SN3000 NVMe SSD Green NVMe Performance",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 334,
+    "a": "Placa Madre AMD AM5| X870 ASUS TUF Gaming Plus WiFi |ATX",
+    "b": "PLACA MADRE ASUS PRIME X870-P WIFI - ATX - SAM5  P/N PRIMEX870-PWIFI",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 335,
+    "a": "M/B ASUS PRO A520M-C II/CSM",
+    "b": "Placa Madre Asus Prime A520M-A II",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 336,
+    "a": "Memoria RAM DIMM 32 GB - DDR5 6000 MT/s - Kingston FURY Beast Black - Intel XMP/AMD EXPO (KF560C36BBE-32)",
+    "b": "Memoria RAM 32GB (2*16GB) DDR5 6000MHz DIMM CL36 Non-ECC 1.35v 288p FURYBeastBl",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 337,
+    "a": "Placa Madre ASUS PRIME B760M-A D4-CSM, mATX, LGA1700",
+    "b": "M/B ASUS PRIME B760M-K D4",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 338,
+    "a": "Corsair Memoria RAM VENGEANCE LPX 8GB DDR4 3200 MHz C16 – Negro [CMK8GX4M1E3200C16]",
+    "b": "Memoria Ram DDR4 8GB 3200MHz Corsair Vengeance RGB Pro DIMM, PC4-25600, CL16, 1.35V",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 339,
+    "a": "Memoria RAM Corsair Vengeance RGB RS 8GB x 3200Mhz DDR4",
+    "b": "Corsair Memoria RAM VENGEANCE LPX 8GB DDR4 3200 MHz C16 – Negro [CMK8GX4M1E3200C16]",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 340,
+    "a": "Memoria RAM Kingston Fury Beast 1 x 8GB DDR4-3200",
+    "b": "Memoria RAM DIMM 8 GB - DDR4 3200 MT/s - Kingston Fury Renegade Black (KF432C16RB2/8)",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 341,
+    "a": "Fuente de Poder XPG Pylon 550W 80 Plus Bronze",
+    "b": "Fuente de Poder 550W XPG Pylon 80+ Bronze",
+    "pAB": 0.9999988690590791,
+    "pBA": 0.9999993616451822
+  },
+  {
+    "i": 342,
+    "a": "FUENTE DE PODER MSI MAG A650GL 650W 80 PLUS GOLD MODULAR",
+    "b": "Fuente de Poder 650W - MSI MAG A650GN II - 80 Plus Gold",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 343,
+    "a": "Memoria Ram Notebook Kingston KCP556US6-8 1 x 8 GB | SO-DIMM DDR5-5600",
+    "b": "Memoria RAM 8GB DDR5 5600MHz SO-DIMM CL46 Non-ECC 1.1v 262p - Kingston",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 344,
+    "a": "DISCO KINGSTON NV2 2TB SSD PCIe 4.0 NVMe GEN 4×4",
+    "b": "SSD M.2 (2280) - 2 TB - Kingston KC3000 - NVMe PCIe 4.0 x4 (SKC3000D/2048G)",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 345,
+    "a": "Placa Madre ASUS PRIME B840M-A WIFI",
+    "b": "Placa Madre Asus Prime B840M-A WIFI",
+    "pAB": 0.9999997897640885,
+    "pBA": 0.9999994705231317
+  },
+  {
+    "i": 346,
+    "a": "Placa Madre ASUS PRIME A620M-K, AM5, DDR5, mATX",
+    "b": "Placa Madre Asus Prime A620M-K (DDR5)",
+    "pAB": 0.9999992406077668,
+    "pBA": 0.9999979968396062
+  },
+  {
+    "i": 347,
+    "a": "Placa Madre sAM5 (AMD) - Gigabyte X870E AORUS ELITE X3D ICE - 4x DDR5 - 4x M.2- Wi-Fi 7 - USB-C/HDMI - ATX",
+    "b": "Placa Madre Gigabyte X870E AERO X3D Dark Wood AM5 ATX DDR5 WiFi 7 PCIe 5",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 348,
+    "a": "FUENTE DE PODER ASUS PRIME AP-850G 850W 80PLUS GOLD F.MODULAR",
+    "b": "Fuente de Poder Asus Prime 850W GOLD",
+    "pAB": 0.9997621179936745,
+    "pBA": 0.9999999611100715
+  },
+  {
+    "i": 349,
+    "a": "CPU AMD RYZEN 9 9950X 4.3 GHz",
+    "b": "AMD Ryzen 9 9950X Granite Ridge AM5 4.30GHz 16-Core",
+    "pAB": 0.9954771276129027,
+    "pBA": 0.9999733804017441
+  },
+  {
+    "i": 350,
+    "a": "CPU AMD RYZEN 9 9900X 4.4 GHz",
+    "b": "Procesador AMD Ryzen 9 9900X 4.4 GHz, 12-Core AM5",
+    "pAB": 0.9999989133512163,
+    "pBA": 0.9999994898867623
+  },
+  {
+    "i": 351,
+    "a": "Procesador Intel Core i5-12400",
+    "b": "INTEL CPU CORE I5 12400 2.5GHz",
+    "pAB": 0.999999928110321,
+    "pBA": 0.9999900940577549
+  },
+  {
+    "i": 352,
+    "a": "Procesador Intel Core Ultra 7 265K 20 cores 3.9Ghz",
+    "b": "Procesador Intel Core Ultra 7 265K 3.9GHz 30MB DDR5 LGA1851",
+    "pAB": 0.9999990809787659,
+    "pBA": 0.9999768133497212
+  },
+  {
+    "i": 353,
+    "a": "Procesador AMD Ryzen 7 8700G 4.2 GHz 8-Core AM5",
+    "b": "Procesador AMD Ryzen 7 8700G 8 Core 5.15GHz 24MB",
+    "pAB": 0.9999997707220192,
+    "pBA": 0.9989749575186939
+  },
+  {
+    "i": 354,
+    "a": "Tarjeta de Video Radeon RX9070 XT 16GB - Gigabyte GAMING OC - GDDR6, 256 bits - PCIe 5.0 - DisplayPort, HDMI",
+    "b": "Tarjeta de Video Gigabyte Radeon RX 9070 XT GAMING OC 16GB",
+    "pAB": 0.9997259481830562,
+    "pBA": 0.9999135937921277
+  },
+  {
+    "i": 355,
+    "a": "Tarjeta de Video MSI GeForce RTX 5080 Gaming Trio White OC 16GB GDDR7",
+    "b": "Tarjeta de Video MSI RTX 5080 16G GAMING TRIO OC WHITE",
+    "pAB": 0.9999584340753822,
+    "pBA": 0.9999607068835696
+  },
+  {
+    "i": 356,
+    "a": "Tarjeta de Video NVIDIA GeForce RTX 5050 WINDFORCE OC 8G",
+    "b": "Tarjeta de Video Gigabyte GeForce RTX 5050 WINDFORCE OC 8G",
+    "pAB": 0.9998737409441916,
+    "pBA": 0.999582611486478
+  },
+  {
+    "i": 357,
+    "a": "Tarjeta de Video MSI RTX 5070 Ventus 3X 12G OC",
+    "b": "Tarjeta de Video MSI GeForce RTX 5070 12G VENTUS 3X OC",
+    "pAB": 0.99999730277362,
+    "pBA": 0.9999296746623206
+  },
+  {
+    "i": 358,
+    "a": "Tarjeta de Video Asus DUAL RTX 5060 OC 8GB",
+    "b": "Nvidia RTX 5060 8GB GDDR6 Asus Dual OC",
+    "pAB": 0.9991474003193569,
+    "pBA": 0.9989010076950505
+  },
+  {
+    "i": 359,
+    "a": "TARJETA DE VIDEO MSI RTX 3050 GAMING X 6GB DDR6",
+    "b": "Tarjeta de Video MSI GeForce RTX 3050 GAMING X 6G - 6 GB GDDR6 (96 bit)",
+    "pAB": 0.9999990448231486,
+    "pBA": 0.9974424574526445
+  },
+  {
+    "i": 360,
+    "a": "Tarjeta de Video ASUS Prime Radeon RX 9060 XT OC 16GB GDDR6",
+    "b": "Tarjeta de Video ASUS Prime Radeon RX 9060 XT OC, 16GB GDDR6",
+    "pAB": 0.9999996975609551,
+    "pBA": 0.9999999711690402
+  },
+  {
+    "i": 361,
+    "a": "Tarjeta de video GeForce RTX 4060 GAMING X 8GB GDDR6, 128-bit, PCI-e 4.0",
+    "b": "TARJETA DE VIDEO MSI RTX 4060 GAMING X 8GB GDDR6 DLSS3",
+    "pAB": 0.9964513407754849,
+    "pBA": 0.9185168910515699
+  },
+  {
+    "i": 362,
+    "a": "Tarjeta de Video NVIDIA GeForce RTX 5050 8GB Windforce OC V2",
+    "b": "Tarjeta de Video Gigabyte RTX 5050 WINDFORCE OC V2 8 GB",
+    "pAB": 0.9999559145875399,
+    "pBA": 0.9997365920540338
+  },
+  {
+    "i": 363,
+    "a": "Tarjeta de Video MSI GeForce RTX 5070 Ventus 2X OC 12GB GDDR7",
+    "b": "Tarjeta de Video MSI GeForce RTX 5070 12G VENTUS 2X OC",
+    "pAB": 0.999830137224037,
+    "pBA": 0.9989676770622277
+  },
+  {
+    "i": 364,
+    "a": "TARJETA DE VIDEO ASROCK RX9060XT CHALLENGER 16GB OC RX9060XT CL 16GO",
+    "b": "Tarjeta de Video ASRock Radeon RX 9060 XT Challenger OC 16GB GDDR6",
+    "pAB": 0.999986592876624,
+    "pBA": 0.9999530170441334
+  },
+  {
+    "i": 365,
+    "a": "TARJETA DE VIDEO ASROCK RX9060XT 8GB CHALLENGER OC RX9060XT CL 8GO",
+    "b": "TARJETA DE VIDEO ASROCK RX 9060 XT CHALLENGER 8GB OC",
+    "pAB": 0.9839399543468619,
+    "pBA": 0.9860534440265407
+  },
+  {
+    "i": 366,
+    "a": "TARJETA DE VIDEO ASUS TUF GEFORCE RTX 5080 16GB GAMING OC 256BIT GDDR7 P/N TUF-RTX5080-O16G-GAMING",
+    "b": "ASUS TUF Gaming GeForce RTX 5080 16GB GDDR7 OC Edition [TUF-RTX5080-O16G-GAMING]",
+    "pAB": 0.999999856693449,
+    "pBA": 0.9999998783213879
+  },
+  {
+    "i": 367,
+    "a": "Placa Madre ASRock B850M Riptide WI-FI AM5 DDR5",
+    "b": "Placa Madre AMD AM5 B850M ASRock Riptide WiFi mATX",
+    "pAB": 0.9999975605445723,
+    "pBA": 0.9967534856200918
+  },
+  {
+    "i": 368,
+    "a": "M/B MSI PRO B760M-P DDR4",
+    "b": "Placa Madre MSI PRO B760M-P DDR4, Micro-ATX, LGA1700",
+    "pAB": 0.9999999904866828,
+    "pBA": 0.9999999852637713
+  },
+  {
+    "i": 369,
+    "a": "M/B MSI B650M GAMING PLUS WIFI",
+    "b": "Placa Madre MSI B650M GAMING PLUS WIFI",
+    "pAB": 1,
+    "pBA": 0.999999993256442
+  },
+  {
+    "i": 370,
+    "a": "M/B ASUS PRIME B840M-A",
+    "b": "Placa Madre Asus PRIME B840M-A DDR5 AM5",
+    "pAB": 0.9998057593275835,
+    "pBA": 0.9999989511089982
+  },
+  {
+    "i": 371,
+    "a": "M/B ASUS TUF GAMING B850M-PLUS WIFI",
+    "b": "Placa Madre ASUS TUF B850M Plus WiFi AM5",
+    "pAB": 0.9991633269987141,
+    "pBA": 0.9999183798411376
+  },
+  {
+    "i": 372,
+    "a": "M/B ASUS PRIME A520M-A II",
+    "b": "Placa Madre ASUS PRIME A520M-A II MicroATX AMD CSM",
+    "pAB": 0.9999711271094861,
+    "pBA": 0.9999998754313273
+  },
+  {
+    "i": 373,
+    "a": "M/B ASUS TUF GAMING B550M-PLUS WIFI II",
+    "b": "Placa Madre ASUS TUF GAMING B550M Plus WIFI II",
+    "pAB": 0.999979368591143,
+    "pBA": 0.9998086118913307
+  },
+  {
+    "i": 374,
+    "a": "ASUS Placa Madre PRIME A620M-K AMD RYZEN 9000 Series DDR5 PCIe 4.0 AM5 SOCKET",
+    "b": "Placa Madre ASUS PRIME A620M-K, AM5, DDR5, mATX",
+    "pAB": 0.9999959270867641,
+    "pBA": 0.9999998180284615
+  },
+  {
+    "i": 375,
+    "a": "Gigabyte Placa Madre H610M H DDR4 Intel LGA 1700 12th/13th Gen CPUs 6+1+1 Hybrid Phases Digital VRM",
+    "b": "Placa Madre Gigabyte H610M-H LGA1700 INTEL",
+    "pAB": 0.9988899375542185,
+    "pBA": 0.9995675866476247
+  },
+  {
+    "i": 376,
+    "a": "Gigabyte Placa Madre A520M-K-V2 Series 5000 Ryzen AM4 Ultra Durable GbE LAN Bandwidth Management PC",
+    "b": "Placa Madre Gigabyte A520M-K V2 MicroATX AMD AM4",
+    "pAB": 0.9999984912566664,
+    "pBA": 0.9999990244260227
+  },
+  {
+    "i": 377,
+    "a": "Placa Madre sAM4 (AMD) - MSI A520M PRO - 2x DDR4 - 1x M.2 - DisplayPort/HDMI/VGA - m-ATX",
+    "b": "Placa Madre MSI A520M PRO, AM4, Micro-ATX",
+    "pAB": 0.9997998015768261,
+    "pBA": 0.9999998840646137
+  },
+  {
+    "i": 378,
+    "a": "Placa Madre LGA s1700 (Intel) - AsRock H610M-HDV/M.2+ D5 - 2x DDR5 - 1x M.2 - DisplayPort/HDMI/VGA - m-ATX",
+    "b": "M/B ASROCK H610M-HDV/M.2+ D5",
+    "pAB": 0.9999944894359014,
+    "pBA": 0.9999999785226954
+  },
+  {
+    "i": 379,
+    "a": "Placa Madre sAM4 (AMD) - Gigabyte B550M K WIFI6E - 4x DDR4 - 2x M.2- Wi-Fi 6E - DisplayPort/HDMI - m-ATX",
+    "b": "Placa Madre Gigabyte B550M K WIFI6E AM4 DDR4 Micro-ATX",
+    "pAB": 0.9999989475730798,
+    "pBA": 0.9999999273431943
+  },
+  {
+    "i": 380,
+    "a": "M/B LGA s1851 (Intel) - MSI B860M GAMING PLUS - 4x DDR5 - WIFI - HDMI/DisplayPort/USB-C - mATX",
+    "b": "Placa Madre MSI B860M GAMING PLUS WIFI, LGA1851, mATX",
+    "pAB": 0.9999467258049746,
+    "pBA": 0.9999930720052055
+  },
+  {
+    "i": 381,
+    "a": "M/B sAM5 (AMD) - Gigabyte B850M EAGLE WIFI6E - 4x DDR5 - 2x M.2 - Wi-Fi 6E - DisplayPort/HDMI - m-ATX",
+    "b": "Placa Madre Gigabyte B850M EAGLE WIFI6E, ATX, AM5",
+    "pAB": 0.990290732288138,
+    "pBA": 0.9999996063632134
+  },
+  {
+    "i": 382,
+    "a": "M/B LGA s1700 (Intel) - Asus Prime Z790-P WIFI - 4x DDR5 - 3x M.2 - Wi-Fi 6 - DisplayPort/HDMI - ATX",
+    "b": "Placa Madre ASUS PRIME Z790-P WIFI, LGA1700, DDR5, ATX",
+    "pAB": 0.9999889630791003,
+    "pBA": 0.9999999847144939
+  },
+  {
+    "i": 383,
+    "a": "Placa Madre Asus B550M-A AC PRIME AMD Micro ATX DDR4 PCIe 4.0 M.2 (PRIME B550M-A AC)",
+    "b": "Placa Madre ASUS PRIME B550M-A AC, mATX, AM4, DDR4, PCIE4.0",
+    "pAB": 0.9999998874727374,
+    "pBA": 0.9999999838043022
+  },
+  {
+    "i": 384,
+    "a": "PLACA MADRE ASROCK B550M PHANTOM 90-MXBE90-A0UAYAZ GAMING 4",
+    "b": "Placa Madre ASRock B550M Phantom Gaming 4, mATX, AM4",
+    "pAB": 0.9878355465315626,
+    "pBA": 0.9999978686654315
+  },
+  {
+    "i": 385,
+    "a": "Tarjeta Madre ASRock H610M-HDV/M.2+ D5 LGA1700 2*DDR5 M.2 DP HDMI VGA mATX",
+    "b": "Placa Madre LGA s1700 (Intel) - AsRock H610M-HDV/M.2+ D5 - 2x DDR5 - 1x M.2 - DisplayPort/HDMI/VGA - m-ATX",
+    "pAB": 0.9999999624102598,
+    "pBA": 0.9999995392942669
+  },
+  {
+    "i": 386,
+    "a": "Tarjeta Madre MSI PRO H810M-B LGA1851 2*DDR5 DIMM HDMI DP M.2 2.5G LAN mATX",
+    "b": "Placa Madre MSI PRO H810M-B - mATX, DDR5",
+    "pAB": 0.9999912685759931,
+    "pBA": 0.9999962777640841
+  },
+  {
+    "i": 387,
+    "a": "Tarjeta Madre MSI PRO B550M-P WIFI6E AM4 4*DDR4 HDMI DP WIFI6E LAN mATX",
+    "b": "Placa Madre MSI B550M-P WIFI6E DDR4 AM4 Micro-ATX",
+    "pAB": 0.9842359840890498,
+    "pBA": 0.9587886294516557
+  },
+  {
+    "i": 388,
+    "a": "Placa Madre MSI B760M GAMING PLUS WIFI (LGA1700, DDR5 x4, M.2 x2, Micro-ATX)",
+    "b": "M/B MSI B760M GAMING PLUS WIFI",
+    "pAB": 0.9999997662983946,
+    "pBA": 0.9999999729755844
+  },
+  {
+    "i": 389,
+    "a": "Placa Madre MSI PRO H610M-G, Socket LGA1700, 2x DDR5, Micro-ATX",
+    "b": "Placa Madre MSI PRO H610M-G DDR5",
+    "pAB": 0.9999980559212901,
+    "pBA": 0.9999997383595346
+  },
+  {
+    "i": 390,
+    "a": "Placa Madre Gigabyte Z790 Eagle AX, LGA1700, DDR5 ATX",
+    "b": "M/B LGA s1700 (Intel) - Gigabyte Z790 EAGLE AX - 4x DDR5 - 3x M.2 - Wi-Fi 6E - DisplayPort/HDMI - ATX",
+    "pAB": 0.9999999617197854,
+    "pBA": 0.9999149978668529
+  },
+  {
+    "i": 391,
+    "a": "Placa Madre Gigabyte B550M AORUS ELITE AX",
+    "b": "sAM4 (AMD) - Gigabyte B550M AORUS Elite AX - 4x DDR4 - 1x M.2 - Wi-Fi 6E - HDMI/DVI-D - m-ATX",
+    "pAB": 0.9999964780717395,
+    "pBA": 0.9995120415787573
+  },
+  {
+    "i": 392,
+    "a": "M/B MSI B550M PRO-VDH WIFI",
+    "b": "Placa Madre MSI B550M PRO-VDH WIFI",
+    "pAB": 0.9999999553544174,
+    "pBA": 1
+  },
+  {
+    "i": 393,
+    "a": "Placa Madre LGA s1700 (Intel) - Asus Prime H610M-K - 2x DDR5 - 1x M.2 - HDMI/VGA - m-ATX",
+    "b": "ASUS PRIME H610M-K Micro ATX DDR5 LGA1700",
+    "pAB": 0.9999999888371717,
+    "pBA": 0.999999965349627
+  },
+  {
+    "i": 394,
+    "a": "M/B sAM4 (AMD) - Gigabyte B550M K - 4x DDR4 - 2x M.2 - DisplayPort/HDMI - m-ATX",
+    "b": "Placa madre AMD B550M K (AM4)",
+    "pAB": 0.999999991848072,
+    "pBA": 0.9999999844493003
+  },
+  {
+    "i": 395,
+    "a": "Placa Madre ASUS PRIME A520M-K, Socket AM4, 2x DDR4, VGA, HDMI, M.2, 4xSATA, Micro-ATX",
+    "b": "M/B ASUS PRIME A520M-K",
+    "pAB": 0.9999999791833186,
+    "pBA": 0.9999999757418984
+  },
+  {
+    "i": 396,
+    "a": "Placa Madre GIGABYTE H610M K V2, Intel LGA 1700, 2xDDR5, HDMI, DP, PCIe 4.0, Micro-ATX",
+    "b": "Placa Madre Intel H610M K V2 (s1700)",
+    "pAB": 0.9999998036083841,
+    "pBA": 0.9999999961492874
+  },
+  {
+    "i": 397,
+    "a": "Placa Madre Asus H610M-F D4, LGA1700, 2x DDR4, 1x M.2, 4x Sata3, PCIe 4.0, VGA, Micro ATX",
+    "b": "ASUS PRIME H610M-F D4",
+    "pAB": 1,
+    "pBA": 0.9999999936633097
+  },
+  {
+    "i": 398,
+    "a": "Placa Madre MSI PRO B760M-P DDR5, LGA1700, Intel B760, 4xSata III, 2xM2 ,Micro-ATX",
+    "b": "M/B MSI PRO B760M-P",
+    "pAB": 0.9999125780114008,
+    "pBA": 0.9433103613655734
+  },
+  {
+    "i": 399,
+    "a": "Placa Madre Asus Prime H610M-K D4 (DDR4)",
+    "b": "M/B ASUS PRIME H610M-K D4",
+    "pAB": 0.9999972062414445,
+    "pBA": 0.999999935116234
+  },
+  {
+    "i": 400,
+    "a": "Tarjeta Madre MSI A520M-A PRO",
+    "b": "Placa Madre MSI A520M-A PRO AMD Micro ATX DDR4 PCIe 3.0 M.2 (911-7D14-020)",
+    "pAB": 0.9999997864522672,
+    "pBA": 0.9999993222792879
+  },
+  {
+    "i": 401,
+    "a": "PLACA MADRE ASUS PRIME H610M-K S1700 DDR5 P/N PRIMEH610M-K",
+    "b": "Placa Madre LGA s1700 (Intel) - Asus Prime H610M-K - 2x DDR5 - 1x M.2 - HDMI/VGA - m-ATX",
+    "pAB": 0.9999999724229581,
+    "pBA": 0.9999999571757685
+  },
+  {
+    "i": 402,
+    "a": "Tarjeta Madre MSI A520M-A PRO AMD AM4 DDR4 M.2 DVI-D HDMI PS/2 USB3.2",
+    "b": "Placa Madre MSI A520M-A PRO AMD Micro ATX DDR4 PCIe 3.0 M.2 (911-7D14-020)",
+    "pAB": 0.9999985410419452,
+    "pBA": 0.973395406862608
+  },
+  {
+    "i": 403,
+    "a": "Tarjeta Madre Asus PRIME H610M-K LGA1700 13°G 2*DDR5 M.2 HDMI VGA PS/2 USB3.2",
+    "b": "Placa Madre LGA s1700 (Intel) - Asus Prime H610M-K - 2x DDR5 - 1x M.2 - HDMI/VGA - m-ATX",
+    "pAB": 0.9999999393095349,
+    "pBA": 0.9999997864547127
+  },
+  {
+    "i": 404,
+    "a": "Tarjeta madre Asus PRIME H610M-F D4 LGA1700 14°G 2*DDR4 M.2 VGA USB3.2 PS/2 mATX",
+    "b": "ASUS PRIME H610M-F D4",
+    "pAB": 0.9999999974522552,
+    "pBA": 1
+  },
+  {
+    "i": 405,
+    "a": "Tarjeta Madre Gigabyte B550M K R1.0 AMD Skt AM4 microATX 4*DDR4 2*M.2 DP HDMI",
+    "b": "Placa madre AMD B550M K (AM4)",
+    "pAB": 0.9999918308267968,
+    "pBA": 0.9998860703709387
+  },
+  {
+    "i": 406,
+    "a": "Placa Madre ASUS PRIME B550M-A AM4 B550 Micro ATX",
+    "b": "PLACA MADRE ASUS PRIME B550M-A SAM4",
+    "pAB": 0.9999999973160115,
+    "pBA": 1
+  },
+  {
+    "i": 407,
+    "a": "ASUS - Placa Madre ASUS PRIME B550M-A AC, Socket AM4, 4x DDR4, VGA, DVI-D, HDMI, Wi-Fi, Micro-ATX (90MB15K0-MVAAY0)",
+    "b": "Placa Madre Asus B550M-A AC PRIME AMD Micro ATX DDR4 PCIe 4.0 M.2 (PRIME B550M-A AC)",
+    "pAB": 0.9999998031499187,
+    "pBA": 0.9999999822507052
+  },
+  {
+    "i": 408,
+    "a": "ASUS - Placa Base ASUS ROG Crosshair X870E Dark Hero X870E AM5 DDR5 ATX WiFi 7 10GbE PCIe 5.0 RAID (90MB1NT0-M0EAY0)",
+    "b": "Placa Madre sAM5 (AMD) - Asus ROG Crosshair X870E Dark Hero - 4x DDR5 - 5x M.2- Wi-Fi 7 - USB-C/HDMI - ATX",
+    "pAB": 0.9999999701686311,
+    "pBA": 0.9999999976595105
+  },
+  {
+    "i": 409,
+    "a": "MSI - Placa Madre MSI PRO H610M-S DDR4 LGA1700 12th 13th 14th GEN Micro-ATX (911-7E44-013)",
+    "b": "Placa Madre MSI Pro H610M-S LGA1700 DDR4",
+    "pAB": 0.9999571573364819,
+    "pBA": 0.9999933593387555
+  },
+  {
+    "i": 410,
+    "a": "PLACA MADRE ASROCK A520M HDV AM4 MATX DDR4 90-MXBE50-A0UAYZ",
+    "b": "M/B ASROCK A520M-HDV",
+    "pAB": 0.9999999394025231,
+    "pBA": 0.9999999423812733
+  },
+  {
+    "i": 411,
+    "a": "PLACA MADRE ASROCK B550M-HDV AM4 MICRO ATX 90-MXBDJ0-AUAYAZ",
+    "b": "Placa Madre ASRock B550M-HDV, mATX, AM4",
+    "pAB": 0.9999885259230544,
+    "pBA": 0.999999636752706
+  },
+  {
+    "i": 412,
+    "a": "PLACA MADRE MSI H610M-S DDR4 LGA1700 14/13/12TH GEN CPU READY",
+    "b": "MSI - Placa Madre MSI PRO H610M-S DDR4 LGA1700 12th 13th 14th GEN Micro-ATX (911-7E44-013)",
+    "pAB": 0.9998978868967233,
+    "pBA": 0.9987400873695297
+  },
+  {
+    "i": 413,
+    "a": "PLACA MADRE MSI PRO H610M-G WIFI",
+    "b": "Placa Madre LGA s1700 (Intel) - MSI PRO H610M-G WIFI - 2x DDR5 - 1x M.2 - HDMI/DisplayPort - m-ATX",
+    "pAB": 0.9999999530888887,
+    "pBA": 0.9999992140399798
+  },
+  {
+    "i": 414,
+    "a": "PLACA MADRE GIGABYTE H610M K V2 DDR5 LGA 1700 12THE- 13THE- 14THE GEN",
+    "b": "Placa Madre Gigabyte H610M K V2, LGA1700, DDR5, mATX",
+    "pAB": 0.9998196824331045,
+    "pBA": 0.9999994861788741
+  },
+  {
+    "i": 415,
+    "a": "FUENTE DE PODER CORSAIR RM850 850W 80 PLUS GOLD F/MODULAR",
+    "b": "FUENTE DE PODER CORSAIR RM850 850W 80 PLUS GOLD F/MODULAR",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 416,
+    "a": "Gigabyte PSU Fuente De Poder UD850GM PG5 V2 850W PCI-EX GEN 5.1 ATX 3.1 80 Plus GOLD Full Modular",
+    "b": "Fuente de Poder Gigabyte GP-UD850GM PG5 V2 850W 80+ Gold",
+    "pAB": 0.9999925889830514,
+    "pBA": 0.9998259835183401
+  },
+  {
+    "i": 417,
+    "a": "Gigabyte Fuente de Poder PSU P550SS 550W Silver 80 Plus",
+    "b": "Fuente de Poder Gigabyte GP-P550SS 550W 80+ Silver Negro",
+    "pAB": 0.9999166585469849,
+    "pBA": 0.9999982721861149
+  },
+  {
+    "i": 418,
+    "a": "Fuente de poder 1000W 80 Plus Gold full modular",
+    "b": "Fuente de Poder Gigabyte GP-UD1000GM PG5 V2 1000W 80+ Gold",
+    "pAB": 0.9999996890633824,
+    "pBA": 0.9999190452944677
+  },
+  {
+    "i": 419,
+    "a": "Fuente de Poder ROG Thor 1200W Platinum III",
+    "b": "Fuente de Poder ASUS ROG Thor 1200W Platinum III",
+    "pAB": 0.9999999869959427,
+    "pBA": 0.9999990086937622
+  },
+  {
+    "i": 420,
+    "a": "Fuente de Poder Asus ROG STRIX 1000W Platinum",
+    "b": "Fuente de Poder ASUS ROG Strix 1000W Platinum",
+    "pAB": 0.9999985061384526,
+    "pBA": 0.9999999339492397
+  },
+  {
+    "i": 421,
+    "a": "Fuente de Poder Asus ROG THOR 1600W Titanium III",
+    "b": "Fuente de Poder ROG THOR 1600W Titanium III",
+    "pAB": 0.9999717157949651,
+    "pBA": 0.9983265572564934
+  },
+  {
+    "i": 422,
+    "a": "Fuente de Poder Asus ROG Thor 1200W Platinum III",
+    "b": "Fuente de Poder ASUS ROG Thor 1200W Platinum III",
+    "pAB": 0.9999999708488811,
+    "pBA": 0.999999985447198
+  },
+  {
+    "i": 423,
+    "a": "Fuente de Poder CoolerMaster Elite Gold 1000W Full Modular MPW-A001-AFAG-BWO",
+    "b": "Fuente de Poder 1000W - Cooler Master Elite Gold 1000 - 80 Plus Gold - Modular",
+    "pAB": 0.9999997407677874,
+    "pBA": 0.9999999545320248
+  },
+  {
+    "i": 424,
+    "a": "Fuente de Poder Gigabyte GP-UD750GM PG5, 750W 80PLUS Gold",
+    "b": "Fuente de poder 750W 80Plus Gold full modular",
+    "pAB": 0.9488887218783247,
+    "pBA": 0.9999488415227694
+  },
+  {
+    "i": 425,
+    "a": "Fuente de Poder Gigabyte 750W Gold PG5",
+    "b": "Fuente de Poder Gigabyte GP-UD750GM PG5, 750W 80PLUS Gold",
+    "pAB": 0.988347258737937,
+    "pBA": 0.960363805160182
+  },
+  {
+    "i": 426,
+    "a": "Fuente de Poder Gigabyte P750BS 750W, 80Plus Bronze",
+    "b": "Fuente de Poder Gigabyte P750BS 750W 80 Plus Bronze",
+    "pAB": 0.999999949089729,
+    "pBA": 0.999999984390968
+  },
+  {
+    "i": 427,
+    "a": "Fuente de poder 1000W ROG STRIX Platinum",
+    "b": "Fuente de Poder ASUS ROG Strix 1000W Platinum",
+    "pAB": 0.9999541513126842,
+    "pBA": 0.9999530565553052
+  },
+  {
+    "i": 428,
+    "a": "FUENTES DE PODER GAMEMAX 500W RGB CERTIFICADA +80 PLUS BRONZE ATX VP500 RGB",
+    "b": "FUENTE DE PODER GAMEMAX VP-500 RGB 500W 80PLUS BRONZE",
+    "pAB": 0.9959318383981509,
+    "pBA": 0.9999999109433729
+  },
+  {
+    "i": 429,
+    "a": "FUENTE PODER COOLER MASTER 750W 80 PLUS BRONCE V3 (MPE-7501-ACAAW-3B",
+    "b": "Fuente de Poder Cooler Master V3 750W 80 Plus Bronze",
+    "pAB": 0.9822265407310052,
+    "pBA": 0.9999995304535467
+  },
+  {
+    "i": 430,
+    "a": "FUENTE DE PODER GAMEMAX 700W VP700 RGB 80 PLUS BRONCE",
+    "b": "FUENTES DE PODER GAMEMAX 700W 80 PLUS BRONCE SEMI MODULAR VP700 RGB",
+    "pAB": 0.9871656271045146,
+    "pBA": 0.9999962094028108
+  },
+  {
+    "i": 431,
+    "a": "MEMORIA RAM KINGSTON FURY BEAST DDR5 5200MHz 8GB CL40",
+    "b": "Memoria RAM Kingston Fury Beast Black 8GB 5200MHz DDR5 CL40",
+    "pAB": 0.9999986411939161,
+    "pBA": 0.9995520713727262
+  },
+  {
+    "i": 432,
+    "a": "MEMORIA RAM CORSAIR VENGEANCE LPX 8GB DDR4 3000MHZ CL16 BLACK",
+    "b": "MEMORIA CORSAIR VENGEANCE LPX 8GB 3000MHz DDR4 BLACK",
+    "pAB": 0.9994238464005323,
+    "pBA": 0.9992386784848847
+  },
+  {
+    "i": 433,
+    "a": "Corsair Memoria RAM VENGEANCE LPX 8GB DDR4 3200 MHz C16 – Negro [CMK8GX4M1E3200C16]",
+    "b": "Memoria Ram Corsair Vengeance Lpx DDR4 8gb 3200mhz Black",
+    "pAB": 0.8589125809677389,
+    "pBA": 0.9999863084970612
+  },
+  {
+    "i": 434,
+    "a": "Kingston FURY Memoria RAM 16GB (1x16GB) SODIMM DDR4 3200 CL20-22-22 1.2v",
+    "b": "MEMORIA RAM KINGSTON HYPERX 16GB 3200MHz DDR4 SODIMM KF432S20IB/16",
+    "pAB": 0.6874425640156554,
+    "pBA": 0.999941671436273
+  },
+  {
+    "i": 435,
+    "a": "Memoria RAM DIMM 8 GB - DDR4 3200 MT/s - XPG Spectrix D35G - RGB White (AX4U32008G16A-SWHD35G)",
+    "b": "Memoria RAM XPG Spectrix D35g RGB DDR4 3200MHz 8GB Blanco",
+    "pAB": 0.906500351366469,
+    "pBA": 0.9999891757053505
+  },
+  {
+    "i": 436,
+    "a": "Memoria RAM SODIMM 8 GB - DDR4 3200 MT/s - Kingston Fury (KF432S20IB/8)",
+    "b": "MEMORIA RAM KINGSTON HYPERX 8GB 3200MHz DDR4 SODIMM KF432S20IB/8",
+    "pAB": 0.999999985692893,
+    "pBA": 1
+  },
+  {
+    "i": 437,
+    "a": "Memoria RAM DIMM 16 GB - DDR5 5600 MT/s - XPG Lancer Blade White - Intel XMP/AMD EXPO (AX5U5600C4616G-SLABWH)",
+    "b": "Memoria RAM XPG Lancer Blade DDR5 5600MTs 16GB Blanco",
+    "pAB": 0.9863609430937217,
+    "pBA": 0.9999991562874201
+  },
+  {
+    "i": 438,
+    "a": "Memoria RAM SODIMM 32 GB - DDR4 3200 MT/s - Kingston Fury Impact Black (KF432S20IB/32)",
+    "b": "Memoria RAM Kingston Fury Impact 32GB 3200MHz CL20 SODIMM",
+    "pAB": 0.9999853485332743,
+    "pBA": 0.9999990385431685
+  },
+  {
+    "i": 439,
+    "a": "Memoria RAM DIMM 32 GB - DDR5 5600 MT/s - Kingston Fury Beast Black - Intel XMP/AMD EXPO (KF556C36BBE-32)",
+    "b": "Memoria Ram 32GB DDR5 5600MT/s CL36 FURY Beast Black EXPO",
+    "pAB": 0.9991252446472939,
+    "pBA": 0.9999960332844394
+  },
+  {
+    "i": 440,
+    "a": "Memoria RAM DIMM 32 GB (Kit 2 x 16 GB) - DDR5 6000 MT/s - Kingston Fury Beast - Intel XMP/AMD EXPO (KF560C30BBEK2-32)",
+    "b": "Memoria RAM Kingston Fury Beast 32G (2×16) 6000MTs DDR5 CL30",
+    "pAB": 0.993896650885653,
+    "pBA": 0.9998883806354866
+  },
+  {
+    "i": 441,
+    "a": "Memoria RAM 16GB DDR4 3200MHz SO-DIMM CL22 Non-ECC 1.2V 260p - Kingston",
+    "b": "Kingston KVR32S22S8/16 (1 x 16GB SO-DIMM DDR4-3200)",
+    "pAB": 0.9999977834440513,
+    "pBA": 0.9998245574092111
+  },
+  {
+    "i": 442,
+    "a": "Memoria RAM 16GB DDR5 4800MHz DIMM CL40 Non-ECC 1.1v 288p - Crucial",
+    "b": "MEMORIA RAM CRUCIAL BASICS 16GB 4800MHZ DDR5",
+    "pAB": 0.9999993307163779,
+    "pBA": 0.9999999602163577
+  },
+  {
+    "i": 443,
+    "a": "Memoria RAM 8GB DDR5 5600MHz DIMM CL46 Non-ECC 1.2v 288p - Kingston",
+    "b": "MEMORIA DIMM KINGSTON DDR5 8GB 5600MT/S - KCP556US6-8",
+    "pAB": 0.9998902082386016,
+    "pBA": 0.9999999667349796
+  },
+  {
+    "i": 444,
+    "a": "Kingston Fury Renegade Pro KF560R32RBE-32 (1 x 32 GB DIMM DDR5-6000 ECC)",
+    "b": "Memoria ram 32GB DDR5 6000Mhz CL32 RDimm Kingston Fury Renegade Pro Black Expo",
+    "pAB": 0.9999974885232671,
+    "pBA": 0.9984396827654433
+  },
+  {
+    "i": 445,
+    "a": "Memoria RAM XPG Lancer Blade DDR5 6000MTs 16GB Blanco",
+    "b": "Memoria RAM ADATA XPG Lancer Blade DDR5 16GB 6000MT/s Blanca",
+    "pAB": 0.9999998603375195,
+    "pBA": 0.9999913647854601
+  },
+  {
+    "i": 446,
+    "a": "Memoria RAM XPG Lancer Blade DDR5 5600MTs 16GB Negro",
+    "b": "Memoria RAM DIMM 16 GB - DDR5 5600 MT/s - XPG Lancer Blade Black - Intel XMP/AMD EXPO (AX5U5600C4616G-SLABBK)",
+    "pAB": 0.9999991606918689,
+    "pBA": 0.9534418514144449
+  },
+  {
+    "i": 447,
+    "a": "Memoria RAM Kingston Fury Beast RGB 32G (2×16) 6000MT/s CL30",
+    "b": "Memoria RAM DIMM 32 GB (Kit 2 x 16 GB) - DDR5 6000MT/s - Kingston Fury Beast RGB (KF560C30BBEAK2-32)",
+    "pAB": 0.9999822527799497,
+    "pBA": 0.9693093496714532
+  },
+  {
+    "i": 448,
+    "a": "Memoria RAM 8GB DDR4 3600MHz DIMM CL17 Non-ECC 1.35V 288p KINGSTON FURY",
+    "b": "Memoria RAM DIMM 8 GB - DDR4 3600 MT/s - Kingston Fury Beast Black (KF436C17BB/8)",
+    "pAB": 0.9999493222366254,
+    "pBA": 0.9999983756718244
+  },
+  {
+    "i": 449,
+    "a": "Kingston Fury - DDR5 SDRAM - 6400 MHz - 16GB CL32 DIMM Beast RGB EXPO (KF564C32BBE-32)",
+    "b": "Memoria RAM 16GB DDR5 6400MHz DIMM CL32 Non-ECC 1.4v 288p Kingston BeastRGB EXPO",
+    "pAB": 0.9975944793866235,
+    "pBA": 0.9999948565203697
+  },
+  {
+    "i": 450,
+    "a": "MEMORIA RAM CRUCIAL DDR4 8GB 1X8GB 3200MHZ 1.2V CT8G4DFRA32A",
+    "b": "MEMORIA RAM CRUCIAL 8GB 3200 MHz DDR4",
+    "pAB": 0.9999977363175366,
+    "pBA": 1
+  },
+  {
+    "i": 451,
+    "a": "Memoria Ram Kingston KCP432NS6/8 (1 x 8GB DIMM DDR4-3200)",
+    "b": "Memoria RAM DDR4 8GB 3200MT/s Kingston, Unbuffered, Non-ECC, CL22, DIMM, 1.2V",
+    "pAB": 0.9998728723336467,
+    "pBA": 0.9820246915336374
+  },
+  {
+    "i": 452,
+    "a": "MEMORIA RAM KINGSTON FURY BEAST RGB KF432C16BB2A/32 1 x 32 GB DIMM DDR4-3200",
+    "b": "Memoria RAM 32GB DDR4 3200 MHz RGB UDIMM",
+    "pAB": 0.9990707018838434,
+    "pBA": 0.9949143156335364
+  },
+  {
+    "i": 453,
+    "a": "MEMORIA RAM FURY BEAST RGB 32GB DDR5 5600 DIMM KF556C36BBEA-32",
+    "b": "Memoria RAM 32GB DDR5 5600 MHz RGB UDIMM",
+    "pAB": 0.9999939925003827,
+    "pBA": 0.9999987476207391
+  },
+  {
+    "i": 454,
+    "a": "SSD Kingston NV3 M.2 2280 Nvme 4.0 Gen 4×4 Ultra Fast 1TB",
+    "b": "Unidad de Estado Sólido 1TB Kingston NV3 PCIe 4.0 NVMe M.2",
+    "pAB": 0.9999927249021415,
+    "pBA": 0.9999992003408872
+  },
+  {
+    "i": 455,
+    "a": "DISCO ADATA LEGEND 800 1TB NVME",
+    "b": "Unidad SSD ADATA Legend 800 NVMe 1TB",
+    "pAB": 0.9999995947896141,
+    "pBA": 0.9999999085008006
+  },
+  {
+    "i": 456,
+    "a": "ADATA Unidad de Estado Sólido 500GB M2.NVME PCIe Gen4 LEGEND 860 5000/3000MBs",
+    "b": "Disco Duro SSD ADATA LEGEND 860 500 GB M.2 PCIe Gen4 x4",
+    "pAB": 0.9998762018805859,
+    "pBA": 0.9999656976555342
+  },
+  {
+    "i": 457,
+    "a": "Kingston Unidad de Estado Sólido SSD 2TB NV3 PCIe 4.0 NVMe M.2 6000MB/s",
+    "b": "Disco Duro Kingston NV3 M.2 2280 2TB PCIe 4.0 x4",
+    "pAB": 0.9999296603776093,
+    "pBA": 0.9999815498629994
+  },
+  {
+    "i": 458,
+    "a": "Kingston KC600 SSD 2TB SATA 6Gb/s AES de 256 bits",
+    "b": "DISCO SSD KINGSTON KC600 2TB SATA 2.5 SATA 3 3D TLC",
+    "pAB": 0.999999872031122,
+    "pBA": 0.9999996533683535
+  },
+  {
+    "i": 459,
+    "a": "Kingston KC600 SSD 1TB SATA 6Gb/s AES de 256 bits",
+    "b": "DISCO SSD KINGSTON KC600 1TB SATA 2.5 SATA 3 3D TLC",
+    "pAB": 0.9999999905669801,
+    "pBA": 0.999999972116828
+  },
+  {
+    "i": 460,
+    "a": "Kingston KC600 SSD 256GB SATA 6Gb/s AES de 256 bits",
+    "b": "DISCO SSD KINGSTON KC600 256GB SATA 2.5 SATA 3 3D TLC",
+    "pAB": 0.9999999943972565,
+    "pBA": 0.999999980623829
+  },
+  {
+    "i": 461,
+    "a": "Kingston SSD 500GB NV3 M.2 2230 NVMe PCIe 4.0",
+    "b": "Disco Duro SSD Kingston NV3, 500GB M.2 2230 PCIe 4.0 NVMe",
+    "pAB": 0.9999352682211815,
+    "pBA": 0.9994221447964471
+  },
+  {
+    "i": 462,
+    "a": "SSD M.2 (2280) - 2 TB - Adata Legend 860 - PCIe Gen4 x4 (SLEG-860-2000GCS)",
+    "b": "DISCO ADATA LEGEND 860 2TB NVME",
+    "pAB": 0.9978839045782402,
+    "pBA": 0.999999318253212
+  },
+  {
+    "i": 463,
+    "a": "Unidad de Estado Sólido Kingston NV1, 500GB, NVMe M.2, Lectura 2100MB/s Escritura 1700MB/s",
+    "b": "DISCO DURO SSD NVMe KINGSTON NV1 500GB",
+    "pAB": 0.9998686130922031,
+    "pBA": 0.9999988000184851
+  },
+  {
+    "i": 464,
+    "a": "DISCO WESTERN DE ESTADO SOLIDO GREEN 1TB SN350 NVME - M.2 2280 - PCI EXPRESS 3.0 X4 (NVME) P/N WDS100T2G0C",
+    "b": "Disco Duro SSD Western Digital Green SN350 1TB M.2 2280 NVMe",
+    "pAB": 0.9999996988425094,
+    "pBA": 0.9999997813269891
+  },
+  {
+    "i": 465,
+    "a": "Unidad SSD Western Digital Green SN3000 1TB M.2 22*80 PCIe4x4",
+    "b": "Disco Duro SSD WD Green SN3000 1TB M.2 2280 NVMe PCIe 4.0",
+    "pAB": 0.9999906865485642,
+    "pBA": 0.9998938167353608
+  },
+  {
+    "i": 466,
+    "a": "SSD Western Digital WD Black SN850x 1TB M.2 NVMe PCIe Gen4",
+    "b": "Disco Duro SSD M.2 Western Digital WD Black SN850X 1TB NVMe",
+    "pAB": 0.999999814862217,
+    "pBA": 0.9999997791985306
+  },
+  {
+    "i": 467,
+    "a": "Disco Estado Sólido Kingston Fury Renegade 2TB NVMe PCIe 4.0",
+    "b": "Disco Duro SSD M.2 NVME Kingston FURY Renegade 2 TB",
+    "pAB": 0.9999956831351122,
+    "pBA": 0.9993141052535695
+  },
+  {
+    "i": 468,
+    "a": "DISCO ADATA LEGEND 860 1TB NVME",
+    "b": "Disco Duro SSD ADATA LEGEND 860 1TB M.2 PCIe Gen4 x4",
+    "pAB": 0.999999835792475,
+    "pBA": 0.9995405102338571
+  },
+  {
+    "i": 469,
+    "a": "DISCO DE ESTADO SOLIDO KINGSTON 500GB NV3 NVMe PCIe Up to 5000/3000 MB/s M.2 2280 PCIe 4.0 x4 (NVMe) P/N SNV3S/500G",
+    "b": "Disco Duro SSD Kingston NV3 500GB M.2 2280 NVMe, PCIe 4.0",
+    "pAB": 0.9999487246017117,
+    "pBA": 0.9999995697342511
+  },
+  {
+    "i": 470,
+    "a": "Unidad SSD Kingston NV3 500GB M.2 22*80 PCIe4x4 NVMe Lec5000MB/s Esc3000MB/s",
+    "b": "Disco Duro SSD Kingston NV3 500GB M.2 2280 NVMe, PCIe 4.0",
+    "pAB": 0.9991037905511303,
+    "pBA": 0.9999932273944871
+  }
+]
