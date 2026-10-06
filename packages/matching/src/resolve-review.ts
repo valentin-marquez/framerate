@@ -3,6 +3,7 @@ import { bumpCatalogVersion, type Db } from "@framerate/database";
 import { compare } from "./domain/decide";
 import { buildFingerprint } from "./domain/fingerprint";
 import {
+  addOverride,
   attachIdentifiers,
   getListingIdentity,
   getReview,
@@ -21,7 +22,7 @@ export type ResolveReviewResult =
  * Resuelve una revisión de matching (una persona en el Gatekeeper o `framerate-match`).
  *  - accept: la oferta pasa al producto candidato (y le aporta sus identificadores). El vínculo queda `manual`
  *    para que `matchListing` no lo vuelva a decidir en cada corrida. El producto provisional queda sin ofertas.
- *  - reject: la oferta se queda en su producto propio.
+ *  - reject: la oferta se queda en su producto propio y el par queda prohibido (`forbid`) para que no se vuelva a proponer.
  */
 export async function resolveMatchReview(
   db: Db,
@@ -61,6 +62,15 @@ export async function resolveMatchReview(
     await bumpCatalogVersion(db);
   }
 
+  if (input.action === "reject") {
+    await addOverride(db, {
+      listingId: review.listing_id,
+      productId: review.candidate_product_id,
+      kind: "forbid",
+      createdBy: input.decidedBy,
+      now: input.now,
+    });
+  }
   await resolveReview(db, review.id, input.action === "accept" ? "accepted" : "rejected", input.now);
   return { status: "resolved" };
 }

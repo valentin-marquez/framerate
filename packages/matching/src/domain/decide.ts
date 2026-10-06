@@ -64,7 +64,13 @@ export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison 
 }
 
 export type Decision =
-  | { kind: "link"; productId: number; method: "identifier" | "attributes"; confidence: number; comparison: Comparison }
+  | {
+      kind: "link";
+      productId: number;
+      method: "identifier" | "attributes" | "manual";
+      confidence: number;
+      comparison: Comparison;
+    }
   | { kind: "review"; productId: number; confidence: number; comparison: Comparison }
   | { kind: "new_product" };
 
@@ -83,13 +89,19 @@ export interface Candidate {
    * si los atributos coinciden, casi siempre es una variante (RGB, color, otra serie), así que va a revisión.
    */
   sameStore?: boolean;
+  /** Corrección humana para este par (`match_overrides`). */
+  override?: "force" | "forbid";
 }
 
 /** Elige el mejor candidato y decide qué hacer con la oferta. */
 export function decide(offer: Fingerprint, candidates: readonly Candidate[]): Decision {
   let best: { candidate: Candidate; comparison: Comparison } | null = null;
   for (const candidate of candidates) {
+    if (candidate.override === "forbid") continue;
     const comparison = compare(offer, candidate.fingerprint);
+    if (candidate.override === "force") {
+      return { kind: "link", productId: candidate.productId, method: "manual", confidence: 1, comparison };
+    }
     if (comparison.vetoes.length > 0) continue;
     if (!best || comparison.score > best.comparison.score) best = { candidate, comparison };
   }

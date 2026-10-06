@@ -261,6 +261,15 @@ export interface MatchDecisionsTable {
   created_at: string;
 }
 
+export interface MatchOverridesTable {
+  id: Generated<number>;
+  listing_id: number;
+  product_id: number;
+  kind: "force" | "forbid";
+  created_by: string;
+  created_at: string;
+}
+
 export type ReviewStatus = "pending" | "accepted" | "rejected";
 
 export interface MatchReviewsTable {
@@ -603,6 +612,7 @@ export interface Database {
   price_points: PricePointsTable;
   match_decisions: MatchDecisionsTable;
   match_reviews: MatchReviewsTable;
+  match_overrides: MatchOverridesTable;
   crawl_runs: CrawlRunsTable;
   quarantine: QuarantineTable;
 }

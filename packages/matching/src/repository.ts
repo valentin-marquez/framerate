@@ -431,7 +431,7 @@ export async function closeObsoleteReview(
 export async function getListingIdentity(db: Db, listingId: number) {
   return db.query
     .selectFrom("listings")
-    .select(["id", "product_id as productId", "category", "title", "brand", "mpn", "gtin"])
+    .select(["id", "product_id as productId", "category", "title", "brand", "mpn", "gtin", "image_url as imageUrl"])
     .where("id", "=", listingId)
     .executeTakeFirst();
 }
@@ -446,4 +446,53 @@ export async function moveIdentifiers(db: Db, fromProductId: number, toProductId
     .where("product_id", "=", fromProductId)
     .where((eb) => eb.or(pairs.map((p) => eb.and([eb("kind", "=", p.kind), eb("value", "=", p.value)]))))
     .execute();
+}
+
+export type OverrideKind = "force" | "forbid";
+
+export async function addOverride(
+  db: Db,
+  input: { listingId: number; productId: number; kind: OverrideKind; createdBy: string; now: string },
+) {
+  await db.query
+    .insertInto("match_overrides")
+    .values({
+      listing_id: input.listingId,
+      product_id: input.productId,
+      kind: input.kind,
+      created_by: input.createdBy,
+      created_at: input.now,
+    })
+    .onConflict((oc) => oc.columns(["listing_id", "product_id"]).doUpdateSet({ kind: input.kind }))
+    .execute();
+}
+
+/** Marca los candidatos con su override y suma los `force` que la búsqueda por similitud no encontró. */
+export async function applyOverrides(
+  db: Db,
+  listingId: number,
+  fp: Fingerprint,
+  candidates: Candidate[],
+): Promise<Candidate[]> {
+  const rows = await db.query
+    .selectFrom("match_overrides")
+    .select(["product_id", "kind"])
+    .where("listing_id", "=", listingId)
+    .execute();
+  if (rows.length === 0) return candidates;
+  const kinds = new Map(rows.map((r) => [r.product_id, r.kind]));
+  const known = new Set(candidates.map((c) => c.productId));
+  const missing = rows.filter((r) => r.kind === "force" && !known.has(r.product_id)).map((r) => r.product_id);
+  const all = [...candidates, ...(await loadCandidates(db, missing, fp))];
+  return all.map((c) => ({ ...c, override: kinds.get(c.productId) }));
+}
+
+export async function overrideKind(db: Db, listingId: number, productId: number): Promise<OverrideKind | null> {
+  const row = await db.query
+    .selectFrom("match_overrides")
+    .select("kind")
+    .where("listing_id", "=", listingId)
+    .where("product_id", "=", productId)
+    .executeTakeFirst();
+  return row?.kind ?? null;
 }

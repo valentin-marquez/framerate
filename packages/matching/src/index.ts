@@ -10,3 +10,4 @@ export * from "./domain/product-name";
 export * from "./match-listing";
 export * from "./repository";
 export * from "./resolve-review";
+export * from "./split";

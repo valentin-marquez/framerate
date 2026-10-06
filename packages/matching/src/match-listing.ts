@@ -3,6 +3,7 @@ import { compare, decide } from "./domain/decide";
 import type { Fingerprint } from "./domain/fingerprint";
 import { productNameFromTitle } from "./domain/product-name";
 import {
+  applyOverrides,
   attachIdentifiers,
   closeObsoleteReview,
   createProduct,
@@ -13,6 +14,7 @@ import {
   loadCandidates,
   loadLinkState,
   markSameStore,
+  overrideKind,
   setListingProduct,
 } from "./repository";
 
@@ -52,6 +54,7 @@ export interface MatchListingInput {
  *    identificadores que ninguna otra de sus ofertas publica y se vuelve a decidir. Excepciones: una decisión manual
  *    no se toca; la fundadora (`new_product`) sólo sale ante un veto; si la categoría difiere, el vínculo se mantiene
  *    y se avisa (`categoryMismatch`).
+ *    Un `force` mantiene el vínculo pase lo que pase; un `forbid` lo rompe y el producto no vuelve a ser candidato.
  *    Antes de todo, la revisión pendiente que ya no tiene nada que decidir se cierra.
  * 2. Busca candidatos y decide: vincular, producto nuevo, o producto nuevo
  *    + revisión humana (la oferta queda visible mientras se revisa).
@@ -77,9 +80,11 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     if (current && current.fingerprint.category !== fp.category) {
       return { outcome: "kept", unlinked, categoryMismatch: true, reviewClosed };
     }
-    if (link.method === "manual") return { outcome: "kept", unlinked, reviewClosed };
+    const override = await overrideKind(db, listingId, productId);
+    if (override === "force") return { outcome: "kept", unlinked, reviewClosed };
+    if (link.method === "manual" && override !== "forbid") return { outcome: "kept", unlinked, reviewClosed };
     const check = current && compare(fp, current.fingerprint);
-    const vetoes = check ? check.vetoes : ["product_missing"];
+    const vetoes = override === "forbid" ? ["forbidden"] : check ? check.vetoes : ["product_missing"];
     let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
     if (check && vetoes.length === 0) {
       if (link.method === "new_product") return { outcome: "kept", unlinked, reviewClosed };
@@ -100,7 +105,8 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     unlinked = true;
   }
 
-  const decision = decide(fp, await markSameStore(db, listingId, await findCandidates(db, fp)));
+  const candidates = await markSameStore(db, listingId, await findCandidates(db, fp));
+  const decision = decide(fp, await applyOverrides(db, listingId, fp, candidates));
 
   if (decision.kind === "link") {
     await setListingProduct(db, {
