@@ -15,7 +15,7 @@
   "vars": {
     // shadow: guarda en evidence lo que haría, sin resolver. reject: sólo rechaza (deja un duplicado). live: acepta y
     // rechaza, y espera los requisitos de #117.
-    "MATCH_MODE": "reject",
+    "MATCH_MODE": "live",
     // Parte de los 10.000 neurons gratis al día de Workers AI que puede usar este Worker.
     "MATCH_DAILY_NEURONS": "5000"
   },
