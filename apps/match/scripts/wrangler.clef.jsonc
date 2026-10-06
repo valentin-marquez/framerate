@@ -1,0 +1,8 @@
+{
+  "name": "clef-prompts",
+  "account_id": "3f50a4a123ebcbcb917dababff3ef8b5",
+  "main": "clef-prompts.ts",
+  "compatibility_date": "2026-01-05",
+  "dev": { "port": 8795 },
+  "ai": { "binding": "AI" }
+}

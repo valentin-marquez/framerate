@@ -1,0 +1,8 @@
+{
+  "name": "gemma-prompts",
+  "account_id": "3f50a4a123ebcbcb917dababff3ef8b5",
+  "main": "gemma-prompts.ts",
+  "compatibility_date": "2026-01-05",
+  "dev": { "port": 8796 },
+  "ai": { "binding": "AI" }
+}

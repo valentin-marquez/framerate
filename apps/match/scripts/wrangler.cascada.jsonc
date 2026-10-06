@@ -1,0 +1,9 @@
+{
+  "name": "cascada-experimento",
+  "account_id": "3f50a4a123ebcbcb917dababff3ef8b5",
+  "main": "cascada-experimento.ts",
+  "compatibility_date": "2026-01-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "dev": { "port": 8788 },
+  "ai": { "binding": "AI" }
+}
