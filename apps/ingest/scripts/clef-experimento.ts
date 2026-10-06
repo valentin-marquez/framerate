@@ -1,5 +1,8 @@
 import { mkdir } from "node:fs/promises";
-import gold from "../src/features/ingestion/domain/match-gold.json";
+import goldJson from "../src/features/ingestion/domain/match-gold.json";
+
+type Side = { store: string; rawTitle: string; brand: string | null; mpn: string | null };
+const gold = goldJson as { confidence: string; label: string; note: string; a: Side; b: Side }[];
 
 // Experimento aislado con Clef/Clef-flash (#105, docs/specs/2026-10-03-clef-experimento-plan.md). No toca producción.
 // Uso: CLOUDFLARE_API_TOKEN=… bun scripts/clef-experimento.ts --model clef-flash --tarea par|categoria
@@ -39,7 +42,7 @@ const QUESTIONS = {
 type Item = { id: string; state: unknown; esperado: string; nota?: string };
 
 function itemsPar(): Item[] {
-  const side = (s: (typeof gold)[number]["a"]) => ({ store: s.store, title: s.rawTitle, brand: s.brand, mpn: s.mpn });
+  const side = (s: Side) => ({ store: s.store, title: s.rawTitle, brand: s.brand, mpn: s.mpn });
   const pares = gold.filter((p) => p.confidence === "high" && p.label !== "unsure");
   return pares.flatMap((p, i) => [
     { id: `${i}-ab`, state: { a: side(p.a), b: side(p.b) }, esperado: p.label, nota: p.note },

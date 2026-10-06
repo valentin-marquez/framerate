@@ -1,10 +1,13 @@
 import { expect, test } from "bun:test";
 import type { Category } from "@framerate/contracts";
 import { buildFingerprint, compare, decide, productNameFromTitle } from "@framerate/matching";
-import gold from "./match-gold.json";
+import goldJson from "./match-gold.json";
 import { normalizeOffer } from "./normalize";
 
-type Pair = (typeof gold)[number];
+type Side = { store: string; rawTitle: string; brand: string | null; mpn: string | null; gtin: string | null };
+type Pair = { source: string; category: string; label: string; confidence: string; note: string; a: Side; b: Side };
+// El JSON infiere una unión enorme (null o string por campo) que TypeScript no compara.
+const gold = goldJson as Pair[];
 
 // Cada lado sigue el camino de una oferta real (limpieza del título, cuarentena, huella).
 function normalized(category: Category, side: Pair["a"]) {
