@@ -97,6 +97,7 @@ const reviewRow = (id: number) =>
 const aiOf = async (id: number) => JSON.parse((await reviewRow(id)).evidence).ai;
 const shadow = { mode: "shadow" as const, dailyNeurons: 5000 };
 const live = { mode: "live" as const, dailyNeurons: 5000 };
+const reject = { mode: "reject" as const, dailyNeurons: 5000 };
 
 describe("regla", () => {
   test("acepta y rechaza sólo si los dos órdenes coinciden con margen", () => {
@@ -148,6 +149,25 @@ describe("verifyReview", () => {
     await verifyReview(db, fakeAi(0.6), b.review, live, now, silentLogger);
     expect((await reviewRow(b.review)).status).toBe("pending");
     expect(await aiOf(b.review)).toMatchObject({ verdict: "pending", mode: "live" });
+  });
+
+  test("en reject rechaza, pero un aceptar queda pendiente y no se vuelve a encolar", async () => {
+    const a = await seedReview();
+    await verifyReview(db, fakeAi(0.03), a.review, reject, now, silentLogger);
+    expect((await reviewRow(a.review)).status).toBe("rejected");
+
+    await resetD1(d1);
+    const b = await seedReview();
+    await verifyReview(db, fakeAi(0.97), b.review, reject, now, silentLogger);
+    expect((await reviewRow(b.review)).status).toBe("pending");
+    expect(await aiOf(b.review)).toMatchObject({ verdict: "accept", mode: "reject" });
+    const row = await db.query
+      .selectFrom("listings")
+      .select("product_id")
+      .where("id", "=", b.listing)
+      .executeTakeFirst();
+    expect(row?.product_id).not.toBe(b.candidate);
+    expect(await reviewsForToday(db, reject, now)).toEqual([]);
   });
 
   test("al pasar a live reusa el veredicto de la sombra sin volver a preguntar", async () => {

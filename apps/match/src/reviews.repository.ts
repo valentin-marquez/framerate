@@ -4,14 +4,14 @@ import type { Judgement, Side } from "./judge";
 
 /** Lo que `framerate-match` guarda en `match_reviews.evidence.ai` (sin migración). */
 export interface AiEvidence extends Judgement {
-  mode: "shadow" | "live";
+  mode: "shadow" | "reject" | "live";
   at: string;
   /** Vetos de `compare()` que impidieron aceptar en modo live. */
   vetoes?: string[];
 }
 
 /**
- * Revisiones pendientes que todavía no tienen veredicto de este modelo en este modo. Pasar de shadow a live las
+ * Revisiones pendientes que todavía no tienen veredicto de este modelo en este modo. Pasar de shadow a reject o live las
  * vuelve a incluir: el consumidor reusa la probabilidad guardada y sólo aplica la decisión.
  */
 export async function reviewsToVerify(db: Db, model: string, mode: string, limit: number): Promise<number[]> {

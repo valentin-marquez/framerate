@@ -57,7 +57,7 @@ flowchart TB
 
     matchCron(("Cron Trigger<br/>47 */6 * * *"))
     matchQ[["Queue<br/>framerate-match-verify<br/>(DLQ framerate-match-verify-dlq)"]]
-    match["<b>framerate-match</b><br/>Worker sin HTTP (#117)<br/>verifica revisiones del Gatekeeper<br/>MATCH_MODE shadow o live"]
+    match["<b>framerate-match</b><br/>Worker sin HTTP (#117)<br/>verifica revisiones del Gatekeeper<br/>MATCH_MODE shadow, reject o live"]
     ai["Workers AI<br/>gemma-4-26b-a4b-it<br/>10.000 neurons/día"]
   end
 

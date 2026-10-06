@@ -9,7 +9,7 @@ import { type AiEvidence, loadPair, neuronsSpentSince, reviewsToVerify, saveAiEv
 const NEURONS_PER_PAIR = 3;
 
 export interface VerifyConfig {
-  mode: "shadow" | "live";
+  mode: "shadow" | "reject" | "live";
   dailyNeurons: number;
 }
 
@@ -42,7 +42,10 @@ export async function verifyReview(db: Db, ai: Ai, reviewId: number, config: Ver
     at: now.toISOString(),
   };
 
-  if (config.mode === "live" && evidence.verdict !== "pending") {
+  // reject: sólo rechaza, que deja un duplicado; aceptar mezcla precios y espera la auditoría de las pendientes reales.
+  const applies =
+    config.mode === "live" ? evidence.verdict !== "pending" : config.mode === "reject" && evidence.verdict === "reject";
+  if (applies && evidence.verdict !== "pending") {
     const result = await resolveMatchReview(db, {
       reviewId,
       action: evidence.verdict,

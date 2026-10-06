@@ -3,7 +3,7 @@ export interface Env {
   DB: D1Database;
   AI: Ai;
   VERIFY_QUEUE: Queue<VerifyMessage>;
-  MATCH_MODE: "shadow" | "live";
+  MATCH_MODE: "shadow" | "reject" | "live";
   MATCH_DAILY_NEURONS: string;
 }
 

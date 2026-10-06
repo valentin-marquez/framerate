@@ -11,7 +11,7 @@ import { reviewsForToday, type VerifyConfig, verifyReview } from "./verify";
 const log = createLogger({ feature: "match-verify" });
 
 const configOf = (env: Env): VerifyConfig => ({
-  mode: env.MATCH_MODE === "live" ? "live" : "shadow",
+  mode: env.MATCH_MODE === "live" || env.MATCH_MODE === "reject" ? env.MATCH_MODE : "shadow",
   dailyNeurons: Number(env.MATCH_DAILY_NEURONS) || 0,
 });
 
