@@ -216,8 +216,13 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
 /** Barras que algunas tiendas usan para separar partes del título ("RTX 3050 | MSI Ventus 2X | 6GB"). */
 const TITLE_SEPARATORS = /\s*[|｜]\s*/g;
 
+/** Tecnomas copia fichas desde su administrador y deja "(clone)" en el nombre. */
+const TITLE_CLONE = /\s*\(\s*clone\s*\)/gi;
+
 export function cleanTitle(title: string): string {
-  return collapseWhitespace(decodeEntities(title).replace(TITLE_NOISE, " ").replace(TITLE_SEPARATORS, " "));
+  return collapseWhitespace(
+    decodeEntities(title).replace(TITLE_NOISE, " ").replace(TITLE_CLONE, " ").replace(TITLE_SEPARATORS, " "),
+  );
 }
 
 function extractExternalId(input: unknown): string | null {

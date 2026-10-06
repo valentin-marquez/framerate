@@ -6,6 +6,13 @@ test("cleanTitle quita las barras separadoras y el ruido comercial", () => {
   expect(cleanTitle("¡OFERTA! SSD Kingston NV3 1TB")).toBe("SSD Kingston NV3 1TB");
 });
 
+test("cleanTitle quita el (clone) que Tecnomas deja en las fichas copiadas", () => {
+  expect(cleanTitle("Zotac GAMING GeForce RTX 5070 SOLID OC (clone) [ZT-B50700J-10P]")).toBe(
+    "Zotac GAMING GeForce RTX 5070 SOLID OC [ZT-B50700J-10P]",
+  );
+  expect(cleanTitle("Zotac RTX 5070 Ti SOLID SFF OC ( Clone )")).toBe("Zotac RTX 5070 Ti SOLID SFF OC");
+});
+
 const base: RawOffer = {
   externalId: "123",
   url: "https://tienda.cl/producto/asus-dual-rtx-4070-super",
@@ -29,6 +36,17 @@ describe("normalizeOffer", () => {
     expect(result.offer.mpn).toBe("DUALRTX4070SO12G");
     expect(result.offer.brand).toBe("ASUS");
     expect(result.offer.attributes).toMatchObject({ chipset: "rtx 4070 super", vram: 12 });
+  });
+
+  test("una ficha copiada con (clone) sigue siendo una oferta: sin (clone) y con el MPN estructurado", () => {
+    const result = normalizeOffer(
+      { ...base, title: "Zotac GAMING GeForce RTX 5070 SOLID OC (clone) [ZT-B50700J-10P]", mpn: "ZT-B50700J-10A" },
+      "gpu",
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.offer.title).not.toMatch(/clone/i);
+    expect(result.offer.mpn).toBe("ZTB50700J10A");
   });
 
   test("precios invertidos se corrigen (efectivo = menor)", () => {
