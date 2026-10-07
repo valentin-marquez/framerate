@@ -36,8 +36,8 @@
       {
         "queue": "framerate-match-verify",
         "max_batch_size": 10,
-        // De a uno: no pasar el límite de pedidos por minuto de Workers AI.
-        "max_concurrency": 1,
+        // Cada par son dos pedidos a Workers AI: con 3 en paralelo, seis a la vez. Si hay 429, bajar a 1.
+        "max_concurrency": 3,
         "max_retries": 3,
         "dead_letter_queue": "framerate-match-verify-dlq"
       }
