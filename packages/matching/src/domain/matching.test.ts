@@ -66,6 +66,9 @@ describe("atributos por categoría", () => {
 
   test("CPU", () => {
     expect(PROFILES.cpu.extract("Procesador AMD Ryzen 7 7800X3D AM5").model).toBe("ryzen 7 7800x3d");
+    // PC Express separa el 3D.
+    expect(PROFILES.cpu.extract("PROCESADOR AMD RYZEN 7 7800X 3D 5GHZ 8 NUCLEOS sAM5").model).toBe("ryzen 7 7800x3d");
+    expect(PROFILES.cpu.extract("PROCESADOR AMD Ryzen 9 9950X 3D P/N 100-100000719WOF").model).toBe("ryzen 9 9950x3d");
     expect(PROFILES.cpu.extract("Procesador Intel Core i5-14600K LGA1700").model).toBe("core i5 14600k");
     expect(PROFILES.cpu.extract("Intel Core Ultra 7 265K").model).toBe("core ultra 7 265k");
     expect(PROFILES.cpu.extract("Ryzen 5 5600 vs 5600X").model).toBe("ryzen 5 5600");
@@ -208,7 +211,7 @@ describe("atributos por categoría", () => {
 
   test("SSD: capacidad con 'G' sin B e interfaz 'PCI'", () => {
     expect(PROFILES.ssd.extract("Disco Duro SSD M.2 Kingston PCI 4.0 KC3000 1024G")).toEqual({
-      capacity: 1024,
+      capacity: 1000,
       interface: "nvme",
       pcieGen: 4,
     });

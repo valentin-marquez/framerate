@@ -1,5 +1,5 @@
 import type { Db } from "@framerate/database";
-import { compare, decide } from "./domain/decide";
+import { compare, type Decision, decide } from "./domain/decide";
 import type { Fingerprint } from "./domain/fingerprint";
 import { productNameFromTitle } from "./domain/product-name";
 import {
@@ -11,6 +11,7 @@ import {
   detachIdentifiers,
   fillProductImage,
   findCandidates,
+  identifierOwners,
   loadCandidates,
   loadLinkState,
   markSameStore,
@@ -52,8 +53,9 @@ export interface MatchListingInput {
  * 1. Si ya estaba vinculada, el vínculo sigue sólo si `decide` lo haría hoy (sin veto y sin contar los
  *    identificadores que aportó ella misma). Si no, se desvincula (queda auditado), se le quitan al producto sólo los
  *    identificadores que ninguna otra de sus ofertas publica y se vuelve a decidir. Excepciones: una decisión manual
- *    no se toca; la fundadora (`new_product`) sólo sale ante un veto; si la categoría difiere, el vínculo se mantiene
- *    y se avisa (`categoryMismatch`).
+ *    no se toca; la fundadora (`new_product`) no se re-decide; si la categoría difiere, el vínculo se mantiene y se
+ *    avisa (`categoryMismatch`). Aunque el vínculo siga válido, si su producto no la reconoce por identificador y otro
+ *    dueño de su MPN o GTIN la vincularía, se muda allá.
  *    Un `force` mantiene el vínculo pase lo que pase; un `forbid` lo rompe y el producto no vuelve a ser candidato.
  *    Antes de todo, la revisión pendiente que ya no tiene nada que decidir se cierra.
  * 2. Busca candidatos y decide: vincular, producto nuevo, o producto nuevo
@@ -66,6 +68,7 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
   // Antes que todo: una revisión vieja cerrada deja lugar a la que pueda crear esta misma llamada.
   const reviewClosed = (await closeObsoleteReview(db, listingId, fp, now)) ?? undefined;
   let unlinked = false;
+  let moveTo: Decision | null = null;
 
   if (input.currentProductId !== null) {
     const productId = input.currentProductId;
@@ -87,10 +90,14 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     const vetoes = override === "forbid" ? ["forbidden"] : check ? check.vetoes : ["product_missing"];
     let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
     if (check && vetoes.length === 0) {
-      if (link.method === "new_product") return { outcome: "kept", unlinked, reviewClosed };
-      const again = decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
-      if (again.kind === "link") return { outcome: "kept", unlinked, reviewClosed };
-      evidence = { ...evidence, redecided: again.kind, score: check.score, sameStore: link.olderSameStore };
+      const again = link.method === "new_product" ? null : decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
+      if (again && again.kind !== "link") {
+        evidence = { ...evidence, redecided: again.kind, score: check.score, sameStore: link.olderSameStore };
+      } else {
+        moveTo = check.evidence.identifier ? null : await ownerThatLinks(db, listingId, fp, productId);
+        if (!moveTo) return { outcome: "kept", unlinked, reviewClosed };
+        evidence = { ...evidence, identifierOwner: moveTo.productId };
+      }
     }
     await setListingProduct(db, {
       listingId,
@@ -105,8 +112,13 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     unlinked = true;
   }
 
-  const candidates = await markSameStore(db, listingId, await findCandidates(db, fp));
-  const decision = decide(fp, await applyOverrides(db, listingId, fp, candidates));
+  // Sin re-decidir: contra su propio producto la fundadora puntúa 1 por atributos y le ganaría al identificador.
+  const decision =
+    moveTo ??
+    decide(
+      fp,
+      await applyOverrides(db, listingId, fp, await markSameStore(db, listingId, await findCandidates(db, fp))),
+    );
 
   if (decision.kind === "link") {
     await setListingProduct(db, {
@@ -151,4 +163,17 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     return { outcome: "review", unlinked, reviewClosed };
   }
   return { outcome: "new_product", unlinked, reviewClosed };
+}
+
+/**
+ * Otro producto es dueño de un identificador de la oferta y hoy la vincularía por identificador (sin veto ni
+ * `forbid`). Sin esto, la fundadora de un duplicado y la que llegó por atributos se quedan aunque el veto que las
+ * separó ya no exista.
+ */
+async function ownerThatLinks(db: Db, listingId: number, fp: Fingerprint, productId: number) {
+  const owners = await identifierOwners(db, fp, productId);
+  if (owners.length === 0) return null;
+  const candidates = await markSameStore(db, listingId, await loadCandidates(db, owners, fp));
+  const decision = decide(fp, await applyOverrides(db, listingId, fp, candidates));
+  return decision.kind === "link" && decision.method === "identifier" ? decision : null;
 }

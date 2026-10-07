@@ -127,8 +127,8 @@ const gpu: CategoryProfile = {
     }
     const line = firstMatch(GPU_LINES, t);
     if (line) a.line = line;
-    // "OC" o el patrón de MPN de ASUS "O12G" dentro del título.
-    a.oc = / oc /.test(t) || /o\d{1,2}g /.test(t);
+    // "OC", "OCEd" o el patrón de MPN de ASUS dentro del título ("O12G", "O8GB", "O 12G").
+    a.oc = / oc(?:ed)? /.test(t) || /o\d{1,2}gb? | o \d{1,2}gb? /.test(t);
     // Siempre presente, como `oc`: una V2, EVO o MAX es otra tarjeta aunque la tienda de la base no lo escriba.
     a.variant = t.match(/ (v ?2|evo|max|plus)(?= )/)?.[1]?.replace(" ", "") ?? "";
     return a;
@@ -142,7 +142,8 @@ const cpu: CategoryProfile = {
   discriminators: ["model"],
   keyIsUnique: true,
   extract(title) {
-    const t = prep(title);
+    // "7800X 3D" (PC Express) es el 7800X3D.
+    const t = prep(title).replace(/(\d{4}x) (3d)(?= )/g, "$1$2");
     const a: Attributes = {};
     const ryzen = t.match(/ ryzen ?(threadripper )?(\d) ?(pro )?(\d{4}[a-z0-9]{0,4})(?= )/);
     const ultra = t.match(/ ultra ?i?([3579]) ?(\d{3}[a-z]{0,2})(?= )/);
@@ -240,8 +241,11 @@ function capacityGb(t: string): number | undefined {
   // "SATA 6Gb/s" es velocidad de interfaz, no capacidad ("/" ya es un espacio).
   const m = t.replace(/ \d+ ?gb? s(?= )| \d+ ?gbps(?= )/g, " ").match(/ (\d+(?:\.\d+)?) ?([tg])b?(?= )/);
   if (!m?.[1] || !m[2]) return undefined;
-  const n = Number(m[1]);
-  return m[2] === "t" ? Math.round(n * 1000) : Math.round(n);
+  // "8.192GB": en GB, tres decimales son el punto de miles.
+  const n = Number(m[2] === "g" && /^\d{1,3}\.\d{3}$/.test(m[1]) ? m[1].replace(".", "") : m[1]);
+  const gb = m[2] === "t" ? Math.round(n * 1000) : Math.round(n);
+  // "1024GB" es la de 1 TB escrita en binario; 512 GB sí es otra capacidad que 500 GB.
+  return gb >= 1024 && gb % 1024 === 0 ? (gb / 1024) * 1000 : gb;
 }
 
 const SSD_LINES = [

@@ -70,7 +70,12 @@ const offerOf = (title = TITLE, mpn: string | null = MPN) => ({
   fingerprint: buildFingerprint({ category: "ram", title, brand: "Corsair", mpn }),
 });
 
-const decide = (listingId: number, productId: number | null, method: "identifier" | "manual", by = "system") =>
+const decide = (
+  listingId: number,
+  productId: number | null,
+  method: "identifier" | "manual" | "new_product",
+  by = "system",
+) =>
   db.query
     .insertInto("match_decisions")
     .values({
@@ -153,6 +158,65 @@ describe("overrides", () => {
     });
     expect(result.outcome).toBe("linked");
     expect(await productOf(id)).toBe(kingston);
+  });
+});
+
+describe("identificador de otro producto", () => {
+  const GTIN = "00840006600008";
+
+  test("la fundadora de un duplicado se muda al dueño de su MPN y no vuelve", async () => {
+    await seedStore();
+    const owner = await product("owner", TITLE, "Corsair", MPN);
+    await decide(await listing("0", owner), owner, "new_product");
+    const duplicate = await product("duplicate", TITLE, "Corsair");
+    const id = await listing("1", duplicate);
+    await decide(id, duplicate, "new_product");
+
+    const moved = await matchListing(db, { listingId: id, currentProductId: duplicate, offer: offerOf(), now: NOW });
+    expect(moved).toMatchObject({ outcome: "linked", unlinked: true });
+    expect(await productOf(id)).toBe(owner);
+
+    const again = await matchListing(db, { listingId: id, currentProductId: owner, offer: offerOf(), now: NOW });
+    expect(again.outcome).toBe("kept");
+  });
+
+  test("se queda si su producto también la reconoce por identificador, o si el par está prohibido", async () => {
+    await seedStore();
+    await product("owner", TITLE, "Corsair", MPN);
+    const current = await product("current", TITLE, "Corsair");
+    await db.query
+      .insertInto("product_identifiers")
+      .values({ kind: "gtin", value: GTIN, product_id: current })
+      .execute();
+    const other = await listing("2", current, TITLE, null);
+    await db.query.updateTable("listings").set({ gtin: GTIN }).where("id", "=", other).execute();
+    const id = await listing("1", current);
+    await db.query.updateTable("listings").set({ gtin: GTIN }).where("id", "=", id).execute();
+    await decide(id, current, "identifier");
+    const offer = {
+      ...offerOf(),
+      fingerprint: buildFingerprint({ category: "ram", title: TITLE, brand: "Corsair", mpn: MPN, gtin: GTIN }),
+    };
+    expect((await matchListing(db, { listingId: id, currentProductId: current, offer, now: NOW })).outcome).toBe(
+      "kept",
+    );
+
+    const alone = await product("alone", TITLE, "Corsair");
+    const founder = await listing("3", alone);
+    await decide(founder, alone, "new_product");
+    const owner = (await all(db, "product_identifiers")).find((i) => i.kind === "mpn")?.product_id as number;
+    await db.query
+      .insertInto("match_overrides")
+      .values({ listing_id: founder, product_id: owner, kind: "forbid", created_by: "valentin", created_at: NOW })
+      .execute();
+    const forbidden = await matchListing(db, {
+      listingId: founder,
+      currentProductId: alone,
+      offer: offerOf(),
+      now: NOW,
+    });
+    expect(forbidden.outcome).toBe("kept");
+    expect(await productOf(founder)).toBe(alone);
   });
 });
 

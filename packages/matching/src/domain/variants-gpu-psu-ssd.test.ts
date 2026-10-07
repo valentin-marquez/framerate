@@ -29,8 +29,16 @@ describe("GPU", () => {
       "Tarjeta de Video MSI GeForce RTX 5070 Ti 16G VENTUS 3X OC",
     ],
     ["Tarjeta de Video MSI GeForce RTX 5080 Gaming Trio White OC 16GB GDDR7", "MSI RTX 5080 16G GAMING TRIO OC WHITE"],
+    // OC en la notación de ASUS ("O8GB", "O 12G") o abreviado ("OCEd").
+    ["Tarjeta de Video Asus DUAL RTX5060 O8GB EVO", "ASUS Dual GeForce RTX 5060 EVO OC 8GB GDDR7"],
+    ["Tarjeta de Video Asus Prime Radeon RX9070GRE O 12G", "ASUS Prime Radeon RX 9070 GRE OC 12GB"],
+    ["Tarjeta de Video Asus ROG Astral RTX 5080 OCEd 16GB GDDR7", "Asus ROG Astral RTX 5080 16GB GDDR7 OC Edition"],
   ])("iguales: %s / %s", (a, b) => {
     expect(vetoes("gpu", a, b)).toEqual([]);
+  });
+
+  test("una palabra terminada en o antes de la memoria no es OC", () => {
+    expect(PROFILES.gpu.extract("Tarjeta de Video Gigabyte RTX 5060 Eagle Pro 8G").oc).toBe(false);
   });
 });
 
@@ -104,7 +112,16 @@ describe("SSD", () => {
       "SSD M.2 Kingston NV3 500 GB PCIe 4.0 x4",
     ],
     ["SSD M.2 (2280) - 2 TB - Adata Legend 860 - PCIe Gen4 x4 (SLEG-860-2000GCS)", "DISCO ADATA LEGEND 860 2TB NVME"],
+    // 1024 GB es el mismo SSD de 1 TB escrito en binario.
+    ["Disco estado sólido Kingston SKC600 de 1024GB (SATA, NAND 3D TLC)", "Kingston KC600 SSD 1TB SATA 6Gb/s"],
+    ["Disco SSD 4096GB Kingston Fury Renegade G5 PCIe 5.", "Kingston FURY Renegade G5 4TB SSD M.2 PCIe 5.0 NVMe"],
   ])("iguales: %s / %s", (a, b) => {
     expect(vetoes("ssd", a, b)).toEqual([]);
+  });
+
+  test("capacidad: el punto de miles no es decimal y 512 GB sigue siendo 512", () => {
+    expect(PROFILES.ssd.extract("Disco SSD 8.192GB interno Kingston FURY Renegade G5 M.2 2280").capacity).toBe(8000);
+    expect(PROFILES.ssd.extract("SSD Kingston NV3 512GB NVMe").capacity).toBe(512);
+    expect(PROFILES.ssd.extract("SSD Samsung 870 EVO 1.5TB").capacity).toBe(1500);
   });
 });

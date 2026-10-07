@@ -66,6 +66,19 @@ export async function findCandidates(db: Db, fp: Fingerprint): Promise<Candidate
   return loadCandidates(db, [...ids].slice(0, MAX_CANDIDATES), fp);
 }
 
+/** Productos, salvo `exceptProductId`, dueños de un identificador de la huella. */
+export async function identifierOwners(db: Db, fp: Identifiers, exceptProductId: number): Promise<number[]> {
+  const pairs = identifierPairs(fp);
+  if (pairs.length === 0) return [];
+  const rows = await db.query
+    .selectFrom("product_identifiers")
+    .select("product_id")
+    .where("product_id", "!=", exceptProductId)
+    .where((eb) => eb.or(pairs.map((p) => eb.and([eb("kind", "=", p.kind), eb("value", "=", p.value)]))))
+    .execute();
+  return [...new Set(rows.map((r) => r.product_id))];
+}
+
 /** Marca los candidatos que ya tienen otra oferta activa de la misma tienda que `listingId`. */
 export async function markSameStore(db: Db, listingId: number, candidates: Candidate[]): Promise<Candidate[]> {
   if (candidates.length === 0) return candidates;
