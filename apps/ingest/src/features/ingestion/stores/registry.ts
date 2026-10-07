@@ -550,7 +550,8 @@ export const STORES: readonly StoreDefinition[] = [
     slug: "tecnosaga",
     name: "Tecno Saga",
     url: "https://tecnosaga.cl",
-    minIntervalMs: 1000,
+    // 429 en 6 categorías por ciclo con 1000 ms: todas pegan al mismo `listadoajax` y la cola corre varias a la vez.
+    minIntervalMs: 2500,
     adapter: createTecnoSagaAdapter({
       baseUrl: "https://tecnosaga.cl",
       // "categoría/subcategoría". Sin HDD ni SSD (vacías). Sin la 8/53 "fuente genérica".
