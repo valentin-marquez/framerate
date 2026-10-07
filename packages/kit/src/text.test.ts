@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { collapseWhitespace, decodeEntities, fold, slugify, stripHtml } from "./text";
+import { collapseWhitespace, decodeEntities, fold, searchText, slugify, stripHtml } from "./text";
 
 describe("texto", () => {
   test("fold: minúsculas y sin tildes", () => {
@@ -29,5 +29,26 @@ describe("texto", () => {
 
   test("collapseWhitespace", () => {
     expect(collapseWhitespace("  a \n\t b   c ")).toBe("a b c");
+  });
+});
+
+describe("searchText", () => {
+  test("separa letras y números cuando las dos partes son sustanciales", () => {
+    expect(searchText("MSI RTX 5070Ti 16G FRIEREN")).toBe("msi rtx 5070 ti 16g frieren");
+    expect(searchText("MSI RTX 5070 Ti 16G")).toBe("msi rtx 5070 ti 16g");
+    expect(searchText("rtx5070ti")).toBe("rtx 5070 ti");
+    expect(searchText("16GB")).toBe("16 gb");
+  });
+
+  test("no rompe los tokens que distinguen productos", () => {
+    expect(searchText("AMD Ryzen 7 7800X3D")).toBe("amd ryzen 7 7800x3d");
+    expect(searchText("Core i5-12400F")).toBe("core i5 12400f");
+    expect(searchText("Gigabyte B550M DS3H AC")).toBe("gigabyte b550m ds3h ac");
+    expect(searchText("DDR5-6000")).toBe("ddr5 6000");
+  });
+
+  test("las dos formas de escribir un modelo dan lo mismo", () => {
+    expect(searchText("RTX 5070Ti")).toBe(searchText("RTX 5070 Ti"));
+    expect(searchText("rtx5070ti")).toBe(searchText("RTX 5070 TI"));
   });
 });

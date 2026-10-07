@@ -42,3 +42,30 @@ export function slugify(input: string): string {
     .slice(0, 80)
     .replace(/-+$/g, "");
 }
+
+/**
+ * Forma canónica para el índice de búsqueda: letras y números se separan cuando las dos partes tienen 2 o más
+ * caracteres, así "RTX 5070Ti" y "RTX 5070 Ti" quedan con los mismos tokens. No se separa cuando una parte es de
+ * un solo carácter, porque destruiría tokens que sí distinguen productos ("i5", "7800x3d", "b550m", "ddr5").
+ * La consulta se normaliza igual (`ftsQuery` en el server): las dos formas de escribirlo encuentran lo mismo.
+ */
+export function searchText(input: string): string {
+  return fold(input)
+    .replace(/[^a-z0-9+]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map(splitLetterDigit)
+    .join(" ");
+}
+
+const SEGMENTS = /\d+|[a-z]+|\+/g;
+
+function splitLetterDigit(word: string): string {
+  const parts = word.match(SEGMENTS);
+  if (!parts) return "";
+  return parts.reduce((out, part, i) => {
+    const previous = parts[i - 1];
+    if (!previous) return part;
+    return previous.length > 1 && part.length > 1 ? `${out} ${part}` : out + part;
+  }, "");
+}

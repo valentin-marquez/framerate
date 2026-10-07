@@ -13,7 +13,7 @@ import type {
 } from "@framerate/contracts";
 import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel } from "@framerate/contracts";
 import { type Db, parseJson, toBool } from "@framerate/database";
-import { slugify } from "@framerate/kit";
+import { searchText, slugify } from "@framerate/kit";
 import { titleTokens } from "@framerate/matching";
 import { sql } from "kysely";
 import { likePattern } from "@/shared/sql";
@@ -24,9 +24,14 @@ import { likePattern } from "@/shared/sql";
  * el producto sigue accesible por enlace y para SEO.
  */
 
-/** Convierte texto libre en una consulta FTS5 segura: cada palabra como prefijo literal. */
+/**
+ * Convierte texto libre en una consulta FTS5 segura: cada palabra como prefijo literal. Se normaliza con
+ * `searchText`, igual que la columna `search` del índice, para que `5070ti` y `5070 ti` encuentren lo mismo (#129).
+ */
 export function ftsQuery(q: string): string | null {
-  const tokens = titleTokens(q).slice(0, 8);
+  const tokens = [...new Set(titleTokens(q).flatMap((t) => searchText(t).split(" ")))]
+    .filter((t) => t.length > 1)
+    .slice(0, 8);
   if (tokens.length === 0) return null;
   return tokens.map((t) => `"${t}"*`).join(" ");
 }

@@ -167,6 +167,8 @@ export interface ProductsTable {
   brand: string | null;
   category: string;
   attribute_key: string | null;
+  // Nombre normalizado para el índice de búsqueda (`searchText`); la escribe quien crea el producto.
+  search: string | null;
   attributes: JsonText;
   specs: JsonText;
   specs_source: "extracted" | "opendb" | "manual" | null;

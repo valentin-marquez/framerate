@@ -1,6 +1,6 @@
 import type { Category } from "@framerate/contracts";
 import { type Db, type MatchMethod, parseJson, toJson } from "@framerate/database";
-import { fold, slugify } from "@framerate/kit";
+import { fold, searchText, slugify } from "@framerate/kit";
 import { type Compilable, sql } from "kysely";
 import { type Candidate, compare } from "./domain/decide";
 import { buildFingerprint, type Fingerprint } from "./domain/fingerprint";
@@ -226,6 +226,7 @@ export async function createProduct(
     .values({
       slug,
       name: input.name,
+      search: searchText(input.name),
       brand: fp.brand,
       category: fp.category,
       attribute_key: fp.attributeKey,
