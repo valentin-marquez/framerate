@@ -302,3 +302,39 @@ describe("separar fusiones", () => {
     expect(await revertAiDecisions(db, { decidedBy: "valentin", now: NOW })).toEqual({ reverted: 1, remaining: 0 });
   });
 });
+
+describe("resumen de precios al mover una oferta", () => {
+  const summary = async (id: number) => {
+    const row = (await all(db, "products")).find((p) => p.id === id);
+    return {
+      best_price: row?.best_price,
+      offer_count: row?.offer_count,
+      in_stock_offer_count: row?.in_stock_offer_count,
+    };
+  };
+
+  test("aceptar y separar recalculan el producto que gana la oferta y el que la pierde", async () => {
+    await seedStore();
+    const candidate = await product("corsair-vengeance", TITLE, "Corsair", MPN);
+    const own = await product("provisional", "Corsair Vengeance RGB 32GB", "Corsair");
+    const id = await listing("1", own);
+    await db.query
+      .updateTable("products")
+      .set({ best_price: 100_000, offer_count: 1, in_stock_offer_count: 1 })
+      .where("id", "=", own)
+      .execute();
+    const review = await db.query
+      .insertInto("match_reviews")
+      .values({ listing_id: id, candidate_product_id: candidate, score: 0.7, created_at: NOW })
+      .returning("id")
+      .executeTakeFirstOrThrow();
+
+    await resolveMatchReview(db, { reviewId: review.id, action: "accept", decidedBy: "valentin", now: NOW });
+    expect(await summary(candidate)).toEqual({ best_price: 100_000, offer_count: 1, in_stock_offer_count: 1 });
+    expect(await summary(own)).toEqual({ best_price: null, offer_count: 0, in_stock_offer_count: 0 });
+
+    await splitListing(db, { listingId: id, decidedBy: "valentin", now: NOW });
+    expect(await summary(own)).toEqual({ best_price: 100_000, offer_count: 1, in_stock_offer_count: 1 });
+    expect(await summary(candidate)).toEqual({ best_price: null, offer_count: 0, in_stock_offer_count: 0 });
+  });
+});

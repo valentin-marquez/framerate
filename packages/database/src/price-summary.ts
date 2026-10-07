@@ -46,23 +46,35 @@ const CRAWL_SCOPE = `SELECT product_id FROM listings WHERE store_id = ?1 AND cat
 /** Día calendario en Chile (con su horario de verano). */
 export const santiagoDay = (date: Date) => date.toLocaleDateString("sv-SE", { timeZone: "America/Santiago" });
 
-export async function refreshPriceSummary(
+/** Productos que una oferta dejó o ganó fuera de una corrida (Gatekeeper, separar, fusionar). */
+const PRODUCTS_SCOPE = "SELECT value FROM json_each(?3)";
+
+export function refreshPriceSummary(
   db: Db,
   input: { storeId: number; category: string; previousProductIds: Iterable<number>; now: Date },
 ) {
-  const params = [
-    input.storeId,
-    input.category,
-    JSON.stringify([...input.previousProductIds]),
-    input.now.toISOString(),
-    santiagoDay(input.now),
-  ];
+  return refresh(db, CRAWL_SCOPE, input.storeId, input.category, input.previousProductIds, input.now);
+}
+
+export function refreshProductsPriceSummary(db: Db, productIds: Iterable<number>, now: Date) {
+  return refresh(db, PRODUCTS_SCOPE, null, null, productIds, now);
+}
+
+async function refresh(
+  db: Db,
+  scope: string,
+  storeId: number | null,
+  category: string | null,
+  productIds: Iterable<number>,
+  now: Date,
+) {
+  const params = [storeId, category, JSON.stringify([...productIds]), now.toISOString(), santiagoDay(now)];
   // Las tres en un batch (una transacción): el reference_price lee la fila del día recién escrita. La versión del
   // catálogo sube en la misma transacción, así la caché del server no ve precios nuevos con la versión vieja.
   // D1 rechaza más valores que el mayor ?N de la sentencia: el resumen no usa el día (?5).
   await db.batch([
     ...[[summarySql, params.slice(0, 4)] as const, [dailySql, params] as const, [referenceSql, params] as const].map(
-      ([build, values]) => ({ compile: () => CompiledQuery.raw(build(CRAWL_SCOPE), values) }),
+      ([build, values]) => ({ compile: () => CompiledQuery.raw(build(scope), values) }),
     ),
     { compile: () => bumpCatalogVersionQuery },
   ]);

@@ -1,5 +1,5 @@
 import type { Category } from "@framerate/contracts";
-import { bumpCatalogVersion, type Db, parseJson } from "@framerate/database";
+import { type Db, parseJson, refreshProductsPriceSummary } from "@framerate/database";
 import { buildFingerprint } from "./domain/fingerprint";
 import { productNameFromTitle } from "./domain/product-name";
 import {
@@ -79,7 +79,7 @@ export async function splitListing(
     createdBy: input.decidedBy,
     now: input.now,
   });
-  await bumpCatalogVersion(db);
+  await refreshProductsPriceSummary(db, [from, target], new Date(input.now));
   return { status: "split", productId: target, created: !existing };
 }
 
