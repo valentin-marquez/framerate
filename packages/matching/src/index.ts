@@ -8,6 +8,7 @@ export * from "./domain/product-name";
 
 // Casos de uso y acceso a datos.
 export * from "./match-listing";
+export * from "./merge";
 export * from "./repository";
 export * from "./resolve-review";
 export * from "./split";

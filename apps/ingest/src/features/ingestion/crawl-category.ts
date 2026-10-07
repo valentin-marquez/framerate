@@ -1,7 +1,7 @@
 import type { Category } from "@framerate/contracts";
 import { type Db, refreshPriceSummary } from "@framerate/database";
 import type { Clock, Logger } from "@framerate/kit";
-import { matchListing } from "@framerate/matching";
+import { matchListing, mergeSplitIdentity } from "@framerate/matching";
 import { normalizeOffer } from "./domain/normalize";
 import {
   addToQuarantine,
@@ -115,6 +115,13 @@ export async function crawlCategory(
       if (upsert.productId !== null && (match.unlinked || match.outcome !== "kept")) {
         previousProductIds.add(upsert.productId);
       }
+      const merge = await mergeSplitIdentity(db, {
+        listingId: upsert.listingId,
+        fingerprint: offer.fingerprint,
+        now: now(),
+      });
+      if (merge) log.info(`matching.${merge.status}`, { feature: "matching", listingId: upsert.listingId, ...merge });
+      if (merge?.status === "merged") stats.merged++;
       if (match.unlinked) stats.unlinked++;
       if (match.reviewClosed) stats.reviewsClosed++;
       if (match.outcome === "linked") stats.linked++;
