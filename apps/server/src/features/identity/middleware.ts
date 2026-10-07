@@ -23,7 +23,12 @@ async function sessionUser(c: Context<AppEnv>): Promise<SessionUser | null> {
   if (!c.req.header("cookie")?.includes("session_token")) return null;
   const start = Date.now();
   const accessesBefore = authD1.accesses;
-  const session = await (await getAuth(c.env)).api.getSession({ headers: c.req.raw.headers });
+  const { headers, response: session } = await (await getAuth(c.env)).api.getSession({
+    headers: c.req.raw.headers,
+    returnHeaders: true,
+  });
+  // Al leer de D1, Better Auth renueva la caché de la sesión en una cookie: si no llega al navegador, la caché no sirve.
+  for (const cookie of headers.getSetCookie()) c.header("set-cookie", cookie, { append: true });
   // Better Auth consulta D1 por su cuenta y su primer uso en un isolate inicializa: nada de eso pasa por `d1;dur`.
   c.header("Server-Timing", `session;dur=${Date.now() - start};desc="${authD1.accesses - accessesBefore} accesos"`, {
     append: true,

@@ -69,7 +69,7 @@ export const CuentasConectadas: Story = {
   parameters: { providers: PROVIDERS },
   render: () => (
     <div className="mx-auto max-w-3xl">
-      <ConnectedAccounts accounts={[{ id: "a1", providerId: "discord" }]} />
+      <ConnectedAccounts accounts={Promise.resolve([{ id: "a1", providerId: "discord" }])} />
     </div>
   ),
 };
@@ -80,10 +80,10 @@ export const CuentasConectadasDos: Story = {
   render: () => (
     <div className="mx-auto max-w-3xl">
       <ConnectedAccounts
-        accounts={[
+        accounts={Promise.resolve([
           { id: "a1", providerId: "discord" },
           { id: "a2", providerId: "google" },
-        ]}
+        ])}
       />
     </div>
   ),
@@ -95,7 +95,17 @@ export const OfertaDeUnir: Story = {
   parameters: { providers: PROVIDERS, path: "/ajustes?conectar=google&error=account_already_linked_to_different_user" },
   render: () => (
     <div className="mx-auto max-w-3xl">
-      <ConnectedAccounts accounts={[{ id: "a1", providerId: "discord" }]} />
+      <ConnectedAccounts accounts={Promise.resolve([{ id: "a1", providerId: "discord" }])} />
+    </div>
+  ),
+};
+
+export const CuentasCargando: Story = {
+  name: "Cuentas conectadas: cargando",
+  parameters: { providers: PROVIDERS },
+  render: () => (
+    <div className="mx-auto max-w-3xl">
+      <ConnectedAccounts accounts={new Promise(() => {})} />
     </div>
   ),
 };
@@ -105,7 +115,7 @@ export const CuentasError: Story = {
   parameters: { providers: PROVIDERS },
   render: () => (
     <div className="mx-auto max-w-3xl">
-      <ConnectedAccounts accounts={null} />
+      <ConnectedAccounts accounts={Promise.resolve(null)} />
     </div>
   ),
 };

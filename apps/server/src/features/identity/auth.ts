@@ -86,6 +86,9 @@ export function createAuth(env: Env, options: CreateAuthOptions = {}) {
       },
       expiresIn: 30 * DAY,
       updateAge: DAY,
+      // Sin esto cada request con sesión lee `auth_sessions` en D1. El rol, la sanción y la baja de cuenta no salen de
+      // la caché: `loadSessionUser` los lee siempre. Lo único que tarda hasta 5 min es una sesión borrada en D1.
+      cookieCache: { enabled: true, maxAge: 5 * 60 },
     },
     account: {
       modelName: "auth_accounts",

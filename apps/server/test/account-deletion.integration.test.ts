@@ -226,3 +226,25 @@ describe("tiendas y administradores", () => {
     expect((await deleteMe(ana)).status).toBe(204);
   });
 });
+
+describe("sesión cacheada en la cookie", () => {
+  test("ahorra las lecturas de Better Auth y no revive una cuenta eliminada", async () => {
+    const auth = await sessionHeaders(env, ana);
+    const first = await app.request("/v1/me", { headers: auth }, env);
+    expect(first.status).toBe(200);
+    expect(first.headers.get("server-timing")).toMatch(/session;dur=\d+;desc="[1-9]\d* accesos"/);
+    const cached = first.headers
+      .getSetCookie()
+      .map((c) => c.slice(0, c.indexOf(";")))
+      .filter((c) => c.includes("session_data"));
+    expect(cached).toHaveLength(1);
+    const headers = new Headers({ cookie: `${auth.get("cookie")}; ${cached[0]}` });
+
+    const second = await app.request("/v1/me", { headers }, env);
+    expect(second.status).toBe(200);
+    expect(second.headers.get("server-timing")).toMatch(/session;dur=\d+;desc="0 accesos"/);
+
+    expect((await deleteMe(ana)).status).toBe(204);
+    expect((await app.request("/v1/me", { headers }, env)).status).toBe(401);
+  });
+});

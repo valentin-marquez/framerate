@@ -18,6 +18,7 @@ const requestContext = new AsyncLocalStorage<{
   ip: string | null;
   fetch?: typeof fetch;
   memo: Map<string, Promise<unknown>>;
+  setCookies: string[];
 }>();
 setServerContext(() => requestContext.getStore());
 
@@ -27,12 +28,14 @@ export default {
   async fetch(request, env, ctx) {
     const context = new RouterContextProvider();
     const api = import.meta.env.DEV ? undefined : env.API;
-    return requestContext.run(
+    const setCookies: string[] = [];
+    const response = await requestContext.run(
       {
         cookie: request.headers.get("cookie"),
         ip: request.headers.get("cf-connecting-ip"),
         fetch: api?.fetch.bind(api),
         memo: new Map(),
+        setCookies,
       },
       async () =>
         (await markdownResponse(request)) ??
@@ -46,5 +49,20 @@ export default {
           ),
         ),
     );
+    return withApiCookies(response, setCookies);
   },
 } satisfies ExportedHandler<Env>;
+
+/**
+ * Las acciones ya reenvían sus `set-cookie` (`callApi`): esos ganan. Varias llamadas pueden renovar la misma
+ * cookie; va la última.
+ */
+function withApiCookies(response: Response, setCookies: string[]) {
+  const name = (cookie: string) => cookie.slice(0, cookie.indexOf("="));
+  const present = new Set(response.headers.getSetCookie().map(name));
+  const missing = new Map(setCookies.filter((c) => !present.has(name(c))).map((c) => [name(c), c]));
+  if (missing.size === 0) return response;
+  const headers = new Headers(response.headers);
+  for (const cookie of missing.values()) headers.append("set-cookie", cookie);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}

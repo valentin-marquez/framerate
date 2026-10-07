@@ -26,6 +26,8 @@ interface ServerContext {
   fetch?: typeof fetch;
   /** Resultados compartidos por todos los loaders de la petición HTTP en curso. */
   memo?: Map<string, Promise<unknown>>;
+  /** `set-cookie` de la API (la caché de la sesión) que la respuesta de la web le pasa al navegador. */
+  setCookies?: string[];
 }
 
 let serverContext: () => ServerContext | undefined = () => undefined;
@@ -53,7 +55,7 @@ export function memoPerRequest<T>(key: string, load: () => Promise<T>): Promise<
 export function apiFetch(input: string, init?: RequestInit): Promise<Response> {
   if (typeof window !== "undefined") return fetch(input, init);
   const context = serverContext();
-  if (!context?.fetch) return fetch(input, init);
+  if (!context?.fetch) return fetch(input, init).then((response) => keepCookies(context, response));
   const headers = new Headers(init?.headers);
   if (context.ip) headers.set("x-client-ip", context.ip);
   const start = Date.now();
@@ -69,8 +71,13 @@ export function apiFetch(input: string, init?: RequestInit): Promise<Response> {
         serverTiming: response.headers.get("server-timing"),
       }),
     );
-    return response;
+    return keepCookies(context, response);
   });
+}
+
+function keepCookies(context: ServerContext | undefined, response: Response) {
+  context?.setCookies?.push(...response.headers.getSetCookie());
+  return response;
 }
 
 export class ApiError extends Error {

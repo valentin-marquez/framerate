@@ -6,12 +6,13 @@ import {
   IconLink,
   IconLoader2,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { useFetcher, useSearchParams, useSubmit } from "react-router";
+import { Suspense, useEffect, useState } from "react";
+import { Await, useFetcher, useSearchParams, useSubmit } from "react-router";
 import { toast } from "sonner";
 import { ALREADY_LINKED } from "~/features/auth/components/auth-flash";
 import { useAuthProviders } from "~/features/auth/hooks/useAuth";
 import { Button, type ButtonProps } from "~/shared/components/primitives/button";
+import { Skeleton } from "~/shared/components/primitives/skeleton";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { SettingsBadge, SettingsGroup, SettingsRow, SettingsSection } from "./settings-parts";
 
@@ -24,26 +25,31 @@ export interface LinkedAccount {
 const ICONS: Record<string, Icon> = { discord: IconBrandDiscord, google: IconBrandGoogle };
 
 /** Proveedores de login: cuáles están conectados a tu usuario, conectar los que faltan, soltar uno o unir usuarios. */
-export function ConnectedAccounts({ accounts }: { accounts: LinkedAccount[] | null }) {
+export function ConnectedAccounts({ accounts }: { accounts: Promise<LinkedAccount[] | null> }) {
+  const { t } = useTranslation();
+  const [params] = useSearchParams();
+  // Se toma al montar (también en el SSR), antes de que lleguen las cuentas: AuthFlash limpia la URL justo después.
+  const [mergeOffer] = useState(() => (params.get("error") === ALREADY_LINKED ? params.get("conectar") : null));
+  return (
+    <SettingsSection title={t("connected_accounts")} description={t("connected_accounts_desc")}>
+      <Suspense fallback={<Skeleton className="h-32 rounded-2xl" />}>
+        <Await resolve={accounts}>{(list) => <AccountList accounts={list} mergeOffer={mergeOffer} />}</Await>
+      </Suspense>
+    </SettingsSection>
+  );
+}
+
+function AccountList({ accounts, mergeOffer }: { accounts: LinkedAccount[] | null; mergeOffer: string | null }) {
   const { t } = useTranslation();
   const providers = useAuthProviders();
-  const [params] = useSearchParams();
-  // Se toma al montar (también en el SSR): AuthFlash limpia la URL justo después.
-  const [mergeOffer] = useState(() => (params.get("error") === ALREADY_LINKED ? params.get("conectar") : null));
   // Sólo cuentan los proveedores habilitados: soltar uno nunca te deja con una cuenta que ya no sirve para entrar.
   const connected = accounts?.filter((a) => providers.some((p) => p.id === a.providerId)) ?? [];
   const labelOf = (id: string) => providers.find((p) => p.id === id)?.label ?? id;
 
-  if (!accounts) {
-    return (
-      <SettingsSection title={t("connected_accounts")} description={t("connected_accounts_desc")}>
-        <p className="text-muted-foreground text-sm">{t("connected_accounts_load_error")}</p>
-      </SettingsSection>
-    );
-  }
+  if (!accounts) return <p className="text-muted-foreground text-sm">{t("connected_accounts_load_error")}</p>;
 
   return (
-    <SettingsSection title={t("connected_accounts")} description={t("connected_accounts_desc")}>
+    <>
       {mergeOffer && (
         <div className="flex flex-col gap-3 rounded-2xl bg-secondary p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-foreground text-sm">{t("merge_offer", { provider: labelOf(mergeOffer) })}</p>
@@ -111,7 +117,7 @@ export function ConnectedAccounts({ accounts }: { accounts: LinkedAccount[] | nu
           </div>
         </div>
       </details>
-    </SettingsSection>
+    </>
   );
 }
 
