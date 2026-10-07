@@ -179,6 +179,11 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
                 </ul>
               </details>
             )}
+            {offers.length === 0 && (
+              <p className="text-muted-foreground text-sm">
+                Ninguna tienda lo publica ahora. Dejamos la página con su historial por si vuelve.
+              </p>
+            )}
             {user && (
               <ReportButton
                 targetType="product"

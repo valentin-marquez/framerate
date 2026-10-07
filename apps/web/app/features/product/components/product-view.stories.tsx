@@ -22,3 +22,4 @@ export const SinEspecificaciones = story(cases.sinEspecificaciones, "Sin especif
 export const SinHistorial = story(cases.sinHistorial, "Sin historial");
 export const UnaTienda = story(cases.unaTienda, "Una tienda");
 export const SinStock = story(cases.sinStock, "Sin stock");
+export const Retirado = story(cases.retirado, "Retirado: ninguna tienda lo publica");

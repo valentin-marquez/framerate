@@ -11,14 +11,16 @@ import { formatCLP } from "~/shared/utils/format";
 import type { Route } from "./+types/product-details";
 
 /** Precio a destacar: el mejor con stock, o el de la oferta más barata si nadie tiene (la API las ordena así). */
-const headlinePrice = (product: ProductDetail) => product.bestPrice ?? product.offers[0]?.priceCash ?? 0;
+const headlinePrice = (product: ProductDetail) => product.bestPrice ?? product.offers[0]?.priceCash ?? null;
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Producto no encontrado - Framerate" }];
   const data = loaderData.product;
 
   const bestPrice = headlinePrice(data);
-  const description = `Compra ${data.name} desde ${formatCLP(bestPrice)} en Chile. Compara precios en ${data.offerCount} tiendas.`;
+  const description = bestPrice
+    ? `Compra ${data.name} desde ${formatCLP(bestPrice)} en Chile. Compara precios en ${data.offerCount} tiendas.`
+    : `${data.name}: precios, tiendas e historial en Chile. Ninguna tienda lo publica ahora.`;
   // ponytail: la foto de la tienda tal cual; una tarjeta propia (logo + foto + nombre) cuando haga falta.
   const ogImage = data.imageUrl || "/og-image.png";
 
@@ -32,8 +34,12 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
     { property: "og:description", content: description },
     { property: "og:image", content: ogImage },
     { property: "og:image:alt", content: `${data.name} — Framerate` },
-    { property: "product:price:amount", content: String(bestPrice) },
-    { property: "product:price:currency", content: "CLP" },
+    ...(bestPrice === null
+      ? []
+      : [
+          { property: "product:price:amount", content: String(bestPrice) },
+          { property: "product:price:currency", content: "CLP" },
+        ]),
     { property: "product:category", content: CATEGORY_LABELS[data.category] },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:image", content: ogImage },
@@ -50,10 +56,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         .getPriceHistory(params.slug, period.days)
         .catch((): PricePoint[] => []),
     ]);
-
-    if (product.offers.length === 0) {
-      throw new Response("Producto no encontrado", { status: 404 });
-    }
 
     return { product, history, period, now: Date.now() };
   } catch (error) {

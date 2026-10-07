@@ -44,6 +44,38 @@ beforeAll(async () => {
     .insertInto("product_slug_redirects")
     .values({ old_slug: "asus-dual-4070s-viejo", product_id: seed.asus, created_at: new Date().toISOString() })
     .execute();
+  // Producto que la tienda dejó de publicar: su única oferta quedó inactiva.
+  const at = daysAgo(10);
+  const { id: retirado } = await db.query
+    .insertInto("products")
+    .values({
+      slug: "corsair-rm750e-750w",
+      name: "Corsair RM750e 750W",
+      category: "psu",
+      brand: "Corsair",
+      created_at: at,
+      updated_at: at,
+    })
+    .returning("id")
+    .executeTakeFirstOrThrow();
+  await db.query
+    .insertInto("listings")
+    .values({
+      store_id: seed.alfa,
+      product_id: retirado,
+      external_id: "retirada",
+      url: "https://alfa.cl/p/retirada",
+      title: "oferta retirada",
+      category: "psu",
+      price_cash: 89_990,
+      price_card: 89_990,
+      in_stock: 0,
+      is_active: 0,
+      first_seen_at: at,
+      last_seen_at: at,
+      updated_at: at,
+    })
+    .execute();
 });
 afterAll(() => dispose());
 
@@ -235,11 +267,20 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
     expect((await get("/v1/products/redirects/nada")).status).toBe(404);
   });
 
+  test("un producto sin ofertas activas conserva su ficha y no aparece en el catálogo", async () => {
+    const detail = ProductDetailSchema.parse(await (await get("/v1/products/corsair-rm750e-750w")).json());
+    expect(detail.offers).toEqual([]);
+    expect(detail.bestPrice).toBeNull();
+    const page = ProductPageSchema.parse(await (await get("/v1/products?category=psu")).json());
+    expect(page.items).toEqual([]);
+  });
+
   test("mapa del sitio con productos, categorías con productos y tiendas", async () => {
     const map = SitemapSchema.parse(await (await get("/v1/sitemap")).json());
     expect(map.products.sort()).toEqual([
       "amd-ryzen-7-7800x3d",
       "asus-dual-rtx-4070-super-oc-12gb",
+      "corsair-rm750e-750w",
       "msi-rtx-4060-ventus-2x-8gb",
     ]);
     expect(map.categories).toEqual(["tarjetas-de-video", "procesadores"]);

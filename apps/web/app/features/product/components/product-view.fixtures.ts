@@ -99,4 +99,9 @@ export const cases = {
     product: { ...product, offers: noStock, bestPrice: null, bestCardPrice: null },
     history: history.map((p) => (Date.parse(p.observedAt) > Date.now() - 5 * DAY ? { ...p, inStock: false } : p)),
   },
+  // Ninguna tienda lo publica: la URL se conserva para los buscadores, con su historial.
+  retirado: {
+    product: { ...product, offers: [], offerCount: 0, bestPrice: null, bestCardPrice: null },
+    history,
+  },
 } satisfies Record<string, ProductCase>;

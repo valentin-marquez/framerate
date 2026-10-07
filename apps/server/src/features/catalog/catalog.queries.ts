@@ -453,7 +453,8 @@ export async function sitemap(db: Db): Promise<Sitemap> {
     db.query
       .selectFrom("products as p")
       .select("p.slug")
-      .where(sql<boolean>`exists (select 1 from listings l where l.product_id = p.id and l.is_active = 1)`)
+      // Una ficha que perdió sus ofertas mantiene su URL y su historial: el catálogo la oculta, el sitemap no.
+      .where(sql<boolean>`exists (select 1 from listings l where l.product_id = p.id)`)
       .orderBy("p.slug")
       .execute(),
     categoryCounts(db),
