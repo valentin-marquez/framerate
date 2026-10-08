@@ -43,7 +43,9 @@ async function worker() {
       const o = await haikuOpinion(create, row.a, row.b);
       results.push({ ...row, ...o, guard: acceptGuard(row.a, row.b).ok });
     } catch (error) {
+      // Un error de la API (clave, crédito, workspace) se repite en todos los pares: se corta en el primero.
       console.error(`par ${row.i}:`, (error as Error).message);
+      process.exit(1);
     }
   }
 }
