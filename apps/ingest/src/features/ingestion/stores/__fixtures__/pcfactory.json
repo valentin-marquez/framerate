@@ -16,9 +16,9 @@
           "stock": "+100",
           "thumbnail": "/public/foto/56909/1_200.jpg",
           "precio": {
-            "efectivo": 349990.0,
-            "normal": 360790.0,
-            "referencia": 499990.0,
+            "efectivo": 349990,
+            "normal": 360790,
+            "referencia": 499990,
             "bancoEstado": 0,
             "promocion": true
           },
@@ -40,9 +40,9 @@
           "stock": "19",
           "thumbnail": "/public/foto/54708/1_200.jpg",
           "precio": {
-            "efectivo": 914990.0,
-            "normal": 943290.0,
-            "referencia": 999990.0,
+            "efectivo": 914990,
+            "normal": 943290,
+            "referencia": 999990,
             "bancoEstado": 0,
             "promocion": true
           },
@@ -67,6 +67,17 @@
     "codigo": "56909",
     "mayorista": true,
     "partNumber": "ZT-A30510H-10A",
+    "descripcion": "<p>Tarjeta de video ZOTAC GAMING GeForce RTX 3050 6GB Twin Edge con <b>refrigeración IceStorm 2.0</b></p>",
+    "especificaciones": [
+      {
+        "nombre": "Memoria",
+        "valor": "6GB GDDR6"
+      },
+      {
+        "nombre": "Bus",
+        "valor": "96-bit"
+      }
+    ],
     "slug": "56909-zotac-tarjeta-de-video-nvidia-geforce-rtx-3050-6gb-twin-edge-gaming",
     "digital": false,
     "marca": {

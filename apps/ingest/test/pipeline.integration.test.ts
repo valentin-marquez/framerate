@@ -237,16 +237,19 @@ describe("zona gris del matching", () => {
 });
 
 describe("cuarentena", () => {
-  test("se purga lo de más de 14 días, lo reciente se conserva", async () => {
+  test("se purga lo de más de 14 días; un rechazo que persiste vuelve a registrarse en la siguiente corrida", async () => {
     const clock = steppingClock();
     const deps = testDeps(d1, clock);
     const tienda = fakeStore("alfa", { gpu: ["gpu"] });
     tienda.setOffers([offer("alfa", "1", { category: "gpu", title: "Soporte anti-sag para GPU", priceCash: 15_000 })]);
     await crawlCategory(deps, tienda.store, "gpu");
     clock.advance(15 * 86_400_000);
+    // Mismo rechazo, mismo hash: no se repite la fila.
     await crawlCategory(deps, tienda.store, "gpu");
 
     expect(await purgeQuarantine(deps.db, clock())).toBe(1);
+    expect(await all(deps.db, "quarantine")).toHaveLength(0);
+    await crawlCategory(deps, tienda.store, "gpu");
     expect(await all(deps.db, "quarantine")).toHaveLength(1);
   });
 });

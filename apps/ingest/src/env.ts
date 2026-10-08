@@ -1,3 +1,5 @@
+import type { PipelineMessage } from "@framerate/contracts";
+import type { PipelineMode } from "@/features/ingestion/crawl-category";
 import type { CrawlMessage } from "@/features/ingestion/messages";
 
 /** Bindings del Worker (ver `wrangler.jsonc`). */
@@ -10,6 +12,13 @@ export interface Env {
   /** Achica las fotos de producto una sola vez antes de guardarlas en ASSETS. */
   IMAGES: ImagesBinding;
   CRAWL_QUEUE: Queue<CrawlMessage>;
+  /** Productores del pipeline (#153); los consumen `framerate-normalize` y `framerate-match`. */
+  NORMALIZE_QUEUE: Queue<PipelineMessage>;
+  LINK_QUEUE: Queue<PipelineMessage>;
+  /** off (por defecto) | shadow | live: con shadow o live, lo nuevo o cambiado queda `pending` y se encola. */
+  PIPELINE_NORMALIZE?: PipelineMode;
+  /** off (por defecto) | shadow | live: sólo live saca el vínculo de la corrida y oculta lo nuevo hasta vincularlo. */
+  PIPELINE_LINK?: PipelineMode;
   /** Correos de la plataforma (avisos de reclamos); sin binding (tests) no se envía nada. */
   EMAIL?: SendEmail;
   /** Cuenta de Cloudflare, para la API SQL de Analytics Engine. */

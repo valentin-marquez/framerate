@@ -1,4 +1,4 @@
-import { type Category, CategorySchema } from "@framerate/contracts";
+import { type Category, CategorySchema, NORMALIZER_VERSION, SOURCE_TEXT_MAX } from "@framerate/contracts";
 import { collapseWhitespace, decodeEntities, fold } from "@framerate/kit";
 import {
   type Attributes,
@@ -35,6 +35,8 @@ export const RawOfferSchema = z.object({
   gtin: z.string().trim().max(20).nullable(),
   /** Todas las fotos, la principal primero. */
   imageUrls: z.array(z.url()),
+  /** Texto de la ficha (descripción y specs) si la tienda lo entrega sin otro fetch; lo lee el normalizador. */
+  sourceText: z.string().nullable().optional(),
 });
 export type RawOffer = z.infer<typeof RawOfferSchema>;
 
@@ -55,6 +57,8 @@ export interface NormalizedOffer {
   stockQuantity: number | null;
   attributes: Attributes;
   fingerprint: Fingerprint;
+  /** Ficha recortada a `SOURCE_TEXT_MAX`. */
+  sourceText: string | null;
 }
 
 export type NormalizeResult =
@@ -209,7 +213,42 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
       stockQuantity: raw.inStock ? raw.stockQuantity : 0,
       attributes: fingerprint.attributes,
       fingerprint,
+      sourceText: raw.sourceText?.trim().slice(0, SOURCE_TEXT_MAX) || null,
     },
+  };
+}
+
+export type HashInput = Pick<NormalizedOffer, "category" | "rawTitle" | "brand" | "mpn" | "gtin" | "sourceText">;
+
+/**
+ * `listings.norm_hash`: lo que, si cambia, obliga a normalizar de nuevo (spec 2026-10-08 §4). Precio, stock, fotos y
+ * URL quedan fuera. Subir `NORMALIZER_VERSION` cambia todos los hashes.
+ */
+export async function normHash(input: HashInput): Promise<string> {
+  const key = [
+    NORMALIZER_VERSION,
+    input.category,
+    fold(input.rawTitle),
+    input.mpn ?? "",
+    input.gtin ?? "",
+    input.brand ?? "",
+    fold(input.sourceText ?? "").slice(0, SOURCE_TEXT_MAX),
+  ].join("|");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(key));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** La misma clave para la cuarentena, leída de la oferta cruda (que puede no haber pasado el esquema). */
+export function rawHashInput(input: unknown, category: Category): HashInput {
+  const raw = (typeof input === "object" && input !== null ? input : {}) as Record<string, unknown>;
+  const str = (key: string) => (typeof raw[key] === "string" ? (raw[key] as string) : null);
+  return {
+    category,
+    rawTitle: str("title") ?? "",
+    brand: str("brand"),
+    mpn: str("mpn"),
+    gtin: str("gtin"),
+    sourceText: str("sourceText"),
   };
 }
 
