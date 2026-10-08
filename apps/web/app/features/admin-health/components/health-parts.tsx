@@ -1,4 +1,11 @@
-import type { HealthIncident, HealthSystem, HealthSystemStatus } from "@framerate/contracts";
+import {
+  type HealthIncident,
+  type HealthSystem,
+  type HealthSystemStatus,
+  NORM_STATUSES,
+  type NormStatus,
+  type PipelineHealth,
+} from "@framerate/contracts";
 import {
   IconAlertTriangle,
   IconBan,
@@ -7,15 +14,18 @@ import {
   IconFlag,
   IconGitMerge,
   IconLifebuoy,
+  IconSparkles,
   IconWorldSearch,
 } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { cn } from "~/shared/lib/utils";
+import { formatDateTime } from "~/shared/utils/format";
 import { formatDuration, timeAgo } from "../utils/time";
 
 export const SYSTEM_LABELS: Record<HealthSystem, string> = {
   scraping: "Scraping",
   quarantine: "Cuarentena",
+  pipeline: "Pipeline",
   matching: "Matching",
   support: "Soporte",
   moderation: "Moderación",
@@ -25,6 +35,7 @@ export const SYSTEM_LABELS: Record<HealthSystem, string> = {
 const SYSTEM_CAPTIONS: Record<HealthSystem, string> = {
   scraping: "tiendas y categorías seguidas",
   quarantine: "ofertas en 24 h",
+  pipeline: "ofertas normalizándose",
   matching: "revisiones pendientes",
   support: "tickets abiertos",
   moderation: "reportes abiertos",
@@ -34,6 +45,7 @@ const SYSTEM_CAPTIONS: Record<HealthSystem, string> = {
 const SYSTEM_ICONS: Record<HealthSystem, typeof IconWorldSearch> = {
   scraping: IconWorldSearch,
   quarantine: IconBan,
+  pipeline: IconSparkles,
   matching: IconGitMerge,
   support: IconLifebuoy,
   moderation: IconFlag,
@@ -106,6 +118,117 @@ export function SystemCard({ system, tone, selected, to }: SystemCardProps) {
         </p>
       )}
     </Link>
+  );
+}
+
+const STATUS_LABELS: Record<NormStatus, string> = {
+  legacy: "Sin normalizar",
+  pending: "En cola",
+  normalized: "Con identidad",
+  linked: "Vinculadas",
+  fallback: "Por regex",
+  failed: "Fallidas",
+};
+
+const PURPOSE_LABELS: Record<PipelineHealth["aiUsage"][number]["purpose"], string> = {
+  normalize: "Normalización",
+  judge: "Juez",
+  extract: "Modelos",
+};
+
+const count = (n: number) => n.toLocaleString("es-CL");
+const usd = (n: number) => `US$ ${n >= 1 || n === 0 ? n.toFixed(2) : n.toFixed(4)}`;
+
+function PipelineBox({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-border/60 bg-card p-4">
+      <h3 className="text-sm font-medium">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+/** El pipeline de normalización por dentro: ofertas por etapa, lo que falta publicar y cuánto costó la IA. */
+export function PipelinePanel({ pipeline, now }: { pipeline: PipelineHealth; now: string }) {
+  const todayUsd = pipeline.aiUsage.reduce((sum, u) => sum + u.todayUsd, 0);
+  const cycleUsd = pipeline.aiUsage.reduce((sum, u) => sum + u.cycleUsd, 0);
+  const paused = pipeline.pausedUntil !== null && Date.parse(pipeline.pausedUntil) > Date.parse(now);
+  return (
+    <section aria-label="Pipeline de normalización" className="grid gap-3 md:grid-cols-3">
+      <PipelineBox title="Ofertas por etapa">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+          {NORM_STATUSES.map((status) => (
+            <div key={status} className="flex justify-between gap-2">
+              <dt className="text-muted-foreground">{STATUS_LABELS[status]}</dt>
+              <dd
+                className={cn(
+                  "font-medium tabular-nums",
+                  status === "failed" && pipeline.byStatus.failed > 0 && "text-destructive",
+                )}
+              >
+                {count(pipeline.byStatus[status])}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p className="text-xs text-muted-foreground">
+          {pipeline.oldestPendingAt ? `En cola ${timeAgo(pipeline.oldestPendingAt, now)}` : "Nada esperando en la cola"}
+        </p>
+      </PipelineBox>
+
+      <PipelineBox title="Sin publicar">
+        <div>
+          <p className="text-3xl font-semibold tabular-nums tracking-tight">{count(pipeline.hidden)}</p>
+          <p className="text-xs text-muted-foreground">
+            {pipeline.oldestHiddenAt
+              ? `ofertas ocultas, la más vieja ${timeAgo(pipeline.oldestHiddenAt, now)}`
+              : "ofertas ocultas hasta pasar el pipeline"}
+          </p>
+        </div>
+        <p className={cn("text-sm", paused ? "font-medium text-destructive" : "text-muted-foreground")}>
+          {paused && pipeline.pausedUntil
+            ? `En pausa hasta ${formatDateTime(pipeline.pausedUntil)}: sin crédito de Anthropic`
+            : "Sin pausa global"}
+        </p>
+      </PipelineBox>
+
+      <PipelineBox title="Gasto de IA">
+        <table className="w-full text-sm">
+          <thead className="text-xs text-muted-foreground">
+            <tr>
+              <th scope="col" className="text-left font-normal">
+                Propósito
+              </th>
+              <th scope="col" className="text-right font-normal">
+                Hoy
+              </th>
+              <th scope="col" className="text-right font-normal">
+                Ciclo
+              </th>
+            </tr>
+          </thead>
+          <tbody className="tabular-nums">
+            {pipeline.aiUsage.map((u) => (
+              <tr key={u.purpose}>
+                <td className="text-muted-foreground">{PURPOSE_LABELS[u.purpose]}</td>
+                <td className="text-right">{usd(u.todayUsd)}</td>
+                <td className="text-right">{usd(u.cycleUsd)}</td>
+              </tr>
+            ))}
+            <tr className="font-medium">
+              <td>Total</td>
+              <td className="text-right">{usd(todayUsd)}</td>
+              <td className="text-right">{usd(cycleUsd)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p className="text-xs text-muted-foreground">
+          {pipeline.dailyCapUsd === null
+            ? `Ciclo desde ${formatDateTime(pipeline.cycleStart)}`
+            : `Tope de hoy ${usd(pipeline.dailyCapUsd)}, ciclo desde ${formatDateTime(pipeline.cycleStart)}`}
+        </p>
+      </PipelineBox>
+    </section>
   );
 }
 

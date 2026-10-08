@@ -20,8 +20,8 @@ import { likePattern } from "@/shared/sql";
 
 /**
  * Consultas de lectura del catálogo público. Las listas (catálogo, búsqueda, marcas, rangos, conteos) sólo
- * muestran productos con al menos una oferta activa CON STOCK. La ficha y el sitemap no filtran por stock:
- * el producto sigue accesible por enlace y para SEO.
+ * muestran productos con al menos una oferta activa CON STOCK y visible. La ficha y el sitemap no filtran por
+ * stock (el producto sigue accesible por enlace y para SEO), pero sí exigen una oferta visible.
  */
 
 /**
@@ -42,7 +42,10 @@ export function ftsQuery(q: string): string | null {
  */
 const notUnderReview = sql<boolean>`id NOT IN (SELECT listing_id FROM match_reviews WHERE status = 'pending')`;
 
-/** Agregado por producto sobre ofertas visibles (activas, con stock y sin revisión pendiente). */
+/**
+ * Agregado por producto sobre ofertas publicadas: activas, con stock, sin revisión pendiente y `visible = 1` (una
+ * oferta nueva nace oculta hasta pasar el pipeline de normalización, #153 §8; las de antes ya son visibles).
+ */
 function offerAggregate(db: Db) {
   return db.query
     .selectFrom("listings")
@@ -54,6 +57,7 @@ function offerAggregate(db: Db) {
     ])
     .where("is_active", "=", 1)
     .where("in_stock", "=", 1)
+    .where("visible", "=", 1)
     .where("product_id", "is not", null)
     .where(notUnderReview)
     .groupBy("product_id")
@@ -132,7 +136,7 @@ function filteredQuery(db: Db, filters: ListFilters, brand: string | null, match
   if (brand) base = base.where(sql<boolean>`lower(p.brand) = lower(${brand})`);
   if (filters.store) {
     base = base.where(
-      sql<boolean>`p.id IN (SELECT l.product_id FROM listings l JOIN stores st ON st.id = l.store_id WHERE l.is_active = 1 AND l.in_stock = 1 AND st.slug = ${filters.store})`,
+      sql<boolean>`p.id IN (SELECT l.product_id FROM listings l JOIN stores st ON st.id = l.store_id WHERE l.is_active = 1 AND l.in_stock = 1 AND l.visible = 1 AND st.slug = ${filters.store})`,
     );
   }
   if (filters.minPrice !== undefined) base = base.where("agg.best_price", ">=", filters.minPrice);
@@ -298,12 +302,14 @@ export async function getProduct(
         "l.is_active",
       ])
       .where("pr.slug", "=", slug)
+      .where("l.visible", "=", 1)
       .orderBy("l.in_stock", "desc")
       .orderBy("l.price_cash"),
   ]);
   if (!product) return null;
 
-  // Un producto sin ninguna oferta (ej. provisional fusionado por revisión) no existe públicamente.
+  // Un producto sin ninguna oferta visible (provisional fusionado por revisión, o nuevo a medio procesar en el
+  // pipeline) no existe públicamente todavía.
   if (offerRows.length === 0) return null;
 
   const offers: Offer[] = offerRows
@@ -415,6 +421,7 @@ export async function categoryCounts(db: Db) {
     .select(["category", sql<number>`count(distinct product_id)`.as("products")])
     .where("is_active", "=", 1)
     .where("in_stock", "=", 1)
+    .where("visible", "=", 1)
     .where("product_id", "is not", null)
     .where(notUnderReview)
     .groupBy("category")
@@ -466,8 +473,9 @@ export async function sitemap(db: Db): Promise<Sitemap> {
     db.query
       .selectFrom("products as p")
       .select("p.slug")
-      // Una ficha que perdió sus ofertas mantiene su URL y su historial: el catálogo la oculta, el sitemap no.
-      .where(sql<boolean>`exists (select 1 from listings l where l.product_id = p.id)`)
+      // Una ficha que perdió el stock mantiene su URL y su historial: el catálogo la oculta, el sitemap no. Una que
+      // todavía no tiene oferta visible no existe (la ficha da 404).
+      .where(sql<boolean>`exists (select 1 from listings l where l.product_id = p.id and l.visible = 1)`)
       .orderBy("p.slug")
       .execute(),
     categoryCounts(db),

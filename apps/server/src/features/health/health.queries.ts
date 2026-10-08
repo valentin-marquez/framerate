@@ -1,10 +1,13 @@
 import {
+  AI_PURPOSES,
   CATEGORY_LABELS,
   type Category,
   HEALTH_SYSTEMS,
   HEALTH_THRESHOLDS,
   type Health,
   type HealthIncident,
+  NORM_STATUSES,
+  type PipelineHealth,
 } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { sql } from "kysely";
@@ -24,12 +27,51 @@ const MAX_TICKET_INCIDENTS = 10;
 const iso = (ms: number) => new Date(ms).toISOString();
 const label = (category: string) => CATEGORY_LABELS[category as Category] ?? category;
 const hours = (ms: number) => Math.floor(ms / HOUR);
+const usd = (n: number) => `$${n.toFixed(2)}`;
 
-export async function computeHealth(db: Db, now = new Date()): Promise<Health> {
+/** Crédito de Anthropic que comparten normalize y match; `monthlyUsd` 0 = sin tope configurado. */
+export interface AiBudget {
+  monthlyUsd: number;
+  /** Día del mes en que se renueva el crédito. */
+  cycleDay: number;
+}
+
+/** Misma regla que `apps/match/src/haiku.ts` (las apps no se importan entre sí): ciclo UTC del día `cycleDay` al siguiente. */
+export function billingCycle(now: Date, cycleDay: number) {
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const startMonth = now.getUTCDate() >= cycleDay ? m : m - 1;
+  return { start: new Date(Date.UTC(y, startMonth, cycleDay)), end: new Date(Date.UTC(y, startMonth + 1, cycleDay)) };
+}
+
+/** Tope de hoy: lo que quedaba del ciclo al empezar el día, repartido entre los días que faltan (hoy incluido). */
+function dailyCapUsd(now: Date, budget: AiBudget, spentBeforeToday: number): number {
+  const { end } = billingCycle(now, budget.cycleDay);
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const daysLeft = Math.max(1, Math.round((end.getTime() - today) / 86_400_000));
+  return Math.max(0, budget.monthlyUsd - spentBeforeToday) / daysLeft;
+}
+
+export async function computeHealth(db: Db, budget: AiBudget, now = new Date()): Promise<Health> {
   const t = now.getTime();
   const waiting = t - HEALTH_THRESHOLDS.waitingHours * HOUR;
+  const cycleStart = billingCycle(now, budget.cycleDay).start.toISOString();
+  const dayStart = `${now.toISOString().slice(0, 10)}T00:00:00.000Z`;
 
-  const [latestRuns, history, [quarantine], [matching], openTickets, [reports], frozen, staleClaims] = await db.read([
+  const [
+    latestRuns,
+    history,
+    [quarantine],
+    [matching],
+    openTickets,
+    [reports],
+    frozen,
+    staleClaims,
+    normStatuses,
+    [hidden],
+    [pipelineState],
+    aiUsage,
+  ] = await db.read([
     // La última corrida de cada tienda activa y categoría: es la que dice cómo está hoy.
     db.query
       .selectFrom("crawl_runs as r")
@@ -67,11 +109,33 @@ export async function computeHealth(db: Db, now = new Date()): Promise<Health> {
       .innerJoin("stores as s", "s.id", "c.store_id")
       .select(["s.slug", "s.name", "c.updated_at"])
       .where("c.status", "=", "stale"),
+    // `updated_at` es cuándo la oferta entró en ese estado: quien cambia `norm_status` lo toca.
+    db.query
+      .selectFrom("listings")
+      .select(["norm_status", sql<number>`count(*)`.as("n"), sql<string | null>`min(updated_at)`.as("oldest")])
+      .groupBy("norm_status"),
+    db.query
+      .selectFrom("listings")
+      .select([sql<number>`count(*)`.as("n"), sql<string | null>`min(first_seen_at)`.as("oldest")])
+      .where("visible", "=", 0)
+      .where("is_active", "=", 1),
+    db.query.selectFrom("pipeline_state").select(["paused_until", "updated_at"]).where("id", "=", 1),
+    db.query
+      .selectFrom("ai_usage")
+      .select([
+        "purpose",
+        sql<number>`count(*)`.as("calls"),
+        sql<number>`coalesce(sum(CASE WHEN at >= ${dayStart} THEN usd ELSE 0 END), 0)`.as("today_usd"),
+        sql<number>`coalesce(sum(usd), 0)`.as("cycle_usd"),
+      ])
+      .where("at", ">=", cycleStart)
+      .groupBy("purpose"),
   ]);
 
   const incidents: Record<(typeof HEALTH_SYSTEMS)[number], HealthIncident[]> = {
     scraping: [],
     quarantine: [],
+    pipeline: [],
     matching: [],
     support: [],
     moderation: [],
@@ -123,6 +187,85 @@ export async function computeHealth(db: Db, now = new Date()): Promise<Health> {
         durationMs: null,
       });
     }
+  }
+
+  const byStatus = Object.fromEntries(NORM_STATUSES.map((s) => [s, 0])) as PipelineHealth["byStatus"];
+  for (const row of normStatuses) byStatus[row.norm_status] = Number(row.n);
+  const oldestPendingAt = normStatuses.find((r) => r.norm_status === "pending")?.oldest ?? null;
+  const usage = AI_PURPOSES.map((purpose) => {
+    const row = aiUsage.find((r) => r.purpose === purpose);
+    return {
+      purpose,
+      calls: Number(row?.calls ?? 0),
+      todayUsd: Number(row?.today_usd ?? 0),
+      cycleUsd: Number(row?.cycle_usd ?? 0),
+    };
+  });
+  const todayUsd = usage.reduce((sum, u) => sum + u.todayUsd, 0);
+  const cycleUsd = usage.reduce((sum, u) => sum + u.cycleUsd, 0);
+  const dailyCap = budget.monthlyUsd > 0 ? dailyCapUsd(now, budget, cycleUsd - todayUsd) : null;
+  const pausedUntil = pipelineState?.paused_until ?? null;
+  const pipelineHref = "/admin/estado?sistema=pipeline";
+
+  if (byStatus.failed > 0) {
+    incidents.pipeline.push({
+      id: "pipeline:failed",
+      system: "pipeline",
+      severity: "error",
+      title: "Ofertas que no se pudieron normalizar",
+      detail: `${byStatus.failed} agotaron los reintentos (en la cola de cartas muertas)`,
+      at: normStatuses.find((r) => r.norm_status === "failed")?.oldest ?? iso(t),
+      durationMs: null,
+      href: pipelineHref,
+    });
+  }
+  if (pipelineState && pausedUntil && Date.parse(pausedUntil) > t) {
+    incidents.pipeline.push({
+      id: "pipeline:paused",
+      system: "pipeline",
+      severity: "error",
+      title: "Pipeline en pausa: sin crédito de Anthropic",
+      detail: `Hasta ${pausedUntil.slice(0, 16).replace("T", " ")} UTC`,
+      at: pipelineState.updated_at,
+      durationMs: null,
+      href: pipelineHref,
+    });
+  }
+  if (oldestPendingAt && t - Date.parse(oldestPendingAt) > HEALTH_THRESHOLDS.pendingHours * HOUR) {
+    incidents.pipeline.push({
+      id: "pipeline:pending",
+      system: "pipeline",
+      severity: "warning",
+      title: "Ofertas en cola de normalización",
+      detail: `${byStatus.pending} esperando, la más vieja hace ${hours(t - Date.parse(oldestPendingAt))} h`,
+      at: oldestPendingAt,
+      durationMs: null,
+      href: pipelineHref,
+    });
+  }
+  if (dailyCap !== null && todayUsd >= dailyCap * HEALTH_THRESHOLDS.aiBudgetWarnRatio) {
+    incidents.pipeline.push({
+      id: "pipeline:budget",
+      system: "pipeline",
+      severity: "warning",
+      title: "Gasto de IA cerca del tope de hoy",
+      detail: `${usd(todayUsd)} de ${usd(dailyCap)}; ${usd(cycleUsd)} en el ciclo`,
+      at: dayStart,
+      durationMs: null,
+      href: pipelineHref,
+    });
+  }
+  if (hidden?.oldest && t - Date.parse(hidden.oldest) > HEALTH_THRESHOLDS.hiddenHours * HOUR) {
+    incidents.pipeline.push({
+      id: "pipeline:hidden",
+      system: "pipeline",
+      severity: "warning",
+      title: "Ofertas ocultas que no se publicaron a tiempo",
+      detail: `${Number(hidden.n)} sin pasar el pipeline, la más vieja hace ${hours(t - Date.parse(hidden.oldest))} h`,
+      at: hidden.oldest,
+      durationMs: null,
+      href: pipelineHref,
+    });
   }
 
   if (matching?.oldest && Date.parse(matching.oldest) < waiting) {
@@ -194,6 +337,8 @@ export async function computeHealth(db: Db, now = new Date()): Promise<Health> {
   const values: Record<(typeof HEALTH_SYSTEMS)[number], number> = {
     scraping: latestRuns.length,
     quarantine: Number(quarantine?.n ?? 0),
+    // En camino: encoladas o con identidad a la espera del vínculo.
+    pipeline: byStatus.pending + byStatus.normalized,
     matching: Number(matching?.n ?? 0),
     support: openTickets.length,
     moderation: Number(reports?.n ?? 0),
@@ -211,5 +356,15 @@ export async function computeHealth(db: Db, now = new Date()): Promise<Health> {
     incidents: HEALTH_SYSTEMS.flatMap((id) => incidents[id]).sort(
       (a, b) => Number(b.severity === "error") - Number(a.severity === "error") || Date.parse(a.at) - Date.parse(b.at),
     ),
+    pipeline: {
+      byStatus,
+      oldestPendingAt,
+      hidden: Number(hidden?.n ?? 0),
+      oldestHiddenAt: hidden?.oldest ?? null,
+      pausedUntil,
+      aiUsage: usage,
+      cycleStart,
+      dailyCapUsd: dailyCap,
+    },
   };
 }

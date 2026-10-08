@@ -12,6 +12,7 @@ export * from "./mcp";
 export * from "./moderation";
 export * from "./normalization";
 export * from "./pipeline";
+export * from "./pipeline-admin";
 export * from "./price-history";
 export * from "./quotes";
 export * from "./specs";
