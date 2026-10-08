@@ -1,6 +1,7 @@
 import type { Db } from "@framerate/database";
 import { sql } from "kysely";
 import type { Judgement, Side } from "./judge";
+import { DISAGREE_OVER } from "./tiebreak";
 
 /** Lo que `framerate-match` guarda en `match_reviews.evidence.ai` (sin migración). */
 export interface AiEvidence extends Judgement {
@@ -17,6 +18,9 @@ export interface AiEvidence extends Judgement {
 /**
  * Revisiones pendientes que todavía no tienen veredicto de este modelo en este modo. Pasar de shadow a reject o live las
  * vuelve a incluir: el consumidor reusa la probabilidad guardada y sólo aplica la decisión.
+ *
+ * También entran las que el modelo dejó pendientes y nunca pasaron por el desempate (#148): si no, el desempate sólo
+ * alcanzaría a las revisiones nuevas y las que ya están en la cola se quedarían ahí para siempre.
  */
 export async function reviewsToVerify(db: Db, model: string, mode: string, limit: number): Promise<number[]> {
   const rows = await db.query
@@ -24,7 +28,15 @@ export async function reviewsToVerify(db: Db, model: string, mode: string, limit
     .select("id")
     .where("status", "=", "pending")
     .where(
-      sql<boolean>`(json_extract(evidence, '$.ai.model') IS NOT ${model} OR json_extract(evidence, '$.ai.mode') IS NOT ${mode})`,
+      sql<boolean>`(
+        json_extract(evidence, '$.ai.model') IS NOT ${model}
+        OR json_extract(evidence, '$.ai.mode') IS NOT ${mode}
+        OR (
+          json_extract(evidence, '$.ai.verdict') = 'pending'
+          AND json_extract(evidence, '$.ai.tiebreak') IS NULL
+          AND abs(json_extract(evidence, '$.ai.pAB') - json_extract(evidence, '$.ai.pBA')) > ${DISAGREE_OVER}
+        )
+      )`,
     )
     .orderBy("id")
     .limit(limit)

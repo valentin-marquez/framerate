@@ -204,6 +204,28 @@ describe("reviewsForToday", () => {
     expect(await reviewsForToday(db, shadow, now)).toEqual([]);
   });
 
+  test("vuelve a tomar una pendiente asimétrica de antes del desempate, y no una simétrica", async () => {
+    const { review } = await seedReview();
+    const conEvidencia = (ai: object) =>
+      db.query
+        .updateTable("match_reviews")
+        .set({ evidence: JSON.stringify({ ai: { model: MODEL, mode: "shadow", verdict: "pending", ...ai } }) })
+        .where("id", "=", review)
+        .execute();
+
+    // Gemma se contradijo según el orden y nunca se desempató: hay que volver a tomarla.
+    await conEvidencia({ pAB: 1, pBA: 0 });
+    expect(await reviewsForToday(db, shadow, now)).toEqual([review]);
+
+    // Pendiente pero sin contradicción: no hay nada que desempatar, no se vuelve a tomar.
+    await conEvidencia({ pAB: 0.5, pBA: 0.5 });
+    expect(await reviewsForToday(db, shadow, now)).toEqual([]);
+
+    // Ya se intentó el desempate: tampoco.
+    await conEvidencia({ pAB: 1, pBA: 0, tiebreak: { model: "clef", pAB: 0.5, pBA: 0.5, same: false } });
+    expect(await reviewsForToday(db, shadow, now)).toEqual([]);
+  });
+
   test("respeta el presupuesto diario de neurons", async () => {
     await seedReview();
     expect(await reviewsForToday(db, { mode: "shadow", dailyNeurons: 2 }, now)).toEqual([]);
