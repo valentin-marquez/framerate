@@ -6,10 +6,11 @@ test("cleanTitle quita las barras separadoras y el ruido comercial", () => {
   expect(cleanTitle("¡OFERTA! SSD Kingston NV3 1TB")).toBe("SSD Kingston NV3 1TB");
 });
 
-test("cleanTitle quita el (clone) que Tecnomas deja en las fichas copiadas", () => {
+test("cleanTitle quita el (clone) que Tecnomas deja en las fichas copiadas, con el código viejo que lo sigue", () => {
   expect(cleanTitle("Zotac GAMING GeForce RTX 5070 SOLID OC (clone) [ZT-B50700J-10P]")).toBe(
-    "Zotac GAMING GeForce RTX 5070 SOLID OC [ZT-B50700J-10P]",
+    "Zotac GAMING GeForce RTX 5070 SOLID OC",
   );
+  expect(cleanTitle("Kingston Fury [KF560C36] 16GB")).toBe("Kingston Fury [KF560C36] 16GB");
   expect(cleanTitle("Zotac RTX 5070 Ti SOLID SFF OC ( Clone )")).toBe("Zotac RTX 5070 Ti SOLID SFF OC");
 });
 

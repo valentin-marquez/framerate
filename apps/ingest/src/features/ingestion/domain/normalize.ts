@@ -216,8 +216,11 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
 /** Barras que algunas tiendas usan para separar partes del título ("RTX 3050 | MSI Ventus 2X | 6GB"). */
 const TITLE_SEPARATORS = /\s*[|｜]\s*/g;
 
-/** Tecnomas copia fichas desde su administrador y deja "(clone)" en el nombre. */
-const TITLE_CLONE = /\s*\(\s*clone\s*\)/gi;
+/**
+ * Tecnomas copia fichas desde su administrador y deja "(clone)" en el nombre, a veces con el código de la ficha
+ * original entre corchetes: ese código es el viejo (el bueno viene en el MPN estructurado), así que se va con él.
+ */
+const TITLE_CLONE = /\s*\(\s*clone\s*\)(\s*\[[^\]]*\])?/gi;
 
 export function cleanTitle(title: string): string {
   return collapseWhitespace(
