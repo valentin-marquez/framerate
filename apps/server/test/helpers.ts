@@ -17,6 +17,7 @@ export function testEnv(d1: D1Database, ingest: Partial<IngestService> = {}, ove
       crawlRequests.push(request);
       return { ok: true, enqueued: 1 };
     },
+    enqueuePipeline: async () => ({ ok: true, enqueued: 1 }),
     ...ingest,
   };
   const env: Env = {

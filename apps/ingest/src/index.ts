@@ -3,6 +3,8 @@ import {
   type EnqueueCrawlsRequest,
   EnqueueCrawlsRequestSchema,
   type EnqueueCrawlsResult,
+  type EnqueuePipelineRequest,
+  type EnqueuePipelineResult,
   type IngestService,
 } from "@framerate/contracts";
 import { createDb } from "@framerate/database";
@@ -30,6 +32,11 @@ export class IngestRpc extends WorkerEntrypoint<Env> implements IngestService {
   async enqueueCrawls(request: EnqueueCrawlsRequest): Promise<EnqueueCrawlsResult> {
     // Los argumentos de RPC no están tipados en runtime: se validan como cualquier entrada.
     return requestCrawls(this.env, EnqueueCrawlsRequestSchema.parse(request));
+  }
+
+  async enqueuePipeline(_request: EnqueuePipelineRequest): Promise<EnqueuePipelineResult> {
+    // Las colas del pipeline llegan con la fase 1 de #153; hasta entonces la etapa está apagada.
+    return { ok: false, error: "pipeline_off" };
   }
 }
 

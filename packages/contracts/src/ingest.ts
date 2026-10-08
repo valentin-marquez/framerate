@@ -19,6 +19,26 @@ export type EnqueueCrawlsRequest = z.infer<typeof EnqueueCrawlsRequestSchema>;
 
 export type EnqueueCrawlsResult = { ok: true; enqueued: number } | { ok: false; error: "unknown_store" };
 
+/**
+ * Encola ofertas en una etapa del pipeline (#153): `normalize` para el backfill de identidades con Haiku, `link` para
+ * re-vincular lo existente. Lo encola ingest porque es el productor de las dos colas.
+ */
+export const EnqueuePipelineRequestSchema = z.object({
+  stage: z.enum(["normalize", "link"]),
+  reason: z.enum(["backfill", "relink"]),
+  category: CategorySchema.optional(),
+  store: z.string().min(1).max(64).optional(),
+  limit: z.number().int().min(1).max(5000).default(500),
+  requestedBy: z.string().min(1).max(100),
+});
+export type EnqueuePipelineRequest = z.input<typeof EnqueuePipelineRequestSchema>;
+
+/** `pipeline_off`: la etapa está apagada por su interruptor. */
+export type EnqueuePipelineResult =
+  | { ok: true; enqueued: number }
+  | { ok: false; error: "unknown_store" | "pipeline_off" };
+
 export interface IngestService {
   enqueueCrawls(request: EnqueueCrawlsRequest): Promise<EnqueueCrawlsResult>;
+  enqueuePipeline(request: EnqueuePipelineRequest): Promise<EnqueuePipelineResult>;
 }
