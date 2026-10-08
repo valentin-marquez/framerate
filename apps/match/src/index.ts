@@ -1,20 +1,25 @@
+import { PipelineMessageSchema } from "@framerate/contracts";
 import { createDb } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import { proposeDuplicateReviews } from "./detect";
-import type { Env, VerifyMessage } from "./env";
+import type { Env, LinkMessage, VerifyMessage } from "./env";
 import { createHaiku } from "./haiku";
+import { linkListing, linkModeOf, publishOverdue } from "./link";
 import { extractModels } from "./model";
 import { neuronsSpentSince } from "./reviews.repository";
 import { reviewsForToday, type VerifyConfig, verifyReview } from "./verify";
 
 /**
- * Worker que verifica las revisiones del Gatekeeper con Workers AI (#117). No recibe tráfico público:
- *  - scheduled: propone revisiones para los duplicados ya creados (#148), barre las pendientes sin veredicto y
- *    encola las que caben en el presupuesto diario de neurons, y con lo que sobra saca el modelo del nombre donde
- *    no hay clave de atributos (#98).
- *  - queue:     una revisión por mensaje, en serie, con reintentos y DLQ.
+ * Worker que verifica las revisiones del Gatekeeper con Workers AI (#117) y vincula las ofertas normalizadas (#153).
+ * No recibe tráfico público:
+ *  - scheduled: publica lo oculto más de 24 h (`fallback`), propone revisiones para los duplicados ya creados (#148),
+ *    barre las pendientes sin veredicto y encola las que caben en el presupuesto diario de neurons, y con lo que
+ *    sobra saca el modelo del nombre donde no hay clave de atributos (#98).
+ *  - queue:     `framerate-link`, una oferta por mensaje y en serie; `framerate-match-verify`, una revisión por
+ *               mensaje. Las dos con reintentos y DLQ.
  */
 const log = createLogger({ feature: "match-verify" });
+const linkLog = createLogger({ feature: "link" });
 
 const startOfDay = (now: Date) => `${now.toISOString().slice(0, 10)}T00:00:00.000Z`;
 
@@ -38,6 +43,9 @@ export default {
     const config = configOf(env);
     const now = new Date();
     const detect = env.MATCH_DETECT === "shadow" || env.MATCH_DETECT === "on" ? env.MATCH_DETECT : "off";
+
+    // 0. Nada queda oculto más de 24 h; las revisiones que deje el fallback entran al barrido de abajo.
+    linkLog.info("link.overdue", await publishOverdue(db, now, linkLog));
 
     // 1. Saca el modelo del nombre donde no hay clave de atributos (#98). Va primero para que el detector ya lo vea
     //    en esta misma corrida, pero con un tope de un tercio del presupuesto: juzgar pares es lo que limpia.
@@ -70,7 +78,27 @@ export default {
 
   async queue(batch, env) {
     const db = createDb(env.DB);
-    for (const message of batch.messages) {
+    if (batch.queue === "framerate-link") {
+      const mode = linkModeOf(env.PIPELINE_LINK);
+      for (const message of batch.messages as Message<LinkMessage>[]) {
+        const parsed = PipelineMessageSchema.safeParse(message.body);
+        if (!parsed.success) {
+          // Reintentar un mensaje malformado sólo lo manda a la DLQ con vueltas de más.
+          linkLog.warn("link.invalid_message", { body: message.body, error: parsed.error.message });
+          message.ack();
+          continue;
+        }
+        try {
+          await linkListing(db, parsed.data, mode, new Date(), linkLog);
+          message.ack();
+        } catch (error) {
+          linkLog.error("link.failed", { ...parsed.data, error });
+          message.retry({ delaySeconds: 60 * message.attempts });
+        }
+      }
+      return;
+    }
+    for (const message of batch.messages as Message<VerifyMessage>[]) {
       try {
         await verifyReview(db, env.AI, message.body.reviewId, configOf(env), new Date(), log);
         message.ack();
@@ -80,4 +108,4 @@ export default {
       }
     }
   },
-} satisfies ExportedHandler<Env, VerifyMessage>;
+} satisfies ExportedHandler<Env, VerifyMessage | LinkMessage>;

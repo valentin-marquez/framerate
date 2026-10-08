@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Db } from "@framerate/database";
-import { createTestD1, resetD1 } from "@framerate/database/testing";
+import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { silentLogger } from "@framerate/kit";
 import { billingCycle, dailyCapUsd, HAIKU_MODEL } from "@/haiku";
 import { MODEL, pSameFrom, verdictFor } from "@/judge";
@@ -297,6 +297,42 @@ describe("segunda opinión de Haiku (#149)", () => {
     await verifyReview(db, fakeAi(0.6), s.review, haikuConfig("live", h, 0), now, silentLogger);
     expect(h.calls).toBe(0);
     expect((await reviewRow(s.review)).status).toBe("pending");
+  });
+
+  test("cada llamada deja una fila en ai_usage, también la que falla", async () => {
+    const s = await seedReview();
+    await verifyReview(db, fakeAi(0.6), s.review, haikuConfig("live", fakeHaiku("same")), now, silentLogger);
+    const rows = await all(db, "ai_usage");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      worker: "match",
+      purpose: "judge",
+      model: HAIKU_MODEL,
+      review_id: s.review,
+      input_tokens: 600,
+      output_tokens: 400,
+      status: "ok",
+      at: now.toISOString(),
+    });
+    expect(rows[0]?.usd).toBeCloseTo(0.00026, 8);
+
+    await resetD1(d1);
+    const t = await seedReview();
+    const rateLimited = Object.assign(new Error("rate limit"), { status: 429 });
+    await verifyReview(db, fakeAi(0.6), t.review, haikuConfig("live", fakeHaiku(rateLimited)), now, silentLogger);
+    expect(await all(db, "ai_usage")).toMatchObject([{ status: "rate_limited", usd: 0, error: "rate limit" }]);
+  });
+
+  test("el tope se mide con lo gastado en ai_usage, no con la evidencia de las revisiones", async () => {
+    const s = await seedReview();
+    // Ciclo del 17-09 al 17-10, 11 días por delante: con $30 el día son ~$2,7; ya se gastaron $3 hoy.
+    await db.query
+      .insertInto("ai_usage")
+      .values({ at: now.toISOString(), worker: "match", purpose: "judge", model: HAIKU_MODEL, usd: 3, status: "ok" })
+      .execute();
+    const h = fakeHaiku("same");
+    await verifyReview(db, fakeAi(0.6), s.review, haikuConfig("live", h), now, silentLogger);
+    expect(h.calls).toBe(0);
   });
 
   test("una vez que opinó en un modo no se le vuelve a preguntar; al pasar a live reusa la opinión", async () => {

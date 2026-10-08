@@ -9,6 +9,7 @@ import {
   createProduct,
   createReview,
   detachIdentifiers,
+  fillProductAttributes,
   fillProductImage,
   findCandidates,
   identifierOwners,
@@ -45,6 +46,11 @@ export interface MatchListingInput {
   offer: MatchableOffer;
   now: string;
   decidedBy?: string;
+  /**
+   * Oferta con identidad del normalizador: un producto nuevo toma este nombre canónico y, al vincular, la huella de
+   * la oferta completa la del producto (spec §5.2 y §5.3). Sin él, el camino de hoy: título limpio y nada se completa.
+   */
+  canonicalName?: string;
 }
 
 /**
@@ -132,12 +138,13 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     });
     // Enriquecer el producto: identificadores nuevos permiten matchear por id en el futuro.
     await attachIdentifiers(db, decision.productId, fp);
+    if (input.canonicalName) await fillProductAttributes(db, decision.productId, fp, now);
     await fillProductImage(db, decision.productId, offer.imageUrl, now);
     return { outcome: "linked", unlinked, reviewClosed };
   }
 
   const product = await createProduct(db, {
-    name: productNameFromTitle(offer.title),
+    name: input.canonicalName ?? productNameFromTitle(offer.title),
     fingerprint: fp,
     imageUrl: offer.imageUrl,
     now,

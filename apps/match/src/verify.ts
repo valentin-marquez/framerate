@@ -2,16 +2,18 @@ import type { Db } from "@framerate/database";
 import type { Logger } from "@framerate/kit";
 import { resolveMatchReview } from "@framerate/matching";
 import { acceptGuard } from "./guard";
-import { billingCycle, type createHaiku, dailyCapUsd, HAIKU_MODEL, haikuOpinion, USD_PER_PAIR } from "./haiku";
-import { judge, MODEL } from "./judge";
 import {
-  type AiEvidence,
-  haikuUsdSince,
-  loadPair,
-  neuronsSpentSince,
-  reviewsToVerify,
-  saveAiEvidence,
-} from "./reviews.repository";
+  billingCycle,
+  type createHaiku,
+  dailyCapUsd,
+  HAIKU_MODEL,
+  type HaikuCall,
+  haikuOpinion,
+  USD_PER_PAIR,
+} from "./haiku";
+import { judge, MODEL } from "./judge";
+import { type AiEvidence, loadPair, neuronsSpentSince, reviewsToVerify, saveAiEvidence } from "./reviews.repository";
+import { recordUsage, usdSpentSince } from "./usage";
 
 // Estimación por par para repartir el presupuesto: 2,5 de Gemma medidos, con margen. El tope diario se respeta igual
 // porque el barrido mide lo gastado antes de encolar.
@@ -35,10 +37,10 @@ export interface VerifyConfig {
 
 const startOfDay = (now: Date) => `${now.toISOString().slice(0, 10)}T00:00:00.000Z`;
 
-/** Dólares que Haiku todavía puede gastar hoy según el tope ligado al ciclo de facturación. */
+/** Dólares que Haiku todavía puede gastar hoy según el tope ligado al ciclo de facturación; lo gastado sale de `ai_usage`. */
 export async function haikuBudgetLeft(db: Db, haiku: HaikuConfig, now: Date): Promise<number> {
   const cycleStart = billingCycle(now, haiku.cycleDay).start.toISOString();
-  const [inCycle, today] = await Promise.all([haikuUsdSince(db, cycleStart), haikuUsdSince(db, startOfDay(now))]);
+  const [inCycle, today] = await Promise.all([usdSpentSince(db, cycleStart), usdSpentSince(db, startOfDay(now))]);
   return dailyCapUsd(now, haiku.cycleDay, haiku.monthlyUsd, inCycle - today) - today;
 }
 
@@ -82,8 +84,24 @@ export async function verifyReview(db: Db, ai: Ai, reviewId: number, config: Ver
     const h = config.haiku;
     let opinion = cached?.haiku?.model === HAIKU_MODEL ? { ...cached.haiku, mode: h.mode } : undefined;
     if (!opinion && (await haikuBudgetLeft(db, h, now)) >= USD_PER_PAIR) {
+      const record = (call: HaikuCall) =>
+        recordUsage(db, {
+          at: evidence.at,
+          purpose: "judge",
+          model: HAIKU_MODEL,
+          review_id: reviewId,
+          input_tokens: call.inputTokens,
+          cache_read_tokens: call.cacheReadTokens,
+          cache_write_tokens: call.cacheWriteTokens,
+          output_tokens: call.outputTokens,
+          usd: call.usd,
+          ms: call.ms,
+          status: call.status,
+          error: call.error,
+        });
       try {
-        opinion = { ...(await haikuOpinion(h.create, pair.listing, pair.candidate)), mode: h.mode, at: evidence.at };
+        const asked = await haikuOpinion(h.create, pair.listing, pair.candidate, record);
+        opinion = { ...asked, mode: h.mode, at: evidence.at };
       } catch (error) {
         // Sin crédito, límite de tasa o API caída: el par queda pendiente y lo retoma la próxima corrida.
         log.warn("haiku.failed", { reviewId, error });

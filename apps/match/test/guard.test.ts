@@ -100,3 +100,34 @@ test("sufijos que se escapaban: MLG, el CSM escrito con espacio y el SATA III qu
     ).ok,
   ).toBe(true);
 });
+
+test("identidades ancladas: un campo que los dos lados dicen distinto frena, aunque el MPN coincida", () => {
+  const ram = (title: string, identity: Record<string, string | number | boolean>, mpn: string | null = null) => ({
+    title,
+    brand: "Kingston",
+    mpn,
+    identity: { category: "ram", name: title, identity },
+  });
+  const cl36 = ram(
+    "Kingston Fury Beast 16GB DDR5 5600 CL36",
+    { type: "ddr5", capacity_gb: 16, cas_latency: 36 },
+    "KF556C36BBE-16",
+  );
+  const cl40 = ram(
+    "Kingston Fury Beast 16GB DDR5 5600 CL40",
+    { type: "ddr5", capacity_gb: 16, cas_latency: 40 },
+    "KF556C36BBE-16",
+  );
+  const sinCl = ram("Kingston Fury Beast 16GB DDR5 5600", { type: "ddr5", capacity_gb: 16 });
+  expect(acceptGuard(cl36, cl40)).toEqual({ ok: false, reason: "identidad distinta: cas_latency" });
+  // Lo que un lado no dice no frena: el anclaje ya descartó lo inventado.
+  expect(acceptGuard(cl36, sinCl).ok).toBe(true);
+  // Sin identidad en un lado, rige la guarda por título de siempre.
+  expect(acceptGuard(cl36, { title: "Kingston Fury Beast 16GB DDR5 5600 CL36", brand: "Kingston", mpn: null }).ok).toBe(
+    true,
+  );
+  expect(acceptGuard(cl36, { ...cl40, identity: { ...cl40.identity, category: "ssd" } })).toEqual({
+    ok: false,
+    reason: "identidad distinta: category",
+  });
+});

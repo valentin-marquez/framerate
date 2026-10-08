@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { type TokenUsage, usageOf, usageUsd } from "@framerate/matching/normalize";
 import { z } from "zod";
 import type { Side, Verdict } from "./judge";
+import { errorMessage, type UsageStatus, usageStatusOf } from "./usage";
 
 /**
  * Segunda opinión con Claude Haiku 5.5 para lo que Gemma deja pendiente (#149). La API de Claude no entrega
@@ -9,11 +11,18 @@ import type { Side, Verdict } from "./judge";
  */
 export const HAIKU_MODEL = "claude-haiku-5-5";
 
-// Tarifa hasta 100K tokens de prompt (un par usa ~600).
-const USD_PER_INPUT_TOKEN = 0.1 / 1e6;
-const USD_PER_OUTPUT_TOKEN = 0.5 / 1e6;
 /** Peor caso medido para reservar presupuesto antes de preguntar (dos órdenes, con thinking). */
 export const USD_PER_PAIR = 0.001;
+
+/** Lo que cuesta y cómo terminó una llamada, para `ai_usage`. */
+export interface HaikuCall extends TokenUsage {
+  usd: number;
+  ms: number;
+  status: UsageStatus;
+  error: string | null;
+}
+export type RecordCall = (call: HaikuCall) => Promise<void>;
+const NO_USAGE: TokenUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
 
 const SYSTEM =
   "You decide whether two listings from Chilean PC hardware stores sell the exact same retail product (same SKU). " +
@@ -57,31 +66,49 @@ export function createHaiku(apiKey: string): Create {
   return (params) => client.messages.create(params);
 }
 
-async function ask(create: Create, a: Side, b: Side) {
-  const message = await create({
-    model: HAIKU_MODEL,
-    max_tokens: 1024,
-    system: SYSTEM,
-    output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
-    messages: [{ role: "user", content: JSON.stringify({ a, b }) }],
-  });
-  const usd = message.usage.input_tokens * USD_PER_INPUT_TOKEN + message.usage.output_tokens * USD_PER_OUTPUT_TOKEN;
+async function ask(create: Create, a: Side, b: Side, record?: RecordCall) {
+  const started = Date.now();
+  let message: Anthropic.Message;
+  try {
+    message = await create({
+      model: HAIKU_MODEL,
+      max_tokens: 1024,
+      system: SYSTEM,
+      output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
+      messages: [{ role: "user", content: JSON.stringify({ a, b }) }],
+    });
+  } catch (error) {
+    const ms = Date.now() - started;
+    await record?.({ ...NO_USAGE, usd: 0, ms, status: usageStatusOf(error), error: errorMessage(error) });
+    throw error;
+  }
+  const usage = usageOf(message);
+  const usd = usageUsd(usage);
   // Una negativa o una respuesta que no calza con el esquema se trata como duda: el par queda para una persona.
   const text = message.content.find((b) => b.type === "text")?.text;
   let answer: Answer = { verdict: "unsure", reason: "sin respuesta válida" };
-  if (message.stop_reason !== "refusal" && text) {
+  let status: UsageStatus = message.stop_reason === "refusal" ? "refusal" : "invalid";
+  if (status !== "refusal" && text) {
     try {
       answer = AnswerSchema.parse(JSON.parse(text));
+      status = "ok";
     } catch {
       // queda unsure
     }
   }
+  await record?.({ ...usage, usd, ms: Date.now() - started, status, error: null });
   return { answer, usd };
 }
 
-export async function haikuOpinion(create: Create, listing: Side, candidate: Side): Promise<HaikuOpinion> {
-  const x = await ask(create, listing, candidate);
-  const y = await ask(create, candidate, listing);
+/** `record` recibe cada llamada (dos por par), también las que fallan, para el libro de gasto. */
+export async function haikuOpinion(
+  create: Create,
+  listing: Side,
+  candidate: Side,
+  record?: RecordCall,
+): Promise<HaikuOpinion> {
+  const x = await ask(create, listing, candidate, record);
+  const y = await ask(create, candidate, listing, record);
   const both = (v: Answer["verdict"]) => x.answer.verdict === v && y.answer.verdict === v;
   return {
     model: HAIKU_MODEL,

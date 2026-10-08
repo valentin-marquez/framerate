@@ -54,11 +54,20 @@ export function hasInstructionText(title: string): boolean {
 
 const identified = (s: Side) => !!(canonicalBrand(s.brand) ?? detectBrand(s.title) ?? normalizeMpn(s.mpn));
 
+/** Campos anclados que los dos lados dicen y no coinciden (spec §5.1): frenan aunque el modelo diga `same`. */
+function identityConflicts(a: Side["identity"], b: Side["identity"]): string[] {
+  if (!a || !b) return [];
+  if (a.category !== b.category) return ["category"];
+  return Object.keys(a.identity).filter((k) => k in b.identity && a.identity[k] !== b.identity[k]);
+}
+
 export function acceptGuard(listing: Side, candidate: Side): Guard {
   for (const s of [listing, candidate]) {
     if (hasInstructionText(s.title)) return { ok: false, reason: "título con texto de instrucción" };
     if (!identified(s)) return { ok: false, reason: "sin marca ni MPN" };
   }
+  const conflicts = identityConflicts(listing.identity, candidate.identity);
+  if (conflicts.length) return { ok: false, reason: `identidad distinta: ${conflicts.join(" ")}` };
   const mpn = normalizeMpn(listing.mpn);
   if (mpn && mpn === normalizeMpn(candidate.mpn)) return { ok: true };
   const a = modelTokens(listing.title);

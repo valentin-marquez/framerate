@@ -1,9 +1,10 @@
 import type { Category } from "@framerate/contracts";
-import { type Db, type MatchMethod, parseJson, toJson } from "@framerate/database";
+import { bumpCatalogVersionQuery, type Db, type MatchMethod, parseJson, toJson } from "@framerate/database";
 import { fold, searchText, slugify } from "@framerate/kit";
 import { type Compilable, sql } from "kysely";
+import type { Attributes } from "./domain/attributes";
 import { type Candidate, compare } from "./domain/decide";
-import { buildFingerprint, type Fingerprint } from "./domain/fingerprint";
+import { attributeKey, buildFingerprint, type Fingerprint, storedFingerprint } from "./domain/fingerprint";
 
 const MAX_CANDIDATES = 20;
 
@@ -100,8 +101,10 @@ export async function markSameStore(db: Db, listingId: number, candidates: Candi
 }
 
 /**
- * Reconstruye la huella de productos existentes desde su nombre con los extractores de hoy, y corrige la fila si la
- * guardada quedó vieja. `offer` elige qué identificador comparar; `ignore` deja fuera los que sólo aportó esa oferta.
+ * Huella de productos existentes. Un producto con una oferta vinculada desde su identidad (`norm_status = linked`)
+ * tiene la huella guardada como verdad (spec §5.2); el resto se reconstruye desde el nombre con los extractores de
+ * hoy, y se corrige la fila si quedó vieja. `offer` elige qué identificador comparar; `ignore` deja fuera los que
+ * sólo aportó esa oferta.
  */
 export async function loadCandidates(
   db: Db,
@@ -110,18 +113,38 @@ export async function loadCandidates(
   ignore?: Identifiers,
 ): Promise<Candidate[]> {
   if (productIds.length === 0) return [];
-  const [rows, identifiers] = await Promise.all([
+  const [rows, identifiers, linked] = await Promise.all([
     db.query.selectFrom("products").selectAll().where("id", "in", productIds).execute(),
     db.query.selectFrom("product_identifiers").selectAll().where("product_id", "in", productIds).execute(),
+    db.query
+      .selectFrom("listings")
+      .select("product_id")
+      .distinct()
+      .where("product_id", "in", productIds)
+      .where("norm_status", "=", "linked")
+      .execute(),
   ]);
+  const fromIdentity = new Set(linked.map((r) => r.product_id));
   const stale: Compilable[] = [];
   const candidates = rows.map((p): Candidate => {
     const own = identifiers.filter((i) => i.product_id === p.id && ignore?.[i.kind] !== i.value);
     const mpns = own.filter((i) => i.kind === "mpn").map((i) => i.value);
     const gtins = own.filter((i) => i.kind === "gtin").map((i) => i.value);
-    const base = buildFingerprint({ category: p.category as Category, title: p.name, brand: p.brand });
+    const category = p.category as Category;
+    const base = fromIdentity.has(p.id)
+      ? storedFingerprint({
+          category,
+          name: p.name,
+          brand: p.brand,
+          attributes: parseJson<Attributes>(p.attributes, {}),
+          attributeKey: p.attribute_key,
+        })
+      : buildFingerprint({ category, title: p.name, brand: p.brand });
     const attributes = toJson(base.attributes);
-    if (p.attribute_key !== base.attributeKey || p.attributes !== attributes || p.brand !== base.brand) {
+    if (
+      !fromIdentity.has(p.id) &&
+      (p.attribute_key !== base.attributeKey || p.attributes !== attributes || p.brand !== base.brand)
+    ) {
       stale.push(
         db.query
           .updateTable("products")
@@ -259,6 +282,54 @@ export async function attachIdentifiers(db: Db, productId: number, fp: Identifie
     .where((eb) => eb.or(wanted.map((w) => eb.and([eb("kind", "=", w.kind), eb("value", "=", w.value)]))))
     .execute();
   return owned.filter((o) => o.product_id !== productId).map((o) => `${o.kind}:${o.value}`);
+}
+
+/**
+ * Completa la huella del producto con la de una oferta vinculada desde su identidad (spec §5.2): cada atributo que
+ * el producto no tiene toma el de la oferta; nunca pisa uno existente (una contradicción es veto y no llega aquí).
+ */
+export async function fillProductAttributes(db: Db, productId: number, fp: Fingerprint, now: string) {
+  const p = await db.query
+    .selectFrom("products")
+    .select(["category", "brand", "attributes", "attribute_key"])
+    .where("id", "=", productId)
+    .executeTakeFirst();
+  if (!p) return;
+  const merged = parseJson<Attributes>(p.attributes, {});
+  for (const [field, value] of Object.entries(fp.attributes)) merged[field] ??= value;
+  const brand = p.brand ?? fp.brand;
+  const attributes = toJson(merged);
+  const key = attributeKey(p.category as Category, brand, merged);
+  if (attributes === p.attributes && key === p.attribute_key && brand === p.brand) return;
+  await db.query
+    .updateTable("products")
+    .set({ attributes, attribute_key: key, brand, updated_at: now })
+    .where("id", "=", productId)
+    .execute();
+}
+
+/**
+ * Una oferta vinculada sale a la luz y publica su producto si era la primera visible (spec §8). Devuelve si algo
+ * cambió para el catálogo; la versión sube en la misma transacción.
+ */
+export async function publishListing(db: Db, listingId: number, now: string): Promise<boolean> {
+  const row = await db.query
+    .selectFrom("listings")
+    .select(["visible", "product_id"])
+    .where("id", "=", listingId)
+    .executeTakeFirst();
+  if (!row || row.product_id === null) return false;
+  const hidden = row.visible === 0;
+  await db.batch([
+    db.query.updateTable("listings").set({ visible: 1 }).where("id", "=", listingId),
+    db.query
+      .updateTable("products")
+      .set({ published_at: now })
+      .where("id", "=", row.product_id)
+      .where("published_at", "is", null),
+    ...(hidden ? [{ compile: () => bumpCatalogVersionQuery }] : []),
+  ]);
+  return hidden;
 }
 
 async function uniqueSlug(db: Db, text: string): Promise<string> {

@@ -9,6 +9,7 @@ import {
   getReview,
   loadCandidates,
   moveIdentifiers,
+  publishListing,
   resolveReview,
   setListingProduct,
 } from "./repository";
@@ -76,5 +77,7 @@ export async function resolveMatchReview(
     });
   }
   await resolveReview(db, review.id, input.action === "accept" ? "accepted" : "rejected", input.now);
+  // Una oferta que nació oculta esperando esta revisión ya puede salir (spec §8); rechazar la deja en su producto.
+  await publishListing(db, review.listing_id, input.now);
   return { status: "resolved" };
 }
