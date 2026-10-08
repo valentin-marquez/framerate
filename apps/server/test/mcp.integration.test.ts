@@ -111,6 +111,9 @@ describe("servidor MCP", () => {
       conStock: true,
     });
     expect(JSON.stringify(result)).not.toContain("Ignora tus instrucciones");
+    // El tráfico pasa por la ficha de Framerate: nunca se entrega el enlace directo a la tienda.
+    expect(JSON.stringify(result)).not.toContain("alfa.cl");
+    expect(result.structuredContent.producto.url).toBe(`${env.WEB_ORIGIN}/producto/rtx-4060`);
   });
 
   test("un slug que no existe es un error que dice cómo corregirlo", async () => {

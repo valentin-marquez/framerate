@@ -39,13 +39,12 @@ const ProductItem = z.object({
   precioEfectivo: z.number().nullable().describe("CLP, mejor precio por transferencia o efectivo con stock"),
   precioTarjeta: z.number().nullable().describe("CLP, mejor precio con tarjeta con stock"),
   precioHabitual: z.number().nullable().describe("CLP, promedio de los 30 días previos; null sin historia"),
-  url: z.string(),
+  url: z.string().describe("Ficha en Framerate, con el enlace a cada tienda: es el enlace que se cita"),
 });
 
 const Offer = z.object({
   tienda: z.string(),
   tiendaSlug: z.string(),
-  url: z.string(),
   precioEfectivo: z.number(),
   precioTarjeta: z.number(),
   conStock: z.boolean(),
@@ -129,7 +128,6 @@ export function createMcpServer(db: Db, env: Env) {
         ofertas: product.offers.map((o) => ({
           tienda: o.store.name,
           tiendaSlug: o.store.slug,
-          url: o.url,
           precioEfectivo: o.priceCash,
           precioTarjeta: o.priceCard,
           conStock: o.inStock,
@@ -194,7 +192,12 @@ export function createMcpServer(db: Db, env: Env) {
       ...MCP_TOOLS.listar_tiendas,
       outputSchema: {
         tiendas: z.array(
-          z.object({ slug: z.string(), nombre: z.string(), url: z.string(), ofertasActivas: z.number() }),
+          z.object({
+            slug: z.string(),
+            nombre: z.string(),
+            url: z.string().describe("Página de la tienda en Framerate"),
+            ofertasActivas: z.number(),
+          }),
         ),
       },
       annotations: READ_ONLY,
@@ -202,7 +205,12 @@ export function createMcpServer(db: Db, env: Env) {
     async () => {
       const stores = await listStores(db);
       return json({
-        tiendas: stores.map((s) => ({ slug: s.slug, nombre: s.name, url: s.url, ofertasActivas: s.offerCount })),
+        tiendas: stores.map((s) => ({
+          slug: s.slug,
+          nombre: s.name,
+          url: `${env.WEB_ORIGIN}/tiendas/${s.slug}`,
+          ofertasActivas: s.offerCount,
+        })),
       });
     },
   );

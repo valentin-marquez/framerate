@@ -38,8 +38,9 @@ export const MCP_TOOLS = {
   ver_producto: {
     title: "Ver producto",
     description:
-      "Ficha de un producto con sus ofertas por tienda: precio en efectivo, precio con tarjeta, stock y enlace a la " +
-      "tienda. Necesita el slug que devuelve buscar_productos. No sirve para buscar.",
+      "Ficha de un producto con sus ofertas por tienda: precio en efectivo, precio con tarjeta y stock. Para comprar, " +
+      "enlaza a la ficha en Framerate (url del producto), que lleva a cada tienda. Necesita el slug que devuelve " +
+      "buscar_productos. No sirve para buscar.",
     inputSchema: { slug },
   },
   historial_de_precios: {
