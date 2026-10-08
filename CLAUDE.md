@@ -13,8 +13,9 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
   Cron ni colas.
 - **`apps/ingest`**: Worker de scraping (Cron + Queues + R2 + RPC): adaptadores de tienda, normalización y
   matching. No tiene HTTP público; `server` le pide crawls por RPC tipado.
-- **`apps/match`**: Worker que verifica las revisiones del Gatekeeper con Workers AI (Cron + Queue, sin HTTP).
-  Empieza en modo sombra (`MATCH_MODE`); ver #117.
+- **`apps/match`**: Worker que verifica las revisiones del Gatekeeper con Workers AI (Cron + Queue, sin HTTP), y con
+  Claude Haiku 5.5 como tercera opinión sobre lo que queda pendiente (`MATCH_HAIKU`, con tope ligado al ciclo del
+  crédito de Anthropic; ver #149). Cada modelo nuevo entra en sombra antes de decidir (`MATCH_MODE`, #117).
 - **`apps/web`**: React Router v7 (SSR) en Workers. Sólo habla con la API (`/v1/*`), nunca con la base.
 - **`packages/contracts`**: esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.
 - **`packages/database`**: dueño del esquema: migraciones SQL, tipos Kysely, cliente D1 y utilidades de test

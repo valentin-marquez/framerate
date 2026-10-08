@@ -2,17 +2,45 @@ import type { Db } from "@framerate/database";
 import type { Logger } from "@framerate/kit";
 import { resolveMatchReview } from "@framerate/matching";
 import { acceptGuard } from "./guard";
+import { billingCycle, type createHaiku, dailyCapUsd, HAIKU_MODEL, haikuOpinion, USD_PER_PAIR } from "./haiku";
 import { judge, MODEL } from "./judge";
-import { type AiEvidence, loadPair, neuronsSpentSince, reviewsToVerify, saveAiEvidence } from "./reviews.repository";
+import {
+  type AiEvidence,
+  haikuUsdSince,
+  loadPair,
+  neuronsSpentSince,
+  reviewsToVerify,
+  saveAiEvidence,
+} from "./reviews.repository";
 import { needsTiebreak, tiebreak } from "./tiebreak";
 
 // Estimación por par para repartir el presupuesto: 2,5 de Gemma medidos, más el desempate con Clef (16) que sale
 // en una fracción de los pares. El tope diario se respeta igual porque el barrido mide lo gastado antes de encolar.
 const NEURONS_PER_PAIR = 6;
 
+export interface HaikuConfig {
+  mode: "shadow" | "live";
+  create: ReturnType<typeof createHaiku>;
+  /** Parte del crédito mensual de Anthropic que puede usar este Worker. */
+  monthlyUsd: number;
+  /** Día del mes en que se renueva el crédito (el del pago del plan). */
+  cycleDay: number;
+}
+
 export interface VerifyConfig {
   mode: "shadow" | "reject" | "live";
   dailyNeurons: number;
+  /** Sin configurar (o sin clave), Haiku no se usa. */
+  haiku?: HaikuConfig;
+}
+
+const startOfDay = (now: Date) => `${now.toISOString().slice(0, 10)}T00:00:00.000Z`;
+
+/** Dólares que Haiku todavía puede gastar hoy según el tope ligado al ciclo de facturación. */
+export async function haikuBudgetLeft(db: Db, haiku: HaikuConfig, now: Date): Promise<number> {
+  const cycleStart = billingCycle(now, haiku.cycleDay).start.toISOString();
+  const [inCycle, today] = await Promise.all([haikuUsdSince(db, cycleStart), haikuUsdSince(db, startOfDay(now))]);
+  return dailyCapUsd(now, haiku.cycleDay, haiku.monthlyUsd, inCycle - today) - today;
 }
 
 /**
@@ -21,11 +49,11 @@ export interface VerifyConfig {
  * diario se pasaría.
  */
 export async function reviewsForToday(db: Db, config: VerifyConfig, now: Date, spentExtra = 0): Promise<number[]> {
-  const startOfDay = `${now.toISOString().slice(0, 10)}T00:00:00.000Z`;
-  const left = config.dailyNeurons - (await neuronsSpentSince(db, startOfDay)) - spentExtra;
+  const left = config.dailyNeurons - (await neuronsSpentSince(db, startOfDay(now))) - spentExtra;
   const pairs = Math.floor(left / NEURONS_PER_PAIR);
   if (pairs <= 0) return [];
-  return reviewsToVerify(db, MODEL, config.mode, pairs);
+  const haiku = config.haiku ? { model: HAIKU_MODEL, mode: config.haiku.mode } : null;
+  return reviewsToVerify(db, MODEL, config.mode, pairs, haiku);
 }
 
 /**
@@ -60,6 +88,28 @@ export async function verifyReview(db: Db, ai: Ai, reviewId: number, config: Ver
     if (cached.tiebreak.same) evidence.verdict = "accept";
   }
 
+  // Lo que Gemma y Clef no decidieron: tercera opinión de Haiku (#149), una sola vez por par y dentro del tope diario.
+  let decidedBy = `ai:${MODEL}`;
+  if (config.haiku && evidence.verdict === "pending") {
+    const h = config.haiku;
+    let opinion = cached?.haiku?.model === HAIKU_MODEL ? { ...cached.haiku, mode: h.mode } : undefined;
+    if (!opinion && (await haikuBudgetLeft(db, h, now)) >= USD_PER_PAIR) {
+      try {
+        opinion = { ...(await haikuOpinion(h.create, pair.listing, pair.candidate)), mode: h.mode, at: evidence.at };
+      } catch (error) {
+        // Sin crédito, límite de tasa o API caída: el par queda pendiente y lo retoma la próxima corrida.
+        log.warn("haiku.failed", { reviewId, error });
+      }
+    }
+    if (opinion) {
+      evidence.haiku = opinion;
+      if (h.mode === "live" && opinion.verdict !== "pending") {
+        evidence.verdict = opinion.verdict;
+        decidedBy = `ai:${HAIKU_MODEL}`;
+      }
+    }
+  }
+
   // reject: sólo rechaza, que deja un duplicado; aceptar mezcla precios y espera la auditoría de las pendientes reales.
   const applies =
     config.mode === "live" ? evidence.verdict !== "pending" : config.mode === "reject" && evidence.verdict === "reject";
@@ -70,7 +120,7 @@ export async function verifyReview(db: Db, ai: Ai, reviewId: number, config: Ver
     const result = await resolveMatchReview(db, {
       reviewId,
       action: evidence.verdict,
-      decidedBy: `ai:${MODEL}`,
+      decidedBy,
       now: evidence.at,
     });
     if (result.status === "vetoed") evidence.vetoes = result.vetoes;

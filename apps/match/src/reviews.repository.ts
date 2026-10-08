@@ -1,5 +1,6 @@
 import type { Db } from "@framerate/database";
 import { sql } from "kysely";
+import type { HaikuOpinion } from "./haiku";
 import type { Judgement, Side } from "./judge";
 import { DISAGREE_OVER } from "./tiebreak";
 
@@ -13,6 +14,8 @@ export interface AiEvidence extends Judgement {
   guard?: string;
   /** Desempate con Clef cuando los dos órdenes de Gemma se contradicen (#148). */
   tiebreak?: { model: string; pAB: number; pBA: number; same: boolean };
+  /** Tercera opinión de Haiku cuando Gemma y Clef no decidieron (#149). En sombra no cambia `verdict`. */
+  haiku?: HaikuOpinion & { mode: "shadow" | "live"; at: string };
 }
 
 /**
@@ -20,9 +23,16 @@ export interface AiEvidence extends Judgement {
  * vuelve a incluir: el consumidor reusa la probabilidad guardada y sólo aplica la decisión.
  *
  * También entran las que el modelo dejó pendientes y nunca pasaron por el desempate (#148): si no, el desempate sólo
- * alcanzaría a las revisiones nuevas y las que ya están en la cola se quedarían ahí para siempre.
+ * alcanzaría a las revisiones nuevas y las que ya están en la cola se quedarían ahí para siempre. Por lo mismo, con Haiku
+ * encendido entran las que siguen pendientes sin su opinión en el modo actual (#149).
  */
-export async function reviewsToVerify(db: Db, model: string, mode: string, limit: number): Promise<number[]> {
+export async function reviewsToVerify(
+  db: Db,
+  model: string,
+  mode: string,
+  limit: number,
+  haiku: { model: string; mode: string } | null = null,
+): Promise<number[]> {
   const rows = await db.query
     .selectFrom("match_reviews")
     .select("id")
@@ -35,6 +45,14 @@ export async function reviewsToVerify(db: Db, model: string, mode: string, limit
           json_extract(evidence, '$.ai.verdict') = 'pending'
           AND json_extract(evidence, '$.ai.tiebreak') IS NULL
           AND abs(json_extract(evidence, '$.ai.pAB') - json_extract(evidence, '$.ai.pBA')) > ${DISAGREE_OVER}
+        )
+        OR (
+          ${haiku ? 1 : 0} = 1
+          AND json_extract(evidence, '$.ai.verdict') = 'pending'
+          AND (
+            json_extract(evidence, '$.ai.haiku.model') IS NOT ${haiku?.model ?? null}
+            OR json_extract(evidence, '$.ai.haiku.mode') IS NOT ${haiku?.mode ?? null}
+          )
         )
       )`,
     )
@@ -52,6 +70,16 @@ export async function neuronsSpentSince(db: Db, since: string): Promise<number> 
     .where(sql<boolean>`json_extract(evidence, '$.ai.at') >= ${since}`)
     .executeTakeFirst();
   return Number(row?.n ?? 0);
+}
+
+/** Dólares gastados en Haiku desde `since` (ISO), sumando las opiniones guardadas. */
+export async function haikuUsdSince(db: Db, since: string): Promise<number> {
+  const row = await db.query
+    .selectFrom("match_reviews")
+    .select(sql<number | null>`sum(json_extract(evidence, '$.ai.haiku.usd'))`.as("usd"))
+    .where(sql<boolean>`json_extract(evidence, '$.ai.haiku.at') >= ${since}`)
+    .executeTakeFirst();
+  return Number(row?.usd ?? 0);
 }
 
 /**

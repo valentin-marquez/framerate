@@ -21,7 +21,15 @@
     // así que 8.000 alcanzan para unos 2.400 pares al día.
     "MATCH_DAILY_NEURONS": "8000",
     // off: nada. shadow: cuenta los productos duplicados que ya existen sin escribir. on: les abre revisión (#148).
-    "MATCH_DETECT": "on"
+    "MATCH_DETECT": "on",
+    // Tercera opinión de Claude Haiku 5.5 sobre lo que Gemma y Clef dejan pendiente (#149). off, shadow o live; la
+    // clave va con `wrangler secret put ANTHROPIC_API_KEY`.
+    "MATCH_HAIKU": "shadow",
+    // Del crédito de $100 al mes de la API de Anthropic (plan Max), lo que puede gastar este Worker; el resto queda
+    // para el asistente (#110). Un par cuesta ~$0,0006, así que alcanza de sobra. El tope de cada día es lo que queda
+    // del ciclo repartido entre los días que faltan, y el ciclo se renueva el día del pago del plan.
+    "ANTHROPIC_MONTHLY_USD": "30",
+    "ANTHROPIC_CYCLE_DAY": "17"
   },
 
   "d1_databases": [

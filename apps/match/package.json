@@ -11,6 +11,7 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
     "@framerate/database": "workspace:*",
     "@framerate/kit": "workspace:*",
     "@framerate/matching": "workspace:*",

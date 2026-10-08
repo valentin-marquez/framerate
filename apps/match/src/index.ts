@@ -2,6 +2,7 @@ import { createDb } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import { proposeDuplicateReviews } from "./detect";
 import type { Env, VerifyMessage } from "./env";
+import { createHaiku } from "./haiku";
 import { extractModels } from "./model";
 import { neuronsSpentSince } from "./reviews.repository";
 import { reviewsForToday, type VerifyConfig, verifyReview } from "./verify";
@@ -20,6 +21,15 @@ const startOfDay = (now: Date) => `${now.toISOString().slice(0, 10)}T00:00:00.00
 const configOf = (env: Env): VerifyConfig => ({
   mode: env.MATCH_MODE === "live" || env.MATCH_MODE === "reject" ? env.MATCH_MODE : "shadow",
   dailyNeurons: Number(env.MATCH_DAILY_NEURONS) || 0,
+  haiku:
+    (env.MATCH_HAIKU === "shadow" || env.MATCH_HAIKU === "live") && env.ANTHROPIC_API_KEY
+      ? {
+          mode: env.MATCH_HAIKU,
+          create: createHaiku(env.ANTHROPIC_API_KEY),
+          monthlyUsd: Number(env.ANTHROPIC_MONTHLY_USD) || 0,
+          cycleDay: Number(env.ANTHROPIC_CYCLE_DAY) || 1,
+        }
+      : undefined,
 });
 
 export default {

@@ -18,6 +18,8 @@ export interface ReviewEvidence {
     model?: string;
     /** Segunda opinión de Clef cuando los dos órdenes del primer modelo se contradicen (#148). */
     tiebreak?: { pAB?: number; pBA?: number; same?: boolean };
+    /** Tercera opinión de Haiku sobre lo que los dos anteriores dejaron pendiente (#149). */
+    haiku?: { verdict?: string; reason?: string; mode?: "shadow" | "live" };
   };
 }
 
@@ -47,6 +49,12 @@ const VERDICT_TONE: Record<Verdict, string> = {
   pending: "bg-warn",
   guard: "bg-warn",
   none: "bg-muted-foreground/40",
+};
+
+const HAIKU_LABELS: Record<string, string> = {
+  accept: "Haiku: el mismo producto",
+  reject: "Haiku: productos distintos",
+  pending: "Haiku duda",
 };
 
 const SEGMENTS = 10;
@@ -111,21 +119,31 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
 export function EvidenceChips({ evidence, score }: { evidence: ReviewEvidence; score: number }) {
   const guard = evidence.ai?.guard;
   const tiebreak = evidence.ai?.tiebreak;
+  const haiku = evidence.ai?.haiku;
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <Chip>similitud {score.toFixed(2)}</Chip>
-      {evidence.attributeKeyMatch && <Chip tone="ok">mismos atributos</Chip>}
-      {evidence.brandMatch === false && <Chip tone="warn">marca distinta</Chip>}
-      {evidence.mpnConflict && <Chip tone="warn">MPN distinto</Chip>}
-      {evidence.modelConflict && <Chip tone="warn">modelo distinto</Chip>}
-      {evidence.sameImage === true && <Chip>misma foto</Chip>}
-      {evidence.detector === "model_ai" && <Chip>agrupado por modelo</Chip>}
-      {guard && <Chip tone="warn">guarda: {guard}</Chip>}
-      {tiebreak && (
-        <Chip tone={tiebreak.same ? "ok" : "neutral"}>
-          desempate {Math.round(Math.min(tiebreak.pAB ?? 0, tiebreak.pBA ?? 0) * 100)}%
-        </Chip>
-      )}
+    <div className="space-y-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Chip>similitud {score.toFixed(2)}</Chip>
+        {evidence.attributeKeyMatch && <Chip tone="ok">mismos atributos</Chip>}
+        {evidence.brandMatch === false && <Chip tone="warn">marca distinta</Chip>}
+        {evidence.mpnConflict && <Chip tone="warn">MPN distinto</Chip>}
+        {evidence.modelConflict && <Chip tone="warn">modelo distinto</Chip>}
+        {evidence.sameImage === true && <Chip>misma foto</Chip>}
+        {evidence.detector === "model_ai" && <Chip>agrupado por modelo</Chip>}
+        {guard && <Chip tone="warn">guarda: {guard}</Chip>}
+        {tiebreak && (
+          <Chip tone={tiebreak.same ? "ok" : "neutral"}>
+            desempate {Math.round(Math.min(tiebreak.pAB ?? 0, tiebreak.pBA ?? 0) * 100)}%
+          </Chip>
+        )}
+        {haiku?.verdict && (
+          <Chip tone={haiku.verdict === "accept" ? "ok" : haiku.verdict === "reject" ? "warn" : "neutral"}>
+            {HAIKU_LABELS[haiku.verdict] ?? "Haiku"}
+            {haiku.mode === "shadow" && " (en sombra)"}
+          </Chip>
+        )}
+      </div>
+      {haiku?.reason && <p className="text-muted-foreground text-xs">{haiku.reason}</p>}
     </div>
   );
 }

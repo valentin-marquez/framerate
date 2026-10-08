@@ -1,7 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import type Anthropic from "@anthropic-ai/sdk";
 import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { silentLogger } from "@framerate/kit";
+import { billingCycle, dailyCapUsd, HAIKU_MODEL } from "@/haiku";
 import { MODEL, pSameFrom, verdictFor } from "@/judge";
 import { TIEBREAK_MODEL } from "@/tiebreak";
 import { reviewsForToday, verifyReview } from "@/verify";
@@ -297,4 +299,116 @@ test("sin contradicción no se gasta en desempate", async () => {
   const ai = fakeAiAsimetrico(0.6, 0.55, 0.99);
   expect(await verifyReview(db, ai, s.review, { mode: "live", dailyNeurons: 1000 }, now, silentLogger)).toBe("pending");
   expect(ai.clefCalls).toBe(0);
+});
+
+/** Haiku falso: responde lo que se le pida en cada orden y cuenta las llamadas. */
+function fakeHaiku(...verdicts: ("same" | "different" | "unsure" | Error)[]) {
+  const haiku = {
+    calls: 0,
+    create: async () => {
+      const v = verdicts[haiku.calls++ % verdicts.length];
+      if (v instanceof Error) throw v;
+      return {
+        content: [{ type: "text", text: JSON.stringify({ verdict: v, reason: "mismo modelo y capacidad" }) }],
+        stop_reason: "end_turn",
+        usage: { input_tokens: 600, output_tokens: 400 },
+      } as unknown as Anthropic.Message;
+    },
+  };
+  return haiku;
+}
+const haikuConfig = (mode: "shadow" | "live", h: ReturnType<typeof fakeHaiku>, monthlyUsd = 30) => ({
+  mode: "live" as const,
+  dailyNeurons: 1000,
+  haiku: { mode, create: h.create, monthlyUsd, cycleDay: 17 },
+});
+
+describe("tercera opinión de Haiku (#149)", () => {
+  test("en sombra opina sobre lo que Gemma dejó pendiente, sin decidir", async () => {
+    const s = await seedReview();
+    const h = fakeHaiku("same");
+    expect(await verifyReview(db, fakeAi(0.6), s.review, haikuConfig("shadow", h), now, silentLogger)).toBe("pending");
+    expect(h.calls).toBe(2);
+    expect((await reviewRow(s.review)).status).toBe("pending");
+    expect((await aiOf(s.review)).haiku).toMatchObject({
+      model: HAIKU_MODEL,
+      verdict: "accept",
+      reason: "mismo modelo y capacidad",
+      mode: "shadow",
+    });
+    // Dos órdenes de 600 tokens de entrada y 400 de salida a $0,10 y $0,50 el millón.
+    expect((await aiOf(s.review)).haiku.usd).toBeCloseTo(0.00052, 8);
+  });
+
+  test("en live acepta sólo si coincide en los dos órdenes, y la decisión queda a su nombre", async () => {
+    const s = await seedReview();
+    await verifyReview(db, fakeAi(0.6), s.review, haikuConfig("live", fakeHaiku("same")), now, silentLogger);
+    expect((await reviewRow(s.review)).status).toBe("accepted");
+    const decision = await db.query
+      .selectFrom("match_decisions")
+      .select("decided_by")
+      .where("listing_id", "=", s.listing)
+      .orderBy("id", "desc")
+      .executeTakeFirstOrThrow();
+    expect(decision.decided_by).toBe(`ai:${HAIKU_MODEL}`);
+
+    await resetD1(d1);
+    const t = await seedReview();
+    await verifyReview(db, fakeAi(0.6), t.review, haikuConfig("live", fakeHaiku("same", "unsure")), now, silentLogger);
+    expect((await reviewRow(t.review)).status).toBe("pending");
+  });
+
+  test("no le pregunta lo que Gemma ya decidió", async () => {
+    const s = await seedReview();
+    const h = fakeHaiku("different");
+    await verifyReview(db, fakeAi(0.97), s.review, haikuConfig("live", h), now, silentLogger);
+    expect(h.calls).toBe(0);
+    expect((await reviewRow(s.review)).status).toBe("accepted");
+  });
+
+  test("si la API falla, el par queda pendiente y vuelve a la cola de la próxima corrida", async () => {
+    const s = await seedReview();
+    const config = haikuConfig("live", fakeHaiku(new Error("credit balance too low")));
+    expect(await verifyReview(db, fakeAi(0.6), s.review, config, now, silentLogger)).toBe("pending");
+    expect((await aiOf(s.review)).haiku).toBeUndefined();
+    expect(await reviewsForToday(db, config, now)).toEqual([s.review]);
+  });
+
+  test("con el tope del día gastado no pregunta", async () => {
+    const s = await seedReview();
+    const h = fakeHaiku("same");
+    await verifyReview(db, fakeAi(0.6), s.review, haikuConfig("live", h, 0), now, silentLogger);
+    expect(h.calls).toBe(0);
+    expect((await reviewRow(s.review)).status).toBe("pending");
+  });
+
+  test("una vez que opinó en un modo no se le vuelve a preguntar; al pasar a live reusa la opinión", async () => {
+    const s = await seedReview();
+    const h = fakeHaiku("same");
+    await verifyReview(db, fakeAi(0.6), s.review, haikuConfig("shadow", h), now, silentLogger);
+    expect(await reviewsForToday(db, haikuConfig("shadow", h), now)).toEqual([]);
+    expect(await reviewsForToday(db, haikuConfig("live", h), now)).toEqual([s.review]);
+    await verifyReview(db, fakeAi(0.6), s.review, haikuConfig("live", h), now, silentLogger);
+    expect(h.calls).toBe(2);
+    expect((await reviewRow(s.review)).status).toBe("accepted");
+  });
+});
+
+describe("tope ligado al ciclo de facturación", () => {
+  test("el ciclo va del día 17 al 17 del mes siguiente, también al cruzar el año", () => {
+    expect(billingCycle(new Date("2026-10-08T12:00:00Z"), 17)).toEqual({
+      start: new Date("2026-09-17T00:00:00Z"),
+      end: new Date("2026-10-17T00:00:00Z"),
+    });
+    expect(billingCycle(new Date("2027-01-05T00:00:00Z"), 17).start).toEqual(new Date("2026-12-17T00:00:00Z"));
+    expect(billingCycle(new Date("2026-10-17T00:00:00Z"), 17).start).toEqual(new Date("2026-10-17T00:00:00Z"));
+  });
+
+  test("reparte lo que queda entre los días que faltan, hoy incluido", () => {
+    // 08-10: faltan 9 días (8 al 16) para el 17.
+    expect(dailyCapUsd(new Date("2026-10-08T15:00:00Z"), 17, 30, 3)).toBeCloseTo(3, 6);
+    // El último día del ciclo puede gastar todo lo que quedó.
+    expect(dailyCapUsd(new Date("2026-10-16T23:00:00Z"), 17, 30, 25)).toBeCloseTo(5, 6);
+    expect(dailyCapUsd(new Date("2026-10-08T15:00:00Z"), 17, 30, 40)).toBe(0);
+  });
 });
