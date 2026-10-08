@@ -3,7 +3,6 @@ import type { Db } from "@framerate/database";
 import { createTestD1 } from "@framerate/database/testing";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { dailyBest } from "@/features/mcp/mcp.server";
 import { testEnv } from "./helpers";
 
 let db: Db;
@@ -130,29 +129,18 @@ describe("servidor MCP", () => {
     expect((await rpc("tools/list", {}, { origin: env.WEB_ORIGIN })).status).toBe(200);
   });
 
+  test("el historial arrastra el precio de una tienda que no cambió en el período", async () => {
+    const result = await call("historial_de_precios", { slug: "rtx-4060", dias: 7 });
+    const dias = result.structuredContent.dias;
+    expect(dias).toHaveLength(8);
+    expect(dias.at(-1)).toEqual({
+      fecha: new Date().toISOString().slice(0, 10),
+      precioEfectivo: 300_000,
+      tienda: "Alfa",
+    });
+  });
+
   test("la API sigue en su host", async () => {
     expect((await app.request("http://api.framerate.cl/health", undefined, env)).status).toBe(200);
   });
-});
-
-test("historial: el mejor precio con stock de cada día", () => {
-  const p = (observedAt: string, priceCash: number, storeName: string, inStock = true) => ({
-    store: storeName,
-    storeName,
-    priceCash,
-    priceCard: priceCash,
-    inStock,
-    observedAt,
-  });
-  expect(
-    dailyBest([
-      p("2026-10-01T06:00:00Z", 300, "A"),
-      p("2026-10-01T12:00:00Z", 280, "B"),
-      p("2026-10-01T18:00:00Z", 100, "C", false),
-      p("2026-10-02T06:00:00Z", 290, "A"),
-    ]),
-  ).toEqual([
-    { fecha: "2026-10-01", precioEfectivo: 280, tienda: "B" },
-    { fecha: "2026-10-02", precioEfectivo: 290, tienda: "A" },
-  ]);
 });

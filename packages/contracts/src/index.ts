@@ -8,6 +8,7 @@ export * from "./identity";
 export * from "./ingest";
 export * from "./match-review";
 export * from "./moderation";
+export * from "./price-history";
 export * from "./quotes";
 export * from "./specs";
 export * from "./stores";

@@ -1,8 +1,9 @@
 import {
+  bestOf,
   CATEGORIES,
   CATEGORY_LABELS,
   CategorySchema,
-  type PricePoint,
+  historyDays,
   type ProductSummary,
 } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
@@ -57,19 +58,6 @@ function json<T extends Record<string, unknown>>(data: T) {
 
 function usageError(text: string) {
   return { content: [{ type: "text" as const, text }], isError: true };
-}
-
-/** Mejor precio con stock por día: la historia cruda trae un punto por tienda y corrida, demasiado para un agente. */
-export function dailyBest(points: PricePoint[]) {
-  const days = new Map<string, { fecha: string; precioEfectivo: number; tienda: string }>();
-  for (const p of points) {
-    if (!p.inStock) continue;
-    const fecha = p.observedAt.slice(0, 10);
-    const best = days.get(fecha);
-    if (!best || p.priceCash < best.precioEfectivo)
-      days.set(fecha, { fecha, precioEfectivo: p.priceCash, tienda: p.storeName });
-  }
-  return [...days.values()];
 }
 
 export function createMcpServer(db: Db, env: Env) {
@@ -189,7 +177,7 @@ export function createMcpServer(db: Db, env: Env) {
       title: "Historial de precios",
       description:
         "Mejor precio en efectivo con stock de un producto, por día, y en qué tienda. Úsala para saber si un precio " +
-        "bajó o subió. Necesita el slug que devuelve buscar_productos.",
+        "bajó o subió. Los días en que ninguna tienda tuvo stock no aparecen. Necesita el slug que devuelve buscar_productos.",
       inputSchema: {
         slug: z.string().min(1).max(120),
         dias: z.number().int().min(1).max(365).default(30),
@@ -201,9 +189,20 @@ export function createMcpServer(db: Db, env: Env) {
       annotations: READ_ONLY,
     },
     async ({ slug, dias }) => {
-      const history = await bySlug(slug, (s) => getPriceHistory(db, s, dias));
+      // Ingest guarda un punto sólo cuando algo cambia: hacen falta las ofertas actuales para arrastrar cada precio.
+      const history = await bySlug(slug, async (s) => {
+        const [product, points] = await Promise.all([getProduct(db, s, undefined), getPriceHistory(db, s, dias)]);
+        return product && points ? { offers: product.offers, points } : null;
+      });
       if (!history) return notFound(slug);
-      return json({ slug: history.slug, dias: dailyBest(history.found) });
+      const { offers, points } = history.found;
+      return json({
+        slug: history.slug,
+        dias: historyDays(points, offers, dias, Date.now()).flatMap((d) => {
+          const best = bestOf(d, "cash");
+          return best ? [{ fecha: d.day, precioEfectivo: best.cash, tienda: best.storeName }] : [];
+        }),
+      });
     },
   );
 
