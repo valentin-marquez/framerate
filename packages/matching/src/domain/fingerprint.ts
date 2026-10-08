@@ -61,11 +61,33 @@ export function fingerprintFromIdentity({ identity, mpn, gtin }: IdentityFingerp
   return {
     category,
     brand,
-    mpn: normalizeMpn(mpn) ?? identity.mpn,
+    mpn: normalizeMpn(mpn) ?? normalizeMpn(identity.mpn),
     gtin: normalizeGtin(gtin),
     attributes,
     attributeKey: attributeKey(category, brand, attributes),
     tokens: distinctiveTokens(category, identity.name, brand),
+  };
+}
+
+/**
+ * Huella de un producto cuya fila es la verdad (creado o completado desde una identidad, spec §5.2): los atributos
+ * guardados no se recalculan desde el nombre. Los identificadores los pone quien carga el producto.
+ */
+export function storedFingerprint(product: {
+  category: Category;
+  name: string;
+  brand: string | null;
+  attributes: Attributes;
+  attributeKey: string | null;
+}): Fingerprint {
+  return {
+    category: product.category,
+    brand: product.brand,
+    mpn: null,
+    gtin: null,
+    attributes: product.attributes,
+    attributeKey: product.attributeKey,
+    tokens: distinctiveTokens(product.category, product.name, product.brand),
   };
 }
 

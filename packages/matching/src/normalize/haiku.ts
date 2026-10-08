@@ -30,7 +30,7 @@ export const usageUsd = (u: TokenUsage): number =>
   u.cacheReadTokens * USD_INPUT * 0.1 +
   u.cacheWriteTokens * USD_INPUT * 1.25;
 
-const usageOf = (m: Anthropic.Message): TokenUsage => ({
+export const usageOf = (m: Anthropic.Message): TokenUsage => ({
   inputTokens: m.usage.input_tokens,
   outputTokens: m.usage.output_tokens,
   cacheReadTokens: m.usage.cache_read_input_tokens ?? 0,
