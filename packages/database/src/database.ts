@@ -169,6 +169,9 @@ export interface ProductsTable {
   attribute_key: string | null;
   // Nombre normalizado para el índice de búsqueda (`searchText`); la escribe quien crea el producto.
   search: string | null;
+  // Modelo sacado del nombre por el modelo de lenguaje donde no hay clave de atributos (#98), y cuándo se preguntó.
+  model_ai: string | null;
+  model_ai_at: string | null;
   attributes: JsonText;
   specs: JsonText;
   specs_source: "extracted" | "opendb" | "manual" | null;

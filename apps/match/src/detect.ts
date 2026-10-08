@@ -31,30 +31,66 @@ interface GroupRow {
   name: string;
 }
 
-/** Productos con oferta activa cuya clave de atributos comparten con otro, agrupados por clave. */
-async function duplicateGroups(db: Db, limit: number): Promise<GroupRow[][]> {
-  const rows = await db.query
-    .selectFrom("products as p")
-    .select(["p.attribute_key as key", "p.id", "p.offer_count as offers", "p.category", "p.name"])
-    .where("p.attribute_key", "is not", null)
-    .where(sql<boolean>`exists (select 1 from listings l where l.product_id = p.id and l.is_active = 1)`)
-    .where(
-      sql<boolean>`p.attribute_key in (
-        select attribute_key from products where attribute_key is not null group by attribute_key having count(*) > 1
-      )`,
-    )
-    .orderBy("p.attribute_key")
-    .orderBy("p.offer_count", "desc")
-    .orderBy("p.id")
-    .execute();
+/** De dónde salió el grupo: cambia el piso de puntaje para proponer. */
+type Source = "attribute_key" | "model_ai";
+interface Group {
+  source: Source;
+  rows: GroupRow[];
+}
 
-  const groups = new Map<string, GroupRow[]>();
-  for (const row of rows as GroupRow[]) {
-    const group = groups.get(row.key) ?? [];
-    group.push(row);
-    groups.set(row.key, group);
-  }
-  return [...groups.values()].filter((g) => g.length > 1).slice(0, limit);
+/**
+ * Grupos de productos con oferta activa que podrían ser el mismo: los que comparten clave de atributos, y en las
+ * categorías que no tienen clave (gabinetes, coolers, ventiladores) los que comparten marca y el modelo que sacó el
+ * modelo de lenguaje (#98).
+ */
+async function duplicateGroups(db: Db, limit: number): Promise<Group[]> {
+  const activo = sql<boolean>`exists (select 1 from listings l where l.product_id = p.id and l.is_active = 1)`;
+  const [porClave, porModelo] = await Promise.all([
+    db.query
+      .selectFrom("products as p")
+      .select(["p.attribute_key as key", "p.id", "p.offer_count as offers", "p.category", "p.name"])
+      .where("p.attribute_key", "is not", null)
+      .where(activo)
+      .where(
+        sql<boolean>`p.attribute_key in (
+          select attribute_key from products where attribute_key is not null group by attribute_key having count(*) > 1
+        )`,
+      )
+      .orderBy("p.attribute_key")
+      .orderBy("p.offer_count", "desc")
+      .orderBy("p.id")
+      .execute(),
+    db.query
+      .selectFrom("products as p")
+      .select([
+        sql<string>`p.category || '|' || lower(p.brand) || '|' || lower(p.model_ai)`.as("key"),
+        "p.id",
+        "p.offer_count as offers",
+        "p.category",
+        "p.name",
+      ])
+      .where("p.model_ai", "is not", null)
+      .where("p.brand", "is not", null)
+      .where(activo)
+      .orderBy("key")
+      .orderBy("p.offer_count", "desc")
+      .orderBy("p.id")
+      .execute(),
+  ]);
+
+  const agrupar = (rows: GroupRow[], source: Source): Group[] => {
+    const groups = new Map<string, GroupRow[]>();
+    for (const row of rows) {
+      const group = groups.get(row.key) ?? [];
+      group.push(row);
+      groups.set(row.key, group);
+    }
+    return [...groups.values()].filter((g) => g.length > 1).map((rows) => ({ source, rows }));
+  };
+  return [...agrupar(porClave as GroupRow[], "attribute_key"), ...agrupar(porModelo as GroupRow[], "model_ai")].slice(
+    0,
+    limit,
+  );
 }
 
 /** ¿El par ya fue descartado por una persona, por el modelo o por una revisión rechazada? */
@@ -86,7 +122,10 @@ export async function proposeDuplicateReviews(
     result.skipped[reason] = (result.skipped[reason] ?? 0) + 1;
   };
 
-  for (const group of await duplicateGroups(db, input.maxGroups ?? 500)) {
+  for (const { source, rows: group } of await duplicateGroups(db, input.maxGroups ?? 500)) {
+    // Sin clave de atributos el puntaje tope es 0,45, así que el piso de la banda gris no aplica: lo que une al par
+    // es el modelo extraído, y quien decide es el modelo de lenguaje con su guarda.
+    const floor = source === "model_ai" ? 0 : 0.6;
     const [keeper, ...rest] = group;
     if (!keeper) continue;
     const [candidate] = await loadCandidates(db, [keeper.id], { mpn: null, gtin: null });
@@ -117,7 +156,7 @@ export async function proposeDuplicateReviews(
           continue;
         }
         // Bajo la banda gris no hay nada que proponer: el matching ya los considera productos distintos.
-        if (comparison.score < 0.6) {
+        if (comparison.score < floor) {
           count("puntaje_bajo");
           continue;
         }
@@ -141,7 +180,7 @@ export async function proposeDuplicateReviews(
             listingId: listing.id,
             candidateProductId: keeper.id,
             score: comparison.score,
-            evidence: { ...comparison.evidence, detector: "attribute_key", previousProductId: other.id },
+            evidence: { ...comparison.evidence, detector: source, previousProductId: other.id },
             now,
           });
         }

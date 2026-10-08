@@ -2,15 +2,20 @@ import { createDb } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import { proposeDuplicateReviews } from "./detect";
 import type { Env, VerifyMessage } from "./env";
+import { extractModels } from "./model";
+import { neuronsSpentSince } from "./reviews.repository";
 import { reviewsForToday, type VerifyConfig, verifyReview } from "./verify";
 
 /**
  * Worker que verifica las revisiones del Gatekeeper con Workers AI (#117). No recibe tráfico público:
  *  - scheduled: propone revisiones para los duplicados ya creados (#148), barre las pendientes sin veredicto y
- *    encola las que caben en el presupuesto diario de neurons.
+ *    encola las que caben en el presupuesto diario de neurons, y con lo que sobra saca el modelo del nombre donde
+ *    no hay clave de atributos (#98).
  *  - queue:     una revisión por mensaje, en serie, con reintentos y DLQ.
  */
 const log = createLogger({ feature: "match-verify" });
+
+const startOfDay = (now: Date) => `${now.toISOString().slice(0, 10)}T00:00:00.000Z`;
 
 const configOf = (env: Env): VerifyConfig => ({
   mode: env.MATCH_MODE === "live" || env.MATCH_MODE === "reject" ? env.MATCH_MODE : "shadow",
@@ -20,18 +25,34 @@ const configOf = (env: Env): VerifyConfig => ({
 export default {
   async scheduled(_controller, env) {
     const db = createDb(env.DB);
-    // Los duplicados ya creados se proponen antes del barrido, para que el modelo los juzgue en la misma corrida.
+    const config = configOf(env);
+    const now = new Date();
     const detect = env.MATCH_DETECT === "shadow" || env.MATCH_DETECT === "on" ? env.MATCH_DETECT : "off";
+
+    // 1. Saca el modelo del nombre donde no hay clave de atributos (#98). Va primero para que el detector ya lo vea
+    //    en esta misma corrida, pero con un tope de un tercio del presupuesto: juzgar pares es lo que limpia.
+    if (detect !== "off") {
+      const spent = await neuronsSpentSince(db, startOfDay(now));
+      const budget = Math.min(config.dailyNeurons / 3, config.dailyNeurons - spent);
+      if (budget > 0) {
+        const models = await extractModels(db, env.AI, { now, neuronBudget: budget, log });
+        if (models.asked > 0) log.info("models.extracted", { ...models });
+      }
+    }
+
+    // 2. Propone los duplicados ya creados, antes del barrido, para que el modelo los juzgue en la misma corrida.
     if (detect !== "off") {
       const found = await proposeDuplicateReviews(db, { now: new Date(), dryRun: detect === "shadow" });
       log.info("duplicates.detected", { mode: detect, ...found, samples: found.samples.slice(0, 5) });
     }
-    const ids = await reviewsForToday(db, configOf(env), new Date());
+
+    // 3. Barre las pendientes con lo que queda del presupuesto (`reviewsForToday` descuenta lo ya gastado).
+    const ids = await reviewsForToday(db, config, new Date());
     // sendBatch acepta hasta 100 mensajes por llamada.
     for (let i = 0; i < ids.length; i += 100) {
       await env.VERIFY_QUEUE.sendBatch(ids.slice(i, i + 100).map((reviewId) => ({ body: { reviewId } })));
     }
-    log.info("reviews.enqueued", { count: ids.length, ...configOf(env) });
+    log.info("reviews.enqueued", { count: ids.length, ...config });
   },
 
   async queue(batch, env) {

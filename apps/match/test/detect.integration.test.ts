@@ -128,6 +128,72 @@ test("en seco cuenta lo que haría sin escribir nada", async () => {
   expect(await all(db, "match_reviews")).toHaveLength(0);
 });
 
+test("en gabinetes agrupa por el modelo extraído, aunque el puntaje no llegue a la banda gris (#98)", async () => {
+  const store = await db.query
+    .insertInto("stores")
+    .values({ slug: "beta", name: "beta", url: "https://beta.cl", domain: "beta.cl", created_at: at })
+    .returning("id")
+    .executeTakeFirstOrThrow();
+  const caja = async (slug: string, name: string, modelo: string, offers: number) =>
+    (
+      await db.query
+        .insertInto("products")
+        .values({
+          slug,
+          name,
+          category: "case",
+          brand: "Cougar",
+          model_ai: modelo,
+          offer_count: offers,
+          created_at: at,
+          updated_at: at,
+        })
+        .returning("id")
+        .executeTakeFirstOrThrow()
+    ).id;
+  const oferta = async (externalId: string, productId: number, title: string) =>
+    (
+      await db.query
+        .insertInto("listings")
+        .values({
+          store_id: store.id,
+          product_id: productId,
+          external_id: externalId,
+          url: `https://beta.cl/p/${externalId}`,
+          title,
+          category: "case",
+          brand: "Cougar",
+          price_cash: 60_000,
+          price_card: 60_000,
+          in_stock: 1,
+          first_seen_at: at,
+          last_seen_at: at,
+          updated_at: at,
+        })
+        .returning("id")
+        .executeTakeFirstOrThrow()
+    ).id;
+
+  const grande = await caja("cougar-fv270-rgb", "Cougar FV270 RGB Negro (2 front, 1 back fans)", "FV270", 2);
+  const chico = await caja("cougar-fv270", "Cougar FV270 RGB Negro Mid Tower", "FV270", 1);
+  // Mismo modelo y otro color, los dos dicho: el veto de color lo separa sin preguntarle a nadie.
+  const blanco = await caja("cougar-fv270-white", "Cougar FV270 RGB White", "FV270", 1);
+  await oferta("a", grande, "Cougar FV270 RGB Negro (2 front, 1 back fans)");
+  await oferta("b", grande, "Cougar FV270 RGB Negro");
+  const suya = await oferta("c", chico, "Cougar FV270 RGB Negro Mid Tower");
+  await oferta("d", blanco, "Cougar FV270 RGB White");
+
+  const result = await proposeDuplicateReviews(db, { now });
+  expect(result.proposed).toBe(1);
+  expect(result.skipped["veto:attribute:color"]).toBe(1);
+  // Ojo: el veto necesita que LOS DOS lados digan el color. Si el que sobrevive no lo dice, el par va a la cola y
+  // decide el modelo con su guarda, que es justo para lo que está (#132).
+  const reviews = (await all(db, "match_reviews")) as Array<{ listing_id: number; evidence: string }>;
+  expect(reviews).toHaveLength(1);
+  expect(reviews[0]?.listing_id).toBe(suya);
+  expect(JSON.parse(reviews[0]?.evidence ?? "{}")).toMatchObject({ detector: "model_ai" });
+});
+
 test("un producto sin clave no se propone: no hay con qué agruparlo", async () => {
   const { product, listing } = await seed();
   const uno = await product("msi-gt-1030-a", "MSI GeForce GT 1030 4GB GDDR4", 1, null);

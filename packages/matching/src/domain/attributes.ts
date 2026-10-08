@@ -503,6 +503,16 @@ const WHITE = / (white|blanc[oa]s?|wh|ice|snow)(?= )/;
 // En coolers "Ice Force" es una línea, no un color.
 const WHITE_SAID = / (white|blanc[oa]s?|wh|snow)(?= )/;
 const BLACK_SAID = / (black|negr[oa]s?|bk)(?= )/;
+// Colores que sólo aparecen dicho (un gabinete rosado es otro SKU que el blanco). Sin esto, "FV150 RGB Pink" y
+// "FV150 RGB White" no tenían conflicto de color y nada los separaba (#98).
+const OTHER_COLORS: Array<[string, RegExp]> = [
+  ["pink", / (pink|ros[ao]s?)(?= )/],
+  ["red", / (red|roj[ao]s?)(?= )/],
+  ["blue", / (blue|azul(?:es)?)(?= )/],
+  ["gray", / (gr[ae]y|gris(?:es)?)(?= )/],
+  ["green", / (green|verdes?)(?= )/],
+  ["purple", / (purple|morad[ao]s?|lila)(?= )/],
+];
 // "80 Plus White" es una certificación.
 const CERTIFICATION_WHITE = / 80 ?\+? ?(?:plus )?white(?= )/g;
 
@@ -517,7 +527,9 @@ function withColor(profile: CategoryProfile, mode: "standard" | "said"): Categor
     extract(title) {
       const a = profile.extract(title);
       const t = prep(title).replace(CERTIFICATION_WHITE, " ");
-      if (mode === "standard") a.color = WHITE.test(t) ? "white" : "black";
+      const other = OTHER_COLORS.find(([, re]) => re.test(t))?.[0];
+      if (other) a.color = other;
+      else if (mode === "standard") a.color = WHITE.test(t) ? "white" : "black";
       else if (WHITE_SAID.test(t)) a.color = "white";
       else if (BLACK_SAID.test(t)) a.color = "black";
       return a;
