@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { AppEnv } from "@/app";
 import { currentActor } from "@/features/identity/middleware";
 import { actorLabel } from "@/features/identity/types";
-import { resolveMatchReview, splitListing } from "./reviews";
+import { mergeProductPair, resolveMatchReview, splitListing } from "./reviews";
 
 /** Cola de revisión humana del matching (montado bajo `/v1/admin`, protegido). */
 export const matchReviewRoutes = new Hono<AppEnv>()
@@ -33,6 +33,14 @@ export const matchReviewRoutes = new Hono<AppEnv>()
         decidedBy: actorLabel(currentActor(c)),
         now: new Date().toISOString(),
       }),
+    );
+  })
+  .post("/products/:a/merge/:b", async (c) => {
+    const { a, b } = z
+      .object({ a: z.coerce.number().int().positive(), b: z.coerce.number().int().positive() })
+      .parse(c.req.param());
+    return c.json(
+      await mergeProductPair(c.var.db, { a, b, decidedBy: actorLabel(currentActor(c)), now: new Date().toISOString() }),
     );
   })
   .post("/match-reviews/revert-ai", async (c) => {

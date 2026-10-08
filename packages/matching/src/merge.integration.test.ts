@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:tes
 import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { buildFingerprint } from "./domain/fingerprint";
-import { mergeSplitIdentity } from "./merge";
+import { mergeProductPair, mergeSplitIdentity } from "./merge";
 
 let d1: D1Database;
 let db: Db;
@@ -149,5 +149,66 @@ describe("fusión por identidad repartida", () => {
     expect(await mergeSplitIdentity(db, { listingId: id, fingerprint: fingerprint(), now: NOW })).toBeNull();
     const onlyMpn = buildFingerprint({ category: "ssd", title: TITLE, brand: "Kingston", mpn: MPN });
     expect(await mergeSplitIdentity(db, { listingId: id, fingerprint: onlyMpn, now: NOW })).toBeNull();
+  });
+});
+
+describe("fusión a mano de dos productos (#147)", () => {
+  test("junta los dos sin una oferta que lo pruebe: el de menos ofertas entra en el de más", async () => {
+    await seed();
+    const big = await product("kingston-kc600-1tb", TITLE, 2, { kind: "mpn", value: MPN });
+    const small = await product("kc600-1tb-otra", TITLE, 1, { kind: "gtin", value: GTIN });
+    await listing("a", big, 50_000, { mpn: MPN });
+    await listing("b", big, 48_000, { mpn: MPN });
+    await listing("c", small, 45_000, { gtin: GTIN });
+
+    // Al revés a propósito: la dirección la decide quién tiene más ofertas, no el orden de los argumentos.
+    const result = await mergeProductPair(db, { a: small, b: big, decidedBy: "user:ana", now: NOW });
+    expect(result).toEqual({ status: "merged", from: small, to: big });
+
+    expect((await all(db, "products")).map((p) => p.id)).toEqual([big]);
+    expect((await all(db, "listings")).every((l) => l.product_id === big)).toBe(true);
+    expect((await all(db, "product_identifiers")).map((i) => i.product_id)).toEqual([big, big]);
+    expect(await all(db, "product_slug_redirects")).toMatchObject([{ old_slug: "kc600-1tb-otra", product_id: big }]);
+    // Queda auditado quién lo pidió y sin oferta que lo pruebe.
+    const decision = (await all(db, "match_decisions")).at(-1) as { decided_by: string; evidence: string };
+    expect(decision.decided_by).toBe("user:ana");
+    expect(JSON.parse(decision.evidence)).toMatchObject({ mergedFrom: small, proofListingId: null });
+  });
+
+  test("respeta el veto entre los dos productos y el par ya rechazado", async () => {
+    await seed();
+    const big = await product("kc600-1tb", TITLE, 2, { kind: "mpn", value: MPN });
+    const otra = await product("kc600-512", "Kingston KC600 512GB SATA SSD", 1, { kind: "gtin", value: GTIN });
+    const suya = await listing("c", otra, 45_000, { gtin: GTIN });
+
+    const vetoed = await mergeProductPair(db, { a: big, b: otra, decidedBy: "user:ana", now: NOW });
+    expect(vetoed).toMatchObject({ status: "skipped", from: otra, to: big, reason: "veto:attribute:capacity" });
+
+    await db.query.updateTable("products").set({ name: TITLE }).where("id", "=", otra).execute();
+    await db.query
+      .insertInto("match_reviews")
+      .values({ listing_id: suya, candidate_product_id: big, score: 0.7, status: "rejected", created_at: NOW })
+      .execute();
+    expect(await mergeProductPair(db, { a: big, b: otra, decidedBy: "user:ana", now: NOW })).toEqual({
+      status: "skipped",
+      from: otra,
+      to: big,
+      reason: "rejected",
+    });
+    expect(await all(db, "products")).toHaveLength(2);
+  });
+
+  test("el mismo producto dos veces, o uno que no existe, no hace nada", async () => {
+    await seed();
+    const uno = await product("kc600", TITLE, 1, { kind: "mpn", value: MPN });
+    expect(await mergeProductPair(db, { a: uno, b: uno, decidedBy: "user:ana", now: NOW })).toMatchObject({
+      status: "skipped",
+      reason: "same_product",
+    });
+    expect(await mergeProductPair(db, { a: uno, b: 9999, decidedBy: "user:ana", now: NOW })).toMatchObject({
+      status: "skipped",
+      reason: "product_missing",
+    });
+    expect(await all(db, "products")).toHaveLength(1);
   });
 });

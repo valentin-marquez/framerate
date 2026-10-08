@@ -49,13 +49,15 @@ export async function mergeSplitIdentity(
   return { status: "merged", ...pair };
 }
 
-async function mergeBlocker(db: Db, fp: Fingerprint, a: number, b: number): Promise<string | null> {
-  const candidates = await loadCandidates(db, [a, b], fp);
+/** `fp` nula: la fusión no la prueba una oferta sino quien la pide, así que sólo se comparan los dos productos. */
+async function mergeBlocker(db: Db, fp: Fingerprint | null, a: number, b: number): Promise<string | null> {
+  const candidates = await loadCandidates(db, [a, b], fp ?? { mpn: null, gtin: null });
   const [pa, pb] = [a, b].map((id) => candidates.find((c) => c.productId === id)?.fingerprint);
   if (!pa || !pb) return "product_missing";
   // Entre productos el MPN/GTIN de cada uno sólo dice que tienen identificadores distintos, no que lo sean.
   const between = compare({ ...pa, mpn: null, gtin: null }, { ...pb, mpn: null, gtin: null }).vetoes;
-  const vetoes = [...compare(fp, pa).vetoes, ...compare(fp, pb).vetoes, ...between];
+  const offer = fp ? [...compare(fp, pa).vetoes, ...compare(fp, pb).vetoes] : [];
+  const vetoes = [...offer, ...between];
   if (vetoes.length > 0) return `veto:${[...new Set(vetoes)].join(",")}`;
 
   const rejected = await db.query.executeQuery(
@@ -73,12 +75,34 @@ async function mergeBlocker(db: Db, fp: Fingerprint, a: number, b: number): Prom
 }
 
 /**
+ * Fusiona dos productos cuando nadie puede probarlo con una oferta: lo prueba quien lo pide (#147). El de menos
+ * ofertas entra en el de más, y con las mismas ofertas gana el id menor, igual que la fusión por identificador.
+ * Respeta los mismos frenos: un veto entre los dos, un `forbid` o una revisión ya rechazada.
+ */
+export async function mergeProductPair(
+  db: Db,
+  input: { a: number; b: number; decidedBy: string; now: string },
+): Promise<MergeResult> {
+  const { a, b } = input;
+  if (a === b) return { status: "skipped", from: a, to: b, reason: "same_product" };
+  const rows = await db.query.selectFrom("products").select(["id", "offer_count"]).where("id", "in", [a, b]).execute();
+  const [ra, rb] = [a, b].map((id) => rows.find((r) => r.id === id));
+  if (!ra || !rb) return { status: "skipped", from: a, to: b, reason: "product_missing" };
+  const aWins = ra.offer_count > rb.offer_count || (ra.offer_count === rb.offer_count && a < b);
+  const pair = aWins ? { from: b, to: a } : { from: a, to: b };
+  const reason = await mergeBlocker(db, null, pair.from, pair.to);
+  if (reason) return { status: "skipped", ...pair, reason };
+  await mergeProducts(db, { ...pair, listingId: null, decidedBy: input.decidedBy, now: input.now });
+  return { status: "merged", ...pair };
+}
+
+/**
  * Todo lo que apunta a `from` pasa a `to` en una transacción y `from` se borra; su slug redirige a `to`. Cada oferta
  * que se muda queda auditada con `previousProductId`, así `splitListing` puede sacarla otra vez.
  */
 async function mergeProducts(
   db: Db,
-  input: { from: number; to: number; listingId: number; decidedBy: string; now: string },
+  input: { from: number; to: number; listingId: number | null; decidedBy: string; now: string },
 ) {
   const { from, to, now } = input;
   const evidence = JSON.stringify({ mergedFrom: from, previousProductId: from, proofListingId: input.listingId });

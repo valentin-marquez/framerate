@@ -136,6 +136,43 @@ describe("revisión de matches", () => {
     expect((await all(db, "match_reviews"))[0]?.status).toBe("pending");
   });
 
+  test("fusionar dos productos a mano los junta sin revisión de por medio", async () => {
+    const s = await seedReview();
+    // Sobrevive el que tiene más ofertas, sin importar el orden de los argumentos.
+    await db.query.updateTable("products").set({ offer_count: 1 }).where("id", "=", s.provisional).execute();
+    const res = await send(`/v1/admin/products/${s.candidate}/merge/${s.provisional}`, "POST");
+    expect(res.status).toBe(200);
+    expect((await res.json()) as object).toEqual({ from: s.candidate, to: s.provisional });
+    expect((await all(db, "products")).map((p) => p.id)).toEqual([s.provisional]);
+    expect(await all(db, "product_slug_redirects")).toMatchObject([
+      { old_slug: "corsair-vengeance-ddr5", product_id: s.provisional },
+    ]);
+  });
+
+  test("fusionar a mano con un veto da 409, y con un producto inexistente 404", async () => {
+    const s = await seedReview();
+    await db.query
+      .updateTable("products")
+      .set({ name: "Corsair Vengeance RGB 16GB DDR5" })
+      .where("id", "=", s.candidate)
+      .execute();
+    const vetoed = await send(`/v1/admin/products/${s.candidate}/merge/${s.provisional}`, "POST");
+    expect(vetoed.status).toBe(409);
+    expect(ApiErrorSchema.parse(await vetoed.json()).error.code).toBe("merge_blocked");
+    expect(await all(db, "products")).toHaveLength(2);
+
+    const missing = await send(`/v1/admin/products/${s.provisional}/merge/9999`, "POST");
+    expect(missing.status).toBe(404);
+    expect(ApiErrorSchema.parse(await missing.json()).error.code).toBe("product_not_found");
+  });
+
+  test("sin token de admin, fusionar da 401", async () => {
+    const s = await seedReview();
+    const res = await app.request(`/v1/admin/products/${s.candidate}/merge/${s.provisional}`, { method: "POST" }, env);
+    expect(res.status).toBe(401);
+    expect(await all(db, "products")).toHaveLength(2);
+  });
+
   test("resolver dos veces o una inexistente da error claro", async () => {
     const s = await seedReview();
     await send(`/v1/admin/reviews/${s.review}/reject`, "POST");
