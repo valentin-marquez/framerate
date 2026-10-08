@@ -1,11 +1,13 @@
 import { createDb } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
+import { proposeDuplicateReviews } from "./detect";
 import type { Env, VerifyMessage } from "./env";
 import { reviewsForToday, type VerifyConfig, verifyReview } from "./verify";
 
 /**
  * Worker que verifica las revisiones del Gatekeeper con Workers AI (#117). No recibe tráfico público:
- *  - scheduled: barre las pendientes sin veredicto y encola las que caben en el presupuesto diario de neurons.
+ *  - scheduled: propone revisiones para los duplicados ya creados (#148), barre las pendientes sin veredicto y
+ *    encola las que caben en el presupuesto diario de neurons.
  *  - queue:     una revisión por mensaje, en serie, con reintentos y DLQ.
  */
 const log = createLogger({ feature: "match-verify" });
@@ -17,7 +19,14 @@ const configOf = (env: Env): VerifyConfig => ({
 
 export default {
   async scheduled(_controller, env) {
-    const ids = await reviewsForToday(createDb(env.DB), configOf(env), new Date());
+    const db = createDb(env.DB);
+    // Los duplicados ya creados se proponen antes del barrido, para que el modelo los juzgue en la misma corrida.
+    const detect = env.MATCH_DETECT === "shadow" || env.MATCH_DETECT === "on" ? env.MATCH_DETECT : "off";
+    if (detect !== "off") {
+      const found = await proposeDuplicateReviews(db, { now: new Date(), dryRun: detect === "shadow" });
+      log.info("duplicates.detected", { mode: detect, ...found, samples: found.samples.slice(0, 5) });
+    }
+    const ids = await reviewsForToday(db, configOf(env), new Date());
     // sendBatch acepta hasta 100 mensajes por llamada.
     for (let i = 0; i < ids.length; i += 100) {
       await env.VERIFY_QUEUE.sendBatch(ids.slice(i, i + 100).map((reviewId) => ({ body: { reviewId } })));
