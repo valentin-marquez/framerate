@@ -36,7 +36,13 @@ export function ftsQuery(q: string): string | null {
   return tokens.map((t) => `"${t}"*`).join(" ");
 }
 
-/** Agregado por producto sobre ofertas visibles (activas y con stock). */
+/**
+ * Una oferta con revisión de matching pendiente no se lista: el matching dudó y le creó un producto propio que puede ser
+ * un duplicado. Sigue en su ficha (que no filtra) y vuelve a las listas cuando la revisión se resuelve.
+ */
+const notUnderReview = sql<boolean>`id NOT IN (SELECT listing_id FROM match_reviews WHERE status = 'pending')`;
+
+/** Agregado por producto sobre ofertas visibles (activas, con stock y sin revisión pendiente). */
 function offerAggregate(db: Db) {
   return db.query
     .selectFrom("listings")
@@ -49,6 +55,7 @@ function offerAggregate(db: Db) {
     .where("is_active", "=", 1)
     .where("in_stock", "=", 1)
     .where("product_id", "is not", null)
+    .where(notUnderReview)
     .groupBy("product_id")
     .as("agg");
 }
@@ -409,6 +416,7 @@ export async function categoryCounts(db: Db) {
     .where("is_active", "=", 1)
     .where("in_stock", "=", 1)
     .where("product_id", "is not", null)
+    .where(notUnderReview)
     .groupBy("category")
     .execute();
   return rows.map((r) => ({ category: r.category, products: Number(r.products) }));
