@@ -833,7 +833,7 @@
 }
 
 /*
- * Haz de luz (border beam) del buscador y de la entrada Cyber del riel: una línea en el borde inferior y su resplandor
+ * Haz de luz (border beam) del buscador: una línea en el borde inferior y su resplandor
  * hacia adentro, que van y vienen despacio. Pasivo: tenue en reposo, más presente con foco o mientras busca. Sólo
  * anima transform; la opacidad cambia con transición. Con movimiento reducido queda quieto al centro.
  */
@@ -868,29 +868,6 @@
     rgb(96 165 250 / 0.12) 55%,
     transparent
   );
-}
-/* Destacado (Cyber): más presente en reposo, con una segunda línea arriba que va en contra y los colores del evento. */
-.beam[data-variant="cyber"] {
-  opacity: 0.8;
-}
-:hover > .beam[data-variant="cyber"] {
-  opacity: 1;
-}
-.beam[data-variant="cyber"] > .beam-line {
-  background: linear-gradient(90deg, transparent, #2c65ef 25%, #f61c36 75%, transparent);
-}
-.beam[data-variant="cyber"] > .beam-glow {
-  background: radial-gradient(
-    ellipse 50% 100% at 50% 100%,
-    rgb(246 28 54 / 0.22),
-    rgb(44 101 239 / 0.14) 55%,
-    transparent
-  );
-}
-.beam > .beam-top {
-  top: 0;
-  bottom: auto;
-  animation-direction: alternate-reverse;
 }
 @keyframes beam {
   from {

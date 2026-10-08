@@ -122,16 +122,6 @@ export const BuscadorYFps: Story = {
   ),
 };
 
-export const CyberActivo: Story = {
-  name: "Navbar: en /cyber",
-  parameters: { path: "/cyber" },
-  render: () => (
-    <div className="min-h-screen">
-      <Navbar categories={categories} freshness={freshness} initialCollapsed={false} />
-    </div>
-  ),
-};
-
 export const Pie: Story = { render: () => <SiteFooter /> };
 
 /**

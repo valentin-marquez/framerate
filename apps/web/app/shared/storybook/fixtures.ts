@@ -195,7 +195,7 @@ export const specMatchProducts: ProductSummary[] = rowProducts
   .slice(0, 5)
   .map((p, i) => ({ ...p, specMatch: i < 2 ? "match" : "unknown" }));
 
-/** Bajas de precio para `/cyber` y la fila de la home. */
+/** Bajas de precio para la fila de la home. */
 export const dropProducts: ProductSummary[] = rowProducts.map((p, i) => ({
   ...p,
   referencePrice: Math.round((p.bestPrice ?? 0) * (1.25 - i * 0.03)),

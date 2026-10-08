@@ -3,8 +3,8 @@ import { Pagination, ProductGrid } from "~/features/explore/components";
 import { enterClass } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 import { type CatalogData, categoryFacets } from "../load-catalog";
-import { CategoryHeader, CyberHeader, SearchHeader } from "./catalog-headers";
-import { CategoryChips, FilterBar } from "./filter-bar";
+import { CategoryHeader, SearchHeader } from "./catalog-headers";
+import { FilterBar } from "./filter-bar";
 
 /** "memoria", "Wi-Fi", "PCIe": a media frase en minúscula, salvo siglas y nombres con mayúsculas internas. */
 const inSentence = (label: string) => (/^.[a-záéíóúñ ]+$/.test(label) ? label.toLowerCase() : label);
@@ -17,17 +17,12 @@ export function missingSpecLabel(category: string | null, spec: string[]) {
   return labels.length ? labels.join(" o ") : undefined;
 }
 
-const CYBER_EMPTY = {
-  title: "Todavía no hay bajas de precio",
-  text: "Comparamos el precio de hoy con el de los días anteriores. Si no aparece nada, prueba con otros filtros o vuelve en unos días.",
-};
-
 /**
  * Vista de catálogo: cabecera (foto de la categoría o la consulta buscada), barra de filtros fija y grilla
- * paginada. Con `deals` es `/cyber`; si no, con `category` es `/categoria/:slug` y sin ella, `/buscar`.
+ * paginada. Con `category` es `/categoria/:slug` y sin ella, `/buscar`.
  */
 export function CatalogView({ data }: { data: CatalogData }) {
-  const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited, deals } = data;
+  const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited } = data;
   const [params, setParams] = useSearchParams();
   const loading = useNavigation().state === "loading";
   const trending = new Set(trendingIds);
@@ -51,12 +46,7 @@ export function CatalogView({ data }: { data: CatalogData }) {
         </p>
       )}
 
-      {deals ? (
-        <>
-          <CyberHeader total={meta.total} />
-          {data.categories.length > 0 && <CategoryChips categories={data.categories} />}
-        </>
-      ) : category ? (
+      {category ? (
         <CategoryHeader
           category={category}
           total={brands.reduce((sum, b) => sum + b.count, 0) || meta.total}
@@ -82,7 +72,6 @@ export function CatalogView({ data }: { data: CatalogData }) {
           products={products}
           trendingIds={trending}
           missingSpec={missingSpecLabel(category, data.spec)}
-          empty={deals ? CYBER_EMPTY : undefined}
           className={cn(fresh && "t-results")}
         />
       </div>

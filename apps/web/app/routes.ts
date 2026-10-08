@@ -17,7 +17,7 @@ export default [
   route("explorar", "features/search/pages/redirect-old-explore.tsx"),
   route("categoria/:slug", "features/category/pages/category-page.tsx"),
   route("producto/:slug", "features/product/pages/product-details.tsx"),
-  route("cyber", "features/cyber/pages/cyber-page.tsx"),
+  route("cyber", "features/catalog/redirect-old-cyber.tsx"),
 
   // rutas protegidas (opcionales)
   route("perfil", "features/profile/pages/profile-page.tsx", { id: "profile-me" }),

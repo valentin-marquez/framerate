@@ -1,10 +1,4 @@
-import {
-  type BrandCount,
-  type CategoryItem,
-  type Facet,
-  type FacetDefinition,
-  facetValueLabel,
-} from "@framerate/contracts";
+import { type BrandCount, type Facet, type FacetDefinition, facetValueLabel } from "@framerate/contracts";
 import { IconCheck, IconChevronDown, IconX } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
@@ -293,32 +287,6 @@ export function FacetFilter({ facet }: { facet: Facet }) {
         </p>
       )}
     </Popover>
-  );
-}
-
-/** Filtro de categoría para vistas que mezclan categorías (`/cyber`). Cambiarla borra los filtros propios de la otra. */
-export function CategoryChips({ categories }: { categories: CategoryItem[] }) {
-  const { params, update } = useFilterParams();
-  const current = params.get("category");
-  const choose = (slug: string | null) =>
-    update({ category: slug, brand: null, min_price: null, max_price: null, spec: null });
-  return (
-    <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
-      <button type="button" onClick={() => choose(null)} className={cn(chip(!current), "shrink-0")}>
-        Todas
-      </button>
-      {categories.map((c) => (
-        <button
-          key={c.id}
-          type="button"
-          aria-pressed={c.slug === current}
-          onClick={() => choose(c.slug === current ? null : c.slug)}
-          className={cn(chip(c.slug === current), "shrink-0")}
-        >
-          {c.label}
-        </button>
-      ))}
-    </div>
   );
 }
 

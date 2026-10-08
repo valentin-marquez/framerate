@@ -28,7 +28,9 @@ export const FilaDeProductos: Story = {
 
 export const BajasDePrecio: Story = {
   name: "Fila de bajas de precio",
-  render: () => <ProductRow title="Bajas de precio" href="/cyber" more="Ver todas" products={dropProducts} />,
+  render: () => (
+    <ProductRow title="Bajas de precio" href="/buscar?sort=discount" more="Ver todas" products={dropProducts} />
+  ),
 };
 
 export const Tiendas: Story = { render: () => <StoresStrip stores={stores} /> };

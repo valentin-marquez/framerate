@@ -5,7 +5,6 @@ import {
   IconChevronRight,
   IconHome,
   IconLayoutGrid,
-  IconRosetteDiscount,
   IconSearch,
 } from "@tabler/icons-react";
 import { createContext, type ReactNode, use, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -109,47 +108,6 @@ function RailLink({
         {count !== undefined && (
           <span className="rail-label ml-auto text-muted-foreground text-xs tabular-nums">{count}</span>
         )}
-      </NavLink>
-    </RailHint>
-  );
-}
-
-/**
- * Entrada destacada de `/cyber`: tarjeta propia con el haz de luz del buscador (`.beam`, variante con los colores del
- * evento). Sin el logo de cyber.cl: es marca de la CCS y haría parecer que somos participante oficial. Es un enlace
- * directo hijo del riel, así la píldora de sección activa la mide igual que a los demás.
- */
-function CyberLink({ collapsed, onClick }: { collapsed?: boolean; onClick?: () => void }) {
-  const { target, select } = use(RailTarget);
-  const current = target === "/cyber";
-  return (
-    <RailHint label="Cyber Monday" collapsed={!!collapsed}>
-      <NavLink
-        to="/cyber"
-        prefetch="intent"
-        onClick={(e) => {
-          if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) select("/cyber");
-          onClick?.();
-        }}
-        aria-label={collapsed ? "Cyber Monday" : undefined}
-        data-current={current}
-        className={cn(
-          "relative flex items-center gap-3 overflow-hidden rounded-xl border border-border/70 transition-[color,background-color,scale] active:scale-[0.985]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          current ? "bg-secondary" : "bg-card/60 hover:bg-secondary/60",
-          "h-14 w-full px-2.5",
-        )}
-      >
-        <span aria-hidden="true" data-variant="cyber" className="beam pointer-events-none absolute inset-0 rounded-xl">
-          <span className="beam-glow" />
-          <span className="beam-line" />
-          <span className="beam-line beam-top" />
-        </span>
-        <IconRosetteDiscount className="size-[18px] shrink-0 text-[#2c65ef] dark:text-[#6b93f5]" stroke={1.75} />
-        <span className="rail-label flex min-w-0 flex-col">
-          <span className="truncate font-bold text-foreground text-sm tracking-tight">Cyber Monday</span>
-          <span className="truncate text-muted-foreground text-xs">5 al 7 de octubre</span>
-        </span>
       </NavLink>
     </RailHint>
   );
@@ -328,8 +286,6 @@ export function Navbar({
               icon={<IconLayoutGrid className="size-[18px] shrink-0" stroke={1.75} />}
             />
           </nav>
-
-          <CyberLink collapsed={!wide} />
         </RailGroup>
 
         {/* El alto mínimo hace que, en una ventana muy baja, scrollee el riel entero y no se aplaste la lista. */}
@@ -384,26 +340,11 @@ export function Navbar({
 
       <nav
         aria-label="Atajos"
-        className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-3 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         <NavLink to="/" end prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
           <IconHome className="size-5" stroke={1.75} />
           Inicio
-        </NavLink>
-        <NavLink to="/cyber" prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
-          {/* El destacado del evento también en el teléfono: la pastilla lleva el haz azul a rojo del riel. */}
-          <span className="relative -my-1 grid h-7 w-11 place-items-center overflow-hidden rounded-full border border-border/70 bg-card/60">
-            <span
-              aria-hidden="true"
-              data-variant="cyber"
-              className="beam pointer-events-none absolute inset-0 rounded-full"
-            >
-              <span className="beam-glow" />
-              <span className="beam-line" />
-            </span>
-            <IconRosetteDiscount className="relative size-[18px] text-[#2c65ef] dark:text-[#6b93f5]" stroke={1.75} />
-          </span>
-          Cyber
         </NavLink>
         <button type="button" className={tabClass(sheetOpen)} onClick={() => setSheetOpen(true)}>
           <IconCategory className="size-5" stroke={1.75} />
@@ -418,10 +359,7 @@ export function Navbar({
       <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
         {/* Hoja que sube desde abajo (transitions.dev, "panel reveal"): se desliza en vez de crecer desde el centro. */}
         <DialogContent className="top-auto bottom-0 max-h-[80dvh] w-full max-w-none translate-y-0 overflow-y-auto rounded-t-3xl rounded-b-none border-x-0 border-b-0 p-3 pb-8 zoom-in-100 zoom-out-100 slide-in-from-bottom-24 slide-out-to-bottom-24 lg:hidden">
-          <div className="px-1 pt-2 pb-3">
-            <CyberLink onClick={() => setSheetOpen(false)} />
-          </div>
-          <DialogTitle className="px-2.5 pb-3">Categorías</DialogTitle>
+          <DialogTitle className="px-2.5 pt-2 pb-3">Categorías</DialogTitle>
           {categories.map((c) => (
             <RailLink
               key={c.id}

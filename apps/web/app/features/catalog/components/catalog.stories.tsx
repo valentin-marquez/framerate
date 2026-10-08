@@ -1,15 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ProductGrid } from "~/features/explore/components";
-import {
-  brands,
-  categories,
-  dropProducts,
-  gpuFacets,
-  rowProducts,
-  specMatchProducts,
-} from "~/shared/storybook/fixtures";
+import { brands, gpuFacets, rowProducts, specMatchProducts } from "~/shared/storybook/fixtures";
 import type { CatalogData } from "../load-catalog";
-import { CategoryHeader, CyberHeader, SearchHeader } from "./catalog-headers";
+import { CategoryHeader, SearchHeader } from "./catalog-headers";
 import { CatalogView } from "./catalog-view";
 import { FacetFilter, FilterBar } from "./filter-bar";
 
@@ -94,11 +87,6 @@ export const SoloDesconocidos: Story = {
   ),
 };
 
-export const CabeceraCyber: Story = {
-  name: "Cabecera de Cyber",
-  render: () => <CyberHeader total={128} />,
-};
-
 const catalog = (overrides: Partial<CatalogData> = {}): CatalogData =>
   ({
     products: rowProducts,
@@ -106,55 +94,15 @@ const catalog = (overrides: Partial<CatalogData> = {}): CatalogData =>
     brands,
     priceRange: { min: 279_990, max: 939_990 },
     facets: [],
-    categories: [],
     trendingIds: [rowProducts[0].id],
     rateLimited: false,
     category: "tarjetas-de-video",
     search: null,
     brand: null,
     spec: [],
-    deals: false,
     defaultSort: "price_asc",
     ...overrides,
   }) as CatalogData;
-
-export const VistaCyber: Story = {
-  name: "Vista completa: Cyber",
-  parameters: { path: "/cyber" },
-  render: () => (
-    <CatalogView
-      data={catalog({
-        products: dropProducts,
-        meta: { page: 1, limit: 24, total: 8, totalPages: 1 },
-        category: null,
-        brands: [],
-        priceRange: null,
-        categories,
-        deals: true,
-        defaultSort: "discount",
-      })}
-    />
-  ),
-};
-
-export const VistaCyberVacia: Story = {
-  name: "Vista completa: Cyber sin bajas",
-  parameters: { path: "/cyber" },
-  render: () => (
-    <CatalogView
-      data={catalog({
-        products: [],
-        meta: { page: 1, limit: 24, total: 0, totalPages: 0 },
-        category: null,
-        brands: [],
-        priceRange: null,
-        categories,
-        deals: true,
-        defaultSort: "discount",
-      })}
-    />
-  ),
-};
 
 export const VistaConFacetas: Story = {
   name: "Vista completa: filtrada por especificación",

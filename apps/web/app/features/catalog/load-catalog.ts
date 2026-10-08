@@ -1,11 +1,4 @@
-import {
-  type CategoryItem,
-  categoryFromSlug,
-  type Facet,
-  facetsFor,
-  type ProductSort,
-  SpecFilterSchema,
-} from "@framerate/contracts";
+import { categoryFromSlug, type Facet, facetsFor, type ProductSort, SpecFilterSchema } from "@framerate/contracts";
 import { categoriesService } from "~/features/category/services/categories";
 import { productsService } from "~/features/product/services/products";
 import { isRateLimitError } from "~/shared/lib/api";
@@ -24,17 +17,16 @@ export function categoryFacets(category: string | null | undefined) {
 }
 
 /**
- * Datos de la vista de catálogo. La comparten `/buscar` (todo el catálogo, con búsqueda), `/categoria/:slug` (una
- * categoría) y `/cyber` (`deals`: sólo bajas de precio, de todas las categorías): los filtros salen de la URL, así
- * cada vista se puede compartir.
+ * Datos de la vista de catálogo. La comparten `/buscar` (todo el catálogo, con búsqueda) y `/categoria/:slug` (una
+ * categoría): los filtros salen de la URL, así cada vista se puede compartir.
  */
-export async function loadCatalog(request: Request, category?: string, { deals = false } = {}) {
+export async function loadCatalog(request: Request, category?: string) {
   const params = new URL(request.url).searchParams;
   const search = params.get("q")?.trim() || undefined;
   const brand = params.get("brand") || undefined;
   const minPrice = number(params.get("min_price"));
   const maxPrice = number(params.get("max_price"));
-  const defaultSort: CatalogSort = deals ? "discount" : "price_asc";
+  const defaultSort: CatalogSort = "price_asc";
   const sortParam = params.get("sort");
   const sort = CATALOG_SORTS.find((s) => s === sortParam) ?? defaultSort;
   const page = Math.max(1, Number(params.get("page")) || 1);
@@ -50,8 +42,6 @@ export async function loadCatalog(request: Request, category?: string, { deals =
     brands: [] as Awaited<ReturnType<typeof categoriesService.getBrands>>,
     priceRange: null as Awaited<ReturnType<typeof categoriesService.getPriceRange>> | null,
     facets: [] as Facet[],
-    /** Sólo en `/cyber`, para filtrar por categoría. */
-    categories: [] as CategoryItem[],
     trendingIds: [] as number[],
     rateLimited: false,
   };
@@ -60,13 +50,12 @@ export async function loadCatalog(request: Request, category?: string, { deals =
     search: search ?? null,
     brand: brand ?? null,
     spec,
-    deals,
     defaultSort,
   };
-  const shared = { brand, search, min_price: minPrice, max_price: maxPrice, spec, deals };
+  const shared = { brand, search, min_price: minPrice, max_price: maxPrice, spec };
 
   try {
-    const [{ items: products, total }, brands, priceRange, facets, categories, trending] = await Promise.all([
+    const [{ items: products, total }, brands, priceRange, facets, trending] = await Promise.all([
       productsService.getAll({ ...shared, page, limit: PAGE_SIZE, category, sort }),
       category
         ? categoriesService.getBrands(category, shared).catch(() => empty.brands)
@@ -75,12 +64,6 @@ export async function loadCatalog(request: Request, category?: string, { deals =
       category && keys.size > 0
         ? categoriesService.getFacets(category, shared).catch(() => empty.facets)
         : Promise.resolve(empty.facets),
-      deals
-        ? categoriesService.getAll().then(
-            (all) => all.filter((c) => c.productCount > 0),
-            () => empty.categories,
-          )
-        : Promise.resolve(empty.categories),
       productsService.getTrending(40).catch(() => ({ ids: [] as number[] })),
     ]);
     const meta = { page, limit: PAGE_SIZE, total, totalPages: Math.ceil(total / PAGE_SIZE) };
@@ -92,7 +75,6 @@ export async function loadCatalog(request: Request, category?: string, { deals =
       brands,
       priceRange,
       facets,
-      categories,
       trendingIds: trending.ids,
     };
   } catch (error) {
