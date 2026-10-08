@@ -187,6 +187,8 @@ export interface ProductsTable {
   reference_price: number | null;
   views_7d: Defaulted<number>;
   prices_updated_at: string | null;
+  // Cuándo se vinculó su primera oferta visible (0022); null = nace oculto hasta pasar el pipeline.
+  published_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -241,6 +243,69 @@ export interface ListingsTable {
   first_seen_at: string;
   last_seen_at: string;
   updated_at: string;
+  // Pipeline de normalización (0022).
+  norm_hash: string | null;
+  norm_status: Defaulted<NormStatus>;
+  norm_at: string | null;
+  source_text: string | null;
+  visible: Defaulted<SqlBool>;
+  crawl_category: string | null;
+}
+
+export type NormStatus = "legacy" | "pending" | "normalized" | "linked" | "fallback" | "failed";
+
+export interface ListingIdentityTable {
+  listing_id: number;
+  version: number;
+  input_hash: string;
+  model: string;
+  category: string;
+  brand: string | null;
+  name: string;
+  mpn: string | null;
+  confidence: "high" | "medium" | "low";
+  identity: JsonText;
+  identity_raw: JsonText;
+  specs: JsonText;
+  specs_source: JsonText;
+  created_at: string;
+}
+
+export interface AiUsageTable {
+  id: Generated<number>;
+  at: string;
+  worker: "normalize" | "match";
+  purpose: "normalize" | "judge" | "extract";
+  model: string;
+  listing_id: number | null;
+  review_id: number | null;
+  input_tokens: Defaulted<number>;
+  cache_read_tokens: Defaulted<number>;
+  cache_write_tokens: Defaulted<number>;
+  output_tokens: Defaulted<number>;
+  usd: Defaulted<number>;
+  ms: number | null;
+  status: "ok" | "invalid" | "refusal" | "rate_limited" | "no_credit" | "error";
+  error: string | null;
+}
+
+export interface PipelineStateTable {
+  id: number;
+  paused_until: string | null;
+  updated_at: string;
+}
+
+export interface MatchShadowTable {
+  id: Generated<number>;
+  listing_id: number;
+  version: number;
+  kind: "link" | "review" | "new_product";
+  product_id: number | null;
+  score: number;
+  vetoes: JsonText;
+  current_product_id: number | null;
+  agrees: SqlBool;
+  created_at: string;
 }
 
 export interface PricePointsTable {
@@ -307,6 +372,7 @@ export interface QuarantineTable {
   reason: string;
   payload: string;
   created_at: string;
+  norm_hash: string | null;
 }
 
 export type ClickSource =
@@ -620,6 +686,10 @@ export interface Database {
   match_overrides: MatchOverridesTable;
   crawl_runs: CrawlRunsTable;
   quarantine: QuarantineTable;
+  listing_identity: ListingIdentityTable;
+  ai_usage: AiUsageTable;
+  pipeline_state: PipelineStateTable;
+  match_shadow: MatchShadowTable;
 }
 
 export type ListingRow = Selectable<ListingsTable>;
