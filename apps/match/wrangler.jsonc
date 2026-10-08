@@ -29,7 +29,10 @@
     // para el asistente (#110). Un par cuesta ~$0,0006, así que alcanza de sobra. El tope de cada día es lo que queda
     // del ciclo repartido entre los días que faltan, y el ciclo se renueva el día del pago del plan.
     "ANTHROPIC_MONTHLY_USD": "30",
-    "ANTHROPIC_CYCLE_DAY": "17"
+    "ANTHROPIC_CYCLE_DAY": "17",
+    // Vínculo desde la identidad de Haiku (#153). off: ignora la cola. shadow: sólo escribe `match_shadow` (qué haría
+    // contra el vínculo actual). live: vincula, crea productos con el nombre canónico y los publica.
+    "PIPELINE_LINK": "shadow"
   },
 
   "d1_databases": [
@@ -52,6 +55,14 @@
         "max_concurrency": 3,
         "max_retries": 3,
         "dead_letter_queue": "framerate-match-verify-dlq"
+      },
+      {
+        "queue": "framerate-link",
+        "max_batch_size": 10,
+        // En serie: dos ofertas del mismo producto nuevo en paralelo crearían dos productos (spec §1).
+        "max_concurrency": 1,
+        "max_retries": 3,
+        "dead_letter_queue": "framerate-link-dlq"
       }
     ]
   }
