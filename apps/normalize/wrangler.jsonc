@@ -1,0 +1,50 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "framerate-normalize",
+  "account_id": "3f50a4a123ebcbcb917dababff3ef8b5",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "keep_vars": true,
+  "observability": { "enabled": true },
+
+  // Este Worker NO recibe tráfico público ni tiene Cron: sólo consume la cola `framerate-normalize` (#153).
+  // Primera vez: bunx wrangler queues create framerate-normalize, framerate-normalize-dlq, framerate-link y
+  // framerate-link-dlq. La clave de Anthropic va aparte: bunx wrangler secret put ANTHROPIC_API_KEY.
+
+  "vars": {
+    // off: acusa los mensajes sin llamar a Haiku. shadow y live normalizan igual (la sombra del vínculo la decide
+    // `framerate-match` con el mensaje de `framerate-link`).
+    "NORMALIZE_MODE": "shadow",
+    // Del crédito mensual de Anthropic, la parte de la normalización (el juez de `framerate-match` tiene la suya).
+    // El tope de cada día es lo que queda del ciclo repartido entre los días que faltan; el ciclo se renueva el día
+    // del pago del plan. Una oferta cuesta ~$0,0005.
+    "ANTHROPIC_MONTHLY_USD": "20",
+    "ANTHROPIC_CYCLE_DAY": "17"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "framerate",
+      // Debe ser el MISMO id que en packages/database y apps/match.
+      "database_id": "6537cc10-7e7b-4dba-9c01-ce80e6a840eb"
+    }
+  ],
+
+  "queues": {
+    "producers": [{ "binding": "LINK_QUEUE", "queue": "framerate-link" }],
+    "consumers": [
+      {
+        "queue": "framerate-normalize",
+        // Una oferta por invocación: con 5 en paralelo son 5 llamadas a Haiku a la vez (1,3 a 9,7 s cada una).
+        "max_batch_size": 1,
+        "max_concurrency": 5,
+        // Las esperas por tope o por pausa consumen un intento cada hora: 6 cubren 6 h antes de la DLQ.
+        "max_retries": 6,
+        "dead_letter_queue": "framerate-normalize-dlq"
+      }
+    ]
+  }
+}

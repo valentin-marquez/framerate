@@ -24,6 +24,7 @@
     "dev": "turbo run dev",
     "dev:ingest": "turbo run dev --filter=ingest",
     "dev:match": "turbo run dev --filter=match",
+    "dev:normalize": "turbo run dev --filter=normalize",
     "dev:server": "turbo run dev --filter=server",
     "dev:web": "turbo run dev --filter=web",
     "lint": "turbo run biome:lint",
