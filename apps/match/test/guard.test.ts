@@ -34,6 +34,22 @@ describe("acceptGuard", () => {
     ).toBe(false);
   });
 
+  test("procesador sin gráficos integrados en un solo lado", () => {
+    const intel = (t: string) => side(t, "Intel");
+    expect(
+      ok(intel("Intel Core Ultra 5 225 4.9GHz LGA1851"), intel("Intel Core Ultra 5 225 LGA 1851, 65W, sin Video")),
+    ).toBe(false);
+    expect(ok(intel("Intel Core i5-12400"), intel("Intel Core i5-12400F"))).toBe(false);
+    expect(ok(intel("Intel Core i5-12400F"), intel("Intel Core i5 12400F sin gráficos"))).toBe(true);
+    expect(ok(intel("Intel Core i5-13600KF"), intel("Intel Core i5 13600KF"))).toBe(true);
+  });
+
+  test("año del modelo en un solo lado", () => {
+    const cougar = (t: string) => side(t, "Cougar");
+    expect(ok(cougar("Cougar Atlas 650 80 Plus Bronze"), cougar("Cougar Atlas 650 (2024) 80 Plus Bronze"))).toBe(false);
+    expect(ok(cougar("Cougar Atlas 650 (2024)"), cougar("Fuente Cougar ATLAS 650 2024"))).toBe(true);
+  });
+
   test("el mismo MPN en los dos lados salta la comparación de sufijos", () => {
     expect(
       ok(side("PRIME B760M-K", "ASUS", "90MB1H00-M0EAY0"), side("PRIME B760M-K D4 WIFI", "ASUS", "90MB1H00-M0EAY0")),

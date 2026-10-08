@@ -24,6 +24,8 @@ const SYSTEM =
   "A manufacturer can publish more than one code for the same product, for example a part number " +
   "(90YV0M10-M0AA00) and a model code (PRIME-RTX5070-O12G). Two different codes are a conflict only when they " +
   "name different variants.\n" +
+  'Text such as "sin video" or "sin gráficos" marks a processor without integrated graphics (Intel F models): if ' +
+  "only one listing says it, they are different products. A model year such as (2024) marks a revision, too.\n" +
   "Answer unsure when the titles do not say enough to tell. Write the reason in Spanish, in one short sentence.";
 
 const SCHEMA = {

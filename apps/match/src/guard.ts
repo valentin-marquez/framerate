@@ -29,6 +29,15 @@ function ssdPcie(title: string): string | null {
     : null;
 }
 
+// Procesadores sin gráficos integrados: Intel los marca con F (12400F, 225F) y algunas tiendas sólo escriben "sin video"
+// en el título. Si un lado lo dice y el otro no, es otro procesador (225 contra 225F, en el gold).
+function noGraphics(title: string): boolean {
+  return /\bsin (video|gr[aá]fic)|\b(without|no) graphics\b|\b\d{3,5}k?f\b/i.test(title);
+}
+
+// El año del modelo marca una revisión (Cougar Atlas 650 contra Atlas 650 (2024), en el gold).
+const modelYear = (title: string) => title.match(/\b20[12]\d\b/)?.[0] ?? null;
+
 function generation(title: string): string | null {
   const m = title.toLowerCase().match(/\b(?:ddr|d)([45])\b/);
   return m ? `ddr${m[1]}` : null;
@@ -59,6 +68,9 @@ export function acceptGuard(listing: Side, candidate: Side): Guard {
   const intel = INTEL_BOTH_DDR.test(`${listing.title} ${candidate.title}`.toLowerCase());
   const [pa, pb] = [ssdPcie(listing.title), ssdPcie(candidate.title)];
   if (pa !== pb) diff.push(`pcie${pa ?? pb}`);
+  if (noGraphics(listing.title) !== noGraphics(candidate.title)) diff.push("sin gráficos");
+  const [ya, yb] = [modelYear(listing.title), modelYear(candidate.title)];
+  if (!ya !== !yb) diff.push(ya ?? yb ?? "");
   if (ga !== gb && (intel || (ga && gb))) diff.push(ga ?? gb ?? "");
   return diff.length ? { ok: false, reason: `consta en un solo lado: ${diff.join(" ")}` } : { ok: true };
 }
