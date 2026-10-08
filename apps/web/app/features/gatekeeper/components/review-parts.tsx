@@ -10,7 +10,15 @@ export interface ReviewEvidence {
   attributeKeyMatch?: boolean;
   sameImage?: boolean;
   detector?: "attribute_key" | "model_ai";
-  ai?: { pAB?: number; pBA?: number; verdict?: string; guard?: string; model?: string };
+  ai?: {
+    pAB?: number;
+    pBA?: number;
+    verdict?: string;
+    guard?: string;
+    model?: string;
+    /** Segunda opinión de Clef cuando los dos órdenes del primer modelo se contradicen (#148). */
+    tiebreak?: { pAB?: number; pBA?: number; same?: boolean };
+  };
 }
 
 export type Verdict = "accept" | "reject" | "pending" | "guard" | "none";
@@ -102,6 +110,7 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
 /** Lo que el matching vio, en chips, para no tener que leer el JSON. */
 export function EvidenceChips({ evidence, score }: { evidence: ReviewEvidence; score: number }) {
   const guard = evidence.ai?.guard;
+  const tiebreak = evidence.ai?.tiebreak;
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <Chip>similitud {score.toFixed(2)}</Chip>
@@ -112,6 +121,11 @@ export function EvidenceChips({ evidence, score }: { evidence: ReviewEvidence; s
       {evidence.sameImage === true && <Chip>misma foto</Chip>}
       {evidence.detector === "model_ai" && <Chip>agrupado por modelo</Chip>}
       {guard && <Chip tone="warn">guarda: {guard}</Chip>}
+      {tiebreak && (
+        <Chip tone={tiebreak.same ? "ok" : "neutral"}>
+          desempate {Math.round(Math.min(tiebreak.pAB ?? 0, tiebreak.pBA ?? 0) * 100)}%
+        </Chip>
+      )}
     </div>
   );
 }
