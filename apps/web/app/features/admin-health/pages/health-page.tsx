@@ -69,7 +69,26 @@ export default function HealthPage({ loaderData }: Route.ComponentProps) {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Estado de los sistemas</h1>
-          <p className="text-sm text-muted-foreground">Actualizado {formatDateTime(health.generatedAt)}</p>
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-medium",
+                total === 0 && "bg-success/15 text-success",
+                total > 0 && errors === 0 && "bg-warn/20 text-foreground",
+                errors > 0 && "bg-destructive/10 text-destructive",
+              )}
+            >
+              {total === 0 && <IconCircleCheck className="size-4" aria-hidden />}
+              {total === 0 ? "Todo en orden" : `${total} ${total === 1 ? "cosa necesita" : "cosas necesitan"} atención`}
+            </span>
+            {total > 0 && (
+              <span className="text-muted-foreground">
+                {errors} con error, {total - errors}{" "}
+                {total - errors === 1 ? "atrasada o esperando" : "atrasadas o esperando"}
+              </span>
+            )}
+            <span className="text-muted-foreground">Actualizado {formatDateTime(health.generatedAt)}</span>
+          </p>
         </div>
         <Button
           variant="outline"
@@ -85,28 +104,6 @@ export default function HealthPage({ loaderData }: Route.ComponentProps) {
           Actualizar
         </Button>
       </header>
-
-      <div
-        className={cn(
-          "flex items-center gap-3 rounded-2xl px-5 py-4",
-          total === 0 && "bg-success/15 text-success",
-          total > 0 && errors === 0 && "bg-warn/20 text-foreground",
-          errors > 0 && "bg-destructive/10 text-destructive",
-        )}
-      >
-        {total === 0 && <IconCircleCheck className="size-6 shrink-0" />}
-        <div>
-          <p className="font-semibold">
-            {total === 0 ? "Todo en orden" : `${total} ${total === 1 ? "cosa necesita" : "cosas necesitan"} atención`}
-          </p>
-          {total > 0 && (
-            <p className="text-sm opacity-80">
-              {errors} con error, {total - errors}{" "}
-              {total - errors === 1 ? "atrasada o esperando" : "atrasadas o esperando"}
-            </p>
-          )}
-        </div>
-      </div>
 
       <section aria-label="Sistemas" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {health.systems.map((s) => (

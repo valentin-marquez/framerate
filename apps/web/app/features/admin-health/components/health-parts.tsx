@@ -1,5 +1,14 @@
 import type { HealthIncident, HealthSystem, HealthSystemStatus } from "@framerate/contracts";
-import { IconAlertTriangle, IconCircleX } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconBan,
+  IconBuildingStore,
+  IconCircleX,
+  IconFlag,
+  IconGitMerge,
+  IconLifebuoy,
+  IconWorldSearch,
+} from "@tabler/icons-react";
 import { Link } from "react-router";
 import { cn } from "~/shared/lib/utils";
 import { formatDuration, timeAgo } from "../utils/time";
@@ -20,6 +29,15 @@ const SYSTEM_CAPTIONS: Record<HealthSystem, string> = {
   support: "tickets abiertos",
   moderation: "reportes abiertos",
   stores: "congeladas o con reclamo caído",
+};
+
+const SYSTEM_ICONS: Record<HealthSystem, typeof IconWorldSearch> = {
+  scraping: IconWorldSearch,
+  quarantine: IconBan,
+  matching: IconGitMerge,
+  support: IconLifebuoy,
+  moderation: IconFlag,
+  stores: IconBuildingStore,
 };
 
 export type Tone = "ok" | "warning" | "error";
@@ -56,6 +74,7 @@ interface SystemCardProps {
 
 /** Una tarjeta por sistema: su cifra y si necesita atención. Al pulsarla filtra las incidencias de ese sistema. */
 export function SystemCard({ system, tone, selected, to }: SystemCardProps) {
+  const Icon = SYSTEM_ICONS[system.id];
   return (
     <Link
       to={to}
@@ -67,8 +86,11 @@ export function SystemCard({ system, tone, selected, to }: SystemCardProps) {
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium">{SYSTEM_LABELS[system.id]}</span>
-        <span className={cn("size-2 rounded-full", DOT[tone])} aria-hidden />
+        <span className="flex min-w-0 items-center gap-2">
+          <Icon size={16} className="shrink-0 text-muted-foreground" aria-hidden />
+          <span className="truncate text-sm font-medium">{SYSTEM_LABELS[system.id]}</span>
+        </span>
+        <span className={cn("size-2 shrink-0 rounded-full", DOT[tone])} aria-hidden />
       </div>
       <div>
         <p className="text-3xl font-semibold tabular-nums tracking-tight">{system.value}</p>

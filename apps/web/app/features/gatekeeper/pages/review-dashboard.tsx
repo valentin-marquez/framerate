@@ -1,40 +1,47 @@
-import type { MatchReviewsResponse } from "@framerate/contracts";
-import { data, useFetcher } from "react-router";
+import type { MatchReviewItem, MatchReviewsResponse } from "@framerate/contracts";
+import { data, Link, useFetcher, useSearchParams } from "react-router";
 import { requireRole } from "~/features/auth/services/auth.server";
+import { Button } from "~/shared/components/primitives/button";
 import { ApiError, api } from "~/shared/lib/api";
+import { cn } from "~/shared/lib/utils";
+import {
+  describeListing,
+  EvidenceChips,
+  ProbabilityMeter,
+  type ReviewEvidence,
+  Side,
+  VERDICT_LABELS,
+  type Verdict,
+  verdictOf,
+} from "../components/review-parts";
 import type { Route } from "./+types/review-dashboard";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 100;
+const ORDER: Verdict[] = ["accept", "guard", "pending", "reject", "none"];
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "Gatekeeper - Framerate Admin" }, { name: "description", content: "Revisión de matches dudosos" }];
+  return [{ title: "Gatekeeper - Framerate Admin" }, { name: "robots", content: "noindex" }];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireRole(request, "moderator");
-
   try {
     const { items } = await api.get<MatchReviewsResponse>("/v1/admin/reviews", {
       params: { limit: String(PAGE_SIZE) },
     });
-    return {
-      queueDepth: items.length >= PAGE_SIZE ? `${PAGE_SIZE}+` : String(items.length),
-      currentItem: items[0] ?? null,
-    };
+    return { items, truncated: items.length >= PAGE_SIZE };
   } catch (error) {
     console.error("Error fetching review queue:", error);
-    return { queueDepth: "?", currentItem: null };
+    return { items: [] as MatchReviewItem[], truncated: false };
   }
 }
 
 export async function action({ request }: Route.ActionArgs) {
   await requireRole(request, "moderator");
-
   const formData = await request.formData();
   const reviewId = Number(formData.get("reviewId"));
   const decision = formData.get("intent") === "reject" ? "reject" : "accept";
-  if (!Number.isInteger(reviewId) || reviewId <= 0) return data({ success: false, error: "Missing ID" });
-
+  if (!Number.isInteger(reviewId) || reviewId <= 0) return data({ success: false, error: "Falta el id" });
   try {
     await api.post(`/v1/admin/reviews/${reviewId}/${decision}`, {});
     return data({ success: true });
@@ -43,122 +50,135 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-const money = (value: number) => `$${value.toLocaleString("es-CL")}`;
-
-export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
-  const { queueDepth, currentItem } = loaderData;
+/** Una revisión: los dos lados, qué dijo el modelo y los dos botones. */
+function ReviewCard({ item }: { item: MatchReviewItem }) {
   const fetcher = useFetcher();
-
-  if (!currentItem) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
-        <h1 className="text-3xl font-semibold text-foreground mb-4">Todo al día 🎉</h1>
-        <p className="text-muted-foreground">No hay matches pendientes de revisión.</p>
-      </div>
-    );
-  }
-
-  const { listing, candidate } = currentItem;
+  const evidence = item.evidence as ReviewEvidence;
+  const busy = fetcher.state !== "idle";
 
   return (
-    <div className="min-h-screen bg-background p-8 pb-28">
-      <header className="mb-8 flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-foreground">Gatekeeper</h1>
-        <div className="bg-card px-4 py-2 rounded-lg shadow-sm">
-          <span className="text-muted-foreground text-sm">Pendientes:</span>
-          <span className="ml-2 font-mono font-semibold text-primary">{queueDepth}</span>
+    <li
+      className={cn(
+        "rounded-2xl border border-border/60 bg-card p-4 transition-opacity",
+        busy && "pointer-events-none opacity-50",
+      )}
+    >
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start">
+        <Side
+          label="Oferta"
+          title={item.listing.title}
+          subtitle={describeListing(item)}
+          imageUrl={item.listing.imageUrl}
+          href={item.listing.url}
+        />
+        <Side
+          label="Producto candidato"
+          title={item.candidate.name}
+          subtitle={[item.candidate.brand, item.candidate.category].filter(Boolean).join("   ")}
+          imageUrl={item.candidate.imageUrl}
+          href={`/producto/${item.candidate.slug}`}
+        />
+        <div className="w-full space-y-3 lg:w-56">
+          <ProbabilityMeter evidence={evidence} />
+          <div className="flex gap-2">
+            {(["reject", "accept"] as const).map((intent) => (
+              <fetcher.Form key={intent} method="post" className="flex-1">
+                <input type="hidden" name="reviewId" value={item.id} />
+                <Button
+                  name="intent"
+                  value={intent}
+                  type="submit"
+                  size="sm"
+                  variant={intent === "accept" ? "default" : "secondary"}
+                  disabled={busy}
+                  className="w-full"
+                >
+                  {intent === "accept" ? "El mismo" : "Distintos"}
+                </Button>
+              </fetcher.Form>
+            ))}
+          </div>
         </div>
+      </div>
+      <div className="mt-3 border-border/50 border-t pt-3">
+        <EvidenceChips evidence={evidence} score={item.score} />
+      </div>
+    </li>
+  );
+}
+
+export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
+  const { items, truncated } = loaderData;
+  const [params] = useSearchParams();
+  const active = ORDER.find((v) => v === params.get("veredicto"));
+
+  const counts = new Map<Verdict, number>();
+  for (const item of items) {
+    const v = verdictOf(item.evidence as ReviewEvidence);
+    counts.set(v, (counts.get(v) ?? 0) + 1);
+  }
+  const shown = active ? items.filter((i) => verdictOf(i.evidence as ReviewEvidence) === active) : items;
+
+  const chipUrl = (verdict: Verdict | null) => {
+    const next = new URLSearchParams(params);
+    if (verdict) next.set("veredicto", verdict);
+    else next.delete("veredicto");
+    const query = next.toString();
+    return query ? `?${query}` : ".";
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+      <header className="space-y-1">
+        <h1 className="font-semibold text-3xl tracking-tight md:text-4xl">Gatekeeper</h1>
+        <p className="text-muted-foreground text-sm">
+          {items.length === 0
+            ? "Nada pendiente."
+            : `${truncated ? `${PAGE_SIZE}+` : items.length} ${items.length === 1 ? "revisión pendiente" : "revisiones pendientes"}. El modelo ya decidió las claras; acá quedan las que necesitan ojo.`}
+        </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-        <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">Oferta entrante</h2>
-          <div className="space-y-4">
-            <div>
-              <span className="text-xs text-muted-foreground">Título en la tienda</span>
-              <p className="text-lg font-medium text-foreground">{listing.title}</p>
-            </div>
-            <div className="flex gap-6">
-              <div>
-                <span className="text-xs text-muted-foreground">Tienda</span>
-                <p className="font-mono text-sm">{listing.store.name}</p>
-              </div>
-              <div>
-                <span className="text-xs text-muted-foreground">Precio</span>
-                <p className="font-mono text-sm">{money(listing.priceCash)}</p>
-              </div>
-              {listing.mpn ? (
-                <div>
-                  <span className="text-xs text-muted-foreground">MPN</span>
-                  <p className="font-mono text-sm">{listing.mpn}</p>
-                </div>
-              ) : null}
-            </div>
-            <a
-              href={listing.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary underline underline-offset-2"
-            >
-              Ver en la tienda
-            </a>
-            <div className="p-4 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-sm rounded-md border border-amber-500/20">
-              ⚠ Coincidencia dudosa (similitud: {currentItem.score})
-            </div>
-          </div>
+      {items.length > 0 && (
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          <Chip to={chipUrl(null)} active={!active}>
+            Todas {items.length}
+          </Chip>
+          {ORDER.filter((v) => counts.get(v)).map((v) => (
+            <Chip key={v} to={chipUrl(v)} active={active === v}>
+              {VERDICT_LABELS[v]} {counts.get(v)}
+            </Chip>
+          ))}
         </div>
+      )}
 
-        <div className="bg-card p-6 rounded-xl shadow-sm border border-border ring-2 ring-primary/10">
-          <h2 className="text-sm font-semibold text-primary uppercase tracking-wide mb-4">Producto sugerido</h2>
-          <div className="space-y-4">
-            <div>
-              <span className="text-xs text-muted-foreground">Nombre</span>
-              <p className="text-lg font-medium text-foreground">{candidate.name}</p>
-            </div>
-            <div className="flex gap-6">
-              <div>
-                <span className="text-xs text-muted-foreground">Marca</span>
-                <p className="text-sm">{candidate.brand ?? "—"}</p>
-              </div>
-              <div>
-                <span className="text-xs text-muted-foreground">Categoría</span>
-                <p className="text-sm">{candidate.category}</p>
-              </div>
-            </div>
-            <div>
-              <span className="text-xs text-muted-foreground">Evidencia</span>
-              <pre className="text-xs bg-secondary p-2 rounded border border-border mt-1 overflow-x-auto">
-                {JSON.stringify(currentItem.evidence, null, 2)}
-              </pre>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 flex justify-center gap-4 shadow-lg">
-        {(["reject", "accept"] as const).map((intent) => (
-          <fetcher.Form key={intent} method="post">
-            <input type="hidden" name="reviewId" value={currentItem.id} />
-            <button
-              name="intent"
-              value={intent}
-              type="submit"
-              disabled={fetcher.state !== "idle"}
-              className={
-                intent === "accept"
-                  ? "px-8 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 shadow-md transition-colors"
-                  : "px-8 py-3 bg-destructive/10 text-destructive font-medium rounded-lg hover:bg-destructive/15 transition-colors"
-              }
-            >
-              {fetcher.state !== "idle"
-                ? "Procesando..."
-                : intent === "accept"
-                  ? "Es el mismo producto"
-                  : "Son productos distintos"}
-            </button>
-          </fetcher.Form>
-        ))}
-      </div>
+      {shown.length === 0 ? (
+        <p className="rounded-2xl bg-secondary/40 px-4 py-12 text-center text-muted-foreground text-sm">
+          {items.length === 0 ? "Todo al día: no hay revisiones pendientes." : "Ninguna revisión con ese filtro."}
+        </p>
+      ) : (
+        <ul className="space-y-3">
+          {shown.map((item) => (
+            <ReviewCard key={item.id} item={item} />
+          ))}
+        </ul>
+      )}
     </div>
+  );
+}
+
+function Chip({ to, active, children }: { to: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      to={to}
+      preventScrollReset
+      replace
+      aria-current={active ? "true" : undefined}
+      className={cn(
+        "shrink-0 rounded-full px-3 py-1.5 font-medium text-sm transition-colors",
+        active ? "bg-foreground text-background" : "bg-secondary/60 text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {children}
+    </Link>
   );
 }
