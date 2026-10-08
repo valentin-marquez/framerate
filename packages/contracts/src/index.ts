@@ -10,6 +10,8 @@ export * from "./ingest";
 export * from "./match-review";
 export * from "./mcp";
 export * from "./moderation";
+export * from "./normalization";
+export * from "./pipeline";
 export * from "./price-history";
 export * from "./quotes";
 export * from "./specs";
