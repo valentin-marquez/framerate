@@ -9,7 +9,8 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
 
 - **`apps/server`**: Worker de la API HTTP (`api.framerate.cl`, Hono + D1), organizado por feature: `catalog`,
   `identity` (Better Auth + Discord; ver `docs/identity.md`), `stores`, `claims` (ver `docs/stores.md`),
-  `users-admin`, `crawl-admin` y `match-review`. No tiene Cron ni colas.
+  `users-admin`, `crawl-admin`, `match-review` y `mcp` (servidor MCP de sólo lectura en `mcp.framerate.cl`). No tiene
+  Cron ni colas.
 - **`apps/ingest`**: Worker de scraping (Cron + Queues + R2 + RPC): adaptadores de tienda, normalización y
   matching. No tiene HTTP público; `server` le pide crawls por RPC tipado.
 - **`apps/match`**: Worker que verifica las revisiones del Gatekeeper con Workers AI (Cron + Queue, sin HTTP).

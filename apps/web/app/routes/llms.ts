@@ -22,6 +22,7 @@ export function loader({ request }: LoaderFunctionArgs) {
     "",
     "## Para agentes",
     "La home, cada ficha de producto y cada categoría responden en markdown si la petición lleva `Accept: text/markdown` (misma URL).",
+    "Para buscar, comparar precios entre tiendas y ver el historial de precios hay un servidor MCP público y de sólo lectura, sin autenticación: `https://mcp.framerate.cl` (HTTP streamable).",
   ];
 
   sections.push("", "## Categorías");

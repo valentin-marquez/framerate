@@ -15,6 +15,7 @@ import { mergeRoutes } from "@/features/identity/merge.routes";
 import { credentialedCors, optionalUser, requireStaff, requireUser } from "@/features/identity/middleware";
 import type { Actor, SessionUser } from "@/features/identity/types";
 import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
+import { handleMcp } from "@/features/mcp/mcp.server";
 import {
   moderationAdminRoutes,
   reportsRoutes,
@@ -54,6 +55,7 @@ export type AppEnv = {
  *   /v1/reports   reportes de contenido (sesión). /v1/translation-feedback: sugerencias de traducción.
  *   /v1/*         lectura pública (catálogo, perfiles públicos), con caché en el edge.
  *   /v1/admin/*   personal: moderador o superior (sesión), o el token de servicio.
+ *   mcp.*         todo el host es el servidor MCP de sólo lectura (#125), sin CORS: sus clientes no son navegadores.
  *
  * Todo CORS es sólo para el origen de la web y con cookies: el navegador envía la sesión en cada llamada y no
  * la acepta junto a `Access-Control-Allow-Origin: *`.
@@ -79,6 +81,13 @@ export function createApp() {
       "Server-Timing",
       `d1;dur=${Math.round(d1Ms)};desc="${queries} viajes", app;dur=${Date.now() - start}`,
     );
+  });
+
+  app.use("*", async (c, next) => {
+    if (!new URL(c.req.url).hostname.startsWith("mcp.")) return next();
+    await rateLimit(c, async () => {
+      c.res = await handleMcp(c.req.raw, c.var.db, c.env);
+    });
   });
 
   app.get("/health", (c) => c.json({ status: "ok" }));

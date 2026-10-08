@@ -19,6 +19,7 @@
     "@framerate/emails": "workspace:*",
     "@framerate/kit": "workspace:*",
     "@framerate/matching": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "better-auth": "^1.7.6",
     "hono": "^4.13.12",
     "kysely": "^0.29.6",

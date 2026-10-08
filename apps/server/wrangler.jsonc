@@ -11,8 +11,12 @@
 
   // Este Worker sólo atiende HTTP. Ni Cron ni colas ni R2 de scraping: eso es de apps/ingest.
 
-  // Dominio propio: Cloudflare crea el DNS y el certificado.
-  "routes": [{ "pattern": "api.framerate.cl", "custom_domain": true }],
+  // Dominios propios: Cloudflare crea el DNS y el certificado. En mcp.framerate.cl todo el host es el servidor MCP
+  // (#125); un subdominio aparte permite reglas de rate limiting y WAF propias.
+  "routes": [
+    { "pattern": "api.framerate.cl", "custom_domain": true },
+    { "pattern": "mcp.framerate.cl", "custom_domain": true }
+  ],
 
   // Públicas y fijas por despliegue. En local mandan las de .dev.vars.
   "vars": {
