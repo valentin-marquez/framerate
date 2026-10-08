@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Db } from "@framerate/database";
-import { all, createTestD1, resetD1 } from "@framerate/database/testing";
+import { createTestD1, resetD1 } from "@framerate/database/testing";
 import { silentLogger } from "@framerate/kit";
 import { billingCycle, dailyCapUsd, HAIKU_MODEL } from "@/haiku";
 import { MODEL, pSameFrom, verdictFor } from "@/judge";
