@@ -12,11 +12,10 @@ import {
   reviewsToVerify,
   saveAiEvidence,
 } from "./reviews.repository";
-import { needsTiebreak, tiebreak } from "./tiebreak";
 
-// Estimación por par para repartir el presupuesto: 2,5 de Gemma medidos, más el desempate con Clef (16) que sale
-// en una fracción de los pares. El tope diario se respeta igual porque el barrido mide lo gastado antes de encolar.
-const NEURONS_PER_PAIR = 6;
+// Estimación por par para repartir el presupuesto: 2,5 de Gemma medidos, con margen. El tope diario se respeta igual
+// porque el barrido mide lo gastado antes de encolar.
+const NEURONS_PER_PAIR = 3;
 
 export interface HaikuConfig {
   mode: "shadow" | "live";
@@ -76,19 +75,8 @@ export async function verifyReview(db: Db, ai: Ai, reviewId: number, config: Ver
     at: now.toISOString(),
   };
 
-  // Gemma que se contradice según el orden no es ruido: en el set etiquetado, 5 de 17 de esos pares son productos
-  // distintos. Clef los separa bien, así que desempata, y sólo para aceptar (ver tiebreak.ts).
-  if (evidence.verdict === "pending" && needsTiebreak(evidence.pAB, evidence.pBA) && !cached?.tiebreak) {
-    const second = await tiebreak(ai, pair.listing, pair.candidate);
-    evidence.neurons += second.neurons;
-    evidence.tiebreak = { model: second.model, pAB: second.pAB, pBA: second.pBA, same: second.same };
-    if (second.same) evidence.verdict = "accept";
-  } else if (cached?.tiebreak) {
-    evidence.tiebreak = cached.tiebreak;
-    if (cached.tiebreak.same) evidence.verdict = "accept";
-  }
-
-  // Lo que Gemma y Clef no decidieron: tercera opinión de Haiku (#149), una sola vez por par y dentro del tope diario.
+  // Lo que Gemma no decidió: segunda opinión de Haiku (#149), una sola vez por par y dentro del tope diario. Reemplaza
+  // al desempate con Clef, que costaba 16 neurons por par y resolvía menos.
   let decidedBy = `ai:${MODEL}`;
   if (config.haiku && evidence.verdict === "pending") {
     const h = config.haiku;

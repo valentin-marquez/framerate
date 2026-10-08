@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { Side, Verdict } from "./judge";
 
 /**
- * Tercera opinión con Claude Haiku 5.5 para lo que Gemma y Clef dejan pendiente (#149). La API de Claude no entrega
+ * Segunda opinión con Claude Haiku 5.5 para lo que Gemma deja pendiente (#149). La API de Claude no entrega
  * logprobs, así que no reemplaza al juez con umbral medido: sólo entra cuando éste no decidió, y pregunta en los dos
  * órdenes como Gemma (acepta o rechaza sólo si coinciden).
  */

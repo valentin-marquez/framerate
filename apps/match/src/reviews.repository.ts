@@ -2,7 +2,6 @@ import type { Db } from "@framerate/database";
 import { sql } from "kysely";
 import type { HaikuOpinion } from "./haiku";
 import type { Judgement, Side } from "./judge";
-import { DISAGREE_OVER } from "./tiebreak";
 
 /** Lo que `framerate-match` guarda en `match_reviews.evidence.ai` (sin migración). */
 export interface AiEvidence extends Judgement {
@@ -12,9 +11,7 @@ export interface AiEvidence extends Judgement {
   vetoes?: string[];
   /** Motivo por el que `acceptGuard` frenó una aceptación del modelo. */
   guard?: string;
-  /** Desempate con Clef cuando los dos órdenes de Gemma se contradicen (#148). */
-  tiebreak?: { model: string; pAB: number; pBA: number; same: boolean };
-  /** Tercera opinión de Haiku cuando Gemma y Clef no decidieron (#149). En sombra no cambia `verdict`. */
+  /** Segunda opinión de Haiku cuando Gemma no decidió (#149). En sombra no cambia `verdict`. */
   haiku?: HaikuOpinion & { mode: "shadow" | "live"; at: string };
 }
 
@@ -22,9 +19,8 @@ export interface AiEvidence extends Judgement {
  * Revisiones pendientes que todavía no tienen veredicto de este modelo en este modo. Pasar de shadow a reject o live las
  * vuelve a incluir: el consumidor reusa la probabilidad guardada y sólo aplica la decisión.
  *
- * También entran las que el modelo dejó pendientes y nunca pasaron por el desempate (#148): si no, el desempate sólo
- * alcanzaría a las revisiones nuevas y las que ya están en la cola se quedarían ahí para siempre. Por lo mismo, con Haiku
- * encendido entran las que siguen pendientes sin su opinión en el modo actual (#149).
+ * Con Haiku encendido también entran las que Gemma dejó pendientes sin su opinión en el modo actual (#149): si no, sólo
+ * alcanzaría a las revisiones nuevas y las que ya estaban en la cola se quedarían ahí para siempre.
  */
 export async function reviewsToVerify(
   db: Db,
@@ -41,11 +37,6 @@ export async function reviewsToVerify(
       sql<boolean>`(
         json_extract(evidence, '$.ai.model') IS NOT ${model}
         OR json_extract(evidence, '$.ai.mode') IS NOT ${mode}
-        OR (
-          json_extract(evidence, '$.ai.verdict') = 'pending'
-          AND json_extract(evidence, '$.ai.tiebreak') IS NULL
-          AND abs(json_extract(evidence, '$.ai.pAB') - json_extract(evidence, '$.ai.pBA')) > ${DISAGREE_OVER}
-        )
         OR (
           ${haiku ? 1 : 0} = 1
           AND json_extract(evidence, '$.ai.verdict') = 'pending'

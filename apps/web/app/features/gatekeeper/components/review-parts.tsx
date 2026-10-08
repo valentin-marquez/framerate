@@ -16,9 +16,7 @@ export interface ReviewEvidence {
     verdict?: string;
     guard?: string;
     model?: string;
-    /** Segunda opinión de Clef cuando los dos órdenes del primer modelo se contradicen (#148). */
-    tiebreak?: { pAB?: number; pBA?: number; same?: boolean };
-    /** Tercera opinión de Haiku sobre lo que los dos anteriores dejaron pendiente (#149). */
+    /** Segunda opinión de Haiku sobre lo que el primer modelo dejó pendiente (#149). */
     haiku?: { verdict?: string; reason?: string; mode?: "shadow" | "live" };
   };
 }
@@ -118,7 +116,6 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
 /** Lo que el matching vio, en chips, para no tener que leer el JSON. */
 export function EvidenceChips({ evidence, score }: { evidence: ReviewEvidence; score: number }) {
   const guard = evidence.ai?.guard;
-  const tiebreak = evidence.ai?.tiebreak;
   const haiku = evidence.ai?.haiku;
   return (
     <div className="space-y-1.5">
@@ -131,11 +128,6 @@ export function EvidenceChips({ evidence, score }: { evidence: ReviewEvidence; s
         {evidence.sameImage === true && <Chip>misma foto</Chip>}
         {evidence.detector === "model_ai" && <Chip>agrupado por modelo</Chip>}
         {guard && <Chip tone="warn">guarda: {guard}</Chip>}
-        {tiebreak && (
-          <Chip tone={tiebreak.same ? "ok" : "neutral"}>
-            desempate {Math.round(Math.min(tiebreak.pAB ?? 0, tiebreak.pBA ?? 0) * 100)}%
-          </Chip>
-        )}
         {haiku?.verdict && (
           <Chip tone={haiku.verdict === "accept" ? "ok" : haiku.verdict === "reject" ? "warn" : "neutral"}>
             {HAIKU_LABELS[haiku.verdict] ?? "Haiku"}
