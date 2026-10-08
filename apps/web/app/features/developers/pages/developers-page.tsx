@@ -35,7 +35,8 @@ const CLIENTS: Client[] = [
       "En claude.ai o en la app de escritorio, abre Configuración y luego Conectores.",
       "Elige Agregar conector personalizado.",
       <>
-        Ponle de nombre Framerate y pega la URL <code className="font-mono text-sm">{MCP_URL}</code>.
+        Ponle de nombre Framerate, pega la URL <code className="font-mono text-sm">{MCP_URL}</code> y deja la
+        autenticación en Sin inicio de sesión.
       </>,
       "Actívalo en el chat desde el menú de herramientas.",
     ],
