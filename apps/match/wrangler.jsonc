@@ -19,7 +19,7 @@
     // Parte de los 10.000 neurons gratis al día de Workers AI que puede usar este Worker.
     "MATCH_DAILY_NEURONS": "5000",
     // off: nada. shadow: cuenta los productos duplicados que ya existen sin escribir. on: les abre revisión (#148).
-    "MATCH_DETECT": "shadow"
+    "MATCH_DETECT": "on"
   },
 
   "d1_databases": [
