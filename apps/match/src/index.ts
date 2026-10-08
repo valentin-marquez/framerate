@@ -31,11 +31,13 @@ export default {
 
     // 1. Saca el modelo del nombre donde no hay clave de atributos (#98). Va primero para que el detector ya lo vea
     //    en esta misma corrida, pero con un tope de un tercio del presupuesto: juzgar pares es lo que limpia.
+    let spentNow = 0;
     if (detect !== "off") {
       const spent = await neuronsSpentSince(db, startOfDay(now));
       const budget = Math.min(config.dailyNeurons / 3, config.dailyNeurons - spent);
       if (budget > 0) {
         const models = await extractModels(db, env.AI, { now, neuronBudget: budget, log });
+        spentNow = models.neurons;
         if (models.asked > 0) log.info("models.extracted", { ...models });
       }
     }
@@ -47,7 +49,8 @@ export default {
     }
 
     // 3. Barre las pendientes con lo que queda del presupuesto (`reviewsForToday` descuenta lo ya gastado).
-    const ids = await reviewsForToday(db, config, new Date());
+    // La extracción no deja rastro en `match_reviews`, así que su gasto se descuenta a mano.
+    const ids = await reviewsForToday(db, config, new Date(), spentNow);
     // sendBatch acepta hasta 100 mensajes por llamada.
     for (let i = 0; i < ids.length; i += 100) {
       await env.VERIFY_QUEUE.sendBatch(ids.slice(i, i + 100).map((reviewId) => ({ body: { reviewId } })));

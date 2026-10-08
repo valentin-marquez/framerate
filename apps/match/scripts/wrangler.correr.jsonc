@@ -1,0 +1,13 @@
+{
+  "name": "match-correr-ahora",
+  "account_id": "3f50a4a123ebcbcb917dababff3ef8b5",
+  "main": "correr-ahora.ts",
+  "compatibility_date": "2026-01-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "dev": { "port": 8795 },
+  "ai": { "binding": "AI" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "framerate", "database_id": "6537cc10-7e7b-4dba-9c01-ce80e6a840eb" }
+  ],
+  "queues": { "producers": [{ "queue": "framerate-match-verify", "binding": "VERIFY_QUEUE" }] }
+}

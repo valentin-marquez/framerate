@@ -208,3 +208,10 @@ describe("reviewsForToday", () => {
     expect(await reviewsForToday(db, { mode: "shadow", dailyNeurons: 2 }, now)).toEqual([]);
   });
 });
+
+test("el gasto de esta corrida que todavía no está en las revisiones también descuenta del tope", async () => {
+  const s = await seedReview();
+  // Con 10 neurons caben 3 pares (3 por par), pero si ya se gastaron 8 en extraer modelos no cabe ninguno.
+  expect(await reviewsForToday(db, { mode: "live", dailyNeurons: 10 }, now)).toEqual([s.review]);
+  expect(await reviewsForToday(db, { mode: "live", dailyNeurons: 10 }, now, 8)).toEqual([]);
+});

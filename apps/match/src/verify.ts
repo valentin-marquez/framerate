@@ -14,10 +14,14 @@ export interface VerifyConfig {
   dailyNeurons: number;
 }
 
-/** Cuántas revisiones caben hoy en el presupuesto, y cuáles. */
-export async function reviewsForToday(db: Db, config: VerifyConfig, now: Date): Promise<number[]> {
+/**
+ * Cuántas revisiones caben hoy en el presupuesto, y cuáles. `spentExtra` son los neurons gastados en esta misma
+ * corrida que todavía no están en `match_reviews` (la extracción de modelos de #98): sin descontarlos, el tope
+ * diario se pasaría.
+ */
+export async function reviewsForToday(db: Db, config: VerifyConfig, now: Date, spentExtra = 0): Promise<number[]> {
   const startOfDay = `${now.toISOString().slice(0, 10)}T00:00:00.000Z`;
-  const left = config.dailyNeurons - (await neuronsSpentSince(db, startOfDay));
+  const left = config.dailyNeurons - (await neuronsSpentSince(db, startOfDay)) - spentExtra;
   const pairs = Math.floor(left / NEURONS_PER_PAIR);
   if (pairs <= 0) return [];
   return reviewsToVerify(db, MODEL, config.mode, pairs);
