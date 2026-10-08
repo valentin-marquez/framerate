@@ -217,6 +217,53 @@ describe("atributos por categoría", () => {
     });
   });
 
+  // Títulos reales de producción que se quedaban sin clave de atributos (#146).
+  test("GPU: líneas y ediciones que la lista no conocía, y la VRAM dentro del MPN de ASUS", () => {
+    const line = (title: string) => PROFILES.gpu.extract(title).line;
+    expect(line("MSI GeForce RTX 5070 Ti Frieren OC 16GB GDDR7")).toBe("frieren");
+    expect(line("MSI GT 1030 4GB DDR4 LP OC")).toBe("lp");
+    expect(line("MSI GeForce GT 1030 4GB GDDR4 OC Low Profile (912-V812-231)")).toBe("lp");
+    expect(line("MSI GeForce RTX 5070 World of Warcraft Midnight Void OC 12GB GDDR7")).toBe(
+      "world of warcraft midnight void",
+    );
+    expect(line("ASUS GeForce RTX 5060 Ti T1 OC 8GB GDDR7")).toBe("t1");
+    expect(line("ASUS GTX1650 4Gb GDDR6 PHOENIX")).toBe("phoenix");
+    expect(line("MSI GeForce RTX 5090 32G LIGHTNING Z")).toBe("lightning");
+    expect(line("Sparkle Intel Arc A380 ELF 6GB GDDR6 PCIe 4.0 ITX")).toBe("elf");
+    expect(line("Zotac Gaming GeForce GT 730 Zone 4GB GDDR3")).toBe("zone");
+    expect(line("EVGA RTX 3070 TI FTW3 ULTRA GAMING 8GB DDR6")).toBe("ftw3");
+    // Typos de la tienda.
+    expect(line("ASROCK RX 6800 XT PHATOM GAMING D 16GB OC")).toBe("phantom gaming");
+    expect(line("ASRock RX 9070 XT Changeller 16GB")).toBe("challenger");
+    // "GAMING" a secas no es una línea: ZOTAC GAMING es la marca.
+    expect(line("ZOTAC GAMING GeForce RTX 3050 Twin Edge")).toBe("twin edge");
+    // La VRAM sólo está en el MPN, como ya pasaba con el OC.
+    expect(PROFILES.gpu.extract("ASUS Dual RTX3060 O12G V2").vram).toBe(12);
+    expect(PROFILES.gpu.extract("AMD PRIME RX9070XT O16G").vram).toBe(16);
+    expect(PROFILES.gpu.extract("ASUS GTX1650 SUPER Overclocked 4GB Phoenix").oc).toBe(true);
+  });
+
+  test("SSD y HDD: 'Sata3' pegado, RPM de servidor y el SAS que no es SATA", () => {
+    expect(PROFILES.ssd.extract('PATRIOT P210 SSD 256GB SATA3 2.5"').interface).toBe("sata");
+    expect(PROFILES.hdd.extract("HPE 1TB SATA 7.2K LFF RW HDD")).toMatchObject({ rpm: 7200, interface: "sata" });
+    expect(PROFILES.hdd.extract('ThinkSystem SR630 V4 2.5" 2.4TB 10K SAS 12Gb Hot Swap 512e HDD')).toMatchObject({
+      rpm: 10_000,
+      interface: "sas",
+    });
+    expect(PROFILES.hdd.extract('Toshiba S300 2TB 3.5" 5400RMP SATA3 128MB para/Videovigilancia').rpm).toBe(5400);
+  });
+
+  test("marcas que faltaban en el vocabulario", () => {
+    expect(detectBrand("AMD AM5 ASRok B850M - XWiFi R2.0 mATX")).toBe("ASRock");
+    expect(detectBrand("SSD Copius 512 GB M.2 NVMe PCIe 3.0")).toBe("Copious");
+    expect(detectBrand("16GB DDR5 5600MHz SO-DIMM CL46 Non-ECC 1.1v 262p - MICRON")).toBe("Micron");
+    expect(detectBrand("FSP Hydro K PRO 500W ATX 80+ Bronce No-Modular HP2-500")).toBe("FSP");
+    expect(detectBrand("ADK-A750S Aurion 750W Certificada 80 Plus Bronze (AURPO75080BR)")).toBe("Aurion");
+    expect(detectBrand("HEX Gaming 16GB DDR4 3200MHz")).toBe("HEX");
+    // Kston es una marca propia, no un alias de Kingston.
+    expect(detectBrand("M.2 2280 Nvme 512gb Kston K765 Realtek Rts5766dl Oem")).toBe("Kston");
+  });
+
   test("una coma pegada al valor no esconde el atributo", () => {
     expect(PROFILES.gpu.extract("MSI RTX 5060 Ti 16GB, Ventus 2X").vram).toBe(16);
     expect(PROFILES.motherboard.extract("Placa Madre ASUS B650M, WiFi").chipset).toBe("b650");

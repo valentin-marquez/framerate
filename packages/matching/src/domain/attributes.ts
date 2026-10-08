@@ -91,9 +91,24 @@ const GPU_LINES = [
   "merc",
   "mech",
   "xc",
+  "ftw3",
   "ftw",
   "vanguard",
   "founders edition",
+  // Ediciones y líneas vistas en títulos reales de tiendas chilenas (#146). Sin "gaming" a secas: es genérico y
+  // "ZOTAC GAMING" es la marca, no la línea.
+  "world of warcraft midnight void",
+  "world of warcraft midnight light",
+  "frieren",
+  "mlg",
+  "lightning",
+  "phoenix",
+  "t1",
+  "ko",
+  "elf",
+  "zone",
+  "eco",
+  "lp",
 ] as const;
 
 const gpu: CategoryProfile = {
@@ -120,15 +135,20 @@ const gpu: CategoryProfile = {
       const suffix = { ts: "ti super", t: "ti", s: "super", "0": "" }[gv[2]];
       a.chipset = ["rtx", `${gv[1]}0`, suffix].filter(Boolean).join(" ");
     }
-    const vram = t.match(/ (\d{1,2}) ?gb?(?= |d)/);
-    if (vram?.[1]) {
-      const gb = Number(vram[1]);
+    const vramText = t.match(/ (\d{1,2}) ?gb?(?= |d)/)?.[1] ?? t.match(/ o(\d{1,2})gb?(?= )/)?.[1];
+    if (vramText) {
+      const gb = Number(vramText);
       if (gb >= 2 && gb <= 48) a.vram = gb;
     }
-    const line = firstMatch(GPU_LINES, t);
+    // Typos de línea y "low profile" escrito largo; sólo para buscar la línea.
+    const lineText = t
+      .replace(/ phatom /g, " phantom ")
+      .replace(/ changeller /g, " challenger ")
+      .replace(/ low profile /g, " lp ");
+    const line = firstMatch(GPU_LINES, lineText);
     if (line) a.line = line;
-    // "OC", "OCEd" o el patrón de MPN de ASUS dentro del título ("O12G", "O8GB", "O 12G").
-    a.oc = / oc(?:ed)? /.test(t) || /o\d{1,2}gb? | o \d{1,2}gb? /.test(t);
+    // "OC", "OCEd", "Overclocked" o el patrón de MPN de ASUS dentro del título ("O12G", "O8GB", "O 12G").
+    a.oc = / (?:oc(?:ed)?|overclocked) /.test(t) || /o\d{1,2}gb? | o \d{1,2}gb? /.test(t);
     // Siempre presente, como `oc`: una V2, EVO o MAX es otra tarjeta aunque la tienda de la base no lo escriba.
     a.variant = t.match(/ (v ?2|evo|max|plus)(?= )/)?.[1]?.replace(" ", "") ?? "";
     return a;
@@ -275,7 +295,7 @@ const ssd: CategoryProfile = {
     const cap = capacityGb(t);
     if (cap) a.capacity = cap;
     if (/ nvme | pci/.test(t)) a.interface = "nvme";
-    else if (/ sata /.test(t)) a.interface = "sata";
+    else if (/ sata3? /.test(t)) a.interface = "sata";
     const formFactor = t.match(/ 22 ?(30|42|80|110)(?= )/)?.[1];
     if (formFactor) a.formFactor = `22${formFactor}`;
     else if (/ 2\.5/.test(t)) a.formFactor = "2.5";
@@ -294,15 +314,20 @@ const ssd: CategoryProfile = {
 
 const hdd: CategoryProfile = {
   keyFields: ["capacity", "rpm"],
-  discriminators: ["capacity", "rpm", "formFactor"],
+  discriminators: ["capacity", "rpm", "formFactor", "interface"],
   keyIsUnique: false,
   extract(title) {
     const t = prep(title);
     const a: Attributes = {};
     const cap = capacityGb(t);
     if (cap) a.capacity = cap;
-    const rpm = t.match(/ (\d{4,5}) ?rpm/);
-    if (rpm?.[1]) a.rpm = Number(rpm[1]);
+    // "RMP" es un typo frecuente; los discos de servidor escriben 7.2K o 10K.
+    const rpm = t.match(/ (\d{4,5}) ?r(?:pm|mp)/)?.[1];
+    const rpmK = t.match(/ (7\.2|10)k(?: rpm)?(?= )/)?.[1];
+    if (rpm) a.rpm = Number(rpm);
+    else if (rpmK) a.rpm = Math.round(Number(rpmK) * 1000);
+    if (/ sas /.test(t)) a.interface = "sas";
+    else if (/ sata/.test(t)) a.interface = "sata";
     if (/ 2\.5/.test(t)) a.formFactor = "2.5";
     else if (/ 3\.5/.test(t)) a.formFactor = "3.5";
     return a;

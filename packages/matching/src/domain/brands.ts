@@ -9,7 +9,7 @@ const BRANDS: Record<string, string[]> = {
   ASUS: ["asus", "rog", "tuf gaming"],
   MSI: ["msi"],
   Gigabyte: ["gigabyte", "aorus"],
-  ASRock: ["asrock"],
+  ASRock: ["asrock", "asrok"],
   Zotac: ["zotac"],
   PNY: ["pny"],
   Galax: ["galax"],
@@ -72,7 +72,7 @@ const BRANDS: Record<string, string[]> = {
   Exodia: ["exodia"],
   "Hype Legend": ["hype legend"],
   "X-Micro": ["x micro"],
-  Copious: ["copious"],
+  Copious: ["copious", "copius"],
   SanDisk: ["sandisk"],
   Mushkin: ["mushkin"],
   HPE: ["hpe", "hewlett packard enterprise"],
@@ -96,6 +96,16 @@ const BRANDS: Record<string, string[]> = {
   Fanxiang: ["fanxiang"],
   Timetec: ["timetec"],
   "Lite-On": ["lite on", "liteon"],
+  // Marcas vistas en productos de producción que quedaban sin marca y por eso sin clave de atributos (#146).
+  Micron: ["micron"],
+  Transcend: ["transcend"],
+  FSP: ["fsp"],
+  Aurion: ["aurion"],
+  Advantech: ["advantech"],
+  Puskill: ["puskill"],
+  Shanghao: ["shanghao"],
+  Kston: ["kston"],
+  HEX: ["hex"],
 };
 
 /** Texto comparable: sin tildes, minúsculas, separadores unificados a un espacio. */
