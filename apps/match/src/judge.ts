@@ -1,3 +1,5 @@
+import type { IdentityValue } from "@framerate/contracts";
+
 export const MODEL = "@cf/google/gemma-4-26b-a4b-it";
 
 // Medido con match-gold.json (#117): con 0,9 en los dos órdenes, 0 fusiones erróneas en 310 pares.
@@ -17,6 +19,14 @@ export interface Side {
   title: string;
   brand: string | null;
   mpn: string | null;
+  /** Identidad anclada del normalizador, si la oferta ya pasó por él: contexto para el modelo y freno de `acceptGuard`. */
+  identity?: SideIdentity;
+}
+
+export interface SideIdentity {
+  category: string;
+  name: string;
+  identity: Record<string, IdentityValue>;
 }
 
 export type Verdict = "accept" | "reject" | "pending";

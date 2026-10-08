@@ -1,7 +1,8 @@
-import type { Db } from "@framerate/database";
+import type { AiUsageTable, Db } from "@framerate/database";
 import type { Logger } from "@framerate/kit";
-import { sql } from "kysely";
+import { type Insertable, sql } from "kysely";
 import { MODEL } from "./judge";
+import { errorMessage, recordUsage, usageStatusOf } from "./usage";
 
 /**
  * Saca el modelo del nombre de un producto donde no hay clave de atributos (#98). En gabinetes, coolers y
@@ -56,10 +57,15 @@ async function ask(ai: Ai, brand: string | null, name: string) {
   )) as {
     response?: string;
     choices?: Array<{ message: { content: string } }>;
-    usage?: { neurons?: number };
+    usage?: { neurons?: number; prompt_tokens?: number; completion_tokens?: number };
   };
   const raw = (response.response ?? response.choices?.[0]?.message?.content ?? "").trim();
-  return { raw: raw.replace(/^model( name)?:/i, "").trim(), neurons: response.usage?.neurons ?? NEURONS_PER_MODEL };
+  return {
+    raw: raw.replace(/^model( name)?:/i, "").trim(),
+    neurons: response.usage?.neurons ?? NEURONS_PER_MODEL,
+    inputTokens: response.usage?.prompt_tokens ?? 0,
+    outputTokens: response.usage?.completion_tokens ?? 0,
+  };
 }
 
 export async function extractModels(
@@ -83,13 +89,18 @@ export async function extractModels(
     .execute();
 
   const at = input.now.toISOString();
+  // Workers AI cobra en neurons, no en dólares: la fila deja tokens y estado; `usd` queda en 0.
+  const usage = (fields: Partial<Insertable<AiUsageTable>>, ms: number) =>
+    recordUsage(db, { at, purpose: "extract", model: MODEL, ms, status: "ok", ...fields });
   for (const row of rows) {
     if (result.neurons >= input.neuronBudget) break;
     let modelo: string | null = null;
+    const started = Date.now();
     try {
-      const { raw, neurons } = await ask(ai, row.brand, row.name);
+      const { raw, neurons, inputTokens, outputTokens } = await ask(ai, row.brand, row.name);
       result.neurons += neurons;
       result.asked++;
+      await usage({ input_tokens: inputTokens, output_tokens: outputTokens }, Date.now() - started);
       // Guarda contra invención: lo que devuelve tiene que estar literal en el nombre.
       const ok = raw.toLowerCase() !== "none" && raw.length > 1 && fold(row.name).includes(fold(raw));
       if (ok) {
@@ -98,6 +109,7 @@ export async function extractModels(
       }
     } catch (error) {
       input.log?.error("model.extract_failed", { productId: row.id, error });
+      await usage({ status: usageStatusOf(error), error: errorMessage(error) }, Date.now() - started);
       continue; // Sin fecha: se reintenta en la corrida siguiente.
     }
     await db.query

@@ -1,7 +1,7 @@
-import type { Db } from "@framerate/database";
+import { type Db, parseJson } from "@framerate/database";
 import { sql } from "kysely";
 import type { HaikuOpinion } from "./haiku";
-import type { Judgement, Side } from "./judge";
+import type { Judgement, Side, SideIdentity } from "./judge";
 
 /** Lo que `framerate-match` guarda en `match_reviews.evidence.ai` (sin migración). */
 export interface AiEvidence extends Judgement {
@@ -63,19 +63,10 @@ export async function neuronsSpentSince(db: Db, since: string): Promise<number> 
   return Number(row?.n ?? 0);
 }
 
-/** Dólares gastados en Haiku desde `since` (ISO), sumando las opiniones guardadas. */
-export async function haikuUsdSince(db: Db, since: string): Promise<number> {
-  const row = await db.query
-    .selectFrom("match_reviews")
-    .select(sql<number | null>`sum(json_extract(evidence, '$.ai.haiku.usd'))`.as("usd"))
-    .where(sql<boolean>`json_extract(evidence, '$.ai.haiku.at') >= ${since}`)
-    .executeTakeFirst();
-  return Number(row?.usd ?? 0);
-}
-
 /**
  * Los dos lados del par. El candidato es un producto: se lo representa con su oferta activa más antigua (la que
- * suele haberlo creado), con el nombre del producto si ya no tiene ofertas activas.
+ * suele haberlo creado), con el nombre del producto si ya no tiene ofertas activas. Cada lado lleva su identidad
+ * anclada (la versión más nueva) si el normalizador ya pasó por esa oferta.
  */
 export async function loadPair(db: Db, reviewId: number) {
   const review = await db.query
@@ -87,6 +78,7 @@ export async function loadPair(db: Db, reviewId: number) {
       "r.status",
       "r.evidence",
       "r.candidate_product_id as candidateId",
+      "l.id as listingId",
       "l.title",
       "l.brand",
       "l.mpn",
@@ -99,15 +91,32 @@ export async function loadPair(db: Db, reviewId: number) {
 
   const founder = await db.query
     .selectFrom("listings")
-    .select(["title", "brand", "mpn"])
+    .select(["id", "title", "brand", "mpn"])
     .where("product_id", "=", review.candidateId)
     .where("is_active", "=", 1)
     .orderBy("id")
     .limit(1)
     .executeTakeFirst();
+  const identities = await db.query
+    .selectFrom("listing_identity")
+    .select(["listing_id", "category", "name", "identity"])
+    .where("listing_id", "in", [review.listingId, founder?.id ?? review.listingId])
+    .orderBy("version", "desc")
+    .execute();
+  const identityOf = (listingId: number | undefined): SideIdentity | undefined => {
+    const row = identities.find((i) => i.listing_id === listingId);
+    return row && { category: row.category, name: row.name, identity: parseJson(row.identity, {}) };
+  };
 
-  const listing: Side = { title: review.title, brand: review.brand, mpn: review.mpn };
-  const candidate: Side = founder ?? { title: review.productName, brand: review.productBrand, mpn: null };
+  const listing: Side = {
+    title: review.title,
+    brand: review.brand,
+    mpn: review.mpn,
+    identity: identityOf(review.listingId),
+  };
+  const candidate: Side = founder
+    ? { title: founder.title, brand: founder.brand, mpn: founder.mpn, identity: identityOf(founder.id) }
+    : { title: review.productName, brand: review.productBrand, mpn: null };
   const evidence = JSON.parse(review.evidence) as { ai?: AiEvidence };
   return { id: review.id, status: review.status, listing, candidate, ai: evidence.ai ?? null };
 }
