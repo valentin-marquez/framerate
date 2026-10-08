@@ -9889,5 +9889,215 @@
       "mpn": null,
       "gtin": "00740617344806"
     }
+  },
+  {
+    "source": "near",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "Exodia Sky Plus: título idéntico en dos tiendas, ninguna publica identificador",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Gabinete Exodia Sky Plus Blanco ATX 7 Fans ARGB V. Templado",
+      "brand": "Exodia",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "progaming",
+      "rawTitle": "Gabinete Exodia Sky Plus Blanco ATX 7 Fans ARGB V. Templado",
+      "brand": "Exodia",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "be quiet! PURE BASE 501 DX White: una trae GTIN y la otra el MPN, sin cruce",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Gabinete be quiet! PURE BASE 501 DX White",
+      "brand": "be quiet!",
+      "mpn": null,
+      "gtin": "04260052192849"
+    },
+    "b": {
+      "store": "sandos",
+      "rawTitle": "Gabinete be quiet! PURE BASE 501 DX White",
+      "brand": "be quiet!",
+      "mpn": "BGW77",
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "case",
+    "label": "same",
+    "confidence": "high",
+    "note": "MSI MAG PANO 100R PZ: la segunda tienda agrega Gamer al título",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Gabinete MSI MAG PANO 100R PZ",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": "04711377231565"
+    },
+    "b": {
+      "store": "central-gamer",
+      "rawTitle": "Gabinete Gamer MSI MAG PANO 100R PZ",
+      "brand": "MSI",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "near",
+    "category": "cpu_cooler",
+    "label": "same",
+    "confidence": "high",
+    "note": "Arctic Freezer 36 A-RGB negro: BLACK contra (Black)",
+    "a": {
+      "store": "mybox",
+      "rawTitle": "Refrigeración ARCTIC Freezer 36 A-RGB BLACK",
+      "brand": "Arctic",
+      "mpn": "ACFRE00124A",
+      "gtin": null
+    },
+    "b": {
+      "store": "eylstore",
+      "rawTitle": "Arctic Freezer 36 A-RGB (Black)",
+      "brand": "Arctic",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "XPG Valor Air blanco contra negro, GTIN distinto en la misma tienda",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Gabinete XPG Valor AIr Mid-Tower ATX Blanco",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085937537"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Gabinete XPG Valor AIr Mid-Tower ATX Negro",
+      "brand": "ADATA",
+      "mpn": null,
+      "gtin": "04711085937520"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "Cougar FV150 RGB rosado contra blanco: sin 'pink' en el vocabulario no había conflicto de color (#98)",
+    "a": {
+      "store": "dust2",
+      "rawTitle": "Gabinete Cougar FV150 RGB, Mid Tower, ATX, Pink",
+      "brand": "Cougar",
+      "mpn": null,
+      "gtin": "04710483778360"
+    },
+    "b": {
+      "store": "dust2",
+      "rawTitle": "Gabinete Cougar FV150 RGB, ATX, White",
+      "brand": "Cougar",
+      "mpn": null,
+      "gtin": "04710483778247"
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "Cooler Master QUBE 500 FLATPACK blanco contra negro",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "GABINETE COOLER MASTER QUBE 500 FLATPACK WHITE",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "GABINETE COOLER MASTER QUBE 500 FLATPACK BLACK",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "same-store",
+    "category": "case",
+    "label": "different",
+    "confidence": "high",
+    "note": "GameMax Infinity Mini: la blanca lo dice y la otra no; el caso de omisión que la guarda tiene que frenar",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "GABINETE GAMEMAX INFINITY MINI MATX",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "GABINETE GAMEMAX INFINITY MINI WHITE MATX",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "case",
+    "label": "different",
+    "confidence": "low",
+    "note": "MasterBox TD 300 WHITE contra TD 300 a secas: la base probablemente es negra, pero el título no lo dice",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "GABINETE COOLER MASTER MASTERBOX TD 300 WHITE",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "infor-ingen",
+      "rawTitle": "GABINETE COOLER MASTER MASTERBOX TD 300",
+      "brand": "Cooler Master",
+      "mpn": null,
+      "gtin": null
+    }
+  },
+  {
+    "source": "review",
+    "category": "case",
+    "label": "different",
+    "confidence": "low",
+    "note": "GameMax Storm BK con 1 ventilador FRGB contra el Storm BK pelado: puede ser el mismo con otro empaque",
+    "a": {
+      "store": "infor-ingen",
+      "rawTitle": "GABINETE GAMEMAX STORM BK 1 FAN FRGB",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    },
+    "b": {
+      "store": "nuevatec",
+      "rawTitle": "Gamemax Storm BK",
+      "brand": "GameMax",
+      "mpn": null,
+      "gtin": null
+    }
   }
 ]

@@ -24,7 +24,9 @@ const rows = gold.map((g, i) => {
 const high = rows.filter((r) => r.g.confidence === "high");
 
 // Medido el 06-10: 223 aceptados por el modelo, 213 tras la guarda (y 1 fusión errónea del modelo que la guarda frena).
-const ACCEPTED_FLOOR = 213;
+// El 08-10 se sumaron 10 pares reales de gabinetes y coolers (#98), 4 iguales y 6 distintos: el modelo acertó los 10,
+// incluidos los de omisión de color que los vetos no ven ("INFINITY MINI" contra "INFINITY MINI WHITE").
+const ACCEPTED_FLOOR = 217;
 
 describe("gold con las probabilidades grabadas", () => {
   test("ninguna fusión errónea: un par distinto de confianza alta nunca se acepta", () => {

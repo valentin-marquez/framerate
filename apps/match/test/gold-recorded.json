@@ -3295,5 +3295,75 @@
     "b": "Disco Duro SSD Kingston NV3 500GB M.2 2280 NVMe, PCIe 4.0",
     "pAB": 0.9991037905511303,
     "pBA": 0.9999932273944871
+  },
+  {
+    "i": 471,
+    "a": "Gabinete Exodia Sky Plus Blanco ATX 7 Fans ARGB V. Templado",
+    "b": "Gabinete Exodia Sky Plus Blanco ATX 7 Fans ARGB V. Templado",
+    "pAB": 1,
+    "pBA": 1
+  },
+  {
+    "i": 472,
+    "a": "Gabinete be quiet! PURE BASE 501 DX White",
+    "b": "Gabinete be quiet! PURE BASE 501 DX White",
+    "pAB": 0.9999999842868057,
+    "pBA": 0.9999999781347354
+  },
+  {
+    "i": 473,
+    "a": "Gabinete MSI MAG PANO 100R PZ",
+    "b": "Gabinete Gamer MSI MAG PANO 100R PZ",
+    "pAB": 0.9999996742113915,
+    "pBA": 0.9998164795767276
+  },
+  {
+    "i": 474,
+    "a": "Refrigeración ARCTIC Freezer 36 A-RGB BLACK",
+    "b": "Arctic Freezer 36 A-RGB (Black)",
+    "pAB": 0.9999993136132619,
+    "pBA": 0.9999999449252573
+  },
+  {
+    "i": 475,
+    "a": "Gabinete XPG Valor AIr Mid-Tower ATX Blanco",
+    "b": "Gabinete XPG Valor AIr Mid-Tower ATX Negro",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 476,
+    "a": "Gabinete Cougar FV150 RGB, Mid Tower, ATX, Pink",
+    "b": "Gabinete Cougar FV150 RGB, ATX, White",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 477,
+    "a": "GABINETE COOLER MASTER QUBE 500 FLATPACK WHITE",
+    "b": "GABINETE COOLER MASTER QUBE 500 FLATPACK BLACK",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 478,
+    "a": "GABINETE GAMEMAX INFINITY MINI MATX",
+    "b": "GABINETE GAMEMAX INFINITY MINI WHITE MATX",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 479,
+    "a": "GABINETE COOLER MASTER MASTERBOX TD 300 WHITE",
+    "b": "GABINETE COOLER MASTER MASTERBOX TD 300",
+    "pAB": 0,
+    "pBA": 0
+  },
+  {
+    "i": 480,
+    "a": "GABINETE GAMEMAX STORM BK 1 FAN FRGB",
+    "b": "Gamemax Storm BK",
+    "pAB": 0.00007909724529552104,
+    "pBA": 0.00013409379632518933
   }
 ]

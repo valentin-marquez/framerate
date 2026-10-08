@@ -29,6 +29,8 @@ interface GroupRow {
   offers: number;
   category: string;
   name: string;
+  /** Hash de la foto original. Dos productos con el mismo hash tienen la misma foto byte a byte. */
+  image: string | null;
 }
 
 /** De dónde salió el grupo: cambia el piso de puntaje para proponer. */
@@ -48,7 +50,14 @@ async function duplicateGroups(db: Db, limit: number): Promise<Group[]> {
   const [porClave, porModelo] = await Promise.all([
     db.query
       .selectFrom("products as p")
-      .select(["p.attribute_key as key", "p.id", "p.offer_count as offers", "p.category", "p.name"])
+      .select([
+        "p.attribute_key as key",
+        "p.id",
+        "p.offer_count as offers",
+        "p.category",
+        "p.name",
+        "p.image_key as image",
+      ])
       .where("p.attribute_key", "is not", null)
       .where(activo)
       .where(
@@ -68,6 +77,7 @@ async function duplicateGroups(db: Db, limit: number): Promise<Group[]> {
         "p.offer_count as offers",
         "p.category",
         "p.name",
+        "p.image_key as image",
       ])
       .where("p.model_ai", "is not", null)
       .where("p.brand", "is not", null)
@@ -180,7 +190,14 @@ export async function proposeDuplicateReviews(
             listingId: listing.id,
             candidateProductId: keeper.id,
             score: comparison.score,
-            evidence: { ...comparison.evidence, detector: source, previousProductId: other.id },
+            evidence: {
+              ...comparison.evidence,
+              detector: source,
+              previousProductId: other.id,
+              // Dato para quien revisa, no para el modelo: medido, 17 de 21 pares que comparten foto son productos
+              // distintos (variantes de color y packs), así que decírselo al modelo lo empujaría a equivocarse.
+              ...(keeper.image && other.image ? { sameImage: keeper.image === other.image } : {}),
+            },
             now,
           });
         }
