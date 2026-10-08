@@ -6,7 +6,7 @@ import { Button } from "~/shared/components/primitives/button";
 import { api } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
 import { formatDateTime } from "~/shared/utils/format";
-import { IncidentRow, SYSTEM_LABELS, SystemCard, type Tone } from "../components/health-parts";
+import { IncidentRow, PipelinePanel, SYSTEM_LABELS, SystemCard, type Tone } from "../components/health-parts";
 import type { Route } from "./+types/health-page";
 
 export function meta(_: Route.MetaArgs) {
@@ -105,7 +105,7 @@ export default function HealthPage({ loaderData }: Route.ComponentProps) {
         </Button>
       </header>
 
-      <section aria-label="Sistemas" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <section aria-label="Sistemas" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         {health.systems.map((s) => (
           <SystemCard
             key={s.id}
@@ -116,6 +116,8 @@ export default function HealthPage({ loaderData }: Route.ComponentProps) {
           />
         ))}
       </section>
+
+      {(!system || system === "pipeline") && <PipelinePanel pipeline={health.pipeline} now={health.generatedAt} />}
 
       <section aria-label="Incidencias" className="rounded-3xl bg-secondary/30 p-2">
         <div className="space-y-3 p-3">
