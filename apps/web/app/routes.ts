@@ -9,6 +9,7 @@ export default [
   // Info
   route("privacidad", "features/legal/pages/privacy-page.tsx"),
   route("terminos", "features/legal/pages/terms-page.tsx"),
+  route("desarrolladores", "features/developers/pages/developers-page.tsx"),
   route("soporte/:id", "features/support/pages/ticket-page.tsx"),
 
   // Products & Categories
@@ -49,6 +50,7 @@ export default [
   route("profile", "features/profile/pages/redirect-old-profile.tsx"),
   route("privacy", "features/legal/pages/redirect-old-privacy.tsx"),
   route("terms", "features/legal/pages/redirect-old-terms.tsx"),
+  route("developers", "features/developers/pages/redirect-old-developers.tsx"),
   route("settings/*", "features/settings/pages/redirect-old-settings.tsx"),
 
   // Admin

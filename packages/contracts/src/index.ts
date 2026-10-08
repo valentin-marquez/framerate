@@ -7,6 +7,7 @@ export * from "./health";
 export * from "./identity";
 export * from "./ingest";
 export * from "./match-review";
+export * from "./mcp";
 export * from "./moderation";
 export * from "./price-history";
 export * from "./quotes";

@@ -5,6 +5,7 @@ import { Logo } from "./logo";
 const LINKS = [
   { to: "/buscar", label: "Catálogo" },
   { to: "/reclamar", label: "Para tiendas" },
+  { to: "/desarrolladores", label: "Desarrolladores" },
   { to: "/terminos", label: "Términos" },
   { to: "/privacidad", label: "Privacidad" },
 ];

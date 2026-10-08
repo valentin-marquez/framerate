@@ -12,7 +12,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8787";
 
 // Rutas estáticas públicas e indexables. Las URLs visibles van en español
 // (ver CLAUDE.md). Se excluyen auth/settings/admin/perfiles y cotizaciones.
-const STATIC_PATHS = ["/", "/buscar", "/cyber", "/reclamar", "/privacidad", "/terminos"];
+const STATIC_PATHS = ["/", "/buscar", "/cyber", "/reclamar", "/privacidad", "/terminos", "/desarrolladores"];
 
 interface SitemapData {
   products: string[];
