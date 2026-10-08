@@ -67,18 +67,141 @@ describe("acceso", () => {
     expect((await health(moderator)).status).toBe(200);
   });
 
-  test("sin nada fallando no hay incidencias y están los seis sistemas", async () => {
+  test("sin nada fallando no hay incidencias y están los siete sistemas", async () => {
     const h = await get();
     expect(h.incidents).toEqual([]);
     expect(h.systems.map((s) => s.id)).toEqual([
       "scraping",
       "quarantine",
+      "pipeline",
       "matching",
       "support",
       "moderation",
       "stores",
     ]);
     expect(h.systems.every((s) => s.attention === 0)).toBe(true);
+  });
+});
+
+describe("pipeline", () => {
+  const setStatus = (id: number, norm_status: "pending" | "normalized" | "failed", hoursAgo: number) =>
+    db.query
+      .updateTable("listings")
+      .set({ norm_status, updated_at: ago(hoursAgo) })
+      .where("id", "=", id)
+      .execute();
+
+  test("cuenta por estado y lo en camino; una pendiente de más de 2 h avisa y una fallida es error", async () => {
+    await setStatus(seed.listings.l1, "pending", 3);
+    await setStatus(seed.listings.l4, "pending", 1);
+    const msi = await db.query
+      .selectFrom("listings")
+      .select("id")
+      .where("external_id", "=", "2")
+      .executeTakeFirstOrThrow();
+    await setStatus(msi.id, "failed", 5);
+
+    const h = await get();
+    expect(system(h, "pipeline")).toMatchObject({ value: 2, attention: 2 });
+    expect(h.pipeline.byStatus).toEqual({ legacy: 1, pending: 2, normalized: 0, linked: 0, fallback: 0, failed: 1 });
+    expect(h.incidents.map((i) => [i.id, i.severity])).toEqual([
+      ["pipeline:failed", "error"],
+      ["pipeline:pending", "warning"],
+    ]);
+    expect(h.incidents[1]?.detail).toBe("2 esperando, la más vieja hace 3 h");
+    expect(h.incidents[1]?.href).toBe("/admin/estado?sistema=pipeline");
+
+    // Con las pendientes recientes, nada que avisar.
+    await setStatus(seed.listings.l1, "normalized", 1);
+    await setStatus(msi.id, "pending", 1);
+    const calm = await get();
+    expect(calm.incidents).toEqual([]);
+    expect(system(calm, "pipeline")?.value).toBe(3);
+  });
+
+  test("las ocultas se cuentan y avisan pasadas 24 h; la pausa global vigente es error", async () => {
+    const oldest = ago(30);
+    const pausedUntil = ago(-2);
+    await db.query
+      .updateTable("listings")
+      .set({ visible: 0, first_seen_at: oldest })
+      .where("id", "=", seed.listings.l1)
+      .execute();
+    await db.query
+      .updateTable("listings")
+      .set({ visible: 0, first_seen_at: ago(1) })
+      .where("id", "=", seed.listings.l4)
+      .execute();
+    // `resetD1` vacía también la fila única que sembró la migración.
+    const pause = (paused_until: string) =>
+      db.query
+        .insertInto("pipeline_state")
+        .values({ id: 1, paused_until, updated_at: ago(0) })
+        .onConflict((oc) => oc.column("id").doUpdateSet({ paused_until }))
+        .execute();
+    await pause(pausedUntil);
+
+    const h = await get();
+    expect(h.pipeline).toMatchObject({ hidden: 2, oldestHiddenAt: oldest, pausedUntil });
+    expect(h.incidents.map((i) => [i.id, i.severity])).toEqual([
+      ["pipeline:paused", "error"],
+      ["pipeline:hidden", "warning"],
+    ]);
+    expect(h.incidents[1]?.detail).toBe("2 sin pasar el pipeline, la más vieja hace 30 h");
+
+    // Una pausa que ya venció no es incidencia.
+    await pause(ago(1));
+    expect((await get()).incidents.map((i) => i.id)).toEqual(["pipeline:hidden"]);
+  });
+
+  test("gasto de IA por propósito, hoy y en el ciclo, con el tope de hoy y aviso al 90 %", async () => {
+    const budgetEnv = testEnv(d1, {}, { ANTHROPIC_MONTHLY_USD: "30", ANTHROPIC_CYCLE_DAY: "17" }).env;
+    const withBudget = async () =>
+      HealthSchema.parse(
+        await (
+          await app.request(
+            "/v1/admin/health",
+            { headers: { authorization: `Bearer ${budgetEnv.ADMIN_TOKEN}` } },
+            budgetEnv,
+          )
+        ).json(),
+      );
+    const cycleStart = Date.parse((await withBudget()).pipeline.cycleStart);
+    const usage = (purpose: "normalize" | "judge", at: string, usd: number) => ({
+      at,
+      worker: "normalize" as const,
+      purpose,
+      model: "claude-haiku-5-5",
+      usd,
+      status: "ok" as const,
+    });
+    await db.query
+      .insertInto("ai_usage")
+      .values([
+        usage("normalize", new Date(Date.now() - 1000).toISOString(), 30),
+        usage("normalize", new Date(cycleStart + 3_600_000).toISOString(), 1),
+        usage("judge", new Date(cycleStart + 3_600_000).toISOString(), 0.2),
+        // Del ciclo anterior: no cuenta.
+        usage("judge", new Date(cycleStart - 3_600_000).toISOString(), 5),
+      ])
+      .execute();
+
+    const h = await withBudget();
+    expect(h.pipeline.aiUsage).toEqual([
+      { purpose: "normalize", calls: 2, todayUsd: 30, cycleUsd: 31 },
+      { purpose: "judge", calls: 1, todayUsd: 0, cycleUsd: 0.2 },
+      { purpose: "extract", calls: 0, todayUsd: 0, cycleUsd: 0 },
+    ]);
+    // Quedaban $28,80 del ciclo al empezar el día, repartidos entre los días que faltan: menos que los $30 de hoy.
+    expect(h.pipeline.dailyCapUsd).toBeGreaterThan(0);
+    expect(h.pipeline.dailyCapUsd).toBeLessThanOrEqual(28.8);
+    expect(h.incidents.map((i) => [i.id, i.severity])).toEqual([["pipeline:budget", "warning"]]);
+    expect(h.incidents[0]?.detail).toMatch(/^\$30\.00 de \$\d+\.\d\d; \$31\.20 en el ciclo$/);
+
+    // Sin tope configurado no hay con qué comparar: ni tope ni aviso.
+    const plain = await get();
+    expect(plain.pipeline.dailyCapUsd).toBeNull();
+    expect(plain.incidents).toEqual([]);
   });
 });
 

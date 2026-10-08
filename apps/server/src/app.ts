@@ -22,6 +22,7 @@ import {
   reportsRoutes,
   translationFeedbackRoutes,
 } from "@/features/moderation/moderation.routes";
+import { pipelineAdminRoutes } from "@/features/pipeline-admin/pipeline-admin.routes";
 import { quotesRoutes } from "@/features/quotes/quotes.routes";
 import { myStoresRoutes } from "@/features/stores/my-stores.routes";
 import { storeManagementRoutes } from "@/features/stores/store-management.routes";
@@ -171,6 +172,7 @@ export function createApp() {
   adminApi.use("*", credentialedCors);
   adminApi.use("*", requireStaff("moderator"));
   adminApi.route("/", crawlAdminRoutes);
+  adminApi.route("/", pipelineAdminRoutes);
   adminApi.route("/", healthRoutes);
   adminApi.route("/", matchReviewRoutes);
   adminApi.route("/", claimsAdminRoutes);

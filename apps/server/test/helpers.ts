@@ -1,4 +1,4 @@
-import type { EnqueueCrawlsRequest, IngestService, Role } from "@framerate/contracts";
+import type { EnqueueCrawlsRequest, EnqueuePipelineRequest, IngestService, Role } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { testUtils } from "better-auth/plugins";
 import type { Env } from "@/env";
@@ -7,17 +7,21 @@ import { createAuth } from "@/features/identity/auth";
 export const WEB_ORIGIN = "http://localhost:5173";
 
 /**
- * Env de la API para tests: `ingest` falso (registra los pedidos de crawl y permite
+ * Env de la API para tests: `ingest` falso (registra los pedidos de crawl y del pipeline y permite
  * fijar la respuesta) y credenciales de Discord de mentira. `overrides` pisa cualquier binding.
  */
 export function testEnv(d1: D1Database, ingest: Partial<IngestService> = {}, overrides: Partial<Env> = {}) {
   const crawlRequests: EnqueueCrawlsRequest[] = [];
+  const pipelineRequests: EnqueuePipelineRequest[] = [];
   const service: IngestService = {
     enqueueCrawls: async (request) => {
       crawlRequests.push(request);
       return { ok: true, enqueued: 1 };
     },
-    enqueuePipeline: async () => ({ ok: true, enqueued: 1 }),
+    enqueuePipeline: async (request) => {
+      pipelineRequests.push(request);
+      return { ok: true, enqueued: 1 };
+    },
     ...ingest,
   };
   const env: Env = {
@@ -32,7 +36,7 @@ export function testEnv(d1: D1Database, ingest: Partial<IngestService> = {}, ove
     DISCORD_CLIENT_SECRET: "discord-test-secret",
     ...overrides,
   };
-  return { env, crawlRequests };
+  return { env, crawlRequests, pipelineRequests };
 }
 
 /**

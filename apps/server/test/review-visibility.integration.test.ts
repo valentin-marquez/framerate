@@ -53,3 +53,30 @@ test("un producto con otras ofertas sigue en las listas: sólo deja de contar la
     ["ASUS Dual RTX 4070 SUPER OC 12GB", 650_000, 1],
   ]);
 });
+
+const setVisible = (externalId: string, visible: 0 | 1) =>
+  db.query.updateTable("listings").set({ visible }).where("external_id", "=", externalId).execute();
+
+test("una oferta oculta (nueva, sin pasar el pipeline) no cuenta en listas, conteos ni sitemap, y su ficha no existe", async () => {
+  await setVisible("3", 0);
+  expect((await page("category=cpu")).total).toBe(0);
+  expect((await app.request("/v1/products/amd-ryzen-7-7800x3d", undefined, env)).status).toBe(404);
+  const categories = (await (await app.request("/v1/categories", undefined, env)).json()) as {
+    items: { id: string; productCount: number }[];
+  };
+  expect(categories.items.find((c) => c.id === "cpu")?.productCount).toBe(0);
+  const sitemap = (await (await app.request("/v1/sitemap", undefined, env)).json()) as { products: string[] };
+  expect(sitemap.products).not.toContain("amd-ryzen-7-7800x3d");
+  expect(sitemap.products).toContain("asus-dual-rtx-4070-super-oc-12gb");
+
+  // Al publicarse (vínculo terminado o plazo de 24 h) vuelve sola.
+  await setVisible("3", 1);
+  expect((await page("category=cpu")).total).toBe(1);
+});
+
+test("un producto con otra oferta visible sigue: la oculta no aparece en su ficha ni en el agregado", async () => {
+  await setVisible("1", 0);
+  const res = await app.request("/v1/products/asus-dual-rtx-4070-super-oc-12gb", undefined, env);
+  expect(ProductDetailSchema.parse(await res.json()).offers.map((o) => o.priceCash)).toEqual([599_990]);
+  await setVisible("1", 1);
+});

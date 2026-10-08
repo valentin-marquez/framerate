@@ -14,6 +14,12 @@ export interface Env {
   ADMIN_TOKENS?: string;
   /** "production" | "development". */
   ENVIRONMENT?: string;
+  /**
+   * Crédito mensual de Anthropic que comparten normalize y match, y el día en que se renueva: sólo para que
+   * `/admin/estado` muestre el tope de hoy y avise al acercarse. Mismos valores que en los `wrangler.jsonc` de esos Workers.
+   */
+  ANTHROPIC_MONTHLY_USD?: string;
+  ANTHROPIC_CYCLE_DAY?: string;
 
   // ─── Autenticación (Better Auth) ───────────────────────────────────────────
   /** Firma cookies y cifra tokens OAuth. Mínimo 32 caracteres. `wrangler secret put BETTER_AUTH_SECRET`. */

@@ -43,6 +43,46 @@ where r.started_at = (select max(started_at) from crawl_runs r2 where r2.store_i
 order by s.slug, r.category
 ```
 
+## Pipeline de normalización (#153)
+
+El tablero es el estado por oferta; lo mismo que muestra `/admin/estado` en el sistema `pipeline`:
+
+```sql
+select norm_status, count(*) n, min(updated_at) desde from listings where is_active=1 group by 1
+```
+
+Gasto de IA por día y propósito en los últimos 7 días (`ai_usage` tiene una fila por llamada; `status` distinto
+de `ok` dice por qué falló):
+
+```sql
+select substr(at,1,10) dia, purpose, status, count(*) llamadas, round(sum(usd),4) usd from ai_usage
+where at >= datetime('now','-7 days') group by 1,2,3 order by 1 desc, 2
+```
+
+Productos sin publicar (`published_at is null`) y ofertas ocultas con su antigüedad; a las 24 h el Cron de ingest
+las publica por `fallback`, así que más viejas que eso es un problema:
+
+```sql
+select count(*) ocultas, min(first_seen_at) mas_vieja from listings where visible=0 and is_active=1
+select count(*) sin_publicar, min(created_at) mas_viejo from products where published_at is null
+```
+
+Cuánto intenta inventar Haiku (campos de identidad que declaró "de conocimiento", que el anclaje descarta):
+
+```sql
+select category, count(*) n from listing_identity
+where json_extract(identity_raw,'$.identity_from_knowledge') != '[]' group by 1 order by n desc
+```
+
+Pausa global (sin crédito) y vínculo en sombra por categoría (`GET /v1/admin/pipeline/shadow?category=` da lo mismo
+con la muestra):
+
+```sql
+select paused_until from pipeline_state where id=1
+select l.category, s.agrees, s.kind, count(*) n from match_shadow s join listings l on l.id=s.listing_id
+where s.version=(select max(version) from match_shadow s2 where s2.listing_id=s.listing_id) group by 1,2,3 order by 1,2,3
+```
+
 ## Cómo leer los resultados
 
 - **Ofertas por producto cerca de 1** con varias tiendas: casi no hay fusiones entre tiendas. Mirar las revisiones

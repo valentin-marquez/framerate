@@ -24,7 +24,11 @@
     "WEB_ORIGIN": "https://framerate.cl",
     "COOKIE_DOMAIN": "framerate.cl",
     // Dominio propio del bucket framerate-assets (lo llena apps/ingest), con transformaciones de Images en la zona.
-    "ASSETS_BASE_URL": "https://cdn.framerate.cl"
+    "ASSETS_BASE_URL": "https://cdn.framerate.cl",
+    // Crédito de Anthropic que comparten normalize y match (la suma de sus `ANTHROPIC_MONTHLY_USD`) y el día del
+    // pago del plan: /admin/estado calcula con ellos el tope de hoy y avisa al 90 % (#153 §7).
+    "ANTHROPIC_MONTHLY_USD": "30",
+    "ANTHROPIC_CYCLE_DAY": "17"
   },
 
   "d1_databases": [
