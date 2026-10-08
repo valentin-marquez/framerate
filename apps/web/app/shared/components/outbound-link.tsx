@@ -16,7 +16,7 @@ export interface OutboundLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLA
 
 /**
  * `<a target="_blank">` para outbound a tiendas. Aplica UTM al href y dispara
- * un registro en `outbound_clicks` (best-effort, no bloquea).
+ * el registro del clic (`POST /v1/clicks`, best-effort, no bloquea).
  *
  * Drop-in replacement para los `<a target="_blank" rel="noopener noreferrer">`
  * que apuntan a una tienda externa.

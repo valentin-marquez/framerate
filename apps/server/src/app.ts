@@ -5,6 +5,7 @@ import type { Env } from "@/env";
 import { catalogRoutes } from "@/features/catalog/catalog.routes";
 import { claimsRoutes } from "@/features/claims/claims.routes";
 import { claimsAdminRoutes } from "@/features/claims/claims-admin.routes";
+import { clicksRoutes } from "@/features/clicks/clicks.routes";
 import { commentsRoutes, productCommentsRoutes } from "@/features/comments/comments.routes";
 import { crawlAdminRoutes } from "@/features/crawl-admin/crawl-admin.routes";
 import { healthRoutes } from "@/features/health/health.routes";
@@ -50,6 +51,7 @@ export type AppEnv = {
  *
  *   /v1/auth/*    login/logout (Better Auth) + lista de proveedores. CORS con cookies sólo desde la web.
  *   /v1/me        perfil propio y unión de usuarios (`/v1/me/merge`). Requiere sesión.
+ *   /v1/clicks    clics salientes hacia tiendas, a Analytics Engine (sin sesión, sin respuesta).
  *   /v1/support   tickets de soporte: con sesión, o sin cuenta con Turnstile y el token del ticket.
  *   /v1/quotes    cotizaciones: las ajenas se leen según su visibilidad; escribir exige ser el dueño.
  *   /v1/reports   reportes de contenido (sesión). /v1/translation-feedback: sugerencias de traducción.
@@ -116,6 +118,11 @@ export function createApp() {
   claimsApi.use("*", requireUser);
   claimsApi.route("/", claimsRoutes);
 
+  const clicksApi = new Hono<AppEnv>();
+  clicksApi.use("*", credentialedCors);
+  clicksApi.use("*", rateLimit);
+  clicksApi.route("/", clicksRoutes);
+
   const supportApi = new Hono<AppEnv>();
   supportApi.use("*", credentialedCors);
   supportApi.use("*", rateLimit);
@@ -174,6 +181,7 @@ export function createApp() {
   app.route("/v1/auth", authApi);
   app.route("/v1/me", meApi);
   app.route("/v1/claims", claimsApi);
+  app.route("/v1/clicks", clicksApi);
   app.route("/v1/support", supportApi);
   app.route("/v1/quotes", quotesApi);
   app.route("/v1/reports", reportsApi);

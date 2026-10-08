@@ -1,15 +1,7 @@
-/**
- * Contextos válidos para tracking de outbound clicks. Mantener este enum corto
- * y semántico — cada string termina como `utm_campaign` en el link saliente y
- * en `outbound_clicks.source` en la DB.
- */
-export type OutboundSource =
-  | "product_details_hero"
-  | "product_details_comparison"
-  | "product_details_mobile"
-  | "quote_item"
-  | "quote_pdf"
-  | "store_page";
+import type { ClickSource } from "@framerate/contracts";
+
+/** Desde dónde sale el clic: es el `utm_campaign` del link y el `source` que registra `POST /v1/clicks`. */
+export type OutboundSource = ClickSource;
 
 const UTM_SOURCE = "framerate.cl";
 const UTM_MEDIUM = "referral";
