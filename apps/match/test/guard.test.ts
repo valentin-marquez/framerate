@@ -66,3 +66,21 @@ describe("texto de instrucción en el título", () => {
     expect(hasInstructionText(title)).toBe(false);
   });
 });
+
+test("sufijos que se escapaban: MLG, el CSM escrito con espacio y el SATA III que no es revisión", () => {
+  const side = (title: string) => ({ title, brand: "ASUS", mpn: null });
+  // "Gaming X Slim MLG" es otra tarjeta que la "Gaming X Slim" a secas.
+  expect(
+    acceptGuard(side("MSI RTX 4070 Super 12G Gaming X SLIM GDDR6X"), side("MSI RTX 4070 Super 12G Gaming X Slim MLG"))
+      .ok,
+  ).toBe(false);
+  // "CS M" es un CSM con espacio.
+  expect(acceptGuard(side("ASUS Prime B650M-A ii CS M AM5"), side("M/B ASUS PRIME B650M-A II")).ok).toBe(false);
+  // "SATA III" es la interfaz del disco, no una revisión: no puede frenar una fusión buena.
+  expect(
+    acceptGuard(
+      side("Disco Duro Western Digital Red Plus 8TB 3.5 5640RPM SATA III 6GB/s 256MB"),
+      side("WESTERN DIGITAL RED 8TB 256mb 5640rpm P/N WD80EFPX"),
+    ).ok,
+  ).toBe(true);
+});

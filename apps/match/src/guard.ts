@@ -4,13 +4,19 @@ import type { Side } from "./judge";
 export type Guard = { ok: true } | { ok: false; reason: string };
 
 // Un LLM no sabe lo que el título no dice: si un lado trae esto y el otro no, es otro producto o no se puede saber.
-const MODEL_TOKEN = /^(v\d|ii|iii|ac|ax\d?|wifi\d*e?|csm|pcie5)$/;
+const MODEL_TOKEN = /^(v\d|ii|iii|ac|ax\d?|wifi\d*e?|csm|mlg|pcie5)$/;
 // Placas Intel de las series 400 a 700: la misma placa existe con DDR4 y con DDR5; en AM4, AM5 y la serie 800 la
 // generación la fija el socket y omitirla no cambia el producto.
 const INTEL_BOTH_DDR = /\b[hbz][4-7][1679]0/;
 
 function modelTokens(title: string): Set<string> {
-  const t = title.toLowerCase().replace(/wi[ -]fi/g, "wifi");
+  const t = title
+    .toLowerCase()
+    .replace(/wi[ -]fi/g, "wifi")
+    // "B650M-A II CS M" es un CSM escrito con espacio.
+    .replace(/\bcs m\b/g, "csm")
+    // "SATA III" es la interfaz del disco, no la revisión del modelo.
+    .replace(/\bsata ?(?:iii|3)\b/g, "sata3");
   const words = t.split(/[^a-z0-9]+/).filter((w) => MODEL_TOKEN.test(w));
   return new Set(words.map((w) => (/^(ac|ax|wifi)/.test(w) ? "wifi" : w)));
 }

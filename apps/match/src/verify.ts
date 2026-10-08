@@ -4,10 +4,11 @@ import { resolveMatchReview } from "@framerate/matching";
 import { acceptGuard } from "./guard";
 import { judge, MODEL } from "./judge";
 import { type AiEvidence, loadPair, neuronsSpentSince, reviewsToVerify, saveAiEvidence } from "./reviews.repository";
+import { needsTiebreak, tiebreak } from "./tiebreak";
 
-// ponytail: estimación fija por par (medido ~2,5 con títulos del set); si los reales salen más largos, el tope
-// diario se respeta igual porque el barrido mide lo gastado antes de encolar.
-const NEURONS_PER_PAIR = 3;
+// Estimación por par para repartir el presupuesto: 2,5 de Gemma medidos, más el desempate con Clef (16) que sale
+// en una fracción de los pares. El tope diario se respeta igual porque el barrido mide lo gastado antes de encolar.
+const NEURONS_PER_PAIR = 6;
 
 export interface VerifyConfig {
   mode: "shadow" | "reject" | "live";
@@ -46,6 +47,18 @@ export async function verifyReview(db: Db, ai: Ai, reviewId: number, config: Ver
     mode: config.mode,
     at: now.toISOString(),
   };
+
+  // Gemma que se contradice según el orden no es ruido: en el set etiquetado, 5 de 17 de esos pares son productos
+  // distintos. Clef los separa bien, así que desempata, y sólo para aceptar (ver tiebreak.ts).
+  if (evidence.verdict === "pending" && needsTiebreak(evidence.pAB, evidence.pBA) && !cached?.tiebreak) {
+    const second = await tiebreak(ai, pair.listing, pair.candidate);
+    evidence.neurons += second.neurons;
+    evidence.tiebreak = { model: second.model, pAB: second.pAB, pBA: second.pBA, same: second.same };
+    if (second.same) evidence.verdict = "accept";
+  } else if (cached?.tiebreak) {
+    evidence.tiebreak = cached.tiebreak;
+    if (cached.tiebreak.same) evidence.verdict = "accept";
+  }
 
   // reject: sólo rechaza, que deja un duplicado; aceptar mezcla precios y espera la auditoría de las pendientes reales.
   const applies =

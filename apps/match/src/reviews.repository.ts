@@ -10,6 +10,8 @@ export interface AiEvidence extends Judgement {
   vetoes?: string[];
   /** Motivo por el que `acceptGuard` frenó una aceptación del modelo. */
   guard?: string;
+  /** Desempate con Clef cuando los dos órdenes de Gemma se contradicen (#148). */
+  tiebreak?: { model: string; pAB: number; pBA: number; same: boolean };
 }
 
 /**

@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import type { Db } from "@framerate/database";
-import { createTestD1, resetD1 } from "@framerate/database/testing";
+import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { silentLogger } from "@framerate/kit";
 import { MODEL, pSameFrom, verdictFor } from "@/judge";
+import { TIEBREAK_MODEL } from "@/tiebreak";
 import { reviewsForToday, verifyReview } from "@/verify";
 
 let d1: D1Database;
@@ -214,4 +215,64 @@ test("el gasto de esta corrida que todavía no está en las revisiones también 
   // Con 10 neurons caben 3 pares (3 por par), pero si ya se gastaron 8 en extraer modelos no cabe ninguno.
   expect(await reviewsForToday(db, { mode: "live", dailyNeurons: 10 }, now)).toEqual([s.review]);
   expect(await reviewsForToday(db, { mode: "live", dailyNeurons: 10 }, now, 8)).toEqual([]);
+});
+
+/** Gemma que se contradice según el orden, y Clef de desempate (#148). */
+function fakeAiAsimetrico(pAB: number, pBA: number, clef: number) {
+  let gemma = 0;
+  const ai = {
+    clefCalls: 0,
+    async run(model: string) {
+      if (model === TIEBREAK_MODEL) {
+        ai.clefCalls++;
+        return { answers: { r: { noul: clef } }, usage: { input_tokens: 400 } };
+      }
+      const p = gemma++ === 0 ? pAB : pBA;
+      return {
+        choices: [
+          {
+            message: { content: p >= 0.5 ? "same" : "different" },
+            logprobs: {
+              content: [
+                {
+                  top_logprobs: [
+                    { token: "same", logprob: Math.log(p) },
+                    { token: "different", logprob: Math.log(1 - p) },
+                  ],
+                },
+              ],
+            },
+          },
+        ],
+        usage: { neurons: 1.25 },
+      };
+    },
+  };
+  return ai as typeof ai & Ai;
+}
+
+test("si los dos órdenes de Gemma se contradicen, Clef desempata y puede aceptar", async () => {
+  const s = await seedReview();
+  const ai = fakeAiAsimetrico(1, 0, 0.95);
+  expect(await verifyReview(db, ai, s.review, { mode: "live", dailyNeurons: 1000 }, now, silentLogger)).toBe("accept");
+  expect(ai.clefCalls).toBe(2);
+  const review = (await all(db, "match_reviews"))[0] as { status: string; evidence: string };
+  expect(review.status).toBe("accepted");
+  expect(JSON.parse(review.evidence).ai.tiebreak).toMatchObject({ same: true, pAB: 0.95 });
+});
+
+test("si Clef tampoco se convence, la revisión se queda pendiente", async () => {
+  const s = await seedReview();
+  const ai = fakeAiAsimetrico(1, 0, 0.6);
+  expect(await verifyReview(db, ai, s.review, { mode: "live", dailyNeurons: 1000 }, now, silentLogger)).toBe("pending");
+  const review = (await all(db, "match_reviews"))[0] as { status: string; evidence: string };
+  expect(review.status).toBe("pending");
+  expect(JSON.parse(review.evidence).ai.tiebreak).toMatchObject({ same: false });
+});
+
+test("sin contradicción no se gasta en desempate", async () => {
+  const s = await seedReview();
+  const ai = fakeAiAsimetrico(0.6, 0.55, 0.99);
+  expect(await verifyReview(db, ai, s.review, { mode: "live", dailyNeurons: 1000 }, now, silentLogger)).toBe("pending");
+  expect(ai.clefCalls).toBe(0);
 });
