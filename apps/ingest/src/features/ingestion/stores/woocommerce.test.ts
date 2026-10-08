@@ -133,9 +133,16 @@ describe("adaptador WooCommerce", () => {
       attributes: [],
       description: "<p>P/N: 288-1N754-210Z6 ⚡ Tarjeta de video</p>",
     };
-    expect(toRawOffer(product, "gpu", { sku: "internal" }).mpn).toBe("2881N754210Z6");
+    expect(toRawOffer(product, "gpu", { sku: "internal" })).toMatchObject({
+      mpn: "2881N754210Z6",
+      // La ficha sin HTML va entera al normalizador.
+      sourceText: "P/N: 288-1N754-210Z6 ⚡ Tarjeta de video",
+    });
     expect(toRawOffer({ ...product, sku: "ZT-B50600H-10M" }, "gpu", { sku: "mpn" }).mpn).toBe("ZT-B50600H-10M");
-    expect(toRawOffer({ ...product, description: "" }, "gpu", { sku: "internal" }).mpn).toBeNull();
+    expect(toRawOffer({ ...product, description: "" }, "gpu", { sku: "internal" })).toMatchObject({
+      mpn: null,
+      sourceText: null,
+    });
     for (const description of ["<p>P/N: RTX4060</p>", "<p>P/N: DDR5-6000</p>"])
       expect(toRawOffer({ ...product, description }, "gpu", { sku: "internal" }).mpn).toBeNull();
   });

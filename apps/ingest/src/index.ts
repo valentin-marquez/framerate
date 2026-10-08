@@ -4,6 +4,7 @@ import {
   EnqueueCrawlsRequestSchema,
   type EnqueueCrawlsResult,
   type EnqueuePipelineRequest,
+  EnqueuePipelineRequestSchema,
   type EnqueuePipelineResult,
   type IngestService,
 } from "@framerate/contracts";
@@ -14,7 +15,7 @@ import { recheckClaims } from "@/features/claims/recheck";
 import { copyProductImages } from "@/features/images/product-images";
 import { purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
-import { enqueueAllCrawls, requestCrawls, runCrawlMessage } from "@/features/ingestion/runtime";
+import { enqueueAllCrawls, requestCrawls, requestPipeline, runCrawlMessage } from "@/features/ingestion/runtime";
 import { applyViews7d, fetchViews7d } from "@/features/popularity/views";
 import { emailSender } from "@/shared/email";
 
@@ -24,7 +25,7 @@ import { emailSender } from "@/shared/email";
  *  - scheduled: Cron → encola un crawl por (tienda, categoría), copia a R2 las fotos de producto pendientes y
  *               recalcula `views_7d` desde Analytics Engine.
  *  - queue:     consume crawls (uno por mensaje, con reintentos y DLQ).
- *  - RPC:       `IngestRpc`, que usa apps/server para "crawlear ahora".
+ *  - RPC:       `IngestRpc`, que usa apps/server para "crawlear ahora" y para encolar el backfill del pipeline.
  */
 const log = createLogger({ service: "framerate-ingest" });
 
@@ -34,9 +35,8 @@ export class IngestRpc extends WorkerEntrypoint<Env> implements IngestService {
     return requestCrawls(this.env, EnqueueCrawlsRequestSchema.parse(request));
   }
 
-  async enqueuePipeline(_request: EnqueuePipelineRequest): Promise<EnqueuePipelineResult> {
-    // Las colas del pipeline llegan con la fase 1 de #153; hasta entonces la etapa está apagada.
-    return { ok: false, error: "pipeline_off" };
+  async enqueuePipeline(request: EnqueuePipelineRequest): Promise<EnqueuePipelineResult> {
+    return requestPipeline(this.env, EnqueuePipelineRequestSchema.parse(request));
   }
 }
 

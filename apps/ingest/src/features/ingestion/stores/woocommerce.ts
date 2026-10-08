@@ -126,7 +126,8 @@ export function toRawOffer(
   const gtin = normalizeGtin(sku) ? sku : null;
   const skuMpn = !gtin && config.sku === "mpn" && sku ? sku : null;
   const skuIsMpn = normalizeMpn(skuMpn) !== null;
-  const partNumber = stripHtml(p.description).match(PART_NUMBER)?.[1];
+  const description = stripHtml(p.description);
+  const partNumber = description.match(PART_NUMBER)?.[1];
   const descriptionMpn = gtin || skuIsMpn || !partNumber ? null : codesInTitle(`P/N ${partNumber}`).mpn;
 
   return {
@@ -143,6 +144,7 @@ export function toRawOffer(
     mpn: skuIsMpn ? skuMpn : descriptionMpn,
     gtin,
     imageUrls: p.images.map((i) => i.src),
+    sourceText: description || null,
   };
 }
 

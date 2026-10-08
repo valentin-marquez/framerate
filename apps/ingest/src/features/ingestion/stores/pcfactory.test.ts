@@ -53,12 +53,21 @@ describe("adaptador PC Factory", () => {
       // "+100" es un piso.
       stockQuantity: null,
       imageUrls: ["https://assets.pcfactory.cl/public/foto/56909/1_200.jpg"],
+      // Descripción sin HTML y specs de la ficha, para el normalizador.
+      sourceText:
+        "Tarjeta de video ZOTAC GAMING GeForce RTX 3050 6GB Twin Edge con refrigeración IceStorm 2.0\nMemoria: 6GB GDDR6\nBus: 96-bit",
     });
   });
 
-  test("una ficha que falla deja la oferta sin MPN en vez de tumbar la categoría", async () => {
+  test("una ficha que falla deja la oferta sin MPN ni texto en vez de tumbar la categoría", async () => {
     const offers = await Array.fromAsync(adapter.crawlCategory("gpu", fakeContext().ctx));
-    expect(offers[1]).toMatchObject({ externalId: "54708", mpn: null, stockQuantity: 19, priceCash: 914_990 });
+    expect(offers[1]).toMatchObject({
+      externalId: "54708",
+      mpn: null,
+      sourceText: null,
+      stockQuantity: 19,
+      priceCash: 914_990,
+    });
   });
 
   test("salta los productos outlet", async () => {

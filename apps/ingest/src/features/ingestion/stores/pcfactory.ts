@@ -1,4 +1,5 @@
 import type { Category } from "@framerate/contracts";
+import { stripHtml } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
@@ -38,7 +39,20 @@ const ItemSchema = z.object({
 });
 type PcFactoryItem = z.infer<typeof ItemSchema>;
 
-const DetailSchema = z.object({ partNumber: z.string().nullable() });
+const DetailSchema = z.object({
+  partNumber: z.string().nullable(),
+  descripcion: z.string().nullable().optional(),
+  // Pares nombre y valor. Las claves exactas no están verificadas contra una ficha real: se toman los textos del par.
+  especificaciones: z.array(z.record(z.string(), z.unknown())).optional(),
+});
+type Detail = z.infer<typeof DetailSchema>;
+
+export interface PcFactoryDetail {
+  partNumber: string | null;
+  sourceText: string | null;
+}
+
+const NO_DETAIL: PcFactoryDetail = { partNumber: null, sourceText: null };
 
 const MAX_PAGES = 20;
 
@@ -62,7 +76,7 @@ export function createPcFactoryAdapter(config: PcFactoryConfig): StoreAdapter {
           }
           // Outlet = caja abierta o reacondicionado, y el título no siempre lo dice: `normalize` no lo vería.
           if (item.data.outlet) continue;
-          yield toRawOffer(item.data, await partNumber(item.data.id, ctx), category);
+          yield toRawOffer(item.data, await detail(item.data.id, ctx), category);
         }
         if (page + 1 >= pageable.totalPages) break;
       }
@@ -70,19 +84,33 @@ export function createPcFactoryAdapter(config: PcFactoryConfig): StoreAdapter {
   };
 }
 
-/** Una ficha que falla no debe tumbar la categoría: la oferta entra igual, sin MPN. */
-async function partNumber(id: number, ctx: CrawlContext): Promise<string | null> {
+/** Una ficha que falla no debe tumbar la categoría: la oferta entra igual, sin MPN ni texto. */
+async function detail(id: number, ctx: CrawlContext): Promise<PcFactoryDetail> {
   try {
     const res = await ctx.http.get(`${API}/${id}`);
     await ctx.snapshot(`producto/${id}.json`, res.text);
-    return DetailSchema.parse(JSON.parse(res.text)).partNumber?.trim() || null;
+    const parsed = DetailSchema.parse(JSON.parse(res.text));
+    return { partNumber: parsed.partNumber?.trim() || null, sourceText: sourceTextOf(parsed) };
   } catch (error) {
     ctx.log.warn("pcfactory.detail_failed", { id, error });
-    return null;
+    return NO_DETAIL;
   }
 }
 
-export function toRawOffer(item: PcFactoryItem, partNumber: string | null, category: Category): RawOffer {
+function sourceTextOf(d: Detail): string | null {
+  const specs = (d.especificaciones ?? []).map((pair) =>
+    Object.values(pair)
+      .filter((v): v is string => typeof v === "string")
+      .join(": "),
+  );
+  return [stripHtml(d.descripcion ?? ""), ...specs].filter(Boolean).join("\n") || null;
+}
+
+export function toRawOffer(
+  item: PcFactoryItem,
+  { partNumber, sourceText }: PcFactoryDetail,
+  category: Category,
+): RawOffer {
   const stock = Number(item.stock.replace(/\D/g, "")) || 0;
   const gtin = partNumber && normalizeGtin(partNumber) ? partNumber : null;
   return {
@@ -99,5 +127,6 @@ export function toRawOffer(item: PcFactoryItem, partNumber: string | null, categ
     mpn: gtin ? null : partNumber,
     gtin,
     imageUrls: item.thumbnail ? [`https://assets.pcfactory.cl${item.thumbnail}`] : [],
+    sourceText,
   };
 }

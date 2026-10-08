@@ -14,8 +14,18 @@
   // Crawl completo cada 6 horas (UTC). Encola un mensaje por (tienda, categoría).
   "triggers": { "crons": ["17 */6 * * *"] },
 
-  // `views_7d` sale de la API SQL de Analytics Engine; el token va aparte: wrangler secret put ANALYTICS_API_TOKEN.
-  "vars": { "CF_ACCOUNT_ID": "3f50a4a123ebcbcb917dababff3ef8b5" },
+  "vars": {
+    // `views_7d` sale de la API SQL de Analytics Engine; el token va aparte: wrangler secret put ANALYTICS_API_TOKEN.
+    "CF_ACCOUNT_ID": "3f50a4a123ebcbcb917dababff3ef8b5",
+    // Pipeline de normalización con Haiku (#153). off: todo como antes. shadow o live: lo nuevo o con cambios
+    // relevantes queda `pending` y se encola en framerate-normalize (en shadow la corrida sigue vinculando por regex).
+    // Encender recién después de un ciclo completo de crawls en off: así lo existente ya tiene `norm_hash` y no se
+    // encola todo de golpe; el backfill va por categoría con el RPC enqueuePipeline.
+    "PIPELINE_NORMALIZE": "off",
+    // Sólo live cambia algo: lo nuevo nace oculto (visible = 0) y lo vincula el consumidor de framerate-link; lo
+    // `legacy` se sigue vinculando en la corrida hasta la fase 4. Sin PIPELINE_NORMALIZE encendido cuenta como off.
+    "PIPELINE_LINK": "off"
+  },
 
   // Los crawls consumen CPU parseando JSON; subir el límite por invocación.
   "limits": { "cpu_ms": 120000 },
@@ -45,7 +55,13 @@
   "send_email": [{ "name": "EMAIL" }],
 
   "queues": {
-    "producers": [{ "binding": "CRAWL_QUEUE", "queue": "framerate-crawl" }],
+    "producers": [
+      { "binding": "CRAWL_QUEUE", "queue": "framerate-crawl" },
+      // Las consumen framerate-normalize y framerate-match; se crean con el primer deploy de normalize
+      // (bunx wrangler queues create framerate-normalize / framerate-link, y sus -dlq). Sin ellas este deploy falla.
+      { "binding": "NORMALIZE_QUEUE", "queue": "framerate-normalize" },
+      { "binding": "LINK_QUEUE", "queue": "framerate-link" }
+    ],
     "consumers": [
       {
         "queue": "framerate-crawl",
