@@ -33,6 +33,7 @@
       "name": "match",
       "dependencies": {
         "@anthropic-ai/sdk": "^0.132.1",
+        "@framerate/contracts": "workspace:*",
         "@framerate/database": "workspace:*",
         "@framerate/kit": "workspace:*",
         "@framerate/matching": "workspace:*",
@@ -187,6 +188,7 @@
     "packages/matching": {
       "name": "@framerate/matching",
       "dependencies": {
+        "@anthropic-ai/sdk": "^0.132.1",
         "@framerate/contracts": "workspace:*",
         "@framerate/database": "workspace:*",
         "@framerate/kit": "workspace:*",

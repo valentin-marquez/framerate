@@ -4,13 +4,15 @@
   "license": "UNLICENSED",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./normalize": "./src/normalize/index.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
     "test": "bun test"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
     "@framerate/contracts": "workspace:*",
     "@framerate/database": "workspace:*",
     "@framerate/kit": "workspace:*",

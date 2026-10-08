@@ -1,4 +1,5 @@
 // Dominio puro (sin IO): huella de producto y decisión de matching.
+export * from "./domain/anchor";
 export * from "./domain/attributes";
 export * from "./domain/brands";
 export * from "./domain/decide";

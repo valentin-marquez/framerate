@@ -1,6 +1,6 @@
-import type { Category } from "@framerate/contracts";
+import type { Category, IdentityValue, ListingIdentity } from "@framerate/contracts";
 import { fold } from "@framerate/kit";
-import { type Attributes, PROFILES } from "./attributes";
+import { ATTRIBUTE_DEFAULTS, type Attributes, identityAttributeName, PROFILES } from "./attributes";
 import { canonicalBrand, detectBrand } from "./brands";
 import { normalizeGtin, normalizeMpn } from "./identifiers";
 
@@ -47,13 +47,47 @@ export function buildFingerprint(input: FingerprintInput): Fingerprint {
   };
 }
 
+export interface IdentityFingerprintInput {
+  identity: ListingIdentity;
+  /** Códigos del campo de la tienda: el MPN de la tienda gana al impreso. */
+  mpn?: string | null;
+  gtin?: string | null;
+}
+
+/** La misma huella que `buildFingerprint`, desde la identidad anclada por el normalizador: `compare` no distingue. */
+export function fingerprintFromIdentity({ identity, mpn, gtin }: IdentityFingerprintInput): Fingerprint {
+  const { category, brand } = identity;
+  const attributes = attributesFromIdentity(category, identity.identity);
+  return {
+    category,
+    brand,
+    mpn: normalizeMpn(mpn) ?? identity.mpn,
+    gtin: normalizeGtin(gtin),
+    attributes,
+    attributeKey: attributeKey(category, brand, attributes),
+    tokens: distinctiveTokens(category, identity.name, brand),
+  };
+}
+
+/** Nombres de hoy y la política de `attributes.ts` (`ATTRIBUTE_DEFAULTS`, `oc` y `wifi` siempre presentes). */
+function attributesFromIdentity(category: Category, identity: Record<string, IdentityValue>): Attributes {
+  const a: Attributes = {};
+  for (const [field, value] of Object.entries(identity)) a[identityAttributeName(field)] = value;
+  for (const [field, value] of Object.entries(ATTRIBUTE_DEFAULTS[category] ?? {})) a[field] ??= value;
+  if (category === "gpu") a.oc ??= false;
+  if (category === "motherboard") a.wifi ??= false;
+  // Como el extractor: una línea conocida sin "RGB" es la versión sin RGB.
+  if (category === "ram" && a.line !== undefined) a.rgb ??= false;
+  return a;
+}
+
 const CHIP_MAKERS = new Set(["AMD", "NVIDIA", "Intel"]);
 
 /**
  * En GPU y placas la tienda a veces declara el fabricante del chip o otro ensamblador; el del título manda. En el
  * resto se respeta la marca declarada ("XPG Lancer RGB ROG" detectaría ASUS en una RAM).
  */
-function resolveBrand(input: FingerprintInput): string | null {
+export function resolveBrand(input: FingerprintInput): string | null {
   const inTitle = detectBrand(input.title);
   const assembled = input.category === "gpu" || input.category === "motherboard";
   if (assembled && inTitle && !CHIP_MAKERS.has(inTitle)) return inTitle;

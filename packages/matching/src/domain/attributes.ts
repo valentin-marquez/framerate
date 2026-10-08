@@ -22,8 +22,8 @@ export interface CategoryProfile {
   keyIsUnique: boolean;
 }
 
-/** Texto comparable: minúsculas, sin tildes, separadores → espacio (conserva `+` y `.`). */
-function prep(title: string): string {
+/** Texto comparable: minúsculas, sin tildes, separadores → espacio (conserva `+` y `.`), con espacio en los bordes. */
+export function prep(title: string): string {
   return ` ${fold(title)
     .replace(/(\d),(\d)/g, "$1.$2")
     .replace(/×/g, "x")
@@ -159,7 +159,7 @@ const gpu: CategoryProfile = {
 
 const cpu: CategoryProfile = {
   keyFields: ["model"],
-  discriminators: ["model"],
+  discriminators: ["model", "packaging"],
   keyIsUnique: true,
   extract(title) {
     // "7800X 3D" (PC Express) es el 7800X3D.
@@ -218,7 +218,19 @@ const RAM_LINES = [
 const ram: CategoryProfile = {
   keyFields: ["type", "capacity", "modules", "speed", "formFactor"],
   // `line` no va en la clave (muchas tiendas no la escriben), pero si ambos lados la dicen y difiere, es otro producto.
-  discriminators: ["type", "capacity", "modules", "speed", "formFactor", "line", "rgb"],
+  // `casLatency`, `ecc` y `registered` sólo los trae el normalizador: vetan cuando ambos lados los anclan.
+  discriminators: [
+    "type",
+    "capacity",
+    "modules",
+    "speed",
+    "formFactor",
+    "line",
+    "rgb",
+    "casLatency",
+    "ecc",
+    "registered",
+  ],
   keyIsUnique: false,
   extract(title) {
     // "2*16GB" (Tecnomas) es un kit; "Vegeance" (Infor-Ingen) es Vengeance.
@@ -378,7 +390,7 @@ const EFFICIENCY_ALIASES: Record<string, string> = { bronce: "bronze", platino: 
 
 const psu: CategoryProfile = {
   keyFields: ["wattage", "efficiency"],
-  discriminators: ["wattage", "efficiency", "line", "revision"],
+  discriminators: ["wattage", "efficiency", "line", "revision", "modular"],
   keyIsUnique: false,
   extract(title) {
     const t = prep(title);
@@ -492,7 +504,8 @@ const motherboard: CategoryProfile = {
 
 const generic: CategoryProfile = {
   keyFields: [],
-  discriminators: [],
+  // `model` lo trae el normalizador (#98); como clave se decide con la sombra de la fase 2.
+  discriminators: ["model"],
   keyIsUnique: false,
   extract: () => ({}),
 };
@@ -536,6 +549,32 @@ function withColor(profile: CategoryProfile, mode: "standard" | "said"): Categor
     },
   };
 }
+
+/** Campos de identidad del normalizador cuyo nombre difiere del atributo de hoy; el resto se llama igual. */
+const IDENTITY_ATTRIBUTE_NAMES: Record<string, string> = {
+  capacity_gb: "capacity",
+  vram_gb: "vram",
+  speed_mt_s: "speed",
+  form_factor: "formFactor",
+  memory_type: "memory",
+  pcie_gen: "pcieGen",
+  cas_latency: "casLatency",
+  radiator_mm: "radiatorMm",
+  size_mm: "sizeMm",
+};
+export const identityAttributeName = (field: string): string => IDENTITY_ATTRIBUTE_NAMES[field] ?? field;
+
+/**
+ * Lo que el extractor rellena cuando el título no lo dice ("siempre presente": sin color es negra, sin variante es
+ * la base, una RAM es un módulo DIMM). La huella desde la identidad aplica lo mismo; el anclaje no los toma como
+ * evidencia del título. Los booleanos (`oc`, `wifi`, `rgb`) se tratan aparte: sólo con token.
+ */
+export const ATTRIBUTE_DEFAULTS: Partial<Record<Category, Attributes>> = {
+  gpu: { variant: "", color: "black" },
+  motherboard: { variant: "", color: "black" },
+  ram: { modules: 1, formFactor: "dimm", color: "black" },
+  psu: { color: "black" },
+};
 
 export const PROFILES: Record<Category, CategoryProfile> = {
   gpu: withColor(gpu, "standard"),
