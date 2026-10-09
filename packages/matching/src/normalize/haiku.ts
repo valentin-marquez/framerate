@@ -6,6 +6,7 @@ import {
   outputSchema,
   SOURCE_TEXT_MAX,
 } from "@framerate/contracts";
+import type { CatalogCandidate } from "../repository";
 
 /**
  * Normalización de una oferta con Haiku 5.5 (spec 2026-10-08 §3). Compartida por el Worker `normalize` y por el
@@ -60,6 +61,8 @@ export interface NormalizeInput {
   gtin: string | null;
   sourceText?: string | null;
   store?: string | null;
+  /** Productos del catálogo parecidos (#157): Haiku dice si alguno es el mismo SKU en `same_as`. */
+  catalog?: CatalogCandidate[];
 }
 
 export interface NormalizeCall {
@@ -121,6 +124,7 @@ async function ask(
     mpn: input.mpn,
     gtin: input.gtin,
     description: input.sourceText ? input.sourceText.slice(0, SOURCE_TEXT_MAX) : null,
+    catalog_candidates: input.catalog ?? [],
   };
   const content = feedback
     ? `${JSON.stringify(listing)}\n\nYour previous answer was rejected: ${feedback}. Answer again following the schema.`
@@ -176,5 +180,7 @@ Your output has three parts with different rules.
    - mpn: the manufacturer part number as printed in the text (title, description or codes), or "". Never a store SKU, never invented. Keep it exactly as printed, hyphens included.
    - condition: new, used, refurbished or open_box (new unless the listing says otherwise).
    - confidence: high when brand and model are explicit and unambiguous; medium when the model is inferred from partial text; low when the listing barely identifies the product (generic title, no model).
+
+4. CATALOG MATCH. catalog_candidates lists products already in our catalog that look similar (id, name, part numbers). If one of them is exactly the same retail SKU as this listing, write its id in same_as; otherwise "". Same SKU means same model and series, same edition, same capacity/VRAM/wattage/speed, OC or not, same color, same pack size and kit (1x16 is not 2x8), same revision (V2, 2024). Wording differences are fine ("LP" and "Low Profile", "GDDR3" and "DDR3", "2GD3 LP" is MSI's 2GB DDR3 Low Profile), and so is a detail the listing omits when the model only exists in that form. A different part number means a different SKU. When the listing is too vague to tell (no series name), or two candidates could fit, write "": a wrong match mixes prices of different products, a missing one only leaves a duplicate. The candidates never change the other fields: identity still comes only from the listing.
 
 Every value is a string: "" when unknown or not applicable. Numbers as plain digits ("32", "5600", "1.35"); booleans as "true"/"false". Output only the JSON object that matches the schema.`;

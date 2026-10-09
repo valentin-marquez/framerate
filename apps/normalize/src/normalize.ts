@@ -9,7 +9,7 @@ import {
 } from "@framerate/contracts";
 import type { AiUsageTable, Db } from "@framerate/database";
 import type { Logger } from "@framerate/kit";
-import { listingIdentityFrom } from "@framerate/matching";
+import { catalogCandidates, listingIdentityFrom } from "@framerate/matching";
 import {
   type Create,
   NORMALIZE_MODEL,
@@ -164,6 +164,7 @@ export async function normalizeListing(
     error,
   });
 
+  const catalog = await catalogCandidates(db, { category, title, mpn: listing.mpn });
   const input = {
     category,
     title,
@@ -172,6 +173,7 @@ export async function normalizeListing(
     gtin: listing.gtin,
     sourceText: listing.source_text,
     store: listing.store,
+    catalog,
   };
   let result: NormalizeCall;
   try {
@@ -248,12 +250,16 @@ export async function normalizeListing(
       reason: output.category_reason,
     });
   }
+  // Sólo vale un id que se le mostró: uno inventado o de otra categoría no llega a match.
+  const sameAs = catalog.find((c) => String(c.id) === output.same_as)?.id ?? null;
   log.info("normalize.anchored", {
     listingId,
     dropped: anchored.dropped,
     fromMpn: anchored.fromMpn,
     knowledge: anchored.knowledge,
     confidence: identity.confidence,
+    candidates: catalog.length,
+    sameAs,
   });
 
   const specs: Record<string, IdentityValue> = {};
@@ -287,9 +293,12 @@ export async function normalizeListing(
       identity_from_knowledge: output.identity_from_knowledge,
       dropped: anchored.dropped,
       from_mpn: anchored.fromMpn,
+      same_as: output.same_as,
+      candidates: catalog.map((c) => c.id),
     }),
     specs: JSON.stringify(specs),
     specs_source: JSON.stringify(specsSource),
+    same_as: sameAs,
     created_at: at,
   };
   await db.batch([

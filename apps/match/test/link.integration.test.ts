@@ -94,7 +94,10 @@ async function listing(input: {
   ).id;
 }
 
-async function identity(listingId: number, input: { name?: string; model?: string; mpn?: string | null } = {}) {
+async function identity(
+  listingId: number,
+  input: { name?: string; model?: string; mpn?: string | null; extra?: Record<string, unknown>; sameAs?: number } = {},
+) {
   await db.query
     .insertInto("listing_identity")
     .values({
@@ -107,10 +110,11 @@ async function identity(listingId: number, input: { name?: string; model?: strin
       name: input.name ?? NAME,
       mpn: input.mpn === undefined ? MPN : input.mpn,
       confidence: "high",
-      identity: JSON.stringify({ model: input.model ?? "ryzen 5 5600x" }),
+      identity: JSON.stringify({ model: input.model ?? "ryzen 5 5600x", ...input.extra }),
       identity_raw: "{}",
       specs: "{}",
       specs_source: "{}",
+      same_as: input.sameAs ?? null,
       created_at: at,
     })
     .execute();
@@ -257,6 +261,42 @@ describe("en vivo", () => {
     expect(await linkListing(db, message(l), "live", now, silentLogger)).toBe("skipped");
     expect(await linkListing(db, message(999), "live", now, silentLogger)).toBe("skipped");
     expect((await listingRow(l)).visible).toBe(0);
+  });
+});
+
+describe("same_as del preprocesador (#157)", () => {
+  // El nombre del producto no dice el modelo: sin clave que comparar, la decisión normal crea un producto nuevo.
+  async function setup(name = "AMD Procesador Gamer Box") {
+    const s = await store("alfa");
+    const p = await product({ slug: "amd-procesador", name });
+    const l = await listing({ store: s, external: "1", visible: 0, normStatus: "normalized" });
+    await identity(l, { mpn: null, sameAs: p });
+    return { p, l };
+  }
+
+  test("en sombra sólo se guarda: la decisión normal sigue igual", async () => {
+    const { p, l } = await setup();
+    expect(await linkListing(db, message(l), "live", now, silentLogger)).toBe("new_product");
+    expect((await listingRow(l)).product_id).not.toBe(p);
+  });
+
+  test("en vivo vincula al producto que reconoció Haiku, y lo deja en la evidencia", async () => {
+    const { p, l } = await setup();
+    expect(await linkListing(db, message(l), "live", now, silentLogger, { sameAs: true })).toBe("linked");
+    expect(await listingRow(l)).toMatchObject({ product_id: p, visible: 1 });
+    const [decision] = await db.query
+      .selectFrom("match_decisions")
+      .select(["product_id", "method", "evidence"])
+      .where("listing_id", "=", l)
+      .execute();
+    expect(decision).toMatchObject({ product_id: p, method: "attributes" });
+    expect(JSON.parse(decision?.evidence ?? "{}").sameAs).toBe(true);
+  });
+
+  test("un veto gana: otro modelo no se vincula aunque Haiku diga que es el mismo", async () => {
+    const { p, l } = await setup("AMD Ryzen 7 5800X");
+    expect(await linkListing(db, message(l), "live", now, silentLogger, { sameAs: true })).toBe("new_product");
+    expect((await listingRow(l)).product_id).not.toBe(p);
   });
 });
 

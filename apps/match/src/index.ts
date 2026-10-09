@@ -89,7 +89,7 @@ export default {
           continue;
         }
         try {
-          await linkListing(db, parsed.data, mode, new Date(), linkLog);
+          await linkListing(db, parsed.data, mode, new Date(), linkLog, { sameAs: env.LINK_SAME_AS === "live" });
           message.ack();
         } catch (error) {
           linkLog.error("link.failed", { ...parsed.data, error });

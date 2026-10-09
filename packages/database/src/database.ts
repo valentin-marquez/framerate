@@ -268,6 +268,8 @@ export interface ListingIdentityTable {
   identity_raw: JsonText;
   specs: JsonText;
   specs_source: JsonText;
+  /** Producto que Haiku reconoció como el mismo SKU entre los candidatos del catálogo (#157). */
+  same_as: number | null;
   created_at: string;
 }
 

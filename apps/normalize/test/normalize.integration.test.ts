@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { type LinkMessage, NORMALIZER_VERSION } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
-import { silentLogger } from "@framerate/kit";
+import { searchText, silentLogger } from "@framerate/kit";
 import { NORMALIZE_MODEL } from "@framerate/matching/normalize";
 import { billingCycle, dailyCapUsd } from "@/budget";
 import { type NormalizeConfig, normalizeListing } from "@/normalize";
@@ -51,11 +51,13 @@ const OUTPUT = {
 type Reply = { text?: string; stop?: string } | Error;
 const usage = { input_tokens: 700, output_tokens: 300, cache_read_input_tokens: 3400, cache_creation_input_tokens: 0 };
 
-/** Haiku falso: responde en orden lo que se le pida y cuenta las llamadas. */
+/** Haiku falso: responde en orden lo que se le pida, cuenta las llamadas y guarda lo que recibió. */
 function fakeHaiku(...replies: Reply[]) {
   const haiku = {
     calls: 0,
-    create: async () => {
+    prompts: [] as string[],
+    create: async (params: Anthropic.MessageCreateParamsNonStreaming) => {
+      haiku.prompts.push(String(params.messages[0]?.content));
       const r = replies[Math.min(haiku.calls++, replies.length - 1)];
       if (r instanceof Error) throw r;
       return {
@@ -133,6 +135,25 @@ const run = (listingId: number, cfg: NormalizeConfig, link = fakeQueue(), attemp
   normalizeListing(db, link, message(listingId), cfg, { now, attempts, log: silentLogger });
 const listingRow = (id: number) =>
   db.query.selectFrom("listings").select(["norm_status", "norm_at"]).where("id", "=", id).executeTakeFirstOrThrow();
+
+async function seedProduct(name: string, mpn?: string) {
+  const p = await db.query
+    .insertInto("products")
+    .values({
+      slug: name.toLowerCase().replaceAll(" ", "-"),
+      name,
+      search: searchText(name),
+      category: "ram",
+      brand: "Kingston",
+      created_at: at,
+      updated_at: at,
+    })
+    .returning("id")
+    .executeTakeFirstOrThrow();
+  if (mpn)
+    await db.query.insertInto("product_identifiers").values({ kind: "mpn", value: mpn, product_id: p.id }).execute();
+  return p.id;
+}
 
 describe("normalizeListing", () => {
   test("normaliza: identidad anclada, libro de gasto, estado y vínculo encolado", async () => {
@@ -344,6 +365,27 @@ describe("normalizeListing", () => {
   test("sin clave de Anthropic los mensajes esperan", async () => {
     const id = await seedListing();
     expect(await run(id, config(fakeHaiku(ok()), { create: null }))).toMatchObject({ reason: "no_api_key" });
+  });
+
+  test("le muestra a Haiku los productos parecidos del catálogo y guarda same_as sólo si es uno de ellos", async () => {
+    const beast = await seedProduct("Kingston Fury Beast 16GB DDR5 5600 CL36", "KF556C36BBE16");
+    const renegade = await seedProduct("Kingston Fury Renegade 32GB DDR5 6400");
+    await seedProduct("Corsair Vengeance 16GB DDR4 3200");
+
+    const h = fakeHaiku(ok({ same_as: String(beast) } as Partial<typeof OUTPUT>));
+    await run(await seedListing(), config(h));
+    const sent = JSON.parse(h.prompts[0] ?? "{}");
+    const ids = sent.catalog_candidates.map((c: { id: number }) => c.id);
+    expect(ids).toContain(beast);
+    expect(ids).toContain(renegade);
+    expect(sent.catalog_candidates.find((c: { id: number }) => c.id === beast).mpns).toEqual(["KF556C36BBE16"]);
+    expect((await all(db, "listing_identity"))[0]?.same_as).toBe(beast);
+
+    // Un id que no se le mostró no llega a match.
+    const invented = await seedListing({ external_id: "2", url: "https://beta.cl/p/2", norm_hash: "hash-2" });
+    await run(invented, config(fakeHaiku(ok({ same_as: "999" } as Partial<typeof OUTPUT>))));
+    const row = (await all(db, "listing_identity")).find((r) => r.listing_id === invented);
+    expect(row?.same_as).toBeNull();
   });
 
   test("off: acusa sin llamar ni tocar nada", async () => {

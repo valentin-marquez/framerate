@@ -17,6 +17,8 @@ export interface Env {
   ANTHROPIC_CYCLE_DAY?: string;
   /** Vínculo desde la identidad (#153). off: ignora la cola. shadow: sólo `match_shadow`. live: vincula y publica. */
   PIPELINE_LINK?: string;
+  /** shadow: el `same_as` del preprocesador sólo se guarda. live: vincula cuando la decisión normal no (#157). */
+  LINK_SAME_AS?: string;
 }
 
 /** Mensaje de `VERIFY_QUEUE`: verificar una revisión pendiente del Gatekeeper. */

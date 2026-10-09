@@ -5,6 +5,7 @@ import { type Compilable, sql } from "kysely";
 import type { Attributes } from "./domain/attributes";
 import { type Candidate, compare } from "./domain/decide";
 import { attributeKey, buildFingerprint, type Fingerprint, storedFingerprint } from "./domain/fingerprint";
+import { normalizeMpn } from "./domain/identifiers";
 
 const MAX_CANDIDATES = 20;
 
@@ -65,6 +66,62 @@ export async function findCandidates(db: Db, fp: Fingerprint): Promise<Candidate
   }
 
   return loadCandidates(db, [...ids].slice(0, MAX_CANDIDATES), fp);
+}
+
+export interface CatalogCandidate {
+  id: number;
+  name: string;
+  mpns: string[];
+}
+
+const CATALOG_CANDIDATES = 8;
+
+/**
+ * Lo que el preprocesador le muestra a Haiku para que diga si la oferta ya está en el catálogo (#157): el dueño del
+ * MPN impreso y los más parecidos por texto en la misma categoría. Sin marca: la de la tienda no siempre es la canónica.
+ */
+export async function catalogCandidates(
+  db: Db,
+  offer: { category: Category; title: string; mpn: string | null },
+): Promise<CatalogCandidate[]> {
+  const ids: number[] = [];
+  const mpn = normalizeMpn(offer.mpn);
+  if (mpn) {
+    const owners = await db.query
+      .selectFrom("product_identifiers")
+      .select("product_id")
+      .where("kind", "=", "mpn")
+      .where("value", "=", mpn)
+      .execute();
+    ids.push(...owners.map((r) => r.product_id));
+  }
+  const tokens = [...new Set(searchText(offer.title).split(" "))].filter((t) => t.length > 1).slice(0, 16);
+  if (tokens.length > 0) {
+    const match = tokens.map((t) => `"${t}"`).join(" OR ");
+    const { rows } = await sql<{
+      id: number;
+    }>`SELECT p.id FROM products_fts JOIN products p ON p.id = products_fts.rowid
+      WHERE products_fts MATCH ${match} AND p.category = ${offer.category} ORDER BY products_fts.rank
+      LIMIT ${CATALOG_CANDIDATES}`.execute(db.query);
+    ids.push(...rows.map((r) => r.id));
+  }
+  const unique = [...new Set(ids)].slice(0, CATALOG_CANDIDATES);
+  if (unique.length === 0) return [];
+  const [products, identifiers] = await Promise.all([
+    db.query.selectFrom("products").select(["id", "name"]).where("id", "in", unique).execute(),
+    db.query
+      .selectFrom("product_identifiers")
+      .select(["product_id", "value"])
+      .where("product_id", "in", unique)
+      .where("kind", "=", "mpn")
+      .execute(),
+  ]);
+  return unique.flatMap((id) => {
+    const p = products.find((x) => x.id === id);
+    if (!p) return [];
+    const mpns = identifiers.filter((i) => i.product_id === id).map((i) => i.value);
+    return [{ id, name: p.name, mpns: mpns.slice(0, 3) }];
+  });
 }
 
 /** Productos, salvo `exceptProductId`, dueños de un identificador de la huella. */

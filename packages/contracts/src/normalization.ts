@@ -138,6 +138,7 @@ export function outputSchema(category: Category) {
       identity_from_knowledge: strs,
       specs: obj(SPEC_FIELDS[category]),
       specs_from_knowledge: strs,
+      same_as: str,
     },
     required: [
       "category",
@@ -152,6 +153,7 @@ export function outputSchema(category: Category) {
       "identity_from_knowledge",
       "specs",
       "specs_from_knowledge",
+      "same_as",
     ],
     additionalProperties: false,
   };
@@ -195,6 +197,8 @@ export function NormalizationOutputSchema(category: Category) {
     identity_from_knowledge: z.array(z.string()),
     specs: fields(SPEC_FIELDS[category], (_, v) => coerceSpec(v)),
     specs_from_knowledge: z.array(z.string()),
+    // Las salidas grabadas antes de #157 no lo traen.
+    same_as: z.string().trim().default(""),
   });
 }
 
@@ -211,6 +215,8 @@ export interface NormalizationOutput {
   identity_from_knowledge: string[];
   specs: Record<string, IdentityValue | null>;
   specs_from_knowledge: string[];
+  /** Id de un candidato del catálogo que es el mismo SKU, o "" (#157). */
+  same_as: string;
 }
 
 /** Lo que el anclaje necesita de la salida; es lo que se graba en el gold normalizado. */

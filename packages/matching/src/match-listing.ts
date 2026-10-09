@@ -51,6 +51,11 @@ export interface MatchListingInput {
    * la oferta completa la del producto (spec §5.2 y §5.3). Sin él, el camino de hoy: título limpio y nada se completa.
    */
   canonicalName?: string;
+  /**
+   * Producto que el preprocesador reconoció como el mismo SKU entre los candidatos del catálogo (#157). Se usa sólo si
+   * la decisión normal no vincula, y sólo si `compare` no da vetos ni conflicto de MPN o de código de modelo.
+   */
+  sameAs?: number | null;
 }
 
 /**
@@ -97,7 +102,9 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
     if (check && vetoes.length === 0) {
       const again = link.method === "new_product" ? null : decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
-      if (again && again.kind !== "link") {
+      // El preprocesador lo reconoció como el mismo SKU y nada lo contradice: se queda.
+      const confirmed = input.sameAs === productId && !link.olderSameStore;
+      if (again && again.kind !== "link" && !confirmed) {
         evidence = { ...evidence, redecided: again.kind, score: check.score, sameStore: link.olderSameStore };
       } else {
         moveTo = check.evidence.identifier ? null : await ownerThatLinks(db, listingId, fp, productId);
@@ -119,12 +126,14 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
   }
 
   // Sin re-decidir: contra su propio producto la fundadora puntúa 1 por atributos y le ganaría al identificador.
-  const decision =
+  const decided =
     moveTo ??
     decide(
       fp,
       await applyOverrides(db, listingId, fp, await markSameStore(db, listingId, await findCandidates(db, fp))),
     );
+  const viaSameAs = decided.kind !== "link" && input.sameAs ? await sameAsLink(db, listingId, fp, input.sameAs) : null;
+  const decision = viaSameAs ?? decided;
 
   if (decision.kind === "link") {
     await setListingProduct(db, {
@@ -132,7 +141,7 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
       productId: decision.productId,
       method: decision.method,
       confidence: decision.confidence,
-      evidence: { ...decision.comparison.evidence },
+      evidence: { ...decision.comparison.evidence, ...(viaSameAs ? { sameAs: true } : {}) },
       decidedBy,
       now,
     });
@@ -183,4 +192,22 @@ async function ownerThatLinks(db: Db, listingId: number, fp: Fingerprint, produc
   const candidates = await markSameStore(db, listingId, await loadCandidates(db, owners, fp));
   const decision = decide(fp, await applyOverrides(db, listingId, fp, candidates));
   return decision.kind === "link" && decision.method === "identifier" ? decision : null;
+}
+
+/**
+ * El `same_as` del preprocesador vincula sólo si nada lo contradice: veto, MPN distinto, `forbid`, u otra oferta de la
+ * misma tienda en ese producto (casi siempre una variante, como en `decide`).
+ */
+async function sameAsLink(db: Db, listingId: number, fp: Fingerprint, productId: number): Promise<Decision | null> {
+  const [candidate] = await applyOverrides(
+    db,
+    listingId,
+    fp,
+    await markSameStore(db, listingId, await loadCandidates(db, [productId], fp)),
+  );
+  if (!candidate || candidate.override === "forbid" || candidate.sameStore) return null;
+  const comparison = compare(fp, candidate.fingerprint);
+  const { vetoes, evidence } = comparison;
+  if (vetoes.length > 0 || evidence.mpnConflict || evidence.modelConflict) return null;
+  return { kind: "link", productId, method: "attributes", confidence: comparison.score, comparison };
 }

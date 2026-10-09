@@ -32,7 +32,10 @@
     "ANTHROPIC_CYCLE_DAY": "17",
     // Vínculo desde la identidad de Haiku (#153). off: ignora la cola. shadow: sólo escribe `match_shadow` (qué haría
     // contra el vínculo actual). live: vincula, crea productos con el nombre canónico y los publica.
-    "PIPELINE_LINK": "live"
+    "PIPELINE_LINK": "live",
+    // El preprocesador dice qué producto del catálogo es el mismo SKU (#157). shadow: sólo queda en
+    // `listing_identity.same_as`. live: vincula cuando la identidad no calza por clave y nada lo contradice.
+    "LINK_SAME_AS": "shadow"
   },
 
   "d1_databases": [
