@@ -26,8 +26,12 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
    3. `apps/match`: `bunx wrangler@latest deploy`. La primera vez, crear antes sus colas:
       `bunx wrangler@latest queues create framerate-match-verify` y `... framerate-match-verify-dlq`. Para pasar de
       sombra a decidir solo, cambiar `MATCH_MODE` a `live` en su `wrangler.jsonc` y volver a desplegar.
-   4. `apps/server`: `bunx wrangler deploy`.
-   5. `apps/web`: `VITE_API_URL=https://api.framerate.cl VITE_TURNSTILE_SITE_KEY=0x4AAAAAAFLjXEJIhds4HQZi bun run build`
+   4. `apps/normalize` (#153): `bunx wrangler@latest deploy`. La primera vez, crear antes las colas del pipeline
+      (`queues create framerate-normalize`, `framerate-normalize-dlq`, `framerate-link`, `framerate-link-dlq`) y que el
+      dueño ponga `secret put ANTHROPIC_API_KEY` en `apps/normalize`. Las colas tienen que existir antes de desplegar
+      ingest y match, que las producen y consumen.
+   5. `apps/server`: `bunx wrangler deploy`.
+   6. `apps/web`: `VITE_API_URL=https://api.framerate.cl VITE_TURNSTILE_SITE_KEY=0x4AAAAAAFLjXEJIhds4HQZi bun run build`
       y luego `bunx wrangler deploy`. La site key de Turnstile es pública (va en el JS del sitio); su secreto vive en
       `framerate-server` (`TURNSTILE_SECRET_KEY`). Sin ella, el soporte sin cuenta no muestra el formulario.
 5. Verificar: `bunx wrangler tail framerate-ingest` (o `framerate-server`) y, si cambió el scraping, pedir un crawl
@@ -39,6 +43,12 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
 `git push origin <rama>`. `origin` es Forgejo (`git.nozz.skin`); GitHub ya no se usa. Nunca usar credenciales pegadas en el chat: si pide contraseña, que la ingrese el dueño.
 
 ## Trampas
+
+- **Pipeline de normalización (#153): se enciende por etapas.** Interruptores: `PIPELINE_NORMALIZE` y `PIPELINE_LINK`
+  en ingest, `NORMALIZE_MODE` en normalize, `PIPELINE_LINK` en match (`off` | `shadow` | `live`). Orden: desplegar con
+  ingest en `off` un ciclo completo (6 h) para que toda oferta reciba su `norm_hash` sin encolarse; después `shadow` y el
+  backfill por categoría con `POST /v1/admin/pipeline/normalize`; revisar `GET /v1/admin/pipeline/shadow?category=`;
+  recién ahí `live`. Encender `shadow` desde el primer deploy encola el catálogo entero en la primera corrida.
 
 - **Pre-push falla con "The WebSocket is undefined" o "new dependencies optimized".** No es del código: es el build
   de Vite chocando con un dev server o Storybook abierto que re-optimiza dependencias. Reintentar el push.

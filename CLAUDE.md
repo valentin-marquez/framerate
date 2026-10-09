@@ -16,6 +16,9 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
 - **`apps/match`**: Worker que verifica las revisiones del Gatekeeper con Workers AI (Cron + Queue, sin HTTP), y con
   Claude Haiku 5.5 como tercera opinión sobre lo que queda pendiente (`MATCH_HAIKU`, con tope ligado al ciclo del
   crédito de Anthropic; ver #149). Cada modelo nuevo entra en sombra antes de decidir (`MATCH_MODE`, #117).
+- **`apps/normalize`**: Worker que normaliza cada oferta una sola vez con Claude Haiku (cola `framerate-normalize`):
+  identidad anclada al texto, specs y nombre canónico en `listing_identity`, gasto en `ai_usage`. Su salida va a la
+  cola `framerate-link`, que consume `apps/match`. Diseño y fases: `docs/specs/2026-10-08-preprocesador-ia.md` (#153).
 - **`apps/web`**: React Router v7 (SSR) en Workers. Sólo habla con la API (`/v1/*`), nunca con la base.
 - **`packages/contracts`**: esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.
 - **`packages/database`**: dueño del esquema: migraciones SQL, tipos Kysely, cliente D1 y utilidades de test
@@ -44,6 +47,7 @@ bun run db:migrate:local      # aplica packages/database/migrations en la D1 loc
 bun run dev:server            # API (wrangler dev)
 bun run dev:ingest            # scraping (Cron/Queue/RPC)
 bun run dev:match             # verificación del Gatekeeper (Cron/Queue/Workers AI, remoto)
+bun run dev:normalize         # normalización con Haiku (Queue; necesita apps/normalize/.dev.vars con ANTHROPIC_API_KEY)
 bun run dev:web               # frontend
 bun run test                  # check-types + tests de todo el monorepo (red de seguridad antes de desplegar)
 bun test path/to/file.test.ts # un archivo (dentro de la app)
