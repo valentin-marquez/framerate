@@ -91,10 +91,47 @@ export function storedFingerprint(product: {
   };
 }
 
+// Haiku reparte el mismo nombre entre `model` y `variant` distinto en cada llamada ("crystal z6m floe" contra
+// "crystal z6m" + "floe", "vx310" + "argb"), y repite en el texto lo que ya tiene campo propio (RGB, color, OC).
+const FREE_TEXT_NOISE = new Set([
+  "rgb",
+  "argb",
+  "oc",
+  "black",
+  "white",
+  "pink",
+  "red",
+  "blue",
+  "gray",
+  "green",
+  "silver",
+]);
+// Campo que recibe el texto libre repartido: `variant` se suma a él (gabinete "crystal z6m" + "floe", GPU "gaming" +
+// "trio"). Sigue siendo estricto: un token distinto de cualquier lado veta.
+const FOLD_INTO: Partial<Record<Category, string>> = {
+  case: "model",
+  cpu_cooler: "model",
+  case_fan: "model",
+  gpu: "line",
+};
+
+const tokens = (value: IdentityValue | undefined) =>
+  typeof value === "string" ? value.split(" ").filter((t) => t && !FREE_TEXT_NOISE.has(t)) : [];
+
+function stableFreeText(category: Category, a: Attributes) {
+  const target = FOLD_INTO[category];
+  if (!target) return;
+  const folded = [...new Set([...tokens(a[target]), ...tokens(a.variant)])].join(" ");
+  delete a.variant;
+  if (folded) a[target] = folded;
+  else delete a[target];
+}
+
 /** Nombres de hoy y la política de `attributes.ts` (`ATTRIBUTE_DEFAULTS`, `oc` y `wifi` siempre presentes). */
 function attributesFromIdentity(category: Category, identity: Record<string, IdentityValue>): Attributes {
   const a: Attributes = {};
   for (const [field, value] of Object.entries(identity)) a[identityAttributeName(field)] = value;
+  stableFreeText(category, a);
   for (const [field, value] of Object.entries(ATTRIBUTE_DEFAULTS[category] ?? {})) a[field] ??= value;
   if (category === "gpu") a.oc ??= false;
   if (category === "motherboard") a.wifi ??= false;
