@@ -136,7 +136,9 @@ async function importBatches(dir: string) {
       mpn: r.mpn,
     });
     if (!identity) {
+      // Como el Worker: un combo o accesorio queda `failed` y no se vincula por identidad.
       fail("other", r.id);
+      statements.push(`UPDATE listings SET norm_status = 'failed', norm_at = ${sqlText(at)} WHERE id = ${r.id};`);
       continue;
     }
     const specs: Record<string, unknown> = {};
