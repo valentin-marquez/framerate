@@ -35,7 +35,7 @@
     "PIPELINE_LINK": "live",
     // El preprocesador dice qué producto del catálogo es el mismo SKU (#157). shadow: sólo queda en
     // `listing_identity.same_as`. live: vincula cuando la identidad no calza por clave y nada lo contradice.
-    "LINK_SAME_AS": "shadow"
+    "LINK_SAME_AS": "live"
   },
 
   "d1_databases": [
