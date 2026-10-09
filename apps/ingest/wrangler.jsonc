@@ -21,7 +21,7 @@
     // relevantes queda `pending` y se encola en framerate-normalize (en shadow la corrida sigue vinculando por regex).
     // Encender recién después de un ciclo completo de crawls en off: así lo existente ya tiene `norm_hash` y no se
     // encola todo de golpe; el backfill va por categoría con el RPC enqueuePipeline.
-    "PIPELINE_NORMALIZE": "off",
+    "PIPELINE_NORMALIZE": "shadow",
     // Sólo live cambia algo: lo nuevo nace oculto (visible = 0) y lo vincula el consumidor de framerate-link; lo
     // `legacy` se sigue vinculando en la corrida hasta la fase 4. Sin PIPELINE_NORMALIZE encendido cuenta como off.
     "PIPELINE_LINK": "off"
