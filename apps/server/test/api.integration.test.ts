@@ -267,6 +267,18 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
     expect((await get("/v1/products/redirects/nada")).status).toBe(404);
   });
 
+  // #145: las fichas del sistema anterior cierran en un id de 13 dígitos con uno o dos guiones.
+  test("un slug del sistema anterior va a la ficha de hoy por su MPN o por el slug sin sufijo", async () => {
+    const to = async (slug: string) => (await get(`/v1/products/redirects/${slug}`)).json();
+    expect(await to("12gb-gddr6x-dual-rtx4070s-o12g-1782355372370")).toEqual({
+      slug: "asus-dual-rtx-4070-super-oc-12gb",
+    });
+    expect(await to("asus-dual-rtx-4070-super-oc-12gb--1768100912220")).toEqual({
+      slug: "asus-dual-rtx-4070-super-oc-12gb",
+    });
+    expect((await get("/v1/products/redirects/480gb-2-5-sata-mv480gb-1782433181001")).status).toBe(404);
+  });
+
   test("un producto sin ofertas activas conserva su ficha y no aparece en el catálogo", async () => {
     const detail = ProductDetailSchema.parse(await (await get("/v1/products/corsair-rm750e-750w")).json());
     expect(detail.offers).toEqual([]);

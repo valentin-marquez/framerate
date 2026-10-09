@@ -14,7 +14,7 @@ import type {
 import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel, NORMALIZER_VERSION } from "@framerate/contracts";
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { searchText, slugify } from "@framerate/kit";
-import { titleTokens } from "@framerate/matching";
+import { normalizeGtin, normalizeMpn, titleTokens } from "@framerate/matching";
 import { sql } from "kysely";
 import { likePattern } from "@/shared/sql";
 import { fuseSpecs } from "./product-specs";
@@ -468,7 +468,7 @@ export async function priceRange(db: Db, category: Category): Promise<PriceRange
   return { min: row?.min ?? null, max: row?.max ?? null };
 }
 
-/** Slug vigente de un producto que cambió de nombre o se fusionó. */
+/** Slug vigente de un producto que cambió de nombre, se fusionó o viene del sistema anterior. */
 export async function resolveRedirect(db: Db, oldSlug: string): Promise<string | null> {
   const row = await db.query
     .selectFrom("product_slug_redirects as r")
@@ -476,7 +476,37 @@ export async function resolveRedirect(db: Db, oldSlug: string): Promise<string |
     .select("p.slug")
     .where("r.old_slug", "=", oldSlug)
     .executeTakeFirst();
-  return row?.slug ?? null;
+  return row?.slug ?? (await resolveLegacySlug(db, oldSlug));
+}
+
+/**
+ * Las fichas del sistema anterior cerraban en un id de 13 dígitos con uno o dos guiones, y justo antes llevaban el
+ * MPN o el GTIN (`asus-prime-b550m-a-ac-90mb15k0-mvaay0-1782355372370`, #145). Se prueba el slug sin sufijo y después
+ * los últimos 1 a 4 tramos como identificador, del más largo al más corto; sólo vale si apunta a un único producto.
+ */
+async function resolveLegacySlug(db: Db, slug: string): Promise<string | null> {
+  const base = slug.match(/^(.+?)--?\d{13}$/)?.[1];
+  if (!base) return null;
+  const same = await db.query.selectFrom("products").select("slug").where("slug", "=", base).executeTakeFirst();
+  if (same) return same.slug;
+
+  const parts = base.split("-");
+  const codes = [4, 3, 2, 1].flatMap((n) => {
+    const raw = parts.slice(-n).join("");
+    return n <= parts.length ? [normalizeMpn(raw), normalizeGtin(raw)].filter((c): c is string => c !== null) : [];
+  });
+  if (codes.length === 0) return null;
+  const rows = await db.query
+    .selectFrom("product_identifiers as i")
+    .innerJoin("products as p", "p.id", "i.product_id")
+    .select(["i.value", "p.id", "p.slug"])
+    .where("i.value", "in", codes)
+    .execute();
+  for (const code of codes) {
+    const products = new Map(rows.filter((r) => r.value === code).map((r) => [r.id, r.slug]));
+    if (products.size > 0) return products.size === 1 ? ([...products.values()][0] ?? null) : null;
+  }
+  return null;
 }
 
 /** El producto `p` tiene ofertas y todas están ocultas por el pipeline (#153). */
