@@ -105,7 +105,7 @@ describe("pipeline", () => {
     expect(system(h, "pipeline")).toMatchObject({ value: 2, attention: 2 });
     expect(h.pipeline.byStatus).toEqual({ legacy: 1, pending: 2, normalized: 0, linked: 0, fallback: 0, failed: 1 });
     expect(h.incidents.map((i) => [i.id, i.severity])).toEqual([
-      ["pipeline:failed", "error"],
+      ["pipeline:failed", "warning"],
       ["pipeline:pending", "warning"],
     ]);
     expect(h.incidents[1]?.detail).toBe("2 esperando, la más vieja hace 3 h");
@@ -242,6 +242,15 @@ describe("scraping", () => {
 
     await run(seed.alfa, "gpu", "succeeded", 1, { finishedAgo: 0.9, stats: { deactivationSkipped: false } });
     expect((await get()).incidents).toEqual([]);
+  });
+
+  test("una tienda que falló y no volvió a correr (pausada) es una sola advertencia, no una por categoría", async () => {
+    await run(seed.alfa, "gpu", "failed", 72, { finishedAgo: 71.9, error: "HTTP 403 de la tienda" });
+    await run(seed.alfa, "cpu", "failed", 72, { finishedAgo: 71.8, error: "HTTP 403 de la tienda" });
+    const scraping = (await get()).incidents.filter((i) => i.system === "scraping");
+    expect(scraping.map((i) => [i.id, i.severity])).toEqual([["scraping:alfa:not-crawled", "warning"]]);
+    expect(scraping[0]?.detail).toContain("No corre hace 2 d");
+    expect(scraping[0]?.detail).toContain("en 2 categorías: HTTP 403");
   });
 
   test("una tienda inactiva no cuenta", async () => {

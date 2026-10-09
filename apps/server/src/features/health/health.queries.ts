@@ -113,6 +113,7 @@ export async function computeHealth(db: Db, budget: AiBudget, now = new Date()):
     db.query
       .selectFrom("listings")
       .select(["norm_status", sql<number>`count(*)`.as("n"), sql<string | null>`min(updated_at)`.as("oldest")])
+      .where("is_active", "=", 1)
       .groupBy("norm_status"),
     db.query
       .selectFrom("listings")
@@ -142,11 +143,21 @@ export async function computeHealth(db: Db, budget: AiBudget, now = new Date()):
     stores: [],
   };
 
+  // Una tienda que falló y no volvió a correr (pausada en el registro, #81, #114) es una sola incidencia, no una por
+  // categoría que se repite para siempre.
+  const notCrawled = new Map<string, { name: string; at: string; error: string | null; categories: number }>();
   for (const r of latestRuns) {
     const base = { system: "scraping" as const, title: `${r.name}, ${label(r.category)}`, href: `/tiendas/${r.slug}` };
     const id = (kind: string) => `scraping:${r.slug}:${r.category}:${kind}`;
+    const end = r.finished_at ?? r.started_at;
+    if (r.status === "failed" && t - Date.parse(end) > HEALTH_THRESHOLDS.staleRunHours * HOUR) {
+      const prev = notCrawled.get(r.slug);
+      if (!prev || end > prev.at) notCrawled.set(r.slug, { name: r.name, at: end, error: r.error, categories: 0 });
+      const entry = notCrawled.get(r.slug);
+      if (entry) entry.categories++;
+      continue;
+    }
     if (r.status === "failed") {
-      const end = r.finished_at ?? r.started_at;
       incidents.scraping.push({
         ...base,
         id: id("failed"),
@@ -189,6 +200,19 @@ export async function computeHealth(db: Db, budget: AiBudget, now = new Date()):
     }
   }
 
+  for (const [slug, store] of notCrawled) {
+    incidents.scraping.push({
+      id: `scraping:${slug}:not-crawled`,
+      system: "scraping",
+      severity: "warning",
+      title: store.name,
+      detail: `No corre hace ${Math.floor((t - Date.parse(store.at)) / (24 * HOUR))} d (¿pausada?); su último error, en ${store.categories} categorías: ${(store.error ?? "sin detalle").slice(0, 160)}`,
+      at: store.at,
+      durationMs: null,
+      href: `/tiendas/${slug}`,
+    });
+  }
+
   const byStatus = Object.fromEntries(NORM_STATUSES.map((s) => [s, 0])) as PipelineHealth["byStatus"];
   for (const row of normStatuses) byStatus[row.norm_status] = Number(row.n);
   const oldestPendingAt = normStatuses.find((r) => r.norm_status === "pending")?.oldest ?? null;
@@ -211,9 +235,9 @@ export async function computeHealth(db: Db, budget: AiBudget, now = new Date()):
     incidents.pipeline.push({
       id: "pipeline:failed",
       system: "pipeline",
-      severity: "error",
-      title: "Ofertas que no se pudieron normalizar",
-      detail: `${byStatus.failed} agotaron los reintentos (en la cola de cartas muertas)`,
+      severity: "warning",
+      title: "Ofertas que Haiku no identificó",
+      detail: `${byStatus.failed} no son un componente (combos, accesorios) o la respuesta salió inválida dos veces; se vuelven a intentar en cada corrida`,
       at: normStatuses.find((r) => r.norm_status === "failed")?.oldest ?? iso(t),
       durationMs: null,
       href: pipelineHref,
