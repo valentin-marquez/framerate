@@ -1,6 +1,7 @@
 import type { Category } from "@framerate/contracts";
 import type { Db, NormStatus } from "@framerate/database";
 import { fromBool, toBool, toJson } from "@framerate/database";
+import { sql } from "kysely";
 import type { NormalizedOffer } from "./domain/normalize";
 
 /**
@@ -129,6 +130,40 @@ export async function addToQuarantine(
 const QUARANTINE_DAYS = 14;
 
 /** Cada corrida vuelve a registrar sus rechazos: sin purga la tabla crece sin fin. */
+const STALE_HOURS = 48;
+/** Más que esto de golpe es una caída nuestra (Cron, red), no de las tiendas: no se apaga nada. */
+const STALE_MAX_SHARE = 0.3;
+
+/**
+ * Una tienda que deja de responder nunca corre `deactivateUnseen` (la corrida falla antes), y sus ofertas seguirían
+ * publicadas con precios viejos (Tecno Saga, dominio caído el 08-10). Las que nadie vio en 48 h (8 ciclos) se apagan;
+ * si la tienda vuelve, la corrida las reactiva. Devuelve los productos tocados, para recalcular su precio.
+ */
+export async function deactivateStale(
+  db: Db,
+  now: Date,
+): Promise<{ deactivated: number; skipped: boolean; productIds: number[] }> {
+  const before = new Date(now.getTime() - STALE_HOURS * 3_600_000).toISOString();
+  const counts = await db.query
+    .selectFrom("listings")
+    .select([sql<number>`count(*)`.as("active"), sql<number>`coalesce(sum(last_seen_at < ${before}), 0)`.as("stale")])
+    .where("is_active", "=", 1)
+    .executeTakeFirstOrThrow();
+  const active = Number(counts.active);
+  const stale = Number(counts.stale);
+  if (stale === 0) return { deactivated: 0, skipped: false, productIds: [] };
+  if (stale > active * STALE_MAX_SHARE) return { deactivated: 0, skipped: true, productIds: [] };
+  const rows = await db.query
+    .updateTable("listings")
+    .set({ is_active: 0, updated_at: now.toISOString() })
+    .where("is_active", "=", 1)
+    .where("last_seen_at", "<", before)
+    .returning("product_id")
+    .execute();
+  const productIds = [...new Set(rows.map((r) => r.product_id).filter((id): id is number => id !== null))];
+  return { deactivated: rows.length, skipped: false, productIds };
+}
+
 export async function purgeQuarantine(db: Db, now: Date): Promise<number> {
   const before = new Date(now.getTime() - QUARANTINE_DAYS * 86_400_000).toISOString();
   const result = await db.query.deleteFrom("quarantine").where("created_at", "<", before).executeTakeFirst();

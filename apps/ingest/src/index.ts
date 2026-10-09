@@ -8,12 +8,12 @@ import {
   type EnqueuePipelineResult,
   type IngestService,
 } from "@framerate/contracts";
-import { createDb } from "@framerate/database";
+import { createDb, refreshProductsPriceSummary } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import type { Env } from "@/env";
 import { recheckClaims } from "@/features/claims/recheck";
 import { copyProductImages } from "@/features/images/product-images";
-import { purgeQuarantine } from "@/features/ingestion/ingestion.repository";
+import { deactivateStale, purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
 import { enqueueAllCrawls, requestCrawls, requestPipeline, runCrawlMessage } from "@/features/ingestion/runtime";
 import { applyViews7d, fetchViews7d } from "@/features/popularity/views";
@@ -49,6 +49,9 @@ export default {
       await recheckClaims(createDb(env.DB), new Date().toISOString(), undefined, emailSender(env)),
     );
     log.info("quarantine.purged", { deleted: await purgeQuarantine(createDb(env.DB), new Date()) });
+    const stale = await deactivateStale(createDb(env.DB), new Date());
+    if (stale.productIds.length > 0) await refreshProductsPriceSummary(createDb(env.DB), stale.productIds, new Date());
+    (stale.skipped ? log.warn : log.info)("listings.stale", { deactivated: stale.deactivated, skipped: stale.skipped });
     const imageLog = log.child({ feature: "images" });
     imageLog.info(
       "images.copied",

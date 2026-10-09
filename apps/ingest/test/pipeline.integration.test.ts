@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { crawlCategory } from "@/features/ingestion/crawl-category";
-import { purgeQuarantine } from "@/features/ingestion/ingestion.repository";
+import { deactivateStale, purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { fakeStore, offer, steppingClock, testDeps } from "./helpers";
 
 /**
@@ -267,5 +267,44 @@ describe("datos de origen para la huella", () => {
     expect(listing).toMatchObject({ title: "Nvidia RTX 3050 MSI Ventus 2X 6GB GDDR6", raw_title: raw });
     expect(listing?.image_url).toBe(images[0]);
     expect(JSON.parse(listing?.image_urls ?? "[]")).toEqual(images);
+  });
+});
+
+describe("ofertas que nadie ve", () => {
+  const HOUR = 3_600_000;
+  const gpus = (slug: string, n: number) =>
+    Array.from({ length: n }, (_, i) =>
+      offer(slug, String(i), { category: "gpu", title: `MSI RTX 40${60 + i} Ventus 2X 8GB`, priceCash: 300_000 + i }),
+    );
+
+  test("una tienda que dejó de responder se apaga a las 48 h y vuelve sola con la siguiente corrida", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const caida = fakeStore("caida", { gpu: ["gpu"] });
+    const sana = fakeStore("sana", { gpu: ["gpu"] });
+    caida.setOffers(gpus("caida", 2));
+    sana.setOffers(gpus("sana", 8));
+    await crawlCategory(deps, caida.store, "gpu");
+    clock.advance(49 * HOUR);
+    await crawlCategory(deps, sana.store, "gpu");
+
+    const result = await deactivateStale(deps.db, clock());
+    expect(result).toMatchObject({ deactivated: 2, skipped: false });
+    expect(result.productIds).toHaveLength(2);
+    const active = (await all(deps.db, "listings")).filter((l) => l.is_active === 1);
+    expect(active).toHaveLength(8);
+
+    await crawlCategory(deps, caida.store, "gpu");
+    expect((await all(deps.db, "listings")).filter((l) => l.is_active === 1)).toHaveLength(10);
+  });
+
+  test("si lo viejo pasa del 30 % es una caída nuestra: no apaga nada", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const tienda = fakeStore("alfa", { gpu: ["gpu"] });
+    tienda.setOffers(gpus("alfa", 3));
+    await crawlCategory(deps, tienda.store, "gpu");
+    clock.advance(49 * HOUR);
+    expect(await deactivateStale(deps.db, clock())).toMatchObject({ deactivated: 0, skipped: true });
   });
 });
