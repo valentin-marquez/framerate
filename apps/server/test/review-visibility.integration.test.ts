@@ -80,3 +80,14 @@ test("un producto con otra oferta visible sigue: la oculta no aparece en su fich
   expect(ProductDetailSchema.parse(await res.json()).offers.map((o) => o.priceCash)).toEqual([599_990]);
   await setVisible("1", 1);
 });
+
+test("un producto sin ninguna oferta conserva su ficha y su lugar en el sitemap (#144)", async () => {
+  const at = new Date().toISOString();
+  await db.query
+    .insertInto("products")
+    .values({ slug: "sin-ofertas", name: "Producto sin ofertas", category: "gpu", created_at: at, updated_at: at })
+    .execute();
+  expect((await app.request("/v1/products/sin-ofertas", undefined, env)).status).toBe(200);
+  const sitemap = (await (await app.request("/v1/sitemap", undefined, env)).json()) as { products: string[] };
+  expect(sitemap.products).toContain("sin-ofertas");
+});

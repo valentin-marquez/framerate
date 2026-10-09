@@ -308,9 +308,9 @@ export async function getProduct(
   ]);
   if (!product) return null;
 
-  // Un producto sin ninguna oferta visible (provisional fusionado por revisión, o nuevo a medio procesar en el
-  // pipeline) no existe públicamente todavía.
-  if (offerRows.length === 0) return null;
+  // Un producto cuyas ofertas están todas ocultas (nuevo a medio procesar en el pipeline) no existe públicamente
+  // todavía. Uno sin ninguna oferta sí: conserva su URL (#144).
+  if (offerRows.length === 0 && (await onlyHiddenOffers(db, product.id))) return null;
 
   const offers: Offer[] = offerRows
     .filter((o) => toBool(o.is_active))
@@ -468,14 +468,27 @@ export async function resolveRedirect(db: Db, oldSlug: string): Promise<string |
   return row?.slug ?? null;
 }
 
+/** El producto `p` tiene ofertas y todas están ocultas por el pipeline (#153). */
+const HIDDEN_ONLY = sql`exists (select 1 from listings l where l.product_id = p.id and l.visible = 0)
+  and not exists (select 1 from listings l where l.product_id = p.id and l.visible = 1)`;
+
+async function onlyHiddenOffers(db: Db, productId: number) {
+  const row = await db.query
+    .selectFrom("products as p")
+    .select(sql<number>`${HIDDEN_ONLY}`.as("hidden"))
+    .where("p.id", "=", productId)
+    .executeTakeFirst();
+  return Boolean(row?.hidden);
+}
+
 export async function sitemap(db: Db): Promise<Sitemap> {
   const [products, counts, stores] = await Promise.all([
     db.query
       .selectFrom("products as p")
       .select("p.slug")
-      // Una ficha que perdió el stock mantiene su URL y su historial: el catálogo la oculta, el sitemap no. Una que
-      // todavía no tiene oferta visible no existe (la ficha da 404).
-      .where(sql<boolean>`exists (select 1 from listings l where l.product_id = p.id and l.visible = 1)`)
+      // Una ficha que perdió el stock o sus ofertas mantiene su URL y su historial (#144). Sólo falta la de un
+      // producto con todas sus ofertas ocultas por el pipeline (la ficha da 404).
+      .where(sql<boolean>`not (${HIDDEN_ONLY})`)
       .orderBy("p.slug")
       .execute(),
     categoryCounts(db),
