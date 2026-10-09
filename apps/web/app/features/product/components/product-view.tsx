@@ -21,6 +21,7 @@ import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import { priceDrop } from "../utils/price-drop";
+import { type SpecRow, specLines } from "../utils/spec-labels";
 
 interface ProductViewProps {
   product: ProductDetail;
@@ -46,7 +47,8 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
   const inStock = offers.filter((o) => o.inStock);
   const outOfStock = offers.filter((o) => !o.inStock);
   const best = offers[0];
-  const specs = specRows(product.attributes);
+  const specs = withoutRepeats([...specRows(product.attributes), ...specLines(product.specs)]);
+  const fromKnowledge = specs.some((s) => s.knowledge);
   const summary = summarizeHistory(history, offers, period.days, now);
 
   const choosePeriod = (key: string) =>
@@ -219,17 +221,23 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
               <>
                 <h2 className="font-semibold text-foreground text-lg tracking-tight">Ficha técnica</h2>
                 <dl className="grid grid-cols-2 gap-2">
-                  {specs.map(([label, value]) => (
+                  {specs.map(({ label, value, knowledge }) => (
                     <div key={label} className="rounded-2xl bg-secondary/60 px-3 py-2.5">
                       <dt className="text-muted-foreground text-xs">{label}</dt>
-                      <dd className="font-medium text-foreground text-sm">{value}</dd>
+                      <dd className="font-medium text-foreground text-sm">
+                        {value}
+                        {knowledge && <span className="text-muted-foreground"> *</span>}
+                      </dd>
                     </div>
                   ))}
                 </dl>
               </>
             )}
             <p className="text-muted-foreground text-xs">
-              {specs.length > 0 && "Sacada del nombre del producto en las tiendas."}
+              {specs.length > 0 && "Sacada de las fichas de las tiendas."}
+              {fromKnowledge && (
+                <span className="block">* Ninguna tienda lo indica: es el dato conocido del modelo.</span>
+              )}
               {product.mpn && (
                 <span className="block">
                   Código del fabricante <span className="font-mono">{product.mpn}</span>
@@ -399,15 +407,19 @@ const UPPER = new Set(["chipset", "type", "interface", "formFactor", "socket"]);
 
 /** Los atributos que el matching saca del título, como filas legibles. El resto (línea, OC...) sólo le sirve al
  * matching. */
-function specRows(attributes: ProductDetail["attributes"]): [string, string][] {
-  return Object.entries(attributes).flatMap(([key, value]): [string, string][] => {
+function specRows(attributes: ProductDetail["attributes"]): SpecRow[] {
+  return Object.entries(attributes).flatMap(([key, value]): SpecRow[] => {
     const label = SPEC_LABELS[key];
     if (!label || typeof value === "boolean") return [];
-    if (typeof value === "number") return [[label, `${value}${UNITS[key] ?? ""}`]];
-    if (key === "efficiency") return [[label, `80 Plus ${value[0]?.toUpperCase()}${value.slice(1)}`]];
-    return [[label, UPPER.has(key) ? value.toUpperCase() : `${value[0]?.toUpperCase()}${value.slice(1)}`]];
+    const row = (text: string) => [{ label, value: text, knowledge: false }];
+    if (typeof value === "number") return row(`${value}${UNITS[key] ?? ""}`);
+    if (key === "efficiency") return row(`80 Plus ${value[0]?.toUpperCase()}${value.slice(1)}`);
+    return row(UPPER.has(key) ? value.toUpperCase() : `${value[0]?.toUpperCase()}${value.slice(1)}`);
   });
 }
+
+/** Lo del nombre va primero; una spec con la misma etiqueta (el socket de una CPU) no se repite. */
+const withoutRepeats = (rows: SpecRow[]) => rows.filter((r, i) => rows.findIndex((o) => o.label === r.label) === i);
 
 /** Precio habitual tachado y cuánto bajó; nada si la baja es menor al 3%. */
 function PriceDropLine({ price, reference }: { price: number; reference: number | null }) {

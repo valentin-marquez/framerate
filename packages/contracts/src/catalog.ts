@@ -61,8 +61,18 @@ export const ProductSummarySchema = z.object({
 });
 export type ProductSummary = z.infer<typeof ProductSummarySchema>;
 
+/** Especificación de la ficha, fundida desde las identidades de sus ofertas (#153); claves de `SPEC_FIELDS`. */
+export const ProductSpecSchema = z.object({
+  key: z.string(),
+  value: z.union([z.string(), z.number(), z.boolean()]),
+  /** Ninguna tienda lo dice: lo completó el normalizador por conocimiento del modelo. Se muestra con nota. */
+  knowledge: z.boolean(),
+});
+export type ProductSpec = z.infer<typeof ProductSpecSchema>;
+
 export const ProductDetailSchema = ProductSummarySchema.extend({
   offers: z.array(OfferSchema),
+  specs: z.array(ProductSpecSchema),
 });
 export type ProductDetail = z.infer<typeof ProductDetailSchema>;
 

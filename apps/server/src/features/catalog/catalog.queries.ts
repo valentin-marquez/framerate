@@ -11,12 +11,13 @@ import type {
   ProductSummary,
   Sitemap,
 } from "@framerate/contracts";
-import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel } from "@framerate/contracts";
+import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel, NORMALIZER_VERSION } from "@framerate/contracts";
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { searchText, slugify } from "@framerate/kit";
 import { titleTokens } from "@framerate/matching";
 import { sql } from "kysely";
 import { likePattern } from "@/shared/sql";
+import { fuseSpecs } from "./product-specs";
 
 /**
  * Consultas de lectura del catálogo público. Las listas (catálogo, búsqueda, marcas, rangos, conteos) sólo
@@ -280,7 +281,7 @@ export async function getProduct(
   slug: string,
   assetsBaseUrl: string | undefined,
 ): Promise<ProductDetail | null> {
-  const [[product], offerRows] = await db.read([
+  const [[product], offerRows, specRows] = await db.read([
     db.query.selectFrom("products as p").selectAll("p").select(mpnOf.as("mpn")).where("p.slug", "=", slug),
     db.query
       .selectFrom("listings as l")
@@ -305,6 +306,16 @@ export async function getProduct(
       .where("l.visible", "=", 1)
       .orderBy("l.in_stock", "desc")
       .orderBy("l.price_cash"),
+    db.query
+      .selectFrom("listing_identity as i")
+      .innerJoin("listings as l", (join) =>
+        join.onRef("l.id", "=", "i.listing_id").onRef("l.norm_hash", "=", "i.input_hash"),
+      )
+      .innerJoin("products as pr", "pr.id", "l.product_id")
+      .select(["i.specs", "i.specs_source"])
+      .where("pr.slug", "=", slug)
+      .where("l.is_active", "=", 1)
+      .where("i.version", "=", NORMALIZER_VERSION),
   ]);
   if (!product) return null;
 
@@ -340,7 +351,7 @@ export async function getProduct(
     offerCount: offers.length,
     referencePrice: product.reference_price,
   };
-  return { ...summary, offers };
+  return { ...summary, offers, specs: fuseSpecs(summary.category, specRows) };
 }
 
 export async function getPriceHistory(db: Db, slug: string, days: number): Promise<PricePoint[] | null> {

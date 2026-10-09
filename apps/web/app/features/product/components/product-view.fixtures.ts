@@ -57,6 +57,14 @@ export const product: ProductDetail = {
   attributes: { chipset: "rx 9060 xt", vram: 16, line: "dual", oc: false },
   offerCount: offers.length,
   offers,
+  specs: [
+    { key: "memory_type", value: "GDDR6", knowledge: false },
+    { key: "memory_bus_bit", value: 128, knowledge: false },
+    { key: "core_boost_clock_mhz", value: 3290, knowledge: false },
+    { key: "hdmi", value: 1, knowledge: false },
+    { key: "displayport", value: 3, knowledge: false },
+    { key: "tdp_w", value: 160, knowledge: true },
+  ],
 };
 
 /** Un punto por día y tienda, con una ondulación fija (sin azar, para que la historia sea estable). */
