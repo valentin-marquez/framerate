@@ -77,22 +77,22 @@ export async function enqueueAllCrawls(
   filter?: { store?: string; category?: Category },
 ) {
   const requestedAt = new Date().toISOString();
-  const messages: CrawlMessage[] = [];
+  const perStore: CrawlMessage[][] = [];
   for (const store of STORES) {
     if (store.pausedReason) continue;
     if (filter?.store && store.slug !== filter.store) continue;
+    const own: CrawlMessage[] = [];
     for (const [category, slugs] of Object.entries(store.adapter.categories)) {
       if (!slugs?.length) continue;
       if (filter?.category && category !== filter.category) continue;
-      messages.push({
-        type: "crawl.category",
-        store: store.slug,
-        category: category as Category,
-        requestedAt,
-        requestedBy,
-      });
+      own.push({ type: "crawl.category", store: store.slug, category: category as Category, requestedAt, requestedBy });
     }
+    perStore.push(own);
   }
+  // Intercaladas por tienda: la cola corre dos corridas a la vez y, en orden de tienda, las dos eran de la misma
+  // (dos clientes HTTP con su propio intervalo contra un sitio; MyBox respondía 429 en cada ciclo).
+  const longest = Math.max(0, ...perStore.map((m) => m.length));
+  const messages = Array.from({ length: longest }, (_, i) => perStore.flatMap((m) => m[i] ?? [])).flat();
   await sendInBatches(env.CRAWL_QUEUE, messages);
   return messages.length;
 }

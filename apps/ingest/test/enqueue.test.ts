@@ -19,6 +19,14 @@ describe("requestCrawls", () => {
     expect(sent.every((m) => m.type === "crawl.category" && m.requestedBy === "cron")).toBe(true);
   });
 
+  test("intercala las tiendas: dos corridas seguidas nunca son de la misma tienda mientras haya otra", async () => {
+    const { env, sent } = testEnv({} as D1Database);
+    await requestCrawls(env, { requestedBy: "cron" });
+    const stores = new Set(sent.map((m) => m.store)).size;
+    const firstRound = sent.slice(0, stores).map((m) => m.store);
+    expect(new Set(firstRound).size).toBe(stores);
+  });
+
   test("no encola las tiendas pausadas", async () => {
     const { env, sent } = testEnv({} as D1Database);
     await requestCrawls(env, { requestedBy: "cron" });
