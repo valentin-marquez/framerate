@@ -32,7 +32,7 @@
     "ANTHROPIC_CYCLE_DAY": "17",
     // Vínculo desde la identidad de Haiku (#153). off: ignora la cola. shadow: sólo escribe `match_shadow` (qué haría
     // contra el vínculo actual). live: vincula, crea productos con el nombre canónico y los publica.
-    "PIPELINE_LINK": "shadow"
+    "PIPELINE_LINK": "live"
   },
 
   "d1_databases": [

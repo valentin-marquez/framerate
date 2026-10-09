@@ -24,7 +24,7 @@
     "PIPELINE_NORMALIZE": "shadow",
     // Sólo live cambia algo: lo nuevo nace oculto (visible = 0) y lo vincula el consumidor de framerate-link; lo
     // `legacy` se sigue vinculando en la corrida hasta la fase 4. Sin PIPELINE_NORMALIZE encendido cuenta como off.
-    "PIPELINE_LINK": "off"
+    "PIPELINE_LINK": "live"
   },
 
   // Los crawls consumen CPU parseando JSON; subir el límite por invocación.
