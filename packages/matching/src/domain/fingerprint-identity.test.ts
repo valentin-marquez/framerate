@@ -43,6 +43,16 @@ describe("huella desde la identidad: texto libre estable entre llamadas", () => 
     expect(compare(c, d).vetoes).toEqual([]);
   });
 
+  // #155: pares iguales de producción, Haiku pone "elite" en la línea o en el modelo según la llamada.
+  test("placa: las mismas palabras repartidas entre línea y modelo no vetan", () => {
+    const base = { chipset: "b650m", formFactor: "matx", wifi: true };
+    const a = fp("motherboard", "Gigabyte", { ...base, line: "aorus", model: "b650m elite" });
+    const b = fp("motherboard", "Gigabyte", { ...base, line: "aorus elite", model: "b650m" });
+    expect(compare(a, b).vetoes).toEqual([]);
+    const c = fp("motherboard", "Gigabyte", { ...base, line: "aorus", model: "b650m pro" });
+    expect(compare(a, c).vetoes).toContain("attribute:model");
+  });
+
   test("GPU: otra línea sigue vetando", () => {
     const a = fp("gpu", "MSI", { chipset: "rtx 5060", vram_gb: 8, line: "ventus 2x", oc: true });
     const b = fp("gpu", "MSI", { chipset: "rtx 5060", vram_gb: 8, line: "gaming trio", oc: true });

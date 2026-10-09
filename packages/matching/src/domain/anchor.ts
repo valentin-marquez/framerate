@@ -170,7 +170,7 @@ function normalizeValue(category: Category, field: string, value: IdentityValue 
 
 // Lo que ya tiene campo propio (memoria, wifi, OC, revisión) o pertenece a `line` no distingue dentro de `model` ni
 // `variant`: Haiku lo reparte distinto en cada llamada ("TUF GAMING B850M-PLUS WIFI" contra "B850M Plus WiFi").
-const OWN_FIELD_TOKENS = /^(?:ddr[345]|d[45]|wi|fi|wifi[a-z0-9]*|6e|ax|ac|oc|edition|r\d(?:\.\d)?|ii|max|csm)$/;
+const OWN_FIELD_TOKENS = /^(?:ddr[345]|d[45]|wi|fi\d?|wifi[a-z0-9]*|6e|ax|ac|oc|edition|r\d(?:\.\d)?|ii|max|csm)$/;
 
 function dedupeAcrossFields(identity: Record<string, IdentityValue>): void {
   const line = identity.line;
