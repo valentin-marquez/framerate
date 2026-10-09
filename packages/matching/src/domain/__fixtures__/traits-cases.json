@@ -1,0 +1,874 @@
+{
+  "merged": [
+    {
+      "category": "case",
+      "titles": ["Gabinete Cooler Master TD500 MESH Negro V2 ATX", "GABINETE COOLER MASTER MASTERBOX TD500 V2 ARGB"]
+    },
+    {
+      "category": "case",
+      "titles": [
+        "Gabinete Cooler Master TD500 MESH White V2 ATX",
+        "GABINETE COOLER MASTER MASTERBOX TD500 V2 ARGB WHITE"
+      ]
+    },
+    {
+      "category": "case",
+      "titles": [
+        "Gabinete Formula Crystal Z1CM PLUS Black AR",
+        "Formula Gabinete CRYSTAL Z1CM PLUS BLACK AR 3 Fans",
+        "Gabinete - Formula V Line Crystal Z1CM Plus AR - S/Fuente - m-ATX - Negro - Incluye 3 ventiladores ARGB 120 mm"
+      ]
+    },
+    {
+      "category": "case",
+      "titles": [
+        "Gabinete - Gamemax Diamond CP BK - RGB - S/Fuente - ATX - Negro (Incluye 1 Fan 120mm ARGB Trasero + 1 de 140mm Turbo Normal Lateral M/B)",
+        "GABINETE GAMER GAMEMAX DIAMOND CP BK SIN FUENTE"
+      ]
+    },
+    {
+      "category": "case",
+      "titles": [
+        "GABINETE GAMER GAMEMAX F46 BLACK ATX P/N F46 BLACK",
+        "Gabinete Gamer GameMax F46 BK ATX – 4 Ventiladores ARGB/PWM, Vidrio Templado y USB-C"
+      ]
+    },
+    {
+      "category": "case",
+      "titles": [
+        "Gabinete - GameMax HYPE-A BK - ATX - Negro - Sin Fuente - Incluye 4 FAN 120MM ARGB",
+        "Gabinete Gamemax Hype-A BK",
+        "GABINETE GAMEMAX HYPE A BLACK ( 3FANS ARGB ) SIN FUENTE"
+      ]
+    },
+    {
+      "category": "case_fan",
+      "titles": ["XPG Ventilador VENTO 120 ARGB PWM Black", "VENTILADOR XPG VENTO 120 ARGB BLACK"]
+    },
+    {
+      "category": "case_fan",
+      "titles": [
+        "Kit de ventiladores 120 mm ARGB Personalizable",
+        "Set 3 Ventiladores EsGaming EZ-A25 ARGB FAN SET, 120mm ARGB c/control remoto"
+      ]
+    },
+    {
+      "category": "case_fan",
+      "titles": ["COOLER GAMEMAX FN12A-S8I", "GAMEMAX VENTILADOR FN12A-S8I WHITE ARGB"]
+    },
+    {
+      "category": "cpu",
+      "titles": [
+        "Procesador AMD Ryzen 7 7700 8 Nucleos AM5 c Disipador",
+        "AMD Procesador CPU Ryzen 7 7700 Socket AM5 Wraith Prism 65W Gráficos Integrados Radeon",
+        "CPU AMD Ryzen 7 7700 (AM5)"
+      ]
+    },
+    {
+      "category": "cpu",
+      "titles": [
+        "Intel Procesador Core I3-10105F 3.70 GHz Socket LGA 1200 6MB (no GPU)",
+        "Procesador Intel® Core™ i3-10105F 4 Core 3,7Ghz (6M Cache, Up to 4.4Ghz) LGA1200 Sin Graficos",
+        "PLACA MADRE Core i3-10105F LGA 1200 [BX8070110105F]"
+      ]
+    },
+    {
+      "category": "cpu",
+      "titles": [
+        "CPU Intel XEON Silver 4314 CPU FOR HPE",
+        "CPU Intel - Socket LGA 4189 - Xeon Silver 4314 - 2.3GHZ - 16 Core (HPE DL 360 Gen10) (P36922-B21)",
+        "Procesador Intel Xeon Silver 4314 - 2.4 GHz - 16 núcleos - 24 MB caché - para ProLiant DL110 Gen10, DL360 Gen10, DL380 Gen10; Synergy 480 Gen10",
+        "Procesador Intel Xeon Silver 4314 2,3 GHz, 16 núcleos y 135 W para HPE",
+        "UPG 2do CPU Xeon-Silver 4314 2.4GHz 16-core 135W Processor for HPE DL 360 Gen10"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": [
+        "ASUS ROG RYUJIN III 360 ARGB EXTREM Refrigeración líquida LCD",
+        "Refrigeración Líquida CPU - Asus ROG RYUJIN III 360 ARGB EXTREME - 360 mm - Pantalla LCD 3.5\" - Negro - Sockets: AM5, AM4 / LGA 1851, 1700, 1200, 115x",
+        "Refrigeracion liquida ASUS ROG RYUJIN III 360 ARGB EXTREME - Pantalla LCD 3.5\" - Intel/Amd",
+        "ASUS - ROG RYUJIN III 360 ARGB EXTREM",
+        "Refrigeración Líquida ASUS ROG Ryujin III 360 ARGB Extreme, 360mm, Pantalla LCD, Intel/AMD",
+        "Refrigeración Liquida ASUS ROG Ryujin III 360 ARGB Extreme"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": [
+        "Refrigeración Líquida ASUS ROG RYUO IV 360 ARGB, AMOLED",
+        "Refrigeración Líquida ASUS ROG RYUO IV 360 ARGB, AMOLED",
+        "ASUS ROG RYUO IV 360 ARGB",
+        "Refrigeración Líquida 360 ARGB Pantalla LCD Black",
+        "ASUS cooling system - 90RC01N1-B0AAY0",
+        "ASUS - ASUS cooling system - 90RC01N1-B0AAY0 (90RC01N1-B0AAY0)"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": [
+        "Cooler Master MasterLiquid Core Nex Series - White [MLX-D24M-A18PA-RW]",
+        "Refrigeración Liquida Cooler Master MasterLiquid Core Nex Series - White"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": [
+        "Refrigeración Liquida Cooler Master ML240 Vivid Con Pantalla",
+        "REFRIGERACION LIQUIDA WATER COOLING COOLER MASTER ML240 VIVID P/N MLY-L24M-A18PK-R1"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": [
+        "Refrigeración Líquida Esgaming CZ-360B-BK ARGB",
+        "Ventilador CPU Water Cooler CZ-360B-BK ARGB 360 - Esgaming"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": ["WATERCOOLING GAMEMAX GLACIER 360 LCD BLACK", "Gamemax Watercooling Glacier 360 LCD BK"]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": ["WATERCOOLING GAMEMAX GLACIER 360 LCD WHITE", "Gamemax Watercooling Glacier 360 LCD WH"]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": [
+        "GameMax IceBurg 360 Digital BK",
+        "SISTEMA DE REFRIGERACION LIQUIDA GAMEMAX WATERCOOLING ICEBURG 360 DIGITAL BK ( s1700 ready y AM5 ) P/N ICEBURG-360-DIGITAL-BK"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": [
+        "WATERCOOLING MSI CORELIQUID A13 240MM WHITE",
+        "Refrigeración Líquida MSI CORELIQUID A13 240 ARGB Blanco"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": [
+        "Refrigeracion Liquida MSI MAG Coreliquid A15 360",
+        "Refrigeracion Liquida MSI MAG Coreliquid A15 360",
+        "MSI Water Cooling MAG Coreliquid A15 360 BLACK"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": ["Refrigeracion Liquida MSI MAG CoreLiquid M240", "WATERCOOLING MSI MAG CORELIQUID M240"]
+    },
+    {
+      "category": "cpu_cooler",
+      "titles": [
+        "WATERCOOLING NZXT KRAKEN ELITE 240 RGB WHITE",
+        "REFRIGERACION LIQUIDA NZXT Kraken Elite 240 2.72\" IPS LCD & RGB - White P/N RL- KR24E-W2"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "TARJETA DE VIDEO ASUS ROG STRIX RTX 3050 8GB GDDR6",
+        "Tarjeta de Video ASUS Rog Strix RTX 3050 8GB GDDR6"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta de Video ASUS PRIME RTX 5060 Ti 16GB GDDR7",
+        "Tarjeta de Video NVIDIA GeForce RTX 5060TI 16GB PRIME"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta de Video ASUS PRIME RTX 5070 Ti 16GB GDDR7 OC",
+        "Tarjeta de Video ASUS Prime GeForce RTX 5070 Ti OC 16GB GDDR7",
+        "Tarjeta de Video Prime GF RTX-5070 Ti OC 16GB GDDR7 3*DP HDMI PCIe 5.0 x16",
+        "Tarjeta de Video ASUS Prime GeForce RTX 5070 Ti OC Edition, 16GB GDDR7, 256-bit, 1432 TOPs",
+        "TARJETA DE VIDEO ASUS PRIME GEFORCE RTX 5070TI 16GB 256BIT GDDR7 OC EDITION P/N PRIME-RTX5070TI-O16G",
+        "Tarjeta de Video ASUS Prime GeForce RTX 5070 Ti OC Edition, 16GB GDDR7, 256-bit, 1432 TOPs"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta de Video Gigabyte GeForce RTX 5080 Gaming OC 16GB GDDR7",
+        "Tarjeta de Video Gigabyte GeForce RTX 5080 Gaming OC 16G - 16GB GDDR7",
+        "Tarjeta de Video NVIDIA GeForce RTX 5080 16GB Gaming OC"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta Grafica MSI GeForce RTX 5060Ti 16G VENTUS 2X OC PLUS",
+        "Tarjeta Grafica MSI GeForce RTX 5060Ti 16G VENTUS 2X OC PLUS",
+        "Tarjeta de Video MSI GeForce RTX 5060 Ti Ventus 2X Black Plus OC 16GB GDDR7",
+        "TARJETA DE VIDEO MSI GEFORCE RTX 5060 TI 16GB VENTUS 2X OC PLUS GDDR7"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta de Video MSI GeForce RTX 5060 8G SHADOW 2X OC",
+        "Tarjeta de Video MSI GeForce RTX 5060 Shadow 2X OC 8GB GDDR7",
+        "TARJETA DE VIDEO MSI GEFORCE RTX 5060 SHADOW 2X OC 8GB",
+        "Tarjeta de Video MSI GeForce RTX 5060 8G SHADOW 2X OC",
+        "MSI Tarjeta de Video GPU NVIDIA GEFORCE RTX 5060 8G GDDR7 Shadow 2X OC EDITION",
+        "MSI GeForce RTX 5060 8G SHADOW 2X OC [G5060-8S2C]",
+        "Tarjeta de video MSI GeForce RTX™ 5060 SHADOW 2X OC 8GB GDDR7 [G5060-8S2C]"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta de Video MSI RTX 5070Ti 16G FRIEREN Edition",
+        "Tarjeta de Video MSI GeForce RTX 5070 Ti Frieren OC 16GB GDDR7"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta de Video MSI GeForce RTX 5080 Shadow 3X OC 16GB GDDR7",
+        "MSI GeForce RTX 5080 16G SHADOW 3X OC [G5080-16S3C]"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta de Video ZOTAC GeForce RTX3050 6G GDDR6 Twin Edge OC",
+        "Tarjeta de Video NVIDIA GeForce RTX 3050 6GB Twin Edge Gaming",
+        "Tarjeta de Video ZOTAC GAMING Nvidia GeForce RTX 3050 Twin Edge OC 6GB GDDR6 96-bit",
+        "Tarjeta de Video ZOTAC GAMING Nvidia GeForce RTX 3050 Twin Edge OC 6GB GDDR6 96-bit",
+        "TARJETA DE VIDEO ZOTAC GeForce RTX3050 6GB TWIN EDGE OC GDDR6 ZT-A30510H-10A",
+        "Tarjeta de Video Zotac Twin Edge OC GF-RTX 3050 6GB GDDR6 3*DP HDMI Dual Slot"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta de Video Nvidia RTX 5050 8GB VRAM Zotac Twin Edge OC",
+        "Tarjeta de Video ZOTAC GeForce RTX 5050 Twin Edge OC 8GB",
+        "TARJETA DE VIDEO ZOTAC RTX 5050 8GB DDR6 GAMING TWIN EDGE OC ZT-B50500H-10M",
+        "Tarjeta de Video Nvidia GeForce Zotac GAMING RTX 5050 Twin Edge OC 8GB GDDR6"
+      ]
+    },
+    {
+      "category": "gpu",
+      "titles": [
+        "Tarjeta de Video Zotac Gaming GeForce RTX 5070 Solid OC 12GB GDDR7",
+        "Tarjeta de Video ZOTAC GAMING GeForce RTX 5070 SOLID OC 12GB GDDR7",
+        "Tarjeta de Video ZOTAC GAMING GeForce RTX 5070 SOLID OC 12GB GDDR7"
+      ]
+    },
+    {
+      "category": "hdd",
+      "titles": [
+        "Disco 1.2TB 10K RPM SAS 12GBPS 512N 2.5IN HOT R650-R450",
+        "Disco duro 1.2TB interno Dell 10000 RPM 2.5” SAS 12Gb/s Hot-Swap"
+      ]
+    },
+    {
+      "category": "hdd",
+      "titles": [
+        "Disco Duro Purple Pro 10TB CCTV 512mb 7200rpm Western Digital",
+        "HDD Disco Duro SATA WD Purple Pro 10 TB para videovigilancia",
+        "Disco Western Digital WD Purple 10TB - 3.5\" - 7200 rpm P/N",
+        "Disco Duro Western Digital Purple Pro 10TB 3.5\" 7200RPM SATA3 512MB p/VideoVig",
+        "Disco duro 10TB interno WD Purple Pro 3.5\" 7200 RPM SATA III ST10000PURZ",
+        "Disco duro HDD Western Digital Purple Pro 10 TB 3.5\", SATA 6Gb/s, 7200 rpm"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "Placa Madre ASUS PRIME A620M-K, AM5, DDR5, mATX",
+        "M/B ASUS PRIME A620M-K",
+        "ASUS Placa Madre PRIME A620M-K AMD RYZEN 9000 Series DDR5 PCIe 4.0 AM5 SOCKET",
+        "Asus Prime A620M-K AM5",
+        "Placa Madre ASUS Prime A620M-K DDR5",
+        "Placa Madre AMD PRIME A620M-K (sAM5)",
+        "Placa Madre sAM5 (AMD) - Asus Prime A620M-K - 2x DDR5 - 1x M.2 - HDMI/VGA - m-ATX",
+        "Placa Madre Asus PRIME A620M-K - Placa base - micro ATX - Socket AM5 - AMD A620 Chipset - USB 3.2",
+        "Placa Madre ASUS PRIME A620M-K, Socket AM5, 2x DDR5, M.2 PCIe 4.0, 1GbE, HDMI, VGA, Micro-ATX",
+        "Placa Madre Asus A620M-K Prime AMD Micro ATX DDR5 PCIe 4.0 M.2 (90MB1F40-M0EAY0)",
+        "PLACA MADRE ASUS PRIME A620M-K AM5 P/N PRIME A620M-k",
+        "Tarjeta Made Asus PRIME A620M-K AMD AM5 2*DDR5 M.2 PS/2 HDMI VGA 4*USB3.2 mATX",
+        "Placa Madre ASUS Prime A620M-K DDR5, Socket AM5, AMD A620, 2xDIMM, VGA, HDMI, micro-ATX",
+        "ASUS - Placa Madre ASUS PRIME A620M-K, Socket AM5, 2x DDR5, M.2 PCIe 4.0, 1GbE, HDMI, VGA, Micro-ATX (90MB1F40-M0EAY0)",
+        "Placa Madre Asus Prime A620M-K (DDR5)"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "Placa Madre AMD ASUS Prime B550M-A AC DDR4 WiFi mATX",
+        "Placa Madre ASUS PRIME B550M-A AC, mATX, AM4, DDR4, PCIE4.0",
+        "Placa Madre ASUS Prime B550M-A AC MicroATX AMD AM4",
+        "Placa Madre ASUS Prime B550M-A AC",
+        "Placa Madre ASUS PRIME B550M-A AC, Socket AM4, 4x DDR4, Wi-Fi, Micro-ATX",
+        "Placa Madre Asus B550M-A AC PRIME AMD Micro ATX DDR4 PCIe 4.0 M.2 (PRIME B550M-A AC)",
+        "Tarjeta Madre Asus PRIME B550M-A AC AMD AM4 4*DDR4 WiFi 2*M.2 DVI HDMI VGA mATX",
+        "Placa Asus PRIME B550M-A AC sAM4 4xDDR4 WIFI M-ATX",
+        "M/B ASUS PRIME B550M-A AC",
+        "ASUS - Placa Madre ASUS PRIME B550M-A AC, Socket AM4, 4x DDR4, VGA, DVI-D, HDMI, Wi-Fi, Micro-ATX (90MB15K0-MVAAY0)"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "Placa Madre ASUS Prime B650M-A AX II MicroATX AM5",
+        "M/B ASUS PRIME B650M-A AX II",
+        "M/B ASUS PRIME B650M-A WIFI II"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "M/B ASUS PRIME B760M-A D4",
+        "Placa Madre PC LGA1700 Asus Prime B760M-A D4 DDR4 90MB1D00-M1EAY0",
+        "ASUS PRIME B760M-A D4 LGA1700 DDR4 mATX",
+        "Tarjeta Madre Asus PRIME B760M-A D4 LGA1700 14°G 4*DDR4 2*M.2 DP HDMI USB3.2",
+        "ASUS PRIME B760M-A D4"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "Placa Madre sAM5 (AMD) - Asus ROG Strix B850-A Gaming WIFI - 4x DDR5 - 4x M.2- Wi-Fi 7 - DisplayPort/HDMI - ATX",
+        "Placa Madre ASUS ROG Strix B850-A Gaming WiFi (Socket AM5, DDR5, PCIe 5.0, Wi-Fi 7, ATX)",
+        "Placa Madre ASUS ROG Strix B850-A Gaming WiFi AM5 DDR5 ATX"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "Placa Madre LGA s1700 (Intel) - Asus Prime H610M-F D4 R2.0 - 2x DDR4 - 1x M.2 - HDMI - m-ATX",
+        "ASUS PRIME H610M-F D4",
+        "Placa Madre Asus H610M-F D4, LGA1700, 2x DDR4, 1x M.2, 4x Sata3, PCIe 4.0, VGA, Micro ATX",
+        "PLACA MADRE ASUS PRIME H610M-F D4 R2.0 s1700",
+        "Placa Madre ASUS PRIME H610M-F D4 (LGA1700, DDR4 2133/3200MHz, M.2, Micro ATX)",
+        "ASUS PRIME H610M-F D4 R2.0 DDR4 mATX",
+        "Tarjeta madre Asus PRIME H610M-F D4 LGA1700 14°G 2*DDR4 M.2 VGA USB3.2 PS/2 mATX",
+        "ASUS - PRIME H610M-F D4 (90MB1H70-M0EAY0)",
+        "Placa Madre Intel H610M-F D4 R2.0 (s1700)",
+        "Placa Madre ASUS PRIME H610M-F D4 R2.0 LGA1700 DDR4"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "M/B ASUS PRIME H610M-K",
+        "ASUS PRIME H610M-K",
+        "Placa Madre Intel PRIME H610M-K (s1700)",
+        "Placa Madre Asus H610M-K Prime Intel Micro ATX DDR5 LGA 1700 PCIe 4.0 M.2 (90MB1GA0-M0EAY0)",
+        "Placa Madre Asus H610M-K Prime Intel Micro ATX DDR5 LGA 1700 PCIe 4.0 M.2",
+        "ASUS PRIME H610M-K Micro ATX DDR5 LGA1700",
+        "Placa Madre LGA s1700 (Intel) - Asus Prime H610M-K - 2x DDR5 - 1x M.2 - HDMI/VGA - m-ATX",
+        "PLACA MADRE ASUS PRIME H610M-K S1700 DDR5 P/N PRIMEH610M-K",
+        "Tarjeta Madre Asus PRIME H610M-K LGA1700 13°G 2*DDR5 M.2 HDMI VGA PS/2 USB3.2",
+        "Placa Madre ASUS PRIME H610M-K LGA 1700, DDR5, M.2, PCI-e 4.0, RGB, HDMI, m-ATX",
+        "ASUS - Placa Madre ASUS PRIME H610M-K, Socket LGA 1700, 2x DDR5, VGA, HDMI, M.2, 4xSATA, Micro-ATX (PRIME H610M-K)",
+        "Placa Madre Asus Prime H610M-K DDR5"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": ["Placa Madre Gigabyte B550M DS3H AC AMD AM4", "M/B GIGABYTE B550M DS3H AC"]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "Placa Madre Gigabyte B550M K DDR4",
+        "Placa Madre Gigabyte B550M K (AM4, DDR4 2133/4733MHz, M.2, MicroATX)",
+        "Placa Madre Gigabyte B550M-K MicroATX AMD AM4",
+        "M/B GIGABYTE B550M K",
+        "Placa madre AMD B550M K (AM4)",
+        "Tarjeta Madre Gigabyte B550M K R1.0 AMD Skt AM4 microATX 4*DDR4 2*M.2 DP HDMI",
+        "PLACA MADRE GIGABYTE AMD B550M K AM4"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "Gigabyte Placa Madre B650M D3HP AX WIFI Socket AM5 RYZEN 9000 Series",
+        "Placa Madre AMD B650M D3HP AX (sAM5)",
+        "Placa Madre Gigabyte B650M D3HP AX, AM5, DDR5",
+        "Placa Madre Gigabyte B650M D3HP AX DDR5"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "M/B MSI PRO A620M-E",
+        "Placa Madre MSI PRO A620M-E Socket AMD AM5, DDR5, HDMI, VGA, USB 3.2, PCIe 4.0, mATX"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "M/B MSI B760M GAMING PLUS WIFI",
+        "Tarjeta Madre MSI B760M GAMING PLUS WIFI LGA1700 4*DDR5 HDMI DP 2*M.2 mATX",
+        "Placa Madre MSI B760M GAMING PLUS WIFI (LGA1700, DDR5 x4, M.2 x2, Micro-ATX)"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "titles": [
+        "Placa Madre MSI Pro H610M-S LGA1700 DDR4",
+        "M/B MSI PRO H610M-S DDR4",
+        "MSI - Placa Madre MSI PRO H610M-S DDR4 LGA1700 12th 13th 14th GEN Micro-ATX (911-7E44-013)",
+        "PLACA MADRE MSI H610M-S DDR4 LGA1700 14/13/12TH GEN CPU READY",
+        "Tarjeta Madre MSI PRO H610M-S DDR4 LGA1700 14°G 2*DDR4 M.2 HDMI USB3.2/2.0 mATX"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "Fuente de Poder XPG Probe 700W 80 Plus Bronze, Negro",
+        "FUENTE DE PODER XPG PROBE 700W 80+ BRONZE",
+        "Fuente de Poder 700W - XPG Probe 700B - 80 Plus Bronze",
+        "Fuente de poder 700W XPG Probe 80+ Bronze",
+        "Fuente de poder XPG Probe 700W 80+ Bronze (PROBE700B-BKCCL)",
+        "FUENTE DE PODER ADATA XPG PROBE 700W 80+ BRONCE P/N PROBE700B-BKCEU"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "FUENTE DE PODER ADATA XPG PYLON 750W BRONZE P/N PYLON750B-BKCEU",
+        "Fuente de Poder XPG Pylon 750W 80+ Bronze",
+        "Fuente de Poder XPG Pylon 750W 80+ Bronze (PYLON750B-BKCCL)"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "Fuente de Poder Asus ROG Thor Platinum II de 1200 W",
+        "FUENTE DE PODER ASUS ROG THOR 1200W 80PLUS PLATINUM",
+        "FUENTE DE PODER ASUS ROG THOR 1200P2 GAMING 1200W 80PLUS PLATINUM F.MODULAR"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "Fuente de Poder ASUS ROG Thor 1200W Platinum III",
+        "ASUS ROG-THOR-1200P3-GAMING 1200W Fuente ATX 3.1 Platinum III",
+        "Fuente de Poder ROG Thor 1200W Platinum III",
+        "Fuente de Poder 1200W - Asus ROG Thor 1200W Platinum III - 80 Plus Platinum - Modular",
+        "Fuente de Poder ASUS ROG THOR 1200W Platinum III, Full Modular, 80 PLUS Platinum, Pantalla OLED",
+        "Fuente de Poder Asus ROG Thor 1200W Platinum III",
+        "Fuente de Poder ASUS ROG THOR 1200W Platinium III - Full Modular - 80Plus Pantalla Oled Magnetica.",
+        "Fuente de Poder Asus Rog Thor 1200W Platinum III, Pantalla Oled",
+        "Fuente de Poder ASUS ROG Thor 1200W, Certificada 80+ Plus Platinum, ATX 3.1, Gaming Premium",
+        "ASUS - ROG Thor 1200W Platinum III (90YE00V2-B0SA00)",
+        "Fuente de Poder ASUS ROG THOR 1200W Platinum III, Full Modular, 80 PLUS Platinum, Pantalla OLED"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "FUENTE DE PODER ASUS PRIME AP-850G 850W 80PLUS GOLD F.MODULAR",
+        "Fuente de Poder 850W Plus Gold AP-850G",
+        "Fuente de poder 850W Asus Prime Gold",
+        "ASUS - AP-850G PSU NORTH AMERICA (90YE00U0-B0SA00)",
+        "Fuente de Poder ASUS PRIME 850G 80PLUS Gold - Modular - ATX 3.0 y PCIex 5.0 - AP-850G"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "Fuente de Poder Cooler Master Elite Gold 650W, 80PLUS Gold",
+        "Fuente de Poder CoolerMaster Elite 650W GOLD",
+        "FUENTE DE PODER COOLER MASTER ELITE GOLD 650W FULL MODULAR - NO INCLUYE CABLE DE PODER",
+        "Fuente de Poder Cooler Master Elite Gold 650W",
+        "Fuente de Poder Cooler Master Elite Gold 650W Modular 80 Plus Gold ATX",
+        "ELITE GOLD 650 FM A/WO cord",
+        "COOLER MASTER - Fuente de Poder Cooler Master Elite Gold 650, Full Modular, Certificada 80 Plus Gold PCIe 5.1 (MPX-6505-AFAG-BWO)",
+        "Cooler Master Elite Gold 650W (MPX-6505-AFAG) (650 W)"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "Fuente de Poder Corsair CX750F RGB Full Modular 80Plus Bronze",
+        "Fuente de Poder Corsair CX750F RGB Full Modular 80Plus Bronze"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "FUENTE DE PODER GAMEMAX GZ-1000G 80PLUS GOLD 1000W F.MODULAR ATX 3.1 PCIe 5.1",
+        "FUENTE CERTIFICADA GAMEMAX 1000W 80+ GOLD - GZ1000G BK",
+        "Gamemax GZ 1000G BK (1000 W) 80+ Gold Modular"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "Fuente de Poder Gigabyte GP-UD750GM PG5 V2 750W",
+        "Fuente de Poder Gigabyte GP-UD750GM PG5 V2 750W",
+        "Fuente de Poder 750W 80 Plus Gold Full modular V2",
+        "Fuente de Poder 750W - Gigabyte UD750GM PG5 V2 - 80 Plus Gold - Modular"
+      ]
+    },
+    {
+      "category": "psu",
+      "titles": [
+        "Fuente de Poder MSI MAG A850GN 850W PCIE5 Gold",
+        "Fuente de Poder MSI A850GN 850W PCIe5 80 Plus Gold",
+        "Fuente de Poder 850W - MSI MAG A850GN PCIE5 - 80 Plus Gold",
+        "Fuente de Poder 850W MSI MAG A850GN PCIe5 80 Plus Gold No Modular",
+        "MSI - FUENTE PODER MAG A850GN PCIE5 850W (306-7ZPBX23-CE0)",
+        "FUENTE DE PODER MSI 850W GOLD NO MODULAR MAG A850GN P/N MAG A850GN PCIE5"
+      ]
+    },
+    {
+      "category": "ram",
+      "titles": [
+        "Memoria RAM Corsair Vengeance RGB RS 8GB x 3200Mhz DDR4",
+        "Memoria RAM Corsair Vengeance RGB RS 8GB DDR4 3200MHz CL16 (CMG8GX4M1E3200C16)",
+        "Memoria RAM DDR4 8GB 3200MHz RGB UDIMM"
+      ]
+    },
+    {
+      "category": "ram",
+      "titles": [
+        "MEMORIA KIT CORSAIR VEGEANCE 32GB (2X16GB) 6000MHz RGB",
+        "Memoria RAM Corsair Vengeance RGB 32G (2x16GB) 6000MHz CL36"
+      ]
+    },
+    {
+      "category": "ram",
+      "titles": [
+        "Memoria RAM KingSpec 16GB 3200 DDR4 KS3200D4P13156G",
+        "Memoria RAM DIMM 16 GB - DDR4 3200 MT/s - Kingspec (KS3200D4P13516G)",
+        "MEMORIA UDIMM DDR4 KINGSPEC 16GB 3200MHZ KS3200D4P13516G"
+      ]
+    },
+    {
+      "category": "ssd",
+      "titles": [
+        "DISCO SSD SATA ADATA SU650 1TB",
+        "SSD 2.5\" - 1 TB - Adata Ultimate SU650 - SATA 3 (6.0 Gb/s) (ASU650SS-1TT-R)",
+        "SSD Interno ADATA Ultimate SU650 1TB 2.5\" SATA III 3D NAND",
+        "Unidad SSD 1TB Ultimate SU650 520/450 MB/s SATA 6Gb/s",
+        "Unidad SSD AData SU650 1TB 2.5\" 7mm SATA III 6.0Gb/s Lec520MB/s Esc450MB/s",
+        "Disco SSD 1TB Interno ADATA SU650 Blue"
+      ]
+    },
+    {
+      "category": "ssd",
+      "titles": [
+        "Disco Solido SSD ADATA Legend 710 Gen3 M.2 256GB",
+        "ADATA LEGEND 710 256GB",
+        "A-DATA Legend 710 256 GB (ALEG-710-256GCS)",
+        "SSD M.2 (2280) - 256 GB - Adata Legend 710 - NVMe PCIe 3.0 x4 (ALEG-710-256GCS)",
+        "SSD NVMe ADATA LEGEND 710 256GB M.2 PCle 3.0"
+      ]
+    },
+    {
+      "category": "ssd",
+      "titles": [
+        "SSD M.2 (2280) - 128 GB - TWSC NVMe PCIe 3.0 x4 BULK (Sin Embalaje)",
+        "SSD M.2 128GB interno SSD TWSC M.2 2280 NVME BULK (SIN CAJA)",
+        "Disco SSD 128GB interno TWSC M.2 2280 NVMe PCIe 3.0 x4",
+        "Disco Solido Ssd Twsc Nvme M2 128gb Pcie 3.0 2280 Oem"
+      ]
+    },
+    {
+      "category": "ssd",
+      "titles": [
+        "DISCO DURO SSD WESTER DIGITAL GREEN 480GB",
+        "Unidad SSD Western Digital 480 GB Green 2.5\" SATA WDS480G2G0A (WDS480G2G0A)"
+      ]
+    },
+    {
+      "category": "ssd",
+      "titles": [
+        "Unidad SSD 500GB SN3000 NVMe SSD Green NVMe Performance",
+        "SSD WESTERN DIGITAL GREEN 500GB SN3000 NVME - M.2 2280 - PCIEX 4.0 X4 P/N WDS500G4G0E",
+        "Unidad SSD Western Digital Green SN3000 500GB M.2 22*80 PCIe4x4 L5000MBs E4100MB"
+      ]
+    }
+  ],
+  "separated": [
+    {
+      "category": "case",
+      "a": ["Gabinete HYTE Y70 LCD 3ra Gen Pitch Black ATX — Pantalla 14.9\" 2.5K — con Riser PCIe 4.0"],
+      "b": ["Gabinete HYTE Y70 Black ATX — con Riser PCIe 4.0 — Panorámico — No incluye LCD"]
+    },
+    {
+      "category": "case",
+      "a": ["GABINETE GAMER ANTEC TORQUE BLACK RED SIN FUENTE P/N 0-761345-80017-4"],
+      "b": ["GABINETE GAMER ANTEC TORQUE BLACK/WHITE SIN FUENTE P/N 0-761345-80026-6"]
+    },
+    {
+      "category": "case",
+      "a": ["Gabinete Corsair 6500X - Negro"],
+      "b": ["Gabinete Corsair 6500X - Negro-Madera"]
+    },
+    {
+      "category": "case",
+      "a": ["Gabinete NZXT H5 Flow (2024) Compact Mid-Tower ATX Black"],
+      "b": ["Gabinete NZXT H5 Flow RGB (2024) ATX c/ Fans RGB Black"]
+    },
+    {
+      "category": "case",
+      "a": ["Gabinete NZXT H5 Flow (2024) Compact Mid-Tower ATX White"],
+      "b": ["Gabinete NZXT H5 Flow RGB (2024) ATX c/ Fans RGB White"]
+    },
+    {
+      "category": "case",
+      "a": ["Gabinete NZXT H9 Flow (2025) Dual-Chamber Mid-Tower Black"],
+      "b": ["Gabinete NZXT H9 Flow RGB 2025 con Fans RGB y Control Black"]
+    },
+    {
+      "category": "case_fan",
+      "a": ["Ventilador 12 cm - AirFlow M57 MOLEX Auto RGB Fan OEM (Sin Caja) - 120mm - Regular Black"],
+      "b": ["Ventilador 12 cm - AirFlow M57 MOLEX Auto RGB Fan OEM (Sin Caja) - 120mm - Reverse Black"]
+    },
+    {
+      "category": "case_fan",
+      "a": ["Ventilador 12 cm - AirFlow M57 MOLEX Auto RGB Fan OEM (Sin Caja) - 120mm - Regular Black"],
+      "b": ["Ventilador 12 cm - AirFlow M57 ARGB Fan OEM (Sin Caja) - 120mm - Regular Black"]
+    },
+    {
+      "category": "case_fan",
+      "a": ["Antec F12 Racing ARGB - 3 Pack [0-761345-40015-2]"],
+      "b": ["PACK DE 3 VENTILADORES ANTEC F12 Racing ARGB DE 120MM - 0-761345-77760-5"]
+    },
+    {
+      "category": "case_fan",
+      "a": ["VENTILADOR CORSAIR AF140 140mm LED RED"],
+      "b": ["VENTILADOR CORSAIR AF140 140mm LED AZUL"]
+    },
+    {
+      "category": "case_fan",
+      "a": ["Ventilador Gamer Cougar SC140 ARGB white"],
+      "b": ["Ventilador Gamer Cougar SC140 ARGB Reverse Blade white"]
+    },
+    {
+      "category": "case_fan",
+      "a": ["COOLER GAMEMAX GALEFORCE 32 LED BLUE 120MM (GMX-GF12B)"],
+      "b": ["COOLER GAMEMAX GALEFORCE 32 LED GREEN 120MM (GMX-GF12G)"]
+    },
+    {
+      "category": "case_fan",
+      "a": ["COOLER GAMEMAX RGB FORCE LED RGB 120MM (GMX-12RGB-PROII)"],
+      "b": ["COOLER GAMEMAX RGB FORCE GMX-12RGB-PRO"]
+    },
+    {
+      "category": "case_fan",
+      "a": ["COOLER GAMEMAX RAINBOWFORCE 120MM FRGB (FN12RAINBOW-C) 1 CONECTOR"],
+      "b": ["COOLER GAMEMAX RAINBOWFORCE 120MM ARGB (FN12RAINBOW-M)"]
+    },
+    {
+      "category": "cpu",
+      "a": ["UPG 2do CPU Xeon-Silver 4410Y 2.0GHz 12-core 150W Processor for HPE ML350 Gen11"],
+      "b": ["procesador Intel Xeon Silver 4410Y 12C (Lenovo ThinkSystem SR630 V3)"]
+    },
+    {
+      "category": "cpu_cooler",
+      "a": ["COOLER CPU GAMEMAX GAMMA 500 RGB"],
+      "b": ["COOLER CPU GAMEMAX GAMMA 500 RAINBOW"]
+    },
+    {
+      "category": "cpu_cooler",
+      "a": ["Ventilador CPU - Intel Socket LGA1700 (OEM)"],
+      "b": ["VENTILADOR PARA CPU INTEL ORIGINAL BASE COBRE s115x / s1200 P/n K69237-001"]
+    },
+    {
+      "category": "cpu_cooler",
+      "a": ["VENTILADOR PARA CPU INTEL ORIGINAL BASE COBRE s115x / s1200 P/n K69237-001"],
+      "b": [
+        "VENTILADOR PARA CPU INTEL ORIGINAL BASE COBRE s1700 P/n M23901-001",
+        "Disipador CPU Intel Original para LGA1700 con pasta térmica Cable 4Pin"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "a": ["WATERCOOLING MSI MAG CORELIQUID A15 360 ARGB GEN2"],
+      "b": ["Refrigeracion Liquida MSI MAG Coreliquid A15 360", "Refrigeracion Liquida MSI MAG Coreliquid A15 360"]
+    },
+    {
+      "category": "cpu_cooler",
+      "a": ["Refrigeración Líquida NZXT Kraken Elite 240 RGB V2 White"],
+      "b": ["WATERCOOLING NZXT KRAKEN ELITE 240 RGB WHITE"]
+    },
+    {
+      "category": "cpu_cooler",
+      "a": ["WATERCOOLING NZXT KRAKEN PLUS 240 RGB WHITE"],
+      "b": ["REFRIGERACION LIQUIDA NZXT Kraken Plus 240 1.54\" LCD & RGB V2 White P/N RL- KR240-W2"]
+    },
+    {
+      "category": "cpu_cooler",
+      "a": ["Disipador Xilence by be quiet! XC091 M806D.B Multi-Socket"],
+      "b": ["Disipador Xilence by be quiet! XC056 M704PRO.ARGB 120mm"]
+    },
+    {
+      "category": "gpu",
+      "a": ["TARJETA DE VIDEO ASUS TUF GAMING GEFORCE GTX 1660TI EVO 6GB GDDR6"],
+      "b": ["TARJETA DE VIDEO ASUS TUF GAMING GEFORCE GTX 1660TI EVO OC 6GB GDDR6"]
+    },
+    {
+      "category": "gpu",
+      "a": ["Tarjeta de Video ASUS PRIME GeForce RTX 5070 12GB GDDR7"],
+      "b": [
+        "Tarjeta de Video ASUS Prime GeForce RTX 5070 OC 12GB",
+        "Tarjeta de Video ASUS GeForce RTX 5070 Prime OC 12GB GDDR7",
+        "Tarjeta de Video ASUS PRIME GeForce RTX™ 5070 12GB GDDR7 OC Edition",
+        "Tarjeta de Video Asus Prime GeForce RTX 5070 OC de 12GB GDDR7"
+      ]
+    },
+    {
+      "category": "gpu",
+      "a": [
+        "TARJETA DE VIDEO MSI GTX 1650 D6 VENTUS XS 4GB DDR6",
+        "Tarjeta de Video GeForce® GTX 1650 D6 VENTUS XS OCV3 4GB GDDR6 (128 bit)"
+      ],
+      "b": ["Tarjeta de video GeForce GTX 1650 D6 VENTUS XS OCV1, 4GB GDDR6, 128-bit, PCI-e x16 3.0"]
+    },
+    {
+      "category": "gpu",
+      "a": ["Tarjeta de Video MSI RTX 4070 Super 12G Gaming X Slim MLG"],
+      "b": ["Tarjeta de Video MSI RTX 4070 Super 12G Gaming X SLIM GDDR6X"]
+    },
+    {
+      "category": "gpu",
+      "a": ["TARJETA DE VIDEO ZOTAC GAMING GEFORCE RTX 3050 TWIN EDGE"],
+      "b": [
+        "Tarjeta de Video ZOTAC GeForce RTX3050 6G GDDR6 Twin Edge OC",
+        "Tarjeta de Video NVIDIA GeForce RTX 3050 6GB Twin Edge Gaming",
+        "Tarjeta de Video ZOTAC GAMING Nvidia GeForce RTX 3050 Twin Edge OC 6GB GDDR6 96-bit",
+        "Tarjeta de Video ZOTAC GAMING Nvidia GeForce RTX 3050 Twin Edge OC 6GB GDDR6 96-bit",
+        "TARJETA DE VIDEO ZOTAC GeForce RTX3050 6GB TWIN EDGE OC GDDR6 ZT-A30510H-10A"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "a": [
+        "Placa Madre Gigabyte B550M DS3H AC R2, DDR4, mATX",
+        "Placa Madre AMD B550M DS3H AC R2 (sAM4)",
+        "Tarjeta Madre Gigabyte B550M DS3H AC R2 Socket AM4 4*DIMM GbE LAN WIFI mATX"
+      ],
+      "b": ["Placa Madre Gigabyte B550M DS3H AC AMD AM4"]
+    },
+    {
+      "category": "motherboard",
+      "a": ["M/B ASUS PRIME B650M-A II-CSM", "Placa Madre Asus Prime B650M-A II CSM (DDR5)"],
+      "b": [
+        "Placa Madre ASUS PRIME B650M-A II",
+        "M/B ASUS PRIME B650M-A II",
+        "Placa Madre ASUS Prime B650M-A II, AMD Socket AM5, 4xDIMM DDR5, VGA, DP, HDMI, 2xM.2, Micro-ATX"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "a": ["M/B MSI PRO B760M-P"],
+      "b": ["Placa Madre MSI PRO B760M-P DDR5, LGA1700, Intel B760, 4xSata III, 2xM2 ,Micro-ATX"]
+    },
+    {
+      "category": "motherboard",
+      "a": [
+        "Placa Madre MSI PRO H610M-G DDR5",
+        "MSI PRO H610M-G, LGA 1700, DDR5",
+        "Placa Madre MSI PRO H610M-G, Socket LGA1700, 2x DDR5, Micro-ATX",
+        "PLACA MARE MSI H610M-G DDR5 LGA1700 12the- 13the- 14the GEN"
+      ],
+      "b": ["M/B MSI PRO H610M-G"]
+    },
+    {
+      "category": "psu",
+      "a": ["FUENTE DE PODER AZZA PSAZ-750G ATX 3.0 750W 80 PLUS GOLD"],
+      "b": ["FUENTE DE PODER AZZA 750W 80 PLUS GOLD"]
+    },
+    {
+      "category": "psu",
+      "a": ["FUENTE DE PODER AZZA 850W ATX3.0 80PLUS GOLD MODULAR"],
+      "b": ["FUENTE DE PODER AZZA PSAZ 850W 80 PLUS GOLD MODULAR"]
+    },
+    {
+      "category": "psu",
+      "a": ["Fuente de poder Cougar XTC500 watt 12V"],
+      "b": ["Fuente de Poder Cougar VTE500 de 500Watts (31VE050.0013P)"]
+    },
+    {
+      "category": "psu",
+      "a": ["FUENTE DE PODER GAMEMAX GE-550 80PLUS BRONZE 650W ATX 3.1"],
+      "b": ["FUENTE DE PODER GAMEMAX GE-650 80PLUS BRONZE 650W ATX 3.1 PCIe 5.1"]
+    },
+    {
+      "category": "psu",
+      "a": ["FUENTE DE PODER GAMEMAX VP 700 ECO 700W 80 PLUS BRONZE"],
+      "b": [
+        "FUENTE DE PODER GAMEMAX VP-700 RGB 700W 80PLUS BRONZE",
+        "FUENTES DE PODER GAMEMAX 700W 80 PLUS BRONCE SEMI MODULAR VP700 RGB",
+        "FUENTE DE PODER GAMEMAX 700W VP700 RGB 80 PLUS BRONCE"
+      ]
+    },
+    {
+      "category": "psu",
+      "a": ["Fuente de Poder 1000W - Gigabyte AORUS Elite P1000PM ICE - 80 Plus Platinum - Modular"],
+      "b": ["Fuente de Poder AORUS ELITE P1000W 80+ PLATINUM MODULAR PCIe 5.0"]
+    },
+    {
+      "category": "psu",
+      "a": [
+        "Fuente de Poder MSI MAG A750GL PCIE5 750W 80+ Gold",
+        "Fuente de Poder MSI MAG A750GLS PCIE5 80 Plus Gold",
+        "FUENTE DE PODER MSI MAG A750GL PCIE 5 750W 80 PLUS GOLD MODULAR",
+        "Fuente de Poder MSI MAG A750GLS PCIE5 80 Plus Gold",
+        "Fuente de Poder MSI MAG A750GLS PCIE5 750W 80 Plus Gold ATX 3.1 PCIe 5.1 Full Modular"
+      ],
+      "b": ["FUENTE DE PODER MSI MAG A750GLS 750W 80 PLUS GOLD F.MODULAR"]
+    },
+    {
+      "category": "psu",
+      "a": [
+        "Fuente de Poder MSI MAG A850GLS PCIE5 850W 80 Plus Gold",
+        "Fuente de Poder MSI MAG A850GL PCIE5 80 Plus Gold Modular",
+        "Fuente de poder MSI 850 W MAG A850GL PCIE5 ATX 3.0"
+      ],
+      "b": ["FUENTE DE PODER MSI MAG A850GL 850W 80 PLUS GOLD F.MODULAR"]
+    },
+    {
+      "category": "psu",
+      "a": ["FUENTE DE PODER MSI MPG A850G 850W 80 PLUS GOLD F. MODULAR"],
+      "b": ["FUENTE DE PODER MSI MPG A850GF 850W 80 PLUS GOLD F.MODULAR"]
+    },
+    {
+      "category": "ram",
+      "a": ["Memoria RAM DIMM 16 GB DDR5 6000 MT/s - Corsair Vengeance - Intel XMP/AMD EXPO (CMK16GX5M1D6000Z38)"],
+      "b": ["Memoria RAM DIMM 16 GB - DDR5 6000 MT/s - Corsair Vengeance - Intel XMP/AMD EXPO (CMK16GX5M1E6000Z36)"]
+    },
+    {
+      "category": "ram",
+      "a": [
+        "Memoria RAM DIMM 16 GB - DDR4 3200 MT/s - Kingston (KCP432NS8/16)",
+        "Memoria RAM 16GB DDR4 3200MHz DIMM Non-ECC CL22 Unb. 1.2V 288p Kingston"
+      ],
+      "b": [
+        "Memoria RAM DIMM 16 GB - DDR4 3200 MT/s - Kingston (KVR32N22D8/16)",
+        "Memoria RAM 16GB DDR4 3200MHz DIMM CL22 Non-ECC 1.2V 288p - Kingston ValueRAM"
+      ]
+    },
+    {
+      "category": "motherboard",
+      "a": [
+        "Placa Madre AMD AM5 ASUS ROG STRIX B850-A GAMING WiFi R2 DDR5 ATX",
+        "Placa Madre ASUS ROG STRIX B850-A GAMING WIFI AMD AM5 ATX DDR5 AEMP, 2.5G LAN, WiFi 7 4x M.2, PCIe 5.0"
+      ],
+      "b": [
+        "Placa Madre sAM5 (AMD) - Asus ROG Strix B850-A Gaming WIFI - 4x DDR5 - 4x M.2- Wi-Fi 7 - DisplayPort/HDMI - ATX",
+        "Placa Madre ASUS ROG Strix B850-A Gaming WiFi (Socket AM5, DDR5, PCIe 5.0, Wi-Fi 7, ATX)"
+      ]
+    },
+    {
+      "category": "cpu_cooler",
+      "a": ["Refrigeración Líquida Cooler Master MasterLiquid Core Nex LGA 1700 AM5 Blanco"],
+      "b": ["Cooler Master MasterLiquid Core Nex Series - White [MLX-D24M-A18PA-RW]"]
+    }
+  ]
+}

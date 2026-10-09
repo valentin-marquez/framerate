@@ -1,5 +1,6 @@
 import { PROFILES } from "./attributes";
 import type { Fingerprint } from "./fingerprint";
+import { TRAIT_DISCRIMINATORS } from "./traits";
 
 /**
  * Comparación y decisión de matching. Lógica pura y determinista.
@@ -35,7 +36,7 @@ export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison 
     if (!evidence.brandMatch) vetoes.push("brand");
   }
 
-  for (const field of PROFILES[offer.category].discriminators) {
+  for (const field of [...PROFILES[offer.category].discriminators, ...TRAIT_DISCRIMINATORS]) {
     const a = offer.attributes[field];
     const b = candidate.attributes[field];
     if (a !== undefined && b !== undefined && a !== b) vetoes.push(`attribute:${field}`);

@@ -6,6 +6,7 @@ export * from "./domain/decide";
 export * from "./domain/fingerprint";
 export * from "./domain/identifiers";
 export * from "./domain/product-name";
+export * from "./domain/traits";
 
 // Casos de uso y acceso a datos.
 export * from "./match-listing";

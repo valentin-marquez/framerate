@@ -11,6 +11,7 @@ import { ATTRIBUTE_DEFAULTS, type Attributes, identityAttributeName, PROFILES, p
 import { canonicalBrand } from "./brands";
 import { resolveBrand } from "./fingerprint";
 import { normalizeMpn } from "./identifiers";
+import { titleTraits } from "./traits";
 
 /**
  * Anclaje de la identidad que devuelve Haiku (spec 2026-10-08 §2): un campo entra a la identidad sólo si aparece en
@@ -69,6 +70,8 @@ export function anchorIdentity(raw: IdentitySource, input: AnchorInput): AnchorR
     identity[field] = value;
   }
   dedupeAcrossFields(identity);
+  // Lo que separa SKU hermanos y ningún campo tiene (pantalla, versión, kit de servidor): del título, no de Haiku.
+  Object.assign(identity, titleTraits(category, input.title));
   return { identity, dropped, fromMpn, knowledge: raw.identity_from_knowledge, confidence };
 }
 

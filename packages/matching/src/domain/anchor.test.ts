@@ -18,6 +18,12 @@ const raw = (
   ...extra,
 });
 
+// `traits` sale del título (traits.test.ts); aquí se mide sólo lo que viene de Haiku.
+const fields = (identity: Record<string, unknown> | undefined) => {
+  const { traits: _, ...rest } = identity ?? {};
+  return rest;
+};
+
 describe("anclaje", () => {
   test("los valores por defecto sin token no entran; lo que dice el título sí", () => {
     // Medido: sin ficha, Haiku escribió modules=1, rgb=false, ecc=false, registered=false para una RAM que no lo dice.
@@ -36,7 +42,7 @@ describe("anclaje", () => {
       { category: "ram", title: "Memoria RAM X-Micro 8 GB DDR5 4800 MHz U-DIMM Heatsink" },
     );
     // "U-DIMM" sí es un token negativo de registered (unbuffered).
-    expect(r.identity).toEqual({
+    expect(fields(r.identity)).toEqual({
       type: "ddr5",
       capacity_gb: 8,
       speed_mt_s: 4800,
@@ -70,7 +76,7 @@ describe("anclaje", () => {
       title: "DISCO SSD SATA ADATA SU650 1TB",
     });
     expect(identity?.mpn).toBeNull();
-    expect(identity?.identity).toEqual({ capacity_gb: 1000 });
+    expect(fields(identity?.identity)).toEqual({ capacity_gb: 1000 });
   });
 
   test("la ficha de otro producto no manda: el título contradice la línea y baja la confianza", () => {
@@ -80,7 +86,7 @@ describe("anclaje", () => {
       title: 'DISCO DURO SSD PATRIOT ELITE 240GB SATA III 2.5"',
       sourceText: "Patriot Burst SSD 240GB SATA III unidad de estado sólido",
     });
-    expect(r.identity).toEqual({ capacity_gb: 240, interface: "sata" });
+    expect(fields(r.identity)).toEqual({ capacity_gb: 240, interface: "sata" });
     expect(r.dropped).toEqual(["line"]);
     expect(r.confidence).toBe("low");
   });
@@ -108,7 +114,7 @@ describe("anclaje", () => {
       }),
       { category: "motherboard", title: "PLACA MADRE ASUS PRIME H610M-K S1700 DDR5", mpn: "PRIMEH610M-K" },
     );
-    expect(mobo.identity).toEqual({
+    expect(fields(mobo.identity)).toEqual({
       chipset: "h610",
       model: "prime h610m k",
       form_factor: "matx",
@@ -119,11 +125,13 @@ describe("anclaje", () => {
 
   test("booleanos sólo con token explícito; el O12G de ASUS vale como OC", () => {
     expect(
-      anchorIdentity(raw("gpu", { chipset: "rtx 5070", vram_gb: 12, oc: true, line: "Prime" }), {
-        category: "gpu",
-        title: "Tarjeta de Video ASUS Prime GeForce RTX 5070 12GB GDDR7",
-        mpn: "PRIME-RTX5070-O12G",
-      }).identity,
+      fields(
+        anchorIdentity(raw("gpu", { chipset: "rtx 5070", vram_gb: 12, oc: true, line: "Prime" }), {
+          category: "gpu",
+          title: "Tarjeta de Video ASUS Prime GeForce RTX 5070 12GB GDDR7",
+          mpn: "PRIME-RTX5070-O12G",
+        }).identity,
+      ),
     ).toEqual({ chipset: "rtx 5070", vram_gb: 12, oc: true, line: "prime" });
     expect(
       anchorIdentity(raw("ram", { ecc: true }), {
@@ -132,25 +140,31 @@ describe("anclaje", () => {
       }).dropped,
     ).toEqual(["ecc"]);
     expect(
-      anchorIdentity(raw("ram", { ecc: false, registered: false }), {
-        category: "ram",
-        title: "Memoria RAM Kingston 16GB DDR5 5600MHz DIMM CL46 Non-ECC",
-      }).identity,
+      fields(
+        anchorIdentity(raw("ram", { ecc: false, registered: false }), {
+          category: "ram",
+          title: "Memoria RAM Kingston 16GB DDR5 5600MHz DIMM CL46 Non-ECC",
+        }).identity,
+      ),
     ).toEqual({ ecc: false });
   });
 
   test("capacidades con unidad y chipset pegado o separado", () => {
     expect(
-      anchorIdentity(raw("ssd", { capacity_gb: 1000, interface: "nvme", form_factor: "m2_2280", pcie_gen: 4 }), {
-        category: "ssd",
-        title: "SSD Kingston NV3 1TB M.2 2280 PCIe 4.0 x4 NVMe",
-      }).identity,
+      fields(
+        anchorIdentity(raw("ssd", { capacity_gb: 1000, interface: "nvme", form_factor: "m2_2280", pcie_gen: 4 }), {
+          category: "ssd",
+          title: "SSD Kingston NV3 1TB M.2 2280 PCIe 4.0 x4 NVMe",
+        }).identity,
+      ),
     ).toEqual({ capacity_gb: 1000, interface: "nvme", form_factor: "2280", pcie_gen: 4 });
     expect(
-      anchorIdentity(raw("gpu", { chipset: "rtx 5070 ti", vram_gb: 16 }), {
-        category: "gpu",
-        title: "MSI RTX5070Ti 16G VENTUS 3X OC",
-      }).identity,
+      fields(
+        anchorIdentity(raw("gpu", { chipset: "rtx 5070 ti", vram_gb: 16 }), {
+          category: "gpu",
+          title: "MSI RTX5070Ti 16G VENTUS 3X OC",
+        }).identity,
+      ),
     ).toEqual({ chipset: "rtx 5070 ti", vram_gb: 16 });
   });
 
