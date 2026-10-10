@@ -1,6 +1,4 @@
-import type { Category } from "@framerate/contracts";
 import { type Db, parseJson, refreshProductsPriceSummary } from "@framerate/database";
-import { buildFingerprint } from "./domain/fingerprint";
 import { productNameFromTitle } from "./domain/product-name";
 import {
   addOverride,
@@ -8,6 +6,7 @@ import {
   createProduct,
   detachIdentifiers,
   getListingIdentity,
+  listingFingerprint,
   setListingProduct,
 } from "./repository";
 
@@ -43,18 +42,12 @@ export async function splitListing(
       ? await db.query.selectFrom("products").select("id").where("id", "=", previous).executeTakeFirst()
       : undefined;
 
-  const fp = buildFingerprint({
-    category: listing.category as Category,
-    title: listing.title,
-    brand: listing.brand,
-    mpn: listing.mpn,
-    gtin: listing.gtin,
-  });
+  const { fingerprint: fp, canonicalName } = await listingFingerprint(db, listing);
   const target =
     existing?.id ??
     (
       await createProduct(db, {
-        name: productNameFromTitle(listing.title),
+        name: canonicalName ?? productNameFromTitle(listing.title),
         fingerprint: fp,
         imageUrl: listing.imageUrl,
         now: input.now,

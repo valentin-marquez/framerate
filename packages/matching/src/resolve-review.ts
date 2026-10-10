@@ -1,12 +1,11 @@
-import type { Category } from "@framerate/contracts";
 import { type Db, refreshProductsPriceSummary } from "@framerate/database";
 import { compare } from "./domain/decide";
-import { buildFingerprint } from "./domain/fingerprint";
 import {
   addOverride,
   attachIdentifiers,
   getListingIdentity,
   getReview,
+  listingFingerprint,
   loadCandidates,
   moveIdentifiers,
   publishListing,
@@ -36,13 +35,7 @@ export async function resolveMatchReview(
   if (input.action === "accept") {
     const listing = await getListingIdentity(db, review.listing_id);
     if (!listing) return { status: "listing_missing" };
-    const fp = buildFingerprint({
-      category: listing.category as Category,
-      title: listing.title,
-      brand: listing.brand,
-      mpn: listing.mpn,
-      gtin: listing.gtin,
-    });
+    const { fingerprint: fp } = await listingFingerprint(db, listing);
     const [candidate] = await loadCandidates(db, [review.candidate_product_id], fp);
     const vetoes = candidate ? compare(fp, candidate.fingerprint).vetoes : ["product_missing"];
     if (vetoes.length > 0) return { status: "vetoed", vetoes };

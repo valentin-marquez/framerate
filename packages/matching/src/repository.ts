@@ -1,11 +1,17 @@
-import type { Category } from "@framerate/contracts";
+import type { Category, ListingIdentity } from "@framerate/contracts";
 import { bumpCatalogVersionQuery, type Db, type MatchMethod, parseJson, toJson } from "@framerate/database";
 import { fold, searchText, slugify } from "@framerate/kit";
 import { sql } from "kysely";
 import type { Attributes } from "./domain/attributes";
 import { type Candidate, compare } from "./domain/decide";
 import { familyKey } from "./domain/family";
-import { attributeKey, buildFingerprint, type Fingerprint, storedFingerprint } from "./domain/fingerprint";
+import {
+  attributeKey,
+  buildFingerprint,
+  type Fingerprint,
+  fingerprintFromIdentity,
+  storedFingerprint,
+} from "./domain/fingerprint";
 import { normalizeGtin, normalizeMpn } from "./domain/identifiers";
 
 const MAX_CANDIDATES = 20;
@@ -569,6 +575,58 @@ export async function getListingIdentity(db: Db, listingId: number) {
     .select(["id", "product_id as productId", "category", "title", "brand", "mpn", "gtin", "image_url as imageUrl"])
     .where("id", "=", listingId)
     .executeTakeFirst();
+}
+
+/**
+ * La huella de una oferta tal como la ve el matching (#156): desde su última identidad de Haiku, con los códigos del
+ * campo de la tienda. Sólo una oferta sin identidad (todavía `pending`, o `failed`) se deduce del título con los
+ * extractores, y esa huella es provisoria.
+ */
+export async function listingFingerprint(
+  db: Db,
+  listing: {
+    id: number;
+    category: string;
+    title: string;
+    brand: string | null;
+    mpn: string | null;
+    gtin: string | null;
+  },
+): Promise<{ fingerprint: Fingerprint; fromIdentity: boolean; canonicalName: string | null }> {
+  const row = await db.query
+    .selectFrom("listing_identity")
+    .select(["category", "brand", "name", "mpn", "confidence", "identity"])
+    .where("listing_id", "=", listing.id)
+    .orderBy("version", "desc")
+    .limit(1)
+    .executeTakeFirst();
+  if (row) {
+    const identity: ListingIdentity = {
+      category: row.category as Category,
+      brand: row.brand,
+      name: row.name,
+      mpn: row.mpn,
+      confidence: row.confidence as ListingIdentity["confidence"],
+      identity: parseJson(row.identity, {}),
+    };
+    return {
+      fingerprint: fingerprintFromIdentity({ identity, mpn: listing.mpn, gtin: listing.gtin }),
+      fromIdentity: true,
+      canonicalName: row.name,
+    };
+  }
+  const category = listing.category as Category;
+  return {
+    fingerprint: buildFingerprint({
+      category,
+      title: listing.title,
+      brand: listing.brand,
+      mpn: listing.mpn,
+      gtin: listing.gtin,
+    }),
+    fromIdentity: false,
+    canonicalName: null,
+  };
 }
 
 /** Traslada identificadores de un producto a otro (al fusionar por revisión humana). */

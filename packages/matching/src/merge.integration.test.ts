@@ -107,7 +107,8 @@ describe("fusión por identidad repartida", () => {
 
     const products = await all(db, "products");
     expect(products.map((p) => p.id)).toEqual([big]);
-    expect(products[0]).toMatchObject({ offer_count: 3, best_price: 45_000 });
+    // Las tres ofertas son de la misma tienda de prueba: cuenta una.
+    expect(products[0]).toMatchObject({ offer_count: 1, best_price: 45_000 });
     expect((await all(db, "listings")).every((l) => l.product_id === big)).toBe(true);
     expect((await all(db, "product_identifiers")).map((i) => i.product_id)).toEqual([big, big]);
     expect(await all(db, "product_slug_redirects")).toMatchObject([
