@@ -3,6 +3,7 @@ export * from "./domain/anchor";
 export * from "./domain/attributes";
 export * from "./domain/brands";
 export * from "./domain/decide";
+export * from "./domain/family";
 export * from "./domain/fingerprint";
 export * from "./domain/identifiers";
 export * from "./domain/product-name";

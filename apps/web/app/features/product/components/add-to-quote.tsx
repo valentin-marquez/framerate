@@ -92,8 +92,13 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
             render={
               <Button
                 variant="secondary"
-                size={label ? "sm" : "icon"}
-                className={cn(label ? "w-full gap-1.5 px-3 text-foreground" : "", "transition-all")}
+                // "long" acompaña al botón grande de la tienda en la ficha: misma altura y padding.
+                size={label === "long" ? "lg" : label ? "sm" : "icon"}
+                className={cn(
+                  label ? "w-full gap-1.5 text-foreground" : "",
+                  label === "short" && "px-3",
+                  "transition-all",
+                )}
                 onClick={() => (originQuote ? add(originQuote) : setPhase("open"))}
                 aria-label={t("add_to_quote")}
                 type="button"

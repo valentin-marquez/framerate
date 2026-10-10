@@ -70,9 +70,22 @@ export const ProductSpecSchema = z.object({
 });
 export type ProductSpec = z.infer<typeof ProductSpecSchema>;
 
+/** Otro producto de la misma familia (#101, `FAMILY_FIELDS`): la misma RTX 5070 de otra marca o línea. */
+export const ProductVariantSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  imageUrl: z.url().nullable(),
+  bestPrice: z.number().int().nonnegative().nullable(),
+});
+export type ProductVariant = z.infer<typeof ProductVariantSchema>;
+
 export const ProductDetailSchema = ProductSummarySchema.extend({
   offers: z.array(OfferSchema),
   specs: z.array(ProductSpecSchema),
+  /** Los demás productos de la familia, con stock primero y luego por precio; hasta 8. La propia no va. */
+  variants: z.array(ProductVariantSchema),
+  /** Cuántos tiene la familia en total, sin contar este. */
+  variantsTotal: z.number().int().nonnegative(),
 });
 export type ProductDetail = z.infer<typeof ProductDetailSchema>;
 

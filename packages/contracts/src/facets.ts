@@ -71,6 +71,22 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
   case_fan: [],
 };
 
+/**
+ * Familia de un producto (#101): los atributos que un comprador compara como "el mismo producto en otra versión",
+ * sin importar marca ni línea (una RTX 5070 de ASUS y una de MSI; una DDR5 de 32 GB 2x16 a 6000 de cualquier marca).
+ * Son claves de `products.attributes`; el matching calcula `products.family_key` con ellas y la ficha arma el título
+ * y el filtro de la categoría. Sin familia: CPU (cada modelo es único), gabinetes y ventiladores (demasiado amplio).
+ */
+export const FAMILY_FIELDS: Partial<Record<Category, readonly string[]>> = {
+  gpu: ["chipset", "vram"],
+  motherboard: ["chipset", "formFactor"],
+  ram: ["type", "capacity", "modules", "speed", "formFactor"],
+  ssd: ["capacity", "interface", "pcieGen"],
+  hdd: ["capacity", "rpm", "formFactor"],
+  psu: ["wattage", "efficiency"],
+  cpu_cooler: ["type", "radiatorMm"],
+};
+
 /** Etiqueta visible de un valor: "12 GB", "DDR5", "1 TB" (las capacidades de 1000 GB o más pasan a TB). */
 export function facetValueLabel(facet: FacetDefinition, value: string): string {
   const named = facet.values?.[value];

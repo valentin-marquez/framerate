@@ -5,6 +5,7 @@ import { useUser } from "~/features/auth/hooks/useAuth";
 import { ReportButton } from "~/features/moderation";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
 import { PriceHistoryPanel } from "~/features/product/components/price-history-panel";
+import { ProductFamily } from "~/features/product/components/product-variants";
 import {
   type HistorySummary,
   PERIODS,
@@ -66,7 +67,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
       <Breadcrumb category={product.category} />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-10">
         {/* Destino de la foto de la tarjeta de producto (app.css). */}
         <div
           className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl bg-[var(--product-stage)] lg:col-start-1 lg:row-start-1 lg:aspect-square"
@@ -84,7 +85,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
           )}
         </div>
 
-        <div className="min-w-0 space-y-8 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <div className="min-w-0 space-y-8 lg:col-start-2 lg:row-span-3 lg:row-start-1">
           <header className="space-y-2">
             {product.brand && <p className="text-muted-foreground text-sm">{product.brand}</p>}
             <h1 className="text-balance font-semibold text-3xl text-foreground tracking-tight">{product.name}</h1>
@@ -246,6 +247,9 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
             </p>
           </section>
         )}
+
+        {/* Bajo la ficha técnica: en teléfono queda después de precio y tiendas, que es lo que se viene a ver. */}
+        <ProductFamily product={product} className="lg:col-start-1 lg:row-start-3" />
       </div>
     </div>
   );
@@ -279,7 +283,7 @@ function PriceContext({
             "rounded-full px-2 py-0.5 font-medium text-xs",
             verdict.tone === "good" && "bg-success/15 text-success",
             verdict.tone === "neutral" && "bg-background text-foreground",
-            verdict.tone === "bad" && "bg-warn/20 text-foreground",
+            verdict.tone === "bad" && "bg-destructive/15 text-destructive",
           )}
         >
           {verdict.label}
@@ -303,7 +307,7 @@ function PriceContext({
         </Select>
       </div>
       <div className="space-y-1.5">
-        <div className="relative h-1.5 rounded-full bg-gradient-to-r from-success/60 via-foreground/15 to-warn/70">
+        <div className="relative h-1.5 rounded-full bg-gradient-to-r from-success/60 via-foreground/15 to-destructive/60">
           <span
             className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 size-3.5 rounded-full border-2 border-card bg-foreground shadow-sm"
             style={{ left: `${at * 100}%` }}

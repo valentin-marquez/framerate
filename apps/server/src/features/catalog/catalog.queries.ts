@@ -9,6 +9,7 @@ import type {
   ProductListQuery,
   ProductPage,
   ProductSummary,
+  ProductVariant,
   Sitemap,
 } from "@framerate/contracts";
 import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel } from "@framerate/contracts";
@@ -355,7 +356,39 @@ export async function getProduct(
     offerCount: offers.length,
     referencePrice: product.reference_price,
   };
-  return { ...summary, offers, specs: fuseSpecs(summary.category, specRows) };
+  const family = await productFamily(db, product.id, product.family_key, assetsBaseUrl);
+  return { ...summary, offers, specs: fuseSpecs(summary.category, specRows), ...family };
+}
+
+const FAMILY_SHOWN = 8;
+
+/** Los demás productos de la familia (#101): publicados y con ofertas, con stock primero y luego por precio. */
+async function productFamily(
+  db: Db,
+  productId: number,
+  familyKey: string | null,
+  assetsBaseUrl: string | undefined,
+): Promise<{ variants: ProductVariant[]; variantsTotal: number }> {
+  if (!familyKey) return { variants: [], variantsTotal: 0 };
+  const rows = await db.query
+    .selectFrom("products")
+    .select(["slug", "name", "best_price", "in_stock_offer_count", "image_url", "image_key"])
+    .where("family_key", "=", familyKey)
+    .where("id", "!=", productId)
+    .where("published_at", "is not", null)
+    .where("offer_count", ">", 0)
+    .orderBy(sql`in_stock_offer_count > 0`, "desc")
+    .orderBy("best_price")
+    .execute();
+  return {
+    variants: rows.slice(0, FAMILY_SHOWN).map((r) => ({
+      slug: r.slug,
+      name: r.name,
+      imageUrl: productImageUrl(r, assetsBaseUrl),
+      bestPrice: r.in_stock_offer_count > 0 ? r.best_price : null,
+    })),
+    variantsTotal: rows.length,
+  };
 }
 
 export async function getPriceHistory(db: Db, slug: string, days: number): Promise<PricePoint[] | null> {

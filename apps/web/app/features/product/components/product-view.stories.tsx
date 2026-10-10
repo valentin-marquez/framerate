@@ -16,7 +16,7 @@ const story = (data: ProductCase, name: string, period: Period = PERIODS[0]): St
   render: () => <ProductView {...data} period={period} now={Date.now()} />,
 });
 
-export const Normal = story(cases.normal, "Con historial y varias tiendas");
+export const Normal = story(cases.normal, "Con historial, varias tiendas y su familia (#101)");
 export const SeisMeses = story(cases.unaTienda, "6 meses con un mes de datos", PERIODS[2]);
 export const SinEspecificaciones = story(cases.sinEspecificaciones, "Sin especificaciones");
 export const SinHistorial = story(cases.sinHistorial, "Sin historial");

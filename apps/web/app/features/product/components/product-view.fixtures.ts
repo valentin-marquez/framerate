@@ -54,7 +54,7 @@ export const product: ProductDetail = {
   bestCardPrice: 561_600,
   referencePrice: 589_990,
   mpn: "DUAL-RX9060XT-16G",
-  attributes: { chipset: "rx 9060 xt", vram: 16, line: "dual", oc: false },
+  attributes: { chipset: "rx 9060 xt", vram: 16, line: "dual", oc: false, color: "black" },
   offerCount: offers.length,
   offers,
   specs: [
@@ -65,6 +65,58 @@ export const product: ProductDetail = {
     { key: "displayport", value: 3, knowledge: false },
     { key: "tdp_w", value: 160, knowledge: true },
   ],
+  // La familia (#101): las demás RX 9060 XT de 16 GB, de cualquier marca, como las lista la API (8 de 11).
+  variants: [
+    {
+      slug: "gigabyte-rx-9060-xt-gaming-oc-16gb",
+      name: "Gigabyte Radeon RX 9060 XT Gaming OC 16GB",
+      imageUrl: null,
+      bestPrice: 539_990,
+    },
+    {
+      slug: "sapphire-pulse-rx-9060-xt-16gb",
+      name: "Sapphire Pulse Radeon RX 9060 XT 16GB",
+      imageUrl: null,
+      bestPrice: 544_990,
+    },
+    {
+      slug: "asus-dual-rx-9060-xt-oc-16gb-white",
+      name: "ASUS Dual Radeon RX 9060 XT OC 16GB White",
+      imageUrl: null,
+      bestPrice: 549_990,
+    },
+    {
+      slug: "powercolor-reaper-rx-9060-xt-16gb",
+      name: "PowerColor Reaper Radeon RX 9060 XT 16GB",
+      imageUrl: null,
+      bestPrice: 559_990,
+    },
+    {
+      slug: "xfx-swift-rx-9060-xt-16gb",
+      name: "XFX Swift Radeon RX 9060 XT 16GB OC Triple Fan",
+      imageUrl: null,
+      bestPrice: 569_990,
+    },
+    {
+      slug: "asrock-challenger-rx-9060-xt-16gb",
+      name: "ASRock Radeon RX 9060 XT Challenger 16GB OC",
+      imageUrl: null,
+      bestPrice: 579_990,
+    },
+    {
+      slug: "sapphire-nitro-rx-9060-xt-16gb",
+      name: "Sapphire Nitro+ Radeon RX 9060 XT 16GB",
+      imageUrl: null,
+      bestPrice: 629_990,
+    },
+    {
+      slug: "asus-tuf-rx-9060-xt-oc-16gb",
+      name: "ASUS TUF Gaming Radeon RX 9060 XT OC 16GB",
+      imageUrl: null,
+      bestPrice: null,
+    },
+  ],
+  variantsTotal: 11,
 };
 
 /** Un punto por día y tienda, con una ondulación fija (sin azar, para que la historia sea estable). */

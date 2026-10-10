@@ -4,6 +4,7 @@ import { fold, searchText, slugify } from "@framerate/kit";
 import { type Compilable, sql } from "kysely";
 import type { Attributes } from "./domain/attributes";
 import { type Candidate, compare } from "./domain/decide";
+import { familyKey } from "./domain/family";
 import { attributeKey, buildFingerprint, type Fingerprint, storedFingerprint } from "./domain/fingerprint";
 import { normalizeGtin, normalizeMpn } from "./domain/identifiers";
 
@@ -212,7 +213,12 @@ export async function loadCandidates(
       stale.push(
         db.query
           .updateTable("products")
-          .set({ attribute_key: base.attributeKey, attributes, brand: base.brand })
+          .set({
+            attribute_key: base.attributeKey,
+            family_key: familyKey(category, base.attributes),
+            attributes,
+            brand: base.brand,
+          })
           .where("id", "=", p.id),
       );
     }
@@ -317,6 +323,7 @@ export async function createProduct(
       brand: fp.brand,
       category: fp.category,
       attribute_key: fp.attributeKey,
+      family_key: familyKey(fp.category, fp.attributes),
       attributes: toJson(fp.attributes),
       image_url: input.imageUrl,
       created_at: input.now,
@@ -367,7 +374,13 @@ export async function fillProductAttributes(db: Db, productId: number, fp: Finge
   if (attributes === p.attributes && key === p.attribute_key && brand === p.brand) return;
   await db.query
     .updateTable("products")
-    .set({ attributes, attribute_key: key, brand, updated_at: now })
+    .set({
+      attributes,
+      attribute_key: key,
+      family_key: familyKey(p.category as Category, merged),
+      brand,
+      updated_at: now,
+    })
     .where("id", "=", productId)
     .execute();
 }
