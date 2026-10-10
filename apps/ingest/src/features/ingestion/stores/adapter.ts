@@ -38,6 +38,9 @@ export interface StoreDefinition {
   adapter: StoreAdapter;
   /** Espera mínima entre requests a esta tienda, si su rate limit pide más que el valor por defecto del cliente HTTP. */
   minIntervalMs?: number;
+  /** `relay`: sale por el relay del servidor propio (#154) porque la tienda corta las IPs de Cloudflare; su dominio tiene
+   * que estar en `apps/relay/src/hosts.ts`. Sin configurar, o con el relay caído, sale directo. */
+  egress?: "relay";
   /** Motivo por el que no se rastrea (el cron la salta). La tienda sigue registrada: sus ofertas y su ficha se conservan. */
   pausedReason?: string;
 }

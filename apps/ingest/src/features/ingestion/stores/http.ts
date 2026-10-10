@@ -31,8 +31,10 @@ export class HttpError extends Error {
   }
 }
 
+export type Fetch = (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => Promise<Response>;
+
 export interface HttpClientOptions {
-  fetch?: typeof fetch;
+  fetch?: Fetch;
   sleep?: (ms: number) => Promise<void>;
   /** Espera mínima entre requests al mismo host. */
   minIntervalMs?: number;

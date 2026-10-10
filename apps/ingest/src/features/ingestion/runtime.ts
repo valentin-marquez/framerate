@@ -18,6 +18,7 @@ import type { CrawlMessage } from "./messages";
 import type { CrawlContext, StoreDefinition } from "./stores/adapter";
 import { createHttpClient } from "./stores/http";
 import { findStore, STORES } from "./stores/registry";
+import { relayFetch } from "./stores/relay";
 
 /**
  * Conexión de la ingesta con la plataforma (Queues, Cron, R2). La lógica vive
@@ -127,9 +128,17 @@ function productionContext(
   log: Logger,
 ): CrawlContext {
   const day = new Date().toISOString().slice(0, 10);
+  const storeLog = log.child({ store: store.slug, category, runId });
+  const relay = store.egress === "relay" && env.RELAY_URL && env.RELAY_TOKEN;
+  if (store.egress === "relay" && !relay) storeLog.warn("egress.relay_unconfigured");
   return {
-    http: createHttpClient({ minIntervalMs: store.minIntervalMs }),
-    log: log.child({ store: store.slug, category, runId }),
+    http: createHttpClient({
+      minIntervalMs: store.minIntervalMs,
+      fetch: relay
+        ? relayFetch({ url: env.RELAY_URL as string, token: env.RELAY_TOKEN as string, log: storeLog })
+        : undefined,
+    }),
+    log: storeLog,
     async snapshot(name, body) {
       // Comprimido: las respuestas JSON/HTML se reducen ~10x. Retención vía regla de ciclo de vida de R2.
       const gz = new Response(new Blob([body]).stream().pipeThrough(new CompressionStream("gzip")));

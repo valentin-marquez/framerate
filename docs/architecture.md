@@ -301,6 +301,11 @@ Reglas (ya decididas):
 Reglas del adaptador (ver `apps/ingest/src/features/ingestion/stores/adapter.ts`): sólo extrae datos crudos, nunca
 inventa identificadores, siempre guarda snapshot.
 
+Si la tienda corta las IPs de Cloudflare (403 o captcha por origen, no por lo que hacemos), `egress: "relay"` en su
+definición y su dominio en `apps/relay/src/hosts.ts`: el `fetch` del adaptador sale por `relay.nozz.skin` (un
+`Bun.serve` en Docker en el servidor del dueño, con token y lista de dominios) y, si el relay no responde, directo. El
+relay no resuelve desafíos anti-bot ni cambia el user agent (#154).
+
 ## 7. Operación
 
 ```bash

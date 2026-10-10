@@ -12,7 +12,8 @@ alimentan la huella de producto. Base: un sondeo del 30-09-2026 sobre las tienda
   evaluaron a fondo.
 - **25 son WooCommerce con la Store API abierta.** El adaptador que ya existe les sirve con sólo configurarlo.
 - **4 están fuera de alcance mientras sólo usemos `fetch`**, porque bloquean con Cloudflare: Winpy (la más
-  grande), SP Digital, CTMAN y Nice One.
+  grande), SP Digital, CTMAN y Nice One. Para las que cortan por IP de datacenter (no por desafío anti-bot) está el
+  relay del servidor propio (#154): `egress: "relay"` en el registro y su dominio en `apps/relay/src/hosts.ts`.
 - Las multitiendas (Mercado Libre, Falabella, Paris, Ripley, Lider…) casi no venden componentes. No se integran.
 
 ### Cómo se midió
@@ -122,9 +123,9 @@ cuarentena por motivo.
 **Descartadas o en pausa tras el sondeo del 30-09-2026:**
 
 - Centrale: plugin anti-scraping para los precios (ver arriba).
-- TYT Gamer: pausada (`pausedReason` en el registro). Desde el 01-10-2026 responde 403 a todas las corridas desde Workers; desde una red residencial respondía 200. No se cambia el user agent para pasar el bloqueo. Para reactivarla, probar desde un Worker (`wrangler dev --remote`) o pedirle a la tienda que habilite `FramerateBot`, y quitar `pausedReason` (#81).
+- TYT Gamer: pausada (`pausedReason` en el registro). Desde el 01-10-2026 responde 403 a todas las corridas desde Workers; desde una red residencial respondía 200. No se cambia el user agent para pasar el bloqueo. 10-10-2026: a través del relay (#154) responde 200 con `FramerateBot`, pero migró a PrestaShop (`https://www.tytgamer.cl/tienda/`; la Store API de Woo ya no existe): rehacer el adaptador con `createPrestaShopAdapter` y `egress: "relay"` (#81).
 - KDTEC: la Store API respondió a las 3 primeras peticiones y después cortó la conexión TCP (sin 403 ni 429; ¿límite por IP o servidor sobrecargado?). Reintentar otro día con `perPage` 20 y una petición cada 5 s; su robots.txt pide no rastrear filtros. Hay que leer la marca del atributo "Marca".
-- Tecno Shopping: el adaptador funciona (con `www` y desde una red residencial: 43 ofertas válidas), pero desde un Worker el captcha de SiteGround responde con un meta refresh a `/.well-known/sgcaptcha/` (HTML con 200, y el crawl falla con "Unexpected token <"). Es un bloqueo anti-bot por IP de Cloudflare: no se evade. Pausada con `pausedReason` el 05-10-2026; reactivar si la tienda permite el tráfico de `FramerateBot`.
+- Tecno Shopping: el adaptador funciona (con `www` y desde una red residencial: 43 ofertas válidas), pero desde un Worker el captcha de SiteGround responde con un meta refresh a `/.well-known/sgcaptcha/` (HTML con 200, y el crawl falla con "Unexpected token <"). Es un bloqueo anti-bot por IP de Cloudflare: no se evade. Pausada con `pausedReason` el 05-10-2026. 10-10-2026: a través del relay (#154) la Store API responde 200 con `FramerateBot`; tiene `egress: "relay"` y se despausa cuando el relay esté en producción.
 - Tecno Master: la ficha muestra la tarjeta más barata que la transferencia (4.495.621 contra 4.616.610); aclarar antes de integrar. Oct. 2026: su web está "en construcción" (`Retry-After: 86400`) y no se ve la ficha; la Store API sí responde (364 productos), con `brands` vacío (marca sólo en el título).
 - Notebooksya: casi todo son notebooks; pocos componentes.
 - AllTec: PrestaShop 1.6 (no devuelve JSON) y casi sin componentes.

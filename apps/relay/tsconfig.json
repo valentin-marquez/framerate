@@ -1,0 +1,10 @@
+{
+  "extends": "@framerate/config/tsconfig",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ESNext"],
+    "types": ["bun"],
+    "noUncheckedIndexedAccess": true
+  },
+  "include": ["src"]
+}

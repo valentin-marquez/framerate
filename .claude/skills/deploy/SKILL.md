@@ -34,6 +34,10 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
    6. `apps/web`: `VITE_API_URL=https://api.framerate.cl VITE_TURNSTILE_SITE_KEY=0x4AAAAAAFLjXEJIhds4HQZi bun run build`
       y luego `bunx wrangler deploy`. La site key de Turnstile es pública (va en el JS del sitio); su secreto vive en
       `framerate-server` (`TURNSTILE_SECRET_KEY`). Sin ella, el soporte sin cuenta no muestra el formulario.
+   7. `apps/relay` **no se despliega desde aquí**: Coolify (`coolify.nozz.skin`) lo construye con su `Dockerfile` en cada
+      push a `main` (webhook de Forgejo). Si cambió `apps/relay`, mirar en Coolify que el deploy terminó y
+      `curl https://relay.nozz.skin/health`. Su token es `RELAY_TOKEN` en Coolify y el mismo valor como secreto en
+      ingest.
 5. Verificar: `bunx wrangler tail framerate-ingest` (o `framerate-server`) y, si cambió el scraping, pedir un crawl
    con `POST /v1/admin/crawls` y revisar `GET /v1/admin/crawls` y la cuarentena. Para una revisión más a fondo,
    usar la skill `prod-health`.

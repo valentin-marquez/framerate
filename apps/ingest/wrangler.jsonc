@@ -16,7 +16,9 @@
 
   "vars": {
     // `views_7d` sale de la API SQL de Analytics Engine; el token va aparte: wrangler secret put ANALYTICS_API_TOKEN.
-    "CF_ACCOUNT_ID": "3f50a4a123ebcbcb917dababff3ef8b5"
+    "CF_ACCOUNT_ID": "3f50a4a123ebcbcb917dababff3ef8b5",
+    // Relay de salida (#154) para tiendas con `egress: "relay"`; el token va aparte: wrangler secret put RELAY_TOKEN.
+    "RELAY_URL": "https://relay.nozz.skin"
   },
 
   // Los crawls consumen CPU parseando JSON; subir el límite por invocación.

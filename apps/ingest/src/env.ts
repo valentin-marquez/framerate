@@ -21,4 +21,7 @@ export interface Env {
   /** Token con permiso "Account Analytics: Read". `wrangler secret put ANALYTICS_API_TOKEN`. Sin él no se recalcula
    * `views_7d`. */
   ANALYTICS_API_TOKEN?: string;
+  /** Relay de salida en el servidor propio (#154), para tiendas con `egress: "relay"`. `wrangler secret put RELAY_TOKEN`. */
+  RELAY_URL?: string;
+  RELAY_TOKEN?: string;
 }

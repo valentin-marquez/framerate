@@ -323,7 +323,9 @@ export const STORES: readonly StoreDefinition[] = [
     name: "TYT Gamer",
     url: "https://tytgamer.cl/tienda",
     minIntervalMs: 1000,
-    pausedReason: "tytgamer.cl responde 403 a los Workers desde el 01-10-2026 (#81)",
+    // Por el relay responde (10-10-2026), pero ya no es WooCommerce: www.tytgamer.cl/tienda es PrestaShop. Rehacer en #81.
+    pausedReason: "tytgamer.cl responde 403 a los Workers desde el 01-10-2026 y migró a PrestaShop (#81)",
+    egress: "relay",
     adapter: createPrestaShopAdapter({
       baseUrl: "https://tytgamer.cl/tienda",
       // La referencia es el id del producto. El listado tampoco trae la marca.
@@ -506,6 +508,7 @@ export const STORES: readonly StoreDefinition[] = [
     url: "https://www.tecnoshopping.cl",
     minIntervalMs: 1000,
     pausedReason: "el captcha de SiteGround bloquea la IP de los Workers (/.well-known/sgcaptcha), desde el 05-10-2026",
+    egress: "relay",
     adapter: createWooCommerceAdapter({
       // Con www: el apex redirige sin conservar la ruta y la API terminaba en la home HTML.
       baseUrl: "https://www.tecnoshopping.cl",
