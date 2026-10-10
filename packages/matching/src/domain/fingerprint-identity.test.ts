@@ -49,6 +49,15 @@ describe("huella desde la identidad: texto libre estable entre llamadas", () => 
   });
 
   // #155: pares iguales de producción, Haiku pone "elite" en la línea o en el modelo según la llamada.
+  test("placa: el modelo con y sin espacio es el mismo código", () => {
+    const base = { chipset: "a520", formFactor: "matx", wifi: false };
+    const a = fp("motherboard", "ASUS", { ...base, model: "a520m k", line: "prime" });
+    expect(differences(a, fp("motherboard", "ASUS", { ...base, model: "a520mk", line: "prime" }))).toEqual([]);
+    expect(differences(a, fp("motherboard", "ASUS", { ...base, model: "a520m a", line: "prime" }))).toContain(
+      "attribute:model",
+    );
+  });
+
   test("placa: las mismas palabras repartidas entre línea y modelo no vetan", () => {
     const base = { chipset: "b650m", formFactor: "matx", wifi: true };
     const a = fp("motherboard", "Gigabyte", { ...base, line: "aorus", model: "b650m elite" });

@@ -322,8 +322,15 @@ export async function normalizeListing(
     db.query.updateTable("listings").set({ norm_status: "normalized", norm_at: at }).where("id", "=", listingId),
   ]);
   // Haiku vio dos fichas del mismo SKU entre los candidatos: se fusionan en la que eligió, salvo que un dato
-  // estructural, un `forbid` o un rechazo previo lo frenen (`mergeBlocker`). Queda auditado en `match_decisions`.
+  // estructural, un `forbid` o un rechazo previo lo frenen (`mergeBlocker`), o que las dos fichas tengan MPN y ninguno
+  // en común (freno determinista aparte del juicio del modelo). Queda auditado en `match_decisions`.
+  const mpnsOf = (id: number) => catalog.find((c) => c.id === id)?.mpns ?? [];
   for (const duplicate of duplicates) {
+    const [a, b] = [mpnsOf(sameAs as number), mpnsOf(duplicate)];
+    if (a.length > 0 && b.length > 0 && !a.some((m) => b.includes(m))) {
+      log.info("normalize.duplicate", { listingId, sameAs, duplicate, status: "skipped", reason: "mpn_distinto" });
+      continue;
+    }
     const merged = await mergeProductPair(db, { a: sameAs as number, b: duplicate, decidedBy: AI_ACTOR, now: at });
     log.info("normalize.duplicate", { listingId, sameAs, duplicate, ...merged });
   }

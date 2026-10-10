@@ -165,6 +165,11 @@ export async function proposeDuplicateReviews(
           count(`veto:${comparison.vetoes[0]}`);
           continue;
         }
+        // Otra línea o modelo con la misma clave (Renegade contra NV3): el preprocesador ya los distinguió.
+        if (comparison.evidence.textMismatch) {
+          count("texto_distinto");
+          continue;
+        }
         // Bajo la banda gris no hay nada que proponer: el matching ya los considera productos distintos.
         if (comparison.score < floor) {
           count("puntaje_bajo");

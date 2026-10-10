@@ -159,12 +159,12 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
       fp,
       await applyOverrides(db, listingId, fp, await markSameStore(db, listingId, await findCandidates(db, fp))),
     );
-    if (
-      input.canonicalName &&
-      decision.kind === "link" &&
-      decision.method === "attributes" &&
-      input.shownCandidates?.includes(decision.productId)
-    ) {
+    const shown = decision.kind !== "new_product" && input.shownCandidates?.includes(decision.productId);
+    // Haiku vio ese candidato con otra línea o modelo y no lo eligió: no hay nada que revisar.
+    if (input.canonicalName && shown && decision.kind === "review" && decision.comparison.evidence.textMismatch) {
+      decision = { kind: "new_product" };
+    }
+    if (input.canonicalName && shown && decision.kind === "link" && decision.method === "attributes") {
       decision = {
         kind: "review",
         productId: decision.productId,
