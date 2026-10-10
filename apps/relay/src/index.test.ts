@@ -205,8 +205,9 @@ describe("relay", () => {
       );
     const estados = (await Promise.all([pedir(), pedir(), pedir()])).map((r) => r.status);
     expect(estados).toEqual([200, 200, 200]);
-    expect(llegadas[1]! - llegadas[0]!).toBeGreaterThanOrEqual(55);
-    expect(llegadas[2]! - llegadas[1]!).toBeGreaterThanOrEqual(55);
+    const [a = 0, b = 0, c = 0] = llegadas;
+    expect(b - a).toBeGreaterThanOrEqual(55);
+    expect(c - b).toBeGreaterThanOrEqual(55);
 
     const ocupada = await handle(
       new Request("http://relay.local/fetch?url=https://llena.cl/", { headers: { Authorization: `Bearer ${TOKEN}` } }),
