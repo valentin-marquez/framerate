@@ -591,9 +591,10 @@ export const STORES: readonly StoreDefinition[] = [
     slug: "winpy",
     name: "Winpy",
     url: "https://www.winpy.cl",
-    // Corta con 429 incluso a 1 petición cada 3 s cuando corren varias categorías a la vez (10-10-2026); su
-    // robots.txt pedía Crawl-delay 10 en el sondeo del 30-09. Una categoría a la vez, a 5 s, es lo que aguanta.
+    // Desde una red residencial aguanta 1 petición cada 3 s; desde los Workers corta con 429 incluso sola y a 5 s
+    // (10-10-2026): limita por IP y las de Cloudflare son compartidas. Reactivar con un relay (#154) o navegador.
     minIntervalMs: 5000,
+    pausedReason: "winpy.cl responde 429 a los Workers aunque vaya una categoría sola a 5 s (10-10-2026)",
     adapter: createWinpyAdapter({
       baseUrl: "https://www.winpy.cl",
       // "tarjetas-de-video" y "tarjetas-graficas" son la misma lista. "disco-duro-pc-s" estaba vacía (oct. 2026).
