@@ -323,8 +323,7 @@ export const STORES: readonly StoreDefinition[] = [
     name: "TYT Gamer",
     url: "https://tytgamer.cl/tienda",
     minIntervalMs: 1000,
-    // Por el relay responde (10-10-2026), pero ya no es WooCommerce: www.tytgamer.cl/tienda es PrestaShop. Rehacer en #81.
-    pausedReason: "tytgamer.cl responde 403 a los Workers desde el 01-10-2026 y migró a PrestaShop (#81)",
+    // Responde 403 a las IPs de Cloudflare desde el 01-10-2026: sale por el relay (#81, #154).
     egress: "relay",
     adapter: createPrestaShopAdapter({
       baseUrl: "https://tytgamer.cl/tienda",
