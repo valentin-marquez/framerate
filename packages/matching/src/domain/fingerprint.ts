@@ -115,6 +115,15 @@ const FOLD_INTO: Partial<Record<Category, string>> = {
   gpu: "line",
 };
 
+/**
+ * Los vetos que se sostienen aunque el preprocesador diga que es el mismo SKU (`same_as`). El texto libre de
+ * `FOLD_INTO` lo escribe Haiku distinto entre llamadas ("TUF Gaming" y "TUF", "ML" y "MasterLiquid"), así que no le
+ * gana a su propio reconocimiento; un modelo que es código (CPU, placa) sí.
+ */
+export function vetoesAgainstSameAs(category: Category, vetoes: readonly string[]): string[] {
+  return vetoes.filter((v) => v !== `attribute:${FOLD_INTO[category]}`);
+}
+
 const tokens = (value: IdentityValue | undefined) =>
   typeof value === "string" ? value.split(" ").filter((t) => t && !FREE_TEXT_NOISE.has(t)) : [];
 

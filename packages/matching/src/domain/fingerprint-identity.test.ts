@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { IdentityValue, ListingIdentity } from "@framerate/contracts";
 import { compare } from "./decide";
-import { fingerprintFromIdentity } from "./fingerprint";
+import { fingerprintFromIdentity, vetoesAgainstSameAs } from "./fingerprint";
 
 const fp = (category: ListingIdentity["category"], brand: string, identity: Record<string, IdentityValue>) =>
   fingerprintFromIdentity({
@@ -69,6 +69,14 @@ describe("huella desde la identidad: texto libre estable entre llamadas", () => 
     expect(compare(ml, full).vetoes).toEqual([]);
     const other = fp("cpu_cooler", "Cooler Master", { ...aio, model: "masterliquid core nex 240" });
     expect(compare(ml, other).vetoes).toContain("attribute:model");
+  });
+
+  test("same_as le gana al texto libre de Haiku, no a un modelo que es código ni a otro atributo", () => {
+    expect(vetoesAgainstSameAs("gpu", ["attribute:line"])).toEqual([]);
+    expect(vetoesAgainstSameAs("cpu_cooler", ["attribute:model"])).toEqual([]);
+    expect(vetoesAgainstSameAs("gpu", ["attribute:line", "attribute:vram"])).toEqual(["attribute:vram"]);
+    expect(vetoesAgainstSameAs("cpu", ["attribute:model"])).toEqual(["attribute:model"]);
+    expect(vetoesAgainstSameAs("motherboard", ["attribute:model"])).toEqual(["attribute:model"]);
   });
 
   test("GPU: otra línea sigue vetando", () => {

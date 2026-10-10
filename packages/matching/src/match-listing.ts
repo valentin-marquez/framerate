@@ -1,6 +1,6 @@
 import type { Db } from "@framerate/database";
 import { compare, type Decision, decide } from "./domain/decide";
-import type { Fingerprint } from "./domain/fingerprint";
+import { type Fingerprint, vetoesAgainstSameAs } from "./domain/fingerprint";
 import { productNameFromTitle } from "./domain/product-name";
 import {
   applyOverrides,
@@ -98,7 +98,14 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     if (override === "force") return { outcome: "kept", unlinked, reviewClosed };
     if (link.method === "manual" && override !== "forbid") return { outcome: "kept", unlinked, reviewClosed };
     const check = current && compare(fp, current.fingerprint);
-    const vetoes = override === "forbid" ? ["forbidden"] : check ? check.vetoes : ["product_missing"];
+    const vetoes =
+      override === "forbid"
+        ? ["forbidden"]
+        : check
+          ? input.sameAs === productId
+            ? vetoesAgainstSameAs(fp.category, check.vetoes)
+            : check.vetoes
+          : ["product_missing"];
     let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
     if (check && vetoes.length === 0) {
       const again = link.method === "new_product" ? null : decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
@@ -195,7 +202,7 @@ async function ownerThatLinks(db: Db, listingId: number, fp: Fingerprint, produc
 }
 
 /**
- * El `same_as` del preprocesador vincula sólo si nada lo contradice: veto, MPN distinto, `forbid`, u otra oferta de la
+ * El `same_as` del preprocesador vincula sólo si nada lo contradice: veto (salvo el de texto libre), MPN distinto, `forbid`, u otra oferta de la
  * misma tienda en ese producto (casi siempre una variante, como en `decide`).
  */
 async function sameAsLink(db: Db, listingId: number, fp: Fingerprint, productId: number): Promise<Decision | null> {
@@ -208,6 +215,7 @@ async function sameAsLink(db: Db, listingId: number, fp: Fingerprint, productId:
   if (!candidate || candidate.override === "forbid" || candidate.sameStore) return null;
   const comparison = compare(fp, candidate.fingerprint);
   const { vetoes, evidence } = comparison;
-  if (vetoes.length > 0 || evidence.mpnConflict || evidence.modelConflict) return null;
+  if (vetoesAgainstSameAs(fp.category, vetoes).length > 0 || evidence.mpnConflict || evidence.modelConflict)
+    return null;
   return { kind: "link", productId, method: "attributes", confidence: comparison.score, comparison };
 }
