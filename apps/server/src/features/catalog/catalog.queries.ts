@@ -353,7 +353,8 @@ export async function getProduct(
     bestCardPrice: inStock.length > 0 ? Math.min(...inStock.map((o) => o.priceCard)) : null,
     mpn: product.mpn,
     attributes: parseJson<ProductSummary["attributes"]>(product.attributes, {}),
-    offerCount: offers.length,
+    // Tiendas, no publicaciones: una tienda puede publicar el mismo producto dos veces.
+    offerCount: new Set(offers.map((o) => o.store.slug)).size,
     referencePrice: product.reference_price,
   };
   const family = await productFamily(db, product.id, product.family_key, assetsBaseUrl);

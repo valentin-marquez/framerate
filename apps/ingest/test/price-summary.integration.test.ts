@@ -24,7 +24,8 @@ async function product(deps: ReturnType<typeof testDeps>) {
 }
 
 describe("resumen de precios", () => {
-  test("mejor precio entre tiendas sólo con stock; la oferta agotada cuenta como activa", async () => {
+  // Beta publica el producto dos veces: cuenta como una tienda, con y sin stock.
+  test("mejor precio entre tiendas sólo con stock; los conteos son de tiendas, no de publicaciones", async () => {
     const clock = steppingClock(START);
     const deps = testDeps(d1, clock);
     const alfa = fakeStore("alfa", { gpu: ["gpu"] });
@@ -40,7 +41,7 @@ describe("resumen de precios", () => {
     expect(await product(deps)).toMatchObject({
       best_price: 480_000,
       best_price_card: 500_000,
-      offer_count: 3,
+      offer_count: 2,
       in_stock_offer_count: 2,
       reference_price: null,
     });

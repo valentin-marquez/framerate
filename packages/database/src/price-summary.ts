@@ -10,13 +10,14 @@ import type { Db } from "./client";
 
 /**
  * `scope` es una subconsulta que devuelve ids de producto. Sólo ofertas activas y publicadas (una oculta por el pipeline,
- * #153, no puede mover el precio de un producto); el precio sólo de las con stock.
+ * #153, no puede mover el precio de un producto); el precio sólo de las con stock. Los conteos son de tiendas: una
+ * tienda que publica el mismo producto dos veces cuenta una.
  */
 const summarySql = (scope: string) => `
 UPDATE products SET
   (best_price, best_price_card, offer_count, in_stock_offer_count) = (
     SELECT MIN(CASE WHEN in_stock = 1 THEN price_cash END), MIN(CASE WHEN in_stock = 1 THEN price_card END),
-      COUNT(*), COALESCE(SUM(in_stock), 0)
+      COUNT(DISTINCT store_id), COUNT(DISTINCT CASE WHEN in_stock = 1 THEN store_id END)
     FROM listings WHERE product_id = products.id AND is_active = 1 AND visible = 1),
   prices_updated_at = ?4
 WHERE id IN (${scope})`;

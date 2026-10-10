@@ -38,7 +38,7 @@ ON CONFLICT (product_id, day) DO UPDATE SET
 UPDATE products SET
   (best_price, best_price_card, offer_count, in_stock_offer_count) = (
     SELECT MIN(CASE WHEN in_stock = 1 THEN price_cash END), MIN(CASE WHEN in_stock = 1 THEN price_card END),
-      COUNT(*), COALESCE(SUM(in_stock), 0)
+      COUNT(DISTINCT store_id), COUNT(DISTINCT CASE WHEN in_stock = 1 THEN store_id END)
     FROM listings WHERE product_id = products.id AND is_active = 1 AND visible = 1),
   prices_updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now');
 

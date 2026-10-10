@@ -43,8 +43,9 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
   const location = useLocation();
   const changingPeriod = navigation.state === "loading" && navigation.location?.pathname === location.pathname;
 
-  // La API ya las ordena: primero con stock y luego por precio.
-  const offers = product.offers;
+  // La API ya las ordena: primero con stock y luego por precio. Una tienda que publica el mismo producto dos veces
+  // aparece una vez, con su mejor publicación; las demás quedan plegadas.
+  const { offers, repeated } = onePerStore(product.offers);
   const inStock = offers.filter((o) => o.inStock);
   const outOfStock = offers.filter((o) => !o.inStock);
   const best = offers[0];
@@ -178,6 +179,21 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
                 </summary>
                 <ul className="mt-2 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
                   {outOfStock.map((o) => (
+                    <StoreRow key={o.id} offer={o} productId={product.id} now={now} />
+                  ))}
+                </ul>
+              </details>
+            )}
+            {repeated.length > 0 && (
+              <details className="group">
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 py-1 text-muted-foreground text-sm hover:text-foreground">
+                  <IconChevronDown className="size-4 transition-transform group-open:rotate-180" />
+                  {repeated.length === 1
+                    ? `1 publicación repetida (${repeated[0]?.store.name} lo publica dos veces)`
+                    : `${repeated.length} publicaciones repetidas de las mismas tiendas`}
+                </summary>
+                <ul className="mt-2 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+                  {repeated.map((o) => (
                     <StoreRow key={o.id} offer={o} productId={product.id} now={now} />
                   ))}
                 </ul>
@@ -378,6 +394,21 @@ function Breadcrumb({ category }: { category: ProductDetail["category"] }) {
 }
 
 const relative = new Intl.RelativeTimeFormat("es-CL", { numeric: "auto" });
+
+/** La primera publicación de cada tienda en el orden de la API (con stock y más barata primero); el resto, aparte. */
+function onePerStore(all: Offer[]): { offers: Offer[]; repeated: Offer[] } {
+  const seen = new Set<string>();
+  const offers: Offer[] = [];
+  const repeated: Offer[] = [];
+  for (const o of all) {
+    if (seen.has(o.store.slug)) repeated.push(o);
+    else {
+      seen.add(o.store.slug);
+      offers.push(o);
+    }
+  }
+  return { offers, repeated };
+}
 
 function seenAgo(iso: string, now: number) {
   const minutes = Math.max(1, Math.round((now - Date.parse(iso)) / 60_000));
