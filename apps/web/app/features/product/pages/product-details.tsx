@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { redirect } from "react-router";
 import { CommentsSection } from "~/features/comments/components/comments-section";
 import { ProductView } from "~/features/product/components/product-view";
-import { headlinePrice, shareDescription } from "~/features/product/lib/share";
+import { headlinePrice, ogImagePath, shareDescription } from "~/features/product/lib/share";
 import { productsService } from "~/features/product/services/products";
 import { periodFromParam } from "~/features/product/utils/price-history";
 import { isRateLimitError } from "~/shared/lib/api";
@@ -17,9 +17,7 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
   const description = shareDescription(data);
   const url = `${origin}/producto/${data.slug}`;
   // Tarjeta propia de 1200×630 (foto sobre la base de la marca); `v` cambia con la foto, así se cachea sin vencer.
-  const image = data.imageUrl
-    ? `${origin}/og/producto/${data.slug}.jpg?v=${encodeURIComponent((data.imageUrl.split("/").pop() ?? "").replace(/\.\w+$/, ""))}`
-    : `${origin}/og-image.png`;
+  const image = data.imageUrl ? `${origin}${ogImagePath(data.slug, data.imageUrl)}` : `${origin}/og-image.png`;
 
   return [
     { title: `${data.name}: precios en Chile - Framerate` },

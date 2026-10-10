@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { ProductDetail } from "@framerate/contracts";
-import { byteLength, DISCORD_EMBED_MAX_BYTES, discordEmbed, shareDescription } from "./share";
+import { byteLength, DISCORD_EMBED_MAX_BYTES, discordEmbed, ogImagePath, shareDescription } from "./share";
 
 const offer = (slug: string, priceCash: number, inStock = true, priceCard = Math.round(priceCash * 1.05)) => ({
   id: priceCash,
@@ -82,5 +82,11 @@ describe("tarjeta de Discord", () => {
       const visible = texts(discordEmbed(p, "https://framerate.cl")) + shareDescription(p);
       expect(visible).not.toMatch(/ · |—|–/);
     }
+  });
+
+  test("la imagen para compartir cambia de versión sólo cuando cambia la foto", () => {
+    expect(ogImagePath("msi-a520m", "https://cdn.framerate.cl/products/346cab.webp")).toBe(
+      "/og/producto/msi-a520m.jpg?v=346cab",
+    );
   });
 });

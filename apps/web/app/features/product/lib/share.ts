@@ -4,6 +4,12 @@ import { formatCLP } from "~/shared/utils/format";
 /** Precio a destacar: el mejor con stock, o el de la oferta más barata si nadie tiene (la API las ordena así). */
 export const headlinePrice = (product: ProductDetail) => product.bestPrice ?? product.offers[0]?.priceCash ?? null;
 
+/** Ruta de la imagen para compartir; `v` es el nombre del archivo de la foto, así cambia cuando cambia la foto. */
+export function ogImagePath(slug: string, imageUrl: string): string {
+  const version = (imageUrl.split("/").pop() ?? "").replace(/\.\w+$/, "");
+  return `/og/producto/${slug}.jpg?v=${encodeURIComponent(version)}`;
+}
+
 /** Una oferta por tienda, sólo con stock, en el orden de la API (más barata primero). */
 function inStockByStore(product: ProductDetail) {
   const seen = new Set<string>();

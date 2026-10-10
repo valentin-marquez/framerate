@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
+import { ogImagePath } from "~/features/product/lib/share";
 import { productsService } from "~/features/product/services/products";
 import base from "../assets/og-product-base.jpg?inline";
 
@@ -19,7 +20,11 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 
   const slug = (params.file ?? "").replace(/\.jpg$/, "");
   const product = await productsService.getBySlug(slug).catch(() => null);
-  const photo = product?.imageUrl ? await fetch(product.imageUrl).catch(() => null) : null;
+  if (!product?.imageUrl) return fallback(request);
+  // Sólo se compone la URL canónica: un `v` inventado saltaría la caché y cobraría una transformación por pedido.
+  const canonical = new URL(ogImagePath(product.slug, product.imageUrl), request.url);
+  if (canonical.href !== request.url) return Response.redirect(canonical.href, 301);
+  const photo = await fetch(product.imageUrl).catch(() => null);
   if (!photo?.ok || !photo.body) return fallback(request);
 
   try {
