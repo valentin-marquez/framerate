@@ -11,6 +11,7 @@ declare namespace Cloudflare {
     VITE_API_URL: string;
     /** Service binding hacia el Worker de la API (framerate-server). */
     API: Fetcher;
+    IMAGES: ImagesBinding;
   }
 }
 interface Env extends Cloudflare.Env {}

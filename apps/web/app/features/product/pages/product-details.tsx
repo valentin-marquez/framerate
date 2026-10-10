@@ -1,27 +1,25 @@
-import { CATEGORY_LABELS, type PricePoint, type ProductDetail } from "@framerate/contracts";
+import { CATEGORY_LABELS, type PricePoint } from "@framerate/contracts";
 import { useEffect } from "react";
 import { redirect } from "react-router";
 import { CommentsSection } from "~/features/comments/components/comments-section";
 import { ProductView } from "~/features/product/components/product-view";
+import { headlinePrice, shareDescription } from "~/features/product/lib/share";
 import { productsService } from "~/features/product/services/products";
 import { periodFromParam } from "~/features/product/utils/price-history";
 import { isRateLimitError } from "~/shared/lib/api";
-import { formatCLP } from "~/shared/utils/format";
 import type { Route } from "./+types/product-details";
-
-/** Precio a destacar: el mejor con stock, o el de la oferta más barata si nadie tiene (la API las ordena así). */
-const headlinePrice = (product: ProductDetail) => product.bestPrice ?? product.offers[0]?.priceCash ?? null;
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Producto no encontrado - Framerate" }];
-  const data = loaderData.product;
+  const { product: data, origin } = loaderData;
 
   const bestPrice = headlinePrice(data);
-  const description = bestPrice
-    ? `Compra ${data.name} desde ${formatCLP(bestPrice)} en Chile. Compara precios en ${data.offerCount} tiendas.`
-    : `${data.name}: precios, tiendas e historial en Chile. Ninguna tienda lo publica ahora.`;
-  // ponytail: la foto de la tienda tal cual; una tarjeta propia (logo + foto + nombre) cuando haga falta.
-  const ogImage = data.imageUrl || "/og-image.png";
+  const description = shareDescription(data);
+  const url = `${origin}/producto/${data.slug}`;
+  // Tarjeta propia de 1200×630 (foto sobre la base de la marca); `v` cambia con la foto, así se cachea sin vencer.
+  const image = data.imageUrl
+    ? `${origin}/og/producto/${data.slug}.jpg?v=${encodeURIComponent((data.imageUrl.split("/").pop() ?? "").replace(/\.\w+$/, ""))}`
+    : `${origin}/og-image.png`;
 
   return [
     { title: `${data.name}: precios en Chile - Framerate` },
@@ -29,10 +27,14 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
     { property: "og:site_name", content: "Framerate.cl" },
     { property: "og:locale", content: "es_CL" },
     { property: "og:type", content: "product" },
+    { property: "og:url", content: url },
     { property: "og:title", content: data.name },
     { property: "og:description", content: description },
-    { property: "og:image", content: ogImage },
-    { property: "og:image:alt", content: `${data.name} — Framerate` },
+    { property: "og:image", content: image },
+    { property: "og:image:type", content: data.imageUrl ? "image/jpeg" : "image/png" },
+    { property: "og:image:width", content: "1200" },
+    { property: "og:image:height", content: "630" },
+    { property: "og:image:alt", content: `${data.name} en Framerate` },
     ...(bestPrice === null
       ? []
       : [
@@ -41,7 +43,16 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
         ]),
     { property: "product:category", content: CATEGORY_LABELS[data.category] },
     { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:image", content: ogImage },
+    { name: "twitter:title", content: data.name },
+    { name: "twitter:description", content: description },
+    { name: "twitter:image", content: image },
+    // Discord arma con este JSON una tarjeta propia (foto, precio, tiendas y botones); sin él, usa lo de arriba.
+    {
+      tagName: "link",
+      rel: "discord:component-embed",
+      type: "application/json",
+      href: `${origin}/embed/discord/producto/${data.slug}`,
+    },
   ];
 }
 
@@ -56,7 +67,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         .catch((): PricePoint[] => []),
     ]);
 
-    return { product, history, period, now: Date.now() };
+    return { product, history, period, now: Date.now(), origin: new URL(request.url).origin };
   } catch (error) {
     // Respeta redirects/respuestas explícitas (incluye `throw redirect(...)`).
     if (error instanceof Response) throw error;

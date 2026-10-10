@@ -9,6 +9,8 @@
   "main": "./workers/app.ts",
   // SSR → API por service binding (no por HTTP público: mismo zone). Requiere framerate-server desplegado.
   "services": [{ "binding": "API", "service": "framerate-server" }],
+  // Arma la imagen para compartir una ficha (foto del producto sobre la base de la marca).
+  "images": { "binding": "IMAGES" },
   "observability": {
     "enabled": true
   },
