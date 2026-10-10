@@ -174,6 +174,7 @@ export const webview: Render = async (url, userAgent, waitFor) => {
       argv: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", `--proxy-pac-url=${PAC_URL}`],
     },
   });
+  const deadline = Date.now() + RENDER_MS;
   let timer: Timer | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error("render: timeout")), RENDER_MS);
@@ -181,21 +182,34 @@ export const webview: Render = async (url, userAgent, waitFor) => {
   const run = async () => {
     // `cdp` necesita una sesión, y la sesión nace con la primera navegación.
     await tab.navigate("about:blank");
-    await tab.cdp("Emulation.setUserAgentOverride", { userAgent });
+    // El navegador es compartido: las cookies de la página anterior no llegan a esta. La caché se queda (Chrome ya la
+    // separa por sitio) porque reusar el JavaScript de la tienda entre páginas es lo que hace rápido el render.
     await tab.cdp("Network.enable", {});
+    await tab.cdp("Network.clearBrowserCookies", {});
+    await tab.cdp("Emulation.setUserAgentOverride", { userAgent });
     await tab.cdp("Network.setBlockedURLs", { urls: BLOCKED });
     await tab.navigate(url);
     if (waitFor) {
       const probe = `!!document.querySelector(${JSON.stringify(waitFor)})`;
-      while (!(await tab.evaluate(probe))) await Bun.sleep(WAIT_POLL_MS);
+      // Con plazo propio: el timeout de afuera responde, pero este bucle tiene que terminar también.
+      while (!(await tab.evaluate(probe))) {
+        if (Date.now() > deadline) throw new Error("render: timeout");
+        await Bun.sleep(WAIT_POLL_MS);
+      }
     }
+    // Medir antes de traer: si no, una página enorme se copia entera a la memoria del relay.
+    const length = Number(await tab.evaluate("document.documentElement.outerHTML.length"));
+    if (length * 3 > MAX_BYTES) throw new Error("render: respuesta demasiado grande");
     return String(await tab.evaluate("document.documentElement.outerHTML"));
   };
+  const work = run();
   try {
-    return await Promise.race([run(), timeout]);
+    return await Promise.race([work, timeout]);
   } finally {
     clearTimeout(timer);
     tab.close();
+    // Con la pestaña cerrada, lo que quede de `run` falla; no tiene que ensuciar la consola como rechazo sin manejar.
+    work.catch(() => {});
   }
 };
 
