@@ -79,6 +79,13 @@ describe("huella desde la identidad: texto libre estable entre llamadas", () => 
     expect(vetoesAgainstSameAs("motherboard", ["attribute:model"])).toEqual(["attribute:model"]);
   });
 
+  test("SSD: la serie repartida entre línea y serie no veta, otra serie sí", () => {
+    const base = { capacity: 500, interface: "nvme", formFactor: "2280", pcieGen: 3 };
+    const a = fp("ssd", "ADATA", { ...base, line: "legend 710" });
+    expect(compare(a, fp("ssd", "ADATA", { ...base, line: "legend", series: "710" })).vetoes).toEqual([]);
+    expect(compare(a, fp("ssd", "ADATA", { ...base, line: "legend", series: "800" })).vetoes).not.toEqual([]);
+  });
+
   test("GPU: otra línea sigue vetando", () => {
     const a = fp("gpu", "MSI", { chipset: "rtx 5060", vram_gb: 8, line: "ventus 2x", oc: true });
     const b = fp("gpu", "MSI", { chipset: "rtx 5060", vram_gb: 8, line: "gaming trio", oc: true });

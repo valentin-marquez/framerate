@@ -36,13 +36,13 @@ export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison 
     if (!evidence.brandMatch) vetoes.push("brand");
   }
 
-  // Haiku reparte las mismas palabras entre `line` y `model` distinto en cada llamada ("aorus" + "b650m elite" contra
-  // "aorus elite" + "b650m", #155): si juntas coinciden, ninguno de los dos veta.
+  // Haiku reparte las mismas palabras entre `line`, `model` y `series` distinto en cada llamada ("aorus" + "b650m elite"
+  // contra "aorus elite" + "b650m", #155; SSD "legend 710" contra "legend" + "710"): si juntas coinciden, no vetan.
   const sameWords = lineModelWords(offer) === lineModelWords(candidate);
   for (const field of [...PROFILES[offer.category].discriminators, ...TRAIT_DISCRIMINATORS]) {
     const a = offer.attributes[field];
     const b = candidate.attributes[field];
-    if (sameWords && (field === "line" || field === "model")) continue;
+    if (sameWords && (field === "line" || field === "model" || field === "series")) continue;
     if (a !== undefined && b !== undefined && a !== b) vetoes.push(`attribute:${field}`);
   }
 
@@ -154,8 +154,8 @@ function modelCodeConflict(a: readonly string[], b: readonly string[]): boolean 
 const LINE_MODEL_ALIASES: Record<string, string> = { gaming: "", ml: "masterliquid" };
 
 function lineModelWords(fp: Fingerprint): string {
-  const { line, model } = fp.attributes;
-  return [line, model]
+  const { line, model, series } = fp.attributes;
+  return [line, model, series]
     .filter((v) => typeof v === "string")
     .join(" ")
     .split(" ")
