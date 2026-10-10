@@ -149,17 +149,23 @@ function modelCodeConflict(a: readonly string[], b: readonly string[]): boolean 
   );
 }
 
-/** Coeficiente de Dice sobre conjuntos de tokens (0..1). */
+// "TUF Gaming" y "TUF" son la misma línea, y Wei abrevia MasterLiquid como "ML" (#155). Sólo afloja la comparación:
+// los atributos guardados no cambian, así que no mueve ofertas ya vinculadas.
+const LINE_MODEL_ALIASES: Record<string, string> = { gaming: "", ml: "masterliquid" };
+
 function lineModelWords(fp: Fingerprint): string {
   const { line, model } = fp.attributes;
   return [line, model]
     .filter((v) => typeof v === "string")
     .join(" ")
     .split(" ")
+    .map((t) => LINE_MODEL_ALIASES[t] ?? t)
     .filter(Boolean)
     .sort()
     .join(" ");
 }
+
+/** Coeficiente de Dice sobre conjuntos de tokens (0..1). */
 
 export function diceSimilarity(a: readonly string[], b: readonly string[]): number {
   if (a.length === 0 || b.length === 0) return 0;

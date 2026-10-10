@@ -53,6 +53,24 @@ describe("huella desde la identidad: texto libre estable entre llamadas", () => 
     expect(compare(a, c).vetoes).toContain("attribute:model");
   });
 
+  // Desvinculados en el ciclo de las 00:17 UTC del 10-10: la ASUS TUF 5060 Ti y las Core Nex Digital de Wei.
+  test('"gaming" y la abreviatura ML no distinguen la línea ni el modelo', () => {
+    const gpu = { chipset: "rtx 5060 ti", vram_gb: 16, oc: true };
+    const a = fp("gpu", "ASUS", { ...gpu, line: "tuf gaming" });
+    expect(compare(a, fp("gpu", "ASUS", { ...gpu, line: "tuf" })).vetoes).toEqual([]);
+    expect(compare(a, fp("gpu", "ASUS", { ...gpu, line: "prime" })).vetoes).toContain("attribute:line");
+    const msi = { chipset: "rtx 5060", vram_gb: 8, oc: true };
+    const gaming = fp("gpu", "MSI", { ...msi, line: "gaming" });
+    expect(compare(gaming, fp("gpu", "MSI", { ...msi, line: "gaming x" })).vetoes).toContain("attribute:line");
+    expect(compare(gaming, fp("gpu", "MSI", { ...msi, line: "ventus 2x" })).vetoes).toContain("attribute:line");
+    const aio = { type: "aio", radiator_mm: 240, color: "black", rgb: true };
+    const ml = fp("cpu_cooler", "Cooler Master", { ...aio, model: "ml core nex digital 240" });
+    const full = fp("cpu_cooler", "Cooler Master", { ...aio, model: "masterliquid core nex digital 240" });
+    expect(compare(ml, full).vetoes).toEqual([]);
+    const other = fp("cpu_cooler", "Cooler Master", { ...aio, model: "masterliquid core nex 240" });
+    expect(compare(ml, other).vetoes).toContain("attribute:model");
+  });
+
   test("GPU: otra línea sigue vetando", () => {
     const a = fp("gpu", "MSI", { chipset: "rtx 5060", vram_gb: 8, line: "ventus 2x", oc: true });
     const b = fp("gpu", "MSI", { chipset: "rtx 5060", vram_gb: 8, line: "gaming trio", oc: true });
