@@ -15,7 +15,8 @@ export function relayFetch(opts: { url: string; token: string; log: Logger; fetc
     const target = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     const { [RENDER_HEADER]: render, ...headers } = (init?.headers ?? {}) as Record<string, string>;
     if (render) {
-      const res = await direct(`${base}/render?url=${encodeURIComponent(target)}`, {
+      const wait = render === "1" ? "" : `&wait=${encodeURIComponent(render)}`;
+      const res = await direct(`${base}/render?url=${encodeURIComponent(target)}${wait}`, {
         signal: init?.signal,
         headers: { ...headers, Authorization: `Bearer ${opts.token}` },
       });

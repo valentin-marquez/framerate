@@ -126,7 +126,7 @@ describe("relay", () => {
     expect(pedidos).toHaveLength(1);
   });
 
-  test("render: un navegador a la vez, y si falla responde 502 sin trabar la cola", async () => {
+  test("render: dos pestañas a la vez, y si una falla responde 502 sin trabar la cola", async () => {
     let enCurso = 0;
     let maximo = 0;
     let n = 0;
@@ -145,9 +145,24 @@ describe("relay", () => {
         }),
         { token: TOKEN, render, hosts: ["tienda.cl"] },
       );
-    const estados = (await Promise.all([pedir(), pedir(), pedir()])).map((r) => r.status);
-    expect(estados).toEqual([502, 200, 200]);
-    expect(maximo).toBe(1);
+    const estados = (await Promise.all([pedir(), pedir(), pedir(), pedir()])).map((r) => r.status);
+    expect(estados).toEqual([502, 200, 200, 200]);
+    expect(maximo).toBe(2);
+  });
+
+  test("render: pasa el selector de espera", async () => {
+    const vistos: (string | undefined)[] = [];
+    const render = async (_url: string, _ua: string, wait?: string) => {
+      vistos.push(wait);
+      return "<html></html>";
+    };
+    await handle(
+      new Request("http://relay.local/render?url=https://tienda.cl/&wait=.price", {
+        headers: { Authorization: `Bearer ${TOKEN}` },
+      }),
+      { token: TOKEN, render, hosts: ["tienda.cl"] },
+    );
+    expect(vistos).toEqual([".price"]);
   });
 
   test("render: con la cola llena responde 503 sin lanzar otro navegador", async () => {
@@ -164,9 +179,9 @@ describe("relay", () => {
         }),
         { token: TOKEN, render, hosts: ["tienda.cl"] },
       );
-    const estados = (await Promise.all(Array.from({ length: 6 }, pedir))).map((r) => r.status).sort();
+    const estados = (await Promise.all(Array.from({ length: 8 }, pedir))).map((r) => r.status).sort();
     expect(estados.filter((s) => s === 503).length).toBe(2);
-    expect(lanzados).toBe(4);
+    expect(lanzados).toBe(6);
   });
 
   test("si la tienda no responde, 502 marcado como del relay", async () => {

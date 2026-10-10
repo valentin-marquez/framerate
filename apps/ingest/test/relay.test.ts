@@ -80,6 +80,8 @@ describe("relayFetch", () => {
     );
     expect(calls).toEqual(["GET https://relay.test/render?url=https%3A%2F%2Ftienda.cl%2Fp"]);
     expect(headers.get("x-framerate-render")).toBeNull();
+    await http.get("https://tienda.cl/q", { accept: "text/html", render: ".precio" });
+    expect(calls[1]).toBe("GET https://relay.test/render?url=https%3A%2F%2Ftienda.cl%2Fq&wait=.precio");
     expect(headers.get("authorization")).toBe("Bearer t");
 
     expect(() =>

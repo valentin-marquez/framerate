@@ -305,8 +305,9 @@ Si la tienda corta las IPs de Cloudflare (403 o captcha por origen, no por lo qu
 definición y su dominio en `apps/relay/src/hosts.ts`: el `fetch` del adaptador sale por `relay.nozz.skin` (un
 `Bun.serve` en Docker en el servidor del dueño, con token y lista de dominios) y, si el relay no responde, directo. El
 relay no resuelve desafíos anti-bot ni cambia el user agent (#154). Para una tienda que arma la página con
-JavaScript, el adaptador pide `ctx.http.get(url, { render: true })`: el relay la abre con Chromium headless
-(`--dump-dom`, una a la vez, ~8 s por página) y devuelve el HTML ya ejecutado. El navegador no puede tocar la red de la
+JavaScript, el adaptador pide `ctx.http.get(url, { render: true })`, o `{ render: ".selector" }` para responder apenas
+aparece el dato: el relay la abre en una pestaña de un Chromium que mantiene vivo (`Bun.WebView`, dos pestañas a la
+vez, imágenes, fuentes y rastreadores bloqueados, ~2 a 4 s por página) y devuelve el HTML ya ejecutado. El navegador no puede tocar la red de la
 casa (un PAC manda toda dirección privada a un proxy muerto) y, sin relay, `render` falla en vez de traer el HTML crudo.
 
 ## 7. Operación

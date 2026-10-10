@@ -10,11 +10,12 @@
 export const USER_AGENT = "FramerateBot/1.0 (+https://framerate.cl/bot; comparador de precios)";
 
 export interface HttpClient {
-  /** `render`: el HTML después de ejecutar el JavaScript de la página, con el navegador del relay. Sólo en tiendas con
+  /** `render`: el HTML después de ejecutar el JavaScript de la página, con el navegador del relay. Un selector CSS en vez
+   * de `true` responde apenas aparece (más rápido que esperar la carga completa). Sólo en tiendas con
    * `egress: "relay"`; en otra lanza un error. */
   get(
     url: string,
-    init?: { accept?: string; headers?: Record<string, string>; render?: boolean },
+    init?: { accept?: string; headers?: Record<string, string>; render?: boolean | string },
   ): Promise<HttpResponse>;
   /** POST con cuerpo JSON (un cuerpo string va tal cual: pasar `Content-Type` en `headers`, p. ej. un formulario). Sólo para APIs de consulta (idempotentes): se reintenta igual que un GET. */
   post(url: string, json: unknown, init?: { accept?: string; headers?: Record<string, string> }): Promise<HttpResponse>;
@@ -51,7 +52,7 @@ export interface HttpClientOptions {
 
 /** Marca interna que `relayFetch` convierte en `/render`; nunca llega a la tienda. */
 export const RENDER_HEADER = "x-framerate-render";
-// El relay renderiza una página a la vez (~8 s cada una): con varias corridas en cola la espera pasa los 20 s.
+// El relay renderiza dos páginas a la vez (~3 s cada una): con varias corridas en cola la espera pasa los 20 s.
 const RENDER_TIMEOUT_MS = 120_000;
 
 const defaultSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -104,7 +105,8 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
       const headers = { Accept: init?.accept ?? "application/json", ...init?.headers };
       if (!init?.render) return request(url, { headers });
       if (!options.renders) throw new Error(`render requiere egress: "relay" y el relay configurado (${url})`);
-      return request(url, { headers: { ...headers, [RENDER_HEADER]: "1" }, timeoutMs: RENDER_TIMEOUT_MS });
+      const mark = init.render === true ? "1" : init.render;
+      return request(url, { headers: { ...headers, [RENDER_HEADER]: mark }, timeoutMs: RENDER_TIMEOUT_MS });
     },
     post: (url, json, init) =>
       request(url, {

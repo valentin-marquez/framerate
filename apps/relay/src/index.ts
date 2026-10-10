@@ -5,8 +5,9 @@ import { RELAY_HOSTS } from "./hosts";
  * Relay de salida para ingest (#154): descarga una URL de una tienda permitida desde la IP residencial y devuelve la
  * respuesta tal cual (estado, content-type, cuerpo). No sabe de productos; toda la lógica sigue en los Workers.
  * `GET|POST /fetch?url=…` con `Authorization: Bearer <RELAY_TOKEN>`; `GET /health` sin token.
- * `GET /render?url=…`: lo mismo, pero devuelve el HTML ya ejecutado por Chromium headless, para tiendas que arman la
- * página con JavaScript. No sirve para pasar desafíos anti-bot: sale con el mismo user agent del Worker.
+ * `GET /render?url=…[&wait=<selector>]`: lo mismo, pero devuelve el HTML ya ejecutado por Chromium (`Bun.WebView`), para
+ * tiendas que arman la página con JavaScript. Con `wait`, responde apenas aparece ese selector. No sirve para pasar
+ * desafíos anti-bot: sale con el mismo user agent del Worker.
  */
 const MAX_BYTES = 8 * 1024 * 1024;
 const TIMEOUT_MS = 25_000;
@@ -15,7 +16,7 @@ const FORWARD = ["user-agent", "accept", "accept-language", "content-type"];
 const BACK = ["content-type", "retry-after"];
 
 export type Fetch = (url: string, init: RequestInit) => Promise<Response>;
-export type Render = (url: string, userAgent: string) => Promise<string>;
+export type Render = (url: string, userAgent: string, waitFor?: string) => Promise<string>;
 
 export interface RelayOptions {
   token: string;
@@ -36,8 +37,9 @@ export async function handle(req: Request, opts: RelayOptions): Promise<Response
   if (url.pathname === "/render") {
     if (req.method !== "GET") return new Response("method not allowed", { status: 405 });
     try {
-      const pending = serialized(() =>
-        (opts.render ?? chromium)(target, req.headers.get("user-agent") ?? "FramerateBot/1.0"),
+      const waitFor = url.searchParams.get("wait") ?? undefined;
+      const pending = limited(() =>
+        (opts.render ?? webview)(target, req.headers.get("user-agent") ?? "FramerateBot/1.0", waitFor),
       );
       if (!pending) return relayResponse("render queue full", 503);
       const html = await pending;
@@ -105,20 +107,25 @@ async function readCapped(res: Response): Promise<Uint8Array | null> {
   return Buffer.concat(chunks);
 }
 
-// ponytail: un navegador a la vez (cada uno pesa ~300 MB); cola por promesa, sube a un pool si las corridas esperan.
+// ponytail: dos pestañas a la vez en un solo Chromium; sube MAX_TABS si las corridas esperan y el servidor aguanta.
 // Con tope de espera: sin él, cualquiera con el token apila renders hasta tumbar el servidor.
+const MAX_TABS = 2;
 const MAX_WAITING = 4;
-let queue: Promise<unknown> = Promise.resolve();
-let waiting = 0;
-function serialized<T>(task: () => Promise<T>): Promise<T> | null {
-  if (waiting >= MAX_WAITING) return null;
-  waiting++;
-  const run = queue.then(task, task).finally(() => waiting--);
-  queue = run.catch(() => {});
-  return run;
+let active = 0;
+const waiters: (() => void)[] = [];
+function limited<T>(task: () => Promise<T>): Promise<T> | null {
+  if (active >= MAX_TABS && waiters.length >= MAX_WAITING) return null;
+  const start = active < MAX_TABS ? Promise.resolve() : new Promise<void>((r) => waiters.push(r));
+  if (active < MAX_TABS) active++;
+  return start.then(task).finally(() => {
+    const next = waiters.shift();
+    if (next) next();
+    else active--;
+  });
 }
 
 const RENDER_MS = 30_000;
+const WAIT_POLL_MS = 150;
 // La página corre JS ajeno dentro de la red de la casa: un PAC manda toda dirección privada o local a un proxy muerto.
 // Las reglas de resolución de Chromium no alcanzan: no se aplican a IPs escritas tal cual.
 const PAC = `function FindProxyForURL(url, host) {
@@ -132,57 +139,63 @@ const PAC = `function FindProxyForURL(url, host) {
   return "DIRECT";
 }`;
 const PAC_URL = `data:application/x-ns-proxy-autoconfig;base64,${Buffer.from(PAC).toString("base64")}`;
+// Lo que no cambia el DOM que se lee: imágenes, fuentes, video y rastreadores. La página de GPU de TyT baja de 4,2 a 2,4 s.
+const BLOCKED = [
+  ...["png", "jpg", "jpeg", "webp", "avif", "gif", "svg", "ico", "woff", "woff2", "ttf", "otf", "mp4", "webm"].map(
+    (ext) => `*.${ext}*`,
+  ),
+  ...["google-analytics", "googletagmanager", "doubleclick", "facebook", "hotjar", "clarity.ms", "tiktok"].map(
+    (host) => `*${host}*`,
+  ),
+];
 
-/** Chromium headless sin librerías: `--dump-dom` imprime el DOM cuando la página termina de cargar. */
-export const chromium: Render = async (url, userAgent) => {
-  // `setsid`: Chromium deja procesos hijos con la salida abierta; matar el grupo entero es lo único que corta de verdad.
-  const proc = Bun.spawn(
-    [
-      "setsid",
-      process.env.CHROMIUM_PATH ?? "chromium-browser",
-      "--headless=new",
-      // El sandbox propio de Chromium no arranca con el seccomp por defecto de Docker (sale con 134) y habilitarlo pide
-      // abrir el seccomp del contenedor. La frontera es el contenedor: usuario sin root y red local bloqueada por el PAC.
-      "--no-sandbox",
-      "--disable-gpu",
-      "--disable-dev-shm-usage",
-      "--hide-scrollbars",
-      "--mute-audio",
-      "--virtual-time-budget=10000",
-      `--user-agent=${userAgent}`,
-      `--proxy-pac-url=${PAC_URL}`,
-      "--dump-dom",
-      url,
-    ],
-    { stdout: "pipe", stderr: "ignore" },
-  );
-  const killGroup = () => {
-    try {
-      process.kill(-proc.pid, "SIGKILL");
-    } catch {}
-  };
+/** Lo que usa el relay de `Bun.WebView` (experimental en Bun 1.4; los tipos de `@types/bun` 1.3 no lo traen). */
+interface WebViewTab {
+  navigate(url: string): Promise<void>;
+  evaluate(script: string): Promise<unknown>;
+  cdp(method: string, params: object): Promise<unknown>;
+  close(): void;
+}
+type WebViewCtor = new (options: object) => WebViewTab;
+
+/**
+ * Una pestaña por página en un Chromium que Bun mantiene vivo (y relanza si muere). Su sandbox no arranca con el
+ * seccomp por defecto de Docker: la frontera es el contenedor (usuario sin root) y la red de la casa queda fuera por
+ * el PAC.
+ */
+export const webview: Render = async (url, userAgent, waitFor) => {
+  const WebView = (Bun as unknown as { WebView: WebViewCtor }).WebView;
+  const tab = new WebView({
+    width: 1280,
+    height: 800,
+    backend: {
+      type: "chrome",
+      path: process.env.CHROMIUM_PATH ?? "/usr/bin/chromium-browser",
+      argv: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", `--proxy-pac-url=${PAC_URL}`],
+    },
+  });
   let timer: Timer | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      killGroup();
-      reject(new Error("chromium: timeout"));
-    }, RENDER_MS);
+    timer = setTimeout(() => reject(new Error("render: timeout")), RENDER_MS);
   });
+  const run = async () => {
+    // `cdp` necesita una sesión, y la sesión nace con la primera navegación.
+    await tab.navigate("about:blank");
+    await tab.cdp("Emulation.setUserAgentOverride", { userAgent });
+    await tab.cdp("Network.enable", {});
+    await tab.cdp("Network.setBlockedURLs", { urls: BLOCKED });
+    await tab.navigate(url);
+    if (waitFor) {
+      const probe = `!!document.querySelector(${JSON.stringify(waitFor)})`;
+      while (!(await tab.evaluate(probe))) await Bun.sleep(WAIT_POLL_MS);
+    }
+    return String(await tab.evaluate("document.documentElement.outerHTML"));
+  };
   try {
-    const bytes = await Promise.race([readCapped(new Response(proc.stdout)), timeout]);
-    if (!bytes) throw new Error("chromium: respuesta demasiado grande");
-    const code = await Promise.race([proc.exited, timeout]);
-    const html = new TextDecoder().decode(bytes);
-    if (code !== 0 || !html.trim()) throw new Error(`chromium salió con ${code}`);
-    // Sin red o bloqueada por el PAC, Chromium imprime su página de error en vez de fallar.
-    const netError =
-      html.match(/id="main-frame-error"[\s\S]*?(ERR_[A-Z_]+)/)?.[1] ??
-      (html.includes('id="main-frame-error"') && "ERR");
-    if (netError) throw new Error(`chromium: ${netError}`);
-    return html;
+    return await Promise.race([run(), timeout]);
   } finally {
     clearTimeout(timer);
-    killGroup();
+    tab.close();
   }
 };
 
