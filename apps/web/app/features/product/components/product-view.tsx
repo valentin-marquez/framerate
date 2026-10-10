@@ -67,7 +67,8 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
       <Breadcrumb category={product.category} />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-10">
+      {/* minmax(0,1fr) también en teléfono: si no, la columna crece hasta el texto más largo sin cortar y se sale. */}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-10">
         {/* Destino de la foto de la tarjeta de producto (app.css). */}
         <div
           className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl bg-[var(--product-stage)] lg:col-start-1 lg:row-start-1 lg:aspect-square"
