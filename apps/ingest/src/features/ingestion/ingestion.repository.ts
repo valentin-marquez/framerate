@@ -1,8 +1,8 @@
 import type { Category } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
-import { fromBool, toBool, toJson } from "@framerate/database";
+import { fromBool, parseJson, toBool, toJson } from "@framerate/database";
 import { sql } from "kysely";
-import type { NormalizedOffer } from "./domain/normalize";
+import type { NormalizedOffer, RawOffer } from "./domain/normalize";
 
 /**
  * Acceso a datos de la ingesta. Todas las escrituras son idempotentes: si una
@@ -395,4 +395,35 @@ export async function deactivateUnseen(db: Db, storeId: number, category: Catego
     .returning("id")
     .execute();
   return rows.length;
+}
+
+/** Las ofertas activas de una tienda por URL, de vuelta en la forma del adaptador (ver `CrawlContext.known`). */
+export async function knownOffers(db: Db, storeSlug: string): Promise<Map<string, RawOffer>> {
+  const rows = await db.query
+    .selectFrom("listings as l")
+    .innerJoin("stores as s", "s.id", "l.store_id")
+    .selectAll("l")
+    .where("s.slug", "=", storeSlug)
+    .where("l.is_active", "=", 1)
+    .execute();
+  return new Map(
+    rows.map((l) => [
+      l.url,
+      {
+        externalId: l.external_id,
+        url: l.url,
+        title: l.raw_title ?? l.title,
+        category: (l.crawl_category ?? l.category) as Category,
+        priceCash: l.price_cash,
+        priceCard: l.price_card,
+        inStock: toBool(l.in_stock),
+        stockQuantity: l.stock_quantity,
+        brand: l.brand,
+        mpn: l.mpn,
+        gtin: l.gtin,
+        imageUrls: parseJson<string[]>(l.image_urls, []),
+        sourceText: l.source_text,
+      },
+    ]),
+  );
 }

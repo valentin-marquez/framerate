@@ -29,6 +29,9 @@ export interface CrawlContext {
   log: Logger;
   /** Persiste una respuesta cruda (R2). `name` es relativo a la corrida. */
   snapshot(name: string, body: string): Promise<void>;
+  /** La última oferta guardada de esta tienda con esa URL (activa), tal como la entregó el adaptador. Para tiendas
+   * que cobran una petición por ficha: si el listado no cambió, se reusa en vez de volver a pedirla. */
+  known?(url: string): Promise<RawOffer | undefined>;
 }
 
 export interface StoreDefinition {

@@ -9,3 +9,11 @@ export const RELAY_HOSTS: readonly string[] = [
   "www.tecnoshopping.cl",
   "www.winpy.cl",
 ];
+
+/**
+ * Espera mínima entre peticiones a un dominio, sumando todas las corridas: dos categorías de Winpy en paralelo, cada
+ * una a 6 s, eran 1 cada 3 s desde la misma IP y la tienda cortaba con 429 (~12 por minuto, 10-10-2026).
+ */
+export const HOST_INTERVAL_MS: Readonly<Record<string, number>> = {
+  "www.winpy.cl": 6000,
+};

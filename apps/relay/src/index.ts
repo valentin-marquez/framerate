@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { RELAY_HOSTS } from "./hosts";
+import { HOST_INTERVAL_MS, RELAY_HOSTS } from "./hosts";
 
 /**
  * Relay de salida para ingest (#154): descarga una URL de una tienda permitida desde la IP residencial y devuelve la
@@ -23,6 +23,7 @@ export interface RelayOptions {
   fetch?: Fetch;
   render?: Render;
   hosts?: readonly string[];
+  intervals?: Readonly<Record<string, number>>;
 }
 
 export async function handle(req: Request, opts: RelayOptions): Promise<Response> {
@@ -34,6 +35,9 @@ export async function handle(req: Request, opts: RelayOptions): Promise<Response
   const hosts = opts.hosts ?? RELAY_HOSTS;
   const target = allowed(url.searchParams.get("url"), hosts);
   if (!target) return new Response("host not allowed", { status: 403 });
+  const intervals = opts.intervals ?? HOST_INTERVAL_MS;
+  const busy = await pace(new URL(target).hostname, intervals);
+  if (busy) return busy;
   if (url.pathname === "/render") {
     if (req.method !== "GET") return new Response("method not allowed", { status: 405 });
     try {
@@ -71,6 +75,8 @@ export async function handle(req: Request, opts: RelayOptions): Promise<Response
       if (upstream.status >= 300 && upstream.status < 400 && location && hop < MAX_REDIRECTS) {
         const next = allowed(new URL(location, current).href, hosts);
         if (!next) return relayResponse("redirect host not allowed", 403);
+        const busyHop = await pace(new URL(next).hostname, intervals);
+        if (busyHop) return busyHop;
         current = next;
         continue;
       }
@@ -212,6 +218,28 @@ export const webview: Render = async (url, userAgent, waitFor) => {
     work.catch(() => {});
   }
 };
+
+// Más espera que esto y el Worker corta por timeout (20 s): mejor que se retire con un 429 y vuelva.
+const MAX_PACE_WAIT_MS = 15_000;
+const nextSlot = new Map<string, number>();
+
+/** Reserva el próximo turno del dominio y espera hasta él; si la fila ya es muy larga, responde 429 sin reservar. */
+async function pace(host: string, intervals: Readonly<Record<string, number>>): Promise<Response | null> {
+  const interval = intervals[host];
+  if (!interval) return null;
+  const now = Date.now();
+  const slot = Math.max(now, nextSlot.get(host) ?? 0);
+  if (slot - now > MAX_PACE_WAIT_MS) {
+    const seconds = Math.ceil((slot - now) / 1000);
+    return new Response("relay busy for this host", {
+      status: 429,
+      headers: { "x-relay": "1", "retry-after": String(seconds), "content-type": "text/plain" },
+    });
+  }
+  nextSlot.set(host, slot + interval);
+  if (slot > now) await Bun.sleep(slot - now);
+  return null;
+}
 
 const relayResponse = (text: string, status: number) =>
   new Response(text, { status, headers: { "x-relay": "1", "content-type": "text/plain" } });

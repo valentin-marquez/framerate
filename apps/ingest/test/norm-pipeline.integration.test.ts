@@ -4,6 +4,7 @@ import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { crawlCategory } from "@/features/ingestion/crawl-category";
 import { normalizeOffer } from "@/features/ingestion/domain/normalize";
+import { knownOffers } from "@/features/ingestion/ingestion.repository";
 import { requestPipeline, retryStuckNormalize } from "@/features/ingestion/runtime";
 import { toRawOffer } from "@/features/ingestion/stores/woocommerce";
 import { fakeStore, offer, steppingClock, testDeps, testEnv } from "./helpers";
@@ -66,6 +67,34 @@ describe("la corrida no vincula: encola", () => {
     expect(await all(deps.db, "products")).toHaveLength(0);
     expect(await all(deps.db, "match_decisions")).toHaveLength(0);
     expect(deps.sent).toEqual([{ listingId: listing.id, version: NORMALIZER_VERSION, reason: "new" }]);
+  });
+
+  test("una oferta reusada desde la base (known) da el mismo hash: no se reescribe ni vuelve a Haiku", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const alfa = fakeStore("alfa", { gpu: ["gpu"] });
+    alfa.setOffers([
+      offer("alfa", "1", {
+        ...GPU,
+        title: "  ASUS  Dual RTX 4070 SUPER OC 12GB (DUAL-RTX4070S-O12G)",
+        brand: "asus",
+        mpn: "dual-rtx4070s-o12g",
+        gtin: "4711387456789",
+        priceCard: 680_000,
+        stockQuantity: 4,
+        imageUrls: ["https://alfa.example/a.jpg"],
+      }),
+    ]);
+    await crawlCategory(deps, alfa.store, "gpu");
+    const before = await listingOf(deps.db, "1");
+
+    const known = await knownOffers(deps.db, "alfa");
+    alfa.setOffers([...known.values()]);
+    clock.advance(SIX_HOURS);
+    const result = await crawlCategory(deps, alfa.store, "gpu");
+
+    expect(result.stats).toMatchObject({ reused: 1, changed: 0, enqueued: 0, priceChanges: 0 });
+    expect((await listingOf(deps.db, "1")).norm_hash).toBe(before.norm_hash);
   });
 
   test("sin cambios: no reescribe la fila ni encola; sólo avanza last_seen_at", async () => {

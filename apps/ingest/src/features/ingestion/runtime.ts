@@ -13,7 +13,8 @@ import { systemClock } from "@framerate/kit";
 import type { z } from "zod";
 import type { Env } from "@/env";
 import { type CrawlResult, crawlCategory } from "./crawl-category";
-import { listingsForStage, markPending, retryStuck } from "./ingestion.repository";
+import type { RawOffer } from "./domain/normalize";
+import { knownOffers, listingsForStage, markPending, retryStuck } from "./ingestion.repository";
 import type { CrawlMessage } from "./messages";
 import type { CrawlContext, StoreDefinition } from "./stores/adapter";
 import { createHttpClient } from "./stores/http";
@@ -129,6 +130,7 @@ function productionContext(
 ): CrawlContext {
   const day = new Date().toISOString().slice(0, 10);
   const storeLog = log.child({ store: store.slug, category, runId });
+  let known: Promise<Map<string, RawOffer>> | undefined;
   const relay = store.egress === "relay" && env.RELAY_URL && env.RELAY_TOKEN;
   if (store.egress === "relay" && !relay) storeLog.warn("egress.relay_unconfigured");
   return {
@@ -140,6 +142,10 @@ function productionContext(
         : undefined,
     }),
     log: storeLog,
+    known: (url) => {
+      known ??= knownOffers(createDb(env.DB), store.slug);
+      return known.then((offers) => offers.get(url));
+    },
     async snapshot(name, body) {
       // Comprimido: las respuestas JSON/HTML se reducen ~10x. Retención vía regla de ciclo de vida de R2.
       const gz = new Response(new Blob([body]).stream().pipeThrough(new CompressionStream("gzip")));

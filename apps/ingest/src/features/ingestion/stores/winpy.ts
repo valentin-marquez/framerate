@@ -17,6 +17,8 @@ export interface WinpyConfig {
   baseUrl: string;
   /** Categoría Framerate → rutas de categoría de la tienda ("partes-y-piezas/tarjetas-graficas"). */
   categories: Partial<Record<Category, readonly string[]>>;
+  /** Reloj para el repaso diario de fichas (tests). */
+  now?: () => number;
 }
 
 const MAX_PAGES = 15;
@@ -30,14 +32,25 @@ export function createWinpyAdapter(config: WinpyConfig): StoreAdapter {
         for (let page = 1; page <= MAX_PAGES; page++) {
           const res = await ctx.http.get(`${config.baseUrl}/${path}/?pagina=${page}`, { accept: "text/html" });
           await ctx.snapshot(`${path.replaceAll("/", "_")}/page-${page}.html`, res.text);
-          const urls = listingUrls(res.text);
-          ctx.log.info("winpy.page", { path, page, items: urls.length });
-          if (urls.length === 0) break;
+          const cards = listingCards(res.text);
+          let reused = 0;
+          if (cards.length === 0) {
+            ctx.log.info("winpy.page", { path, page, items: 0, reused });
+            break;
+          }
 
-          for (const slug of urls) {
+          for (const { slug, priceCash } of cards) {
             if (seen.has(slug)) continue;
             seen.add(slug);
             const url = `${config.baseUrl}/venta/${slug}/`;
+            // Winpy deja ~12 peticiones por minuto: la ficha sólo se pide si el producto es nuevo, si cambió su precio
+            // o si le toca el repaso diario (stock y precio tarjeta, que el listado no trae).
+            const known = await ctx.known?.(url);
+            if (known && known.priceCash === priceCash && !fichaDue(slug, (config.now ?? Date.now)())) {
+              reused++;
+              yield { ...known, category };
+              continue;
+            }
             const html = await getPage(ctx, url);
             if (!html) continue;
             await ctx.snapshot(`product-${slug}.html`, html);
@@ -48,15 +61,30 @@ export function createWinpyAdapter(config: WinpyConfig): StoreAdapter {
             }
             yield offer;
           }
+          ctx.log.info("winpy.page", { path, page, items: cards.length, reused });
         }
       }
     },
   };
 }
 
-/** Slugs de producto del listado, sin los promocionados de la barra lateral (`?ref=`) y sin repetir. */
-export function listingUrls(html: string): string[] {
-  return [...new Set([...html.matchAll(/href="\/venta\/([^"?/]+)\/"/g)].map((m) => m[1] as string))];
+/** Cada tarjeta del listado (`<article>`): slug y precio de transferencia, el mismo `lowPrice` de la ficha. */
+export function listingCards(html: string): { slug: string; priceCash: number | null }[] {
+  return [...html.matchAll(/<article>([\s\S]*?)<\/article>/g)].flatMap((m) => {
+    const block = m[1] as string;
+    const slug = block.match(/href="\/venta\/([^"?/]+)\/"/)?.[1];
+    if (!slug) return [];
+    return [{ slug, priceCash: parseClp(block.match(/class="valor">([^<]*)</)?.[1] ?? "") }];
+  });
+}
+
+const FICHA_SLOTS = 4;
+const SLOT_MS = 6 * 60 * 60 * 1000;
+/** El cron corre cada 6 h: cada producto cae en uno de cuatro turnos y repasa su ficha una vez al día. */
+export function fichaDue(slug: string, now: number): boolean {
+  let h = 2166136261;
+  for (const ch of slug) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return (h >>> 0) % FICHA_SLOTS === Math.floor(now / SLOT_MS) % FICHA_SLOTS;
 }
 
 const prop = (html: string, name: string) =>

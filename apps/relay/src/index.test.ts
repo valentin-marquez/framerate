@@ -184,6 +184,43 @@ describe("relay", () => {
     expect(lanzados).toBe(6);
   });
 
+  test("pone el ritmo por dominio aunque lleguen pedidos a la vez; con la fila muy larga responde 429", async () => {
+    const llegadas: number[] = [];
+    const t0 = Date.now();
+    const fetch: Fetch = async () => {
+      llegadas.push(Date.now() - t0);
+      return new Response("ok");
+    };
+    const pedir = () =>
+      handle(
+        new Request("http://relay.local/fetch?url=https://lenta.cl/", {
+          headers: { Authorization: `Bearer ${TOKEN}` },
+        }),
+        {
+          token: TOKEN,
+          fetch,
+          hosts: ["lenta.cl"],
+          intervals: { "lenta.cl": 60 },
+        },
+      );
+    const estados = (await Promise.all([pedir(), pedir(), pedir()])).map((r) => r.status);
+    expect(estados).toEqual([200, 200, 200]);
+    expect(llegadas[1]! - llegadas[0]!).toBeGreaterThanOrEqual(55);
+    expect(llegadas[2]! - llegadas[1]!).toBeGreaterThanOrEqual(55);
+
+    const ocupada = await handle(
+      new Request("http://relay.local/fetch?url=https://llena.cl/", { headers: { Authorization: `Bearer ${TOKEN}` } }),
+      { token: TOKEN, fetch, hosts: ["llena.cl"], intervals: { "llena.cl": 20_000 } },
+    );
+    const segunda = await handle(
+      new Request("http://relay.local/fetch?url=https://llena.cl/", { headers: { Authorization: `Bearer ${TOKEN}` } }),
+      { token: TOKEN, fetch, hosts: ["llena.cl"], intervals: { "llena.cl": 20_000 } },
+    );
+    expect(ocupada.status).toBe(200);
+    expect(segunda.status).toBe(429);
+    expect(Number(segunda.headers.get("retry-after"))).toBeGreaterThan(15);
+  });
+
   test("si la tienda no responde, 502 marcado como del relay", async () => {
     const res = await relay("/fetch?url=https://tienda.cl/", {}, async () => {
       throw new Error("ECONNREFUSED");
