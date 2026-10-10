@@ -64,6 +64,40 @@ describe("relayFetch", () => {
     expect(calls.every((c) => c.includes("relay.test"))).toBe(true);
   });
 
+  test("render va a /render del relay; sin relay o con el relay caído, falla en vez de traer el HTML crudo", async () => {
+    calls.length = 0;
+    let headers = new Headers();
+    const relay: Fetch = async (input, init) => {
+      headers = new Headers(init?.headers);
+      return fake(() => new Response("<html>render</html>", { headers: { "x-relay": "1" } }))(input, init);
+    };
+    const http = createHttpClient({
+      renders: true,
+      fetch: relayFetch({ url: "https://relay.test", token: "t", log, fetch: relay }),
+    });
+    expect((await http.get("https://tienda.cl/p", { accept: "text/html", render: true })).text).toBe(
+      "<html>render</html>",
+    );
+    expect(calls).toEqual(["GET https://relay.test/render?url=https%3A%2F%2Ftienda.cl%2Fp"]);
+    expect(headers.get("x-framerate-render")).toBeNull();
+    expect(headers.get("authorization")).toBe("Bearer t");
+
+    expect(() =>
+      createHttpClient({ fetch: fake(() => new Response("")) }).get("https://tienda.cl/p", { render: true }),
+    ).toThrow("render requiere");
+    const caido = createHttpClient({
+      renders: true,
+      retries: 0,
+      fetch: relayFetch({
+        url: "https://relay.test",
+        token: "t",
+        log,
+        fetch: fake(() => new Response("502", { status: 502 })),
+      }),
+    });
+    await expect(caido.get("https://tienda.cl/p", { render: true })).rejects.toThrow("relay caído");
+  });
+
   test("toda tienda con egress relay está en la lista de dominios del relay", () => {
     for (const store of STORES.filter((s) => s.egress === "relay")) {
       expect(RELAY_HOSTS).toContain(new URL(store.url).hostname);

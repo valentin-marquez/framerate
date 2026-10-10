@@ -96,6 +96,60 @@ describe("relay", () => {
     expect(declared.status).toBe(502);
   });
 
+  test("render: devuelve el HTML del navegador con el user agent del Worker, con las mismas reglas", async () => {
+    const pedidos: string[][] = [];
+    const render = async (url: string, ua: string) => {
+      pedidos.push([url, ua]);
+      return "<html><body>precio 9.990</body></html>";
+    };
+    const ok = await handle(
+      new Request("http://relay.local/render?url=https://tienda.cl/p", {
+        headers: { Authorization: `Bearer ${TOKEN}`, "User-Agent": "FramerateBot/1.0" },
+      }),
+      { token: TOKEN, render, hosts: ["tienda.cl"] },
+    );
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get("x-relay")).toBe("1");
+    expect(await ok.text()).toContain("precio 9.990");
+    expect(pedidos).toEqual([["https://tienda.cl/p", "FramerateBot/1.0"]]);
+
+    const fuera = await handle(
+      new Request("http://relay.local/render?url=https://otra.cl/", { headers: { Authorization: `Bearer ${TOKEN}` } }),
+      { token: TOKEN, render, hosts: ["tienda.cl"] },
+    );
+    const sinToken = await handle(new Request("http://relay.local/render?url=https://tienda.cl/"), {
+      token: TOKEN,
+      render,
+      hosts: ["tienda.cl"],
+    });
+    expect([fuera.status, sinToken.status]).toEqual([403, 403]);
+    expect(pedidos).toHaveLength(1);
+  });
+
+  test("render: un navegador a la vez, y si falla responde 502 sin trabar la cola", async () => {
+    let enCurso = 0;
+    let maximo = 0;
+    let n = 0;
+    const render = async () => {
+      enCurso++;
+      maximo = Math.max(maximo, enCurso);
+      await Bun.sleep(5);
+      enCurso--;
+      if (n++ === 0) throw new Error("crash");
+      return "<html></html>";
+    };
+    const pedir = () =>
+      handle(
+        new Request("http://relay.local/render?url=https://tienda.cl/", {
+          headers: { Authorization: `Bearer ${TOKEN}` },
+        }),
+        { token: TOKEN, render, hosts: ["tienda.cl"] },
+      );
+    const estados = (await Promise.all([pedir(), pedir(), pedir()])).map((r) => r.status);
+    expect(estados).toEqual([502, 200, 200]);
+    expect(maximo).toBe(1);
+  });
+
   test("si la tienda no responde, 502 marcado como del relay", async () => {
     const res = await relay("/fetch?url=https://tienda.cl/", {}, async () => {
       throw new Error("ECONNREFUSED");

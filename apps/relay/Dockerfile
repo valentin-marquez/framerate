@@ -1,4 +1,6 @@
 FROM oven/bun:1-alpine
+# Chromium para /render; las fuentes evitan páginas con texto en blanco.
+RUN apk add --no-cache chromium font-noto
 WORKDIR /app
 COPY src ./src
 ENV PORT=3000

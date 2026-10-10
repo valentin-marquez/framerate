@@ -10,7 +10,12 @@
 export const USER_AGENT = "FramerateBot/1.0 (+https://framerate.cl/bot; comparador de precios)";
 
 export interface HttpClient {
-  get(url: string, init?: { accept?: string; headers?: Record<string, string> }): Promise<HttpResponse>;
+  /** `render`: el HTML después de ejecutar el JavaScript de la página, con el navegador del relay. Sólo en tiendas con
+   * `egress: "relay"`; en otra lanza un error. */
+  get(
+    url: string,
+    init?: { accept?: string; headers?: Record<string, string>; render?: boolean },
+  ): Promise<HttpResponse>;
   /** POST con cuerpo JSON (un cuerpo string va tal cual: pasar `Content-Type` en `headers`, p. ej. un formulario). Sólo para APIs de consulta (idempotentes): se reintenta igual que un GET. */
   post(url: string, json: unknown, init?: { accept?: string; headers?: Record<string, string> }): Promise<HttpResponse>;
 }
@@ -40,7 +45,14 @@ export interface HttpClientOptions {
   minIntervalMs?: number;
   timeoutMs?: number;
   retries?: number;
+  /** El `fetch` sabe pedir páginas renderizadas (es el del relay). */
+  renders?: boolean;
 }
+
+/** Marca interna que `relayFetch` convierte en `/render`; nunca llega a la tienda. */
+export const RENDER_HEADER = "x-framerate-render";
+// El relay renderiza una página a la vez (~8 s cada una): con varias corridas en cola la espera pasa los 20 s.
+const RENDER_TIMEOUT_MS = 120_000;
 
 const defaultSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -61,7 +73,10 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
     lastRequestAt.set(host, Date.now());
   }
 
-  async function request(url: string, init: { headers: Record<string, string>; method?: string; body?: string }) {
+  async function request(
+    url: string,
+    init: { headers: Record<string, string>; method?: string; body?: string; timeoutMs?: number },
+  ) {
     const host = new URL(url).host;
     for (let attempt = 0; ; attempt++) {
       await throttle(host);
@@ -70,7 +85,7 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
           method: init.method,
           body: init.body,
           headers: { "User-Agent": USER_AGENT, ...init.headers },
-          signal: AbortSignal.timeout(timeoutMs),
+          signal: AbortSignal.timeout(init.timeoutMs ?? timeoutMs),
         });
         if (res.ok) return { status: res.status, headers: res.headers, text: await res.text() };
         const transient = res.status === 429 || res.status >= 500;
@@ -85,7 +100,12 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
   }
 
   return {
-    get: (url, init) => request(url, { headers: { Accept: init?.accept ?? "application/json", ...init?.headers } }),
+    get: (url, init) => {
+      const headers = { Accept: init?.accept ?? "application/json", ...init?.headers };
+      if (!init?.render) return request(url, { headers });
+      if (!options.renders) throw new Error(`render requiere egress: "relay" y el relay configurado (${url})`);
+      return request(url, { headers: { ...headers, [RENDER_HEADER]: "1" }, timeoutMs: RENDER_TIMEOUT_MS });
+    },
     post: (url, json, init) =>
       request(url, {
         method: "POST",

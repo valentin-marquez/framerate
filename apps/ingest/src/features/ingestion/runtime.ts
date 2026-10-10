@@ -134,6 +134,7 @@ function productionContext(
   return {
     http: createHttpClient({
       minIntervalMs: store.minIntervalMs,
+      renders: Boolean(relay),
       fetch: relay
         ? relayFetch({ url: env.RELAY_URL as string, token: env.RELAY_TOKEN as string, log: storeLog })
         : undefined,

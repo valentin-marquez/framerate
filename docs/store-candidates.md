@@ -13,7 +13,7 @@ alimentan la huella de producto. Base: un sondeo del 30-09-2026 sobre las tienda
 - **25 son WooCommerce con la Store API abierta.** El adaptador que ya existe les sirve con sólo configurarlo.
 - **4 están fuera de alcance mientras sólo usemos `fetch`**, porque bloquean con Cloudflare: Winpy (la más
   grande), SP Digital, CTMAN y Nice One. Para las que cortan por IP de datacenter (no por desafío anti-bot) está el
-  relay del servidor propio (#154): `egress: "relay"` en el registro y su dominio en `apps/relay/src/hosts.ts`.
+  relay del servidor propio (#154): `egress: "relay"` en el registro y su dominio en `apps/relay/src/hosts.ts`. Si además la página se arma con JavaScript (Centrale: precio tarjeta sólo en el HTML), el adaptador pide `render: true` y el relay la abre con Chromium.
 - Las multitiendas (Mercado Libre, Falabella, Paris, Ripley, Lider…) casi no venden componentes. No se integran.
 
 ### Cómo se midió
