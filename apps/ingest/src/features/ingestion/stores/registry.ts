@@ -591,8 +591,9 @@ export const STORES: readonly StoreDefinition[] = [
     slug: "winpy",
     name: "Winpy",
     url: "https://www.winpy.cl",
-    // Corta con 429 a ~1 petición/s; su robots.txt pedía Crawl-delay 10 en el sondeo del 30-09.
-    minIntervalMs: 3000,
+    // Corta con 429 incluso a 1 petición cada 3 s cuando corren varias categorías a la vez (10-10-2026); su
+    // robots.txt pedía Crawl-delay 10 en el sondeo del 30-09. Una categoría a la vez, a 5 s, es lo que aguanta.
+    minIntervalMs: 5000,
     adapter: createWinpyAdapter({
       baseUrl: "https://www.winpy.cl",
       // "tarjetas-de-video" y "tarjetas-graficas" son la misma lista. "disco-duro-pc-s" estaba vacía (oct. 2026).
