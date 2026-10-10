@@ -104,7 +104,7 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | Natcom | WooCommerce, `sku: "internal"`, sin recargo | MPN entre corchetes o paréntesis en el título (~45 %). Su "Ventiladores" son disipadores. Los combos gabinete + fuente aparecen en las dos categorías. ~70 válidas |
 | Café Digital | WooCommerce, `sku: "internal"`, sin recargo | El SKU es el nombre del modelo: 0 % MPN. La tarjeta va escrita a mano y no es uniforme. ~50 válidas |
 | Trulu Store | WooCommerce, `sku: "internal"`, tarjeta +5 %, `skipSku: /-PC(-\|$)/` | Publica las piezas de sus PC armados (`…-PC`) a precio de costo o 0: se excluyen por SKU. ~37 componentes reales, sobre todo LovingCool |
-| Electrónica Budini | WooCommerce, `sku: "internal"` (vacío), sin recargo | MPN entre corchetes o paréntesis en el título (100 % en GPU, CPU y SSD). Muestra lo agotado. ~40 válidas |
+| Electrónica Budini (por el relay) | WooCommerce, `sku: "internal"` (vacío), sin recargo, `egress: "relay"` | MPN entre corchetes o paréntesis en el título (100 % en GPU, CPU y SSD). Muestra lo agotado. ~40 válidas. Responde 403 a las IPs de Cloudflare |
 
 Para evaluar una tienda antes de activarla: `bun run --cwd apps/ingest dry-run <tienda> [categoría]` (crawl real +
 `normalizeOffer`, sin base): reporta cobertura de MPN, GTIN, marca y precios, marcas fuera del diccionario y la

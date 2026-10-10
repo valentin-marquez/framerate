@@ -833,6 +833,8 @@ export const STORES: readonly StoreDefinition[] = [
     slug: "budini",
     name: "Electrónica Budini",
     url: "https://electronicabudini.cl",
+    // Responde 403 a las IPs de Cloudflare y 200 desde una red residencial (10-10-2026): sale por el relay (#154).
+    egress: "relay",
     adapter: createWooCommerceAdapter({
       baseUrl: "https://electronicabudini.cl",
       // SKU vacío; el MPN va en el título entre corchetes o paréntesis. Sin precio tarjeta en la ficha (10-10-2026).
