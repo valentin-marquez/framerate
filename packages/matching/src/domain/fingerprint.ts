@@ -2,7 +2,9 @@ import type { Category, IdentityValue, ListingIdentity } from "@framerate/contra
 import { fold } from "@framerate/kit";
 import { ATTRIBUTE_DEFAULTS, type Attributes, identityAttributeName, PROFILES } from "./attributes";
 import { canonicalBrand, detectBrand } from "./brands";
+import { freeTextFields } from "./decide";
 import { normalizeGtin, normalizeMpn } from "./identifiers";
+import { canonicalText } from "./vocabulary";
 
 /**
  * Huella de un producto: todo lo que el matching necesita para decidir si dos
@@ -38,9 +40,21 @@ export interface FingerprintInput {
   gtin?: string | null;
 }
 
+// El texto libre se compara en su forma canónica (`vocabulary.ts`): así calzan las identidades y fichas guardadas antes
+// del vocabulario, y la huella del regex con la de Haiku.
+function canonicalAttributes(category: Category, brand: string | null, attributes: Attributes): Attributes {
+  const out = { ...attributes };
+  const canonical = canonicalBrand(brand) ?? brand;
+  for (const field of freeTextFields(category)) {
+    const value = out[field];
+    if (typeof value === "string") out[field] = canonicalText(category, canonical, field, value);
+  }
+  return out;
+}
+
 export function buildFingerprint(input: FingerprintInput): Fingerprint {
   const brand = resolveBrand(input);
-  const attributes = PROFILES[input.category].extract(input.title);
+  const attributes = canonicalAttributes(input.category, brand, PROFILES[input.category].extract(input.title));
   return {
     category: input.category,
     brand,
@@ -62,7 +76,9 @@ export interface IdentityFingerprintInput {
 /** La misma huella que `buildFingerprint`, desde la identidad anclada por el normalizador: `compare` no distingue. */
 export function fingerprintFromIdentity({ identity, mpn, gtin }: IdentityFingerprintInput): Fingerprint {
   const { category, brand } = identity;
-  const { attributes, defaulted } = attributesFromIdentity(category, identity.identity);
+  const fromIdentity = attributesFromIdentity(category, identity.identity);
+  const attributes = canonicalAttributes(category, brand, fromIdentity.attributes);
+  const { defaulted } = fromIdentity;
   return {
     category,
     brand,
@@ -100,13 +116,15 @@ export function storedFingerprint(product: {
   attributes: Attributes;
   attributeKey: string | null;
 }): Fingerprint {
+  const attributes = canonicalAttributes(product.category, product.brand, product.attributes);
   return {
     category: product.category,
     brand: product.brand,
     mpn: null,
     gtin: null,
-    attributes: product.attributes,
-    attributeKey: product.attributeKey,
+    attributes,
+    // La clave guardada se escribió antes del vocabulario: la canónica es la que compara con las ofertas de hoy.
+    attributeKey: product.attributeKey === null ? null : attributeKey(product.category, product.brand, attributes),
     tokens: distinctiveTokens(product.category, product.name, product.brand),
   };
 }

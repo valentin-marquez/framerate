@@ -9,9 +9,11 @@ import {
 } from "@framerate/contracts";
 import { ATTRIBUTE_DEFAULTS, type Attributes, identityAttributeName, PROFILES, prep } from "./attributes";
 import { canonicalBrand } from "./brands";
+import { freeTextFields } from "./decide";
 import { resolveBrand } from "./fingerprint";
 import { normalizeMpn } from "./identifiers";
 import { titleTraits } from "./traits";
+import { aliasesOf, canonicalText } from "./vocabulary";
 
 /**
  * Anclaje de la identidad que devuelve Haiku (spec 2026-10-08 §2): un campo entra a la identidad sólo si aparece en
@@ -42,8 +44,12 @@ export interface AnchorResult {
 
 const isCategory = (c: string): c is Category => (CATEGORIES as readonly string[]).includes(c);
 
+const identityBrand = (category: Category, raw: IdentitySource, input: AnchorInput) =>
+  resolveBrand({ category, title: input.title, brand: canonicalBrand(raw.brand) ?? input.brand });
+
 export function anchorIdentity(raw: IdentitySource, input: AnchorInput): AnchorResult {
   const category = isCategory(raw.category) ? raw.category : input.category;
+  const brand = identityBrand(category, raw, input);
   const title = prep(input.title);
   const text = input.sourceText ? prep(input.sourceText) : "";
   const decoded = decodeMpn(category, normalizeMpn(input.mpn) ?? normalizeMpn(raw.mpn));
@@ -55,7 +61,7 @@ export function anchorIdentity(raw: IdentitySource, input: AnchorInput): AnchorR
   for (const field of IDENTITY_FIELDS[category]) {
     const value = normalizeValue(category, field, raw.identity[field] ?? null);
     if (value === null) continue;
-    const where = anchor(category, field, value, title, text, decoded, titleAttributes);
+    const where = anchor(category, brand, field, value, title, text, decoded, titleAttributes);
     // La ficha puede ser de otro producto (medido: "SSD Patriot Elite" con la ficha del Burst): el título manda.
     if (where === "text" && contradictsTitle(category, field, value, titleAttributes)) {
       dropped.push(field);
@@ -69,7 +75,13 @@ export function anchorIdentity(raw: IdentitySource, input: AnchorInput): AnchorR
     if (where === "mpn") fromMpn.push(field);
     identity[field] = value;
   }
-  dedupeAcrossFields(identity);
+  // Después del anclaje: la forma canónica puede no estar escrita en el título ("vengeance lpx" con "Corsair LPX").
+  const rawLine = identity.line;
+  for (const field of freeTextFields(category)) {
+    const value = identity[field];
+    if (typeof value === "string") identity[field] = canonicalText(category, brand, field, value);
+  }
+  dedupeAcrossFields(identity, rawLine);
   // Lo que separa SKU hermanos y ningún campo tiene (pantalla, versión, kit de servidor): del título, no de Haiku.
   Object.assign(identity, titleTraits(category, input.title));
   return { identity, dropped, fromMpn, knowledge: raw.identity_from_knowledge, confidence };
@@ -83,7 +95,7 @@ export function listingIdentityFrom(
   const anchored = anchorIdentity(raw, input);
   if (!isCategory(raw.category)) return { identity: null, anchored };
   const category = raw.category;
-  const brand = resolveBrand({ category, title: input.title, brand: canonicalBrand(raw.brand) ?? input.brand });
+  const brand = identityBrand(category, raw, input);
   // Un MPN sólo cuenta si está impreso: en el título, la ficha o el campo de la tienda.
   const printed = normalizeMpn(raw.mpn);
   const haystack = compact(
@@ -172,9 +184,9 @@ function normalizeValue(category: Category, field: string, value: IdentityValue 
 // `variant`: Haiku lo reparte distinto en cada llamada ("TUF GAMING B850M-PLUS WIFI" contra "B850M Plus WiFi").
 const OWN_FIELD_TOKENS = /^(?:ddr[345]|d[45]|wi|fi\d?|wifi[a-z0-9]*|6e|ax|ac|oc|edition|r\d(?:\.\d)?|ii|max|csm)$/;
 
-function dedupeAcrossFields(identity: Record<string, IdentityValue>): void {
-  const line = identity.line;
-  const lineTokens = new Set(typeof line === "string" ? line.split(" ") : []);
+// Con la línea de Haiku y la canónica: "TUF Gaming" deja "tuf", pero "gaming" tampoco va en el modelo.
+function dedupeAcrossFields(identity: Record<string, IdentityValue>, rawLine: IdentityValue | undefined): void {
+  const lineTokens = new Set([identity.line, rawLine].flatMap((l) => (typeof l === "string" ? l.split(" ") : [])));
   for (const field of ["model", "variant"]) {
     const value = identity[field];
     if (typeof value !== "string") continue;
@@ -196,6 +208,7 @@ type Where = "title" | "mpn" | "text" | null;
 
 function anchor(
   category: Category,
+  brand: string | null,
   field: string,
   value: IdentityValue,
   title: string,
@@ -204,6 +217,8 @@ function anchor(
   regex: Attributes,
 ): Where {
   if (found(field, value, title)) return "title";
+  const free = typeof value === "string" && freeTextFields(category).includes(field) ? value : null;
+  if (free && foundCanonical(category, brand, field, free, title)) return "title";
   if (decoded[field] === value) return "mpn";
   // El extractor de hoy también decodifica el título (B760M → matx, 4800 MT/s → ddr5); sus valores por defecto no
   // son evidencia y los booleanos sólo cuentan con token.
@@ -212,7 +227,18 @@ function anchor(
     return "title";
   }
   if (text && found(field, value, text)) return "text";
+  if (free && text && foundCanonical(category, brand, field, free, text)) return "text";
   return null;
+}
+
+// Haiku copia la forma canónica que le mostramos ("gammix d35" con el título "XPG D35"): cuenta si el texto, reescrito
+// con las mismas reglas, la contiene, o si trae un alias que lleva a ella.
+function foundCanonical(category: Category, brand: string | null, field: string, value: string, text: string): boolean {
+  const canonical = canonicalText(category, brand, field, value);
+  return (
+    formInText(canonical, canonicalText(category, brand, field, text.trim())) ||
+    aliasesOf(category, brand, canonical).some((a) => formInText(a, text))
+  );
 }
 
 function found(field: string, value: IdentityValue, text: string): boolean {

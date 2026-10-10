@@ -6,6 +6,8 @@ import {
   outputSchema,
   SOURCE_TEXT_MAX,
 } from "@framerate/contracts";
+import { resolveBrand } from "../domain/fingerprint";
+import { canonicalValues } from "../domain/vocabulary";
 import type { CatalogCandidate } from "../repository";
 
 /**
@@ -125,6 +127,8 @@ async function ask(
     gtin: input.gtin,
     description: input.sourceText ? input.sourceText.slice(0, SOURCE_TEXT_MAX) : null,
     catalog_candidates: input.catalog ?? [],
+    // Sólo los de la marca y categoría de la oferta: la lista entera inflaría cada llamada.
+    known_lines: canonicalValues(category, resolveBrand({ category, title: input.title, brand: input.brand })),
   };
   const content = feedback
     ? `${JSON.stringify(listing)}\n\nYour previous answer was rejected: ${feedback}. Answer again following the schema.`
@@ -170,6 +174,7 @@ Your output has three parts with different rules.
    - case: model ("Mitra PRO 1101C", "4000D Airflow", "NR200P"), form_factor (full_tower, mid_tower, mini_tower, sff), color, variant.
    - case_fan: model, size_mm, quantity (pack count), color, rgb ("true"/"false").
    Colors are one of black, white, pink, red, blue, gray, green, purple, silver (English, lowercase), or "" when the listing does not say the color.
+   known_lines lists how our catalog writes the line (the model for cpu_cooler, case and case_fan) of this brand. When the listing's line is one of them written differently (abbreviated, reordered, or with a family or marketing word: "TUF Gaming" is "tuf", "Fury Renegade" is "renegade", "ML240L Core" is "masterliquid 240l core", "XPG D35" is "gammix d35"), write exactly the listed form. A word that names another model or version makes it another line: "Renegade G5" is not "renegade", "Lancer Blade" is not "lancer", "Gaming X Trio" is not "gaming x"; then write your own value from the listing. Never pick a listed value the listing does not support.
 
 2. SPECS: descriptive facts for a product page; they are never used to merge listings. Fill the category's spec fields from the text when present. You MAY add facts you know about this exact model (socket, cores, TDP, memory bus, memory type, max GPU length, cas latency) ONLY when the identity is unambiguous (brand and exact model known). List in specs_from_knowledge every spec field you filled from your own knowledge rather than from the text. Leave "" for what you do not know. Do not invent numbers.
 

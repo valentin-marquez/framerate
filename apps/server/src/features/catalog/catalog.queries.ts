@@ -11,7 +11,7 @@ import type {
   ProductSummary,
   Sitemap,
 } from "@framerate/contracts";
-import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel, NORMALIZER_VERSION } from "@framerate/contracts";
+import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel } from "@framerate/contracts";
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { searchText, slugify } from "@framerate/kit";
 import { normalizeGtin, normalizeMpn, titleTokens } from "@framerate/matching";
@@ -306,16 +306,20 @@ export async function getProduct(
       .where("l.visible", "=", 1)
       .orderBy("l.in_stock", "desc")
       .orderBy("l.price_cash"),
+    // La última identidad de cada oferta: al subir `NORMALIZER_VERSION` las specs siguen a la vista mientras se
+    // vuelve a normalizar.
     db.query
       .selectFrom("listing_identity as i")
-      .innerJoin("listings as l", (join) =>
-        join.onRef("l.id", "=", "i.listing_id").onRef("l.norm_hash", "=", "i.input_hash"),
-      )
+      .innerJoin("listings as l", "l.id", "i.listing_id")
       .innerJoin("products as pr", "pr.id", "l.product_id")
       .select(["i.specs", "i.specs_source"])
       .where("pr.slug", "=", slug)
       .where("l.is_active", "=", 1)
-      .where("i.version", "=", NORMALIZER_VERSION),
+      .where(
+        "i.version",
+        "=",
+        sql<number>`(SELECT max(x.version) FROM listing_identity x WHERE x.listing_id = i.listing_id)`,
+      ),
   ]);
   if (!product) return null;
 

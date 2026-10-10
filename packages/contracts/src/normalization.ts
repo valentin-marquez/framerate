@@ -9,8 +9,11 @@ import { CATEGORIES, type Category } from "./categories";
  * "true"/"false"), la identidad es plana y por categoría, y la procedencia son listas de nombres de campo.
  */
 
-/** Sube sólo cuando cambia el contrato (un campo de identidad nuevo): invalida `norm_hash` y re-encola todo. */
-export const NORMALIZER_VERSION = 1;
+/**
+ * Sube sólo cuando cambia el contrato (un campo de identidad nuevo) o hay que volver a normalizar todo: invalida
+ * `norm_hash` y re-encola todo. 2: `same_as` para todo el catálogo y el vocabulario canónico (#157, #158).
+ */
+export const NORMALIZER_VERSION = 2;
 /** La ficha se recorta a esto antes del hash y del prompt. */
 export const SOURCE_TEXT_MAX = 3000;
 

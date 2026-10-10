@@ -20,7 +20,7 @@
     // Del crédito mensual de Anthropic, la parte de la normalización (el juez de `framerate-match` tiene la suya).
     // El tope de cada día es lo que queda del ciclo repartido entre los días que faltan; el ciclo se renueva el día
     // del pago del plan. Una oferta cuesta ~$0,0005.
-    "ANTHROPIC_MONTHLY_USD": "20",
+    "ANTHROPIC_MONTHLY_USD": "30",
     "ANTHROPIC_CYCLE_DAY": "17"
   },
 

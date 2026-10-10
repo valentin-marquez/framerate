@@ -7,6 +7,7 @@ export * from "./domain/fingerprint";
 export * from "./domain/identifiers";
 export * from "./domain/product-name";
 export * from "./domain/traits";
+export * from "./domain/vocabulary";
 
 // Casos de uso y acceso a datos.
 export * from "./match-listing";
