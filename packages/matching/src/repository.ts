@@ -1,7 +1,7 @@
 import type { Category } from "@framerate/contracts";
 import { bumpCatalogVersionQuery, type Db, type MatchMethod, parseJson, toJson } from "@framerate/database";
 import { fold, searchText, slugify } from "@framerate/kit";
-import { type Compilable, sql } from "kysely";
+import { sql } from "kysely";
 import type { Attributes } from "./domain/attributes";
 import { type Candidate, compare } from "./domain/decide";
 import { familyKey } from "./domain/family";
@@ -164,10 +164,10 @@ export async function markSameStore(db: Db, listingId: number, candidates: Candi
 }
 
 /**
- * Huella de productos existentes. Un producto con una oferta vinculada desde su identidad (`norm_status = linked`)
- * tiene la huella guardada como verdad (spec §5.2); el resto se reconstruye desde el nombre con los extractores de
- * hoy, y se corrige la fila si quedó vieja. `offer` elige qué identificador comparar; `ignore` deja fuera los que
- * sólo aportó esa oferta.
+ * Huella de productos existentes: la guardada es la verdad (spec §5.2), venga de la identidad de Haiku o del regex
+ * con que se creó. Antes, un producto sin ofertas de identidad se reconstruía desde el nombre en cada carga y eso
+ * pisaba las huellas restauradas a mano ("z890m plus" volvía a "z890m"). `offer` elige qué identificador comparar;
+ * `ignore` deja fuera los que sólo aportó esa oferta.
  */
 export async function loadCandidates(
   db: Db,
@@ -176,52 +176,27 @@ export async function loadCandidates(
   ignore?: Identifiers,
 ): Promise<Candidate[]> {
   if (productIds.length === 0) return [];
-  const [rows, identifiers, linked] = await Promise.all([
+  const [rows, identifiers] = await Promise.all([
     db.query.selectFrom("products").selectAll().where("id", "in", productIds).execute(),
     db.query.selectFrom("product_identifiers").selectAll().where("product_id", "in", productIds).execute(),
-    db.query
-      .selectFrom("listings")
-      .select("product_id")
-      .distinct()
-      .where("product_id", "in", productIds)
-      // Una oferta que se vuelve a normalizar (versión nueva) pasa por `pending` y `normalized`: su producto sigue siendo
-      // de identidad, y recalcularlo desde el nombre con el regex lo reescribiría en otro formato ("b550mk").
-      .where("norm_status", "in", ["linked", "pending", "normalized"])
-      .execute(),
   ]);
-  const fromIdentity = new Set(linked.map((r) => r.product_id));
-  const stale: Compilable[] = [];
-  const candidates = rows.map((p): Candidate => {
+  return rows.map((p): Candidate => {
     const own = identifiers.filter((i) => i.product_id === p.id && ignore?.[i.kind] !== i.value);
     const mpns = own.filter((i) => i.kind === "mpn").map((i) => i.value);
     const gtins = own.filter((i) => i.kind === "gtin").map((i) => i.value);
+    const stored = parseJson<Attributes>(p.attributes, {});
     const category = p.category as Category;
-    const base = fromIdentity.has(p.id)
-      ? storedFingerprint({
-          category,
-          name: p.name,
-          brand: p.brand,
-          attributes: parseJson<Attributes>(p.attributes, {}),
-          attributeKey: p.attribute_key,
-        })
-      : buildFingerprint({ category, title: p.name, brand: p.brand });
-    const attributes = toJson(base.attributes);
-    if (
-      !fromIdentity.has(p.id) &&
-      (p.attribute_key !== base.attributeKey || p.attributes !== attributes || p.brand !== base.brand)
-    ) {
-      stale.push(
-        db.query
-          .updateTable("products")
-          .set({
-            attribute_key: base.attributeKey,
-            family_key: familyKey(category, base.attributes),
-            attributes,
-            brand: base.brand,
+    // Sin huella guardada (filas de antes de que se escribiera al crear) se deduce del nombre, pero no se escribe.
+    const base =
+      Object.keys(stored).length > 0
+        ? storedFingerprint({
+            category,
+            name: p.name,
+            brand: p.brand,
+            attributes: stored,
+            attributeKey: p.attribute_key,
           })
-          .where("id", "=", p.id),
-      );
-    }
+        : buildFingerprint({ category, title: p.name, brand: p.brand });
     return {
       productId: p.id,
       fingerprint: {
@@ -233,8 +208,6 @@ export async function loadCandidates(
       },
     };
   });
-  if (stale.length > 0) await db.batch(stale);
-  return candidates;
 }
 
 export interface LinkState {
