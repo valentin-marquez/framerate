@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { refreshProductsPriceSummary } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { crawlCategory } from "@/features/ingestion/crawl-category";
 import { fakeStore, offer, steppingClock, testDeps } from "./helpers";
@@ -23,6 +24,18 @@ async function product(deps: ReturnType<typeof testDeps>) {
   return only;
 }
 
+/** Lo que haría `framerate-link`: todas las ofertas al mismo producto, publicadas, con su resumen al día. */
+async function linkAll(deps: ReturnType<typeof testDeps>, now: Date) {
+  const at = now.toISOString();
+  const { id } = await deps.db.query
+    .insertInto("products")
+    .values({ slug: "gpu-1", name: GPU.title, category: "gpu", created_at: at, updated_at: at })
+    .returning("id")
+    .executeTakeFirstOrThrow();
+  await deps.db.query.updateTable("listings").set({ product_id: id, visible: 1, norm_status: "linked" }).execute();
+  await refreshProductsPriceSummary(deps.db, [id], now);
+}
+
 describe("resumen de precios", () => {
   // Beta publica el producto dos veces: cuenta como una tienda, con y sin stock.
   test("mejor precio entre tiendas sólo con stock; los conteos son de tiendas, no de publicaciones", async () => {
@@ -37,6 +50,7 @@ describe("resumen de precios", () => {
     ]);
     await crawlCategory(deps, alfa.store, "gpu");
     await crawlCategory(deps, beta.store, "gpu");
+    await linkAll(deps, clock());
 
     expect(await product(deps)).toMatchObject({
       best_price: 480_000,
@@ -56,6 +70,7 @@ describe("resumen de precios", () => {
     const alfa = fakeStore("alfa", { gpu: ["gpu"] });
     alfa.setOffers([offer("alfa", "1", { ...GPU, priceCash: 500_000 })]);
     await crawlCategory(deps, alfa.store, "gpu");
+    await linkAll(deps, clock());
     alfa.setOffers([offer("alfa", "1", { ...GPU, priceCash: 480_000, inStock: false })]);
     await crawlCategory(deps, alfa.store, "gpu");
 
@@ -77,6 +92,7 @@ describe("resumen de precios", () => {
     beta.setOffers([offer("beta", "1", { ...GPU, priceCash: 450_000 }), kept]);
     await crawlCategory(deps, alfa.store, "gpu");
     await crawlCategory(deps, beta.store, "gpu");
+    await linkAll(deps, clock());
     beta.setOffers([kept]);
     await crawlCategory(deps, beta.store, "gpu");
 
@@ -89,6 +105,7 @@ describe("resumen de precios", () => {
     const alfa = fakeStore("alfa", { gpu: ["gpu"] });
     alfa.setOffers([offer("alfa", "1", { ...GPU, priceCash: 500_000 })]);
     await crawlCategory(deps, alfa.store, "gpu");
+    await linkAll(deps, clock());
     clock.advance(3 * 3600_000);
     alfa.setOffers([offer("alfa", "1", { ...GPU, priceCash: 520_000 })]);
     await crawlCategory(deps, alfa.store, "gpu");
@@ -110,6 +127,7 @@ describe("resumen de precios", () => {
     const alfa = fakeStore("alfa", { gpu: ["gpu"] });
     alfa.setOffers([offer("alfa", "1", { ...GPU, priceCash: 500_000 })]);
     await crawlCategory(deps, alfa.store, "gpu");
+    await linkAll(deps, clock());
     const { id } = await product(deps);
     const history = async (days: Array<[string, number]>) => {
       await d1.batch(

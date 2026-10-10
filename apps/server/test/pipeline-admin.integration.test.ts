@@ -52,11 +52,7 @@ describe("encolar", () => {
     ]);
   });
 
-  test("ingest apagado → 409; tienda desconocida → 404; cuerpo inválido → 400; sin credenciales → 401", async () => {
-    refuse = "pipeline_off";
-    const off = await post("/v1/admin/pipeline/normalize", {});
-    expect(off.status).toBe(409);
-    expect(ApiErrorSchema.parse(await off.json()).error.code).toBe("pipeline_off");
+  test("tienda desconocida → 404; cuerpo inválido → 400; sin credenciales → 401", async () => {
     refuse = "unknown_store";
     const unknown = await post("/v1/admin/pipeline/normalize", { store: "nada" });
     expect(unknown.status).toBe(404);

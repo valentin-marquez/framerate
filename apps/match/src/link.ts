@@ -3,10 +3,8 @@ import { type Db, parseJson, refreshProductsPriceSummary, toJson } from "@framer
 import type { Logger } from "@framerate/kit";
 import {
   applyOverrides,
-  buildFingerprint,
   compare,
   decide,
-  type Fingerprint,
   findCandidates,
   fingerprintFromIdentity,
   loadCandidates,
@@ -30,8 +28,6 @@ export type LinkMode = "off" | "shadow" | "live";
 export const linkModeOf = (value: string | undefined): LinkMode =>
   value === "off" || value === "live" ? value : "shadow";
 
-const LISTING_COLUMNS = ["id", "product_id", "category", "title", "brand", "mpn", "gtin", "image_url"] as const;
-
 export type LinkResult = "skipped" | "off" | "shadow" | "kept" | "linked" | "new_product" | "review";
 
 export async function linkListing(
@@ -44,7 +40,7 @@ export async function linkListing(
   if (mode === "off") return "off";
   const listing = await db.query
     .selectFrom("listings")
-    .select([...LISTING_COLUMNS, "is_active"])
+    .select(["id", "product_id", "category", "title", "brand", "mpn", "gtin", "image_url", "is_active"])
     .where("id", "=", message.listingId)
     .executeTakeFirst();
   // Desapareció antes de normalizarse: `deactivateUnseen` ya la apagó y no hay nada que vincular.
@@ -128,52 +124,32 @@ export async function linkListing(
 }
 
 const HIDDEN_MAX_MS = 24 * 60 * 60 * 1000;
-// ponytail: 100 por corrida del Cron (cada 6 h); sube si Haiku cae con una tienda nueva de 600 ofertas.
+// ponytail: 100 por corrida del Cron (cada 6 h); sube si se acumulan revisiones sin resolver.
 const OVERDUE_BATCH = 100;
 
 /**
- * Plazo de publicación (spec §8): una oferta oculta más de 24 h sale igual. Sin vínculo (Haiku no respondió, sin
- * crédito, DLQ) se vincula con la huella por regex de hoy y queda `fallback` para reprocesar con la versión siguiente;
- * con revisión pendiente se publica tal cual. Nada queda oculto para siempre.
+ * Plazo de publicación (spec §8): una oferta vinculada y oculta más de 24 h (revisión pendiente sin resolver) sale
+ * igual. Lo que lleva 24 h sin vínculo no se toca: no hay huella por regex de respaldo (#156), el Cron de ingest lo
+ * reencola a Haiku.
  */
 export async function publishOverdue(db: Db, now: Date, log: Logger) {
   const at = now.toISOString();
   const rows = await db.query
     .selectFrom("listings")
-    .select(LISTING_COLUMNS)
+    .select(["id", "product_id"])
     .where("visible", "=", 0)
     .where("is_active", "=", 1)
+    .where("product_id", "is not", null)
     .where("first_seen_at", "<", new Date(now.getTime() - HIDDEN_MAX_MS).toISOString())
     .orderBy("id")
     .limit(OVERDUE_BATCH)
     .execute();
-  let fallback = 0;
   for (const l of rows) {
-    if (l.product_id === null) {
-      const fp: Fingerprint = buildFingerprint({
-        category: l.category as Category,
-        title: l.title,
-        brand: l.brand,
-        mpn: l.mpn,
-        gtin: l.gtin,
-      });
-      const offer = { title: l.title, imageUrl: l.image_url, fingerprint: fp };
-      const result = await matchListing(db, {
-        listingId: l.id,
-        currentProductId: null,
-        offer,
-        decidedBy: "fallback",
-        now: at,
-      });
-      await mergeSplitIdentity(db, { listingId: l.id, fingerprint: fp, decidedBy: "fallback", now: at });
-      await db.query.updateTable("listings").set({ norm_status: "fallback" }).where("id", "=", l.id).execute();
-      log.info("link.fallback", { listingId: l.id, outcome: result.outcome });
-      fallback++;
-    }
     await publishListing(db, l.id, at);
     await refreshTouched(db, l.id, l.product_id, now);
+    log.info("link.overdue_published", { listingId: l.id, productId: l.product_id });
   }
-  return { published: rows.length, fallback };
+  return { published: rows.length };
 }
 
 /** Precio y versión del catálogo de los productos que la oferta dejó o ganó (el vínculo corre fuera de la corrida). */

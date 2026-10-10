@@ -12,8 +12,8 @@ import type { Logger } from "@framerate/kit";
 import { systemClock } from "@framerate/kit";
 import type { z } from "zod";
 import type { Env } from "@/env";
-import { type CrawlResult, crawlCategory, type PipelineMode } from "./crawl-category";
-import { listingsForStage, markPending } from "./ingestion.repository";
+import { type CrawlResult, crawlCategory } from "./crawl-category";
+import { listingsForStage, markPending, retryStuck } from "./ingestion.repository";
 import type { CrawlMessage } from "./messages";
 import type { CrawlContext, StoreDefinition } from "./stores/adapter";
 import { createHttpClient } from "./stores/http";
@@ -34,13 +34,6 @@ export async function requestCrawls(env: Env, request: EnqueueCrawlsRequest): Pr
   return { ok: true, enqueued };
 }
 
-export function pipelineModes(env: Env): { normalize: PipelineMode; link: PipelineMode } {
-  const normalize = env.PIPELINE_NORMALIZE ?? "off";
-  // Sin normalización nada llega a `framerate-link`: ocultar lo nuevo sería esconderlo hasta el plazo de 24 h.
-  const link = normalize === "off" ? "off" : (env.PIPELINE_LINK ?? "off");
-  return { normalize, link };
-}
-
 /**
  * Backfill y re-vínculo (RPC desde la API): `normalize` encola en `framerate-normalize` las ofertas activas sin
  * identidad de la versión actual y las deja `pending`; `link` encola en `framerate-link` las que ya la tienen.
@@ -49,7 +42,6 @@ export async function requestPipeline(
   env: Env,
   request: z.output<typeof EnqueuePipelineRequestSchema>,
 ): Promise<EnqueuePipelineResult> {
-  if (pipelineModes(env)[request.stage] === "off") return { ok: false, error: "pipeline_off" };
   if (request.store && !findStore(request.store)) return { ok: false, error: "unknown_store" };
   const db = createDb(env.DB);
   const ids = await listingsForStage(db, { ...request, version: NORMALIZER_VERSION });
@@ -61,6 +53,16 @@ export async function requestPipeline(
     await sendInBatches(env.LINK_QUEUE, messages);
   }
   return { ok: true, enqueued: ids.length };
+}
+
+/** Cron: vuelve a encolar en `framerate-normalize` lo que lleva más de 24 h sin salir de `pending` o `normalized`. */
+export async function retryStuckNormalize(env: Env, now: Date): Promise<number> {
+  const ids = await retryStuck(createDb(env.DB), now);
+  await sendInBatches(
+    env.NORMALIZE_QUEUE,
+    ids.map((listingId) => ({ listingId, version: NORMALIZER_VERSION, reason: "changed" as const })),
+  );
+  return ids.length;
 }
 
 /** sendBatch acepta hasta 100 mensajes. */
@@ -110,10 +112,7 @@ export async function runCrawlMessage(env: Env, message: CrawlMessage, log: Logg
       log,
       newId: () => crypto.randomUUID(),
       createContext: (runId) => productionContext(env, store, message.category, runId, log),
-      pipeline: {
-        ...pipelineModes(env),
-        enqueueNormalize: (messages: PipelineMessage[]) => sendInBatches(env.NORMALIZE_QUEUE, messages),
-      },
+      enqueueNormalize: (messages: PipelineMessage[]) => sendInBatches(env.NORMALIZE_QUEUE, messages),
     },
     store,
     message.category,

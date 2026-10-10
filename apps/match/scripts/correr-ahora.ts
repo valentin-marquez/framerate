@@ -1,7 +1,6 @@
 import { createDb } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import { proposeDuplicateReviews } from "../src/detect";
-import { extractModels } from "../src/model";
 import { neuronsSpentSince } from "../src/reviews.repository";
 import { reviewsForToday, verifyReview } from "../src/verify";
 
@@ -34,10 +33,6 @@ export default {
       out.push(`juzgadas ${ids.length}: ${JSON.stringify(outcomes)}`);
       return new Response(out.join("\n"));
     }
-
-    const budget = Math.min(dailyNeurons / 3, dailyNeurons - gastado);
-    const models = await extractModels(db, env.AI, { now, neuronBudget: budget, log });
-    out.push(`modelos: preguntados ${models.asked}, validos ${models.valid}, ${models.neurons.toFixed(1)} neurons`);
 
     const found = await proposeDuplicateReviews(db, { now: new Date() });
     out.push(`detector: ${found.proposed} revisiones nuevas de ${found.evaluated} ofertas evaluadas`);

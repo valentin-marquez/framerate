@@ -5,8 +5,8 @@ import { deactivateStale, purgeQuarantine } from "@/features/ingestion/ingestion
 import { fakeStore, offer, steppingClock, testDeps } from "./helpers";
 
 /**
- * Pipeline completo contra D1 real: tienda → normalización → oferta →
- * historial de precios → matching → producto canónico.
+ * Corrida completa contra D1 real: tienda → normalización → oferta → historial de precios. El vínculo a producto ya
+ * no ocurre aquí (#156): la oferta queda `pending` para `framerate-normalize`.
  */
 
 let d1: D1Database;
@@ -21,7 +21,7 @@ beforeEach(() => resetD1(d1));
 const GPU_A = { category: "gpu" as const, title: "ASUS Dual RTX 4070 SUPER OC 12GB", priceCash: 650_000 };
 
 describe("ingesta", () => {
-  test("primera corrida crea ofertas, productos y un punto de precio por oferta", async () => {
+  test("primera corrida crea ofertas pendientes y un punto de precio por oferta, sin productos", async () => {
     const clock = steppingClock();
     const deps = testDeps(d1, clock);
     const tienda = fakeStore("alfa", { gpu: ["gpu"] });
@@ -34,9 +34,10 @@ describe("ingesta", () => {
     const result = await crawlCategory(deps, tienda.store, "gpu");
 
     expect(result.status).toBe("succeeded");
-    expect(result.stats).toMatchObject({ seen: 3, valid: 2, quarantined: 1, created: 2, newProducts: 2 });
-    expect(await all(deps.db, "products")).toHaveLength(2);
+    expect(result.stats).toMatchObject({ seen: 3, valid: 2, quarantined: 1, created: 2, enqueued: 2 });
+    expect(await all(deps.db, "products")).toHaveLength(0);
     expect(await all(deps.db, "price_points")).toHaveLength(2);
+    expect(deps.sent.map((m) => m.reason)).toEqual(["new", "new"]);
     const [q] = await all(deps.db, "quarantine");
     expect(q?.reason).toBe("category:other_product");
   });
@@ -93,149 +94,6 @@ describe("ingesta", () => {
   });
 });
 
-describe("matching entre tiendas", () => {
-  test("mismo MPN con distinto formato en dos tiendas → un solo producto", async () => {
-    const deps = testDeps(d1, steppingClock());
-    const alfa = fakeStore("alfa", { gpu: ["gpu"] });
-    const beta = fakeStore("beta", { gpu: ["gpu"] });
-    alfa.setOffers([offer("alfa", "1", { ...GPU_A, mpn: "DUAL-RTX4070S-O12G" })]);
-    beta.setOffers([
-      offer("beta", "x9", {
-        category: "gpu",
-        title: "Tarjeta de Video Asus Dual GeForce RTX4070 Super O12G",
-        priceCash: 639_990,
-        mpn: "dual rtx4070s o12g",
-      }),
-    ]);
-    await crawlCategory(deps, alfa.store, "gpu");
-    const result = await crawlCategory(deps, beta.store, "gpu");
-
-    expect(result.stats.linked).toBe(1);
-    expect(await all(deps.db, "products")).toHaveLength(1);
-    const decisions = await all(deps.db, "match_decisions");
-    expect(decisions.map((d) => d.method).sort()).toEqual(["identifier", "new_product"]);
-  });
-
-  test("CPU se fusiona por modelo aunque ninguna tienda publique MPN", async () => {
-    const deps = testDeps(d1, steppingClock());
-    const alfa = fakeStore("alfa", { cpu: ["cpu"] });
-    const beta = fakeStore("beta", { cpu: ["cpu"] });
-    alfa.setOffers([
-      offer("alfa", "1", { category: "cpu", title: "Procesador AMD Ryzen 7 7800X3D AM5", priceCash: 420_000 }),
-    ]);
-    beta.setOffers([
-      offer("beta", "2", { category: "cpu", title: "AMD RYZEN 7 7800X3D 4.2GHz Box", priceCash: 415_000 }),
-    ]);
-    await crawlCategory(deps, alfa.store, "cpu");
-    await crawlCategory(deps, beta.store, "cpu");
-    expect(await all(deps.db, "products")).toHaveLength(1);
-  });
-
-  test("dos variantes de la misma tienda con iguales atributos no se fusionan: la segunda va a revisión", async () => {
-    const deps = testDeps(d1, steppingClock());
-    const alfa = fakeStore("alfa", { ram: ["ram"] });
-    const ram = (id: string, title: string) => offer("alfa", id, { category: "ram", title, priceCash: 45_000 });
-    alfa.setOffers([
-      ram("1", "Memoria RAM Kingston FURY Beast 16GB DDR4 3200MHz"),
-      ram("2", "Memoria RAM Kingston FURY Beast 16GB DDR4 3200MHz Low Profile"),
-    ]);
-    await crawlCategory(deps, alfa.store, "ram");
-    expect(await all(deps.db, "products")).toHaveLength(2);
-    expect(await all(deps.db, "match_reviews")).toHaveLength(1);
-
-    // Otra tienda con el mismo producto sí se vincula por atributos.
-    const beta = fakeStore("beta", { ram: ["ram"] });
-    beta.setOffers([
-      offer("beta", "9", { category: "ram", title: "Kingston FURY Beast 16GB DDR4 3200MHz", priceCash: 44_000 }),
-    ]);
-    await crawlCategory(deps, beta.store, "ram");
-    expect(await all(deps.db, "products")).toHaveLength(2);
-  });
-
-  test("mismo MPN pero distinta VRAM → productos distintos, sin robar el identificador", async () => {
-    const deps = testDeps(d1, steppingClock());
-    const alfa = fakeStore("alfa", { gpu: ["gpu"] });
-    const beta = fakeStore("beta", { gpu: ["gpu"] });
-    alfa.setOffers([
-      offer("alfa", "1", {
-        category: "gpu",
-        title: "MSI RTX 4060 Ti Ventus 2X 8GB",
-        priceCash: 400_000,
-        mpn: "V515-015R",
-      }),
-    ]);
-    beta.setOffers([
-      offer("beta", "2", {
-        category: "gpu",
-        title: "MSI RTX 4060 Ti Ventus 2X 16GB",
-        priceCash: 480_000,
-        mpn: "V515-015R",
-      }),
-    ]);
-    await crawlCategory(deps, alfa.store, "gpu");
-    await crawlCategory(deps, beta.store, "gpu");
-
-    const allProducts = await all(deps.db, "products");
-    expect(allProducts).toHaveLength(2);
-    const ids = await all(deps.db, "product_identifiers");
-    expect(ids).toHaveLength(1);
-    const conflict = await all(deps.db, "match_decisions").then((r) => r.filter((d) => d.method === "new_product"));
-    expect(conflict.some((d) => d.evidence.includes("identifierConflicts"))).toBe(true);
-  });
-
-  test("si la tienda corrige el título y el vínculo ya no es válido, se desvincula y re-decide", async () => {
-    const clock = steppingClock();
-    const deps = testDeps(d1, clock);
-    const alfa = fakeStore("alfa", { gpu: ["gpu"] });
-    const beta = fakeStore("beta", { gpu: ["gpu"] });
-    alfa.setOffers([offer("alfa", "1", { ...GPU_A, mpn: "DUAL-RTX4070S-O12G" })]);
-    beta.setOffers([offer("beta", "2", { ...GPU_A, mpn: "DUAL-RTX4070S-O12G" })]);
-    await crawlCategory(deps, alfa.store, "gpu");
-    await crawlCategory(deps, beta.store, "gpu");
-    expect(await all(deps.db, "products")).toHaveLength(1);
-
-    // Beta tenía mal el título: en realidad es la versión de 16GB (otro producto).
-    beta.setOffers([offer("beta", "2", { ...GPU_A, title: "ASUS Dual RTX 4070 Ti SUPER OC 16GB", mpn: null })]);
-    const result = await crawlCategory(deps, beta.store, "gpu");
-    expect(result.stats).toMatchObject({ unlinked: 1, newProducts: 1 });
-    expect(await all(deps.db, "products")).toHaveLength(2);
-  });
-});
-
-describe("zona gris del matching", () => {
-  async function setupReview() {
-    const deps = testDeps(d1, steppingClock());
-    const alfa = fakeStore("alfa", { ram: ["ram"] });
-    const beta = fakeStore("beta", { ram: ["ram"] });
-    alfa.setOffers([
-      offer("alfa", "1", {
-        category: "ram",
-        title: "Corsair Vengeance 32GB 2x16GB DDR5 6000MHz Black",
-        priceCash: 180_000,
-      }),
-    ]);
-    beta.setOffers([
-      offer("beta", "2", {
-        category: "ram",
-        title: "Corsair Vengeance 32GB (2x16GB) DDR5 6000MHz CMK32GX5M2B6000C36",
-        priceCash: 150_000,
-        gtin: "0840006600008",
-      }),
-    ]);
-    await crawlCategory(deps, alfa.store, "ram");
-    const result = await crawlCategory(deps, beta.store, "ram");
-    const [review] = await all(deps.db, "match_reviews");
-    return { deps, result, review };
-  }
-
-  test("caso dudoso crea producto provisional visible + revisión pendiente", async () => {
-    const { deps, result, review } = await setupReview();
-    expect(result.stats).toMatchObject({ reviews: 1, newProducts: 1 });
-    expect(review?.status).toBe("pending");
-    expect(await all(deps.db, "products")).toHaveLength(2);
-  });
-});
-
 describe("cuarentena", () => {
   test("se purga lo de más de 14 días; un rechazo que persiste vuelve a registrarse en la siguiente corrida", async () => {
     const clock = steppingClock();
@@ -285,6 +143,16 @@ describe("ofertas que nadie ve", () => {
     caida.setOffers(gpus("caida", 2));
     sana.setOffers(gpus("sana", 8));
     await crawlCategory(deps, caida.store, "gpu");
+    // Vinculadas, como las dejaría `framerate-link`: lo que se apaga tiene que devolver sus productos.
+    for (const l of await all(deps.db, "listings")) {
+      const at = clock().toISOString();
+      const { id } = await deps.db.query
+        .insertInto("products")
+        .values({ slug: `p-${l.id}`, name: l.title, category: "gpu", created_at: at, updated_at: at })
+        .returning("id")
+        .executeTakeFirstOrThrow();
+      await deps.db.query.updateTable("listings").set({ product_id: id }).where("id", "=", l.id).execute();
+    }
     clock.advance(49 * HOUR);
     await crawlCategory(deps, sana.store, "gpu");
 

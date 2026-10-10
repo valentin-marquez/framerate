@@ -1,7 +1,6 @@
 import { type Category, NORMALIZER_VERSION, type PipelineMessage } from "@framerate/contracts";
 import { type Db, refreshPriceSummary } from "@framerate/database";
 import type { Clock, Logger } from "@framerate/kit";
-import { matchListing, mergeSplitIdentity } from "@framerate/matching";
 import { normalizeOffer, normHash, rawHashInput } from "./domain/normalize";
 import {
   addToQuarantine,
@@ -24,18 +23,6 @@ import type { CrawlContext, StoreDefinition } from "./stores/adapter";
  */
 export const MIN_HEALTHY_RATIO = 0.5;
 
-/** off: todo como antes. shadow y live encienden la etapa; sólo en link=live cambia lo que ve el usuario. */
-export type PipelineMode = "off" | "shadow" | "live";
-
-export interface PipelineDeps {
-  normalize: PipelineMode;
-  link: PipelineMode;
-  /** Productor de `framerate-normalize`; se llama una vez al final de la corrida. */
-  enqueueNormalize(messages: PipelineMessage[]): Promise<void>;
-}
-
-const PIPELINE_OFF: PipelineDeps = { normalize: "off", link: "off", enqueueNormalize: async () => {} };
-
 export interface CrawlCategoryDeps {
   db: Db;
   clock: Clock;
@@ -43,8 +30,8 @@ export interface CrawlCategoryDeps {
   /** Crea el contexto de scraping (HTTP + snapshots) para esta corrida. */
   createContext(runId: string): CrawlContext;
   newId(): string;
-  /** Interruptores del pipeline (#153); sin ellos, apagado. */
-  pipeline?: PipelineDeps;
+  /** Productor de `framerate-normalize`; se llama una vez al final de la corrida. */
+  enqueueNormalize(messages: PipelineMessage[]): Promise<void>;
 }
 
 export interface CrawlResult {
@@ -54,14 +41,16 @@ export interface CrawlResult {
   error?: string;
 }
 
-/** Caso de uso: una corrida completa de (tienda, categoría). */
+/**
+ * Caso de uso: una corrida completa de (tienda, categoría). La corrida no vincula: toda oferta nueva o cambiada
+ * queda `pending` (oculta si es nueva) y la decide el pipeline (`framerate-normalize` → `framerate-link`, #156).
+ */
 export async function crawlCategory(
   deps: CrawlCategoryDeps,
   store: StoreDefinition,
   category: Category,
 ): Promise<CrawlResult> {
   const { db, clock } = deps;
-  const pipeline = deps.pipeline ?? PIPELINE_OFF;
   const runId = deps.newId();
   const log = deps.log.child({ feature: "ingestion", store: store.slug, category, runId });
   const stats = emptyStats();
@@ -82,14 +71,12 @@ export async function crawlCategory(
   log.info("crawl.started", { previousActive });
 
   const seen = new Set<string>();
-  // Productos que perdieron una oferta por re-matching: también hay que recalcularles el precio.
-  const previousProductIds = new Set<number>();
   const unchangedIds: number[] = [];
   const toNormalize: PipelineMessage[] = [];
   const flushNormalize = async () => {
     const messages = toNormalize.splice(0);
     if (messages.length === 0) return;
-    await pipeline.enqueueNormalize(messages);
+    await deps.enqueueNormalize(messages);
     stats.enqueued += messages.length;
     log.info("crawl.enqueued", { enqueued: messages.length });
   };
@@ -122,11 +109,7 @@ export async function crawlCategory(
       seen.add(offer.externalId);
       stats.valid++;
 
-      const upsert = await upsertListing(db, storeRow.id, offer, now(), {
-        hash: await normHash(offer),
-        pending: pipeline.normalize !== "off",
-        hideNew: pipeline.link === "live",
-      });
+      const upsert = await upsertListing(db, storeRow.id, offer, now(), await normHash(offer));
       if (upsert.created) stats.created++;
       else stats.updated++;
       if (upsert.priceChanged && !upsert.created) stats.priceChanges++;
@@ -135,47 +118,12 @@ export async function crawlCategory(
         else stats.reused++;
       }
       if (upsert.touchOnly) unchangedIds.push(upsert.listingId);
-      if (upsert.changed && pipeline.normalize !== "off") {
+      if (upsert.changed) {
         toNormalize.push({
           listingId: upsert.listingId,
           version: NORMALIZER_VERSION,
           reason: upsert.created ? "new" : "changed",
         });
-      }
-      // Con el vínculo en vivo, lo que entró al pipeline lo decide el consumidor de `framerate-link`; en la corrida
-      // sólo se sigue vinculando (y re-decidiendo) lo `legacy`, hasta el backfill de la fase 4.
-      if (pipeline.link === "live" && upsert.normStatus !== "legacy") continue;
-
-      const match = await matchListing(db, {
-        listingId: upsert.listingId,
-        currentProductId: upsert.productId,
-        offer,
-        now: now(),
-      });
-      if (match.categoryMismatch) {
-        log.info("matching.category_mismatch", {
-          feature: "matching",
-          listingId: upsert.listingId,
-          productId: upsert.productId,
-        });
-      }
-      if (upsert.productId !== null && (match.unlinked || match.outcome !== "kept")) {
-        previousProductIds.add(upsert.productId);
-      }
-      const merge = await mergeSplitIdentity(db, {
-        listingId: upsert.listingId,
-        fingerprint: offer.fingerprint,
-        now: now(),
-      });
-      if (merge) log.info(`matching.${merge.status}`, { feature: "matching", listingId: upsert.listingId, ...merge });
-      if (merge?.status === "merged") stats.merged++;
-      if (match.unlinked) stats.unlinked++;
-      if (match.reviewClosed) stats.reviewsClosed++;
-      if (match.outcome === "linked") stats.linked++;
-      else if (match.outcome === "new_product") stats.newProducts++;
-      else if (match.outcome === "review") {
-        stats.newProducts++;
-        stats.reviews++;
       }
     }
 
@@ -190,7 +138,7 @@ export async function crawlCategory(
       log.warn("crawl.deactivation_skipped", { valid: stats.valid, previousActive });
     }
 
-    await refreshPriceSummary(db, { storeId: storeRow.id, category, previousProductIds, now: clock() });
+    await refreshPriceSummary(db, { storeId: storeRow.id, category, previousProductIds: [], now: clock() });
     await flushNormalize();
     await finishRun(db, runId, { status: "succeeded", stats, now: now() });
     log.info("crawl.succeeded", { ...stats });

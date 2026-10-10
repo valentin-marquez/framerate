@@ -44,11 +44,10 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
 
 ## Trampas
 
-- **Pipeline de normalización (#153): se enciende por etapas.** Interruptores: `PIPELINE_NORMALIZE` y `PIPELINE_LINK`
-  en ingest, `NORMALIZE_MODE` en normalize, `PIPELINE_LINK` en match (`off` | `shadow` | `live`). Orden: desplegar con
-  ingest en `off` un ciclo completo (6 h) para que toda oferta reciba su `norm_hash` sin encolarse; después `shadow` y el
-  backfill por categoría con `POST /v1/admin/pipeline/normalize`; revisar `GET /v1/admin/pipeline/shadow?category=`;
-  recién ahí `live`. Encender `shadow` desde el primer deploy encola el catálogo entero en la primera corrida.
+- **El pipeline no tiene interruptores en ingest (#156).** Toda oferta nueva o cambiada se encola a `framerate-normalize`
+  y nace oculta hasta que Haiku la vincula. Los modos que quedan: `NORMALIZE_MODE` en normalize y `PIPELINE_LINK` en
+  match (`off` | `shadow` | `live`), ambos en `live`. Apagar normalize deja ofertas ocultas acumulándose: el Cron de
+  ingest las reencola a las 24 h, así que al volver a encender hay que mirar el gasto en `ai_usage`.
 
 - **Pre-push falla con "The WebSocket is undefined" o "new dependencies optimized".** No es del código: es el build
   de Vite chocando con un dev server o Storybook abierto que re-optimiza dependencias. Reintentar el push.
@@ -57,18 +56,18 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
   `VITE_TURNSTILE_SITE_KEY`, el formulario de soporte sin cuenta desaparece.
 - **Una migración aplica a los dos Workers a la vez.** Nunca desplegar un Worker que depende de columnas que la
   migración todavía no creó, ni escribir migraciones destructivas mientras el código viejo sigue desplegado.
-- **Un cambio en `packages/matching` va a ingest, match y server en la misma tanda.** Ingest y server corrigen las filas de
-  `products` con su copia de los extractores al cargarlas; si quedan con versiones distintas, se pisan entre sí.
-- **La primera corrida tras un cambio de matching mueve ofertas en prod** (re-decide todos los vínculos). Antes de
-  desplegar, anotar la hora. Para volver atrás, en este orden: primero `bunx wrangler rollback` en `apps/ingest` y en
-  `apps/server` (si no, el siguiente cron vuelve a aplicar el matching), y después
+- **Un cambio en `packages/matching` va a normalize, match y server en la misma tanda** (ingest sólo usa las
+  compuertas de cuarentena). La huella guardada en `products` no se recalcula al cargar: si cambian los vetos o el
+  vocabulario, correr `packages/database/scripts/recanonize-products.ts`.
+- **Un cambio de matching mueve ofertas en prod a medida que Haiku las vuelve a ver** (`relink`, backfill o cambio de
+  título). Antes de desplegar, anotar la hora. Para volver atrás, en este orden: primero `bunx wrangler rollback` en
+  `apps/match` y en `apps/normalize`, y después
   `bunx wrangler d1 time-travel restore framerate --timestamp=<hora>` desde `packages/database`. El restore descarta
   toda escritura posterior a esa hora (usuarios, sesiones, cotizaciones, reclamos, revisiones resueltas en el admin):
   hay que hacerlo pronto.
-- **Tras el primer ciclo posterior a un deploy de matching**, mirar `GET /v1/admin/crawls` y `/prod-health`. Revertir si
-  alguna corrida falló por límite de subrequests, o si las desvinculaciones del primer ciclo superan ~600 en total (la
-  simulación con datos de prod dio 283; se espera algo más porque las fuentes de Infor-Ingen ahora llegan por el crawl
-  de `psu` y las fichas Woo aportan códigos P/N).
+- **Tras el primer ciclo posterior a un deploy de matching**, mirar `GET /v1/admin/crawls`, `/prod-health` y
+  `bunx wrangler tail framerate-match`. Revertir si alguna corrida falló por límite de subrequests o si las fusiones
+  de `ai:` del día no cuadran en una muestra.
 - **Los secretos no están en el repo.** Si falta uno (`BETTER_AUTH_SECRET`, `ADMIN_TOKEN`, `DISCORD_CLIENT_ID`,
   `DISCORD_CLIENT_SECRET`), el dueño lo pone con `bunx wrangler secret put <NOMBRE>` en la carpeta del Worker.
 - `bun run test` a veces falla por timeout en el primer test de `claims` o de `users-admin` (pasan solos). Repetirlo

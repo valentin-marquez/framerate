@@ -33,10 +33,7 @@ export const EnqueuePipelineRequestSchema = z.object({
 });
 export type EnqueuePipelineRequest = z.input<typeof EnqueuePipelineRequestSchema>;
 
-/** `pipeline_off`: la etapa está apagada por su interruptor. */
-export type EnqueuePipelineResult =
-  | { ok: true; enqueued: number }
-  | { ok: false; error: "unknown_store" | "pipeline_off" };
+export type EnqueuePipelineResult = { ok: true; enqueued: number } | { ok: false; error: "unknown_store" };
 
 export interface IngestService {
   enqueueCrawls(request: EnqueueCrawlsRequest): Promise<EnqueueCrawlsResult>;

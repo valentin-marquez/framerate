@@ -15,15 +15,21 @@ import { recheckClaims } from "@/features/claims/recheck";
 import { copyProductImages } from "@/features/images/product-images";
 import { deactivateStale, purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
-import { enqueueAllCrawls, requestCrawls, requestPipeline, runCrawlMessage } from "@/features/ingestion/runtime";
+import {
+  enqueueAllCrawls,
+  requestCrawls,
+  requestPipeline,
+  retryStuckNormalize,
+  runCrawlMessage,
+} from "@/features/ingestion/runtime";
 import { applyViews7d, fetchViews7d } from "@/features/popularity/views";
 import { emailSender } from "@/shared/email";
 
 /**
  * Worker de ingesta: todo lo que toca tiendas externas. No recibe tráfico
  * público; sus disparadores son:
- *  - scheduled: Cron → encola un crawl por (tienda, categoría), copia a R2 las fotos de producto pendientes y
- *               recalcula `views_7d` desde Analytics Engine.
+ *  - scheduled: Cron → encola un crawl por (tienda, categoría), reintenta lo atascado en el pipeline, copia a R2
+ *               las fotos de producto pendientes y recalcula `views_7d` desde Analytics Engine.
  *  - queue:     consume crawls (uno por mensaje, con reintentos y DLQ).
  *  - RPC:       `IngestRpc`, que usa apps/server para "crawlear ahora" y para encolar el backfill del pipeline.
  */
@@ -44,6 +50,7 @@ export default {
   async scheduled(controller, env) {
     const enqueued = await enqueueAllCrawls(env, `cron:${controller.cron}`);
     log.info("cron.enqueued", { enqueued, cron: controller.cron });
+    log.info("normalize.retried", { retried: await retryStuckNormalize(env, new Date()) });
     log.info(
       "claims.rechecked",
       await recheckClaims(createDb(env.DB), new Date().toISOString(), undefined, emailSender(env)),

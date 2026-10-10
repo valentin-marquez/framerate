@@ -328,9 +328,8 @@ describe("same_as del preprocesador (#157)", () => {
 });
 
 describe("plazo de 24 h", () => {
-  test("lo oculto sin vínculo se vincula por regex como fallback; lo oculto en revisión se publica; lo reciente espera", async () => {
+  test("lo oculto en revisión se publica; lo oculto sin vínculo y lo reciente esperan", async () => {
     const s = await store("alfa");
-    const p = await product({ slug: "amd-ryzen-5-5600x", name: NAME, mpn: MPN });
     const overdue = await listing({
       store: s,
       external: "1",
@@ -350,12 +349,11 @@ describe("plazo de 24 h", () => {
     });
     const recent = await listing({ store: s, external: "3", visible: 0, normStatus: "pending" });
 
-    expect(await publishOverdue(db, now, silentLogger)).toEqual({ published: 2, fallback: 1 });
-    expect(await listingRow(overdue)).toMatchObject({ product_id: p, visible: 1, norm_status: "fallback" });
-    expect(await decisions(overdue)).toEqual([{ product_id: p, method: "identifier", decided_by: "fallback" }]);
-    expect((await productRow(p)).published_at).toBe(at);
+    expect(await publishOverdue(db, now, silentLogger)).toEqual({ published: 1 });
     expect(await listingRow(inReview)).toMatchObject({ visible: 1, norm_status: "linked" });
     expect((await productRow(own)).published_at).toBe(at);
+    expect(await listingRow(overdue)).toMatchObject({ visible: 0, norm_status: "pending", product_id: null });
+    expect(await decisions(overdue)).toEqual([]);
     expect(await listingRow(recent)).toMatchObject({ visible: 0, norm_status: "pending", product_id: null });
   });
 });

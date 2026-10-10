@@ -1,5 +1,5 @@
 import type { Category } from "@framerate/contracts";
-import type { Db, NormStatus } from "@framerate/database";
+import type { Db } from "@framerate/database";
 import { fromBool, toBool, toJson } from "@framerate/database";
 import { sql } from "kysely";
 import type { NormalizedOffer } from "./domain/normalize";
@@ -18,13 +18,6 @@ export interface CrawlStats {
   updated: number;
   priceChanges: number;
   deactivated: number;
-  linked: number;
-  newProducts: number;
-  reviews: number;
-  unlinked: number;
-  reviewsClosed: number;
-  /** Productos fusionados porque una oferta traía el MPN de uno y el GTIN del otro (#141). */
-  merged: number;
   /** true si se omitió desactivar ofertas no vistas porque la corrida parecía incompleta. */
   deactivationSkipped: boolean;
   /** Pipeline (#153): existentes con el mismo `norm_hash`, con hash distinto, encoladas, y rechazos nuevos. */
@@ -43,12 +36,6 @@ export const emptyStats = (): CrawlStats => ({
   updated: 0,
   priceChanges: 0,
   deactivated: 0,
-  linked: 0,
-  newProducts: 0,
-  reviews: 0,
-  unlinked: 0,
-  reviewsClosed: 0,
-  merged: 0,
   deactivationSkipped: false,
   reused: 0,
   changed: 0,
@@ -174,34 +161,24 @@ export interface UpsertResult {
   listingId: number;
   created: boolean;
   priceChanged: boolean;
-  /** Producto al que estaba vinculada antes de esta actualización. */
-  productId: number | null;
-  /** Nueva o con `norm_hash` distinto: hay que normalizarla (de nuevo). */
+  /** Nueva o con `norm_hash` distinto: queda `pending` y hay que normalizarla (de nuevo). */
   changed: boolean;
-  normStatus: NormStatus;
   /** Nada cambió: sólo falta `last_seen_at`, que se escribe por tanda con `touchSeen`. */
   touchOnly: boolean;
-}
-
-export interface UpsertOptions {
-  hash: string;
-  /** Pipeline encendido: lo nuevo o cambiado queda `pending`. */
-  pending: boolean;
-  /** `PIPELINE_LINK=live`: lo nuevo nace oculto hasta que el vínculo termine (spec §8). */
-  hideNew: boolean;
 }
 
 /**
  * Inserta o actualiza una oferta. Si el hash no cambió sólo se tocan precio, stock y disponibilidad (y nada si
  * tampoco cambiaron: `touchOnly`). Registra un punto de precio SÓLO si cambió precio o disponibilidad (o si es
- * nueva). Oferta + punto de precio se escriben en un mismo batch (atómico en D1).
+ * nueva). Oferta + punto de precio se escriben en un mismo batch (atómico en D1). Lo nuevo nace oculto
+ * (`visible = 0`) hasta que el vínculo termine (spec §8).
  */
 export async function upsertListing(
   db: Db,
   storeId: number,
   offer: NormalizedOffer,
   now: string,
-  opts: UpsertOptions,
+  hash: string,
 ): Promise<UpsertResult> {
   const existing = await db.query
     .selectFrom("listings")
@@ -223,7 +200,7 @@ export async function upsertListing(
     image_urls: toJson(offer.imageUrls),
     attributes: toJson(offer.attributes),
     source_text: offer.sourceText,
-    norm_hash: opts.hash,
+    norm_hash: hash,
   };
   const priceFields = {
     price_cash: offer.priceCash,
@@ -242,7 +219,6 @@ export async function upsertListing(
   };
 
   if (!existing) {
-    const normStatus: NormStatus = opts.pending ? "pending" : "legacy";
     await db.batch([
       db.query.insertInto("listings").values({
         store_id: storeId,
@@ -250,8 +226,8 @@ export async function upsertListing(
         first_seen_at: now,
         ...identityFields,
         ...priceFields,
-        norm_status: normStatus,
-        visible: opts.hideNew ? 0 : 1,
+        norm_status: "pending",
+        visible: 0,
       }),
       // INSERT … SELECT: el punto de precio toma el id de la oferta insertada en el mismo batch.
       db.query
@@ -277,15 +253,7 @@ export async function upsertListing(
       .where("store_id", "=", storeId)
       .where("external_id", "=", offer.externalId)
       .executeTakeFirstOrThrow();
-    return {
-      listingId: inserted.id,
-      created: true,
-      priceChanged: true,
-      productId: null,
-      changed: true,
-      normStatus,
-      touchOnly: false,
-    };
+    return { listingId: inserted.id, created: true, priceChanged: true, changed: true, touchOnly: false };
   }
 
   // Una oferta que vuelve a aparecer tras estar inactiva también es un cambio observable.
@@ -295,23 +263,20 @@ export async function upsertListing(
     toBool(existing.in_stock) !== offer.inStock ||
     !toBool(existing.is_active);
   // Una `failed` agotó sus reintentos: la siguiente corrida la vuelve a intentar.
-  const changed = existing.norm_hash !== opts.hash || existing.norm_status === "failed";
-  const base = { listingId: existing.id, created: false, productId: existing.product_id };
-  if (!changed && !priceChanged) {
-    return { ...base, priceChanged: false, changed: false, normStatus: existing.norm_status, touchOnly: true };
-  }
+  const changed = existing.norm_hash !== hash || existing.norm_status === "failed";
+  const base = { listingId: existing.id, created: false };
+  if (!changed && !priceChanged) return { ...base, priceChanged: false, changed: false, touchOnly: true };
 
-  const normStatus: NormStatus = changed && opts.pending ? "pending" : existing.norm_status;
   const update = db.query
     .updateTable("listings")
-    .set(changed ? { ...identityFields, ...priceFields, norm_status: normStatus } : priceFields)
+    .set(changed ? { ...identityFields, ...priceFields, norm_status: "pending" } : priceFields)
     .where("id", "=", existing.id);
   await db.batch(
     priceChanged
       ? [update, db.query.insertInto("price_points").values({ listing_id: existing.id, ...pricePoint })]
       : [update],
   );
-  return { ...base, priceChanged, changed, normStatus, touchOnly: false };
+  return { ...base, priceChanged, changed, touchOnly: false };
 }
 
 // D1 acepta 100 parámetros por sentencia: los ids van en tandas y las tandas en un solo batch.
@@ -337,6 +302,37 @@ export function markPending(db: Db, ids: readonly number[], now: string) {
       db.query.updateTable("listings").set({ norm_status: "pending", updated_at: now }).where("id", "in", c),
     ),
   );
+}
+
+/** Más que esto es un reintento acumulado, no una oferta suelta: sigue en el próximo Cron. */
+const STUCK_HOURS = 24;
+const STUCK_LIMIT = 1000;
+
+/**
+ * Ofertas activas que llevan más de 24 h `pending` o `normalized` (Haiku o el vínculo no las procesaron). Se les
+ * avanza `updated_at` para que el próximo Cron no las repita; el estado no cambia: una `normalized` con identidad
+ * vigente la reenvía el normalizador a `framerate-link` sin pagar de nuevo. Las `failed` no se reintentan.
+ */
+export async function retryStuck(db: Db, now: Date): Promise<number[]> {
+  const before = new Date(now.getTime() - STUCK_HOURS * 3_600_000).toISOString();
+  const rows = await db.query
+    .selectFrom("listings")
+    .select("id")
+    .where("is_active", "=", 1)
+    .where("norm_status", "in", ["pending", "normalized"])
+    .where("updated_at", "<", before)
+    .orderBy("id")
+    .limit(STUCK_LIMIT)
+    .execute();
+  const ids = rows.map((r) => r.id);
+  if (ids.length > 0) {
+    await db.batch(
+      chunks(ids).map((c) =>
+        db.query.updateTable("listings").set({ updated_at: now.toISOString() }).where("id", "in", c),
+      ),
+    );
+  }
+  return ids;
 }
 
 /**

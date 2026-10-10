@@ -2,7 +2,7 @@ import type { PipelineMessage } from "@framerate/contracts";
 import { createDb } from "@framerate/database";
 import { silentLogger } from "@framerate/kit";
 import type { Env } from "@/env";
-import type { CrawlCategoryDeps, PipelineMode } from "@/features/ingestion/crawl-category";
+import type { CrawlCategoryDeps } from "@/features/ingestion/crawl-category";
 import type { RawOffer } from "@/features/ingestion/domain/normalize";
 import type { CrawlMessage } from "@/features/ingestion/messages";
 import type { CrawlContext, StoreDefinition } from "@/features/ingestion/stores/adapter";
@@ -54,12 +54,8 @@ export function offer(storeSlug: string, externalId: string, patch: Partial<RawO
   };
 }
 
-/** `pipeline` enciende los interruptores; lo encolado en `framerate-normalize` queda en `sent`. */
-export function testDeps(
-  d1: D1Database,
-  clock: () => Date,
-  pipeline?: { normalize: PipelineMode; link: PipelineMode },
-): CrawlCategoryDeps & { sent: PipelineMessage[] } {
+/** Lo encolado en `framerate-normalize` queda en `sent`. */
+export function testDeps(d1: D1Database, clock: () => Date): CrawlCategoryDeps & { sent: PipelineMessage[] } {
   let n = 0;
   const sent: PipelineMessage[] = [];
   const context: CrawlContext = {
@@ -76,11 +72,8 @@ export function testDeps(
     log: silentLogger,
     newId: () => `run-${++n}-${clock().getTime()}`,
     createContext: () => context,
-    pipeline: pipeline && {
-      ...pipeline,
-      enqueueNormalize: async (messages) => {
-        sent.push(...messages);
-      },
+    enqueueNormalize: async (messages) => {
+      sent.push(...messages);
     },
     sent,
   };
@@ -112,7 +105,7 @@ function fakeQueue<T>(sent: T[]): Queue<T> {
 }
 
 /** Env de ingest con colas falsas que registran lo enviado. */
-export function testEnv(d1: D1Database, vars?: Pick<Env, "PIPELINE_NORMALIZE" | "PIPELINE_LINK">) {
+export function testEnv(d1: D1Database) {
   const sent: CrawlMessage[] = [];
   const normalize: PipelineMessage[] = [];
   const link: PipelineMessage[] = [];
@@ -124,7 +117,6 @@ export function testEnv(d1: D1Database, vars?: Pick<Env, "PIPELINE_NORMALIZE" | 
     CRAWL_QUEUE: fakeQueue(sent),
     NORMALIZE_QUEUE: fakeQueue(normalize),
     LINK_QUEUE: fakeQueue(link),
-    ...vars,
   };
   return { env, sent, normalize, link };
 }

@@ -15,7 +15,7 @@ const RESOLVERS = {
 } as const;
 type ResolverName = keyof typeof RESOLVERS;
 
-const NXDOMAIN = 3;
+const _NXDOMAIN = 3;
 const TYPE = { NS: 2, TXT: 16 } as const;
 
 type Fetcher = (url: string, init?: RequestInit) => Promise<Response>;

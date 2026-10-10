@@ -28,10 +28,7 @@ export const pipelineAdminRoutes = new Hono<AppEnv>()
       ...STAGES[stage],
       requestedBy: actorLabel(currentActor(c)),
     });
-    if (!result.ok) {
-      if (result.error === "unknown_store") throw new AppError(404, result.error, `Tienda desconocida: ${body.store}`);
-      throw new AppError(409, result.error, "El pipeline está apagado en ingest");
-    }
+    if (!result.ok) throw new AppError(404, result.error, `Tienda desconocida: ${body.store}`);
     return c.json({ enqueued: result.enqueued }, 202);
   })
   .get("/pipeline/shadow", async (c) => {

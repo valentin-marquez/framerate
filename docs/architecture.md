@@ -200,53 +200,40 @@ mismo. Oferta + punto de precio se escriben en un `batch` (atómico en D1).
 
 ## 5. Matching (huella de producto)
 
-Se compara la huella de la oferta con candidatos (mismo identificador, misma
-clave de atributos, o misma marca + texto similar por FTS):
+El matching es **IA primero** (#153, #156): ninguna oferta se vincula por regex. Flujo por oferta:
 
-1. **Vetos duros** → nunca es el mismo producto: distinta categoría, distinta
-   marca, o un atributo discriminante distinto (VRAM, capacidad, modelo de CPU,
-   chipset, OC vs no-OC, color, modelo de placa con su sufijo, DDR4/DDR5, línea,
-   RGB, variante V2/EVO/MAX/II, revisión de fuente, formato y generación de SSD…).
-   Un veto gana incluso a un MPN igual. Dos semánticas: un campo "siempre presente"
-   tiene valor por defecto y veta aunque una tienda no lo escriba (sin color =
-   negra en GPU, fuente, RAM y placa; sin variante = la base); el resto veta sólo
-   si ambos lados lo dicen. En GPU y placas, el ensamblador del título gana a la
-   marca declarada (las tiendas declaran AMD o NVIDIA, o se equivocan de marca).
-2. **Identificador** (MPN o GTIN normalizados iguales) → vínculo automático. Si la
-   tienda no publica el código en su campo, se toma del título (`(…)` final,
-   `[…]`, `P/N`) o del `P/N:` de la ficha Woo, sólo en formas explícitas
-   (`codesInTitle`).
-3. **Clave de atributos** (`gpu|asus|rtx 4070 super|12|dual|true`):
-   - En categorías donde la clave identifica un único producto (CPU) → vínculo.
-   - En el resto, vínculo sólo si además la similitud de título es alta
-     (score ≥ 0.85), no hay MPN en conflicto ni códigos de modelo en conflicto
-     (mismo prefijo, distinto número: `nv1`/`nv3`, `cl36`/`cl28`), y el producto
-     no tiene ya otra oferta de la misma tienda (una tienda no publica dos veces
-     lo mismo: si coinciden los atributos es una variante, y va a revisión).
-4. **Zona gris** (score ≥ 0.6) → se crea producto propio (la oferta es visible
-   de inmediato) + `match_review` proponiendo el candidato. Aceptar mueve la
-   oferta y sus identificadores al candidato.
-5. **Cada crawl vuelve a decidir cada oferta vinculada.** La huella del producto
-   se recalcula desde su nombre con los extractores de hoy (y se corrige la fila si
-   quedó vieja). El vínculo sigue sólo si `decide` lo haría hoy, sin contar los
-   identificadores que aportó esa misma oferta y contando las más antiguas de la
-   misma tienda. Si no, se **desvincula** (auditado), el producto pierde los
-   identificadores que ninguna otra de sus ofertas publica, y la oferta se decide de
-   nuevo. Excepciones: las decisiones manuales no se tocan, la fundadora sólo se va
-   por veto, y una oferta cuya categoría no es la de su producto (la tienda la
-   publica en dos) se deja y se registra (`matching.category_mismatch`).
-6. Una revisión pendiente que ya no tiene nada que decidir (el par hoy se veta, o
-   la oferta ya está en el candidato) se cierra sola. Aceptar una revisión que el
-   matching veta responde 409.
+1. **Ingest** guarda la oferta oculta (`visible = 0`, `norm_status = pending`) y la encola en `framerate-normalize`
+   cada vez que nace o cambia su `norm_hash`. La corrida no decide vínculos.
+2. **Normalize** (Haiku) devuelve la identidad anclada al texto (`listing_identity`: marca, nombre canónico,
+   atributos por categoría, MPN), más `same_as` (el candidato del catálogo que es el mismo producto, entre los que
+   se le mostraron: dueño del MPN/GTIN, producto actual y FTS) y `duplicate_candidates` (fichas del catálogo que son
+   el mismo producto entre sí; se fusionan ahí mismo salvo MPNs disjuntos). Encola el vínculo en `framerate-link`.
+3. **Match** (`matchListing`) decide con la huella que sale de la identidad (`fingerprintFromIdentity`):
+   - **Vetos estructurales** ganan a todo: categoría, marca, capacidad, VRAM, color dicho, V2/CSM, códigos de
+     modelo en conflicto (`nv1`/`nv3`), MPN/GTIN en conflicto y `forbid` manual. Los campos de texto libre (línea
+     de GPU, serie de SSD, modelo de cooler…) no vetan: producen `textMismatch`, que sólo bloquea el vínculo
+     automático por atributos.
+   - **`same_as`** de Haiku es el vínculo principal si no hay veto.
+   - Sin `same_as`: identificador igual → vínculo; clave de atributos igual sin `textMismatch` → vínculo, salvo que
+     Haiku ya hubiera visto y descartado ese candidato (va a revisión); zona gris → producto propio + `match_review`.
+   - Una oferta ya vinculada se mueve sólo si `same_as` apunta a otro producto sin veto, o si aparece un veto.
+4. La oferta se **publica** al quedar vinculada. Lo que Haiku no procesó en 24 h lo reencola el Cron de ingest
+   (`pending`/`normalized` viejos); lo `failed` no es un componente y no vuelve. Un vínculo con revisión pendiente
+   de más de 24 h se publica igual (`publishOverdue`).
+5. El **detector** (`apps/match/src/detect.ts`) agrupa productos con la misma clave de atributos y propone
+   revisiones de fusión con la huella de las identidades, sin `textMismatch`.
+
+La huella guardada en `products` es la verdad: `loadCandidates` no la recalcula desde el nombre (sólo deriva una
+de lectura si el producto no tiene atributos). Los extractores por regex de `attributes.ts` y `buildFingerprint`
+quedan como ayuda: compuertas de cuarentena en `normalizeOffer` (`REQUIRED_ATTRIBUTES`), anclaje de la identidad al
+texto y huella de una oferta sin identidad. Vocabulario canónico en `packages/matching/src/domain/vocabulary.ts`.
 
 Principio: **preferimos duplicados antes que fusiones erróneas.** Un duplicado
-se arregla revisando; una fusión errónea mezcla precios en silencio.
+se arregla revisando (o lo fusiona Haiku al ver los dos); una fusión errónea mezcla precios en silencio.
 
-Perfiles por categoría en `packages/matching/src/domain/attributes.ts`. Mejorar el matching
-de una categoría = mejorar su extractor + agregar casos al test. **Se mide** con el set
-etiquetado de pares reales (`apps/ingest/src/features/ingestion/domain/match-gold.json`): su
-test falla si suben las fusiones erróneas o baja el recall, y sus topes sólo se mueven en la
-buena dirección en el mismo commit que mejora el matching.
+**Se mide** con el gold de identidades reales (`apps/match/test/gold-identity.test.ts`): falla si suben las
+fusiones erróneas o baja el recall, y sus topes sólo se mueven en la buena dirección en el mismo commit que mejora
+el matching.
 
 **Hash de imagen (pendiente, ADR-4):** se agregará como evidencia *positiva*
 dentro de la zona gris (nunca decide sola, porque variantes distintas comparten
@@ -289,8 +276,8 @@ Reglas (ya decididas):
 2. **Fusiones reversibles.** Hoy "fusionar" es mover ofertas de un producto a otro (`accept` mueve la oferta y sus
    identificadores), así que revertir es devolverlas. `match_decisions` guarda el `previousProductId`, pero falta
    la operación "separar" en el admin.
-3. ~~Recalcular huellas.~~ Resuelto: cada crawl recalcula la huella del producto desde su nombre y vuelve a decidir
-   los vínculos (punto 5 de arriba).
+3. ~~Recalcular huellas.~~ Resuelto al revés: la huella guardada manda y se corrige desde la identidad de Haiku
+   (`recanonize-products.ts`), nunca desde el nombre.
 4. **Umbrales por categoría.** `THRESHOLDS` es global; el score configurable probablemente necesite perfiles por
    categoría (junto con `PROFILES` en `attributes.ts`).
 5. **Procedencia de los identificadores.** `product_identifiers` no dice qué oferta aportó cada código; se deduce
@@ -307,8 +294,7 @@ Reglas (ya decididas):
 2. Agregar la entrada en `apps/ingest/src/features/ingestion/stores/registry.ts`.
 3. Guardar respuestas reales como fixture y testear el mapeo.
 4. Evaluar en local: `bun run --cwd apps/ingest dry-run <tienda>` (crawl real + `normalize`: cobertura de MPN,
-   precios, marcas desconocidas y cuarentena) y `bun run --cwd apps/ingest match-report [tiendas…]` (pipeline
-   completo contra una D1 en memoria: productos multi-tienda y fusiones sospechosas; con caché HTTP en disco).
+   precios, marcas desconocidas y cuarentena).
 5. Verificar en producción: `POST /v1/admin/crawls {"store":"x","category":"gpu"}`,
    luego revisar `GET /v1/admin/crawls` y `GET /v1/admin/quarantine`.
 
