@@ -49,6 +49,25 @@ describe("relayFetch", () => {
     }
   });
 
+  test("un 429 sin Retry-After espera 15 s, 30 s… (límite por minuto); con Retry-After, lo que pide", async () => {
+    const waits: number[] = [];
+    let n = 0;
+    const http = createHttpClient({
+      minIntervalMs: 0,
+      sleep: async (ms) => {
+        waits.push(ms);
+      },
+      fetch: async () =>
+        n++ < 2
+          ? new Response("", { status: 429 })
+          : n === 3
+            ? new Response("", { status: 429, headers: { "retry-after": "7" } })
+            : new Response("ok"),
+    });
+    expect((await http.get("https://tienda.cl/a")).text).toBe("ok");
+    expect(waits).toEqual([15_000, 30_000, 7_000]);
+  });
+
   test("un 429 de la tienda a través del relay se reintenta por el relay", async () => {
     calls.length = 0;
     let n = 0;

@@ -92,7 +92,14 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
         const transient = res.status === 429 || res.status >= 500;
         if (!transient || attempt >= retries) throw new HttpError(url, res.status);
         const retryAfter = Number(res.headers.get("retry-after"));
-        await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : backoff(attempt));
+        // Un 429 sin Retry-After suele venir de un límite por minuto (Winpy): reintentar a los 1-4 s vuelve a chocar.
+        const wait =
+          Number.isFinite(retryAfter) && retryAfter > 0
+            ? retryAfter * 1000
+            : res.status === 429
+              ? RATE_LIMIT_WAIT_MS * (attempt + 1)
+              : backoff(attempt);
+        await sleep(wait);
       } catch (error) {
         if (error instanceof HttpError || attempt >= retries) throw error;
         await sleep(backoff(attempt));
@@ -117,4 +124,5 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
   };
 }
 
+const RATE_LIMIT_WAIT_MS = 15_000;
 const backoff = (attempt: number) => 1000 * 2 ** attempt + Math.floor(Math.random() * 250);
