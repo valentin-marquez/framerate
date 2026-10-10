@@ -62,6 +62,14 @@ export function listingUrls(html: string): string[] {
 const prop = (html: string, name: string) =>
   decodeEntities(html.match(new RegExp(`itemprop="${name}"[^>]*>([^<]*)<`))?.[1] ?? "").trim();
 
+// El nombre puede traer una parte en negrita (`<h1 itemprop="name"><b>…</b> (8GB GDDR6)</h1>`): se lee el h1 entero.
+const productName = (html: string) =>
+  decodeEntities(
+    (html.match(/<h1[^>]*itemprop="name"[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " "),
+  ).trim();
+
 export function toRawOffer(html: string, url: string, category: Category): RawOffer {
   const sku = prop(html, "sku");
   const gtinRaw = prop(html, "gtin");
@@ -75,7 +83,7 @@ export function toRawOffer(html: string, url: string, category: Category): RawOf
   return {
     externalId: sku || url.match(/\/venta\/([^/]+)\//)?.[1] || "",
     url,
-    title: prop(html, "name"),
+    title: productName(html),
     category,
     priceCash: parseClp(prop(html, "lowPrice")) ?? 0,
     priceCard: parseClp(prop(html, "highPrice")),

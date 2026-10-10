@@ -67,6 +67,14 @@ describe("adaptador Winpy", () => {
     expect(offers[0]?.imageUrls[0]).toMatch(/^https:\/\/www\.winpy\.cl\/files\//);
   });
 
+  test("un nombre con una parte en negrita se lee entero", () => {
+    const html = `<h1 itemprop="name"><b>Tarjeta gráfica MSI GeForce RTX 5050 8G SHADOW 2X OC</b> (8GB GDDR6, PCIe 5.0)</h1>
+      <span class="sku" itemprop="sku">G5050-8S2C</span><span itemprop="offerCount" class="hidden">3</span>`;
+    const offer = toRawOffer(html, "https://www.winpy.cl/venta/x/", "gpu");
+    expect(offer.title).toBe("Tarjeta gráfica MSI GeForce RTX 5050 8G SHADOW 2X OC (8GB GDDR6, PCIe 5.0)");
+    expect(offer.externalId).toBe("G5050-8S2C");
+  });
+
   test("un kit lleva código propio: no es MPN; sin unidades, sin stock", () => {
     const html = fixture.product
       .replace('itemprop="sku">DUAL-RTX5050-O8G', 'itemprop="sku">KT037XCL23')

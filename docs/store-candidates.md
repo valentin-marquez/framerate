@@ -166,6 +166,19 @@ a las del 30-09 donde se contradicen.
 | Globalbox (24), MegaBytes (147) | Captcha de SiteGround desde el Worker (202) | Globalbox renderiza entera (1,3 MB, título real) | Pasa, pero son chicas y con SKU interno: no vale el costo |
 | Centrale, Tecno Shopping | 200 desde el Worker | No probado | Centrale sigue con su plugin anti-scraping; Tecno Shopping queda pausada por el captcha en las fichas |
 
+**Con el relay y su navegador (10-10-2026):**
+
+- **SP Digital: viable.** Desde la IP del relay la portada y las fichas responden 200 a `FramerateBot` (el bloqueo era
+  a las IPs de Cloudflare). La ficha es SSR y trae todo lo que hace falta sin navegador: "Part number: ZT-B50610H-10A /
+  Cod: NA0000097521", marca, "Pago con transferencia" y "Otros medios de pago" (y "Normal" tachado). El listado
+  (`/categories/componentes/`, `/categories/componentes/2/`…) necesita `render`: renderizado con `Bun.WebView` sale
+  en ~5 s con los links de producto y la paginación, y por defecto **sólo muestra productos con stock** ("Incluir
+  productos agotados" viene apagado), así que estar en el listado es la señal de stock. `robots.txt` pide
+  `Crawl-delay: 5`. Falta: las subcategorías por categoría de Framerate (la de componentes las mezcla) y un adaptador
+  "listado con `render`, ficha con `fetch`"; con ~5 s por ficha, unas 200 a 400 fichas por ciclo.
+- **Centrale: no se integra**, aunque el navegador ahora pase. Protege los precios a propósito con su plugin
+  `centrale-anti-scrape` y Turnstile: es una decisión de la tienda, no un bloqueo por origen, y no se evade.
+
 **Browser Rendering, en limpio:** funciona con el token de wrangler sin configurar nada, una página tarda 3 a 14 s, y
 pasa los captchas de SiteGround y la protección básica de Cloudflare, pero no un desafío gestionado (Nice One) ni un
 bloqueo por IP (TYT Gamer). Lo que justifica hoy es SP Digital. Antes de usarlo en producción: medir los minutos
