@@ -150,6 +150,25 @@ describe("relay", () => {
     expect(maximo).toBe(1);
   });
 
+  test("render: con la cola llena responde 503 sin lanzar otro navegador", async () => {
+    let lanzados = 0;
+    const render = async () => {
+      lanzados++;
+      await Bun.sleep(20);
+      return "<html></html>";
+    };
+    const pedir = () =>
+      handle(
+        new Request("http://relay.local/render?url=https://tienda.cl/", {
+          headers: { Authorization: `Bearer ${TOKEN}` },
+        }),
+        { token: TOKEN, render, hosts: ["tienda.cl"] },
+      );
+    const estados = (await Promise.all(Array.from({ length: 6 }, pedir))).map((r) => r.status).sort();
+    expect(estados.filter((s) => s === 503).length).toBe(2);
+    expect(lanzados).toBe(4);
+  });
+
   test("si la tienda no responde, 502 marcado como del relay", async () => {
     const res = await relay("/fetch?url=https://tienda.cl/", {}, async () => {
       throw new Error("ECONNREFUSED");

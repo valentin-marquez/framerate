@@ -36,9 +36,11 @@ export async function handle(req: Request, opts: RelayOptions): Promise<Response
   if (url.pathname === "/render") {
     if (req.method !== "GET") return new Response("method not allowed", { status: 405 });
     try {
-      const html = await serialized(() =>
+      const pending = serialized(() =>
         (opts.render ?? chromium)(target, req.headers.get("user-agent") ?? "FramerateBot/1.0"),
       );
+      if (!pending) return relayResponse("render queue full", 503);
+      const html = await pending;
       if (Buffer.byteLength(html) > MAX_BYTES) return relayResponse("response too large", 502);
       return new Response(html, { headers: { "x-relay": "1", "content-type": "text/html; charset=utf-8" } });
     } catch (error) {
@@ -104,9 +106,14 @@ async function readCapped(res: Response): Promise<Uint8Array | null> {
 }
 
 // ponytail: un navegador a la vez (cada uno pesa ~300 MB); cola por promesa, sube a un pool si las corridas esperan.
+// Con tope de espera: sin él, cualquiera con el token apila renders hasta tumbar el servidor.
+const MAX_WAITING = 4;
 let queue: Promise<unknown> = Promise.resolve();
-function serialized<T>(task: () => Promise<T>): Promise<T> {
-  const run = queue.then(task, task);
+let waiting = 0;
+function serialized<T>(task: () => Promise<T>): Promise<T> | null {
+  if (waiting >= MAX_WAITING) return null;
+  waiting++;
+  const run = queue.then(task, task).finally(() => waiting--);
   queue = run.catch(() => {});
   return run;
 }
@@ -128,10 +135,14 @@ const PAC_URL = `data:application/x-ns-proxy-autoconfig;base64,${Buffer.from(PAC
 
 /** Chromium headless sin librerías: `--dump-dom` imprime el DOM cuando la página termina de cargar. */
 export const chromium: Render = async (url, userAgent) => {
+  // `setsid`: Chromium deja procesos hijos con la salida abierta; matar el grupo entero es lo único que corta de verdad.
   const proc = Bun.spawn(
     [
+      "setsid",
       process.env.CHROMIUM_PATH ?? "chromium-browser",
       "--headless=new",
+      // El sandbox propio de Chromium no arranca con el seccomp por defecto de Docker (sale con 134) y habilitarlo pide
+      // abrir el seccomp del contenedor. La frontera es el contenedor: usuario sin root y red local bloqueada por el PAC.
       "--no-sandbox",
       "--disable-gpu",
       "--disable-dev-shm-usage",
@@ -145,10 +156,23 @@ export const chromium: Render = async (url, userAgent) => {
     ],
     { stdout: "pipe", stderr: "ignore" },
   );
-  const timer = setTimeout(() => proc.kill(), RENDER_MS);
+  const killGroup = () => {
+    try {
+      process.kill(-proc.pid, "SIGKILL");
+    } catch {}
+  };
+  let timer: Timer | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      killGroup();
+      reject(new Error("chromium: timeout"));
+    }, RENDER_MS);
+  });
   try {
-    const html = await new Response(proc.stdout).text();
-    const code = await proc.exited;
+    const bytes = await Promise.race([readCapped(new Response(proc.stdout)), timeout]);
+    if (!bytes) throw new Error("chromium: respuesta demasiado grande");
+    const code = await Promise.race([proc.exited, timeout]);
+    const html = new TextDecoder().decode(bytes);
     if (code !== 0 || !html.trim()) throw new Error(`chromium salió con ${code}`);
     // Sin red o bloqueada por el PAC, Chromium imprime su página de error en vez de fallar.
     const netError =
@@ -158,6 +182,7 @@ export const chromium: Render = async (url, userAgent) => {
     return html;
   } finally {
     clearTimeout(timer);
+    killGroup();
   }
 };
 
