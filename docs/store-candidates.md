@@ -93,6 +93,8 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | V Gamers | Mismo adaptador, SKU interno, `cashDiscount: 0.03` | Sin `case_fan` ("Ventiladores PC" mezcla AIO y disipadores) |
 | MyShop | Adaptador `myshop` (`POST /servicio/producto`), `minIntervalMs: 2500` | Dry run del 30-09-2026: ~650 ofertas válidas, MPN 81–99 % según categoría, los dos precios en todas. Su Cloudflare corta con 429 (error 1015) a ~1,3 requests/s sostenidas |
 | Sandos | Mismo adaptador, otro mapa de `idFamilia` | Dry run: ~260 válidas, MPN 65–100 %. `api: 1` = entrega diferida por distribuidor: se puede comprar, cuenta como stock |
+| Winpy | Adaptador `winpy` (listado HTML `?pagina=N`, 40 por página, y una ficha por producto con microdatos), `minIntervalMs: 3000` | SKU = MPN (los kits `KT…` no), GTIN, marca, `lowPrice` = transferencia, `highPrice` = otros medios, unidades en stock. Corta con 429 a ~1 petición/s. Sin HDD (categoría vacía) ni ventiladores |
+| Tekmachine | WooCommerce, `sku: "mpn"`, `cardFromRegular: true` | Dry run (10-10-2026): 160 GPU, 152 placas, 73 SSD, 59 fuentes, 56 CPU y 43 RAM válidas; MPN 90–100 %, marca del título 92–98 %, los dos precios. Mucho sin stock (5–47 %). Tarjetas profesionales (Instinct, RTX A) a cuarentena por chipset |
 
 Para evaluar una tienda antes de activarla: `bun run --cwd apps/ingest dry-run <tienda> [categoría]` (crawl real +
 `normalizeOffer`, sin base): reporta cobertura de MPN, GTIN, marca y precios, marcas fuera del diccionario y la

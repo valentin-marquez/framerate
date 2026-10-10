@@ -8,6 +8,7 @@ import { createPrestaShopAdapter } from "./prestashop";
 import { createTecnomasAdapter } from "./tecnomas";
 import { createTecnoSagaAdapter } from "./tecnosaga";
 import { createWeiAdapter } from "./wei";
+import { createWinpyAdapter } from "./winpy";
 import { createWooCommerceAdapter } from "./woocommerce";
 
 /**
@@ -583,6 +584,50 @@ export const STORES: readonly StoreDefinition[] = [
         psu: ["fuentes-de-poder"],
         case: ["gabinetes"],
         cpu_cooler: ["por-aire", "liquida"],
+      },
+    }),
+  },
+  {
+    slug: "winpy",
+    name: "Winpy",
+    url: "https://www.winpy.cl",
+    // Corta con 429 a ~1 petición/s; su robots.txt pedía Crawl-delay 10 en el sondeo del 30-09.
+    minIntervalMs: 3000,
+    adapter: createWinpyAdapter({
+      baseUrl: "https://www.winpy.cl",
+      // "tarjetas-de-video" y "tarjetas-graficas" son la misma lista. "disco-duro-pc-s" estaba vacía (oct. 2026).
+      categories: {
+        gpu: ["partes-y-piezas/tarjetas-graficas"],
+        cpu: ["partes-y-piezas/procesadores"],
+        motherboard: ["partes-y-piezas/placas-madres"],
+        ram: ["memorias/ram-computadores"],
+        psu: ["partes-y-piezas/fuente-de-poder"],
+        ssd: ["almacenamiento/disco-estado-solido"],
+        hdd: ["almacenamiento/disco-duro-pc-s"],
+        case: ["partes-y-piezas/gabinetes"],
+      },
+    }),
+  },
+  {
+    slug: "tekmachine",
+    name: "Tekmachine",
+    url: "https://tekmachine.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://tekmachine.cl",
+      // SKU = MPN ("GV-R906XGAMINGOCICE-16GD"). `price` = "Efectivo/Transferencia" y `regular_price` = "Tarjetas"
+      // (verificado en la ficha, oct. 2026; el recargo va de 5 a 7,5 %). Sin atributo de marca: sale del título.
+      sku: "mpn",
+      cardFromRegular: true,
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madres"],
+        ram: ["memorias"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["discos-solidos"],
+        cpu_cooler: ["cpu-cooling"],
+        case: ["gabinetes"],
+        case_fan: ["case-fan"],
       },
     }),
   },
