@@ -178,7 +178,9 @@ export async function loadCandidates(
       .select("product_id")
       .distinct()
       .where("product_id", "in", productIds)
-      .where("norm_status", "=", "linked")
+      // Una oferta que se vuelve a normalizar (versión nueva) pasa por `pending` y `normalized`: su producto sigue siendo
+      // de identidad, y recalcularlo desde el nombre con el regex lo reescribiría en otro formato ("b550mk").
+      .where("norm_status", "in", ["linked", "pending", "normalized"])
       .execute(),
   ]);
   const fromIdentity = new Set(linked.map((r) => r.product_id));
