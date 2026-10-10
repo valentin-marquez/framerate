@@ -507,7 +507,7 @@ export const STORES: readonly StoreDefinition[] = [
     name: "Tecno Shopping",
     url: "https://www.tecnoshopping.cl",
     minIntervalMs: 1000,
-    pausedReason: "el captcha de SiteGround bloquea la IP de los Workers (/.well-known/sgcaptcha), desde el 05-10-2026",
+    // El captcha de SiteGround bloquea la IP de los Workers (05-10-2026): sale por el relay (#154).
     egress: "relay",
     adapter: createWooCommerceAdapter({
       // Con www: el apex redirige sin conservar la ruta y la API terminaba en la home HTML.
