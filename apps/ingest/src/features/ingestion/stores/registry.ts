@@ -593,10 +593,10 @@ export const STORES: readonly StoreDefinition[] = [
     slug: "winpy",
     name: "Winpy",
     url: "https://www.winpy.cl",
-    // Desde una red residencial aguanta 1 petición cada 3 s; desde los Workers corta con 429 incluso sola y a 5 s
-    // (10-10-2026): limita por IP y las de Cloudflare son compartidas. Reactivar con un relay (#154) o navegador.
-    minIntervalMs: 5000,
-    pausedReason: "winpy.cl responde 429 a los Workers aunque vaya una categoría sola a 5 s (10-10-2026)",
+    // Limita por IP (Cloudflare, ~12 por minuto, 429 sin Retry-After) y las IPs de los Workers son compartidas: sale por
+    // el relay (#154). Desde ahí, a 5 s daba 429 en 3 de 30 fichas (10-10-2026); a 6 s los reintentos lo cubren.
+    egress: "relay",
+    minIntervalMs: 6000,
     adapter: createWinpyAdapter({
       baseUrl: "https://www.winpy.cl",
       // "tarjetas-de-video" y "tarjetas-graficas" son la misma lista. "disco-duro-pc-s" estaba vacía (oct. 2026).

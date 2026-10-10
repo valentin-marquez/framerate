@@ -11,8 +11,8 @@ alimentan la huella de producto. Base: un sondeo del 30-09-2026 sobre las tienda
 - SoloTodo lista 316 tiendas chilenas. **72 venden hoy componentes de PC**, y 56 tienen 15 o más ofertas: esas se
   evaluaron a fondo.
 - **25 son WooCommerce con la Store API abierta.** El adaptador que ya existe les sirve con sólo configurarlo.
-- **4 están fuera de alcance mientras sólo usemos `fetch`**, porque bloquean con Cloudflare: Winpy (la más
-  grande), SP Digital, CTMAN y Nice One. Para las que cortan por IP de datacenter (no por desafío anti-bot) está el
+- **4 estaban fuera de alcance mientras sólo usábamos `fetch`**, porque bloquean con Cloudflare: Winpy (la más
+  grande, integrada por el relay el 10-10-2026), SP Digital, CTMAN y Nice One. Para las que cortan por IP de datacenter (no por desafío anti-bot) está el
   relay del servidor propio (#154): `egress: "relay"` en el registro y su dominio en `apps/relay/src/hosts.ts`. Si además la página se arma con JavaScript (Centrale: precio tarjeta sólo en el HTML), el adaptador pide `render: true` y el relay la abre con Chromium.
 - Las multitiendas (Mercado Libre, Falabella, Paris, Ripley, Lider…) casi no venden componentes. No se integran.
 
@@ -94,7 +94,7 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | V Gamers | Mismo adaptador, SKU interno, `cashDiscount: 0.03` | Sin `case_fan` ("Ventiladores PC" mezcla AIO y disipadores) |
 | MyShop | Adaptador `myshop` (`POST /servicio/producto`), `minIntervalMs: 2500` | Dry run del 30-09-2026: ~650 ofertas válidas, MPN 81–99 % según categoría, los dos precios en todas. Su Cloudflare corta con 429 (error 1015) a ~1,3 requests/s sostenidas |
 | Sandos | Mismo adaptador, otro mapa de `idFamilia` | Dry run: ~260 válidas, MPN 65–100 %. `api: 1` = entrega diferida por distribuidor: se puede comprar, cuenta como stock |
-| Winpy (**pausada**) | Adaptador `winpy` (listado HTML `?pagina=N`, 40 por página, y una ficha por producto con microdatos), `minIntervalMs: 5000` | SKU = MPN (los kits `KT…` no), GTIN, marca, `lowPrice` = transferencia, `highPrice` = otros medios, unidades en stock. Desde esta red aguanta 1 petición cada 3 s; desde los Workers responde 429 aunque vaya una categoría sola a 5 s (10-10-2026): limita por IP y las de Cloudflare son compartidas. Reactivar con el relay de #154 o con navegador. Sin HDD (categoría vacía) ni ventiladores |
+| Winpy (por el relay) | Adaptador `winpy` (listado HTML `?pagina=N`, 40 por página, y una ficha por producto con microdatos), `egress: "relay"`, `minIntervalMs: 6000` | SKU = MPN (los kits `KT…` no), GTIN, marca, `lowPrice` = transferencia, `highPrice` = otros medios, unidades en stock. Desde esta red aguanta 1 petición cada 3 s; desde los Workers responde 429 aunque vaya una categoría sola a 5 s (10-10-2026): limita por IP y las de Cloudflare son compartidas. Por el relay (#154) desde el 10-10-2026: a 5 s daba 429 en 3 de 30 fichas, sin Retry-After (~12 por minuto); 434 fichas en ocho categorías. Sin ventiladores |
 | Tekmachine | WooCommerce, `sku: "mpn"`, `cardFromRegular: true` | Dry run (10-10-2026): 160 GPU, 152 placas, 73 SSD, 59 fuentes, 56 CPU y 43 RAM válidas; MPN 90–100 %, marca del título 92–98 %, los dos precios. Mucho sin stock (5–47 %). Tarjetas profesionales (Instinct, RTX A) a cuarentena por chipset |
 
 Para evaluar una tienda antes de activarla: `bun run --cwd apps/ingest dry-run <tienda> [categoría]` (crawl real +

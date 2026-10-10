@@ -31,7 +31,6 @@ describe("requestCrawls", () => {
     const { env, sent } = testEnv({} as D1Database);
     await requestCrawls(env, { requestedBy: "cron" });
     const paused = STORES.filter((s) => s.pausedReason).map((s) => s.slug);
-    expect(paused).toContain("winpy");
     expect(sent.some((m) => paused.includes(m.store))).toBe(false);
   });
 
