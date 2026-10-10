@@ -635,6 +635,221 @@ export const STORES: readonly StoreDefinition[] = [
       },
     }),
   },
+  {
+    slug: "centrale",
+    name: "Centrale",
+    url: "https://centrale.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://centrale.cl",
+      // SKU interno numérico ("65673"); marca en `brands`. Sin precio tarjeta: la ficha HTML tiene anti-scraping y
+      // Turnstile y no se lee; sólo la Store API (10-10-2026).
+      sku: "internal",
+      // Su robots.txt prohíbe `/*category=`: se pide el catálogo entero (~55 páginas) y se reparte por categoría.
+      wholeCatalog: true,
+      maxPages: 70,
+      categories: {
+        gpu: ["tarjetas-graficas-para-pc"],
+        cpu: ["procesadores-para-pc"],
+        motherboard: ["placas-madres-para-pc"],
+        ram: ["memorias-ram-para-pc"],
+        psu: ["fuentes-de-poder-para-pc"],
+        // Mezcla SSD, HDD (NAS y vigilancia), bahías y adaptadores: `normalize` los aparta.
+        ssd: ["almacenamiento-para-pc"],
+        hdd: ["almacenamiento-para-pc"],
+        cpu_cooler: ["coolers-de-aire", "refrigeracion-liquida"],
+        case: ["gabinetes-para-pc"],
+        case_fan: ["ventiladores"],
+      },
+    }),
+  },
+  {
+    slug: "playfactory",
+    name: "Play Factory",
+    url: "https://playfactory.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://playfactory.cl",
+      // SKU interno de 14 dígitos ("75250562420620"): ~1 de cada 10 pasa el checksum GTIN sin serlo. Un solo precio:
+      // Webpay = transferencia = `price`; `regular_price` es el "antes" (verificado en la ficha, 10-10-2026).
+      sku: "internal",
+      skuGtin: false,
+      categories: {
+        gpu: ["tarjeta-de-video"],
+        cpu: ["procesadores-componentes"],
+        motherboard: ["placa-madre"],
+        ram: ["memoria-ram"],
+        psu: ["fuente-de-poder"],
+        ssd: ["almacenamiento"],
+        // Mezcla disipadores, AIO y ventiladores: `normalize` los separa.
+        cpu_cooler: ["refrigeracion-y-ventilacion"],
+        case: ["gabinetes-pc"],
+        case_fan: ["refrigeracion-y-ventilacion"],
+      },
+    }),
+  },
+  {
+    slug: "cintegral",
+    name: "Cintegral",
+    url: "https://cintegral.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://cintegral.cl",
+      // SKU = prefijo interno + MPN ("ETVAS90YV0LD0-M0AA00"): no se recorta. Marca en `brands`. Un solo precio ("Todo
+      // Medio de Pago"); `regular_price` es el tachado (verificado en la ficha, 10-10-2026).
+      sku: "internal",
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placa-madre"],
+        ram: ["memorias-pc"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["ssd"],
+        hdd: ["discos-duros-pc"],
+        cpu_cooler: ["ventiladores-y-water-cooling"],
+        case: ["gabinetes"],
+        case_fan: ["ventiladores-y-water-cooling"],
+      },
+    }),
+  },
+  {
+    slug: "rstech",
+    name: "RS Tech",
+    url: "https://rstech.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://rstech.cl",
+      // SKU mixto: EAN (se usa como GTIN), códigos propios ("NWGVORW") y modelos sin guion ("TRSP850").
+      sku: "internal",
+      // `price` = transferencia; "Banchile Pagos" (tarjetas) +2 % (verificado en 3 fichas, 10-10-2026).
+      cardMarkup: 0.02,
+      // Sin las categorías "… PC Armado": piezas genéricas del configurador con precios de mejora.
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placa-madre-motherboard"],
+        ram: ["memoria-ram"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["disco-duro-y-almacenamiento"],
+        cpu_cooler: ["aire", "liquida", "bulk"],
+        case: ["gabinetes"],
+        case_fan: ["ventiladores"],
+      },
+    }),
+  },
+  {
+    slug: "megabytes",
+    name: "MegaBytes",
+    url: "https://www.megabytes.cl",
+    minIntervalMs: 1000,
+    // El captcha de SiteGround bloquea la IP de los Workers: sale por el relay (#154).
+    egress: "relay",
+    adapter: createWooCommerceAdapter({
+      // Con www: el apex redirige. Las fichas cuelgan de /sitio-nuevo/ (los permalink ya lo traen).
+      baseUrl: "https://www.megabytes.cl",
+      // SKU interno numérico ("11267"), sin marca en la API.
+      sku: "internal",
+      // `price` = transferencia; "Tarjetas de débito o crédito" +3,36 % (verificado en 3 fichas, 10-10-2026).
+      cardMarkup: 0.0336,
+      // Sin refrigeración ("ventilacion" mezcla AIO, ventiladores, pasta y pads) ni HDD (sólo trae SSD y pendrives).
+      categories: {
+        gpu: ["tarjetas-graficas"],
+        cpu: ["procesador"],
+        motherboard: ["placa-madre"],
+        ram: ["memorias"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["almacenamiento"],
+        case: ["gabinetes"],
+      },
+    }),
+  },
+  {
+    slug: "natcom",
+    name: "Natcom",
+    url: "https://natcomchile.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://natcomchile.cl",
+      // SKU interno; el MPN va en el título entre corchetes o paréntesis. `regular_price` = "antes" y la ficha no
+      // muestra precio tarjeta (verificado, 10-10-2026): sin recargo.
+      sku: "internal",
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placa-madre"],
+        ram: ["pc-escritorio"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["discos-ssd"],
+        hdd: ["discos-duros"],
+        // Su "Ventiladores" son disipadores de CPU.
+        cpu_cooler: ["refrigeracion"],
+        case: ["gabinetes"],
+      },
+    }),
+  },
+  {
+    slug: "cafedigital",
+    name: "Café Digital",
+    url: "https://cafedigital.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://cafedigital.cl",
+      // SKU = nombre de modelo ("MAG A1000GLS PCIE5"). El precio "Webpay" va escrito a mano en la descripción y no es
+      // uniforme (+2,5 %, +4,5 % y valores viejos, 10-10-2026): sin recargo.
+      sku: "internal",
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madre"],
+        ram: ["memorias-ram-pc"],
+        psu: ["fuentes-de-poder-certificadas"],
+        ssd: ["discos-ssd"],
+        hdd: ["disco-duro-pc-hdd"],
+        cpu_cooler: ["cooler-cpu", "refrigeracion-liquida"],
+        case: ["gabinetes-pc"],
+        case_fan: ["ventiladores"],
+      },
+    }),
+  },
+  {
+    slug: "trulu",
+    name: "Trulu Store",
+    url: "https://trulustore.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://trulustore.cl",
+      // SKU = prefijo + MPN ("GPU-PRIME-RTX5080-O16G"): no se recorta. Tarjeta +5 % (verificado en 5 fichas, 10-10-2026).
+      sku: "internal",
+      cardMarkup: 0.05,
+      // Las piezas de sus PC armados (`…-PC`, `…-PC-COSTO0`) salen como productos a precio de costo o 0, con ficha noindex.
+      skipSku: /-PC(-|$)/,
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madre"],
+        ram: ["ddr4", "ddr5"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["disco-ssd-2-5", "disco-ssd-m-2"],
+        cpu_cooler: ["refrigeracion-aire", "refrigeracion-liquida"],
+        case: ["gabinetes"],
+        case_fan: ["ventiladores"],
+      },
+    }),
+  },
+  {
+    slug: "budini",
+    name: "Electrónica Budini",
+    url: "https://electronicabudini.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://electronicabudini.cl",
+      // SKU vacío; el MPN va en el título entre corchetes o paréntesis. Sin precio tarjeta en la ficha (10-10-2026).
+      sku: "internal",
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madre"],
+        ram: ["memoria-ram-pc"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["discos-de-estado-solido-ssd"],
+        // Mezcla AIO y disipadores de aire.
+        cpu_cooler: ["ventiladores-y-sistemas-de-enfriamiento"],
+        case: ["gabinetes-gamer"],
+      },
+    }),
+  },
 ];
 
 export function findStore(slug: string): StoreDefinition | undefined {

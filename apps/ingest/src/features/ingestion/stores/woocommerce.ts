@@ -35,6 +35,14 @@ export interface WooCommerceConfig {
    * "Tarjetas" y "Efectivo/Transferencia"). Se usa sólo si es mayor que `price`.
    */
   cardFromRegular?: boolean;
+  /** `false`: el SKU nunca es GTIN aunque pase el dígito verificador (Play Factory usa números internos de 14
+   * dígitos y ~1 de cada 10 lo pasa por azar). */
+  skuGtin?: false;
+  /** Pedir el catálogo entero sin `?category=` y repartir por `categories[].slug`: para tiendas cuyo robots.txt
+   * prohíbe `/*category=` (Centrale). Cada corrida recorre todas las páginas. */
+  wholeCatalog?: boolean;
+  /** SKU de productos que no son ofertas reales (Trulu publica las piezas de sus PC armados, `…-PC`, a precio de costo). */
+  skipSku?: RegExp;
   perPage?: number;
   /** Tope de páginas por categoría (protección contra loops infinitos). */
   maxPages?: number;
@@ -57,6 +65,7 @@ const WcProductSchema = z.object({
     currency_minor_unit: z.number().int().min(0).max(4).default(0),
   }),
   images: z.array(z.object({ src: z.url() })).default([]),
+  categories: z.array(z.object({ slug: z.string() })).optional(),
   brands: z.array(z.object({ name: z.string() })).optional(),
   attributes: z
     .array(
@@ -77,9 +86,11 @@ export function createWooCommerceAdapter(config: WooCommerceConfig): StoreAdapte
   return {
     categories: config.categories,
     async *crawlCategory(category: Category, ctx: CrawlContext) {
-      for (const slug of config.categories[category] ?? []) {
+      const slugs = config.categories[category] ?? [];
+      for (const slug of config.wholeCatalog ? ["*"] : slugs) {
         for (let page = 1; page <= maxPages; page++) {
-          const url = `${config.baseUrl}/wp-json/wc/store/v1/products?category=${encodeURIComponent(slug)}&per_page=${perPage}&page=${page}`;
+          const filter = slug === "*" ? "" : `category=${encodeURIComponent(slug)}&`;
+          const url = `${config.baseUrl}/wp-json/wc/store/v1/products?${filter}per_page=${perPage}&page=${page}`;
           const res = await ctx.http.get(url);
           await ctx.snapshot(`${slug}/page-${page}.json`, res.text);
 
@@ -87,6 +98,8 @@ export function createWooCommerceAdapter(config: WooCommerceConfig): StoreAdapte
           ctx.log.info("woocommerce.page", { slug, page, items: items.length });
           for (const item of items) {
             const product = WcProductSchema.safeParse(item);
+            if (slug === "*" && !product.data?.categories?.some((c) => slugs.includes(c.slug))) continue;
+            if (config.skipSku && product.data && config.skipSku.test(product.data.sku)) continue;
             // Un item mal formado no debe tumbar la página: se entrega crudo y
             // la validación de `normalize` lo manda a cuarentena con su motivo.
             yield product.success ? toRawOffer(product.data, category, config) : (item as RawOffer);
@@ -113,7 +126,7 @@ const PART_NUMBER = /\b(?:p\s*\/\s*n|part\s*number|n[uú]mero de parte)\s*[:#]?\
 export function toRawOffer(
   p: WcProduct,
   category: Category,
-  config: Pick<WooCommerceConfig, "sku" | "cardMarkup" | "cashDiscount" | "cardFromRegular">,
+  config: Pick<WooCommerceConfig, "sku" | "cardMarkup" | "cashDiscount" | "cardFromRegular" | "skuGtin">,
 ): RawOffer {
   const divisor = 10 ** p.prices.currency_minor_unit;
   const toClp = (v: string | undefined) => {
@@ -131,7 +144,7 @@ export function toRawOffer(
         ? Math.round(price * (1 + config.cardMarkup))
         : null;
   const sku = p.sku.trim();
-  const gtin = normalizeGtin(sku) ? sku : null;
+  const gtin = config.skuGtin !== false && normalizeGtin(sku) ? sku : null;
   const skuMpn = !gtin && config.sku === "mpn" && sku ? sku : null;
   const skuIsMpn = normalizeMpn(skuMpn) !== null;
   const description = stripHtml(p.description);
