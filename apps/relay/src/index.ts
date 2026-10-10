@@ -54,8 +54,8 @@ export async function handle(req: Request, opts: RelayOptions): Promise<Response
         current = next;
         continue;
       }
-      const bytes = await upstream.arrayBuffer();
-      if (bytes.byteLength > MAX_BYTES) return relayResponse("response too large", 502);
+      const bytes = await readCapped(upstream);
+      if (!bytes) return relayResponse("response too large", 502);
       const back = new Headers({ "x-relay": "1" });
       for (const name of BACK) {
         const value = upstream.headers.get(name);
@@ -66,6 +66,25 @@ export async function handle(req: Request, opts: RelayOptions): Promise<Response
   } catch (error) {
     return relayResponse(`upstream: ${error instanceof Error ? error.message : String(error)}`, 502);
   }
+}
+
+/** Lee el cuerpo cortando apenas pasa el tope, sin cargar entero uno enorme en memoria. */
+async function readCapped(res: Response): Promise<Uint8Array | null> {
+  if (Number(res.headers.get("content-length") ?? 0) > MAX_BYTES) {
+    await res.body?.cancel();
+    return null;
+  }
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for await (const chunk of res.body ?? []) {
+    size += chunk.byteLength;
+    if (size > MAX_BYTES) {
+      await res.body?.cancel();
+      return null;
+    }
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
 }
 
 const relayResponse = (text: string, status: number) =>
@@ -80,6 +99,8 @@ function allowed(raw: string | null, hosts: readonly string[]): string | null {
     return null;
   }
   if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  // Sólo el puerto por defecto: con otro, un dominio permitido sirve para tocar otros servicios del mismo host.
+  if (url.port !== "" || url.username || url.password) return null;
   return hosts.includes(url.hostname) ? url.href : null;
 }
 

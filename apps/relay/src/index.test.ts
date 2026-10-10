@@ -34,6 +34,9 @@ describe("relay", () => {
     expect((await relay("/fetch?url=https://otra.cl/")).status).toBe(403);
     expect((await relay("/fetch?url=nada")).status).toBe(403);
     expect((await relay("/fetch")).status).toBe(403);
+    expect((await relay("/fetch?url=https://tienda.cl:8443/")).status).toBe(403);
+    expect((await relay("/fetch?url=http://tienda.cl:22/")).status).toBe(403);
+    expect((await relay("/fetch?url=https://user:pw@tienda.cl/")).status).toBe(403);
   });
 
   test("GET permitido: pasa estado, content-type y cuerpo, con el user agent del Worker", async () => {
@@ -79,6 +82,18 @@ describe("relay", () => {
     expect(await (await relay("/fetch?url=https://tienda.cl/a", {}, hops)).text()).toBe("fin");
     expect((await relay("/fetch?url=https://tienda.cl/fuera", {}, hops)).status).toBe(403);
     expect(calls.map((c) => c.url)).toEqual(["https://tienda.cl/a", "https://tienda.cl/b", "https://tienda.cl/fuera"]);
+  });
+
+  test("respuesta más grande que el tope → 502, aunque no declare content-length", async () => {
+    const big = new ReadableStream({
+      pull(c) {
+        c.enqueue(new Uint8Array(1024 * 1024));
+      },
+    });
+    const res = await relay("/fetch?url=https://tienda.cl/", {}, async () => new Response(big));
+    expect(res.status).toBe(502);
+    const declared = await relay("/fetch?url=https://tienda.cl/", {}, upstream(200, { "content-length": "999999999" }));
+    expect(declared.status).toBe(502);
   });
 
   test("si la tienda no responde, 502 marcado como del relay", async () => {
