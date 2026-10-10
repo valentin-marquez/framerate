@@ -134,6 +134,41 @@ Browser Rendering.
 **Por verificar desde otra red:** Gestion y Equipos y CSByte (Shopify: si `/products.json` responde, son
 fáciles), AllTec, Tekmachine y TYT Gamer.
 
+## Sondeo del 10-10-2026: lo que queda por `fetch` y qué necesita navegador
+
+Se probó cada candidata desde esta red y **desde un Worker** (`apps/ingest/scripts/probe-stores.ts` con
+`wrangler dev --remote`: misma IP y huella TLS que producción), y las bloqueadas con la API REST de Browser Rendering
+(`POST /accounts/<id>/browser-rendering/content`, con el token de `wrangler auth token`). Las notas de abajo reemplazan
+a las del 30-09 donde se contradicen.
+
+### Por `fetch`, en este orden
+
+| # | Tienda | Qué hay | Trabajo |
+|---|---|---|---|
+| 1 | **Winpy** (602 ofertas en SoloTodo, la más grande) | **Ya no bloquea**: 200 desde el Worker. Magento con listado SSR: `/partes-y-piezas/<cat>/?pagina=N`, 40 por página, termina cuando viene vacía (`tarjetas-graficas`, `procesadores`, `placas-madres`, `fuente-de-poder`, `gabinetes`, `memorias/ram-computadores`, `almacenamiento/disco-estado-solido`; `disco-duro-pc-s` está vacía). La ficha trae microdatos: `sku` = MPN (`DUAL-RTX5050-O8G`), `gtin`, `manufacturer`, `lowPrice` = "Transferencia o Depósito", `highPrice` = "Otros medios de pago", "Disponibilidad: N unidades en stock". El MPN va también en el `<title>` después de `\|`. Los kits llevan código interno (`KT037XCL23`). robots.txt: `Disallow: /*filtro=*` | Adaptador nuevo: listado HTML + una ficha por producto (~300 peticiones por ciclo) |
+| 2 | **Tekmachine** (31 en SoloTodo, pero 109 GPU, 126 placas, 55 CPU, 52 SSD, 50 fuentes, 38 gabinetes en su Store API) | WooCommerce abierta desde el Worker. SKU = MPN (`GV-R906XGAMINGOCICE-16GD`, `G506T-16V2CBP`). **`price` = "Efectivo/Transferencia" y `regular_price` = "Tarjetas"** (verificado en la ficha: 699.990 / 752.677; el recargo no es fijo: 5 a 7,5 %). Sin atributo de marca: sale del título | Configuración Woo más una opción nueva, `cardFromRegular`, que hoy el adaptador no tiene |
+| 3 | AllTec (147, MPN 147/147 según SoloTodo) | PrestaShop 1.6, 200 desde el Worker. Sin JSON (sondeo del 30-09) | Parser HTML; sin medir todavía |
+| 4 | KDTEC (303) | La Store API respondió a dos peticiones y la tercera (categorías) se colgó 60 s, como el 30-09 | Inestable; dejar para el final |
+| 5 | CSByte (22) | Shopify con `/products.json` abierto desde el Worker: 11 RAM y 24 de almacenamiento, el resto notebooks y periféricos | Adaptador Shopify chico; poco volumen |
+| | Gestión y Equipos | Shopify abierto, pero vende CCTV y citofonía: no sirve | No integrar |
+| | CTMAN | `www.ctman.cl/products.json` responde, pero sólo 24 accesorios; el catálogo de componentes no está ahí | No integrar por ahora |
+
+### Las que necesitan navegador, y qué pasó con Browser Rendering
+
+| Tienda | Por `fetch` | Con Browser Rendering (REST `/content`) | Veredicto |
+|---|---|---|---|
+| **SP Digital** (213) | Las **fichas son SSR** (Gatsby): `h1`, "Part number: ZT-B50700H-10A / Cod: NA0000099995", marca, transferencia 949.990, "Otros medios" 992.745 y "Normal" 1.499.990 (antes), 200 desde el Worker. Pero el **listado de categoría es sólo JS** (lo arma un BFF de Saleor, `bff.spdigital.cl`, que no respondió a nada sin la app) y el **stock también** ("Stock online" se rellena en el cliente). El sitemap trae 66.174 URL, sin categoría | La categoría renderizada sale en 14 s con sus productos y precios (la subcategoría NVIDIA probada tenía 6) | Viable sólo con navegador para listado y stock: una render por categoría y ciclo, y las fichas por `fetch`. Segunda prioridad |
+| TYT Gamer (28) | 403 desde el Worker (desde esta red, 200) | 1.325 bytes: también bloqueada | Bloquea los rangos de Cloudflare. Sólo con #154 (relay) |
+| Nice One (266) | 403 "Just a moment" en las dos redes | Sigue en el desafío aunque se espere 12 s | No pasa el desafío gestionado de Cloudflare. Sólo con #154 |
+| Globalbox (24), MegaBytes (147) | Captcha de SiteGround desde el Worker (202) | Globalbox renderiza entera (1,3 MB, título real) | Pasa, pero son chicas y con SKU interno: no vale el costo |
+| Centrale, Tecno Shopping | 200 desde el Worker | No probado | Centrale sigue con su plugin anti-scraping; Tecno Shopping queda pausada por el captcha en las fichas |
+
+**Browser Rendering, en limpio:** funciona con el token de wrangler sin configurar nada, una página tarda 3 a 14 s, y
+pasa los captchas de SiteGround y la protección básica de Cloudflare, pero no un desafío gestionado (Nice One) ni un
+bloqueo por IP (TYT Gamer). Lo que justifica hoy es SP Digital. Antes de usarlo en producción: medir los minutos
+incluidos en el plan y el costo por hora de navegador, y decidir si va como binding en `framerate-ingest` (puppeteer)
+o por REST desde el adaptador.
+
 ## Anexo: las 56 tiendas evaluadas
 
 Notas de 1 a 5. **Fac.** = facilidad de scraping (5 = API JSON sin bloqueo con todos los datos; 3 = HTML del
