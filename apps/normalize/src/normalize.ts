@@ -9,7 +9,7 @@ import {
 } from "@framerate/contracts";
 import type { AiUsageTable, Db } from "@framerate/database";
 import type { Logger } from "@framerate/kit";
-import { catalogCandidates, listingIdentityFrom } from "@framerate/matching";
+import { catalogCandidates, listingIdentityFrom, mergeProductPair } from "@framerate/matching";
 import {
   type Create,
   NORMALIZE_MODEL,
@@ -48,6 +48,7 @@ const USD_PER_OFFER = 0.002;
 const HOUR_S = 3600;
 const RATE_LIMIT_DELAYS_S = [60, 300, 900];
 
+const AI_ACTOR = `ai:${NORMALIZE_MODEL}`;
 const isCategory = (c: string): c is Category => (CATEGORIES as readonly string[]).includes(c);
 const wait = (reason: string, delaySeconds: number): Outcome => ({ status: "wait", reason, delaySeconds });
 
@@ -69,6 +70,7 @@ export async function normalizeListing(
     .innerJoin("stores as s", "s.id", "l.store_id")
     .select([
       "l.title",
+      "l.product_id",
       "l.raw_title",
       "l.brand",
       "l.mpn",
@@ -164,7 +166,13 @@ export async function normalizeListing(
     error,
   });
 
-  const catalog = await catalogCandidates(db, { category, title, mpn: listing.mpn });
+  const catalog = await catalogCandidates(db, {
+    category,
+    title,
+    mpn: listing.mpn,
+    gtin: listing.gtin,
+    productId: listing.product_id,
+  });
   const input = {
     category,
     title,
@@ -251,7 +259,11 @@ export async function normalizeListing(
     });
   }
   // Sólo vale un id que se le mostró: uno inventado o de otra categoría no llega a match.
-  const sameAs = catalog.find((c) => String(c.id) === output.same_as)?.id ?? null;
+  const shown = (id: string) => catalog.find((c) => String(c.id) === id)?.id ?? null;
+  const sameAs = shown(output.same_as);
+  const duplicates = sameAs
+    ? [...new Set(output.duplicate_candidates.map(shown))].filter((id): id is number => id !== null && id !== sameAs)
+    : [];
   log.info("normalize.anchored", {
     listingId,
     dropped: anchored.dropped,
@@ -294,6 +306,7 @@ export async function normalizeListing(
       dropped: anchored.dropped,
       from_mpn: anchored.fromMpn,
       same_as: output.same_as,
+      duplicate_candidates: output.duplicate_candidates,
       candidates: catalog.map((c) => c.id),
     }),
     specs: JSON.stringify(specs),
@@ -308,6 +321,12 @@ export async function normalizeListing(
       .onConflict((oc) => oc.columns(["listing_id", "version"]).doUpdateSet(row)),
     db.query.updateTable("listings").set({ norm_status: "normalized", norm_at: at }).where("id", "=", listingId),
   ]);
+  // Haiku vio dos fichas del mismo SKU entre los candidatos: se fusionan en la que eligió, salvo que un dato
+  // estructural, un `forbid` o un rechazo previo lo frenen (`mergeBlocker`). Queda auditado en `match_decisions`.
+  for (const duplicate of duplicates) {
+    const merged = await mergeProductPair(db, { a: sameAs as number, b: duplicate, decidedBy: AI_ACTOR, now: at });
+    log.info("normalize.duplicate", { listingId, sameAs, duplicate, ...merged });
+  }
   // Si esto falla, el reintento encuentra la identidad con el mismo hash y vuelve a encolar el vínculo sin pagar.
   await link.send({ listingId, version: NORMALIZER_VERSION, reason });
   return { status: "normalized" };

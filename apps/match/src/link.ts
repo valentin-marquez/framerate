@@ -21,8 +21,9 @@ import {
  * dos ofertas del mismo producto nuevo en paralelo crearían dos productos.
  *  - shadow: qué haría `decide` con la huella de la identidad, contra el vínculo actual, en `match_shadow`.
  *  - live:   vincula de verdad; el producto nuevo toma el nombre canónico y se publica si no queda revisión.
- * `backfill` sólo escribe sombra en cualquier modo; `relink` firma `relink:v1`. Con `sameAs` (`LINK_SAME_AS=live`, #157)
- * el producto que el preprocesador reconoció entre los candidatos del catálogo vincula cuando la decisión normal no.
+ * `backfill` sólo escribe sombra en cualquier modo; `relink` firma `relink:v1`. El producto que el preprocesador
+ * reconoció entre los candidatos del catálogo (`same_as`, #157) es la decisión principal; lo que vio y no eligió no
+ * se vincula solo por atributos.
  */
 export type LinkMode = "off" | "shadow" | "live";
 
@@ -39,7 +40,6 @@ export async function linkListing(
   mode: LinkMode,
   now: Date,
   log: Logger,
-  opts: { sameAs?: boolean } = {},
 ): Promise<LinkResult> {
   if (mode === "off") return "off";
   const listing = await db.query
@@ -51,7 +51,7 @@ export async function linkListing(
   if (!listing || listing.is_active === 0) return "skipped";
   const row = await db.query
     .selectFrom("listing_identity")
-    .select(["category", "brand", "name", "mpn", "confidence", "identity", "same_as"])
+    .select(["category", "brand", "name", "mpn", "confidence", "identity", "same_as", "identity_raw"])
     .where("listing_id", "=", listing.id)
     .where("version", "=", message.version)
     .executeTakeFirst();
@@ -107,7 +107,8 @@ export async function linkListing(
     canonicalName: identity.name,
     decidedBy,
     now: at,
-    sameAs: opts.sameAs ? row.same_as : null,
+    sameAs: row.same_as,
+    shownCandidates: parseJson<{ candidates?: number[] }>(row.identity_raw, {}).candidates ?? [],
   });
   const merge = await mergeSplitIdentity(db, { listingId: listing.id, fingerprint: fp, decidedBy, now: at });
   await db.query.updateTable("listings").set({ norm_status: "linked" }).where("id", "=", listing.id).execute();

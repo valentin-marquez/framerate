@@ -388,6 +388,23 @@ describe("normalizeListing", () => {
     expect(row?.same_as).toBeNull();
   });
 
+  test("los candidatos que Haiku marca como duplicados se fusionan en el que eligió", async () => {
+    const beast = await seedProduct("Kingston Fury Beast 16GB DDR5 5600 CL36", "KF556C36BBE16");
+    const dup = await seedProduct("Kingston FURY Beast DDR5 16GB 5600MHz CL36");
+    const other = await seedProduct("Kingston Fury Renegade 32GB DDR5 6400");
+    const h = fakeHaiku(
+      ok({ same_as: String(beast), duplicate_candidates: [String(dup), "999"] } as Partial<typeof OUTPUT>),
+    );
+    await run(await seedListing(), config(h));
+    const sent = JSON.parse(h.prompts[0] ?? "{}");
+    expect(sent.catalog_candidates[0]).toMatchObject({ id: beast, offers: 0 });
+    const ids = (await all(db, "products")).map((p) => p.id);
+    expect(ids).toContain(beast);
+    expect(ids).toContain(other);
+    expect(ids).not.toContain(dup);
+    expect((await all(db, "product_slug_redirects")).find((r) => r.product_id === beast)).toBeTruthy();
+  });
+
   test("off: acusa sin llamar ni tocar nada", async () => {
     const id = await seedListing();
     const h = fakeHaiku(ok());

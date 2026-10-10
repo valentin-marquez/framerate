@@ -52,10 +52,12 @@ export interface MatchListingInput {
    */
   canonicalName?: string;
   /**
-   * Producto que el preprocesador reconoció como el mismo SKU entre los candidatos del catálogo (#157). Se usa sólo si
-   * la decisión normal no vincula, y sólo si `compare` no da vetos ni conflicto de MPN o de código de modelo.
+   * Producto que el preprocesador reconoció como el mismo SKU entre los candidatos del catálogo (#157). Es la decisión
+   * principal: vincula salvo que `compare` dé un veto o un conflicto de MPN o de código de modelo.
    */
   sameAs?: number | null;
+  /** Candidatos que vio el preprocesador: lo que vio y no eligió no se vincula solo por atributos. */
+  shownCandidates?: number[];
 }
 
 /**
@@ -81,6 +83,7 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
   const reviewClosed = (await closeObsoleteReview(db, listingId, fp, now)) ?? undefined;
   let unlinked = false;
   let moveTo: Decision | null = null;
+  let movedBySameAs = false;
 
   if (input.currentProductId !== null) {
     const productId = input.currentProductId;
@@ -102,20 +105,30 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     const vetoes = override === "forbid" ? ["forbidden"] : check ? check.vetoes : ["product_missing"];
     let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
     if (check && vetoes.length === 0) {
-      // Con identidad de Haiku, sin veto el vínculo se queda: un título editado no lo rompe. Se vuelve a decidir sólo
-      // si algo lo discute y el preprocesador no lo confirmó (`same_as`): texto libre distinto, o una oferta más
-      // antigua de la misma tienda en el producto (casi siempre una variante). Ahí lo salva un identificador de otra
-      // oferta. Por regex (`legacy`, `fallback`) se re-decide siempre, como antes.
-      const confirmed = input.sameAs === productId;
-      const disputed = !confirmed && (!input.canonicalName || link.olderSameStore || !!check.evidence.textMismatch);
-      const again =
-        disputed && link.method !== "new_product" ? decide(fp, [{ ...current, sameStore: link.olderSameStore }]) : null;
-      if (again && again.kind !== "link") {
-        evidence = { ...evidence, redecided: again.kind, score: check.score, sameStore: link.olderSameStore };
-      } else {
-        moveTo = check.evidence.identifier ? null : await ownerThatLinks(db, listingId, fp, productId);
+      if (input.canonicalName) {
+        // Con identidad de Haiku el vínculo se queda mientras nada lo vete: un título editado no lo rompe. Sólo se
+        // mueve si el preprocesador reconoció otra ficha (`same_as`) y la guarda lo deja, o si Haiku no reconoció
+        // ninguna y otro producto es dueño de su identificador.
+        if (input.sameAs && input.sameAs !== productId) {
+          moveTo = await sameAsLink(db, listingId, fp, input.sameAs);
+          movedBySameAs = moveTo !== null;
+          if (moveTo) evidence = { ...evidence, redecided: "same_as", sameAs: input.sameAs };
+        } else if (!input.sameAs && !check.evidence.identifier) {
+          moveTo = await ownerThatLinks(db, listingId, fp, productId);
+          if (moveTo) evidence = { ...evidence, identifierOwner: moveTo.productId };
+        }
         if (!moveTo) return { outcome: "kept", unlinked, reviewClosed };
-        evidence = { ...evidence, identifierOwner: moveTo.productId };
+      } else {
+        // Por regex (`legacy`, `fallback`) se re-decide siempre, como antes.
+        const again =
+          link.method === "new_product" ? null : decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
+        if (again && again.kind !== "link") {
+          evidence = { ...evidence, redecided: again.kind, score: check.score, sameStore: link.olderSameStore };
+        } else {
+          moveTo = check.evidence.identifier ? null : await ownerThatLinks(db, listingId, fp, productId);
+          if (!moveTo) return { outcome: "kept", unlinked, reviewClosed };
+          evidence = { ...evidence, identifierOwner: moveTo.productId };
+        }
       }
     }
     await setListingProduct(db, {
@@ -131,15 +144,35 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     unlinked = true;
   }
 
-  // Sin re-decidir: contra su propio producto la fundadora puntúa 1 por atributos y le ganaría al identificador.
-  const decided =
-    moveTo ??
-    decide(
+  // Haiku primero: el producto que reconoció vincula si la guarda lo deja. Después, `decide` con las reglas; pero si
+  // Haiku vio ese producto entre los candidatos y no lo eligió, el vínculo por atributos pasa a revisión (la decide el
+  // juez), y sólo un identificador vincula igual.
+  let viaSameAs = movedBySameAs;
+  let decision: Decision | null = moveTo;
+  if (!decision && input.sameAs) {
+    decision = await sameAsLink(db, listingId, fp, input.sameAs);
+    viaSameAs = decision !== null;
+  }
+  if (!decision) {
+    // Sin re-decidir: contra su propio producto la fundadora puntúa 1 por atributos y le ganaría al identificador.
+    decision = decide(
       fp,
       await applyOverrides(db, listingId, fp, await markSameStore(db, listingId, await findCandidates(db, fp))),
     );
-  const viaSameAs = decided.kind !== "link" && input.sameAs ? await sameAsLink(db, listingId, fp, input.sameAs) : null;
-  const decision = viaSameAs ?? decided;
+    if (
+      input.canonicalName &&
+      decision.kind === "link" &&
+      decision.method === "attributes" &&
+      input.shownCandidates?.includes(decision.productId)
+    ) {
+      decision = {
+        kind: "review",
+        productId: decision.productId,
+        confidence: decision.confidence,
+        comparison: decision.comparison,
+      };
+    }
+  }
 
   if (decision.kind === "link") {
     await setListingProduct(db, {
@@ -201,17 +234,12 @@ async function ownerThatLinks(db: Db, listingId: number, fp: Fingerprint, produc
 }
 
 /**
- * El `same_as` del preprocesador vincula sólo si nada lo contradice: veto, MPN distinto, `forbid`, u otra oferta de la
- * misma tienda en ese producto (casi siempre una variante, como en `decide`).
+ * El `same_as` del preprocesador vincula salvo que lo contradiga un dato estructural (veto), un MPN o código de modelo
+ * distinto, o un `forbid`. Que la tienda ya tenga otra oferta ahí no lo frena: Haiku juzgó con el título completo.
  */
 async function sameAsLink(db: Db, listingId: number, fp: Fingerprint, productId: number): Promise<Decision | null> {
-  const [candidate] = await applyOverrides(
-    db,
-    listingId,
-    fp,
-    await markSameStore(db, listingId, await loadCandidates(db, [productId], fp)),
-  );
-  if (!candidate || candidate.override === "forbid" || candidate.sameStore) return null;
+  const [candidate] = await applyOverrides(db, listingId, fp, await loadCandidates(db, [productId], fp));
+  if (!candidate || candidate.override === "forbid") return null;
   const comparison = compare(fp, candidate.fingerprint);
   const { vetoes, evidence } = comparison;
   if (vetoes.length > 0 || evidence.mpnConflict || evidence.modelConflict) return null;

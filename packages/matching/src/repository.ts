@@ -5,7 +5,7 @@ import { type Compilable, sql } from "kysely";
 import type { Attributes } from "./domain/attributes";
 import { type Candidate, compare } from "./domain/decide";
 import { attributeKey, buildFingerprint, type Fingerprint, storedFingerprint } from "./domain/fingerprint";
-import { normalizeMpn } from "./domain/identifiers";
+import { normalizeGtin, normalizeMpn } from "./domain/identifiers";
 
 const MAX_CANDIDATES = 20;
 
@@ -72,26 +72,29 @@ export interface CatalogCandidate {
   id: number;
   name: string;
   mpns: string[];
+  /** Tiendas que lo venden: Haiku elige el primero entre duplicados, y van ordenados por esto. */
+  offers: number;
 }
 
 const CATALOG_CANDIDATES = 8;
 
 /**
- * Lo que el preprocesador le muestra a Haiku para que diga si la oferta ya está en el catálogo (#157): el dueño del
- * MPN impreso y los más parecidos por texto en la misma categoría. Sin marca: la de la tienda no siempre es la canónica.
+ * Lo que el preprocesador le muestra a Haiku para que decida si la oferta ya está en el catálogo (#157): su ficha
+ * actual, los dueños de su MPN o GTIN y los más parecidos por texto en la misma categoría, con más tiendas primero.
+ * Sin marca: la de la tienda no siempre es la canónica.
  */
 export async function catalogCandidates(
   db: Db,
-  offer: { category: Category; title: string; mpn: string | null },
+  offer: { category: Category; title: string; mpn: string | null; gtin?: string | null; productId?: number | null },
 ): Promise<CatalogCandidate[]> {
   const ids: number[] = [];
-  const mpn = normalizeMpn(offer.mpn);
-  if (mpn) {
+  if (offer.productId) ids.push(offer.productId);
+  const pairs = identifierPairs({ mpn: normalizeMpn(offer.mpn), gtin: normalizeGtin(offer.gtin) });
+  if (pairs.length > 0) {
     const owners = await db.query
       .selectFrom("product_identifiers")
       .select("product_id")
-      .where("kind", "=", "mpn")
-      .where("value", "=", mpn)
+      .where((eb) => eb.or(pairs.map((p) => eb.and([eb("kind", "=", p.kind), eb("value", "=", p.value)]))))
       .execute();
     ids.push(...owners.map((r) => r.product_id));
   }
@@ -105,10 +108,10 @@ export async function catalogCandidates(
       LIMIT ${CATALOG_CANDIDATES}`.execute(db.query);
     ids.push(...rows.map((r) => r.id));
   }
-  const unique = [...new Set(ids)].slice(0, CATALOG_CANDIDATES);
+  const unique = [...new Set(ids)].slice(0, CATALOG_CANDIDATES + 1);
   if (unique.length === 0) return [];
   const [products, identifiers] = await Promise.all([
-    db.query.selectFrom("products").select(["id", "name"]).where("id", "in", unique).execute(),
+    db.query.selectFrom("products").select(["id", "name", "offer_count"]).where("id", "in", unique).execute(),
     db.query
       .selectFrom("product_identifiers")
       .select(["product_id", "value"])
@@ -116,12 +119,14 @@ export async function catalogCandidates(
       .where("kind", "=", "mpn")
       .execute(),
   ]);
-  return unique.flatMap((id) => {
-    const p = products.find((x) => x.id === id);
-    if (!p) return [];
-    const mpns = identifiers.filter((i) => i.product_id === id).map((i) => i.value);
-    return [{ id, name: p.name, mpns: mpns.slice(0, 3) }];
-  });
+  return unique
+    .flatMap((id) => {
+      const p = products.find((x) => x.id === id);
+      if (!p) return [];
+      const mpns = identifiers.filter((i) => i.product_id === id).map((i) => i.value);
+      return [{ id, name: p.name, mpns: mpns.slice(0, 3), offers: p.offer_count }];
+    })
+    .sort((a, b) => b.offers - a.offers);
 }
 
 /** Productos, salvo `exceptProductId`, dueños de un identificador de la huella. */

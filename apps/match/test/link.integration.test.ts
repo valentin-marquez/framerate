@@ -274,15 +274,18 @@ describe("same_as del preprocesador (#157)", () => {
     return { p, l };
   }
 
-  test("en sombra sólo se guarda: la decisión normal sigue igual", async () => {
-    const { p, l } = await setup();
+  test("sin same_as la decisión normal crea el producto", async () => {
+    const s = await store("alfa");
+    const p = await product({ slug: "amd-procesador", name: "AMD Procesador Gamer Box" });
+    const l = await listing({ store: s, external: "1", visible: 0, normStatus: "normalized" });
+    await identity(l, { mpn: null });
     expect(await linkListing(db, message(l), "live", now, silentLogger)).toBe("new_product");
     expect((await listingRow(l)).product_id).not.toBe(p);
   });
 
-  test("en vivo vincula al producto que reconoció Haiku, y lo deja en la evidencia", async () => {
+  test("vincula al producto que reconoció Haiku, y lo deja en la evidencia", async () => {
     const { p, l } = await setup();
-    expect(await linkListing(db, message(l), "live", now, silentLogger, { sameAs: true })).toBe("linked");
+    expect(await linkListing(db, message(l), "live", now, silentLogger)).toBe("linked");
     expect(await listingRow(l)).toMatchObject({ product_id: p, visible: 1 });
     const [decision] = await db.query
       .selectFrom("match_decisions")
@@ -295,8 +298,32 @@ describe("same_as del preprocesador (#157)", () => {
 
   test("un veto gana: otro modelo no se vincula aunque Haiku diga que es el mismo", async () => {
     const { p, l } = await setup("AMD Ryzen 7 5800X");
-    expect(await linkListing(db, message(l), "live", now, silentLogger, { sameAs: true })).toBe("new_product");
+    expect(await linkListing(db, message(l), "live", now, silentLogger)).toBe("new_product");
     expect((await listingRow(l)).product_id).not.toBe(p);
+  });
+
+  test("lo que Haiku vio y no eligió no se vincula solo por atributos: va a revisión", async () => {
+    const s = await store("alfa");
+    const p = await product({ slug: "amd-ryzen-5-5600x", name: NAME, attributes: { model: "ryzen 5 5600x" } });
+    const l = await listing({ store: s, external: "1", visible: 0, normStatus: "normalized" });
+    await identity(l, { mpn: null });
+    await db.query
+      .updateTable("listing_identity")
+      .set({ identity_raw: JSON.stringify({ candidates: [p] }) })
+      .where("listing_id", "=", l)
+      .execute();
+    expect(await linkListing(db, message(l), "live", now, silentLogger)).toBe("review");
+    expect((await listingRow(l)).product_id).not.toBe(p);
+  });
+
+  test("una oferta ya vinculada se muda a la ficha que reconoció Haiku", async () => {
+    const s = await store("alfa");
+    const dup = await product({ slug: "amd-ryzen-5-5600x-dup", name: "AMD Ryzen 5 5600X Box" });
+    const p = await product({ slug: "amd-ryzen-5-5600x", name: NAME });
+    const l = await listing({ store: s, external: "1", product: dup, normStatus: "normalized" });
+    await identity(l, { mpn: null, sameAs: p });
+    expect(await linkListing(db, message(l), "live", now, silentLogger)).toBe("linked");
+    expect((await listingRow(l)).product_id).toBe(p);
   });
 });
 
