@@ -23,6 +23,11 @@ export interface Fingerprint {
    * esos ya se comparan como atributos y contarlos de nuevo inflaría la similitud.
    */
   tokens: string[];
+  /**
+   * Campos que la huella rellenó por defecto porque Haiku no los dijo (sin wifi, sin color, sin RGB, sin OC): no son
+   * evidencia, así que si difieren no vetan, pero tampoco dejan vincular solo por atributos.
+   */
+  defaulted?: readonly string[];
 }
 
 export interface FingerprintInput {
@@ -57,16 +62,31 @@ export interface IdentityFingerprintInput {
 /** La misma huella que `buildFingerprint`, desde la identidad anclada por el normalizador: `compare` no distingue. */
 export function fingerprintFromIdentity({ identity, mpn, gtin }: IdentityFingerprintInput): Fingerprint {
   const { category, brand } = identity;
-  const attributes = attributesFromIdentity(category, identity.identity);
+  const { attributes, defaulted } = attributesFromIdentity(category, identity.identity);
   return {
     category,
     brand,
-    mpn: normalizeMpn(mpn) ?? normalizeMpn(identity.mpn),
+    mpn: realMpn(mpn, identity.name) ?? realMpn(identity.mpn, identity.name),
     gtin: normalizeGtin(gtin),
     attributes,
     attributeKey: attributeKey(category, brand, attributes),
     tokens: distinctiveTokens(category, identity.name, brand),
+    defaulted,
   };
+}
+
+// Hay tiendas que publican el nombre pegado como MPN ("MSIMAGCORELIQUIDA15240" en Sandos): si cabe entero en el nombre
+// canónico, que no lleva códigos, es el nombre y no identifica nada (y chocaría con los MPN reales del producto).
+function realMpn(raw: string | null | undefined, name: string): string | null {
+  const mpn = normalizeMpn(raw);
+  return mpn &&
+    !name
+      .normalize("NFKC")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .includes(mpn)
+    ? mpn
+    : null;
 }
 
 /**
@@ -115,15 +135,6 @@ const FOLD_INTO: Partial<Record<Category, string>> = {
   gpu: "line",
 };
 
-/**
- * Los vetos que se sostienen aunque el preprocesador diga que es el mismo SKU (`same_as`). El texto libre de
- * `FOLD_INTO` lo escribe Haiku distinto entre llamadas ("TUF Gaming" y "TUF", "ML" y "MasterLiquid"), así que no le
- * gana a su propio reconocimiento; un modelo que es código (CPU, placa) sí.
- */
-export function vetoesAgainstSameAs(category: Category, vetoes: readonly string[]): string[] {
-  return vetoes.filter((v) => v !== `attribute:${FOLD_INTO[category]}`);
-}
-
 const tokens = (value: IdentityValue | undefined) =>
   typeof value === "string" ? value.split(" ").filter((t) => t && !FREE_TEXT_NOISE.has(t)) : [];
 
@@ -137,16 +148,25 @@ function stableFreeText(category: Category, a: Attributes) {
 }
 
 /** Nombres de hoy y la política de `attributes.ts` (`ATTRIBUTE_DEFAULTS`, `oc` y `wifi` siempre presentes). */
-function attributesFromIdentity(category: Category, identity: Record<string, IdentityValue>): Attributes {
+function attributesFromIdentity(
+  category: Category,
+  identity: Record<string, IdentityValue>,
+): { attributes: Attributes; defaulted: string[] } {
   const a: Attributes = {};
+  const defaulted: string[] = [];
+  const fill = (field: string, value: Attributes[string]) => {
+    if (a[field] !== undefined) return;
+    a[field] = value;
+    defaulted.push(field);
+  };
   for (const [field, value] of Object.entries(identity)) a[identityAttributeName(field)] = value;
   stableFreeText(category, a);
-  for (const [field, value] of Object.entries(ATTRIBUTE_DEFAULTS[category] ?? {})) a[field] ??= value;
-  if (category === "gpu") a.oc ??= false;
-  if (category === "motherboard") a.wifi ??= false;
+  for (const [field, value] of Object.entries(ATTRIBUTE_DEFAULTS[category] ?? {})) fill(field, value);
+  if (category === "gpu") fill("oc", false);
+  if (category === "motherboard") fill("wifi", false);
   // Como el extractor: una línea conocida sin "RGB" es la versión sin RGB.
-  if (category === "ram" && a.line !== undefined) a.rgb ??= false;
-  return a;
+  if (category === "ram" && a.line !== undefined) fill("rgb", false);
+  return { attributes: a, defaulted };
 }
 
 const CHIP_MAKERS = new Set(["AMD", "NVIDIA", "Intel"]);

@@ -1,6 +1,6 @@
 import type { Db } from "@framerate/database";
 import { compare, type Decision, decide } from "./domain/decide";
-import { type Fingerprint, vetoesAgainstSameAs } from "./domain/fingerprint";
+import type { Fingerprint } from "./domain/fingerprint";
 import { productNameFromTitle } from "./domain/product-name";
 import {
   applyOverrides,
@@ -61,8 +61,9 @@ export interface MatchListingInput {
 /**
  * Vincula una oferta a un producto canónico.
  *
- * 1. Si ya estaba vinculada, el vínculo sigue sólo si `decide` lo haría hoy (sin veto y sin contar los
- *    identificadores que aportó ella misma). Si no, se desvincula (queda auditado), se le quitan al producto sólo los
+ * 1. Si ya estaba vinculada (con identidad de Haiku), el vínculo sigue mientras nada lo vete; si el texto libre
+ *    difiere, el producto tiene otra oferta más antigua de la misma tienda o la huella viene del regex, sólo si
+ *    `decide` lo haría hoy (sin contar los identificadores que aportó ella misma) o el preprocesador la reconoció. Si no, se desvincula (queda auditado), se le quitan al producto sólo los
  *    identificadores que ninguna otra de sus ofertas publica y se vuelve a decidir. Excepciones: una decisión manual
  *    no se toca; la fundadora (`new_product`) no se re-decide; si la categoría difiere, el vínculo se mantiene y se
  *    avisa (`categoryMismatch`). Aunque el vínculo siga válido, si su producto no la reconoce por identificador y otro
@@ -98,20 +99,18 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
     if (override === "force") return { outcome: "kept", unlinked, reviewClosed };
     if (link.method === "manual" && override !== "forbid") return { outcome: "kept", unlinked, reviewClosed };
     const check = current && compare(fp, current.fingerprint);
-    const vetoes =
-      override === "forbid"
-        ? ["forbidden"]
-        : check
-          ? input.sameAs === productId
-            ? vetoesAgainstSameAs(fp.category, check.vetoes)
-            : check.vetoes
-          : ["product_missing"];
+    const vetoes = override === "forbid" ? ["forbidden"] : check ? check.vetoes : ["product_missing"];
     let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
     if (check && vetoes.length === 0) {
-      const again = link.method === "new_product" ? null : decide(fp, [{ ...current, sameStore: link.olderSameStore }]);
-      // El preprocesador lo reconoció como el mismo SKU y nada lo contradice: se queda.
-      const confirmed = input.sameAs === productId && !link.olderSameStore;
-      if (again && again.kind !== "link" && !confirmed) {
+      // Con identidad de Haiku, sin veto el vínculo se queda: un título editado no lo rompe. Se vuelve a decidir sólo
+      // si algo lo discute y el preprocesador no lo confirmó (`same_as`): texto libre distinto, o una oferta más
+      // antigua de la misma tienda en el producto (casi siempre una variante). Ahí lo salva un identificador de otra
+      // oferta. Por regex (`legacy`, `fallback`) se re-decide siempre, como antes.
+      const confirmed = input.sameAs === productId;
+      const disputed = !confirmed && (!input.canonicalName || link.olderSameStore || !!check.evidence.textMismatch);
+      const again =
+        disputed && link.method !== "new_product" ? decide(fp, [{ ...current, sameStore: link.olderSameStore }]) : null;
+      if (again && again.kind !== "link") {
         evidence = { ...evidence, redecided: again.kind, score: check.score, sameStore: link.olderSameStore };
       } else {
         moveTo = check.evidence.identifier ? null : await ownerThatLinks(db, listingId, fp, productId);
@@ -202,7 +201,7 @@ async function ownerThatLinks(db: Db, listingId: number, fp: Fingerprint, produc
 }
 
 /**
- * El `same_as` del preprocesador vincula sólo si nada lo contradice: veto (salvo el de texto libre), MPN distinto, `forbid`, u otra oferta de la
+ * El `same_as` del preprocesador vincula sólo si nada lo contradice: veto, MPN distinto, `forbid`, u otra oferta de la
  * misma tienda en ese producto (casi siempre una variante, como en `decide`).
  */
 async function sameAsLink(db: Db, listingId: number, fp: Fingerprint, productId: number): Promise<Decision | null> {
@@ -215,7 +214,6 @@ async function sameAsLink(db: Db, listingId: number, fp: Fingerprint, productId:
   if (!candidate || candidate.override === "forbid" || candidate.sameStore) return null;
   const comparison = compare(fp, candidate.fingerprint);
   const { vetoes, evidence } = comparison;
-  if (vetoesAgainstSameAs(fp.category, vetoes).length > 0 || evidence.mpnConflict || evidence.modelConflict)
-    return null;
+  if (vetoes.length > 0 || evidence.mpnConflict || evidence.modelConflict) return null;
   return { kind: "link", productId, method: "attributes", confidence: comparison.score, comparison };
 }

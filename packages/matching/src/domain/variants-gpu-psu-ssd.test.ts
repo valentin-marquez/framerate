@@ -4,8 +4,14 @@ import { PROFILES } from "./attributes";
 import { compare } from "./decide";
 import { buildFingerprint } from "./fingerprint";
 
-const vetoes = (category: Category, a: string, b: string) =>
-  compare(buildFingerprint({ category, title: a }), buildFingerprint({ category, title: b })).vetoes;
+// Lo que separa a los dos títulos: un veto o un campo de texto libre distinto (no veta, pero no vincula solo).
+const vetoes = (category: Category, a: string, b: string) => {
+  const { vetoes, evidence } = compare(
+    buildFingerprint({ category, title: a }),
+    buildFingerprint({ category, title: b }),
+  );
+  return [...vetoes, ...(evidence.textMismatch ?? []).map((f) => `attribute:${f}`)];
+};
 
 describe("GPU", () => {
   test.each([

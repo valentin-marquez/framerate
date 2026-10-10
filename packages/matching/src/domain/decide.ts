@@ -1,3 +1,4 @@
+import type { Category } from "@framerate/contracts";
 import { PROFILES } from "./attributes";
 import type { Fingerprint } from "./fingerprint";
 import { TRAIT_DISCRIMINATORS } from "./traits";
@@ -19,11 +20,32 @@ export interface Comparison {
     mpnConflict?: boolean;
     /** Códigos de modelo con el mismo prefijo y distinto número ("nv1" vs "nv3", "cl36" vs "cl28"). */
     modelConflict?: boolean;
+    /**
+     * Campos que difieren sin ser prueba: texto libre o un valor que la huella puso por defecto. No vetan, pero impiden
+     * vincular sólo por atributos.
+     */
+    textMismatch?: string[];
     attributeKeyMatch?: boolean;
     titleSimilarity: number;
     brandMatch?: boolean;
   };
 }
+
+// Texto libre que Haiku escribe distinto entre llamadas ("TUF Gaming" y "TUF", "ML" y "MasterLiquid"): si difiere no
+// veta, pero tampoco vincula solo por atributos; lo resuelven un identificador, el `same_as` del preprocesador o una
+// revisión. Lo estructurado (VRAM, capacidad, color, V2) y los códigos (modelo de CPU y de placa, `psuCode`) vetan.
+const FREE_TEXT: Partial<Record<Category, readonly string[]>> = {
+  gpu: ["line"],
+  ssd: ["line", "series"],
+  psu: ["line"],
+  ram: ["line"],
+  motherboard: ["line"],
+  cpu_cooler: ["model"],
+  case: ["model"],
+  case_fan: ["model"],
+};
+
+export const freeTextFields = (category: string): readonly string[] => FREE_TEXT[category as Category] ?? [];
 
 export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison {
   const vetoes: string[] = [];
@@ -39,11 +61,14 @@ export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison 
   // Haiku reparte las mismas palabras entre `line`, `model` y `series` distinto en cada llamada ("aorus" + "b650m elite"
   // contra "aorus elite" + "b650m", #155; SSD "legend 710" contra "legend" + "710"): si juntas coinciden, no vetan.
   const sameWords = lineModelWords(offer) === lineModelWords(candidate);
+  const soft = new Set([...freeTextFields(offer.category), ...(offer.defaulted ?? []), ...(candidate.defaulted ?? [])]);
   for (const field of [...PROFILES[offer.category].discriminators, ...TRAIT_DISCRIMINATORS]) {
     const a = offer.attributes[field];
     const b = candidate.attributes[field];
     if (sameWords && (field === "line" || field === "model" || field === "series")) continue;
-    if (a !== undefined && b !== undefined && a !== b) vetoes.push(`attribute:${field}`);
+    if (a === undefined || b === undefined || a === b) continue;
+    if (soft.has(field)) evidence.textMismatch = [...(evidence.textMismatch ?? []), field];
+    else vetoes.push(`attribute:${field}`);
   }
 
   if (offer.gtin && candidate.gtin && offer.gtin === candidate.gtin) evidence.identifier = "gtin";
@@ -120,7 +145,13 @@ export function decide(offer: Fingerprint, candidates: readonly Candidate[]): De
     return { kind: "link", productId: candidate.productId, method: "identifier", confidence: score, comparison };
   }
 
-  if (evidence.attributeKeyMatch && !evidence.mpnConflict && !evidence.modelConflict && !candidate.sameStore) {
+  if (
+    evidence.attributeKeyMatch &&
+    !evidence.mpnConflict &&
+    !evidence.modelConflict &&
+    !evidence.textMismatch &&
+    !candidate.sameStore
+  ) {
     if (profile.keyIsUnique || score >= THRESHOLDS.autoAttributes) {
       return { kind: "link", productId: candidate.productId, method: "attributes", confidence: score, comparison };
     }

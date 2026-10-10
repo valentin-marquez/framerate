@@ -316,11 +316,11 @@ describe("decisión de matching", () => {
     expect(cpu.evidence.modelConflict).toBeUndefined();
   });
 
-  test("RAM: la línea (Beast vs Renegade) es discriminante cuando ambos títulos la dicen", () => {
+  test("RAM: la línea (Beast vs Renegade) impide vincular solo cuando ambos títulos la dicen", () => {
     const decision = decide(fp("ram", "Memoria Ram DDR4 32GB 3600MHz Kingston Fury Beast, CL18, DIMM"), [
       existing(1, "ram", "Memoria RAM Kingston FURY Renegade 32G 3600MT/s DDR4 CL18"),
     ]);
-    expect(decision).toEqual({ kind: "new_product" });
+    expect(decision.kind).not.toBe("link");
   });
 
   test("con el mismo modelo y atributos, el vínculo por atributos sigue funcionando", () => {

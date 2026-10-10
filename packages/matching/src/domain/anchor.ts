@@ -178,7 +178,12 @@ function dedupeAcrossFields(identity: Record<string, IdentityValue>): void {
   for (const field of ["model", "variant"]) {
     const value = identity[field];
     if (typeof value !== "string") continue;
-    const kept = value.split(" ").filter((t) => !lineTokens.has(t) && !(field === "model" && OWN_FIELD_TOKENS.test(t)));
+    const tokens = value.split(" ");
+    // "WIFI 7" con espacio deja el 7 suelto; el wifi y su versión tienen campo propio.
+    const wifiVersion = (t: string, i: number) => /^\d$/.test(t) && /^(?:fi|wifi)$/.test(tokens[i - 1] ?? "");
+    const kept = tokens.filter(
+      (t, i) => !lineTokens.has(t) && !(field === "model" && (OWN_FIELD_TOKENS.test(t) || wifiVersion(t, i))),
+    );
     const cleaned = field === "variant" ? kept.filter((t) => !/^(?:oc|edition)$/.test(t)) : kept;
     if (cleaned.length) identity[field] = cleaned.join(" ");
     else delete identity[field];

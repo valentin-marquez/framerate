@@ -123,6 +123,15 @@ describe("anclaje", () => {
     expect(mobo.dropped).toEqual(["color"]);
   });
 
+  test('"WIFI 7" con espacio no deja el 7 en el modelo de la placa', () => {
+    const r = anchorIdentity(raw("motherboard", { chipset: "x870", model: "X870 AORUS ELITE WIFI 7", line: "aorus" }), {
+      category: "motherboard",
+      title: "Placa Madre Gigabyte X870 AORUS ELITE WIFI 7 AM5",
+      mpn: null,
+    });
+    expect(r.identity?.model).toBe("x870 elite");
+  });
+
   test("booleanos sólo con token explícito; el O12G de ASUS vale como OC", () => {
     expect(
       fields(
