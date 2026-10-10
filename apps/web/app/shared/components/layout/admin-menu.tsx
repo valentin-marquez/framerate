@@ -1,3 +1,4 @@
+import { hasRole } from "@framerate/contracts";
 import { IconActivityHeartbeat, IconGavel, IconLifebuoy, IconShieldCheck, IconUsers } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { useUser } from "~/features/auth/hooks/useAuth";
@@ -14,8 +15,7 @@ interface AdminMenuProps {
 
 /**
  * Sección "Administración" del dropdown del avatar. Sólo aparece si el usuario
- * tiene rol `moderator` o `admin`. Da acceso a los paneles internos que
- * de otro modo no tienen entrada de navegación.
+ * tiene un rol del equipo (`support` o superior), con los paneles que alcanza.
  */
 export function AdminMenu({ enabled }: AdminMenuProps) {
   const role = useUser()?.role ?? "user";
@@ -37,10 +37,12 @@ export function AdminMenu({ enabled }: AdminMenuProps) {
         <IconLifebuoy className="size-5" />
         <span>Soporte</span>
       </DropdownMenuItem>
-      <DropdownMenuItem render={<Link to="/admin/moderation" prefetch="intent" />}>
-        <IconGavel className="size-5" />
-        <span>Moderación</span>
-      </DropdownMenuItem>
+      {hasRole(role, "moderator") && (
+        <DropdownMenuItem render={<Link to="/admin/moderation" prefetch="intent" />}>
+          <IconGavel className="size-5" />
+          <span>Moderación</span>
+        </DropdownMenuItem>
+      )}
       {role === "admin" && (
         <DropdownMenuItem render={<Link to="/admin/users" prefetch="intent" />}>
           <IconUsers className="size-5" />

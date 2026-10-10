@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { Link, useRevalidator, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { requireRole } from "~/features/auth/services/auth.server";
+import { AdminTabs } from "~/shared/components/layout/admin-tabs";
 import { Button } from "~/shared/components/primitives/button";
 import {
   Dialog,
@@ -179,6 +180,7 @@ export default function ModerationDashboard({ loaderData }: Route.ComponentProps
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 md:px-8">
+      <AdminTabs current="/admin/moderation" />
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Moderación</h1>

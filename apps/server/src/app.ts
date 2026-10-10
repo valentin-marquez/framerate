@@ -13,7 +13,7 @@ import { getAuth } from "@/features/identity/auth-instance";
 import type { UserRow } from "@/features/identity/identity.repository";
 import { authProvidersRoutes, meRoutes, publicProfileRoutes } from "@/features/identity/identity.routes";
 import { mergeRoutes } from "@/features/identity/merge.routes";
-import { credentialedCors, optionalUser, requireStaff, requireUser } from "@/features/identity/middleware";
+import { assertRole, credentialedCors, optionalUser, requireStaff, requireUser } from "@/features/identity/middleware";
 import type { Actor, SessionUser } from "@/features/identity/types";
 import { matchReviewRoutes } from "@/features/match-review/match-review.routes";
 import { handleMcp } from "@/features/mcp/mcp.server";
@@ -57,7 +57,7 @@ export type AppEnv = {
  *   /v1/quotes    cotizaciones: las ajenas se leen según su visibilidad; escribir exige ser el dueño.
  *   /v1/reports   reportes de contenido (sesión). /v1/translation-feedback: sugerencias de traducción.
  *   /v1/*         lectura pública (catálogo, perfiles públicos), con caché en el edge.
- *   /v1/admin/*   personal: moderador o superior (sesión), o el token de servicio.
+ *   /v1/admin/*   personal: moderador o superior (sesión), o el token de servicio; soporte sólo /health y /support.
  *   mcp.*         todo el host es el servidor MCP de sólo lectura (#125), sin CORS: sus clientes no son navegadores.
  *
  * Todo CORS es sólo para el origen de la web y con cookies: el navegador envía la sesión en cada llamada y no
@@ -170,7 +170,12 @@ export function createApp() {
 
   const adminApi = new Hono<AppEnv>();
   adminApi.use("*", credentialedCors);
-  adminApi.use("*", requireStaff("moderator"));
+  adminApi.use("*", requireStaff("support"));
+  // El rol soporte sólo llega a su bandeja y al estado de los sistemas; el resto pide moderador (cerrado por defecto).
+  adminApi.use("*", async (c, next) => {
+    if (!/^\/v1\/admin\/(health$|support\/)/.test(c.req.path)) assertRole(c, "moderator");
+    await next();
+  });
   adminApi.route("/", crawlAdminRoutes);
   adminApi.route("/", pipelineAdminRoutes);
   adminApi.route("/", healthRoutes);

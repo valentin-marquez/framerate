@@ -29,7 +29,7 @@ de rol aplican al instante y no cuando vence la cookie.
 | Handle (`username`) | Lo genera el **servidor**: `[a-z0-9_]{3,24}`, único, sin nombres reservados (`admin`, `soporte`, rutas del sitio…). Nunca se copia crudo del proveedor. Si choca, agrega sufijo (`ana_4821`). |
 | Avatar | El cliente no puede escribirlo. `avatar_source_url` viene del proveedor; `avatar_key` es la copia propia en R2 (pendiente de implementar). Sólo se expone si es `https`. |
 | Perfil editable | `displayName`, `username`, `bio`, `lang`, `theme` vía `PATCH /v1/me` (esquema estricto: cualquier otro campo → 400). |
-| Rol | Uno por usuario: `user` < `moderator` < `admin`. Sólo un admin lo cambia; nadie cambia el suyo; siempre queda al menos un admin. |
+| Rol | Uno por usuario: `user` < `support` < `moderator` < `admin`. `support` sólo llega a la bandeja de soporte y al estado de los sistemas (`/v1/admin/support/*`, `/v1/admin/health`); el resto de `/v1/admin` pide moderador. Sólo un admin lo cambia; nadie cambia el suyo; siempre queda al menos un admin. |
 | Sanciones | Una fila por sanción (historial). Bloquean **publicar**, no iniciar sesión ni editar el perfil. Se aplican con `assertNotBanned(user)` en toda ruta que cree contenido. |
 | Quién sanciona a quién | Sólo a alguien de **menor** rango: un moderador sanciona usuarios; un admin, moderadores y usuarios; nadie a un par ni a sí mismo. |
 | Personal | Sesión con rol suficiente **o** el token de servicio `ADMIN_TOKEN` (scripts; equivale a admin, queda como `null` en la bitácora). |
@@ -60,7 +60,7 @@ avatar o correo. El perfil se edita con nuestro `PATCH /v1/me`.
 | `POST /v1/me/merge/confirm` | sesión (B) + cookie | Absorbe B en A. 204. |
 | `DELETE /v1/me/merge` | sesión + cookie | Cancela. 204. |
 | `GET /v1/users/:username` | público | Perfil público (sin correo, rol ni sanciones). |
-| `GET /v1/admin/users?q=` | moderador+ | Busca por handle o nombre (fragmento) o por correo (exacto). |
+| `GET /v1/admin/users?q=&filter=&page=` | moderador+ | Lista a los registrados (50 por página, con último acceso, proveedores y conteo por filtro: `all`, `staff`, un rol o `banned`). `q` busca por handle o nombre (fragmento) o por correo (exacto). El correo sólo lo recibe un admin. |
 | `POST /v1/admin/users/:id/ban` | moderador+ | Suspende (`reason?`, `expiresAt?` futura). |
 | `POST /v1/admin/users/:id/unban` | moderador+ | Levanta la sanción vigente. |
 | `PATCH /v1/admin/users/:id/role` | admin | Cambia el rol. |

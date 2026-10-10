@@ -2,6 +2,7 @@ import { HEALTH_SYSTEMS, type Health, type HealthSystem } from "@framerate/contr
 import { IconCircleCheck, IconLoader2, IconRefresh } from "@tabler/icons-react";
 import { Link, useRevalidator, useSearchParams } from "react-router";
 import { requireRole } from "~/features/auth/services/auth.server";
+import { AdminTabs } from "~/shared/components/layout/admin-tabs";
 import { Button } from "~/shared/components/primitives/button";
 import { api } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
@@ -14,7 +15,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  await requireRole(request, "moderator");
+  await requireRole(request, "support");
   return { health: await api.get<Health>("/v1/admin/health") };
 }
 
@@ -66,6 +67,7 @@ export default function HealthPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 md:px-8">
+      <AdminTabs current="/admin/estado" />
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Estado de los sistemas</h1>

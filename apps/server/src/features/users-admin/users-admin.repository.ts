@@ -1,55 +1,120 @@
-import type { AdminUser, Role } from "@framerate/contracts";
-import type { Db } from "@framerate/database";
-import { sql } from "kysely";
+import { type AdminUserPage, ROLES, type Role } from "@framerate/contracts";
+import type { Database, Db } from "@framerate/database";
+import { type ExpressionBuilder, sql } from "kysely";
 import type { ActiveBan } from "@/features/identity/types";
 import { likePattern } from "@/shared/sql";
 
 /** Acceso a datos de la administración de usuarios (búsqueda, sanciones, roles). */
 
-export async function searchUsers(db: Db, q: string, limit: number, now: string): Promise<AdminUser[]> {
-  const pattern = likePattern(q);
-  const rows = await db.query
-    .selectFrom("users")
-    .select(["id", "username", "display_name", "role", "created_at"])
-    .where("deleted_at", "is", null)
-    .where((eb) =>
+export const USER_FILTERS = ["all", "staff", ...ROLES, "banned"] as const;
+export type UserFilter = (typeof USER_FILTERS)[number];
+
+const PAGE_SIZE = 50;
+
+const activeBan = (now: string) => (eb: ExpressionBuilder<Database, "users">) =>
+  eb.exists(
+    eb
+      .selectFrom("user_bans")
+      .select("user_bans.id")
+      .whereRef("user_bans.user_id", "=", "users.id")
+      .where("lifted_at", "is", null)
+      .where((w) => w.or([w("expires_at", "is", null), w("expires_at", ">", now)])),
+  );
+
+/**
+ * Registrados, de los más nuevos a los más viejos (por handle si hay búsqueda), con el conteo de cada filtro.
+ * El correo sólo va si lo pide un admin.
+ */
+export async function listUsers(
+  db: Db,
+  input: { q?: string; filter: UserFilter; page: number; withEmail: boolean; now: string },
+): Promise<AdminUserPage> {
+  const { q, filter, page, now } = input;
+  let query = db.query.selectFrom("users").where("deleted_at", "is", null);
+  if (q) {
+    const pattern = likePattern(q);
+    query = query.where((eb) =>
       eb.or([
         sql<boolean>`username LIKE ${pattern} ESCAPE '\\'`,
         sql<boolean>`display_name LIKE ${pattern} ESCAPE '\\'`,
         // El correo sólo coincide exacto: buscar por fragmento permitiría enumerar correos.
         eb("email", "=", q.toLowerCase()),
       ]),
-    )
-    .orderBy("username")
-    .limit(limit)
-    .execute();
-  if (rows.length === 0) return [];
+    );
+  }
 
-  const bans = await db.query
-    .selectFrom("user_bans")
-    .select(["user_id", "reason", "expires_at"])
-    .where(
-      "user_id",
-      "in",
-      rows.map((r) => r.id),
-    )
-    .where("lifted_at", "is", null)
-    .where((eb) => eb.or([eb("expires_at", "is", null), eb("expires_at", ">", now)]))
-    .orderBy("created_at", "desc")
+  const counts = await query
+    .select((eb) => [
+      eb.fn.countAll<number>().as("all"),
+      sql<number>`coalesce(sum(role != 'user'), 0)`.as("staff"),
+      ...ROLES.map((role) => sql<number>`coalesce(sum(role = ${role}), 0)`.as(role)),
+      sql<number>`coalesce(sum(${activeBan(now)(eb)}), 0)`.as("banned"),
+    ])
+    .executeTakeFirstOrThrow();
+
+  if (filter === "staff") query = query.where("role", "!=", "user");
+  else if (filter === "banned") query = query.where(activeBan(now));
+  else if (filter !== "all") query = query.where("role", "=", filter);
+
+  const rows = await query
+    .select((eb) => [
+      "id",
+      "username",
+      "display_name",
+      "email",
+      "role",
+      "created_at",
+      eb
+        .selectFrom("auth_sessions")
+        .select((s) => s.fn.max("updated_at").as("x"))
+        .whereRef("auth_sessions.user_id", "=", "users.id")
+        .as("last_seen_at"),
+      eb
+        .selectFrom("auth_accounts")
+        .select(sql<string>`group_concat(provider_id)`.as("x"))
+        .whereRef("auth_accounts.user_id", "=", "users.id")
+        .as("providers"),
+    ])
+    .orderBy(q ? "username" : "created_at", q ? "asc" : "desc")
+    .limit(PAGE_SIZE + 1)
+    .offset((page - 1) * PAGE_SIZE)
     .execute();
+
+  const shown = rows.slice(0, PAGE_SIZE);
+  const bans = shown.length
+    ? await db.query
+        .selectFrom("user_bans")
+        .select(["user_id", "reason", "expires_at"])
+        .where(
+          "user_id",
+          "in",
+          shown.map((r) => r.id),
+        )
+        .where("lifted_at", "is", null)
+        .where((eb) => eb.or([eb("expires_at", "is", null), eb("expires_at", ">", now)]))
+        .orderBy("created_at", "desc")
+        .execute()
+    : [];
   const banByUser = new Map<string, ActiveBan>();
   for (const b of bans) {
     if (!banByUser.has(b.user_id)) banByUser.set(b.user_id, { reason: b.reason, expiresAt: b.expires_at });
   }
 
-  return rows.map((r) => ({
-    id: r.id,
-    username: r.username,
-    displayName: r.display_name,
-    role: r.role,
-    createdAt: r.created_at,
-    ban: banByUser.get(r.id) ?? null,
-  }));
+  return {
+    items: shown.map((r) => ({
+      id: r.id,
+      username: r.username,
+      displayName: r.display_name,
+      email: input.withEmail ? r.email : null,
+      role: r.role,
+      providers: r.providers ? [...new Set(r.providers.split(","))] : [],
+      createdAt: r.created_at,
+      lastSeenAt: r.last_seen_at ?? null,
+      ban: banByUser.get(r.id) ?? null,
+    })),
+    hasMore: rows.length > PAGE_SIZE,
+    counts: Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, Number(v)])) as AdminUserPage["counts"],
+  };
 }
 
 export async function createBan(

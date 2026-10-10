@@ -156,6 +156,7 @@ const profile: Profile = {
 /** Para `parameters.session` (ver `.storybook/preview.tsx`). */
 export const sessions = {
   user: { user: me("user"), profile },
+  support: { user: me("support"), profile },
   admin: { user: me("admin"), profile },
 };
 

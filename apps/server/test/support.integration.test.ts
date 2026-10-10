@@ -289,12 +289,13 @@ describe("admin", () => {
     expect((await patch(ticket.id, { status: "in_progress" })).status).toBe(200);
     expect(await closedAt()).toBeNull();
 
-    const assigned = AdminTicketSchema.parse(await (await patch(ticket.id, { assignToSelf: true }, mod)).json());
+    const assigned = AdminTicketSchema.parse(await (await patch(ticket.id, { assignedTo: mod })).json());
     expect(assigned).toMatchObject({ assignedTo: mod, status: "in_progress" });
 
-    const byToken = await patch(ticket.id, { assignToSelf: true });
-    expect(byToken.status).toBe(400);
-    expect(await code(byToken)).toBe("cannot_assign_token");
+    const toUser = await patch(ticket.id, { assignedTo: ana });
+    expect(toUser.status).toBe(400);
+    expect(await code(toUser)).toBe("invalid_assignee");
+    expect(AdminTicketSchema.parse(await (await patch(ticket.id, { assignedTo: null })).json()).assignedTo).toBeNull();
     expect((await patch("NOEXISTE", { status: "closed" })).status).toBe(404);
   });
 });

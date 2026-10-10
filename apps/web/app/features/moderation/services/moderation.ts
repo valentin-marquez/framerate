@@ -1,11 +1,12 @@
 import type {
-  AdminUser,
+  AdminUserPage,
   ModerationAction,
   Report,
   ReportPage,
   ReportStatus,
   ReportTargetType,
   ResolveReportRequest,
+  Role,
 } from "@framerate/contracts";
 import { api } from "~/shared/lib/api";
 
@@ -31,7 +32,10 @@ export const moderationClient = {
 
   resolve: (id: number, payload: ResolveReportRequest) => api.post<Report>(`${BASE}/reports/${id}/resolve`, payload),
 
-  searchUsers: (q: string) => api.get<{ items: AdminUser[] }>("/v1/admin/users", { params: { q } }),
+  listUsers: (params: { q?: string; filter?: string; page?: number }) =>
+    api.get<AdminUserPage>("/v1/admin/users", { params: query(params) }),
+
+  changeRole: (userId: string, role: Role) => api.patch(`/v1/admin/users/${userId}/role`, { role }),
 
   ban: (payload: { user_id: string; reason?: string; expires_at?: string | null }) =>
     api.post(`/v1/admin/users/${payload.user_id}/ban`, {

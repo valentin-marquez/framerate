@@ -3,12 +3,15 @@ import {
   type AdminTicket,
   type AdminTicketDetail,
   AdminUpdateTicketRequestSchema,
+  hasRole,
   SupportStatusSchema,
+  type TeamMember,
   type TicketMessage,
 } from "@framerate/contracts";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "@/app";
+import { findUserById } from "@/features/identity/identity.repository";
 import { currentActor } from "@/features/identity/middleware";
 import { actorUserId } from "@/features/identity/types";
 import { sendEmailInBackground } from "@/shared/email";
@@ -42,6 +45,17 @@ const ticketEmailProps = (c: Context<AppEnv>, ticket: TicketRow) => ({
 });
 
 export const supportAdminRoutes = new Hono<AppEnv>()
+  .get("/team", async (c) => {
+    const rows = await c.var.db.query
+      .selectFrom("users")
+      .select(["id", "display_name"])
+      .where("role", "!=", "user")
+      .where("deleted_at", "is", null)
+      .orderBy("display_name")
+      .execute();
+    return c.json<{ items: TeamMember[] }>({ items: rows.map((r) => ({ id: r.id, displayName: r.display_name })) });
+  })
+
   .get("/tickets", async (c) => {
     const filter = z
       .object({ status: SupportStatusSchema.optional(), limit: z.coerce.number().int().min(1).max(200).default(50) })
@@ -56,11 +70,13 @@ export const supportAdminRoutes = new Hono<AppEnv>()
   })
 
   .patch("/tickets/:id", async (c) => {
-    const actor = currentActor(c);
     const input = AdminUpdateTicketRequestSchema.parse(await c.req.json().catch(() => ({})));
     const ticket = await ticketOr404(c);
-    if (input.assignToSelf && actor.kind === "token") {
-      throw new AppError(400, "cannot_assign_token", "El token de servicio no puede asignarse tickets");
+    if (input.assignedTo) {
+      const assignee = await findUserById(c.var.db, input.assignedTo);
+      if (!assignee || !hasRole(assignee.role, "support")) {
+        throw new AppError(400, "invalid_assignee", "Sólo se asigna a alguien del equipo");
+      }
     }
     const updated = await c.var.db.query
       .updateTable("support_tickets")
@@ -70,7 +86,7 @@ export const supportAdminRoutes = new Hono<AppEnv>()
           status: input.status,
           closed_at: input.status === "closed" ? (ticket.closed_at ?? new Date().toISOString()) : null,
         }),
-        ...(input.assignToSelf !== undefined && { assigned_to: input.assignToSelf ? actorUserId(actor) : null }),
+        ...(input.assignedTo !== undefined && { assigned_to: input.assignedTo }),
       })
       .where("id", "=", ticket.id)
       .returningAll()

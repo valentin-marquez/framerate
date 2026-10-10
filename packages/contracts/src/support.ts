@@ -84,6 +84,12 @@ export type AdminReplyRequest = z.infer<typeof AdminReplyRequestSchema>;
 
 export const AdminUpdateTicketRequestSchema = z.object({
   status: SupportStatusSchema.optional(),
-  assignToSelf: z.boolean().optional(),
+  /** Alguien del equipo (rol `support` o superior); null lo deja sin asignar. */
+  assignedTo: z.string().nullable().optional(),
 });
 export type AdminUpdateTicketRequest = z.infer<typeof AdminUpdateTicketRequestSchema>;
+
+export interface TeamMember {
+  id: string;
+  displayName: string;
+}

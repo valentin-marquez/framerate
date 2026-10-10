@@ -8,7 +8,7 @@ import { assertRole, currentActor } from "@/features/identity/middleware";
 import { type Actor, actorRole, actorUserId } from "@/features/identity/types";
 import { recordModerationAction } from "@/shared/audit";
 import { AppError } from "@/shared/http/errors";
-import { countAdmins, createBan, liftActiveBans, searchUsers, setRole } from "./users-admin.repository";
+import { countAdmins, createBan, liftActiveBans, listUsers, setRole, USER_FILTERS } from "./users-admin.repository";
 
 /** Administración de usuarios (montado bajo `/v1/admin/users`; mínimo moderador). */
 
@@ -24,11 +24,13 @@ export const usersAdminRoutes = new Hono<AppEnv>()
   .get("/", async (c) => {
     const query = z
       .object({
-        q: z.string().trim().min(2, "Escribe al menos 2 caracteres").max(50),
-        limit: z.coerce.number().int().min(1).max(50).default(20),
+        q: z.string().trim().min(2, "Escribe al menos 2 caracteres").max(50).optional(),
+        filter: z.enum(USER_FILTERS).default("all"),
+        page: z.coerce.number().int().min(1).default(1),
       })
       .parse(c.req.query());
-    return c.json({ items: await searchUsers(c.var.db, query.q, query.limit, new Date().toISOString()) });
+    const withEmail = actorRole(currentActor(c)) === "admin";
+    return c.json(await listUsers(c.var.db, { ...query, withEmail, now: new Date().toISOString() }));
   })
 
   .post("/:id/ban", async (c) => {

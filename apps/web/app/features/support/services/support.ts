@@ -7,6 +7,7 @@ import type {
   CreateTicketRequest,
   ReplyRequest,
   SupportStatus,
+  TeamMember,
   Ticket,
   TicketDetail,
   TicketMessage,
@@ -40,6 +41,7 @@ export const adminSupportClient = {
       body,
       isInternal,
     } satisfies AdminReplyRequest),
+  team: () => api.get<{ items: TeamMember[] }>("/v1/admin/support/team"),
   update: (id: string, body: AdminUpdateTicketRequest) =>
     api.patch<AdminTicket>(`/v1/admin/support/tickets/${encodeURIComponent(id)}`, body),
 };

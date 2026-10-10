@@ -17,7 +17,7 @@ type Defaulted<T> = ColumnType<T, T | undefined, T>;
 
 // ─── Identidad (0001) ────────────────────────────────────────────────────────
 
-export type UserRole = "user" | "moderator" | "admin";
+export type UserRole = "user" | "support" | "moderator" | "admin";
 export type Lang = "es" | "en" | "arn";
 
 export interface UsersTable {

@@ -1,14 +1,6 @@
-import { IconBan, IconLoader2, IconUserCheck, IconUserShield } from "@tabler/icons-react";
-import { useState } from "react";
-import { useRevalidator } from "react-router";
-import { toast } from "sonner";
+import type { ModerationAction } from "@framerate/contracts";
 import { requireRole } from "~/features/auth/services/auth.server";
-import { Button } from "~/shared/components/primitives/button";
-import { Input } from "~/shared/components/primitives/input";
-import { Label } from "~/shared/components/primitives/label";
-import { Textarea } from "~/shared/components/primitives/textarea";
-import { ApiError } from "~/shared/lib/api";
-import { cn } from "~/shared/lib/utils";
+import { type UserFilter, UsersAdminView } from "../components/users-admin-view";
 import { moderationClient } from "../services/moderation";
 import type { Route } from "./+types/users-admin";
 
@@ -16,183 +8,27 @@ export function meta(_: Route.MetaArgs) {
   return [{ title: "Usuarios - Framerate Admin" }, { name: "robots", content: "noindex" }];
 }
 
-interface ProfileSearchResult {
-  id: string;
-  username: string | null;
-  full_name: string | null;
-  avatar_url: string | null;
-  banned: boolean;
-  ban_reason: string | null;
-  ban_expires_at: string | null;
-  role: "user" | "moderator" | "admin";
-}
+const FILTERS: UserFilter[] = ["all", "staff", "user", "support", "moderator", "admin", "banned"];
 
 export async function loader({ request }: Route.LoaderArgs) {
-  await requireRole(request, "admin");
+  const { user } = await requireRole(request, "admin");
+  const params = new URL(request.url).searchParams;
+  const q = params.get("q")?.trim() ?? "";
+  const filter = FILTERS.find((f) => f === params.get("filter")) ?? "all";
+  const page = Math.max(1, Number(params.get("page")) || 1);
+  const selectedId = params.get("u");
 
-  const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";
-  let results: ProfileSearchResult[] = [];
-  if (q.length >= 2) {
-    const { items } = await moderationClient.searchUsers(q);
-    results = items.map((u) => ({
-      id: u.id,
-      username: u.username,
-      full_name: u.displayName,
-      avatar_url: null,
-      banned: u.ban !== null,
-      ban_reason: u.ban?.reason ?? null,
-      ban_expires_at: u.ban?.expiresAt ?? null,
-      role: u.role,
-    }));
-  }
+  const [data, history] = await Promise.all([
+    moderationClient.listUsers({ q: q.length >= 2 ? q : undefined, filter, page }),
+    selectedId
+      ? moderationClient.listActions({ targetType: "user", targetId: selectedId, pageSize: 20 }).then((r) => r.items)
+      : ([] as ModerationAction[]),
+  ]);
+  const selected = data.items.find((u) => u.id === selectedId) ?? null;
 
-  return { q, results };
+  return { data, q, filter, page, selected, history: selected ? history : [], currentUserId: user.id };
 }
 
 export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
-  const { q, results } = loaderData;
-  const revalidator = useRevalidator();
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [banReason, setBanReason] = useState("");
-
-  async function handleBan(userId: string) {
-    setBusyId(userId);
-    try {
-      await moderationClient.ban({ user_id: userId, reason: banReason.trim() || undefined });
-      toast.success("Usuario baneado");
-      setBanReason("");
-      revalidator.revalidate();
-    } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : "Error baneando");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function handleUnban(userId: string) {
-    setBusyId(userId);
-    try {
-      await moderationClient.unban({ user_id: userId });
-      toast.success("Ban levantado");
-      revalidator.revalidate();
-    } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : "Error desbaneando");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-background p-4 sm:p-8">
-      <header className="mx-auto max-w-4xl mb-6 flex items-center gap-3">
-        <div className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary">
-          <IconUserShield className="size-5" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-semibold">Usuarios</h1>
-          <p className="text-sm text-muted-foreground">
-            Sólo para administradores. Busca a un usuario por su nombre de usuario y gestiona su baneo.
-          </p>
-        </div>
-      </header>
-
-      <form method="get" className="mx-auto max-w-4xl mb-6 flex gap-2">
-        <Input
-          type="search"
-          name="q"
-          placeholder="Buscar por nombre de usuario (mín. 2 caracteres)"
-          defaultValue={q}
-          className="flex-1"
-        />
-        <Button type="submit">Buscar</Button>
-      </form>
-
-      <main className="mx-auto max-w-4xl">
-        {results.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
-            {q ? "Ningún resultado." : "Escribe un nombre de usuario para buscar."}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {results.map((u) => (
-              <div
-                key={u.id}
-                className={cn(
-                  "rounded-2xl border bg-card p-4 flex items-center gap-4",
-                  u.banned ? "border-destructive/30 bg-destructive/5" : "border-border",
-                )}
-              >
-                {u.avatar_url ? (
-                  <img src={u.avatar_url} alt="" className="size-12 rounded-full object-cover" />
-                ) : (
-                  <div className="size-12 rounded-full bg-secondary grid place-items-center text-muted-foreground font-medium">
-                    {u.username?.[0]?.toUpperCase() ?? "?"}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium truncate">{u.full_name ?? u.username ?? "—"}</p>
-                    <span className="text-xs rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">
-                      {u.role}
-                    </span>
-                    {u.banned ? (
-                      <span className="text-xs rounded-full bg-destructive/10 text-destructive px-2 py-0.5 font-medium">
-                        Baneado
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="text-xs text-muted-foreground font-mono truncate">
-                    @{u.username}
-                    <span className="ml-2">{u.id.slice(0, 8)}</span>
-                  </p>
-                  {u.banned && u.ban_reason ? (
-                    <p className="text-xs text-destructive mt-1">Motivo: {u.ban_reason}</p>
-                  ) : null}
-                </div>
-                <div className="flex flex-col gap-2 min-w-[12rem]">
-                  {u.banned ? (
-                    <Button size="sm" variant="secondary" disabled={busyId === u.id} onClick={() => handleUnban(u.id)}>
-                      {busyId === u.id ? (
-                        <IconLoader2 className="size-4 animate-spin" />
-                      ) : (
-                        <IconUserCheck className="size-4" />
-                      )}
-                      Levantar ban
-                    </Button>
-                  ) : (
-                    <details>
-                      <summary className="cursor-pointer text-sm text-destructive hover:underline">
-                        <IconBan className="size-4 inline" /> Banear
-                      </summary>
-                      <div className="mt-2 flex flex-col gap-2">
-                        <Label htmlFor={`reason-${u.id}`} className="text-xs">
-                          Motivo
-                        </Label>
-                        <Textarea
-                          id={`reason-${u.id}`}
-                          value={banReason}
-                          onChange={(e) => setBanReason(e.target.value)}
-                          rows={2}
-                          className="text-xs"
-                        />
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          disabled={busyId === u.id}
-                          onClick={() => handleBan(u.id)}
-                        >
-                          {busyId === u.id ? <IconLoader2 className="size-4 animate-spin" /> : null}
-                          Confirmar ban
-                        </Button>
-                      </div>
-                    </details>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
-  );
+  return <UsersAdminView {...loaderData} />;
 }

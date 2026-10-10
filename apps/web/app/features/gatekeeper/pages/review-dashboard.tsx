@@ -1,6 +1,7 @@
 import type { MatchReviewItem, MatchReviewsResponse } from "@framerate/contracts";
 import { data, Link, useFetcher, useSearchParams } from "react-router";
 import { requireRole } from "~/features/auth/services/auth.server";
+import { AdminTabs } from "~/shared/components/layout/admin-tabs";
 import { Button } from "~/shared/components/primitives/button";
 import { ApiError, api } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
@@ -129,6 +130,7 @@ export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+      <AdminTabs current="/admin/gatekeeper" />
       <header className="space-y-1">
         <h1 className="font-semibold text-3xl tracking-tight md:text-4xl">Gatekeeper</h1>
         <p className="text-muted-foreground text-sm">

@@ -1,26 +1,26 @@
-import type { AdminTicketDetail, SupportStatus, TicketMessage } from "@framerate/contracts";
-import {
-  IconCheck,
-  IconChecks,
-  IconHelp,
-  IconLifebuoy,
-  IconLoader2,
-  IconLock,
-  IconLockOpen,
-  IconMail,
-  IconRefresh,
-  IconUserCheck,
-} from "@tabler/icons-react";
+import type {
+  AdminTicket,
+  AdminTicketDetail,
+  Health,
+  SupportStatus,
+  TeamMember,
+  TicketMessage,
+} from "@framerate/contracts";
+import { IconCheck, IconChecks, IconHelp, IconLoader2, IconLock, IconMail, IconRefresh } from "@tabler/icons-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { useRevalidator, useSearchParams } from "react-router";
+import { Link, useRevalidator, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { requireRole } from "~/features/auth/services/auth.server";
+import { AdminTabs } from "~/shared/components/layout/admin-tabs";
 import { Button } from "~/shared/components/primitives/button";
+import { Label } from "~/shared/components/primitives/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/shared/components/primitives/select";
 import { Switch } from "~/shared/components/primitives/switch";
 import { Textarea } from "~/shared/components/primitives/textarea";
-import { ApiError } from "~/shared/lib/api";
+import { ApiError, api } from "~/shared/lib/api";
 import { cn } from "~/shared/lib/utils";
 import { formatDateTime } from "~/shared/utils/format";
+import { StatusStrip } from "../components/status-strip";
 import {
   CATEGORY_ICONS,
   CATEGORY_LABELS,
@@ -28,18 +28,21 @@ import {
   ticketSource,
   STATUS_LABELS as USER_STATUS_LABELS,
 } from "../lib/labels";
-import { adminSupportClient, SUPPORT_EMAIL } from "../services/support";
+import { adminSupportClient } from "../services/support";
 import type { Route } from "./+types/admin-support-page";
 
 const STATUS_LABELS: Record<SupportStatus, string> = { ...USER_STATUS_LABELS, waiting_user: "Esperando respuesta" };
 
-const STATUS_FILTERS: Array<SupportStatus | "all"> = [
-  "open",
-  "in_progress",
-  "waiting_user",
-  "resolved",
-  "closed",
-  "all",
+type View = "mine" | "unassigned" | "open" | "waiting_user" | "done";
+
+const isDone = (t: AdminTicket) => t.status === "resolved" || t.status === "closed";
+
+const VIEWS: { key: View; label: string; test: (t: AdminTicket, me: string) => boolean }[] = [
+  { key: "mine", label: "Mis tickets", test: (t, me) => t.assignedTo === me && !isDone(t) },
+  { key: "unassigned", label: "Sin asignar", test: (t) => t.assignedTo === null && !isDone(t) },
+  { key: "open", label: "Abiertos", test: (t) => t.status === "open" || t.status === "in_progress" },
+  { key: "waiting_user", label: "Esperando", test: (t) => t.status === "waiting_user" },
+  { key: "done", label: "Cerrados", test: isDone },
 ];
 
 export function meta(_: Route.MetaArgs) {
@@ -51,169 +54,165 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { user } = await requireRole(request, "moderator");
-  const url = new URL(request.url);
-  const statusFilter = (url.searchParams.get("status") as SupportStatus | null) ?? null;
-
-  const { items } = await adminSupportClient.list({ status: statusFilter ?? undefined, limit: 100 });
-
-  return { tickets: items, currentUserId: user.id };
+  const { user } = await requireRole(request, "support");
+  // ponytail: las vistas se cuentan en la web sobre los últimos 200; con más volumen, contarlas en la API.
+  const [{ items }, { items: team }, incidents] = await Promise.all([
+    adminSupportClient.list({ limit: 200 }),
+    adminSupportClient.team(),
+    // Sin el estado la bandeja sigue sirviendo: la franja simplemente no sale.
+    api
+      .get<Health>("/v1/admin/health")
+      .then((h) => h.incidents)
+      .catch(() => null),
+  ]);
+  return { tickets: items, team, incidents, currentUserId: user.id };
 }
 
 export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
-  const { tickets, currentUserId } = loaderData;
+  const { tickets, team, incidents, currentUserId } = loaderData;
   const revalidator = useRevalidator();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedId, setSelectedId] = useState<string | null>(tickets[0]?.id ?? null);
+  const [searchParams] = useSearchParams();
+  const view = VIEWS.find((v) => v.key === searchParams.get("vista")) ?? VIEWS[1];
+  const visible = tickets.filter((t) => view.test(t, currentUserId));
+  const [selectedId, setSelectedId] = useState<string | null>(visible[0]?.id ?? null);
 
-  // El filtro activo se deriva de la URL — así el resaltado es inmediato y el
-  // loader vuelve a correr con el query param correcto.
-  const activeFilter: SupportStatus | "all" = (searchParams.get("status") as SupportStatus | null) ?? "all";
-
-  // Cuando cambian los tickets (revalidate o filtro), si el selectedId ya no existe, agarro el primero.
+  // Al cambiar de vista se abre el primero. Asignar o cambiar el estado puede sacar al ticket abierto de la vista: sigue
+  // abierto igual, para no saltar a otro en medio del trabajo.
   useEffect(() => {
-    if (!selectedId || !tickets.some((t) => t.id === selectedId)) {
-      setSelectedId(tickets[0]?.id ?? null);
-    }
-  }, [tickets, selectedId]);
-
-  function setStatusFilter(next: SupportStatus | "all") {
-    setSearchParams(
-      (prev) => {
-        if (next === "all") prev.delete("status");
-        else prev.set("status", next);
-        return prev;
-      },
-      { preventScrollReset: true },
-    );
+    setSelectedId((current) => (current && tickets.some((t) => t.id === current) ? current : (visible[0]?.id ?? null)));
+  }, [tickets, visible]);
+  const [lastView, setLastView] = useState(view.key);
+  if (lastView !== view.key) {
+    setLastView(view.key);
+    setSelectedId(visible[0]?.id ?? null);
   }
 
+  const nameOf = (id: string) => (id === currentUserId ? "ti" : (team.find((m) => m.id === id)?.displayName ?? "otro"));
+
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-8">
-      <header className="mx-auto max-w-7xl mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary">
-            <IconLifebuoy className="size-5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Soporte</h1>
-            <p className="text-sm text-muted-foreground">Tickets de la web y de {SUPPORT_EMAIL}.</p>
-          </div>
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+      <AdminTabs current="/admin/support" />
+      <header className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="font-semibold text-3xl tracking-tight md:text-4xl">Soporte</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => revalidator.revalidate()}
+            disabled={revalidator.state !== "idle"}
+          >
+            <IconRefresh className={cn("size-4", revalidator.state !== "idle" && "animate-spin")} />
+            Actualizar
+          </Button>
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => revalidator.revalidate()}
-          disabled={revalidator.state !== "idle"}
-        >
-          <IconRefresh className={cn("size-4", revalidator.state !== "idle" && "animate-spin")} />
-          Refrescar
-        </Button>
+        {incidents && <StatusStrip incidents={incidents} />}
       </header>
 
-      <nav className="mx-auto max-w-7xl mb-6 flex flex-wrap gap-1 rounded-xl bg-card p-1 border border-border w-fit">
-        {STATUS_FILTERS.map((status) => {
-          const label = status === "all" ? "Todos" : STATUS_LABELS[status];
-          const active = activeFilter === status;
-          return (
-            <button
-              key={status}
-              type="button"
-              onClick={() => setStatusFilter(status)}
-              className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
-                active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary",
-              )}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </nav>
-
-      <main className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
-        <section className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="px-4 py-2 border-b border-border bg-secondary/30">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-              {tickets.length} tickets
-            </p>
-          </div>
-          {tickets.length === 0 ? (
-            <div className="p-8 text-center">
-              <IconChecks className="mx-auto size-10 text-emerald-500 mb-2" />
-              <p className="text-sm text-muted-foreground">Sin tickets en este filtro.</p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-border max-h-[70vh] overflow-y-auto">
-              {tickets.map((ticket) => {
-                const Icon = CATEGORY_ICONS[ticket.category];
-                const source = ticketSource(ticket.source);
-                const isSelected = ticket.id === selectedId;
-                return (
-                  <li key={ticket.id}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedId(ticket.id)}
-                      className={cn(
-                        "w-full text-left px-4 py-3 flex gap-3 items-start hover:bg-secondary/40 transition-colors cursor-pointer",
-                        isSelected && "bg-secondary/60",
-                      )}
-                    >
-                      <Icon className="size-4 mt-0.5 shrink-0 text-muted-foreground" />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              "inline-block rounded-full px-1.5 py-0 text-[10px] font-medium",
-                              STATUS_COLORS[ticket.status],
+      <div className="grid items-start gap-4 lg:grid-cols-[340px_1fr]">
+        <section className="min-w-0 space-y-3">
+          <nav aria-label="Vistas" className="-mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-wrap lg:px-0">
+            {VIEWS.map((v) => (
+              <Link
+                key={v.key}
+                to={v.key === "unassigned" ? "." : `?vista=${v.key}`}
+                preventScrollReset
+                replace
+                aria-current={view.key === v.key ? "true" : undefined}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 font-medium text-sm transition-colors",
+                  view.key === v.key
+                    ? "bg-foreground text-background"
+                    : "bg-secondary/60 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {v.label}
+                <span className="tabular-nums opacity-70">
+                  {tickets.filter((t) => v.test(t, currentUserId)).length}
+                </span>
+              </Link>
+            ))}
+          </nav>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {visible.length === 0 ? (
+              <div className="p-8 text-center">
+                <IconChecks className="mx-auto mb-2 size-10 text-success" />
+                <p className="text-muted-foreground text-sm">Nada en esta vista.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-border max-h-[70vh] overflow-y-auto">
+                {visible.map((ticket) => {
+                  const Icon = CATEGORY_ICONS[ticket.category];
+                  const source = ticketSource(ticket.source);
+                  const isSelected = ticket.id === selectedId;
+                  return (
+                    <li key={ticket.id}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedId(ticket.id)}
+                        className={cn(
+                          "w-full text-left px-4 py-3 flex gap-3 items-start hover:bg-secondary/40 transition-colors cursor-pointer",
+                          isSelected && "bg-secondary/60",
+                        )}
+                      >
+                        <Icon className="size-4 mt-0.5 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                "inline-block rounded-full px-1.5 py-0 text-[10px] font-medium",
+                                STATUS_COLORS[ticket.status],
+                              )}
+                            >
+                              {STATUS_LABELS[ticket.status]}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <source.Icon className="size-3" aria-hidden />
+                              {source.label}
+                            </span>
+                            {ticket.assignedTo && (
+                              <span className="text-[10px] text-muted-foreground">
+                                para {nameOf(ticket.assignedTo)}
+                              </span>
                             )}
-                          >
-                            {STATUS_LABELS[ticket.status]}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <source.Icon className="size-3" aria-hidden />
-                            {source.label}
-                          </span>
-                          {ticket.assignedTo === currentUserId && (
-                            <span className="text-[10px] text-primary font-medium">tuyo</span>
-                          )}
+                          </div>
+                          <p className="text-sm font-medium truncate mt-1">{ticket.subject}</p>
+                          <p className="text-xs text-muted-foreground truncate" title={ticket.email}>
+                            {ticket.email}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                            {formatDateTime(ticket.lastMessageAt)}
+                          </p>
                         </div>
-                        <p className="text-sm font-medium truncate mt-1">{ticket.subject}</p>
-                        <p className="text-xs text-muted-foreground truncate" title={ticket.email}>
-                          {ticket.email}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground/70 mt-0.5">
-                          {formatDateTime(ticket.lastMessageAt)}
-                        </p>
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </section>
 
-        <section>
+        <section className="min-w-0">
           {selectedId ? (
-            <TicketThread ticketId={selectedId} currentUserId={currentUserId} />
+            <TicketThread key={selectedId} ticketId={selectedId} team={team} currentUserId={currentUserId} />
           ) : (
             <div className="rounded-2xl border border-border bg-card p-12 text-center">
               <p className="text-sm text-muted-foreground">Selecciona un ticket para verlo.</p>
             </div>
           )}
         </section>
-      </main>
+      </div>
     </div>
   );
 }
 
 interface TicketThreadProps {
   ticketId: string;
+  team: TeamMember[];
   currentUserId: string;
 }
 
-function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
+function TicketThread({ ticketId, team, currentUserId }: TicketThreadProps) {
   const revalidator = useRevalidator();
   const [loading, setLoading] = useState(true);
   const [ticket, setTicket] = useState<AdminTicketDetail | null>(null);
@@ -272,26 +271,20 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
     }
   }
 
-  async function changeStatus(status: SupportStatus) {
+  async function update(change: { status: SupportStatus } | { assignedTo: string | null }) {
     try {
-      const updated = await adminSupportClient.update(ticketId, { status });
-      setTicket((prev) => (prev ? { ...prev, status: updated.status } : prev));
-      toast.success(`Estado actualizado: ${STATUS_LABELS[updated.status]}`);
+      const updated = await adminSupportClient.update(ticketId, change);
+      setTicket((prev) => (prev ? { ...prev, status: updated.status, assignedTo: updated.assignedTo } : prev));
+      toast.success(
+        "status" in change
+          ? `Estado: ${STATUS_LABELS[updated.status]}`
+          : updated.assignedTo
+            ? `Asignado a ${updated.assignedTo === currentUserId ? "ti" : team.find((m) => m.id === updated.assignedTo)?.displayName}`
+            : "Sin asignar",
+      );
       revalidator.revalidate();
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : "No pudimos actualizar";
-      toast.error(msg);
-    }
-  }
-
-  async function assignToMe() {
-    try {
-      const updated = await adminSupportClient.update(ticketId, { assignToSelf: true });
-      setTicket((prev) => (prev ? { ...prev, assignedTo: updated.assignedTo } : prev));
-      toast.success("Asignado a ti");
-      revalidator.revalidate();
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "No pudimos asignar";
       toast.error(msg);
     }
   }
@@ -344,32 +337,49 @@ function TicketThread({ ticketId, currentUserId }: TicketThreadProps) {
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {ticket.assignedTo !== currentUserId && (
-                <Button size="sm" variant="secondary" onClick={assignToMe}>
-                  <IconUserCheck className="size-4" /> Asignármelo
-                </Button>
-              )}
-              {ticket.status !== "in_progress" && (
-                <Button size="sm" variant="secondary" onClick={() => changeStatus("in_progress")}>
-                  En curso
-                </Button>
-              )}
-              {ticket.status !== "resolved" && (
-                <Button size="sm" variant="secondary" onClick={() => changeStatus("resolved")}>
-                  <IconCheck className="size-4" /> Resolver
-                </Button>
-              )}
-              {ticket.status !== "closed" && (
-                <Button size="sm" variant="outline" onClick={() => changeStatus("closed")}>
-                  <IconLock className="size-4" /> Cerrar
-                </Button>
-              )}
-              {ticket.status === "closed" && (
-                <Button size="sm" variant="outline" onClick={() => changeStatus("open")}>
-                  <IconLockOpen className="size-4" /> Reabrir
-                </Button>
-              )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor={`${replyHintId}-assignee`} className="text-muted-foreground text-xs">
+                  Asignado a
+                </Label>
+                <Select
+                  value={ticket.assignedTo ?? "none"}
+                  onValueChange={(v) => update({ assignedTo: v === "none" ? null : (v as string) })}
+                >
+                  <SelectTrigger id={`${replyHintId}-assignee`} size="sm" className="w-full">
+                    <SelectValue>
+                      {(v: string) =>
+                        v === "none" ? "Sin asignar" : (team.find((m) => m.id === v)?.displayName ?? "Fuera del equipo")
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin asignar</SelectItem>
+                    {team.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.id === currentUserId ? `${m.displayName} (tú)` : m.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`${replyHintId}-status`} className="text-muted-foreground text-xs">
+                  Estado
+                </Label>
+                <Select value={ticket.status} onValueChange={(v) => update({ status: v as SupportStatus })}>
+                  <SelectTrigger id={`${replyHintId}-status`} size="sm" className="w-full">
+                    <SelectValue>{(v: string) => STATUS_LABELS[v as SupportStatus]}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(STATUS_LABELS) as SupportStatus[]).map((st) => (
+                      <SelectItem key={st} value={st}>
+                        {STATUS_LABELS[st]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </header>
 

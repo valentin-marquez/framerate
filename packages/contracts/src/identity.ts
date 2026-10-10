@@ -8,11 +8,11 @@ import { z } from "zod";
 // ─── Roles ───────────────────────────────────────────────────────────────────
 
 /** Jerarquía estricta: cada rol incluye los permisos de los anteriores. */
-export const ROLES = ["user", "moderator", "admin"] as const;
+export const ROLES = ["user", "support", "moderator", "admin"] as const;
 export const RoleSchema = z.enum(ROLES);
 export type Role = z.infer<typeof RoleSchema>;
 
-const ROLE_RANK: Record<Role, number> = { user: 1, moderator: 2, admin: 3 };
+const ROLE_RANK: Record<Role, number> = { user: 1, support: 2, moderator: 3, admin: 4 };
 
 export const roleRank = (role: Role): number => ROLE_RANK[role];
 
@@ -186,11 +186,33 @@ export const AdminUserSchema = z.object({
   id: z.string(),
   username: UsernameSchema,
   displayName: z.string(),
+  /** Sólo para admins. */
+  email: z.string().nullable(),
   role: RoleSchema,
+  /** Proveedores con que entra: "discord", "google". */
+  providers: z.array(z.string()),
   createdAt: z.iso.datetime(),
+  /** Última vez que se renovó una sesión suya. */
+  lastSeenAt: z.iso.datetime().nullable(),
   ban: BanSchema.nullable(),
 });
 export type AdminUser = z.infer<typeof AdminUserSchema>;
+
+export const AdminUserPageSchema = z.object({
+  items: z.array(AdminUserSchema),
+  hasMore: z.boolean(),
+  /** Cuántos hay en cada filtro (con la búsqueda aplicada). */
+  counts: z.object({
+    all: z.number(),
+    staff: z.number(),
+    user: z.number(),
+    support: z.number(),
+    moderator: z.number(),
+    admin: z.number(),
+    banned: z.number(),
+  }),
+});
+export type AdminUserPage = z.infer<typeof AdminUserPageSchema>;
 
 export const BanRequestSchema = z.object({
   reason: z.string().trim().max(500).optional(),

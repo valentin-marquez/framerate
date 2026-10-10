@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { AdminUserSchema, ApiErrorSchema, MeSchema, type Role } from "@framerate/contracts";
+import { AdminUserPageSchema, AdminUserSchema, ApiErrorSchema, MeSchema, type Role } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { z } from "zod";
@@ -119,6 +119,61 @@ describe("búsqueda de usuarios", () => {
       .object({ items: z.array(AdminUserSchema) })
       .parse(await (await call(mod, "/v1/admin/users?q=ana")).json());
     expect(list.items[0]?.ban).toEqual({ reason: "spam", expiresAt: null });
+  });
+});
+
+describe("listado de usuarios", () => {
+  const page = async (actor: string, query = "") =>
+    AdminUserPageSchema.parse(await (await call(actor, `/v1/admin/users${query}`)).json());
+
+  test("sin búsqueda lista a todos, del más nuevo al más viejo, con el conteo de cada filtro", async () => {
+    const admin = await who("Rafa", "admin");
+    await who("Sofi", "support");
+    const ana = await who("Ana");
+    await call(admin, `/v1/admin/users/${ana}/ban`, "POST", {});
+
+    const all = await page(admin);
+    expect(all.items.map((u) => u.username)).toEqual(["ana", "sofi", "rafa"]);
+    expect(all.counts).toEqual({ all: 3, staff: 2, user: 1, support: 1, moderator: 0, admin: 1, banned: 1 });
+    expect(all.hasMore).toBe(false);
+    expect(all.items[2]).toMatchObject({
+      email: "rafa@example.com",
+      providers: ["discord"],
+      lastSeenAt: expect.any(String),
+    });
+
+    expect((await page(admin, "?filter=staff")).items.map((u) => u.username)).toEqual(["sofi", "rafa"]);
+    expect((await page(admin, "?filter=support")).items.map((u) => u.username)).toEqual(["sofi"]);
+    expect((await page(admin, "?filter=banned")).items.map((u) => u.username)).toEqual(["ana"]);
+  });
+
+  test("el correo sólo se lo ve un admin", async () => {
+    const mod = await who("Mod", "moderator");
+    expect((await page(mod)).items.every((u) => u.email === null)).toBe(true);
+  });
+});
+
+describe("rol soporte", () => {
+  test("llega a la bandeja de soporte y al estado, y a nada más", async () => {
+    const sofi = await who("Sofi", "support");
+    expect((await call(sofi, "/v1/admin/support/tickets")).status).toBe(200);
+    expect((await call(sofi, "/v1/admin/support/team")).status).toBe(200);
+    expect((await call(sofi, "/v1/admin/health")).status).toBe(200);
+    for (const path of ["/v1/admin/users", "/v1/admin/reviews", "/v1/admin/crawls", "/v1/admin/moderation/queue"]) {
+      expect((await call(sofi, path)).status).toBe(403);
+    }
+    const ana = await who("Ana");
+    expect((await call(sofi, `/v1/admin/users/${ana}/ban`, "POST", {})).status).toBe(403);
+  });
+
+  test("el equipo de soporte lista a todos los que no son usuarios comunes", async () => {
+    const sofi = await who("Sofi", "support");
+    await who("Mod", "moderator");
+    await who("Ana");
+    const { items } = (await (await call(sofi, "/v1/admin/support/team")).json()) as {
+      items: { displayName: string }[];
+    };
+    expect(items.map((m) => m.displayName)).toEqual(["Mod", "Sofi"]);
   });
 });
 
