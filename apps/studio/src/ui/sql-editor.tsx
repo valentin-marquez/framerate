@@ -60,7 +60,17 @@ export function SqlEditor({
       parent: host.current as HTMLDivElement,
       doc: value,
       extensions: [
-        Prec.highest(keymap.of([{ key: "Mod-Enter", run: () => (cb.current.onRun(), true) }])),
+        Prec.highest(
+          keymap.of([
+            {
+              key: "Mod-Enter",
+              run: () => {
+                cb.current.onRun();
+                return true;
+              },
+            },
+          ]),
+        ),
         basicSetup,
         lang.current.of(language(schema)),
         look.current.of(dark ? oneDark : []),

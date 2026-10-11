@@ -2,8 +2,10 @@ import { Banner, Button, Checkbox, DropdownMenu, Input, Pagination, Select } fro
 import {
   ArrowClockwiseIcon,
   ArrowDownIcon,
+  ArrowSquareOutIcon,
   ArrowsOutSimpleIcon,
   ArrowUpIcon,
+  CaretDownIcon,
   CodeIcon,
   DotsThreeIcon,
   FunnelSimpleIcon,
@@ -28,6 +30,7 @@ import {
 } from "../sql";
 import type { Result, Target } from "../targets";
 import { type Column, objects, query, schema } from "./api";
+import { CellEditor, type Editing } from "./cell-editor";
 import { ColumnLabel, Grid, showValue } from "./grid";
 import { RowDialog } from "./row-dialog";
 import { Toolbar, type View } from "./toolbar";
@@ -54,6 +57,8 @@ export function DataTab({
   onView,
   onOpenSql,
   onDirty,
+  onJump,
+  initialFilters,
 }: {
   target: Target;
   table: string;
@@ -62,10 +67,14 @@ export function DataTab({
   onView: (v: View) => void;
   onOpenSql: (sql: string) => void;
   onDirty: (dirty: boolean) => void;
+  onJump: (table: string, column: string, value: string) => void;
+  // Llega al saltar por una clave foránea: la tabla abre ya filtrada.
+  initialFilters?: Filter[];
 }) {
   const [columns, setColumns] = useState<Column[]>([]);
-  const [filters, setFilters] = useState<Filter[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
+  const [fks, setFks] = useState<Record<string, { table: string; to: string }>>({});
+  const [filters, setFilters] = useState<Filter[]>(initialFilters ?? []);
+  const [showFilters, setShowFilters] = useState(initialFilters !== undefined);
   const [sorts, setSorts] = useState<Sort[]>([]);
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<Result>();
@@ -73,7 +82,7 @@ export function DataTab({
   const [ms, setMs] = useState<number>();
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState<Pending>({});
-  const [editingCell, setEditingCell] = useState<{ row: number; column: string }>();
+  const [editing, setEditing] = useState<Editing & { row: Row }>();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -93,7 +102,10 @@ export function DataTab({
 
   useEffect(() => {
     schema(target, table).then(
-      (s) => setColumns(s.columns),
+      (s) => {
+        setColumns(s.columns);
+        setFks(Object.fromEntries(s.fks.map((f) => [String(f.from), { table: String(f.table), to: String(f.to) }])));
+      },
       (e) => setError(e.message),
     );
   }, [target, table]);
@@ -150,14 +162,16 @@ export function DataTab({
     return p && c in p ? p[c] : r[c];
   };
 
-  const commitCell = (r: Row, column: string, text: string) => {
-    setEditingCell(undefined);
-    if (text === String(valueAt(r, column) ?? "")) return;
+  const same = (a: unknown, b: unknown) => (a === null || b === null ? a === b : String(a) === String(b));
+
+  const commitCell = (r: Row, column: string, value: string | null) => {
+    setEditing(undefined);
+    if (same(valueAt(r, column), value)) return;
     const k = rk(r);
     setPending((p) => {
-      const values = { ...p[k]?.values, [column]: text };
+      const values = { ...p[k]?.values, [column]: value };
       // Volver al valor original deshace el cambio.
-      if (String(r[column] ?? "") === text) delete values[column];
+      if (same(r[column], value)) delete values[column];
       const next = { ...p };
       if (Object.keys(values).length) next[k] = { key: keyOf(r), values };
       else delete next[k];
@@ -352,7 +366,12 @@ export function DataTab({
       <div className="min-h-0 flex-1 overflow-auto">
         {result && (
           <Grid
-            columns={visible.map((name) => ({ name, type: types[name] }))}
+            columns={visible.map((name) => ({
+              name,
+              type: types[name],
+              pk: columns.some((c) => c.name === name && c.pk > 0),
+              fk: fks[name]?.table,
+            }))}
             rows={rows.map((r) => visible.map((c) => valueAt(r, c)))}
             leading={
               editable
@@ -391,47 +410,84 @@ export function DataTab({
             }
             head={(c) => {
               const s = sorts.find((x) => x.column === c.name);
+              const sortBy = (dir: "asc" | "desc" | null) => {
+                setSorts((all) => {
+                  const rest = all.filter((x) => x.column !== c.name);
+                  return dir ? [...rest, { column: c.name, dir }] : rest;
+                });
+                setPage(1);
+              };
               return (
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-2"
-                  onClick={() => toggleSort(c.name)}
-                >
-                  <ColumnLabel column={c} />
-                  {s?.dir === "asc" && <ArrowUpIcon />}
-                  {s?.dir === "desc" && <ArrowDownIcon />}
-                </button>
+                <div className="flex w-full items-center justify-between gap-2">
+                  <button type="button" className="flex items-center gap-1" onClick={() => toggleSort(c.name)}>
+                    <ColumnLabel column={c} />
+                    {s?.dir === "asc" && <ArrowUpIcon />}
+                    {s?.dir === "desc" && <ArrowDownIcon />}
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenu.Trigger
+                      render={
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          shape="square"
+                          icon={<CaretDownIcon />}
+                          aria-label={`Opciones de ${c.name}`}
+                        />
+                      }
+                    />
+                    <DropdownMenu.Content>
+                      <DropdownMenu.Item onClick={() => sortBy("asc")}>Orden ascendente</DropdownMenu.Item>
+                      <DropdownMenu.Item onClick={() => sortBy("desc")}>Orden descendente</DropdownMenu.Item>
+                      {s && <DropdownMenu.Item onClick={() => sortBy(null)}>Quitar orden</DropdownMenu.Item>}
+                      <DropdownMenu.Item
+                        onClick={() => {
+                          editFilters((fs) => [...fs, { column: c.name, op: "=", value: "" }]);
+                          setShowFilters(true);
+                        }}
+                      >
+                        Filtrar por esta columna
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(c.name)}>
+                        Copiar nombre
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu>
+                </div>
               );
             }}
             cell={(i, j, v) => {
               const r = rows[i] as Row;
               const column = visible[j] as string;
               const dirty = pending[rk(r)]?.values && column in (pending[rk(r)]?.values ?? {});
-              if (editingCell?.row === i && editingCell.column === column) {
-                return (
-                  <input
-                    // biome-ignore lint/a11y/noAutofocus: la celda entra en edición por doble clic
-                    autoFocus
-                    aria-label={column}
-                    className="w-full bg-transparent font-mono outline-none"
-                    defaultValue={v === null ? "" : String(v)}
-                    onBlur={(e) => commitCell(r, column, e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") commitCell(r, column, e.currentTarget.value);
-                      if (e.key === "Escape") setEditingCell(undefined);
-                    }}
-                  />
-                );
-              }
+              const fk = fks[column];
               return (
-                <button
-                  type="button"
-                  title={v === null ? "NULL" : String(v)}
-                  className={`block w-full truncate text-left ${dirty ? "text-kumo-warning" : ""}`}
-                  onDoubleClick={() => editable && setEditingCell({ row: i, column })}
-                >
-                  {showValue(v)}
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    title={v === null ? "NULL" : String(v)}
+                    className={`block min-w-0 flex-1 truncate text-left ${dirty ? "text-kumo-warning" : ""}`}
+                    onDoubleClick={(e) => {
+                      const anchor = e.currentTarget.closest("td");
+                      if (editable && anchor)
+                        setEditing((prev) => ({ anchor, column, value: v, row: r, nonce: (prev?.nonce ?? 0) + 1 }));
+                    }}
+                  >
+                    {showValue(v)}
+                  </button>
+                  {fk && v !== null && (
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      shape="square"
+                      className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                      icon={<ArrowSquareOutIcon />}
+                      aria-label={`Ver en ${fk.table}`}
+                      title={`Ver en ${fk.table}`}
+                      onClick={() => onJump(fk.table, fk.to, String(v))}
+                    />
+                  )}
+                </div>
               );
             }}
           />
@@ -457,6 +513,12 @@ export function DataTab({
           </Button>
         </div>
       )}
+
+      <CellEditor
+        editing={editing}
+        onCommit={(value) => editing && commitCell(editing.row, editing.column, value)}
+        onClose={() => setEditing(undefined)}
+      />
 
       <RowDialog
         target={target}

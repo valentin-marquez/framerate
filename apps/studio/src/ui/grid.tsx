@@ -1,7 +1,9 @@
 import { Table } from "@cloudflare/kumo";
+import { KeyIcon, LinkSimpleIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
-export type GridColumn = { name: string; type?: string };
+// fk: tabla referenciada, para el ícono de vínculo.
+export type GridColumn = { name: string; type?: string; pk?: boolean; fk?: string };
 
 export const showValue = (v: unknown) =>
   v === null ? <span className="text-kumo-subtle italic">NULL</span> : String(v);
@@ -57,7 +59,9 @@ export function Grid({
 
 export function ColumnLabel({ column }: { column: GridColumn }) {
   return (
-    <span className="flex items-baseline gap-1.5">
+    <span className="flex items-center gap-1.5">
+      {column.pk && <KeyIcon className="shrink-0 text-kumo-warning" aria-label="Clave primaria" />}
+      {column.fk && <LinkSimpleIcon className="shrink-0 text-kumo-brand" aria-label={`Referencia a ${column.fk}`} />}
       <span className="font-medium">{column.name}</span>
       {column.type && <span className="text-xs font-normal text-kumo-subtle lowercase">{column.type}</span>}
     </span>

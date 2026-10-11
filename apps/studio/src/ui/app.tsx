@@ -1,6 +1,7 @@
 import { Badge, Banner, Button, Input, Select, Sidebar } from "@cloudflare/kumo";
 import { EyeIcon, MagnifyingGlassIcon, MoonIcon, SunIcon, TableIcon, TerminalWindowIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Filter } from "../sql";
 import type { Target } from "../targets";
 import { tables as loadTables } from "./api";
 import { DataTab } from "./data-tab";
@@ -16,6 +17,8 @@ export function App() {
   const [search, setSearch] = useState("");
   const [sqlText, setSqlText] = useState("select name from sqlite_master where type = 'table'");
   const [error, setError] = useState<string>();
+  // Un salto por clave foránea abre la tabla referenciada ya filtrada; n fuerza una grilla nueva.
+  const [jump, setJump] = useState<{ n: number; filters?: Filter[] }>({ n: 0 });
   const [mode, setMode] = useState(document.documentElement.dataset.mode ?? "dark");
   const toggleMode = () => {
     const next = mode === "dark" ? "light" : "dark";
@@ -102,6 +105,7 @@ export function App() {
                   onClick={() =>
                     leave(() => {
                       setTable(t.name);
+                      setJump((j) => ({ n: j.n + 1 }));
                       if (view === "sql") setView("data");
                     })
                   }
@@ -130,9 +134,16 @@ export function App() {
           <p className="p-6 text-kumo-subtle">Elige una tabla en la barra lateral.</p>
         ) : tableView === "data" ? (
           <DataTab
-            key={`${target}:${table}`}
+            key={`${target}:${table}:${jump.n}`}
             target={target}
             table={table}
+            initialFilters={jump.filters}
+            onJump={(t, column, value) =>
+              leave(() => {
+                setTable(t);
+                setJump((j) => ({ n: j.n + 1, filters: [{ column, op: "=", value }] }));
+              })
+            }
             type={list.find((t) => t.name === table)?.type ?? "table"}
             view={tableView}
             onView={(v) => leave(() => setView(v))}
