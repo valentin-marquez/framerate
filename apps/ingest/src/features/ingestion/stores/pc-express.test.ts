@@ -38,7 +38,7 @@ const adapter = createPcExpressAdapter({
   categories: { gpu: ["475", "602"], cpu: ["591"], case: ["120"], case_fan: ["170"] },
 });
 const crawl = (category: Category, ctx = fakeContext().ctx) => Array.fromAsync(adapter.crawlCategory(category, ctx));
-const listing = (path: string, page = "") => `${BASE}/index.php?route=product/category&path=${path}${page}`;
+const listing = (path: string, page = "") => `${BASE}/index.php?route=product/category&path=${path}&limit=100${page}`;
 
 describe("adaptador PC Express", () => {
   test("pagina el listado, entra una vez a cada ficha y salta la que ya no existe", async () => {

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { silentLogger } from "@framerate/kit";
-// Cuatro `<article>` reales de Eylstore (oct. 2026): sin código, con un número interno, con un modelo con espacios y
-// con un MPN. El RSC de la página trae `last_page`.
+// Cuatro productos reales de `/api/categorias/…/productos` (11-10-2026), en dos páginas: sin código, con un número
+// interno y part number, con un modelo con espacios y con un MPN.
 import responses from "./__fixtures__/eylstore.json";
 import type { CrawlContext } from "./adapter";
 import { createEylstoreAdapter } from "./eylstore";
@@ -28,24 +28,26 @@ const ctx: CrawlContext = {
 const adapter = createEylstoreAdapter({ baseUrl: BASE, categories: { motherboard: ["placas-madres"] } });
 
 describe("adaptador Eylstore", () => {
-  test("lee las tarjetas del listado, sin entrar a la ficha", async () => {
+  test("pagina la API y lee precios, stock y fotos sin entrar a la ficha", async () => {
     const offers = await Array.fromAsync(adapter.crawlCategory("motherboard", ctx));
 
     expect(offers).toHaveLength(4);
-    expect(offers[0]).toMatchObject({
-      brand: "ASROCK",
-      priceCash: 218_980,
-      priceCard: 229_929,
+    expect(offers[1]).toMatchObject({
+      externalId: "procesador-amd-ryzen-5-5500-42-ghz-6-nucleos-socket-am4-pn-100-100000457box",
+      brand: "AMD",
+      priceCash: 126_990,
+      priceCard: 133_990,
       inStock: true,
-      stockQuantity: 4,
+      stockQuantity: 6,
     });
-    expect(offers[0]?.url).toStartWith(`${BASE}/producto/placa-madre-asrock-b850m`);
-    expect(offers[0]?.imageUrls[0]).toStartWith("https://media.eylstore.cl/");
+    expect(offers[1]?.url).toBe(`${BASE}/producto/${offers[1]?.externalId}`);
+    expect(offers[1]?.imageUrls[0]).toStartWith("https://media.eylstore.cl/");
+    expect(offers[2]).toMatchObject({ inStock: false, stockQuantity: 0 });
   });
 
-  test("sólo un código sin espacios con letras y números es MPN", async () => {
+  test("el MPN sale del part number o de un código sin espacios con letras y números", async () => {
     const offers = await Array.fromAsync(adapter.crawlCategory("motherboard", ctx));
-    // "SKU no informado", "2417" (interno), "A520M K V2" (modelo con espacios) y "G5060-8S2C".
-    expect(offers.map((o) => o.mpn)).toEqual([null, null, null, "G5060-8S2C"]);
+    // Sin código, "2232" con part number, "GV-N5090GAMING OC-32GD" (con espacios) y "G5060-8S2C".
+    expect(offers.map((o) => o.mpn)).toEqual([null, "100-100000457box", null, "G5060-8S2C"]);
   });
 });

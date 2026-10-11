@@ -38,9 +38,6 @@ export interface WooCommerceConfig {
   /** `false`: el SKU nunca es GTIN aunque pase el dígito verificador (Play Factory usa números internos de 14
    * dígitos y ~1 de cada 10 lo pasa por azar). */
   skuGtin?: false;
-  /** Pedir el catálogo entero sin `?category=` y repartir por `categories[].slug`: para tiendas cuyo robots.txt
-   * prohíbe `/*category=` (Centrale). Cada corrida recorre todas las páginas. */
-  wholeCatalog?: boolean;
   /** Taxonomía de un atributo (`pa_…`): los slugs de `categories` son términos de ese atributo, no categorías. Para
    * tiendas con todos los componentes en una categoría plana y el tipo en un atributo (Notebooksya). */
   attribute?: string;
@@ -68,7 +65,6 @@ const WcProductSchema = z.object({
     currency_minor_unit: z.number().int().min(0).max(4).default(0),
   }),
   images: z.array(z.object({ src: z.url() })).default([]),
-  categories: z.array(z.object({ slug: z.string() })).optional(),
   brands: z.array(z.object({ name: z.string() })).optional(),
   attributes: z
     .array(
@@ -90,14 +86,11 @@ export function createWooCommerceAdapter(config: WooCommerceConfig): StoreAdapte
     categories: config.categories,
     async *crawlCategory(category: Category, ctx: CrawlContext) {
       const slugs = config.categories[category] ?? [];
-      for (const slug of config.wholeCatalog ? ["*"] : slugs) {
+      for (const slug of slugs) {
         for (let page = 1; page <= maxPages; page++) {
-          const filter =
-            slug === "*"
-              ? ""
-              : config.attribute
-                ? `attributes[0][attribute]=${config.attribute}&attributes[0][slug][]=${encodeURIComponent(slug)}&`
-                : `category=${encodeURIComponent(slug)}&`;
+          const filter = config.attribute
+            ? `attributes[0][attribute]=${config.attribute}&attributes[0][slug][]=${encodeURIComponent(slug)}&`
+            : `category=${encodeURIComponent(slug)}&`;
           const url = `${config.baseUrl}/wp-json/wc/store/v1/products?${filter}per_page=${perPage}&page=${page}`;
           const res = await ctx.http.get(url);
           await ctx.snapshot(`${slug}/page-${page}.json`, res.text);
@@ -106,7 +99,6 @@ export function createWooCommerceAdapter(config: WooCommerceConfig): StoreAdapte
           ctx.log.info("woocommerce.page", { slug, page, items: items.length });
           for (const item of items) {
             const product = WcProductSchema.safeParse(item);
-            if (slug === "*" && !product.data?.categories?.some((c) => slugs.includes(c.slug))) continue;
             if (config.skipSku && product.data && config.skipSku.test(product.data.sku)) continue;
             // Un item mal formado no debe tumbar la página: se entrega crudo y
             // la validación de `normalize` lo manda a cuarentena con su motivo.

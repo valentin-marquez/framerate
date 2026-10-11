@@ -1,14 +1,13 @@
 import type { Category } from "@framerate/contracts";
-import { decodeEntities } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
+import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { parseClp } from "./html";
 
 /**
- * Eylstore (Next.js, renderizado en el servidor). El listado `/categorias/<slug>?page=N` (12 por página) trae en cada
- * `<article>` marca, título, código, unidades, "Transferencia" y "Otros medios de pago" (tarjeta): no hace falta la ficha.
- * Su robots.txt prohíbe `/api`. El código es el MPN sólo a veces ("SKU no informado" o un número interno el resto).
+ * Eylstore (Next.js sobre una API Laravel). `GET /api/categorias/<slug>/productos?per_page=100` trae marca, código,
+ * part number, los dos precios y el stock: no hace falta la ficha. Su robots.txt prohíbe `/api`; se usa igual por
+ * decisión del dueño (11-10-2026). El código es el MPN sólo a veces ("SKU no informado" o un número interno el resto).
  */
 
 export interface EylstoreConfig {
@@ -17,7 +16,24 @@ export interface EylstoreConfig {
   categories: Partial<Record<Category, readonly string[]>>;
 }
 
-const MAX_PAGES = 30;
+const MAX_PAGES = 10;
+
+const ProductSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  brand: z.string().nullable(),
+  code: z.string().nullable(),
+  part_number: z.string().nullable(),
+  stock: z.number(),
+  precio_transferencia: z.number(),
+  precio_tarjeta: z.number().nullable(),
+  image: z.string().nullable(),
+  gallery: z.array(z.string()).default([]),
+});
+const PageSchema = z.object({
+  meta: z.object({ last_page: z.number() }),
+  products: z.array(z.unknown()),
+});
 
 export function createEylstoreAdapter(config: EylstoreConfig): StoreAdapter {
   return {
@@ -26,47 +42,47 @@ export function createEylstoreAdapter(config: EylstoreConfig): StoreAdapter {
       const seen = new Set<string>();
       for (const slug of config.categories[category] ?? []) {
         for (let page = 1; page <= MAX_PAGES; page++) {
-          const res = await ctx.http.get(`${config.baseUrl}/categorias/${slug}?page=${page}`, { accept: "text/html" });
-          await ctx.snapshot(`${slug}/page-${page}.html`, res.text);
+          const res = await ctx.http.get(
+            `${config.baseUrl}/api/categorias/${slug}/productos?per_page=100&page=${page}`,
+          );
+          await ctx.snapshot(`${slug}/page-${page}.json`, res.text);
 
-          const articles = res.text.split("<article").slice(1);
-          const pages = Number(res.text.match(/last_page\?":(\d+)/)?.[1] ?? 1);
-          ctx.log.info("eylstore.page", { slug, page, items: articles.length, pages });
-          for (const article of articles) {
-            const offer = toRawOffer(article, config.baseUrl, category);
-            if (!offer || seen.has(offer.externalId)) continue;
+          const { meta, products } = PageSchema.parse(JSON.parse(res.text));
+          ctx.log.info("eylstore.page", { slug, page, items: products.length, pages: meta.last_page });
+          for (const item of products) {
+            const product = ProductSchema.safeParse(item);
+            // Un item mal formado no tumba la página: `normalize` lo manda a cuarentena con su motivo.
+            const offer = product.success ? toRawOffer(product.data, config.baseUrl, category) : (item as RawOffer);
+            if (seen.has(offer.externalId)) continue;
             seen.add(offer.externalId);
             yield offer;
           }
-          if (articles.length === 0 || page >= pages) break;
+          if (products.length === 0 || page >= meta.last_page) break;
         }
       }
     },
   };
 }
 
-export function toRawOffer(article: string, baseUrl: string, category: Category): RawOffer | null {
-  const href = article.match(/href="(\/producto\/[^"]+)"/)?.[1];
-  if (!href) return null;
-  const text = (re: RegExp) => decodeEntities(article.match(re)?.[1] ?? "").trim();
+// "SKU no informado", un número interno ("2417") o un modelo con espacios ("B550M K") no son MPN.
+const isMpn = (code: string) => /^\S+$/.test(code) && /[a-z]/i.test(code) && /\d/.test(code);
 
-  const code = text(/<div class="mb-3[^"]*"><span>([^<]*)<\/span>/);
-  const units = Number(article.match(/(\d+) unidades?/)?.[1] ?? 0);
+export function toRawOffer(p: z.infer<typeof ProductSchema>, baseUrl: string, category: Category): RawOffer {
+  const code = p.code?.trim() ?? "";
   const gtin = normalizeGtin(code) ? code : null;
-
+  const mpn = [p.part_number?.trim() ?? "", code].find((c) => !gtin && isMpn(c)) ?? null;
   return {
-    externalId: href.slice("/producto/".length),
-    url: `${baseUrl}${decodeEntities(href)}`,
-    title: text(/<h3[^>]*>([^<]*)<\/h3>/),
+    externalId: p.slug,
+    url: `${baseUrl}/producto/${p.slug}`,
+    title: p.name.trim(),
     category,
-    priceCash: parseClp(article.match(/>(\$[\d.]+)<\/div><div[^>]*>Transferencia</)?.[1]) ?? 0,
-    priceCard: parseClp(article.match(/>(\$[\d.]+)<\/div><div[^>]*>Otros medios de pago</)?.[1]),
-    inStock: units > 0,
-    stockQuantity: units,
-    brand: text(/<span class="mb-1[^"]*">([^<]*)<\/span>/) || null,
-    // "SKU no informado", un número interno ("2417") o un modelo con espacios ("B550M K") no son MPN.
-    mpn: !gtin && /^\S+$/.test(code) && /[a-z]/i.test(code) && /\d/.test(code) ? code : null,
+    priceCash: p.precio_transferencia,
+    priceCard: p.precio_tarjeta,
+    inStock: p.stock > 0,
+    stockQuantity: p.stock,
+    brand: p.brand?.trim() || null,
+    mpn,
     gtin,
-    imageUrls: [article.match(/<img[^>]* src="(https:\/\/[^"]+)"/)?.[1]].filter((s): s is string => !!s),
+    imageUrls: [...new Set([p.image, ...p.gallery].filter((s): s is string => !!s))],
   };
 }

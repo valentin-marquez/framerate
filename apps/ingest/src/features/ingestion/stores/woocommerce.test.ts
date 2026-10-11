@@ -96,26 +96,6 @@ describe("adaptador WooCommerce", () => {
     expect(offer).toMatchObject({ gtin: null, mpn: null, externalId: String(products[1]?.id) });
   });
 
-  test("con wholeCatalog no pide ?category= (robots.txt) y reparte por categories[].slug", async () => {
-    const entero = createWooCommerceAdapter({
-      baseUrl: "https://tienda.example",
-      sku: "internal",
-      wholeCatalog: true,
-      perPage: 2,
-      categories: { gpu: ["tarjetas-de-video"], cpu: ["procesadores"] },
-    });
-    const conCategoria = (i: number, slug: string) => ({ ...products[i], categories: [{ slug: "ofertas" }, { slug }] });
-    const todo = (page: number) => `https://tienda.example/wp-json/wc/store/v1/products?per_page=2&page=${page}`;
-    const { ctx, requested } = fakeContext({
-      [todo(1)]: { body: [conCategoria(0, "tarjetas-de-video"), conCategoria(1, "procesadores")], totalPages: 2 },
-      [todo(2)]: { body: [conCategoria(2, "tarjetas-de-video")], totalPages: 2 },
-    });
-    const gpus = await Array.fromAsync(entero.crawlCategory("gpu", ctx));
-    expect(requested).toEqual([todo(1), todo(2)]);
-    expect(requested.some((u) => u.includes("category="))).toBe(false);
-    expect(gpus.map((o) => o.externalId)).toEqual([String(products[0]?.id), String(products[2]?.id)]);
-  });
-
   test("con attribute filtra por término del atributo en vez de categoría", async () => {
     const porAtributo = createWooCommerceAdapter({
       baseUrl: "https://tienda.example",

@@ -6,7 +6,8 @@ import type { CrawlContext, StoreAdapter } from "./adapter";
 import { findLd, getPage, type LdNode, parseClp } from "./html";
 
 /**
- * PC Express (OpenCart). El listado de categoría trae 20 productos por página (robots.txt prohíbe `limit=`) y
+ * PC Express (OpenCart). El listado de categoría va de a 100 con `limit=100` (su robots.txt lo prohíbe; se usa igual por
+ * decisión del dueño, 11-10-2026) y
  * sólo muestra los que tienen stock, pero sin cantidades, MPN ni precio tarjeta: se entra a cada ficha.
  * Ficha: JSON-LD con nombre, marca y MPN (`sku` es "--"), "Transferencia/Efectivo", "Otros medios" (tarjeta:
  * transferencia −6 % según su página de formas de pago) y stock por sucursal. "Normal" es el precio "antes".
@@ -29,7 +30,7 @@ export function createPcExpressAdapter(config: PcExpressConfig): StoreAdapter {
       const seen = new Set<string>();
       for (const path of config.categories[category] ?? []) {
         for (let page = 1; page <= MAX_PAGES; page++) {
-          const listUrl = `${config.baseUrl}/index.php?route=product/category&path=${path}`;
+          const listUrl = `${config.baseUrl}/index.php?route=product/category&path=${path}&limit=100`;
           const res = await ctx.http.get(page > 1 ? `${listUrl}&page=${page}` : listUrl, { accept: "text/html" });
           await ctx.snapshot(`${path}/page-${page}.html`, res.text);
 

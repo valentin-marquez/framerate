@@ -577,7 +577,7 @@ export const STORES: readonly StoreDefinition[] = [
     minIntervalMs: 1000,
     adapter: createEylstoreAdapter({
       baseUrl: "https://www.eylstore.cl",
-      // Tarjeta = transferencia × 1,05 (en el listado). "tarjetas-de-video" trae también soportes, risers y cables.
+      // Los dos precios vienen en la API (tarjeta = transferencia × 1,05). "tarjetas-de-video" trae también soportes, risers y cables.
       // Sin placas madre ni SSD: casi nunca traen MPN y quedarían duplicadas.
       categories: {
         gpu: ["tarjetas-de-video"],
@@ -644,9 +644,7 @@ export const STORES: readonly StoreDefinition[] = [
       // SKU interno numérico ("65673"); marca en `brands`. Sin precio tarjeta: la ficha HTML tiene anti-scraping y
       // Turnstile y no se lee; sólo la Store API (10-10-2026).
       sku: "internal",
-      // Su robots.txt prohíbe `/*category=`: se pide el catálogo entero (~55 páginas) y se reparte por categoría.
-      wholeCatalog: true,
-      maxPages: 70,
+      // Su robots.txt prohíbe `/*category=`; se filtra igual por decisión del dueño (11-10-2026).
       categories: {
         gpu: ["tarjetas-graficas-para-pc"],
         cpu: ["procesadores-para-pc"],
