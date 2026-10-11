@@ -12,6 +12,8 @@
 }
 
 body {
+  background: var(--color-kumo-base);
+  color: var(--color-kumo-default);
   font-family: var(--font-sans);
   font-feature-settings: "cv11", "tnum";
 }

@@ -1,5 +1,5 @@
 import { Badge, Banner, Button, Input, Select, Sidebar } from "@cloudflare/kumo";
-import { EyeIcon, MagnifyingGlassIcon, TableIcon, TerminalWindowIcon } from "@phosphor-icons/react";
+import { EyeIcon, MagnifyingGlassIcon, MoonIcon, SunIcon, TableIcon, TerminalWindowIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Target } from "../targets";
 import { tables as loadTables } from "./api";
@@ -16,6 +16,15 @@ export function App() {
   const [search, setSearch] = useState("");
   const [sqlText, setSqlText] = useState("select name from sqlite_master where type = 'table'");
   const [error, setError] = useState<string>();
+  const [mode, setMode] = useState(document.documentElement.dataset.mode ?? "dark");
+  const toggleMode = () => {
+    const next = mode === "dark" ? "light" : "dark";
+    document.documentElement.dataset.mode = next;
+    try {
+      localStorage.setItem("studio-mode", next);
+    } catch {}
+    setMode(next);
+  };
   const dirty = useRef(false);
   const onDirty = useCallback((d: boolean) => {
     dirty.current = d;
@@ -40,9 +49,19 @@ export function App() {
         <Sidebar.Header className="h-auto! flex-col items-stretch gap-2 border-b border-kumo-line py-3">
           <div className="flex w-full items-center justify-between gap-2 px-2">
             <span className="font-semibold">D1 Studio</span>
-            <Badge variant={target === "remote" ? "red" : "neutral"}>
-              {target === "remote" ? "Producción" : "Local"}
-            </Badge>
+            <div className="flex items-center gap-1">
+              <Badge variant={target === "remote" ? "red" : "neutral"}>
+                {target === "remote" ? "Producción" : "Local"}
+              </Badge>
+              <Button
+                size="xs"
+                variant="ghost"
+                shape="square"
+                icon={mode === "dark" ? <SunIcon /> : <MoonIcon />}
+                aria-label={mode === "dark" ? "Modo claro" : "Modo oscuro"}
+                onClick={toggleMode}
+              />
+            </div>
           </div>
           <div className="flex flex-col gap-2 w-full px-2 pt-1">
             <Select
@@ -106,7 +125,7 @@ export function App() {
           </div>
         )}
         {view === "sql" ? (
-          <SqlTab target={target} text={sqlText} onText={setSqlText} />
+          <SqlTab target={target} text={sqlText} onText={setSqlText} dark={mode === "dark"} />
         ) : !table ? (
           <p className="p-6 text-kumo-subtle">Elige una tabla en la barra lateral.</p>
         ) : tableView === "data" ? (

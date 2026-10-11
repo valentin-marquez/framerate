@@ -37,3 +37,14 @@ export async function schema(target: Target, table: string) {
     fks: objects(fks),
   };
 }
+
+// Tablas y columnas para el autocompletado de la consola, en una sola consulta.
+export async function completionSchema(target: Target) {
+  const r = await query(
+    target,
+    "select m.name, p.name from sqlite_master m join pragma_table_info(m.name) p where m.type in ('table','view') and m.name not like 'sqlite!_%' escape '!' and m.name not like '!_cf!_%' escape '!'",
+  );
+  const schema: Record<string, string[]> = {};
+  for (const [t, c] of r.rows as [string, string][]) schema[t] = [...(schema[t] ?? []), c];
+  return schema;
+}

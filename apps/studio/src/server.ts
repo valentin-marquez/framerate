@@ -7,7 +7,8 @@ const port = Number(process.env.PORT ?? 4983);
 const server = Bun.serve({
   port,
   hostname: "127.0.0.1",
-  development: true,
+  // El runtime de HMR de Bun falla en Firefox/Zen (`new URL("")`) y deja la página en blanco.
+  development: { hmr: false },
   routes: {
     "/": index,
     "/api/query": {

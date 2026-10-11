@@ -1,15 +1,31 @@
-import { Banner, Button, InputArea } from "@cloudflare/kumo";
+import { Banner, Button } from "@cloudflare/kumo";
 import { PlayIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Result, Target } from "../targets";
-import { query } from "./api";
+import { completionSchema, query } from "./api";
 import { Grid } from "./grid";
+import { SqlEditor } from "./sql-editor";
 import { Toolbar } from "./toolbar";
 
-export function SqlTab({ target, text, onText }: { target: Target; text: string; onText: (t: string) => void }) {
+export function SqlTab({
+  target,
+  text,
+  onText,
+  dark,
+}: {
+  target: Target;
+  text: string;
+  onText: (t: string) => void;
+  dark: boolean;
+}) {
   const [result, setResult] = useState<Result>();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const [schema, setSchema] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    completionSchema(target).then(setSchema, () => setSchema({}));
+  }, [target]);
 
   const exec = async () => {
     setBusy(true);
@@ -39,22 +55,12 @@ export function SqlTab({ target, text, onText }: { target: Target; text: string;
         <Button size="sm" variant="primary" icon={<PlayIcon />} loading={busy} onClick={exec}>
           Ejecutar <kbd className="ml-1 rounded bg-white/20 px-1 text-xs">Ctrl+Enter</kbd>
         </Button>
-        <span className="text-xs text-kumo-subtle">Una sentencia a la vez.</span>
+        <span className="text-xs text-kumo-subtle">
+          Una sentencia a la vez. Ctrl+Espacio sugiere tablas y columnas.
+        </span>
       </Toolbar>
       <div className="h-2/5 shrink-0 border-b border-kumo-line p-3">
-        <InputArea
-          aria-label="Consulta SQL"
-          className="h-full w-full resize-none font-mono text-[13px]"
-          spellCheck={false}
-          value={text}
-          onValueChange={onText}
-          onKeyDown={(e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-              e.preventDefault();
-              exec();
-            }
-          }}
-        />
+        <SqlEditor value={text} onChange={onText} onRun={exec} schema={schema} dark={dark} />
       </div>
       {error && (
         <div className="p-3">
