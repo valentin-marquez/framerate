@@ -29,16 +29,23 @@ const localFile = () => {
   return `${dir}/${f}`;
 };
 
-let token: string | undefined;
-const freshToken = async () => {
-  token = (await $`bunx wrangler auth token`.cwd(root).quiet().text()).trim().split("\n").at(-1);
+// Una sola petición del token aunque lleguen varias consultas a la vez (el tablero de inicio manda cinco).
+let token: Promise<string | undefined> | undefined;
+const freshToken = () => {
+  token = $`bunx wrangler auth token`
+    .cwd(root)
+    .quiet()
+    .text()
+    .then((t) => t.trim().split("\n").at(-1))
+    // Sin sesión, wrangler sale con error: la consulta sigue y D1 responde 401 con un mensaje claro.
+    .catch(() => undefined);
   return token;
 };
 
 async function remote(query: string, params: unknown[], retry = true): Promise<Result> {
   const res = await fetch(url, {
     method: "POST",
-    headers: { authorization: `Bearer ${token ?? (await freshToken())}`, "content-type": "application/json" },
+    headers: { authorization: `Bearer ${await (token ?? freshToken())}`, "content-type": "application/json" },
     body: JSON.stringify({ sql: query, params }),
   });
   const denied = res.status === 401 || res.status === 403;
@@ -64,4 +71,30 @@ export async function run(target: Target, query: string, params: unknown[]): Pro
   if (target === "local") return runLocal(localFile(), query, params);
   if (target === "remote") return remote(query, params);
   throw new Error(`Destino desconocido: ${String(target)}`);
+}
+
+export type Check = { ok: boolean; error?: string };
+
+// Lo que se revisa al abrir: si hay sesión de Cloudflare con acceso a la base y si existe la D1 local.
+export async function status(): Promise<{ remote: Check; local: Check }> {
+  const check = async (fn: () => unknown): Promise<Check> => {
+    try {
+      await fn();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  };
+  return {
+    remote: await check(() => remote("select 1", [])),
+    local: await check(() => localFile()),
+  };
+}
+
+// Abre el login OAuth de wrangler en el navegador de quien corre el studio y espera a que termine.
+export async function login(): Promise<Check> {
+  const proc = Bun.spawn(["bunx", "wrangler", "login"], { cwd: root, stdout: "inherit", stderr: "inherit" });
+  const code = await proc.exited;
+  await freshToken();
+  return code === 0 ? { ok: true } : { ok: false, error: `wrangler login terminó con código ${code}` };
 }

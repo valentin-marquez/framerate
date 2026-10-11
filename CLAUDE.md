@@ -23,7 +23,7 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
 - **`apps/relay`**: la única pieza fuera de Cloudflare: un `Bun.serve` en Docker en el servidor del dueño (Coolify,
   `relay.nozz.skin`) que descarga páginas de las tiendas que cortan las IPs de Cloudflare (`egress: "relay"` en el
   registro de tiendas) y las devuelve tal cual a ingest. Token, lista de dominios, sin lógica de productos (#154).
-- **`apps/studio`**: explorador local de la D1 al estilo Drizzle Studio (Kumo + Kysely), contra producción (API REST
+- **`apps/studio`** (Framerate Studio): explorador local de la D1 al estilo Drizzle Studio y Supabase (Kumo + Kysely), contra producción (API REST
   de D1 con el login de wrangler) o la D1 local. No se despliega; escribe sin restricciones, así que el respaldo es
   Time Travel de D1. Ver `docs/specs/2026-10-10-d1-studio.md`.
 - **`packages/contracts`**: esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.

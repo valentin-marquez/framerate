@@ -24,3 +24,15 @@ export function formatted(value: string | null): string | null {
   }
   return null;
 }
+
+const DAY = 86_400_000;
+
+// Serie diaria de los últimos `days` días UTC, con 0 donde la base no tiene filas, para que los gráficos compartan eje.
+export function lastDays(rows: Record<string, unknown>[], key: string, days: number, now = Date.now()) {
+  const byDay = new Map(rows.map((r) => [String(r.d), Number(r[key])]));
+  const today = Math.floor(now / DAY) * DAY;
+  return Array.from({ length: days }, (_, i) => {
+    const ts = today - (days - 1 - i) * DAY;
+    return [ts, byDay.get(new Date(ts).toISOString().slice(0, 10)) ?? 0] as [number, number];
+  });
+}

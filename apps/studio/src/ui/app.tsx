@@ -1,6 +1,7 @@
 import { Badge, Banner, Button, Input, Select, Sidebar } from "@cloudflare/kumo";
 import {
   EyeIcon,
+  HouseIcon,
   MagnifyingGlassIcon,
   MoonIcon,
   SunIcon,
@@ -13,6 +14,8 @@ import type { Filter } from "../sql";
 import type { Target } from "../targets";
 import { tables as loadTables } from "./api";
 import { DataTab } from "./data-tab";
+import { Home } from "./home";
+import { fetchStatus, Setup, type Status } from "./setup";
 import { SqlTab } from "./sql-tab";
 import { StructureTab } from "./structure-tab";
 import type { View } from "./toolbar";
@@ -23,6 +26,7 @@ export function App() {
   const [target, setTarget] = useState<Target>("remote");
   const [list, setList] = useState<{ name: string; type: string }[]>([]);
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<Status>();
   const [error, setError] = useState<string>();
   // Como Supabase: cada tabla abierta es una pestaña; la de vista previa (en cursiva) se reemplaza al abrir otra.
   const [tabs, setTabs] = useState<Tab[]>([]);
@@ -87,9 +91,15 @@ export function App() {
   };
 
   useEffect(() => {
+    fetchStatus().then(setStatus, () => {});
+  }, []);
+  const ready = target === "local" ? status?.local.ok : status?.remote.ok;
+
+  useEffect(() => {
+    if (!ready) return;
     setError(undefined);
     loadTables(target).then(setList, (e) => setError(e.message));
-  }, [target]);
+  }, [target, ready]);
 
   const shown = list.filter((t) => t.name.includes(search.trim().toLowerCase()));
   const current = tabs.find((t) => t.id === active);
@@ -99,30 +109,48 @@ export function App() {
       <Sidebar>
         <Sidebar.Header className="h-auto! flex-col items-stretch gap-2 border-b border-kumo-line py-3">
           <div className="flex w-full items-center justify-between gap-2 px-2">
-            <span className="font-semibold">D1 Studio</span>
-            <div className="flex items-center gap-1">
+            <span className="flex items-center gap-2 font-semibold">
+              {/* El logo de la web (apps/web/app/shared/components/layout/logo.tsx), sin la animación. */}
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d="M0 0H16V5H5V16H0ZM6 6H16V11H11V16H6Z" fill="currentColor" />
+                <rect x="12" y="12" width="4" height="4" fill="currentColor" />
+              </svg>
+              Framerate
+              <span className="font-normal text-kumo-subtle">Studio</span>
+            </span>
+            <Button
+              size="xs"
+              variant="ghost"
+              shape="square"
+              icon={mode === "dark" ? <SunIcon /> : <MoonIcon />}
+              aria-label={mode === "dark" ? "Modo claro" : "Modo oscuro"}
+              onClick={toggleMode}
+            />
+          </div>
+          <div className="flex flex-col gap-2 w-full px-2 pt-1">
+            {/* Siempre a la vista: se escribe en la base elegida sin pedir confirmación. */}
+            <div className="flex items-center gap-2">
               <Badge variant={target === "remote" ? "red" : "neutral"}>
                 {target === "remote" ? "Producción" : "Local"}
               </Badge>
-              <Button
-                size="xs"
-                variant="ghost"
-                shape="square"
-                icon={mode === "dark" ? <SunIcon /> : <MoonIcon />}
-                aria-label={mode === "dark" ? "Modo claro" : "Modo oscuro"}
-                onClick={toggleMode}
+              <Select
+                size="sm"
+                className="min-w-0 flex-1"
+                aria-label="Base"
+                value={target}
+                onValueChange={(v) => v && switchTarget(v as Target)}
+                items={{ remote: "D1 remota", local: ".wrangler/state" }}
               />
             </div>
-          </div>
-          <div className="flex flex-col gap-2 w-full px-2 pt-1">
-            <Select
+            <Button
               size="sm"
-              className="w-full"
-              aria-label="Base"
-              value={target}
-              onValueChange={(v) => v && switchTarget(v as Target)}
-              items={{ remote: "Producción (D1 remota)", local: "Local (.wrangler/state)" }}
-            />
+              className="w-full justify-start"
+              variant={active === undefined ? "outline" : "secondary"}
+              icon={<HouseIcon />}
+              onClick={() => setActive(undefined)}
+            >
+              Inicio
+            </Button>
             <Button
               size="sm"
               className="w-full justify-start"
@@ -165,7 +193,9 @@ export function App() {
         </Sidebar.Content>
       </Sidebar>
       <main className="flex h-dvh min-w-0 flex-1 flex-col">
-        {error && (
+        {!status && <p className="p-6 text-kumo-subtle">Conectando con la base…</p>}
+        {status && !ready && <Setup status={status} onChange={setStatus} />}
+        {error && ready && (
           <div className="border-b border-kumo-line p-3">
             <Banner variant="error" title="No se pudo leer la base" description={error} />
           </div>
@@ -233,7 +263,7 @@ export function App() {
             )}
           </div>
         ))}
-        {active === undefined && <p className="p-6 text-kumo-subtle">Elige una tabla en la barra lateral.</p>}
+        {active === undefined && ready && <Home key={`${target}:${mode}`} target={target} dark={mode === "dark"} />}
       </main>
     </Sidebar.Provider>
   );

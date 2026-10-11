@@ -1,5 +1,5 @@
 import { allowed } from "./guard";
-import { run, type Target } from "./targets";
+import { login, run, status, type Target } from "./targets";
 import index from "./ui/index.html";
 
 const port = Number(process.env.PORT ?? 4983);
@@ -11,6 +11,18 @@ const server = Bun.serve({
   development: { hmr: false },
   routes: {
     "/": index,
+    "/api/status": {
+      POST: async (req) =>
+        allowed(req, port)
+          ? Response.json(await status())
+          : Response.json({ error: "Origen no permitido" }, { status: 403 }),
+    },
+    "/api/login": {
+      POST: async (req) =>
+        allowed(req, port)
+          ? Response.json(await login())
+          : Response.json({ error: "Origen no permitido" }, { status: 403 }),
+    },
     "/api/query": {
       POST: async (req) => {
         if (!allowed(req, port)) return Response.json({ error: "Origen no permitido" }, { status: 403 });
@@ -25,4 +37,11 @@ const server = Bun.serve({
   },
 });
 
-console.log(`D1 Studio en ${server.url}`);
+console.log(`Framerate Studio en ${server.url}`);
+
+const s = await status();
+if (!s.remote.ok)
+  console.log(
+    `  Producción no disponible: ${s.remote.error}\n  Inicia sesión desde la página o con: bunx wrangler login`,
+  );
+if (!s.local.ok) console.log(`  Sin D1 local: ${s.local.error}`);
