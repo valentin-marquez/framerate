@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import { runLocal } from "./targets";
+import { run, runLocal, type Target } from "./targets";
 
 const file = `${import.meta.dir}/../.test.sqlite`;
 const db = new Database(file, { create: true });
@@ -18,4 +18,8 @@ test("una escritura devuelve filas vacías", () => {
 
 test("SQL inválido lanza el error de SQLite", () => {
   expect(() => runLocal(file, "selec 1", [])).toThrow(/syntax error/);
+});
+
+test("un destino desconocido falla en vez de ir a producción", async () => {
+  expect(run("prod" as Target, "select 1", [])).rejects.toThrow(/Destino desconocido/);
 });

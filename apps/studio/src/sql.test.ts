@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { beforeEach, expect, test } from "bun:test";
-import { countRows, deleteRow, inline, insertRow, type Query, ROWID, selectPage, updateRow } from "./sql";
+import { countRows, deleteRow, inline, insertRow, keyOf, type Query, ROWID, selectPage, updateRow } from "./sql";
 
 let db: Database;
 const all = (q: Query) => db.query(q.sql).all(...(q.params as never[]));
@@ -54,4 +54,19 @@ test("inline arma SQL ejecutable para la consola", () => {
   expect(inline(q)).toBe(`select * from "order" where "my name" = 'o''k' limit 5 offset 0`);
   db.run(`insert into "order" values (9,'o''k',1)`);
   expect(all({ sql: inline(q), params: [] })).toHaveLength(1);
+});
+
+test("una fila nueva sin valores usa los DEFAULT", () => {
+  db.run("create table d (id integer primary key, status text not null default 'pending')");
+  run(insertRow("d", {}));
+  run(insertRow("d", { status: "ok" }));
+  expect(db.query("select status from d order by id").all()).toEqual([{ status: "pending" }, { status: "ok" }]);
+});
+
+test("las vistas no tienen rowid ni PK: se leen sin clave", () => {
+  db.run(`create view v as select "my name" from "order"`);
+  expect(keyOf([{ name: "my name", pk: 0 }], "view")).toBeNull();
+  expect(keyOf([{ name: "a", pk: 0 }], "table")).toBe("rowid");
+  expect(keyOf([{ name: "id", pk: 1 }], "table")).toEqual(["id"]);
+  expect(all(selectPage("v", { ...page, rowid: keyOf([], "view") === "rowid" }))).toHaveLength(3);
 });

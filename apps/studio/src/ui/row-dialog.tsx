@@ -35,7 +35,8 @@ function RowForm({ target, table, columns, row, keyOf, onClose }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const changed = Object.fromEntries(Object.entries(values).filter(([k, v]) => v !== init[k]));
-  const save = row ? updateRow(table, keyOf(row), changed) : insertRow(table, values);
+  // En una fila nueva sólo van las columnas tocadas: las demás toman su DEFAULT.
+  const save = row ? updateRow(table, keyOf(row), changed) : insertRow(table, changed);
 
   const exec = async (q: Query) => {
     try {

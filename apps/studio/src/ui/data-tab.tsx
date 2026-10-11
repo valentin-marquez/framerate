@@ -19,6 +19,7 @@ import {
   type Filter,
   inline,
   type Key,
+  keyOf as keyMode,
   type Op,
   ROWID,
   type Sort,
@@ -48,15 +49,19 @@ function download(name: string, text: string, type: string) {
 export function DataTab({
   target,
   table,
+  type,
   view,
   onView,
   onOpenSql,
+  onDirty,
 }: {
   target: Target;
   table: string;
+  type: string;
   view: View;
   onView: (v: View) => void;
   onOpenSql: (sql: string) => void;
+  onDirty: (dirty: boolean) => void;
 }) {
   const [columns, setColumns] = useState<Column[]>([]);
   const [filters, setFilters] = useState<Filter[]>([]);
@@ -74,9 +79,12 @@ export function DataTab({
   const [busy, setBusy] = useState(false);
   const [dialog, setDialog] = useState<{ open: boolean; row?: Row; formKey: number }>({ open: false, formKey: 0 });
 
-  const pk = columns.filter((c) => c.pk > 0).map((c) => c.name);
-  const rowid = columns.length > 0 && pk.length === 0;
-  const keyOf = (r: Row): Key => (rowid ? { rowid: r[ROWID] } : Object.fromEntries(pk.map((k) => [k, r[k]])));
+  const mode = columns.length > 0 ? keyMode(columns, type) : [];
+  const rowid = mode === "rowid";
+  // Las vistas no tienen clave: se leen pero no se editan.
+  const editable = mode !== null;
+  const keyOf = (r: Row): Key =>
+    mode === "rowid" ? { rowid: r[ROWID] } : Object.fromEntries((mode ?? []).map((k) => [k, r[k]]));
   const rk = (r: Row) => JSON.stringify(keyOf(r));
   // Como en Drizzle, un filtro a medio escribir no filtra.
   const active = filters.filter((f) => f.op.startsWith("is") || f.value);
@@ -158,6 +166,11 @@ export function DataTab({
   };
 
   const changes = Object.values(pending).map((p) => updateRow(table, p.key, p.values));
+
+  useEffect(() => {
+    onDirty(changes.length > 0);
+    return () => onDirty(false);
+  }, [changes.length, onDirty]);
 
   const saveChanges = async () => {
     setBusy(true);
@@ -253,14 +266,18 @@ export function DataTab({
         >
           Filtros{active.length > 0 && ` (${active.length})`}
         </Button>
-        <Button
-          size="sm"
-          variant="primary"
-          icon={<PlusIcon />}
-          onClick={() => setDialog((d) => ({ open: true, row: undefined, formKey: d.formKey + 1 }))}
-        >
-          Agregar fila
-        </Button>
+        {editable ? (
+          <Button
+            size="sm"
+            variant="primary"
+            icon={<PlusIcon />}
+            onClick={() => setDialog((d) => ({ open: true, row: undefined, formKey: d.formKey + 1 }))}
+          >
+            Agregar fila
+          </Button>
+        ) : (
+          <span className="text-xs text-kumo-subtle">Vista de sólo lectura</span>
+        )}
         {selected.size > 0 && (
           <Button
             size="sm"
@@ -337,37 +354,41 @@ export function DataTab({
           <Grid
             columns={visible.map((name) => ({ name, type: types[name] }))}
             rows={rows.map((r) => visible.map((c) => valueAt(r, c)))}
-            leading={{
-              header: (
-                <Checkbox
-                  aria-label="Seleccionar todas"
-                  checked={allSelected}
-                  indeterminate={selected.size > 0 && !allSelected}
-                  onCheckedChange={() => setSelected(allSelected ? new Set() : new Set(allKeys))}
-                />
-              ),
-              cell: (i) => {
-                const r = rows[i] as Row;
-                return (
-                  <div className="flex items-center gap-1">
-                    <Checkbox
-                      aria-label="Seleccionar fila"
-                      checked={selected.has(rk(r))}
-                      onCheckedChange={() => toggle(rk(r))}
-                    />
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      shape="square"
-                      className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-                      icon={<ArrowsOutSimpleIcon />}
-                      aria-label="Abrir fila"
-                      onClick={() => setDialog((d) => ({ open: true, row: r, formKey: d.formKey + 1 }))}
-                    />
-                  </div>
-                );
-              },
-            }}
+            leading={
+              editable
+                ? {
+                    header: (
+                      <Checkbox
+                        aria-label="Seleccionar todas"
+                        checked={allSelected}
+                        indeterminate={selected.size > 0 && !allSelected}
+                        onCheckedChange={() => setSelected(allSelected ? new Set() : new Set(allKeys))}
+                      />
+                    ),
+                    cell: (i) => {
+                      const r = rows[i] as Row;
+                      return (
+                        <div className="flex items-center gap-1">
+                          <Checkbox
+                            aria-label="Seleccionar fila"
+                            checked={selected.has(rk(r))}
+                            onCheckedChange={() => toggle(rk(r))}
+                          />
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            shape="square"
+                            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                            icon={<ArrowsOutSimpleIcon />}
+                            aria-label="Abrir fila"
+                            onClick={() => setDialog((d) => ({ open: true, row: r, formKey: d.formKey + 1 }))}
+                          />
+                        </div>
+                      );
+                    },
+                  }
+                : undefined
+            }
             head={(c) => {
               const s = sorts.find((x) => x.column === c.name);
               return (
@@ -407,7 +428,7 @@ export function DataTab({
                   type="button"
                   title={v === null ? "NULL" : String(v)}
                   className={`block w-full truncate text-left ${dirty ? "text-kumo-warning" : ""}`}
-                  onDoubleClick={() => setEditingCell({ row: i, column })}
+                  onDoubleClick={() => editable && setEditingCell({ row: i, column })}
                 >
                   {showValue(v)}
                 </button>

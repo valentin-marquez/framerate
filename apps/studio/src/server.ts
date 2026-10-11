@@ -13,8 +13,8 @@ const server = Bun.serve({
     "/api/query": {
       POST: async (req) => {
         if (!allowed(req, port)) return Response.json({ error: "Origen no permitido" }, { status: 403 });
-        const { target, sql, params } = (await req.json()) as { target: Target; sql: string; params?: unknown[] };
         try {
+          const { target, sql, params } = (await req.json()) as { target: Target; sql: string; params?: unknown[] };
           return Response.json(await run(target, sql, params ?? []));
         } catch (e) {
           return Response.json({ error: e instanceof Error ? e.message : String(e) }, { status: 400 });

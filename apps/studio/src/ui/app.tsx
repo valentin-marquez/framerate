@@ -1,6 +1,6 @@
 import { Badge, Banner, Button, Input, Select, Sidebar } from "@cloudflare/kumo";
 import { EyeIcon, MagnifyingGlassIcon, TableIcon, TerminalWindowIcon } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Target } from "../targets";
 import { tables as loadTables } from "./api";
 import { DataTab } from "./data-tab";
@@ -16,6 +16,15 @@ export function App() {
   const [search, setSearch] = useState("");
   const [sqlText, setSqlText] = useState("select name from sqlite_master where type = 'table'");
   const [error, setError] = useState<string>();
+  const dirty = useRef(false);
+  const onDirty = useCallback((d: boolean) => {
+    dirty.current = d;
+  }, []);
+  // Salir de la tabla desmonta la grilla y sus cambios pendientes.
+  const leave = (go: () => void) => {
+    if (dirty.current && !window.confirm("Hay cambios sin guardar en esta tabla. ¿Descartarlos?")) return;
+    go();
+  };
 
   useEffect(() => {
     setError(undefined);
@@ -41,7 +50,7 @@ export function App() {
               className="w-full"
               aria-label="Base"
               value={target}
-              onValueChange={(v) => v && setTarget(v as Target)}
+              onValueChange={(v) => v && leave(() => setTarget(v as Target))}
               items={{ remote: "Producción (D1 remota)", local: "Local (.wrangler/state)" }}
             />
             <Button
@@ -49,7 +58,7 @@ export function App() {
               className="w-full justify-start"
               variant={view === "sql" ? "outline" : "secondary"}
               icon={<TerminalWindowIcon />}
-              onClick={() => setView("sql")}
+              onClick={() => leave(() => setView("sql"))}
             >
               Consola SQL
             </Button>
@@ -71,10 +80,12 @@ export function App() {
                   key={t.name}
                   icon={t.type === "view" ? EyeIcon : TableIcon}
                   active={view !== "sql" && t.name === table}
-                  onClick={() => {
-                    setTable(t.name);
-                    if (view === "sql") setView("data");
-                  }}
+                  onClick={() =>
+                    leave(() => {
+                      setTable(t.name);
+                      if (view === "sql") setView("data");
+                    })
+                  }
                 >
                   {t.name}
                 </Sidebar.MenuButton>
@@ -103,12 +114,16 @@ export function App() {
             key={`${target}:${table}`}
             target={target}
             table={table}
+            type={list.find((t) => t.name === table)?.type ?? "table"}
             view={tableView}
-            onView={setView}
-            onOpenSql={(sql) => {
-              setSqlText(sql);
-              setView("sql");
-            }}
+            onView={(v) => leave(() => setView(v))}
+            onDirty={onDirty}
+            onOpenSql={(sql) =>
+              leave(() => {
+                setSqlText(sql);
+                setView("sql");
+              })
+            }
           />
         ) : (
           <StructureTab key={`${target}:${table}`} target={target} table={table} view={tableView} onView={setView} />

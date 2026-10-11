@@ -60,5 +60,8 @@ async function remote(query: string, params: unknown[], retry = true): Promise<R
   return { columns: last?.results.columns ?? [], rows: last?.results.rows ?? [], meta: last?.meta };
 }
 
-export const run = async (target: Target, query: string, params: unknown[]): Promise<Result> =>
-  target === "local" ? runLocal(localFile(), query, params) : remote(query, params);
+export async function run(target: Target, query: string, params: unknown[]): Promise<Result> {
+  if (target === "local") return runLocal(localFile(), query, params);
+  if (target === "remote") return remote(query, params);
+  throw new Error(`Destino desconocido: ${String(target)}`);
+}

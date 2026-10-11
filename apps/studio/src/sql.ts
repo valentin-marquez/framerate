@@ -62,8 +62,18 @@ export const countRows = (table: string, filters: Filter[]): Query =>
 export const updateRow = (table: string, key: Key, values: Record<string, unknown>): Query =>
   out(db.updateTable(table).set(values).where(byKey(key)));
 
+// Sin columnas, `default values`: así cada columna toma su DEFAULT en vez de NULL.
 export const insertRow = (table: string, values: Record<string, unknown>): Query =>
-  out(db.insertInto(table).values(values));
+  Object.keys(values).length
+    ? out(db.insertInto(table).values(values))
+    : out({ compile: () => sql`insert into ${sql.id(table)} default values`.compile(db) });
+
+// Cómo se identifica una fila para editarla: por PK, por rowid si no hay, y las vistas no se editan.
+export function keyOf(columns: { name: string; pk: number }[], type: string): string[] | "rowid" | null {
+  if (type === "view") return null;
+  const pk = columns.filter((c) => c.pk > 0).map((c) => c.name);
+  return pk.length ? pk : "rowid";
+}
 
 export const deleteRow = (table: string, key: Key): Query => out(db.deleteFrom(table).where(byKey(key)));
 
