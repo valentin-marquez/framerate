@@ -1,4 +1,4 @@
-import type { Category, ProductDetail } from "@framerate/contracts";
+import { CATEGORY_LABELS, CATEGORY_SLUGS, type Category, type ProductDetail } from "@framerate/contracts";
 import { formatCLP } from "~/shared/utils/format";
 
 /** Precio a destacar: el mejor con stock, o el de la oferta más barata si nadie tiene (la API las ordena así). */
@@ -24,6 +24,59 @@ export function shareDescription(product: ProductDetail): string {
   }
   const where = stores === 1 ? "1 tienda" : `${stores} tiendas`;
   return `${product.name} desde ${formatCLP(price)} por transferencia en ${where} con stock. Compara precios en Chile.`;
+}
+
+/**
+ * Datos estructurados de la ficha: Product con su AggregateOffer y las migas. Sin precio no va `offers`: Google
+ * rechaza un AggregateOffer sin `lowPrice` o con `offerCount` 0.
+ */
+export function productJsonLd(product: ProductDetail, origin: string) {
+  const url = `${origin}/producto/${product.slug}`;
+  const inStock = product.offers.filter((o) => o.inStock);
+  const priced = inStock.length > 0 ? inStock : product.offers;
+  const low = headlinePrice(product);
+  const stores = new Set(priced.map((o) => o.store.slug)).size;
+  const categoryLabel = CATEGORY_LABELS[product.category];
+
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      url,
+      image: product.imageUrl ?? undefined,
+      description: shareDescription(product),
+      category: categoryLabel,
+      brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+      mpn: product.mpn ?? undefined,
+      offers:
+        low === null || stores === 0
+          ? undefined
+          : {
+              "@type": "AggregateOffer",
+              url,
+              lowPrice: low,
+              highPrice: Math.max(low, ...priced.map((o) => o.priceCash)),
+              priceCurrency: "CLP",
+              offerCount: stores,
+              availability: `https://schema.org/${inStock.length > 0 ? "InStock" : "OutOfStock"}`,
+            },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Inicio", item: `${origin}/` },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: categoryLabel,
+          item: `${origin}/categoria/${CATEGORY_SLUGS[product.category]}`,
+        },
+        { "@type": "ListItem", position: 3, name: product.name, item: url },
+      ],
+    },
+  ];
 }
 
 /** Discord markdown: lo que el nombre de un producto puede traer y rompería un enlace o un formato. */
