@@ -113,6 +113,9 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | UG Store | Jumpseller, `sku: "internal"` (EAN en el código de barras), `cashDiscount: 0.032` | La ficha expone `window.transferDiscountMult = 0.968`. ~90 válidas con marca y GTIN, mucho agotado. En CPU AMD el `barcode` trae el OPN (MPN real), que hoy se pierde |
 | Mercado Store | Jumpseller, `sku: "internal"` (EAN en el código de barras), precio único | ~39 válidas, todas con stock: placas, fuentes, gabinetes, refrigeración. No vende GPU, CPU, RAM ni SSD. Hay fichas copiadas con URL de otro producto (650W/750W); el adaptador usa el nombre |
 | Invasión Gamer | Jumpseller, `sku: "internal"`, `cashDiscount: 1 − 1/1,07` | SKU casi siempre vacío. La ficha calcula la transferencia con JS (precio / 1,07, cerrado hacia abajo a ...900): hasta $999 de diferencia. ~31 válidas, precios altos |
+| SIPO Online | Jumpseller, `sku: "mpn"` (EAN del fabricante casi siempre), `cashDiscount: 0.06` | El tema calcula transferencia = precio × 0,94 sobre el precio ya con promoción. ~119 válidas, todas con stock. La categoría padre no siempre contiene a las hijas: RAM y coolers van por subcategoría. Kronos usa códigos propios y EAN con prefijo 20 |
+| Lancenter | Adaptador `prestashop`, referencia = MPN, `cashDiscount: 0.035` | PrestaShop 1.7: el JSON del listado exige `X-Requested-With` y `Accept: application/json`. ~47 válidas (~30 con stock). Sin gabinetes ni refrigeración (una sola categoría mezcla todo). Los usados van en las mismas categorías |
+| AllTec | Adaptador `alltec`: listado HTML de a 50 (`?p=N`) y una ficha por producto | PrestaShop 1.6 sin JSON. `itemprop="sku"` = MPN (82–100 %), stock en `quantityAvailable`, tarjeta "por PAGO DEBITO / CREDITO / WEBPAY" (+3,5 %). Marca sólo en el título. ~305 válidas; ~320 fichas por ciclo. Las categorías padre traen accesorios: van las subcategorías |
 
 Para evaluar una tienda antes de activarla: `bun run --cwd apps/ingest dry-run <tienda> [categoría]` (crawl real +
 `normalizeOffer`, sin base): reporta cobertura de MPN, GTIN, marca y precios, marcas fuera del diccionario y la
@@ -147,8 +150,9 @@ cuarentena por motivo.
 - Fiestalan: su robots.txt prohíbe toda URL con `?` (incluida la Store API) y pide `Crawl-delay: 60` y 6 peticiones por hora (10-10-2026). 11-10-2026: integrada igual por decisión del dueño, con 5 s entre peticiones.
 - Notebooksya: integrada el 11-10-2026 filtrando por atributo (~150 componentes con stock).
 - Xtreme Components (11-10-2026): casi todo agotado, usado u "open box"; las GPU nuevas son preventa y el SKU viene vacío. No se integra. Tarjeta +3,5 % (Mercado Pago), no precio único.
+- Sondeo de tiendas fuera de SoloTodo (11-10-2026), descartadas: CompuElite (Jumpseller; casi todo PC armados y combos, un solo componente suelto), PCMod (sólo PC armados), HyperPC (sus "componentes" son opciones genéricas del configurador), ShopBox (bazar, ~5 componentes con stock), DESIT (Shopify, ~10 componentes, sin SKU ni código de barras; la transferencia va en `compare_at_price`) y Sistemax (OpenCart 3; de ~450 componentes, ~9 de cada 10 son importación a 7 o 14 días). Un adaptador Shopify genérico se justifica recién con una tercera tienda Shopify con volumen (CSByte + DESIT ≈ 45 componentes).
 - KDTEC (11-10-2026): la Store API sigue sin responder (timeout de 25 s). Tecno Master: la web sigue "en construcción".
-- AllTec: PrestaShop 1.6 (no devuelve JSON) y casi sin componentes.
+- AllTec: PrestaShop 1.6 (no devuelve JSON). 11-10-2026: integrada con un adaptador HTML (~305 válidas).
 
 **Fuera de alcance mientras sólo haya `fetch`:** Winpy, SP Digital, CTMAN y Nice One. Winpy tiene el catálogo más
 grande: conviene probarla desde el Worker antes de descartarla, y si también bloquea, es la primera candidata para

@@ -1,4 +1,5 @@
 import type { StoreDefinition } from "./adapter";
+import { createAlltecAdapter } from "./alltec";
 import { createEylstoreAdapter } from "./eylstore";
 import { createJumpsellerAdapter } from "./jumpseller";
 import { createMyShopAdapter } from "./myshop";
@@ -1046,6 +1047,82 @@ export const STORES: readonly StoreDefinition[] = [
         ssd: ["componentes-pc/ssd-y-almacenamiento"],
         cpu_cooler: ["componentes-pc/refrigeracion"],
         case: ["componentes-pc/gabinetes"],
+      },
+    }),
+  },
+  {
+    slug: "sipo",
+    name: "SIPO Online",
+    url: "https://sipoonline.cl",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://sipoonline.cl",
+      // SKU = EAN del fabricante en casi todo (OPN/MPN en algunas CPU); unos pocos códigos propios en Kronos y
+      // accesorios. El código de barras a veces trae el MPN en vez del EAN.
+      sku: "mpn",
+      // El precio publicado (con la promoción ya aplicada) es "otros medios de pago"; el tema calcula transferencia =
+      // precio × 0,94 (verificado en 2 fichas, 11-10-2026).
+      cashDiscount: 0.06,
+      // Sin case_fan: "Ventiladores PC" no tiene stock. RAM sólo de escritorio.
+      categories: {
+        gpu: ["componentes-pc/tarjeta-de-video"],
+        cpu: ["componentes-pc/procesadores"],
+        motherboard: ["componentes-pc/placas-madre"],
+        ram: ["componentes-pc/ram/ddr4-pc-escritorio", "componentes-pc/ram/ddr5-pc-escritorio"],
+        psu: ["componentes-pc/fuentes-de-poder"],
+        ssd: ["componentes-pc/unidad-de-estado-solido-ssd"],
+        cpu_cooler: ["componentes-pc/cooler-cpu/disipador-por-aire", "componentes-pc/cooler-cpu/refrigeracion-liquida"],
+        case: ["componentes-pc/gabinete"],
+      },
+      // "Placas Madre" trae adaptadores de panel frontal y soportes de GPU.
+      exclude: { motherboard: ["Pernos, adaptadores y cables", "Soporte para GPU"] },
+    }),
+  },
+  {
+    slug: "lancenter",
+    name: "Lancenter",
+    url: "https://tienda.lancenter.cl",
+    minIntervalMs: 1000,
+    adapter: createPrestaShopAdapter({
+      baseUrl: "https://tienda.lancenter.cl",
+      // MPN casi siempre; a veces un UPC (se detecta como GTIN) o un código propio ("A12 240", "AM0-818").
+      reference: "mpn",
+      // `price_amount` es "Precio tarjeta débito / crédito"; "Precio efectivo / transferencia" −3,5 % (verificado en
+      // la ficha, 11-10-2026). La tienda redondea el .5 hacia arriba: puede quedar 1 peso por debajo.
+      cashDiscount: 0.035,
+      // Sin cpu_cooler, case ni case_fan: "Gabinetes y refrigeración" mezcla gabinetes, AIO, ventiladores y pasta, y
+      // `normalize` no aparta gabinetes de coolers ni AIO de gabinetes. Los usados van en las mismas categorías y
+      // `normalize` los aparta.
+      categories: {
+        gpu: ["30-tarjetas-de-video"],
+        cpu: ["31-procesadores"],
+        motherboard: ["35-placa-madre"],
+        ram: ["23-memorias-ram"],
+        psu: ["50-fuentes-de-poder"],
+        // Mezcla SSD, pendrives, microSD y discos externos: `normalize` los aparta.
+        ssd: ["34-almacenamiento"],
+      },
+    }),
+  },
+  {
+    slug: "alltec",
+    name: "AllTec",
+    url: "https://www.alltec.cl",
+    minIntervalMs: 1000,
+    adapter: createAlltecAdapter({
+      baseUrl: "https://www.alltec.cl",
+      // Los padres (17, 16, 18) sólo traen cables y accesorios; los usados están aparte en 120-seminuevos.
+      categories: {
+        gpu: ["63-amd", "64-nvidia"],
+        cpu: ["28-amd", "29-intel"],
+        motherboard: ["31-para-amd", "79-para-intel"],
+        ram: ["37-ddr4", "117-ddr5", "102-ddr4"],
+        psu: ["38-potencia-nominal-estandar", "80-potencia-realcertificadas"],
+        ssd: ["34-ssd"],
+        hdd: ["33-mecanicos-rigidos"],
+        case: ["81-sin-fuente-de-poder", "82-con-fuente-de-poder"],
+        cpu_cooler: ["92-water-cooling", "93-cpu-cooler"],
+        case_fan: ["91-chassis-fan-ventiladores"],
       },
     }),
   },
