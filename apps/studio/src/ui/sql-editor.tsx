@@ -1,4 +1,5 @@
-import type { CompletionContext } from "@codemirror/autocomplete";
+import { acceptCompletion, type CompletionContext } from "@codemirror/autocomplete";
+import { indentWithTab } from "@codemirror/commands";
 import { SQLite, sql } from "@codemirror/lang-sql";
 import { Compartment, Prec } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -60,6 +61,7 @@ export function SqlEditor({
       parent: host.current as HTMLDivElement,
       doc: value,
       extensions: [
+        // Tab acepta la sugerencia abierta (como Enter); sin sugerencia, indenta en vez de sacar el foco.
         Prec.highest(
           keymap.of([
             {
@@ -69,6 +71,8 @@ export function SqlEditor({
                 return true;
               },
             },
+            { key: "Tab", run: acceptCompletion },
+            indentWithTab,
           ]),
         ),
         basicSetup,

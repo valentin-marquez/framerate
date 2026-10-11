@@ -102,6 +102,7 @@
       "dependencies": {
         "@cloudflare/kumo": "2.14.0",
         "@codemirror/autocomplete": "^6.20.3",
+        "@codemirror/commands": "^6.11.1",
         "@codemirror/lang-sql": "^6.10.0",
         "@codemirror/state": "^6.7.6",
         "@codemirror/theme-one-dark": "^6.1.3",
