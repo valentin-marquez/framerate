@@ -1,6 +1,17 @@
 import { Database } from "bun:sqlite";
 import { beforeEach, expect, test } from "bun:test";
-import { countRows, deleteRow, inline, insertRow, keyOf, type Query, ROWID, selectPage, updateRow } from "./sql";
+import {
+  countRows,
+  deleteRow,
+  distinctValues,
+  inline,
+  insertRow,
+  keyOf,
+  type Query,
+  ROWID,
+  selectPage,
+  updateRow,
+} from "./sql";
 
 let db: Database;
 const all = (q: Query) => db.query(q.sql).all(...(q.params as never[]));
@@ -69,4 +80,17 @@ test("las vistas no tienen rowid ni PK: se leen sin clave", () => {
   expect(keyOf([{ name: "a", pk: 0 }], "table")).toBe("rowid");
   expect(keyOf([{ name: "id", pk: 1 }], "table")).toEqual(["id"]);
   expect(all(selectPage("v", { ...page, rowid: keyOf([], "view") === "rowid" }))).toHaveLength(3);
+});
+
+test("contiene busca el texto en cualquier parte", () => {
+  expect(all(countRows("order", [{ column: "my name", op: "contains", value: "re" }]))).toEqual([{ count: 1 }]);
+});
+
+test("valores distintos de una columna para sugerir en el filtro", () => {
+  db.run(`insert into "order" values (5,'uno',9)`);
+  expect(
+    all(distinctValues("order", "my name"))
+      .map((r) => (r as { v: string }).v)
+      .sort(),
+  ).toEqual(["dos", "tres", "uno"]);
 });

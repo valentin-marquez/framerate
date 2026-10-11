@@ -1,4 +1,4 @@
-import { Banner, Button, Checkbox, DropdownMenu, Input, Pagination, Select } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, DropdownMenu, Pagination } from "@cloudflare/kumo";
 import {
   ArrowClockwiseIcon,
   ArrowDownIcon,
@@ -8,21 +8,19 @@ import {
   CaretDownIcon,
   CodeIcon,
   DotsThreeIcon,
-  FunnelSimpleIcon,
   PlusIcon,
   TrashIcon,
-  XIcon,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import { toCsv } from "../csv";
 import {
   countRows,
   deleteRow,
+  distinctValues,
   type Filter,
   inline,
   type Key,
   keyOf as keyMode,
-  type Op,
   ROWID,
   type Sort,
   selectPage,
@@ -31,11 +29,12 @@ import {
 import type { Result, Target } from "../targets";
 import { type Column, objects, query, schema } from "./api";
 import { CellEditor, type Editing } from "./cell-editor";
+import { FilterBar } from "./filter-bar";
 import { ColumnLabel, Grid, showValue } from "./grid";
 import { RowDialog } from "./row-dialog";
+import { SortPopover } from "./sort-popover";
 import { Toolbar, type View } from "./toolbar";
 
-const OPS: Op[] = ["=", "!=", ">", "<", "like", "is null", "is not null"];
 const PER_PAGE = 50;
 
 type Row = Record<string, unknown>;
@@ -74,7 +73,7 @@ export function DataTab({
   const [columns, setColumns] = useState<Column[]>([]);
   const [fks, setFks] = useState<Record<string, { table: string; to: string }>>({});
   const [filters, setFilters] = useState<Filter[]>(initialFilters ?? []);
-  const [showFilters, setShowFilters] = useState(initialFilters !== undefined);
+  const [filterStart, setFilterStart] = useState<{ column: string; n: number }>();
   const [sorts, setSorts] = useState<Sort[]>([]);
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<Result>();
@@ -136,12 +135,6 @@ export function DataTab({
   const editFilters = (fn: (fs: Filter[]) => Filter[]) => {
     setFilters(fn);
     setPage(1);
-  };
-  const setFilter = (i: number, patch: Partial<Filter>) =>
-    editFilters((fs) => fs.map((x, j) => (j === i ? { ...x, ...patch } : x)));
-  const addFilter = () => {
-    const first = columns[0];
-    if (first) editFilters((fs) => [...fs, { column: first.name, op: "=", value: "" }]);
   };
 
   const toggleSort = (column: string) => {
@@ -269,17 +262,14 @@ export function DataTab({
           </>
         }
       >
-        <Button
-          size="sm"
-          variant={showFilters ? "outline" : "secondary"}
-          icon={<FunnelSimpleIcon />}
-          onClick={() => {
-            if (!showFilters && filters.length === 0) addFilter();
-            setShowFilters(!showFilters);
+        <SortPopover
+          columns={columns.map((c) => c.name)}
+          sorts={sorts}
+          onChange={(ss) => {
+            setSorts(ss);
+            setPage(1);
           }}
-        >
-          Filtros{active.length > 0 && ` (${active.length})`}
-        </Button>
+        />
         {editable ? (
           <Button
             size="sm"
@@ -305,57 +295,29 @@ export function DataTab({
         )}
       </Toolbar>
 
-      {showFilters && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-kumo-line bg-kumo-recessed px-3 py-2">
-          {filters.map((f, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: el filtro no tiene otra identidad que su posición
-            <div key={i} className="flex items-center gap-1">
-              <span className="w-12 text-xs text-kumo-subtle">{i === 0 ? "where" : "and"}</span>
-              <Select
-                size="sm"
-                value={f.column}
-                items={Object.fromEntries(columns.map((c) => [c.name, c.name]))}
-                onValueChange={(v) => setFilter(i, { column: String(v) })}
-              />
-              <Select
-                size="sm"
-                value={f.op}
-                items={Object.fromEntries(OPS.map((o) => [o, o]))}
-                onValueChange={(v) => setFilter(i, { op: v as Op })}
-              />
-              {!f.op.startsWith("is") && (
-                <Input
-                  size="sm"
-                  className="font-mono"
-                  value={f.value ?? ""}
-                  placeholder="valor"
-                  aria-label="Valor del filtro"
-                  onChange={(e) => setFilter(i, { value: e.target.value })}
-                />
-              )}
-              <Button
-                size="sm"
-                variant="ghost"
-                shape="square"
-                icon={<XIcon />}
-                aria-label="Quitar filtro"
-                onClick={() => editFilters((fs) => fs.filter((_, j) => j !== i))}
-              />
-            </div>
-          ))}
-          <Button size="sm" variant="ghost" icon={<PlusIcon />} onClick={addFilter}>
-            Filtro
-          </Button>
-          <Button size="sm" variant="ghost" icon={<CodeIcon />} onClick={() => onOpenSql(inline(pageQuery()))}>
-            Abrir en SQL
-          </Button>
-          {filters.length > 0 && (
-            <Button size="sm" variant="ghost" onClick={() => editFilters(() => [])}>
-              Limpiar
+      <FilterBar
+        columns={columns.map((c) => c.name)}
+        filters={filters}
+        start={filterStart}
+        onChange={(fs) => editFilters(() => fs)}
+        loadValues={async (column) => {
+          const q = distinctValues(table, column);
+          const r = await query(target, q.sql, q.params);
+          return r.rows.map((row) => String(row[0]));
+        }}
+        end={
+          <>
+            <Button size="sm" variant="ghost" icon={<CodeIcon />} onClick={() => onOpenSql(inline(pageQuery()))}>
+              Abrir en SQL
             </Button>
-          )}
-        </div>
-      )}
+            {filters.length > 0 && (
+              <Button size="sm" variant="ghost" onClick={() => editFilters(() => [])}>
+                Limpiar
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {error && (
         <div className="border-b border-kumo-line p-3">
@@ -442,8 +404,7 @@ export function DataTab({
                       {s && <DropdownMenu.Item onClick={() => sortBy(null)}>Quitar orden</DropdownMenu.Item>}
                       <DropdownMenu.Item
                         onClick={() => {
-                          editFilters((fs) => [...fs, { column: c.name, op: "=", value: "" }]);
-                          setShowFilters(true);
+                          setFilterStart((f) => ({ column: c.name, n: (f?.n ?? 0) + 1 }));
                         }}
                       >
                         Filtrar por esta columna

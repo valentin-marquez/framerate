@@ -1,6 +1,14 @@
 import { Badge, Banner, Button, Input, Select, Sidebar } from "@cloudflare/kumo";
-import { EyeIcon, MagnifyingGlassIcon, MoonIcon, SunIcon, TableIcon, TerminalWindowIcon } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  EyeIcon,
+  MagnifyingGlassIcon,
+  MoonIcon,
+  SunIcon,
+  TableIcon,
+  TerminalWindowIcon,
+  XIcon,
+} from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
 import type { Filter } from "../sql";
 import type { Target } from "../targets";
 import { tables as loadTables } from "./api";
@@ -9,16 +17,20 @@ import { SqlTab } from "./sql-tab";
 import { StructureTab } from "./structure-tab";
 import type { View } from "./toolbar";
 
+type Tab = { id: number; table: string; preview: boolean; view: View; filters?: Filter[] };
+
 export function App() {
   const [target, setTarget] = useState<Target>("remote");
   const [list, setList] = useState<{ name: string; type: string }[]>([]);
-  const [table, setTable] = useState<string>();
-  const [view, setView] = useState<View | "sql">("data");
   const [search, setSearch] = useState("");
-  const [sqlText, setSqlText] = useState("select name from sqlite_master where type = 'table'");
   const [error, setError] = useState<string>();
-  // Un salto por clave foránea abre la tabla referenciada ya filtrada; n fuerza una grilla nueva.
-  const [jump, setJump] = useState<{ n: number; filters?: Filter[] }>({ n: 0 });
+  // Como Supabase: cada tabla abierta es una pestaña; la de vista previa (en cursiva) se reemplaza al abrir otra.
+  const [tabs, setTabs] = useState<Tab[]>([]);
+  const [active, setActive] = useState<number | "sql">();
+  const [incoming, setIncoming] = useState<{ sql: string; n: number }>();
+  const nextId = useRef(1);
+  const dirty = useRef(new Set<number>());
+  const dirtyHandlers = useRef<Record<number, (d: boolean) => void>>({});
   const [mode, setMode] = useState(document.documentElement.dataset.mode ?? "dark");
   const toggleMode = () => {
     const next = mode === "dark" ? "light" : "dark";
@@ -28,14 +40,50 @@ export function App() {
     } catch {}
     setMode(next);
   };
-  const dirty = useRef(false);
-  const onDirty = useCallback((d: boolean) => {
-    dirty.current = d;
-  }, []);
-  // Salir de la tabla desmonta la grilla y sus cambios pendientes.
-  const leave = (go: () => void) => {
-    if (dirty.current && !window.confirm("Hay cambios sin guardar en esta tabla. ¿Descartarlos?")) return;
-    go();
+
+  const pin = (id: number) =>
+    setTabs((ts) =>
+      ts.some((t) => t.id === id && t.preview) ? ts.map((t) => (t.id === id ? { ...t, preview: false } : t)) : ts,
+    );
+  // Un cambio pendiente fija la pestaña: no se puede perder por abrir otra tabla.
+  // Un manejador estable por pestaña: DataTab lo usa como dependencia de un efecto.
+  const onDirty = (id: number) => {
+    dirtyHandlers.current[id] ??= (d: boolean) => {
+      if (d) {
+        dirty.current.add(id);
+        pin(id);
+      } else dirty.current.delete(id);
+    };
+    return dirtyHandlers.current[id];
+  };
+
+  const openTable = (table: string, filters?: Filter[]) => {
+    const existing = tabs.find((t) => t.table === table && !t.filters);
+    if (existing && !filters) return setActive(existing.id);
+    const id = nextId.current++;
+    setTabs((ts) => {
+      const tab: Tab = { id, table, preview: true, view: "data", filters };
+      const i = ts.findIndex((t) => t.preview);
+      return i === -1 ? [...ts, tab] : ts.map((t, j) => (j === i ? tab : t));
+    });
+    setActive(id);
+  };
+
+  const closeTab = (id: number) => {
+    if (dirty.current.has(id) && !window.confirm("Esta pestaña tiene cambios sin guardar. ¿Descartarlos?")) return;
+    dirty.current.delete(id);
+    const i = tabs.findIndex((t) => t.id === id);
+    const rest = tabs.filter((t) => t.id !== id);
+    setTabs(rest);
+    if (active === id) setActive((rest[i] ?? rest[i - 1])?.id);
+  };
+
+  const switchTarget = (t: Target) => {
+    if (dirty.current.size && !window.confirm("Hay pestañas con cambios sin guardar. ¿Descartarlos?")) return;
+    dirty.current.clear();
+    setTabs([]);
+    setActive(undefined);
+    setTarget(t);
   };
 
   useEffect(() => {
@@ -44,7 +92,7 @@ export function App() {
   }, [target]);
 
   const shown = list.filter((t) => t.name.includes(search.trim().toLowerCase()));
-  const tableView = view === "sql" ? "data" : view;
+  const current = tabs.find((t) => t.id === active);
 
   return (
     <Sidebar.Provider defaultOpen collapsible="none" className="h-dvh">
@@ -72,15 +120,15 @@ export function App() {
               className="w-full"
               aria-label="Base"
               value={target}
-              onValueChange={(v) => v && leave(() => setTarget(v as Target))}
+              onValueChange={(v) => v && switchTarget(v as Target)}
               items={{ remote: "Producción (D1 remota)", local: "Local (.wrangler/state)" }}
             />
             <Button
               size="sm"
               className="w-full justify-start"
-              variant={view === "sql" ? "outline" : "secondary"}
+              variant={active === "sql" ? "outline" : "secondary"}
               icon={<TerminalWindowIcon />}
-              onClick={() => leave(() => setView("sql"))}
+              onClick={() => setActive("sql")}
             >
               Consola SQL
             </Button>
@@ -101,14 +149,8 @@ export function App() {
                 <Sidebar.MenuButton
                   key={t.name}
                   icon={t.type === "view" ? EyeIcon : TableIcon}
-                  active={view !== "sql" && t.name === table}
-                  onClick={() =>
-                    leave(() => {
-                      setTable(t.name);
-                      setJump((j) => ({ n: j.n + 1 }));
-                      if (view === "sql") setView("data");
-                    })
-                  }
+                  active={current?.table === t.name}
+                  onClick={() => openTable(t.name)}
                 >
                   {t.name}
                 </Sidebar.MenuButton>
@@ -128,36 +170,70 @@ export function App() {
             <Banner variant="error" title="No se pudo leer la base" description={error} />
           </div>
         )}
-        {view === "sql" ? (
-          <SqlTab target={target} text={sqlText} onText={setSqlText} dark={mode === "dark"} />
-        ) : !table ? (
-          <p className="p-6 text-kumo-subtle">Elige una tabla en la barra lateral.</p>
-        ) : tableView === "data" ? (
-          <DataTab
-            key={`${target}:${table}:${jump.n}`}
-            target={target}
-            table={table}
-            initialFilters={jump.filters}
-            onJump={(t, column, value) =>
-              leave(() => {
-                setTable(t);
-                setJump((j) => ({ n: j.n + 1, filters: [{ column, op: "=", value }] }));
-              })
-            }
-            type={list.find((t) => t.name === table)?.type ?? "table"}
-            view={tableView}
-            onView={(v) => leave(() => setView(v))}
-            onDirty={onDirty}
-            onOpenSql={(sql) =>
-              leave(() => {
-                setSqlText(sql);
-                setView("sql");
-              })
-            }
-          />
-        ) : (
-          <StructureTab key={`${target}:${table}`} target={target} table={table} view={tableView} onView={setView} />
+        {tabs.length > 0 && (
+          <div className="flex shrink-0 items-stretch overflow-x-auto border-b border-kumo-line bg-kumo-recessed">
+            {tabs.map((t) => (
+              <div
+                key={t.id}
+                className={`group flex items-center gap-1 border-r border-kumo-line pr-1 ${t.id === active ? "bg-kumo-base" : ""}`}
+              >
+                <button
+                  type="button"
+                  title={t.preview ? "Vista previa: doble clic para fijarla" : t.table}
+                  className={`flex items-center gap-1.5 py-2 pl-3 text-sm whitespace-nowrap ${t.preview ? "italic" : ""} ${t.id === active ? "" : "text-kumo-subtle"}`}
+                  onClick={() => setActive(t.id)}
+                  onDoubleClick={() => pin(t.id)}
+                >
+                  <TableIcon />
+                  {t.table}
+                  {t.filters && <span className="text-xs text-kumo-subtle">(filtrada)</span>}
+                </button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  shape="square"
+                  className={t.id === active ? "" : "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"}
+                  icon={<XIcon />}
+                  aria-label={`Cerrar ${t.table}`}
+                  onClick={() => closeTab(t.id)}
+                />
+              </div>
+            ))}
+          </div>
         )}
+        {/* Todo queda montado y sólo se oculta: cada pestaña conserva filtros, página y cambios pendientes. */}
+        <div className={active === "sql" ? "flex min-h-0 flex-1 flex-col" : "hidden"}>
+          <SqlTab target={target} incoming={incoming} dark={mode === "dark"} />
+        </div>
+        {tabs.map((t) => (
+          <div key={`${target}:${t.id}`} className={t.id === active ? "flex min-h-0 flex-1 flex-col" : "hidden"}>
+            <div className={t.view === "data" ? "flex min-h-0 flex-1 flex-col" : "hidden"}>
+              <DataTab
+                target={target}
+                table={t.table}
+                type={list.find((x) => x.name === t.table)?.type ?? "table"}
+                initialFilters={t.filters}
+                view="data"
+                onView={(v) => setTabs((ts) => ts.map((x) => (x.id === t.id ? { ...x, view: v } : x)))}
+                onDirty={onDirty(t.id)}
+                onJump={(table, column, value) => openTable(table, [{ column, op: "=", value }])}
+                onOpenSql={(sql) => {
+                  setIncoming((i) => ({ sql, n: (i?.n ?? 0) + 1 }));
+                  setActive("sql");
+                }}
+              />
+            </div>
+            {t.view === "structure" && (
+              <StructureTab
+                target={target}
+                table={t.table}
+                view="structure"
+                onView={(v) => setTabs((ts) => ts.map((x) => (x.id === t.id ? { ...x, view: v } : x)))}
+              />
+            )}
+          </div>
+        ))}
+        {active === undefined && <p className="p-6 text-kumo-subtle">Elige una tabla en la barra lateral.</p>}
       </main>
     </Sidebar.Provider>
   );

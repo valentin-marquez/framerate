@@ -9,7 +9,7 @@ import {
   sql,
 } from "kysely";
 
-export type Op = "=" | "!=" | ">" | "<" | "like" | "is null" | "is not null";
+export type Op = "=" | "!=" | ">" | "<" | "contains" | "like" | "is null" | "is not null";
 export type Filter = { column: string; op: Op; value?: string };
 export type Sort = { column: string; dir: "asc" | "desc" };
 export type Query = { sql: string; params: unknown[] };
@@ -39,6 +39,7 @@ const where = <Q extends SelectQueryBuilder<Any, Any, Any>>(q: Q, filters: Filte
   filters.reduce((acc, f) => {
     if (f.op === "is null") return acc.where(sql.id(f.column), "is", null) as Q;
     if (f.op === "is not null") return acc.where(sql.id(f.column), "is not", null) as Q;
+    if (f.op === "contains") return acc.where(sql.id(f.column), "like", `%${f.value ?? ""}%`) as Q;
     return acc.where(sql.id(f.column), f.op, f.value ?? "") as Q;
   }, q);
 
@@ -55,6 +56,12 @@ export function selectPage(
   for (const s of o.sorts) q = q.orderBy(sql.id(s.column), s.dir);
   return out(q.limit(o.limit).offset(o.offset));
 }
+
+// Sugerencias para el filtro. Sin ORDER BY, SQLite corta al juntar el límite y no recorre la tabla entera.
+export const distinctValues = (table: string, column: string, limit = 30): Query =>
+  out(
+    db.selectFrom(table).select(sql.id(column).as("v")).distinct().where(sql.id(column), "is not", null).limit(limit),
+  );
 
 export const countRows = (table: string, filters: Filter[]): Query =>
   out(where(db.selectFrom(table).select(db.fn.countAll().as("count")), filters));
