@@ -3,6 +3,7 @@ export * from "./categories";
 export * from "./claims";
 export * from "./clicks";
 export * from "./comments";
+export * from "./compatibility";
 export * from "./facets";
 export * from "./health";
 export * from "./identity";

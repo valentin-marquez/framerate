@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { pageSchema, StoreSummarySchema } from "./catalog";
 import { type Category, CategorySchema } from "./categories";
+import { QuoteCompatibilitySchema } from "./compatibility";
 import { PublicProfileSchema } from "./identity";
 
 /**
@@ -121,6 +122,7 @@ export const QuoteDetailSchema = QuoteSummarySchema.extend({
   items: z.array(QuoteItemSchema),
   /** Suma de los ítems seleccionados con oferta, por su cantidad. */
   totals: z.object({ cash: z.number().int().nonnegative(), card: z.number().int().nonnegative() }),
+  compatibility: QuoteCompatibilitySchema,
 });
 export type QuoteDetail = z.infer<typeof QuoteDetailSchema>;
 

@@ -371,3 +371,85 @@ describe("alternativa y tienda elegidas", () => {
     expect((await patchItem("anon", quote.id, item.id, { isSelected: true })).status).toBe(401);
   });
 });
+
+describe("compatibilidad", () => {
+  const at = "2026-10-01T00:00:00.000Z";
+  async function identity(listingId: number, category: string, facts: Record<string, unknown>, specs = {}) {
+    await db.query
+      .insertInto("listing_identity")
+      .values({
+        listing_id: listingId,
+        version: 2,
+        input_hash: "h",
+        model: "haiku",
+        category,
+        name: "x",
+        confidence: "high",
+        identity: JSON.stringify(facts),
+        identity_raw: "{}",
+        specs: JSON.stringify(specs),
+        specs_source: "{}",
+        created_at: at,
+      })
+      .execute();
+  }
+  async function product(slug: string, category: string, facts: Record<string, unknown>, specs = {}) {
+    const { id } = await db.query
+      .insertInto("products")
+      .values({ slug, name: slug, category, attributes: "{}", created_at: at, updated_at: at })
+      .returning("id")
+      .executeTakeFirstOrThrow();
+    const listing = await db.query
+      .insertInto("listings")
+      .values({
+        store_id: seed.alfa,
+        product_id: id,
+        external_id: slug,
+        url: `https://alfa.cl/${slug}`,
+        title: slug,
+        category,
+        price_cash: 100_000,
+        price_card: 100_000,
+        in_stock: 1,
+        first_seen_at: at,
+        last_seen_at: at,
+        updated_at: at,
+      })
+      .returning("id")
+      .executeTakeFirstOrThrow();
+    await identity(listing.id, category, facts, specs);
+    return id;
+  }
+  const listingsOf = async (productId: number) =>
+    (await db.query.selectFrom("listings").select("id").where("product_id", "=", productId).execute()).map((l) => l.id);
+
+  test("revisa los seleccionados con los datos de Haiku; el TDP de la GPU sale de su chipset", async () => {
+    for (const id of await listingsOf(seed.ryzen)) {
+      await identity(id, "cpu", { model: "ryzen 7 7800x3d" }, { socket: "AM5", tdp_w: 120, includes_cooler: false });
+    }
+    // La ASUS no trae TDP; otra GPU con el mismo chipset sí.
+    for (const id of await listingsOf(seed.asus)) await identity(id, "gpu", { chipset: "rtx 4070 super" });
+    for (const id of await listingsOf(seed.msi))
+      await identity(id, "gpu", { chipset: "rtx 4070 super" }, { tdp_w: 220 });
+    const board = await product("placa-z790", "motherboard", { memory_type: "ddr5" }, { socket: "LGA 1700" });
+    const psu = await product("fuente-500", "psu", { wattage: 500 });
+
+    const quote = await createQuote(ana);
+    for (const id of [seed.ryzen, seed.asus, board, psu]) await addItem(ana, quote.id, id);
+    const { compatibility } = await detail(ana, quote.id);
+
+    expect(compatibility.status).toBe("incompatible");
+    const byRule = Object.fromEntries(compatibility.checks.map((c) => [c.rule, c]));
+    expect(byRule.socket).toMatchObject({
+      result: "incompatible",
+      message: "El procesador es AM5 y la placa LGA1700: no calzan.",
+    });
+    // 75 + 120 + 220 = 415 W: 500 W alcanza, pero sin el 25 % de margen.
+    expect(byRule.psu_wattage?.result).toBe("warning");
+    expect(byRule.cooler_missing?.result).toBe("warning");
+  });
+
+  test("una cotización vacía queda unknown", async () => {
+    expect((await createQuote(ana)).compatibility).toEqual({ status: "unknown", checks: [] });
+  });
+});

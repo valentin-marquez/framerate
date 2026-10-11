@@ -66,6 +66,7 @@ const quote: QuoteDetail = {
   updatedAt: "2026-09-28T15:00:00.000Z",
   items,
   totals: { cash: total("priceCash"), card: total("priceCard") },
+  compatibility: { status: "unknown", checks: [] },
 };
 
 export const Cabecera: Story = {
