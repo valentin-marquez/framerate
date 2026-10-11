@@ -116,6 +116,20 @@ describe("adaptador WooCommerce", () => {
     expect(gpus.map((o) => o.externalId)).toEqual([String(products[0]?.id), String(products[2]?.id)]);
   });
 
+  test("con attribute filtra por término del atributo en vez de categoría", async () => {
+    const porAtributo = createWooCommerceAdapter({
+      baseUrl: "https://tienda.example",
+      sku: "internal",
+      attribute: "pa_tipo",
+      perPage: 2,
+      categories: { gpu: ["tarjeta-de-video"] },
+    });
+    const url =
+      "https://tienda.example/wp-json/wc/store/v1/products?attributes[0][attribute]=pa_tipo&attributes[0][slug][]=tarjeta-de-video&per_page=2&page=1";
+    const { ctx } = fakeContext({ [url]: { body: [products[0]] } });
+    expect(await Array.fromAsync(porAtributo.crawlCategory("gpu", ctx))).toHaveLength(1);
+  });
+
   test("skipSku deja fuera los productos cuyo SKU calza con el patrón", async () => {
     const conSaltos = createWooCommerceAdapter({
       baseUrl: "https://tienda.example",

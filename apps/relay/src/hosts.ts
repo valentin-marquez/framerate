@@ -10,6 +10,7 @@ export const RELAY_HOSTS: readonly string[] = [
   "www.winpy.cl",
   "www.megabytes.cl",
   "electronicabudini.cl",
+  "globalbox.cl",
 ];
 
 /**

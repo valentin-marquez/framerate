@@ -852,6 +852,205 @@ export const STORES: readonly StoreDefinition[] = [
       },
     }),
   },
+  {
+    slug: "dazbog",
+    name: "DazBog Store",
+    url: "https://www.dazbogstore.cl",
+    adapter: createWooCommerceAdapter({
+      // Con www: el apex redirige.
+      baseUrl: "https://www.dazbogstore.cl",
+      // SKU = MPN (en Gigabyte, el código abreviado "B650M A ELITE AX ICE", que es el que usan las demás tiendas).
+      sku: "mpn",
+      // `price` = transferencia; "Webpay Plus" +3 % (verificado en 3 fichas, 11-10-2026). Mercado Pago (+8,5 %) no se usa.
+      cardMarkup: 0.03,
+      categories: {
+        gpu: ["gpus"],
+        cpu: ["cpu"],
+        motherboard: ["placas-madre"],
+        ram: ["ram"],
+        psu: ["psu"],
+        ssd: ["ssd"],
+        cpu_cooler: ["cooler-cpu"],
+        case: ["gabinete"],
+        case_fan: ["ventiladores"],
+      },
+    }),
+  },
+  {
+    slug: "globalbox",
+    name: "Globalbox",
+    url: "https://globalbox.cl",
+    minIntervalMs: 1000,
+    // El captcha de SiteGround bloquea la IP de los Workers: sale por el relay (#154).
+    egress: "relay",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://globalbox.cl",
+      // SKU = MPN; la marca va en `brands`.
+      sku: "mpn",
+      // `price` = "Otros medios de pago"; "Pago con transferencia" −4,6 % (verificado en 3 fichas, 11-10-2026; la
+      // tienda redondea a ...90, así que difiere hasta ~50 pesos).
+      cashDiscount: 0.046,
+      // Sin "sata-sas-y-ssd-para-servidor" (SSD y SAS de servidor HPE/Dell). GPU, gabinetes y ventiladores salen vacíos
+      // en la API y la única placa es una E1-6010 integrada.
+      categories: {
+        cpu: ["procesadores"],
+        ram: ["memorias-ram"],
+        psu: ["fuentes-de-alimentacion"],
+        ssd: ["unidades-de-estado-solido"],
+        hdd: ["discos-duros-internos"],
+        cpu_cooler: ["refrigeracion-cpu"],
+      },
+    }),
+  },
+  {
+    slug: "fiestalan",
+    name: "Fiestalan",
+    url: "https://fiestalan.cl",
+    // Su robots.txt prohíbe URLs con `?` y pide Crawl-delay 60; el dueño decidió integrarla igual, con pausa de 5 s.
+    minIntervalMs: 5000,
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://fiestalan.cl",
+      // SKU abreviado propio ("msia650gn"). Un solo precio; `regular_price` es el "antes" tachado (2 fichas, 11-10-2026).
+      // La Store API oculta lo agotado: RAM y HDD hoy salen vacías.
+      sku: "internal",
+      categories: {
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["motherboard"],
+        ram: ["ddr4", "ddr4-3000mhz", "ddr5"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["ssd", "m2", "nvme"],
+        hdd: ["hdd-almacenamiento"],
+        cpu_cooler: ["cooler-cpu", "water-cooling"],
+        case: ["gabinetes-gabinetes"],
+        case_fan: ["ventiladores"],
+      },
+    }),
+  },
+  {
+    slug: "notebooksya",
+    name: "Notebooksya",
+    url: "https://notebooksya.cl",
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://notebooksya.cl",
+      // SKU mixto: MPN, códigos de mayorista ("CS000ASU31") y números propios. `price` = transferencia; "Webpay -
+      // Mercado Pago" +4,5 % (verificado en 2 fichas, 11-10-2026).
+      sku: "internal",
+      cardMarkup: 0.045,
+      // Todos los componentes van en una categoría plana ("partes-y-piezas-ya"); el tipo está en este atributo.
+      attribute: "pa_producto-partes-y-piezas",
+      categories: {
+        gpu: ["tarjeta-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placa-madre"],
+        ram: ["memoria-ram-para-pc"],
+        psu: ["fuente-de-poder"],
+        ssd: ["disco-estado-solido-ssd"],
+        // Mezcla disipadores, AIO y ventiladores: `normalize` los separa.
+        cpu_cooler: ["refrigeracion"],
+        case: ["gabinetes"],
+        case_fan: ["ventiladores", "refrigeracion"],
+      },
+    }),
+  },
+  {
+    slug: "bookcomputer",
+    name: "Bookcomputer",
+    url: "https://www.bookcomputer.cl",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://www.bookcomputer.cl",
+      // Mezcla MPN, UPC, códigos propios ("BFC001", "HDD005") y basura ("1"); sin marca ni código de barras.
+      sku: "internal",
+      // Precio único; el tachado es el "antes" (verificado en la ficha, 11-10-2026).
+      // Sin RAM (casi todo reacondicionado u Optane) ni cpu_cooler (los AIO están en gabinetes y fuentes). Sin ssd:
+      // "Almacenamiento" mezcla discos y SSD, y `normalize` deja pasar los HDD como SSD (al revés sí los aparta).
+      categories: {
+        gpu: ["partes-y-piezas/tarjeta-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madres"],
+        psu: ["fuentes-de-poder"],
+        // Mezcla reacondicionados, externos y SSD: `normalize` los aparta.
+        hdd: ["almacenamiento"],
+        case: ["gabienete"],
+      },
+      // Los dos AIO de BitFenix figuran en "Fuentes de Poder" y en "Gabinetes".
+      exclude: { psu: ["Gabinetes"], case: ["Fuentes de Poder"] },
+    }),
+  },
+  {
+    slug: "ugstore",
+    name: "UG Store",
+    url: "https://www.ugstore.cl",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://www.ugstore.cl",
+      // SKU interno ("FUE-MSI-0002"); el código de barras es el EAN (en CPU AMD, el OPN "100-000000457").
+      sku: "internal",
+      // El precio publicado es "otros medios de pago"; transferencia = precio × 0,968 (verificado en la ficha, 11-10-2026).
+      cashDiscount: 0.032,
+      categories: {
+        gpu: ["tarjeta-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madre"],
+        ram: ["memorias"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["almacenamiento/ssd"],
+        // Mezcla AIO y ventiladores: `normalize` aparta los ventiladores.
+        cpu_cooler: ["refrigeracion"],
+        case: ["gabinetes"],
+      },
+      // Un AIO figura también en "Tarjetas de Video".
+      exclude: { gpu: ["Refrigeración"] },
+    }),
+  },
+  {
+    slug: "mdstore",
+    name: "Mercado Store",
+    url: "https://www.mdstore.cl",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://www.mdstore.cl",
+      // SKU propio ("MS02910"); el código de barras es el EAN en la mayoría.
+      sku: "internal",
+      // Precio único (Getnet y Mercado Pago, sin precio transferencia; verificado en 2 fichas, 11-10-2026).
+      // Sin GPU, CPU, RAM ni SSD: la tienda no los vende.
+      categories: {
+        motherboard: ["componentes-de-pc/placas-madre"],
+        psu: ["fuentes-de-poder"],
+        case: ["gabinetes"],
+        // "Disipador CPU" trae también brackets de montaje: `normalize` los aparta.
+        cpu_cooler: ["refrigeracion/disipador-cpu", "refrigeracion-liquida"],
+        case_fan: ["refrigeracion/ventiladores-pc"],
+      },
+    }),
+  },
+  {
+    slug: "invasiongamer",
+    name: "Invasión Gamer",
+    url: "https://invasiongamer.com",
+    minIntervalMs: 1000,
+    adapter: createJumpsellerAdapter({
+      baseUrl: "https://invasiongamer.com",
+      // SKU casi siempre vacío (2 de 34 con MPN); la marca sí viene.
+      sku: "internal",
+      // El precio publicado es el de tarjeta; un script de la ficha calcula transferencia = precio / 1,07 cerrado
+      // hacia abajo a ...900, así que el precio transferencia puede quedar hasta $999 sobre el real (verificado en 2
+      // fichas, 11-10-2026).
+      cashDiscount: 1 - 1 / 1.07,
+      categories: {
+        gpu: ["componentes-pc/tarjetas-de-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madres"],
+        // "Memorias RAM Laptop" (SO-DIMM) se deja fuera.
+        ram: ["memorias-ram/memoria-ram-desktop"],
+        psu: ["componentes-pc/fuentes-de-poder"],
+        ssd: ["componentes-pc/ssd-y-almacenamiento"],
+        cpu_cooler: ["componentes-pc/refrigeracion"],
+        case: ["componentes-pc/gabinetes"],
+      },
+    }),
+  },
 ];
 
 export function findStore(slug: string): StoreDefinition | undefined {

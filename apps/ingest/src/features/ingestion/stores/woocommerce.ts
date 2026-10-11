@@ -41,6 +41,9 @@ export interface WooCommerceConfig {
   /** Pedir el catálogo entero sin `?category=` y repartir por `categories[].slug`: para tiendas cuyo robots.txt
    * prohíbe `/*category=` (Centrale). Cada corrida recorre todas las páginas. */
   wholeCatalog?: boolean;
+  /** Taxonomía de un atributo (`pa_…`): los slugs de `categories` son términos de ese atributo, no categorías. Para
+   * tiendas con todos los componentes en una categoría plana y el tipo en un atributo (Notebooksya). */
+  attribute?: string;
   /** SKU de productos que no son ofertas reales (Trulu publica las piezas de sus PC armados, `…-PC`, a precio de costo). */
   skipSku?: RegExp;
   perPage?: number;
@@ -89,7 +92,12 @@ export function createWooCommerceAdapter(config: WooCommerceConfig): StoreAdapte
       const slugs = config.categories[category] ?? [];
       for (const slug of config.wholeCatalog ? ["*"] : slugs) {
         for (let page = 1; page <= maxPages; page++) {
-          const filter = slug === "*" ? "" : `category=${encodeURIComponent(slug)}&`;
+          const filter =
+            slug === "*"
+              ? ""
+              : config.attribute
+                ? `attributes[0][attribute]=${config.attribute}&attributes[0][slug][]=${encodeURIComponent(slug)}&`
+                : `category=${encodeURIComponent(slug)}&`;
           const url = `${config.baseUrl}/wp-json/wc/store/v1/products?${filter}per_page=${perPage}&page=${page}`;
           const res = await ctx.http.get(url);
           await ctx.snapshot(`${slug}/page-${page}.json`, res.text);

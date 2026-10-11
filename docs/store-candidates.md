@@ -49,7 +49,7 @@ La Store API trae `price` y `regular_price`, pero **cada tienda los usa distinto
 |---|---|---|
 | `price` = transferencia; la tarjeta es un recargo que sólo aparece en el HTML | Infor-Ingen (+6 %), Dust2 (+7 %), TecTec (+4 %), Progaming (+5 %), KDTEC (+2,2 %), ETChile (+5 %), CCLink (+5 %), Tecno Master, DazBog, Café Digital, Electronica Budini, Trulu, Notebooksya, MegaBytes, Natcom, RS Tech | `cardMarkup` con el recargo verificado en la ficha; sin él, tarjeta = transferencia |
 | `price` = **tarjeta**; la transferencia sólo en el HTML | Central Gamer (−5 %), Globalbox, Nuevatec (−5 %), Tecno Shopping (−3,5 %) | `cashDiscount` con el descuento verificado en la ficha |
-| Un solo precio | Cintegral, Play Factory, Fiestalan, Xtreme Components | Sin configuración |
+| Un solo precio | Cintegral, Play Factory, Fiestalan, Bookcomputer, Mercado Store | Sin configuración |
 
 En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardarse como precio tarjeta.
 
@@ -105,6 +105,14 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | Café Digital | WooCommerce, `sku: "internal"`, sin recargo | El SKU es el nombre del modelo: 0 % MPN. La tarjeta va escrita a mano y no es uniforme. ~50 válidas |
 | Trulu Store | WooCommerce, `sku: "internal"`, tarjeta +5 %, `skipSku: /-PC(-\|$)/` | Publica las piezas de sus PC armados (`…-PC`) a precio de costo o 0: se excluyen por SKU. ~37 componentes reales, sobre todo LovingCool |
 | Electrónica Budini (por el relay) | WooCommerce, `sku: "internal"` (vacío), sin recargo, `egress: "relay"` | MPN entre corchetes o paréntesis en el título (100 % en GPU, CPU y SSD). Muestra lo agotado. ~40 válidas. Responde 403 a las IPs de Cloudflare |
+| DazBog | WooCommerce, `sku: "mpn"`, tarjeta +3 % ("Webpay Plus"), `baseUrl` con `www` | ~53 válidas, sobre todo placas Gigabyte (SKU = código abreviado, el mismo de las demás tiendas). Los "-USADA" no salen en la API. Pasta térmica mezclada en CPU y refrigeración (`normalize` la aparta) |
+| Globalbox (por el relay) | WooCommerce, `sku: "mpn"`, `cashDiscount: 0.046`, `egress: "relay"` | Captcha de SiteGround desde los Workers. ~43 válidas: HDD de NAS, vigilancia y empresa, SSD, RAM SODIMM. Sin GPU, gabinetes, ventiladores ni placas; sin los discos de servidor. La transferencia se redondea a ...90 (hasta ~50 pesos de diferencia) |
+| Fiestalan | WooCommerce, `sku: "internal"`, un solo precio, `minIntervalMs: 5000` | Su robots.txt prohíbe URLs con `?` y pide Crawl-delay 60: se integra igual por decisión del dueño (11-10-2026), con pausa de 5 s. La API oculta lo agotado (~32 válidas). A veces antepone avisos `Deprecated:` de PHP al JSON |
+| Notebooksya | WooCommerce con `attribute: "pa_producto-partes-y-piezas"`, `sku: "internal"`, tarjeta +4,5 % ("Webpay - Mercado Pago") | Todos los componentes en una categoría plana; el tipo va en ese atributo y el adaptador filtra por él. ~150 válidas, todo con stock, MPN del título 70–84 % en CPU y RAM |
+| Bookcomputer | Jumpseller, `sku: "internal"`, precio único | SKU mezclado (MPN, UPC, códigos propios, basura), sin marca ni código de barras en el MCP. ~37 válidas, sin RAM (reacondicionada), cooler ni SSD ("Almacenamiento" deja pasar HDD como SSD) |
+| UG Store | Jumpseller, `sku: "internal"` (EAN en el código de barras), `cashDiscount: 0.032` | La ficha expone `window.transferDiscountMult = 0.968`. ~90 válidas con marca y GTIN, mucho agotado. En CPU AMD el `barcode` trae el OPN (MPN real), que hoy se pierde |
+| Mercado Store | Jumpseller, `sku: "internal"` (EAN en el código de barras), precio único | ~39 válidas, todas con stock: placas, fuentes, gabinetes, refrigeración. No vende GPU, CPU, RAM ni SSD. Hay fichas copiadas con URL de otro producto (650W/750W); el adaptador usa el nombre |
+| Invasión Gamer | Jumpseller, `sku: "internal"`, `cashDiscount: 1 − 1/1,07` | SKU casi siempre vacío. La ficha calcula la transferencia con JS (precio / 1,07, cerrado hacia abajo a ...900): hasta $999 de diferencia. ~31 válidas, precios altos |
 
 Para evaluar una tienda antes de activarla: `bun run --cwd apps/ingest dry-run <tienda> [categoría]` (crawl real +
 `normalizeOffer`, sin base): reporta cobertura de MPN, GTIN, marca y precios, marcas fuera del diccionario y la
@@ -136,8 +144,10 @@ cuarentena por motivo.
 - KDTEC: la Store API respondió a las 3 primeras peticiones y después cortó la conexión TCP (sin 403 ni 429; ¿límite por IP o servidor sobrecargado?). Reintentar otro día con `perPage` 20 y una petición cada 5 s; su robots.txt pide no rastrear filtros. Hay que leer la marca del atributo "Marca".
 - Tecno Shopping: el adaptador funciona (con `www` y desde una red residencial: 43 ofertas válidas), pero desde un Worker el captcha de SiteGround responde con un meta refresh a `/.well-known/sgcaptcha/` (HTML con 200, y el crawl falla con "Unexpected token <"). Es un bloqueo anti-bot por IP de Cloudflare: no se evade. Pausada con `pausedReason` el 05-10-2026. 10-10-2026: a través del relay (#154) la Store API responde 200 con `FramerateBot`; tiene `egress: "relay"` y se despausó con el relay en producción.
 - Tecno Master: la ficha muestra la tarjeta más barata que la transferencia (4.495.621 contra 4.616.610); aclarar antes de integrar. Oct. 2026: su web está "en construcción" (`Retry-After: 86400`) y no se ve la ficha; la Store API sí responde (364 productos), con `brands` vacío (marca sólo en el título). 10-10-2026: la Store API sigue respondiendo (~134 válidas, MPN 76–100 %) pero las fichas siguen "en construcción": configuración lista, activar cuando vuelva la web.
-- Fiestalan: su robots.txt prohíbe toda URL con `?` (incluida la Store API) y pide `Crawl-delay: 60` y 6 peticiones por hora (10-10-2026). No se integra.
-- Notebooksya: casi todo son notebooks; pocos componentes.
+- Fiestalan: su robots.txt prohíbe toda URL con `?` (incluida la Store API) y pide `Crawl-delay: 60` y 6 peticiones por hora (10-10-2026). 11-10-2026: integrada igual por decisión del dueño, con 5 s entre peticiones.
+- Notebooksya: integrada el 11-10-2026 filtrando por atributo (~150 componentes con stock).
+- Xtreme Components (11-10-2026): casi todo agotado, usado u "open box"; las GPU nuevas son preventa y el SKU viene vacío. No se integra. Tarjeta +3,5 % (Mercado Pago), no precio único.
+- KDTEC (11-10-2026): la Store API sigue sin responder (timeout de 25 s). Tecno Master: la web sigue "en construcción".
 - AllTec: PrestaShop 1.6 (no devuelve JSON) y casi sin componentes.
 
 **Fuera de alcance mientras sólo haya `fetch`:** Winpy, SP Digital, CTMAN y Nice One. Winpy tiene el catálogo más
