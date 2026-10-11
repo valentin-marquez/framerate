@@ -66,3 +66,16 @@ export const insertRow = (table: string, values: Record<string, unknown>): Query
   out(db.insertInto(table).values(values));
 
 export const deleteRow = (table: string, key: Key): Query => out(db.deleteFrom(table).where(byKey(key)));
+
+const literal = (v: unknown) =>
+  v === null || v === undefined
+    ? "null"
+    : typeof v === "number" || typeof v === "bigint"
+      ? String(v)
+      : `'${String(v).replaceAll("'", "''")}'`;
+
+// Para "Abrir en SQL": la consola recibe texto, no parámetros.
+export const inline = (q: Query) => {
+  let i = 0;
+  return q.sql.replace(/\?/g, () => literal(q.params[i++]));
+};

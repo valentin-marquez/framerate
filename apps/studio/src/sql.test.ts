@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { beforeEach, expect, test } from "bun:test";
-import { countRows, deleteRow, insertRow, type Query, ROWID, selectPage, updateRow } from "./sql";
+import { countRows, deleteRow, inline, insertRow, type Query, ROWID, selectPage, updateRow } from "./sql";
 
 let db: Database;
 const all = (q: Query) => db.query(q.sql).all(...(q.params as never[]));
@@ -47,4 +47,11 @@ test("insert y update por PK", () => {
   run(insertRow("order", { id: 4, "my name": "cuatro", qty: null }));
   run(updateRow("order", { id: 4 }, { qty: "8" }));
   expect(db.query(`select qty from "order" where id = 4`).get()).toEqual({ qty: 8 });
+});
+
+test("inline arma SQL ejecutable para la consola", () => {
+  const q = selectPage("order", { ...page, filters: [{ column: "my name", op: "=", value: "o'k" }], limit: 5 });
+  expect(inline(q)).toBe(`select * from "order" where "my name" = 'o''k' limit 5 offset 0`);
+  db.run(`insert into "order" values (9,'o''k',1)`);
+  expect(all({ sql: inline(q), params: [] })).toHaveLength(1);
 });
