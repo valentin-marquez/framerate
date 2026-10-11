@@ -16,7 +16,7 @@ import {
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { sql } from "kysely";
 import { productImageUrl } from "@/features/catalog/catalog.queries";
-import { checkCompatibility, type Part } from "@/features/compatibility/compatibility";
+import { checkCompatibility, highlights, type Part } from "@/features/compatibility/compatibility";
 import { avatarUrl } from "@/features/identity/domain/avatar";
 import { newPublicId } from "@/shared/public-id";
 
@@ -146,6 +146,7 @@ function toItem(r: ItemRow, assetsBaseUrl: string | undefined): QuoteItem {
       imageUrl: productImageUrl(r, assetsBaseUrl),
     },
     offer: offerOf(r),
+    specs: [],
   };
 }
 
@@ -226,13 +227,14 @@ function fuseFacts(rows: { identity: string; specs: string }[]): Record<string, 
   );
 }
 
-function compatibilityOf(items: QuoteItem[], [, factRows, tdpRows]: DetailRows) {
+/** Los ítems seleccionados con sus datos fusionados: alimentan la compatibilidad y los chips de specs. */
+function partsOf(items: QuoteItem[], [, factRows, tdpRows]: DetailRows): Part[] {
   const tdpByChipset = new Map<string, { tdp: number; n: number }>();
   for (const r of tdpRows) {
     const best = tdpByChipset.get(r.chipset);
     if (!best || r.n > best.n) tdpByChipset.set(r.chipset, { tdp: r.tdp, n: r.n });
   }
-  const parts: Part[] = items
+  return items
     .filter((i) => i.isSelected)
     .map((i) => {
       const facts = fuseFacts(factRows.filter((r) => r.item_id === i.id));
@@ -241,12 +243,11 @@ function compatibilityOf(items: QuoteItem[], [, factRows, tdpRows]: DetailRows) 
       }
       return { itemId: i.id, name: i.product.name, category: i.product.category, quantity: i.quantity, facts };
     });
-  return checkCompatibility(parts);
 }
 
 function toDetail(row: SummaryRow, detail: DetailRows, assetsBaseUrl: string | undefined): QuoteDetail {
   const [itemRows] = detail;
-  const items = itemRows
+  const sorted = itemRows
     .map((r) => toItem(r, assetsBaseUrl))
     .sort(
       (a, b) =>
@@ -254,11 +255,16 @@ function toDetail(row: SummaryRow, detail: DetailRows, assetsBaseUrl: string | u
         Number(b.isSelected) - Number(a.isSelected) ||
         a.id - b.id,
     );
+  const parts = partsOf(sorted, detail);
+  const items = sorted.map((i) => {
+    const part = parts.find((p) => p.itemId === i.id);
+    return part ? { ...i, specs: highlights(i.product.category, part.facts) } : i;
+  });
   return {
     ...toSummary(row, assetsBaseUrl),
     items,
     totals: quoteTotals(items),
-    compatibility: compatibilityOf(items, detail),
+    compatibility: checkCompatibility(parts),
   };
 }
 

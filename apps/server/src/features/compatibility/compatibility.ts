@@ -93,6 +93,19 @@ export function largestRadiator(v: unknown): number | null {
 
 const label = (s: string) => s.toUpperCase();
 
+/** Consumo estimado: TDP del procesador y de la GPU más 75 W para el resto. `null` si no hay ninguno de los dos. */
+function consumption({ cpu, gpu }: Parts): { watts: number } | { missing: Part } | null {
+  if (!cpu && !gpu) return null;
+  let watts = 75;
+  for (const p of [cpu, gpu]) {
+    if (!p) continue;
+    const tdp = num(p.facts.tdp_w);
+    if (!tdp) return { missing: p };
+    watts += tdp * p.quantity;
+  }
+  return { watts: Math.round(watts) };
+}
+
 // --- Reglas --------------------------------------------------------------------------------------------------------
 
 const RULES: Rule[] = [
@@ -246,13 +259,10 @@ const RULES: Rule[] = [
     const involved = [psu, cpu, gpu].filter((p): p is Part => p !== undefined);
     const watts = num(psu.facts.wattage);
     if (!watts) return unknown("psu_wattage", involved, "la potencia", psu);
-    let need = 75;
-    for (const p of [cpu, gpu]) {
-      if (!p) continue;
-      const tdp = num(p.facts.tdp_w);
-      if (!tdp) return unknown("psu_wattage", involved, "el consumo", p);
-      need += tdp * p.quantity;
-    }
+    const estimate = consumption({ cpu, gpu });
+    if (!estimate) return null;
+    if ("missing" in estimate) return unknown("psu_wattage", involved, "el consumo", estimate.missing);
+    const need = estimate.watts;
     if (watts < need)
       return check(
         "psu_wattage",
@@ -279,7 +289,62 @@ export function checkCompatibility(parts: readonly Part[]): QuoteCompatibility {
   const byCategory: Parts = {};
   for (const p of parts) byCategory[p.category] ??= p;
   const checks = RULES.flatMap((rule) => rule(byCategory) ?? []);
-  if (checks.length === 0) return { status: "unknown", checks };
+  const estimate = consumption(byCategory);
+  const estimatedWatts = estimate && "watts" in estimate ? estimate.watts : null;
+  if (checks.length === 0) return { status: "unknown", checks, estimatedWatts };
   const worst = checks.reduce((a, c) => (SEVERITY[c.result] > SEVERITY[a.result] ? c : a));
-  return { status: STATUS[worst.result], checks };
+  return { status: STATUS[worst.result], checks, estimatedWatts };
+}
+
+const BOARD_LABELS = ["ITX", "mATX", "ATX", "E-ATX"] as const;
+const EFFICIENCY: Record<string, string> = {
+  white: "80 Plus",
+  bronze: "Bronze",
+  silver: "Silver",
+  gold: "Gold",
+  platinum: "Platinum",
+  titanium: "Titanium",
+};
+const MODULAR: Record<string, string> = { full: "Modular", semi: "Semimodular" };
+const INTERFACES: Record<string, string> = { nvme: "NVMe", sata: "SATA", sas: "SAS", usb: "USB" };
+
+/** Hasta cuatro datos clave de un producto para mostrar como chips en la cotización ("AM5", "8 núcleos"). */
+export function highlights(category: Category, f: Record<string, unknown>): string[] {
+  const n = (key: string, unit: string) => {
+    const x = num(f[key]);
+    return x ? `${x} ${unit}` : null;
+  };
+  const s = socket(f.socket);
+  const ddr = memoryType(f.memory_type ?? f.type);
+  const board = (v: unknown) => {
+    const size = largestBoard(v);
+    return size === null ? null : BOARD_LABELS[size];
+  };
+  const capacity = num(f.capacity_gb);
+  const caseBoard = board(f.supported_motherboard_form_factors);
+  const byCategory: Record<Category, () => unknown[]> = {
+    cpu: () => [s && label(s), n("cores_total", "núcleos"), n("tdp_w", "W")],
+    motherboard: () => [s && label(s), ddr && label(ddr), board(f.form_factor), n("memory_slots", "slots")],
+    ram: () => [ddr && label(ddr), n("speed_mt_s", "MT/s"), num(f.modules) && `${num(f.modules)} módulos`],
+    gpu: () => [n("vram_gb", "GB"), n("tdp_w", "W"), n("length_mm", "mm")],
+    psu: () => [n("wattage", "W"), EFFICIENCY[String(f.efficiency)], MODULAR[String(f.modular)]],
+    case: () => [
+      caseBoard && `Hasta ${caseBoard}`,
+      num(f.max_gpu_length_mm) && `GPU hasta ${num(f.max_gpu_length_mm)} mm`,
+    ],
+    cpu_cooler: () => [
+      f.type === "aio" ? "Líquida" : f.type === "air" ? "Aire" : null,
+      f.type === "aio" ? n("radiator_mm", "mm") : n("height_mm", "mm de alto"),
+    ],
+    ssd: () => [
+      capacity && (capacity >= 1000 ? `${capacity / 1000} TB` : `${capacity} GB`),
+      INTERFACES[String(f.interface)],
+      num(f.pcie_gen) && `PCIe ${num(f.pcie_gen)}.0`,
+    ],
+    hdd: () => [capacity && (capacity >= 1000 ? `${capacity / 1000} TB` : `${capacity} GB`), n("rpm", "RPM")],
+    case_fan: () => [n("size_mm", "mm"), (num(f.quantity) ?? 1) > 1 && `${num(f.quantity)} unidades`],
+  };
+  return byCategory[category]()
+    .filter((x): x is string => typeof x === "string" && x.length > 0)
+    .slice(0, 4);
 }

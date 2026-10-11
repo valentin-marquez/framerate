@@ -103,6 +103,8 @@ export const QuoteItemSchema = z.object({
   chosenListingId: z.number().int().nullable(),
   /** null si ninguna tienda tiene el producto con stock: el ítem no suma al total. */
   offer: QuoteItemOfferSchema.nullable(),
+  /** Hasta cuatro datos clave para mostrar como chips ("AM5", "8 núcleos"). Vacío en las alternativas. */
+  specs: z.array(z.string()),
 });
 export type QuoteItem = z.infer<typeof QuoteItemSchema>;
 

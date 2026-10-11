@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { Category } from "@framerate/contracts";
 import {
   checkCompatibility,
+  highlights,
   largestBoard,
   largestRadiator,
   memoryTypes,
@@ -122,7 +123,7 @@ describe("checkCompatibility", () => {
   });
 
   test("sin pares que revisar el estado es unknown y no hay chequeos", () => {
-    expect(checkCompatibility([gpu])).toEqual({ status: "unknown", checks: [] });
+    expect(checkCompatibility([gpu])).toEqual({ status: "unknown", checks: [], estimatedWatts: 75 + 285 });
   });
 
   test("advertencias: SO-DIMM, socket que el cooler no lista, CPU sin cooler y fuente justa", () => {
@@ -143,4 +144,30 @@ describe("checkCompatibility", () => {
     expect(results([part("cpu_cooler", { type: "aio", radiator_mm: 420 }), box]).radiator).toBe("incompatible");
     expect(results([part("ram", { type: "ddr5", modules: 2 }, 3), mb]).memory_slots).toBe("incompatible");
   });
+
+  test("el consumo estimado suma CPU, GPU y 75 W; sin un TDP queda null", () => {
+    expect(checkCompatibility([cpu, gpu]).estimatedWatts).toBe(75 + 105 + 285);
+    expect(checkCompatibility([cpu, part("gpu", {})]).estimatedWatts).toBeNull();
+  });
+});
+
+describe("highlights", () => {
+  test.each([
+    ["cpu", { socket: "LGA 1700", cores_total: 8, tdp_w: 65 }, ["LGA1700", "8 núcleos", "65 W"]],
+    [
+      "motherboard",
+      { socket: "AM5", memory_type: "ddr5", form_factor: "matx", memory_slots: 2 },
+      ["AM5", "DDR5", "mATX", "2 slots"],
+    ],
+    ["ram", { type: "ddr4", speed_mt_s: 3200, modules: 2 }, ["DDR4", "3200 MT/s", "2 módulos"]],
+    ["psu", { wattage: 850, efficiency: "gold", modular: "full" }, ["850 W", "Gold", "Modular"]],
+    [
+      "case",
+      { supported_motherboard_form_factors: "ATX, Micro-ATX", max_gpu_length_mm: 400 },
+      ["Hasta ATX", "GPU hasta 400 mm"],
+    ],
+    ["cpu_cooler", { type: "aio", radiator_mm: 360 }, ["Líquida", "360 mm"]],
+    ["ssd", { capacity_gb: 1000, interface: "nvme", pcie_gen: 4 }, ["1 TB", "NVMe", "PCIe 4.0"]],
+    ["gpu", {}, []],
+  ] as const)("%s", (category, facts, expected) => expect(highlights(category, facts)).toEqual([...expected]));
 });

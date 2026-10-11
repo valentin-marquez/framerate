@@ -447,9 +447,13 @@ describe("compatibilidad", () => {
     // 75 + 120 + 220 = 415 W: 500 W alcanza, pero sin el 25 % de margen.
     expect(byRule.psu_wattage?.result).toBe("warning");
     expect(byRule.cooler_missing?.result).toBe("warning");
+    expect(compatibility.estimatedWatts).toBe(415);
+    const { items } = await detail(ana, quote.id);
+    expect(items.find((i) => i.product.id === seed.ryzen)?.specs).toEqual(["AM5", "120 W"]);
+    expect(items.find((i) => i.product.id === board)?.specs).toEqual(["LGA1700", "DDR5"]);
   });
 
   test("una cotización vacía queda unknown", async () => {
-    expect((await createQuote(ana)).compatibility).toEqual({ status: "unknown", checks: [] });
+    expect((await createQuote(ana)).compatibility).toEqual({ status: "unknown", checks: [], estimatedWatts: null });
   });
 });
