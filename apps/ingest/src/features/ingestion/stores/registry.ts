@@ -6,6 +6,7 @@ import { createMyShopAdapter } from "./myshop";
 import { createPcExpressAdapter } from "./pc-express";
 import { createPcFactoryAdapter } from "./pcfactory";
 import { createPrestaShopAdapter } from "./prestashop";
+import { createSpDigitalAdapter } from "./spdigital";
 import { createTecnomasAdapter } from "./tecnomas";
 import { createTecnoSagaAdapter } from "./tecnosaga";
 import { createWeiAdapter } from "./wei";
@@ -610,6 +611,37 @@ export const STORES: readonly StoreDefinition[] = [
         ssd: ["almacenamiento/disco-estado-solido"],
         hdd: ["almacenamiento/disco-duro-pc-s"],
         case: ["partes-y-piezas/gabinetes"],
+      },
+    }),
+  },
+  {
+    slug: "spdigital",
+    name: "SP Digital",
+    url: "https://www.spdigital.cl",
+    // Corta las IPs de Cloudflare (403 de su WAF); desde el relay responde. `robots.txt` pide `Crawl-delay: 5`.
+    egress: "relay",
+    minIntervalMs: 5000,
+    adapter: createSpDigitalAdapter({
+      baseUrl: "https://www.spdigital.cl",
+      // Las subcategorías de /categories/componentes, sin RAM de notebook, cables, adaptadores ni modding.
+      categories: {
+        gpu: [
+          "componentes-tarjeta-de-video-tarjeta-video-nvidia",
+          "componentes-tarjeta-de-video-tarjeta-video-amd",
+          "tarjeta-de-video-intel",
+        ],
+        cpu: ["componentes-procesador-procesador-intel", "componentes-procesador-procesador-amd"],
+        motherboard: ["componentes-placa-madre-placa-intel", "componentes-placa-madre-placa-amd"],
+        ram: ["componentes-memorias-ram-memoria-ram-pc"],
+        psu: ["componentes-fuente-de-poder-fuentes-de-poder"],
+        ssd: ["componentes-almacenamiento-ssd-unidad-estado-solido"],
+        hdd: ["componentes-almacenamiento-hdd-disco-duro-mecanico"],
+        cpu_cooler: [
+          "componentes-refrigeracion-y-ventilacion-refrigeracion-liquida",
+          "componentes-refrigeracion-y-ventilacion-disipador-cpu",
+        ],
+        case: ["componentes-gabinetes-mid-tower--atx", "componentes-gabinetes-micro-atx--mini-itx"],
+        case_fan: ["componentes-refrigeracion-y-ventilacion-ventilador-gabinete"],
       },
     }),
   },

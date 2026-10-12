@@ -12,7 +12,7 @@ alimentan la huella de producto. Base: un sondeo del 30-09-2026 sobre las tienda
   evaluaron a fondo.
 - **25 son WooCommerce con la Store API abierta.** El adaptador que ya existe les sirve con sólo configurarlo.
 - **4 estaban fuera de alcance mientras sólo usábamos `fetch`**, porque bloquean con Cloudflare: Winpy (la más
-  grande, integrada por el relay el 10-10-2026), SP Digital, CTMAN y Nice One. Para las que cortan por IP de datacenter (no por desafío anti-bot) está el
+  grande, integrada por el relay el 10-10-2026), SP Digital (integrada el 12-10-2026), CTMAN y Nice One. Para las que cortan por IP de datacenter (no por desafío anti-bot) está el
   relay del servidor propio (#154): `egress: "relay"` en el registro y su dominio en `apps/relay/src/hosts.ts`. Si además la página se arma con JavaScript (Centrale: precio tarjeta sólo en el HTML), el adaptador pide `render: true` y el relay la abre con Chromium.
 - Las multitiendas (Mercado Libre, Falabella, Paris, Ripley, Lider…) casi no venden componentes. No se integran.
 
@@ -192,14 +192,14 @@ a las del 30-09 donde se contradicen.
 
 **Con el relay y su navegador (10-10-2026):**
 
-- **SP Digital: viable.** Desde la IP del relay la portada y las fichas responden 200 a `FramerateBot` (el bloqueo era
-  a las IPs de Cloudflare). La ficha es SSR y trae todo lo que hace falta sin navegador: "Part number: ZT-B50610H-10A /
-  Cod: NA0000097521", marca, "Pago con transferencia" y "Otros medios de pago" (y "Normal" tachado). El listado
-  (`/categories/componentes/`, `/categories/componentes/2/`…) necesita `render`: renderizado con `Bun.WebView` sale
-  en ~5 s con los links de producto y la paginación, y por defecto **sólo muestra productos con stock** ("Incluir
-  productos agotados" viene apagado), así que estar en el listado es la señal de stock. `robots.txt` pide
-  `Crawl-delay: 5`. Falta: las subcategorías por categoría de Framerate (la de componentes las mezcla) y un adaptador
-  "listado con `render`, ficha con `fetch`"; con ~5 s por ficha, unas 200 a 400 fichas por ciclo.
+- **SP Digital: integrada (12-10-2026).** Sale por el relay porque el WAF corta las IPs de Cloudflare (403), pero no
+  necesita `render`: es Gatsby y cada subcategoría (`/categories/componentes-<grupo>-<sub>/`, el árbol completo viene en
+  cualquier `page-data.json`) se publica dos veces desde el servidor. `/page-data/categories/<slug>/page-data.json`
+  trae por producto `metadata.mpn`, `metadata.gtin`, marca, condición, `quantityAvailable` y el precio "otros medios";
+  el precio de transferencia sólo está en el HTML de la tarjeta (con el producto en oferta, `metadata.pricing` guarda el
+  precio de lista), así que el adaptador pide los dos. El listado sólo incluye lo que tiene stock. Se descartan "Caja
+  abierta" y "Segunda selección". Son ~160 ofertas en 10 categorías con ~30 peticiones por ciclo, a 5 s por el
+  `Crawl-delay` de su `robots.txt`. Sin MPN faltante: 176 de 176 lo traían.
 - **Centrale: no se integra**, aunque el navegador ahora pase. Protege los precios a propósito con su plugin
   `centrale-anti-scrape` y Turnstile: es una decisión de la tienda, no un bloqueo por origen, y no se evade.
 
