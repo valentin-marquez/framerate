@@ -126,6 +126,15 @@ function ProductStage({
   );
 }
 
+/** Un solo sello por fuente: 80 Plus si lo tiene, si no el de Cybenetics (ETA, después LAMBDA). */
+function psuCertification({ category, attributes }: ProductSummary): string | null {
+  if (category !== "psu") return null;
+  const { efficiency, eta, lambda } = attributes;
+  if (typeof efficiency === "string") return efficiency;
+  if (typeof eta === "string") return `eta-${eta}`;
+  return typeof lambda === "string" ? `lambda-${lambda}` : null;
+}
+
 /**
  * Tarjeta de producto, la misma en catálogo, home y tiendas. Horizontal: el texto manda (marca, nombre, specs,
  * precio y disponibilidad) y la foto es una miniatura a la derecha con el botón de cotizar encima.
@@ -134,8 +143,7 @@ export function ProductCard({ product, priority = false, trending = false, class
   const { bestPrice, bestCardPrice } = product;
   const specs = getSpecsSummary(product);
   const inStock = bestPrice !== null;
-  const efficiency = product.attributes.efficiency;
-  const psu = product.category === "psu" && typeof efficiency === "string" ? efficiency : null;
+  const psu = psuCertification(product);
   const cardId = useId();
   const drop = priceDrop(bestPrice, product.referencePrice);
 

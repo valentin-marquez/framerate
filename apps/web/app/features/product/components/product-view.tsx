@@ -436,6 +436,8 @@ const SPEC_LABELS: Record<string, string> = {
   formFactor: "Formato",
   wattage: "Potencia",
   efficiency: "Certificación",
+  eta: "Cybenetics ETA",
+  lambda: "Cybenetics LAMBDA",
   socket: "Socket",
 };
 const UNITS: Record<string, string> = { vram: " GB", capacity: " GB", speed: " MHz", rpm: " RPM", wattage: " W" };
