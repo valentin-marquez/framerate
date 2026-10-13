@@ -13,7 +13,7 @@ import { createTestD1 } from "@framerate/database/testing";
 import { z } from "zod";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { daysAgo, seedCatalog, testEnv } from "./helpers";
+import { daysAgo, refreshSummaries, seedCatalog, testEnv } from "./helpers";
 
 /** API HTTP de punta a punta; las respuestas se validan contra `@framerate/contracts`. */
 
@@ -207,6 +207,7 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
   test("el mejor precio con tarjeta es el mínimo entre ofertas con stock, aunque sea de otra tienda", async () => {
     // beta tiene el mejor efectivo (599.990) pero un recargo alto con tarjeta; alfa cobra 650.000 en ambos.
     await db.query.updateTable("listings").set({ price_card: 669_990 }).where("external_id", "=", "9").execute();
+    await refreshSummaries(db);
     try {
       const [asus] = (await list("category=gpu&sort=name")).items;
       expect(asus).toMatchObject({ bestPrice: 599_990, bestCardPrice: 650_000 });
@@ -217,6 +218,7 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
       expect(msi.bestCardPrice).toBeNull();
     } finally {
       await db.query.updateTable("listings").set({ price_card: 599_990 }).where("external_id", "=", "9").execute();
+      await refreshSummaries(db);
     }
   });
 

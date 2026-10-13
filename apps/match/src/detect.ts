@@ -1,4 +1,4 @@
-import type { Db } from "@framerate/database";
+import { type Db, refreshProductsPriceSummary } from "@framerate/database";
 import { compare, createReview, listingFingerprint, loadCandidates, overrideKind } from "@framerate/matching";
 import { sql } from "kysely";
 
@@ -93,7 +93,9 @@ export async function proposeDuplicateReviews(
     result.skipped[reason] = (result.skipped[reason] ?? 0) + 1;
   };
 
-  for (const group of await duplicateGroups(db, input.maxGroups ?? 500)) {
+  // Una revisión pendiente saca la oferta del resumen de precios de su producto (#169): hay que recalcularlo.
+  const touched = new Set<number>();
+  groups: for (const group of await duplicateGroups(db, input.maxGroups ?? 500)) {
     const [keeper, ...rest] = group;
     if (!keeper) continue;
     const [candidate] = await loadCandidates(db, [keeper.id], { mpn: null, gtin: null });
@@ -109,7 +111,7 @@ export async function proposeDuplicateReviews(
         .execute();
 
       for (const listing of listings) {
-        if (result.proposed >= (input.maxProposals ?? 200)) return result;
+        if (result.proposed >= (input.maxProposals ?? 200)) break groups;
         result.evaluated++;
         const { fingerprint } = await listingFingerprint(db, listing);
         const comparison = compare(fingerprint, candidate.fingerprint);
@@ -143,6 +145,7 @@ export async function proposeDuplicateReviews(
           });
         }
         if (!input.dryRun) {
+          touched.add(other.id);
           await createReview(db, {
             listingId: listing.id,
             candidateProductId: keeper.id,
@@ -161,5 +164,6 @@ export async function proposeDuplicateReviews(
       }
     }
   }
+  if (touched.size > 0) await refreshProductsPriceSummary(db, touched, input.now);
   return result;
 }

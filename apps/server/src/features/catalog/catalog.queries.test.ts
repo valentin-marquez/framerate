@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { ProductListQuerySchema } from "@framerate/contracts";
-import type { Db } from "@framerate/database";
+import { type Db, refreshProductsPriceSummary } from "@framerate/database";
 import { createTestD1, resetD1 } from "@framerate/database/testing";
 import { listBrands, listProducts } from "./catalog.queries";
 
@@ -55,6 +55,12 @@ async function seed() {
       })
       .execute();
   }
+  const ids = await db.query.selectFrom("products").select("id").execute();
+  await refreshProductsPriceSummary(
+    db,
+    ids.map((r) => r.id),
+    new Date(NOW),
+  );
 }
 
 describe("filtro por varias marcas", () => {

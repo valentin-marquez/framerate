@@ -39,7 +39,8 @@ UPDATE products SET
   (best_price, best_price_card, offer_count, in_stock_offer_count) = (
     SELECT MIN(CASE WHEN in_stock = 1 THEN price_cash END), MIN(CASE WHEN in_stock = 1 THEN price_card END),
       COUNT(DISTINCT store_id), COUNT(DISTINCT CASE WHEN in_stock = 1 THEN store_id END)
-    FROM listings WHERE product_id = products.id AND is_active = 1 AND visible = 1),
+    FROM listings WHERE product_id = products.id AND is_active = 1 AND visible = 1
+      AND id NOT IN (SELECT listing_id FROM match_reviews WHERE status = 'pending')),
   prices_updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now');
 
 UPDATE products SET reference_price = (

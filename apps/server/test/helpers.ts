@@ -1,5 +1,5 @@
 import type { EnqueueCrawlsRequest, EnqueuePipelineRequest, IngestService, Role } from "@framerate/contracts";
-import type { Db } from "@framerate/database";
+import { type Db, refreshProductsPriceSummary } from "@framerate/database";
 import { testUtils } from "better-auth/plugins";
 import type { Env } from "@/env";
 import { createAuth } from "@/features/identity/auth";
@@ -148,7 +148,18 @@ export async function seedCatalog(db: Db) {
   await pricePoint(l4, 639_990, daysAgo(4));
   await pricePoint(l4, 599_990, daysAgo(2));
 
+  await refreshSummaries(db);
   return { alfa, beta, asus, msi, ryzen, listings: { l1, l4 } };
+}
+
+/** Recalcula el resumen de precios de todos los productos, como ingest o match después de tocar ofertas. */
+export async function refreshSummaries(db: Db) {
+  const ids = await db.query.selectFrom("products").select("id").execute();
+  await refreshProductsPriceSummary(
+    db,
+    ids.map((r) => r.id),
+    new Date(),
+  );
 }
 
 /**
