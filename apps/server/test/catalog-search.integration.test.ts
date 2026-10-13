@@ -5,7 +5,7 @@ import { createTestD1 } from "@framerate/database/testing";
 import { searchText } from "@framerate/kit";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { testEnv } from "./helpers";
+import { refreshSummaries, testEnv } from "./helpers";
 
 /** Buscar un modelo pegado o separado encuentra lo mismo (#129). */
 
@@ -73,6 +73,7 @@ beforeAll(async () => {
   await seed("Corsair Vengeance 16 GB DDR5 6000", "ram");
   await seed("AMD Ryzen 7 7800X3D", "cpu");
   await seed("Intel Core i5-12400F", "cpu");
+  await refreshSummaries(db);
 });
 afterAll(() => dispose());
 

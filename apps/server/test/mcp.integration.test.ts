@@ -3,7 +3,7 @@ import type { Db } from "@framerate/database";
 import { createTestD1 } from "@framerate/database/testing";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { testEnv } from "./helpers";
+import { refreshSummaries, testEnv } from "./helpers";
 
 let db: Db;
 let dispose: () => Promise<void>;
@@ -69,6 +69,7 @@ beforeAll(async () => {
     .insertInto("product_slug_redirects")
     .values({ old_slug: "rtx-4060-vieja", product_id: id, created_at: at })
     .execute();
+  await refreshSummaries(db);
 });
 afterAll(() => dispose());
 

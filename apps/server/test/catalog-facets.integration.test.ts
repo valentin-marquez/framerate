@@ -4,7 +4,7 @@ import type { Db } from "@framerate/database";
 import { createTestD1 } from "@framerate/database/testing";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { testEnv } from "./helpers";
+import { refreshSummaries, testEnv } from "./helpers";
 
 /** Filtro por especificación, ofertas bajo el precio habitual y facetas; respuestas validadas contra contracts. */
 
@@ -29,6 +29,7 @@ beforeAll(async () => {
     .values({ slug: "alfa", name: "alfa", url: "https://alfa.cl", domain: "alfa.cl", created_at: at })
     .returning("id")
     .executeTakeFirstOrThrow();
+  const references: [string, number | null][] = [];
   const seed = async (
     name: string,
     category: string,
@@ -37,6 +38,7 @@ beforeAll(async () => {
     reference: number | null,
     inStock: 0 | 1 = 1,
   ) => {
+    references.push([name.toLowerCase().replace(/\W+/g, "-"), reference]);
     const { id } = await db.query
       .insertInto("products")
       .values({
@@ -106,6 +108,11 @@ beforeAll(async () => {
   await identity(gpu12, 2, { memory_type: "gddr 7" }, { memory_type: "text" });
   await identity(gpu16, 1, { memory_type: "GDDR7" }, { memory_type: "text" });
   await identity(gpu8, 1, { memory_type: "GDDR6" }, { memory_type: "knowledge" });
+  await refreshSummaries(db);
+  // El recálculo saca el precio habitual del historial diario, que aquí no existe: se vuelve a fijar el sembrado.
+  for (const [slug, reference] of references) {
+    await db.query.updateTable("products").set({ reference_price: reference }).where("slug", "=", slug).execute();
+  }
 });
 afterAll(() => dispose());
 
