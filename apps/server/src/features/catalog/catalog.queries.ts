@@ -102,7 +102,7 @@ type ListFilters = Pick<
  * sin decimales y strings tal cual (o, con `clean`, en mayúsculas y sin espacios: "LGA 1700", "LGA-1700", "FCLGA1700" y "lga1700"
  * de distintas tiendas son "LGA1700"). NULL si no está el dato.
  */
-function jsonText(doc: RawBuilder<unknown>, path: string, clean = false) {
+function jsonText(doc: RawBuilder<unknown>, path: RawBuilder<unknown>, clean = false) {
   const value = sql`json_extract(${doc}, ${path})`;
   const text = clean ? sql`upper(replace(replace(replace(${value}, ' ', ''), '-', ''), 'FCLGA', 'LGA'))` : value;
   return sql<string | null>`(CASE json_type(${doc}, ${path})
@@ -127,7 +127,9 @@ const SPEC_SOURCED = new Set(
  * leer de ahí como `attributes`.
  */
 function specValue(key: string) {
-  const path = `$.${key}`;
+  // Literal y no parámetro: la ruta se repite muchas veces por consulta y D1 acepta 100 variables. Las claves vienen
+  // validadas contra `CATEGORY_FACETS` (`SpecFilterSchema` sólo deja letras, dígitos y _).
+  const path = sql.lit(`$.${key}`);
   if (key === "chipMaker") {
     const chipset = sql`json_extract(p.attributes, '$.chipset')`;
     return sql<
