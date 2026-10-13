@@ -54,4 +54,8 @@ ven en Storybook, Fundamentos/Movimiento.
 - **URLs públicas en español** (`/tiendas/:slug`, `/reclamar`, `/buscar`, `/categoria/:slug`, `/producto/:slug`,
   `/cotizacion/:slug`). Al renombrar una ruta, la versión vieja queda como redirect 301
   (`apps/web/app/features/stores/pages/redirect-old-*.tsx`). APIs, tablas y código, en inglés.
-- El estado de los filtros vive en los search params de la URL.
+- El estado de los filtros vive en los search params de la URL. En `/categoria/:slug` los filtros están en el **riel**:
+  el navbar lee los datos del loader de esa ruta (`useMatches`) y su zona de categorías muta a `RailFilters`
+  (`features/catalog`); `F` alterna con la lista y en teléfono es una hoja (`FiltersButton`). Marca y las facetas
+  admiten varios valores (`brand` y `spec` repetibles, "o" dentro del mismo filtro). Un filtro nuevo es una faceta en
+  `contracts` (`CATEGORY_FACETS`): el panel la dibuja solo.

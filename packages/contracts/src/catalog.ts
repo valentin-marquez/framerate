@@ -113,7 +113,10 @@ export type ProductSort = z.infer<typeof ProductSortSchema>;
 
 export const ProductListQuerySchema = z.object({
   category: CategorySchema.optional(),
-  brand: z.string().min(1).max(64).optional(),
+  /** Repetible (`brand=msi&brand=asus`): varias marcas son "o", como los valores de una misma faceta. */
+  brand: z
+    .preprocess((v) => (v === undefined ? undefined : [v].flat()), z.array(z.string().min(1).max(64)).max(20))
+    .optional(),
   store: z.string().min(1).max(64).optional(),
   q: z.string().trim().min(2).max(100).optional(),
   minPrice: z.coerce.number().int().min(0).optional(),

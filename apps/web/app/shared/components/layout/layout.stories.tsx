@@ -4,7 +4,15 @@ import { HomeContent } from "~/features/home/components/home-content";
 import type { MyStore } from "~/features/profile/services/profiles";
 import { SearchField } from "~/features/search/components/search-field";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
-import { categories, dropProducts, freshness, rowProducts, sessions, stores } from "~/shared/storybook/fixtures";
+import {
+  catalogData,
+  categories,
+  dropProducts,
+  freshness,
+  rowProducts,
+  sessions,
+  stores,
+} from "~/shared/storybook/fixtures";
 import { withQueryData } from "~/shared/storybook/with-query-data";
 import { Button } from "../primitives/button";
 import {
@@ -48,6 +56,27 @@ export const NavbarConSesion: Story = {
   render: () => (
     <div className="h-screen">
       <Navbar categories={categories} freshness={freshness} initialCollapsed={false} />
+    </div>
+  ),
+};
+
+export const NavbarCategoria: Story = {
+  name: "Navbar: en una categoría (el riel muestra sus filtros; F alterna con la lista)",
+  // `catalog` simula los datos del loader de la categoría, de donde el riel saca sus filtros.
+  parameters: { path: "/categoria/tarjetas-de-video?brand=msi&spec=vram:8", catalog: catalogData() },
+  render: () => (
+    <div className="h-screen">
+      <Navbar categories={categories} freshness={freshness} initialCollapsed={false} />
+    </div>
+  ),
+};
+
+export const NavbarCategoriaPlegado: Story = {
+  name: "Navbar: en una categoría con el riel plegado (el ícono lleva la cantidad de filtros)",
+  parameters: { path: "/categoria/tarjetas-de-video?brand=msi&spec=vram:8", catalog: catalogData() },
+  render: () => (
+    <div className="h-screen">
+      <Navbar categories={categories} freshness={freshness} initialCollapsed />
     </div>
   ),
 };

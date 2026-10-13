@@ -11,7 +11,8 @@ export interface ProductFilters {
   page?: number;
   limit?: number;
   category?: string;
-  brand?: string;
+  /** Varias marcas son "o". */
+  brand?: string[];
   search?: string;
   min_price?: number;
   max_price?: number;
@@ -30,7 +31,7 @@ export function listParams(filters: ProductFilters): Record<string, string | str
   if (filters.page) params.page = String(filters.page);
   if (filters.limit) params.pageSize = String(filters.limit);
   if (filters.category) params.category = categoryFromSlug(filters.category) ?? filters.category;
-  if (filters.brand) params.brand = filters.brand;
+  if (filters.brand?.length) params.brand = filters.brand;
   const q = searchable(filters.search);
   if (q) params.q = q;
   if (filters.min_price) params.minPrice = String(filters.min_price);

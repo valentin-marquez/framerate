@@ -3,8 +3,10 @@ import { Pagination, ProductGrid } from "~/features/explore/components";
 import { enterClass } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 import { type CatalogData, categoryFacets } from "../load-catalog";
+import { ActiveChips } from "./active-chips";
 import { CategoryHeader, SearchHeader } from "./catalog-headers";
-import { FilterBar } from "./filter-bar";
+import { CatalogToolbar } from "./catalog-toolbar";
+import { FiltersButton } from "./filter-sheet";
 
 /** "memoria", "Wi-Fi", "PCIe": a media frase en minúscula, salvo siglas y nombres con mayúsculas internas. */
 const inSentence = (label: string) => (/^.[a-záéíóúñ ]+$/.test(label) ? label.toLowerCase() : label);
@@ -18,8 +20,9 @@ export function missingSpecLabel(category: string | null, spec: string[]) {
 }
 
 /**
- * Vista de catálogo: cabecera (foto de la categoría o la consulta buscada), barra de filtros fija y grilla
- * paginada. Con `category` es `/categoria/:slug` y sin ella, `/buscar`.
+ * Vista de catálogo: cabecera (foto de la categoría o la consulta buscada), filtros aplicados, barra de orden y
+ * paginación fija y grilla paginada. Los filtros de la categoría viven en el riel (`RailFilters`).
+ * Con `category` es `/categoria/:slug` y sin ella, `/buscar`.
  */
 export function CatalogView({ data }: { data: CatalogData }) {
   const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited } = data;
@@ -57,14 +60,20 @@ export function CatalogView({ data }: { data: CatalogData }) {
         <SearchHeader total={meta.total} search={search} />
       )}
 
-      <FilterBar
-        brands={brands}
-        priceRange={priceRange}
-        total={meta.total}
-        category={category}
-        facets={data.facets}
-        defaultSort={data.defaultSort}
-      />
+      <div className="flex flex-col gap-3">
+        <ActiveChips brands={brands} definitions={categoryFacets(category)} />
+        {/* El orden y la paginación van donde están las entradas; los filtros viven en el riel (o en la hoja, en teléfono). */}
+        <CatalogToolbar
+          total={meta.total}
+          page={meta.page}
+          totalPages={meta.totalPages}
+          pageSize={meta.limit}
+          defaultSort={data.defaultSort}
+          onPageChange={goToPage}
+          lead={category ? <FiltersButton data={data} /> : undefined}
+          className="sticky top-14 z-30 -mx-4 border-border/40 border-b bg-background/80 px-4 py-2.5 backdrop-blur-md md:mx-0 md:rounded-2xl md:border md:px-3 lg:top-3"
+        />
+      </div>
 
       <div className={cn("transition-opacity duration-200", loading && "opacity-50")}>
         <ProductGrid

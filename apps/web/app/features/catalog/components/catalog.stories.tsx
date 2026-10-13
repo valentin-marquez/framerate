@@ -1,10 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ProductGrid } from "~/features/explore/components";
-import { brands, gpuFacets, rowProducts, specMatchProducts } from "~/shared/storybook/fixtures";
-import type { CatalogData } from "../load-catalog";
+import { brands, catalogData, gpuFacets, specMatchProducts } from "~/shared/storybook/fixtures";
+import { categoryFacets } from "../load-catalog";
+import { ActiveChips } from "./active-chips";
 import { CategoryHeader, SearchHeader } from "./catalog-headers";
+import { CatalogToolbar } from "./catalog-toolbar";
 import { CatalogView } from "./catalog-view";
-import { FacetFilter, FilterBar } from "./filter-bar";
+import { FilterPanel } from "./filter-panel";
+import { RailFilters } from "./rail-filters";
 
 const meta = { title: "Catálogo/Cabeceras y filtros", id: "catalogo" } satisfies Meta;
 export default meta;
@@ -33,43 +36,66 @@ export const CabeceraDeBusquedaConConsulta: Story = {
   render: () => <SearchHeader total={2} search="rtx 5060" />,
 };
 
-export const BarraDeFiltros: Story = {
-  name: "Barra de filtros",
-  render: () => <FilterBar brands={brands} priceRange={{ min: 279_990, max: 939_990 }} total={8} />,
-};
-
-export const BarraDeFiltrosActivos: Story = {
-  name: "Barra de filtros con filtros activos",
-  // Los filtros viven en la URL: la historia abre una con marca, rango y orden.
-  parameters: {
-    path: "/categoria/tarjetas-de-video?brand=msi&min_price=300000&max_price=500000&sort=price_desc",
-  },
-  render: () => <FilterBar brands={brands} priceRange={{ min: 279_990, max: 939_990 }} total={3} />,
-};
-
-export const BarraConFacetas: Story = {
-  name: "Barra de filtros con facetas",
-  parameters: { path: "/categoria/tarjetas-de-video?spec=vram:12&spec=vram:16&brand=msi" },
+/** El panel de filtros tal como va en el riel: el precio es un slider y el resto, campos que abren su lista. */
+export const PanelDeFiltros: Story = {
+  name: "Panel de filtros",
   render: () => (
-    <FilterBar
-      brands={brands}
-      priceRange={{ min: 279_990, max: 939_990 }}
-      total={5}
-      category="tarjetas-de-video"
-      facets={gpuFacets}
+    <div className="w-60">
+      <FilterPanel data={catalogData()} />
+    </div>
+  ),
+};
+
+export const PanelConFiltrosActivos: Story = {
+  name: "Panel con filtros activos",
+  parameters: { path: "/categoria/tarjetas-de-video?brand=msi&brand=zotac&spec=vram:12&spec=vram:16&min_price=300000" },
+  render: () => (
+    <div className="w-60">
+      <FilterPanel data={catalogData()} />
+    </div>
+  ),
+};
+
+export const PanelDelRiel: Story = {
+  name: "Panel dentro del riel (con volver y limpiar)",
+  parameters: { path: "/categoria/tarjetas-de-video?spec=vram:8&brand=msi" },
+  render: () => (
+    <div className="flex h-[34rem] w-64 flex-col border border-border/60 bg-card/40 p-3">
+      <RailFilters data={catalogData()} onBack={() => {}} />
+    </div>
+  ),
+};
+
+export const PanelEnHoja: Story = {
+  name: "Panel en la hoja de teléfono (campos que se despliegan)",
+  render: () => (
+    <div className="w-80">
+      <FilterPanel data={catalogData()} inline />
+    </div>
+  ),
+};
+
+export const BarraDeOrdenYPaginas: Story = {
+  name: "Barra de orden, por página y flechas",
+  parameters: { path: "/categoria/tarjetas-de-video?sort=price_desc&limit=12" },
+  render: () => (
+    <CatalogToolbar
+      total={180}
+      page={2}
+      totalPages={15}
+      pageSize={12}
+      defaultSort="price_asc"
+      onPageChange={() => {}}
     />
   ),
 };
 
-export const ChipDeFaceta: Story = {
-  name: "Chip de faceta (abre el popover)",
-  parameters: { path: "/categoria/tarjetas-de-video?spec=vram:8" },
-  // Ábrelo con un clic: muestra valores con conteo, selección múltiple y la nota de los que no tienen el dato.
-  render: () => (
-    <div className="h-80">
-      <FacetFilter facet={gpuFacets[0]} />
-    </div>
-  ),
+export const ChipsDeFiltros: Story = {
+  name: "Filtros aplicados",
+  parameters: {
+    path: "/categoria/tarjetas-de-video?brand=msi&brand=zotac&spec=vram:16&min_price=300000&max_price=500000",
+  },
+  render: () => <ActiveChips brands={brands} definitions={categoryFacets("tarjetas-de-video")} />,
 };
 
 export const SeparadorDeDesconocidos: Story = {
@@ -87,22 +113,7 @@ export const SoloDesconocidos: Story = {
   ),
 };
 
-const catalog = (overrides: Partial<CatalogData> = {}): CatalogData =>
-  ({
-    products: rowProducts,
-    meta: { page: 2, limit: 24, total: 180, totalPages: 8 },
-    brands,
-    priceRange: { min: 279_990, max: 939_990 },
-    facets: [],
-    trendingIds: [rowProducts[0].id],
-    rateLimited: false,
-    category: "tarjetas-de-video",
-    search: null,
-    brand: null,
-    spec: [],
-    defaultSort: "price_asc",
-    ...overrides,
-  }) as CatalogData;
+const catalog = catalogData;
 
 export const VistaConFacetas: Story = {
   name: "Vista completa: filtrada por especificación",

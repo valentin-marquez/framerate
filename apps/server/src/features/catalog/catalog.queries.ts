@@ -74,12 +74,12 @@ function _daysAgoDate(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 }
 
-/** Marca (nombre canónico) a partir de su slug dentro de una categoría; si no coincide ninguna, el texto tal cual. */
-async function resolveBrand(db: Db, brand: string, category?: string): Promise<string> {
+/** Marcas (nombre canónico) a partir de sus slugs dentro de una categoría; la que no coincide con ninguna, el texto tal cual. */
+async function resolveBrands(db: Db, brands: string[], category?: string): Promise<string[]> {
   let query = db.query.selectFrom("products").select("brand").distinct().where("brand", "is not", null);
   if (category) query = query.where("category", "=", category);
   const names = (await query.execute()).map((r) => r.brand as string);
-  return names.find((name) => slugify(name) === slugify(brand)) ?? brand;
+  return brands.map((brand) => names.find((name) => slugify(name) === slugify(brand)) ?? brand);
 }
 
 /** Foto del producto: la copia propia en R2 (`image_key`, ya achicada por ingest), o la URL de la tienda mientras no exista. */
@@ -128,14 +128,20 @@ async function filteredProducts(db: Db, filters: ListFilters) {
     match = ftsQuery(filters.q);
     if (!match) return null;
   }
-  const brand = filters.brand ? await resolveBrand(db, filters.brand, filters.category) : null;
+  const brand = filters.brand?.length ? await resolveBrands(db, filters.brand, filters.category) : null;
   return (skipSpecKey?: string) => filteredQuery(db, filters, brand, match, skipSpecKey);
 }
 
-function filteredQuery(db: Db, filters: ListFilters, brand: string | null, match: string | null, skipSpecKey?: string) {
+function filteredQuery(
+  db: Db,
+  filters: ListFilters,
+  brand: string[] | null,
+  match: string | null,
+  skipSpecKey?: string,
+) {
   let base = db.query.selectFrom("products as p").innerJoin(offerAggregate(db), "agg.product_id", "p.id");
   if (filters.category) base = base.where("p.category", "=", filters.category);
-  if (brand) base = base.where(sql<boolean>`lower(p.brand) = lower(${brand})`);
+  if (brand) base = base.where(sql<boolean>`lower(p.brand) IN (${sql.join(brand.map((b) => sql`lower(${b})`))})`);
   if (filters.store) {
     base = base.where(
       sql<boolean>`p.id IN (SELECT l.product_id FROM listings l JOIN stores st ON st.id = l.store_id WHERE l.is_active = 1 AND l.in_stock = 1 AND l.visible = 1 AND st.slug = ${filters.store})`,

@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router";
 import "../app/shared/styles/app.css";
 
+const CATEGORY_ROUTE_ID = "features/category/pages/category-page";
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, staleTime: Number.POSITIVE_INFINITY } },
 });
@@ -46,7 +48,14 @@ const preview: Preview = {
         origin: "http://localhost:6006",
       };
       const router = createMemoryRouter(
-        [{ id: "root", element: <Outlet />, children: [{ path: "*", element: <Story /> }] }],
+        [
+          {
+            id: "root",
+            element: <Outlet />,
+            // Con `parameters.catalog` la historia se comporta como la ruta de categoría: el riel lee de ahí sus filtros.
+            children: [{ path: "*", id: parameters.catalog ? CATEGORY_ROUTE_ID : undefined, element: <Story /> }],
+          },
+        ],
         {
           // Una historia puede abrir otra URL (filtros en la query, pestaña activa) con `parameters.path`.
           initialEntries: [parameters.path ?? "/"],
@@ -61,6 +70,7 @@ const preview: Preview = {
                 providers: parameters.providers ?? [{ id: "discord", label: "Discord" }],
                 categories: [],
               },
+              ...(parameters.catalog && { [CATEGORY_ROUTE_ID]: parameters.catalog }),
             },
           },
         },
