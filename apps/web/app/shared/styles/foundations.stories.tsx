@@ -74,9 +74,12 @@ function TypeRow({ style }: { style: string }) {
         <code className="font-mono text-muted-foreground text-xs">{style}</code>
         <p className="font-mono text-muted-foreground/60 text-xs">{spec}</p>
       </div>
-      <p ref={ref} className={cn("text-foreground", style, style.startsWith("text-subheading") && "uppercase")}>
-        {style.startsWith("text-subheading") ? "Tarjetas de video" : "Compara precios de PC en Chile"}
+      <p ref={ref} className={cn("text-foreground", style)}>
+        Compara precios de PC en Chile
       </p>
+      {style.startsWith("text-subheading") && (
+        <p className={cn("text-foreground uppercase sm:col-start-2", style)}>Tarjetas de video</p>
+      )}
     </div>
   );
 }

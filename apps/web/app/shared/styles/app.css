@@ -187,7 +187,7 @@
 
 /*
  * Estilos de texto (escala de AlignUI): una clase lleva tamaño, alto de línea, interletrado y peso (`text-label-sm`,
- * `text-title-h4`). Subheading va en mayúsculas (`uppercase`). Los nombres están en TEXT_STYLES (`shared/lib/utils.ts`)
+ * `text-title-h4`). La escala no fija mayúsculas en Subheading; su interletrado de 4 a 6% está pensado para usarlo con `uppercase`. Los nombres están en TEXT_STYLES (`shared/lib/utils.ts`)
  * para que `cn` los trate como tamaño y no como color. Las escalas de Tailwind que coinciden toman su interletrado.
  */
 @theme {
