@@ -197,7 +197,8 @@ function filteredQuery(
   for (const [key, values] of specGroups(filters.spec)) {
     if (key === skipSpecKey) continue;
     const value = specValue(key);
-    base = base.where(sql<boolean>`(${value} IS NULL OR ${value} IN (${sql.join(values)}))`);
+    // Sin el dato el IN da NULL y no excluye; así la subconsulta de specs se evalúa una vez por producto.
+    base = base.where(sql<boolean>`coalesce(${value} IN (${sql.join(values)}), 1)`);
     unknown.push(value);
   }
   const isUnknown =
