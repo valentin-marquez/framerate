@@ -16,7 +16,7 @@ import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel } from "@framerate/con
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { searchText, slugify } from "@framerate/kit";
 import { normalizeGtin, normalizeMpn, titleTokens } from "@framerate/matching";
-import { sql } from "kysely";
+import { type RawBuilder, sql } from "kysely";
 import { likePattern } from "@/shared/sql";
 import { fuseSpecs } from "./product-specs";
 
@@ -98,17 +98,55 @@ type ListFilters = Pick<
 >;
 
 /**
- * Valor de un atributo como texto comparable con `spec=clave:valor`: booleanos 'true'/'false' (`json_extract` da
- * 1/0), enteros sin decimales y strings tal cual. NULL si el producto no tiene el dato.
+ * Valor JSON como texto comparable con `spec=clave:valor`: booleanos 'true'/'false' (`json_extract` da 1/0), enteros
+ * sin decimales y strings tal cual (o, con `clean`, en mayúsculas y sin espacios: "LGA 1700", "LGA-1700", "FCLGA1700" y "lga1700"
+ * de distintas tiendas son "LGA1700"). NULL si no está el dato.
+ */
+function jsonText(doc: RawBuilder<unknown>, path: RawBuilder<unknown>, clean = false) {
+  const value = sql`json_extract(${doc}, ${path})`;
+  const text = clean ? sql`upper(replace(replace(replace(${value}, ' ', ''), '-', ''), 'FCLGA', 'LGA'))` : value;
+  return sql<string | null>`(CASE json_type(${doc}, ${path})
+    WHEN 'true' THEN 'true' WHEN 'false' THEN 'false'
+    WHEN 'integer' THEN CAST(${value} AS TEXT)
+    WHEN 'real' THEN CASE WHEN ${value} = CAST(${value} AS INTEGER)
+      THEN CAST(CAST(${value} AS INTEGER) AS TEXT) ELSE CAST(${value} AS TEXT) END
+    WHEN 'text' THEN ${text} END)`;
+}
+
+const SPEC_SOURCED = new Set(
+  Object.values(CATEGORY_FACETS)
+    .flat()
+    .filter((f) => f.source === "specs")
+    .map((f) => f.key),
+);
+
+/**
+ * Valor de una faceta para el producto `p`. Las de `attributes` salen de la columna; las de specs, del valor de origen
+ * `text` que más repiten sus ofertas activas (la misma fusión que la ficha, sin `knowledge`).
+ * ponytail: subconsulta por producto sobre `listing_identity`; cuando `products.specs` se llene fundido (#153 fase 4),
+ * leer de ahí como `attributes`.
  */
 function specValue(key: string) {
-  const path = `$.${key}`;
-  return sql<string | null>`(CASE json_type(p.attributes, ${path})
-    WHEN 'true' THEN 'true' WHEN 'false' THEN 'false'
-    WHEN 'integer' THEN CAST(json_extract(p.attributes, ${path}) AS TEXT)
-    WHEN 'real' THEN CASE WHEN json_extract(p.attributes, ${path}) = CAST(json_extract(p.attributes, ${path}) AS INTEGER)
-      THEN CAST(CAST(json_extract(p.attributes, ${path}) AS INTEGER) AS TEXT) ELSE CAST(json_extract(p.attributes, ${path}) AS TEXT) END
-    WHEN 'text' THEN json_extract(p.attributes, ${path}) END)`;
+  // Literal y no parámetro: la ruta se repite muchas veces por consulta y D1 acepta 100 variables. Las claves vienen
+  // validadas contra `CATEGORY_FACETS` (`SpecFilterSchema` sólo deja letras, dígitos y _).
+  const path = sql.lit(`$.${key}`);
+  if (key === "chipMaker") {
+    const chipset = sql`json_extract(p.attributes, '$.chipset')`;
+    return sql<
+      string | null
+    >`(CASE WHEN ${chipset} LIKE 'rtx %' OR ${chipset} LIKE 'gtx %' OR ${chipset} LIKE 'gt %' THEN 'nvidia'
+      WHEN ${chipset} LIKE 'rx %' THEN 'amd' WHEN ${chipset} LIKE 'arc %' THEN 'intel' END)`;
+  }
+  if (!SPEC_SOURCED.has(key)) return jsonText(sql`p.attributes`, path);
+  const raw = jsonText(sql`i.specs`, path, true);
+  // Hay tiendas que escriben el socket Intel sólo con el número (1700).
+  const value =
+    key === "socket" ? sql`(CASE WHEN ${raw} GLOB '[0-9][0-9][0-9][0-9]' THEN 'LGA' || ${raw} ELSE ${raw} END)` : raw;
+  return sql<string | null>`(SELECT ${value} FROM listings l JOIN listing_identity i ON i.listing_id = l.id
+    WHERE l.product_id = p.id AND l.is_active = 1 AND json_extract(i.specs_source, ${path}) = 'text'
+      AND i.version = (SELECT max(x.version) FROM listing_identity x WHERE x.listing_id = l.id)
+      AND ${value} IS NOT NULL
+    GROUP BY 1 ORDER BY count(*) DESC, 1 LIMIT 1)`;
 }
 
 /** Valores pedidos por clave: OR dentro de una clave, AND entre claves. */
