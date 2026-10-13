@@ -136,7 +136,10 @@ function specValue(key: string) {
       WHEN ${chipset} LIKE 'rx %' THEN 'amd' WHEN ${chipset} LIKE 'arc %' THEN 'intel' END)`;
   }
   if (!SPEC_SOURCED.has(key)) return jsonText(sql`p.attributes`, path);
-  const value = jsonText(sql`i.specs`, path, true);
+  const raw = jsonText(sql`i.specs`, path, true);
+  // Hay tiendas que escriben el socket Intel sólo con el número (1700).
+  const value =
+    key === "socket" ? sql`(CASE WHEN ${raw} GLOB '[0-9][0-9][0-9][0-9]' THEN 'LGA' || ${raw} ELSE ${raw} END)` : raw;
   return sql<string | null>`(SELECT ${value} FROM listings l JOIN listing_identity i ON i.listing_id = l.id
     WHERE l.product_id = p.id AND l.is_active = 1 AND json_extract(i.specs_source, ${path}) = 'text'
       AND i.version = (SELECT max(x.version) FROM listing_identity x WHERE x.listing_id = l.id)
