@@ -2,11 +2,13 @@
 // deterministas y salen del mismo título que ya se ancló. Después, reseed-products.ts rehace los productos. Uso:
 //   bun scripts/retrait.ts <dir>           en seco: cuántas cambian y el SQL en <dir>/retrait.sql
 //   bun scripts/retrait.ts <dir> --apply   escribe en D1
+
+import { fileURLToPath } from "node:url";
 import { type Category, NORMALIZER_VERSION } from "@framerate/contracts";
 import { TRAIT_DISCRIMINATORS, TRAIT_INFO, titleTraits } from "@framerate/matching";
 import { $ } from "bun";
 
-const DB_DIR = new URL("../../../packages/database/", import.meta.url).pathname;
+const DB_DIR = fileURLToPath(new URL("../../../packages/database/", import.meta.url));
 const [dir, flag] = process.argv.slice(2);
 if (!dir) throw new Error("uso: retrait.ts <dir> [--apply]");
 
