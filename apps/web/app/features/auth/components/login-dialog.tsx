@@ -51,13 +51,16 @@ export function LoginCard({ returnTo, title, description }: LoginCardProps) {
 
 interface LoginDialogProps extends LoginCardProps {
   /** Botón/elemento que dispara el modal. Se compone con `DialogTrigger asChild`. */
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
+  /** Controlado desde afuera: sin `trigger`, no se dibuja botón. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function LoginDialog({ trigger, ...card }: LoginDialogProps) {
+export function LoginDialog({ trigger, open, onOpenChange, ...card }: LoginDialogProps) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="w-full max-w-sm overflow-hidden rounded-3xl p-0">
         <LoginCard {...card} />
       </DialogContent>

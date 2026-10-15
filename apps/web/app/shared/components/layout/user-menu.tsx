@@ -1,9 +1,7 @@
 import { IconLogin, IconLogout, IconPlus, IconSelector, IconSettings, IconUserCircle } from "@tabler/icons-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router";
-import { LoginDialog } from "~/features/auth/components/login-dialog";
 import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
-import { CreateQuoteDialog } from "~/features/quote/components/create-quote-dialog";
 import { MyStoresMenu } from "~/features/stores/components/my-stores-menu";
 import { AdminMenu } from "~/shared/components/layout/admin-menu";
 import { useTranslation } from "~/shared/hooks/use-translation";
@@ -18,6 +16,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../primitives/dropdown-menu";
+
+// Los diálogos se descargan al abrirse por primera vez: el navbar está en todas las páginas y no deben pesar en la carga.
+const LoginDialog = lazy(() =>
+  import("~/features/auth/components/login-dialog").then((m) => ({ default: m.LoginDialog })),
+);
+const CreateQuoteDialog = lazy(() =>
+  import("~/features/quote/components/create-quote-dialog").then((m) => ({ default: m.CreateQuoteDialog })),
+);
 
 /** Avatar con el menú de cuenta, o el botón de ingreso sin sesión. */
 export function UserMenu({
@@ -41,6 +47,10 @@ export function UserMenu({
   const { t } = useTranslation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  // Una vez montado, el diálogo queda montado: así cierra con su animación.
+  const [quoteMounted, setQuoteMounted] = useState(false);
+  const [loginMounted, setLoginMounted] = useState(false);
   const profileHref = profile?.username ? `/u/${profile.username}` : "/perfil";
 
   return user ? (
@@ -119,7 +129,12 @@ export function UserMenu({
           <DropdownMenuSeparator />
 
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => setQuoteOpen(true)}>
+            <DropdownMenuItem
+              onClick={() => {
+                setQuoteMounted(true);
+                setQuoteOpen(true);
+              }}
+            >
               <IconPlus className="size-5" />
               <span>{t("create_quote")}</span>
             </DropdownMenuItem>
@@ -148,29 +163,40 @@ export function UserMenu({
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-      <CreateQuoteDialog open={quoteOpen} onOpenChange={setQuoteOpen} />
+      {quoteMounted && (
+        <Suspense fallback={null}>
+          <CreateQuoteDialog open={quoteOpen} onOpenChange={setQuoteOpen} />
+        </Suspense>
+      )}
     </>
   ) : (
-    <LoginDialog
-      trigger={
-        <button
-          type="button"
-          aria-label={railLabel ? t("login") : undefined}
-          className={cn(
-            "inline-flex h-8 cursor-pointer items-center justify-center rounded-full bg-secondary px-3.5 font-medium text-foreground text-sm transition-colors hover:bg-primary hover:text-primary-foreground",
-            loginClassName,
-          )}
-        >
-          {railLabel ? (
-            <>
-              <IconLogin className="size-[18px] shrink-0" stroke={1.75} />
-              <span className="rail-label">{t("login")}</span>
-            </>
-          ) : (
-            t("login")
-          )}
-        </button>
-      }
-    />
+    <>
+      <button
+        type="button"
+        aria-label={railLabel ? t("login") : undefined}
+        onClick={() => {
+          setLoginMounted(true);
+          setLoginOpen(true);
+        }}
+        className={cn(
+          "inline-flex h-8 cursor-pointer items-center justify-center rounded-full bg-secondary px-3.5 font-medium text-foreground text-sm transition-colors hover:bg-primary hover:text-primary-foreground",
+          loginClassName,
+        )}
+      >
+        {railLabel ? (
+          <>
+            <IconLogin className="size-[18px] shrink-0" stroke={1.75} />
+            <span className="rail-label">{t("login")}</span>
+          </>
+        ) : (
+          t("login")
+        )}
+      </button>
+      {loginMounted && (
+        <Suspense fallback={null}>
+          <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
+        </Suspense>
+      )}
+    </>
   );
 }
