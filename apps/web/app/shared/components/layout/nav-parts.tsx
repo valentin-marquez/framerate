@@ -28,8 +28,19 @@ export function NavFps({ className }: { className?: string }) {
       }
       raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    // Sólo cuenta mientras se ve: el bucle obliga a dibujar cada cuadro, y en el teléfono el riel está oculto.
+    const visibility = new IntersectionObserver(([entry]) => {
+      cancelAnimationFrame(raf);
+      if (!entry.isIntersecting) return;
+      frames = 0;
+      last = performance.now();
+      raf = requestAnimationFrame(tick);
+    });
+    visibility.observe(el);
+    return () => {
+      visibility.disconnect();
+      cancelAnimationFrame(raf);
+    };
   }, []);
   return (
     <span

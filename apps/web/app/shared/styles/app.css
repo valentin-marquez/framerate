@@ -486,7 +486,9 @@
     color-mix(in oklab, var(--foreground) 7%, transparent) 55%,
     transparent
   );
-  animation: orb-breathe 1.6s ease-in-out infinite;
+  /* Unas pocas respiraciones y queda quieto: las fotos lazy fuera de pantalla no cargan nunca, y 90 orbes respirando
+     sin fin mantenían ocupado el hilo principal (medido: ~20 % con CPU x4, la página quieta). */
+  animation: orb-breathe 1.6s ease-in-out 4 both;
 }
 
 .image-orb[data-state="splash"] {
@@ -955,6 +957,13 @@
   left: 0;
   width: 45%;
   animation: beam 7s var(--ease-in-out) infinite alternate;
+  /* Quieto en reposo: un brillo que se mueve siempre obliga a dibujar cuadros aunque nadie toque la página. */
+  animation-play-state: paused;
+}
+:hover > .beam > span,
+:focus-within > .beam > span,
+.beam[data-active="true"] > span {
+  animation-play-state: running;
 }
 .beam-line {
   height: 1px;

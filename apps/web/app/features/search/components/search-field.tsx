@@ -92,7 +92,7 @@ export function SearchField({ className }: { className?: string }) {
       <span className="t-icon-swap pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
         <IconSearch data-on={!loading} className="size-4 text-muted-foreground" />
         <span data-on={loading}>
-          <IconLoader2 className="size-4 animate-spin text-foreground" />
+          <IconLoader2 className={cn("size-4 text-foreground", loading && "animate-spin")} />
         </span>
       </span>
       <input
