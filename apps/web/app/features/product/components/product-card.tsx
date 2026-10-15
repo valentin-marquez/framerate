@@ -61,7 +61,9 @@ function ProductStage({
   psu: string | null;
   cardId: string;
 }) {
-  const [stage, setStage] = useState<"loading" | "opening" | "open">("loading");
+  // Con prioridad (candidata a LCP) la foto sale descubierta desde el servidor: si la cortina esperara a hidratar, el
+  // LCP esperaría a todo el JS.
+  const [stage, setStage] = useState<"loading" | "opening" | "open">(priority ? "open" : "loading");
   // El panel pasa a ser la foto de la ficha (app.css).
   const morphing = useProductMorph(product.slug, cardId);
 
@@ -94,7 +96,7 @@ function ProductStage({
         alt={product.name}
         priority={priority}
         reveal="none"
-        onReady={(fromCache) => setStage(fromCache ? "open" : "opening")}
+        onReady={(fromCache) => setStage((s) => (s === "loading" ? (fromCache ? "open" : "opening") : s))}
         data-state={stage === "opening" ? "open" : undefined}
         className="stage-image absolute inset-0 size-full object-contain object-right p-3 pl-0 mix-blend-multiply"
       />

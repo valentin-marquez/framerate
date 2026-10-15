@@ -62,7 +62,8 @@ export function AsyncImage({
     );
   }
 
-  const fade = reveal === "fade";
+  // Una candidata a LCP no se oculta esperando a hidratar: el fundido haría esperar al LCP a todo el JS.
+  const fade = reveal === "fade" && !priority;
   return (
     <>
       {fade && status === "loading" && fallback && <div className="absolute inset-0">{fallback}</div>}
