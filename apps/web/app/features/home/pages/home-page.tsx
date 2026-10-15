@@ -1,3 +1,4 @@
+import { CATEGORIES, CATEGORY_SLUGS, type ProductPage, type ProductSummary } from "@framerate/contracts";
 import { categoriesService } from "@/features/category/services/categories";
 import { productsService } from "@/features/product/services/products";
 import { HomeContent } from "~/features/home/components/home-content";
@@ -71,32 +72,33 @@ const MIN_ROW_PRODUCTS = 4;
 // Cada tarjeta son ~35 nodos y la home tiene una docena de filas: más tarjetas engordan el HTML y la hidratación.
 const ROW_LIMIT = 8;
 
+/** Productos de una fila; si falla (o hay rate limit) la fila simplemente no se renderiza. */
+function rowItems(page: Promise<ProductPage>, key: string) {
+  return page.then(
+    (r) => r.items,
+    (error) => {
+      if (!isRateLimitError(error)) console.error(`Failed to fetch home row "${key}"`, error);
+      return [] as ProductSummary[];
+    },
+  );
+}
+
 export async function loader() {
-  let categories: Awaited<ReturnType<typeof categoriesService.getAll>> = [];
-  try {
-    categories = await categoriesService.getAll();
-  } catch (error) {
-    if (!isRateLimitError(error)) {
-      console.error("Failed to fetch categories", error);
-    }
-  }
+  // Las filas no esperan a las categorías: la lista es fija y cada espera es un viaje a D1 (~140 ms desde Chile).
+  // De la API sólo salen el orden, el nombre y el conteo.
+  const rowBySlug = new Map(
+    CATEGORIES.map((c) => {
+      const slug = CATEGORY_SLUGS[c];
+      return [slug, rowItems(productsService.getAll({ category: slug, sort: "popularity", limit: ROW_LIMIT }), slug)];
+    }),
+  );
 
-  // No se piden filas de categorías que no llenarían el carrusel: cada una es una llamada a la API.
-  const rowCategories = categories.filter((c) => c.productCount >= MIN_ROW_PRODUCTS);
-
-  const rowDefs: { key: string; title: string; href: string }[] = [
-    { key: "popular", title: "Lo más popular", href: "/buscar" },
-    ...rowCategories.map((c) => ({ key: c.slug, title: c.label, href: `/categoria/${c.slug}` })),
-  ];
-
-  const fetches = [
-    productsService.getAll({ sort: "popularity", limit: ROW_LIMIT }),
-    ...rowCategories.map((c) => productsService.getAll({ category: c.slug, sort: "popularity", limit: ROW_LIMIT })),
-  ];
-
-  // allSettled aísla fallos/rate-limit: una fila que falla simplemente no se renderiza.
-  const [settled, drops, trending, stores] = await Promise.all([
-    Promise.allSettled(fetches),
+  const [categories, popular, drops, trending, stores] = await Promise.all([
+    categoriesService.getAll().catch((error) => {
+      if (!isRateLimitError(error)) console.error("Failed to fetch categories", error);
+      return [] as Awaited<ReturnType<typeof categoriesService.getAll>>;
+    }),
+    rowItems(productsService.getAll({ sort: "popularity", limit: ROW_LIMIT }), "popular"),
     productsService.getDrops(ROW_LIMIT).catch((error) => {
       if (!isRateLimitError(error)) console.error("Failed to fetch home drops", error);
       return [];
@@ -108,21 +110,19 @@ export async function loader() {
     ),
   ]);
 
-  const rows: HomeRow[] = [];
-  settled.forEach((result, i) => {
-    if (result.status !== "fulfilled") {
-      if (result.reason && !isRateLimitError(result.reason)) {
-        console.error(`Failed to fetch home row "${rowDefs[i].key}"`, result.reason);
-      }
-      return;
-    }
-    const products = result.value.items;
-    if (products.length >= MIN_ROW_PRODUCTS) {
-      rows.push({ ...rowDefs[i], products });
-    }
-  });
+  const rows: HomeRow[] = [{ key: "popular", title: "Lo más popular", href: "/buscar", products: popular }];
+  for (const c of categories) {
+    const products = (await rowBySlug.get(c.slug)) ?? [];
+    rows.push({ key: c.slug, title: c.label, href: `/categoria/${c.slug}`, products });
+  }
 
-  return { categories, rows, drops, trendingIds: trending.ids, stores } satisfies HomeData;
+  return {
+    categories,
+    rows: rows.filter((r) => r.products.length >= MIN_ROW_PRODUCTS),
+    drops,
+    trendingIds: trending.ids,
+    stores,
+  } satisfies HomeData;
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
