@@ -2,6 +2,8 @@ import { z } from "zod";
 import { CategorySchema } from "./categories";
 import { SpecFilterSchema } from "./facets";
 
+export * from "./crawl-schedule";
+
 /**
  * Contratos de la API pública de catálogo (`/v1/*`). El servidor valida sus
  * respuestas contra estos esquemas en tests, y la web los usa para tipar
@@ -182,19 +184,6 @@ export const ApiErrorSchema = z.object({
   }),
 });
 export type ApiError = z.infer<typeof ApiErrorSchema>;
-
-/** Cron de la ingesta (`apps/ingest/wrangler.jsonc`): cada 6 horas, a los :17 en UTC. */
-export const CRAWL_EVERY_HOURS = 6;
-export const CRAWL_MINUTE_UTC = 17;
-
-/** Próxima corrida programada después de `now`. */
-export function nextCrawlAt(now: Date): Date {
-  const next = new Date(now);
-  next.setUTCMinutes(CRAWL_MINUTE_UTC, 0, 0);
-  next.setUTCHours(Math.floor(now.getUTCHours() / CRAWL_EVERY_HOURS) * CRAWL_EVERY_HOURS);
-  while (next <= now) next.setUTCHours(next.getUTCHours() + CRAWL_EVERY_HOURS);
-  return next;
-}
 
 /** `GET /v1/freshness`: cuándo se actualizaron las ofertas por última vez y cuándo toca la próxima vez. */
 export const FreshnessSchema = z.object({

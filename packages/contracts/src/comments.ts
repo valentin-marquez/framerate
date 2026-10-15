@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { pageSchema } from "./catalog";
+import { COMMENT_MAX_LENGTH } from "./comment-limits";
 
 /**
  * Comentarios de producto: `/v1/products/:id/comments` y `/v1/comments/*`. Hilos de hasta 10 niveles; sólo hay
@@ -8,8 +9,7 @@ import { pageSchema } from "./catalog";
  * borrado lógico: el autor lo borra con reason "author" y el personal con "moderation"; devuelve el `Comment`.
  */
 
-export const COMMENT_MAX_LENGTH = 5000;
-export const COMMENT_MAX_DEPTH = 10;
+export * from "./comment-limits";
 
 export const CommentSortSchema = z.enum(["best", "recent", "old"]);
 export type CommentSort = z.infer<typeof CommentSortSchema>;

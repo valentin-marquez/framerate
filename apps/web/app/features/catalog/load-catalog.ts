@@ -1,4 +1,4 @@
-import { categoryFromSlug, type Facet, facetsFor, type ProductSort, SpecFilterSchema } from "@framerate/contracts";
+import { categoryFromSlug, type Facet, facetsFor, type ProductSort, SPEC_FILTER_PATTERN } from "@framerate/contracts";
 import { categoriesService } from "~/features/category/services/categories";
 import { productsService } from "~/features/product/services/products";
 import { isRateLimitError } from "~/shared/lib/api";
@@ -34,9 +34,7 @@ export async function loadCatalog(request: Request, category?: string) {
   const pageSize = PAGE_SIZES.find((n) => n === Number(params.get("limit"))) ?? PAGE_SIZES[0];
   // Una clave ajena a la categoría o un valor mal formado haría fallar la consulta entera (400): se descartan.
   const keys = new Set(categoryFacets(category).map((f) => f.key));
-  const spec = params
-    .getAll("spec")
-    .filter((s) => SpecFilterSchema.safeParse(s).success && keys.has(s.slice(0, s.indexOf(":"))));
+  const spec = params.getAll("spec").filter((s) => SPEC_FILTER_PATTERN.test(s) && keys.has(s.slice(0, s.indexOf(":"))));
 
   const empty = {
     products: [],
