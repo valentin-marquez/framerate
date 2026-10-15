@@ -1,5 +1,5 @@
 import type { Category } from "@framerate/contracts";
-import { type Attributes, prep } from "./attributes";
+import { type Attributes, cyberneticsLevels, prep } from "./attributes";
 
 /**
  * Rasgos que separan dos SKU con el mismo nombre de base y que la identidad no tiene en ningún campo: pantalla, versión,
@@ -89,9 +89,13 @@ export function titleTraits(category: Category, title: string): Attributes {
       .map((s) => s.replace(/ /g, ""))
       .filter((c) => !/\d+w$/.test(c) && !/^(?:atx|pcie|de|gold|plus)/.test(c));
     if (codes[0]) a.psuCode = codes[0];
+    // Informan (sellos de la web), no separan productos: no están en `TRAIT_DISCRIMINATORS`.
+    Object.assign(a, cyberneticsLevels(title));
   }
   return a;
 }
 
 /** Discriminantes que agrega `titleTraits`; `compare` veta cuando los dos lados los tienen y difieren. */
 export const TRAIT_DISCRIMINATORS = ["traits", "screen", "ledColor", "oem", "psuCode"] as const;
+/** Rasgos del título que sólo informan: `compare` no los mira. */
+export const TRAIT_INFO = ["eta", "lambda"] as const;

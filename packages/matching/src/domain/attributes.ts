@@ -391,6 +391,17 @@ const EFFICIENCY_ALIASES: Record<string, string> = { bronce: "bronze", platino: 
 const CYBENETICS_ETA = /(?: cybenetics(?: eta)?| eta) (diamond|titanium|platinum|gold|silver|bronze|standard)(?= )/;
 const CYBENETICS_LAMBDA = /\blambda[\s:_-]*(a\+\+|a\+|a-|a|standard\+\+|standard\+|standard)(?![a-z0-9+-])/;
 
+/** Niveles de Cybenetics del título de una fuente: ETA (eficiencia) y LAMBDA (ruido). Sólo aparece el que se lee. */
+export function cyberneticsLevels(title: string): { eta?: string; lambda?: string } {
+  const levels: { eta?: string; lambda?: string } = {};
+  const eta = prep(title).match(CYBENETICS_ETA)?.[1];
+  if (eta) levels.eta = eta;
+  // "A-" pierde el guion en `prep`: el nivel de LAMBDA se lee del título plegado.
+  const lambda = fold(title).match(CYBENETICS_LAMBDA)?.[1];
+  if (lambda) levels.lambda = lambda;
+  return levels;
+}
+
 const psu: CategoryProfile = {
   keyFields: ["wattage", "efficiency"],
   discriminators: ["wattage", "efficiency", "line", "revision", "modular"],
@@ -414,11 +425,7 @@ const psu: CategoryProfile = {
         }
       }
     }
-    const eta = t.match(CYBENETICS_ETA)?.[1];
-    if (eta) a.eta = eta;
-    // "A-" pierde el guion en `prep`: el nivel de LAMBDA se lee del título plegado.
-    const lambda = fold(title).match(CYBENETICS_LAMBDA)?.[1];
-    if (lambda) a.lambda = lambda;
+    Object.assign(a, cyberneticsLevels(title));
     // "White" suelto es el color; la certificación White sólo cuenta como "80 Plus" sin otro nivel.
     // El nivel de Cybenetics no es el de 80 Plus: se saca antes de buscarlo.
     const plus = t.replace(CYBENETICS_ETA, " ");

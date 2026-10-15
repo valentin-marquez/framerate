@@ -3,7 +3,7 @@
 //   bun scripts/retrait.ts <dir>           en seco: cuántas cambian y el SQL en <dir>/retrait.sql
 //   bun scripts/retrait.ts <dir> --apply   escribe en D1
 import { type Category, NORMALIZER_VERSION } from "@framerate/contracts";
-import { TRAIT_DISCRIMINATORS, titleTraits } from "@framerate/matching";
+import { TRAIT_DISCRIMINATORS, TRAIT_INFO, titleTraits } from "@framerate/matching";
 import { $ } from "bun";
 
 const DB_DIR = new URL("../../../packages/database/", import.meta.url).pathname;
@@ -27,7 +27,7 @@ const statements: string[] = [];
 const counts: Record<string, number> = {};
 for (const r of rows) {
   const identity = JSON.parse(r.identity) as Record<string, unknown>;
-  for (const f of TRAIT_DISCRIMINATORS) delete identity[f];
+  for (const f of [...TRAIT_DISCRIMINATORS, ...TRAIT_INFO]) delete identity[f];
   const traits = titleTraits(r.category, r.title);
   for (const [k, v] of Object.entries(traits)) if (v !== "") counts[k] = (counts[k] ?? 0) + 1;
   const next = JSON.stringify({ ...identity, ...traits });
