@@ -3,6 +3,15 @@
   "root": true,
   "extends": ["@framerate/config/biome"],
   "files": {
-    "includes": ["**/*.ts", "!**/worker-configuration.d.ts", "**/*.tsx", "package.json", "README.md", "*.md", "*.json"]
+    "includes": [
+      "**/*.ts",
+      "!**/worker-configuration.d.ts",
+      "!**/cn-tables.ts",
+      "**/*.tsx",
+      "package.json",
+      "README.md",
+      "*.md",
+      "*.json"
+    ]
   }
 }

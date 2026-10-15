@@ -7,8 +7,13 @@ import type { Route } from "./+types/store-page";
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.store) return [{ title: "Tienda no encontrada - Framerate" }];
   return [
-    { title: `${data.store.name} - Framerate` },
-    { name: "description", content: data.store.description ?? `Tienda ${data.store.name} en Framerate.cl` },
+    { title: `${data.store.name}: precios y productos en Chile - Framerate` },
+    {
+      name: "description",
+      content:
+        data.store.description ??
+        `Precios de ${data.products.total.toLocaleString("es-CL")} productos de ${data.store.name} comparados con otras tiendas de Chile, con historial de precios y stock.`,
+    },
   ];
 }
 

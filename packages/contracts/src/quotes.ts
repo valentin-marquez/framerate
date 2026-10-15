@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { pageSchema, StoreSummarySchema } from "./catalog";
-import { type Category, CategorySchema } from "./categories";
+import { CategorySchema } from "./categories";
+import { QuoteCompatibilitySchema } from "./compatibility";
 import { PublicProfileSchema } from "./identity";
+import { QUOTE_SLOTS, QUOTE_VISIBILITIES, QUOTES_MAX_PAGE_SIZE } from "./quote-slots";
 
 /**
  * Cotizaciones (armador de PC): `/v1/quotes/*`. Cada ítem ocupa un slot del armado. En los slots exclusivos se
@@ -9,54 +11,11 @@ import { PublicProfileSchema } from "./identity";
  * case_fan son aditivos. En la URL va el `public_id` de la cotización.
  */
 
-export const QUOTE_SLOTS = [
-  "cpu",
-  "motherboard",
-  "ram",
-  "gpu",
-  "psu",
-  "case",
-  "cpu_cooler",
-  "storage",
-  "case_fan",
-] as const;
+// Constantes y cálculos sin zod (la web los importa): ver quote-slots.ts.
+export * from "./quote-slots";
+
 export const QuoteSlotSchema = z.enum(QUOTE_SLOTS);
-export type QuoteSlot = z.infer<typeof QuoteSlotSchema>;
-
-/** Slot que ocupa cada categoría; el servidor lo deriva al agregar un producto, el cliente no lo elige. */
-export const SLOT_BY_CATEGORY: Record<Category, QuoteSlot> = {
-  gpu: "gpu",
-  cpu: "cpu",
-  motherboard: "motherboard",
-  ram: "ram",
-  psu: "psu",
-  ssd: "storage",
-  hdd: "storage",
-  cpu_cooler: "cpu_cooler",
-  case: "case",
-  case_fan: "case_fan",
-};
-
-export const QUOTE_SLOT_LABELS: Record<QuoteSlot, string> = {
-  cpu: "Procesador",
-  motherboard: "Placa madre",
-  ram: "Memoria RAM",
-  gpu: "Tarjeta de video",
-  psu: "Fuente de poder",
-  case: "Gabinete",
-  cpu_cooler: "Refrigeración CPU",
-  storage: "Almacenamiento",
-  case_fan: "Ventilación",
-};
-
-/** En los slots aditivos todos los ítems cuentan; en los demás, sólo el seleccionado. */
-const ADDITIVE_SLOTS: readonly QuoteSlot[] = ["storage", "case_fan"];
-export const isAdditiveSlot = (slot: QuoteSlot) => ADDITIVE_SLOTS.includes(slot);
-
-/** private: sólo el dueño. unlisted: quien tenga el link. public: además aparece en su perfil. */
-export const QUOTE_VISIBILITIES = ["private", "unlisted", "public"] as const;
 export const QuoteVisibilitySchema = z.enum(QUOTE_VISIBILITIES);
-export type QuoteVisibility = z.infer<typeof QuoteVisibilitySchema>;
 
 export const QuoteAuthorSchema = PublicProfileSchema.pick({ username: true, displayName: true, avatarUrl: true });
 export type QuoteAuthor = z.infer<typeof QuoteAuthorSchema>;
@@ -102,33 +61,21 @@ export const QuoteItemSchema = z.object({
   chosenListingId: z.number().int().nullable(),
   /** null si ninguna tienda tiene el producto con stock: el ítem no suma al total. */
   offer: QuoteItemOfferSchema.nullable(),
+  /** Hasta cuatro datos clave para mostrar como chips ("AM5", "8 núcleos"). Vacío en las alternativas. */
+  specs: z.array(z.string()),
 });
 export type QuoteItem = z.infer<typeof QuoteItemSchema>;
-
-/** Suma de los ítems seleccionados con oferta, por su cantidad: la usan el servidor y la web al actualizar sin esperar. */
-export function quoteTotals(items: readonly QuoteItem[]) {
-  let cash = 0;
-  let card = 0;
-  for (const item of items) {
-    if (!item.isSelected || !item.offer) continue;
-    cash += item.offer.priceCash * item.quantity;
-    card += item.offer.priceCard * item.quantity;
-  }
-  return { cash, card };
-}
 
 export const QuoteDetailSchema = QuoteSummarySchema.extend({
   items: z.array(QuoteItemSchema),
   /** Suma de los ítems seleccionados con oferta, por su cantidad. */
   totals: z.object({ cash: z.number().int().nonnegative(), card: z.number().int().nonnegative() }),
+  compatibility: QuoteCompatibilitySchema,
 });
 export type QuoteDetail = z.infer<typeof QuoteDetailSchema>;
 
 export const QuotePageSchema = pageSchema(QuoteSummarySchema);
 export type QuotePage = z.infer<typeof QuotePageSchema>;
-
-/** Tope de `pageSize`: pedir más da 400, no una página más grande. */
-export const QUOTES_MAX_PAGE_SIZE = 50;
 
 export const QuoteListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(500).default(1),

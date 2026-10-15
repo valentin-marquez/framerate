@@ -1,10 +1,9 @@
 import type { ProductSummary } from "@framerate/contracts";
 import { IconLoader2, IconLogin, IconPlus, IconReceipt, IconX } from "@tabler/icons-react";
-import { type FormEvent, type SyntheticEvent, useEffect, useId, useRef, useState } from "react";
+import { type FormEvent, lazy, Suspense, type SyntheticEvent, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { AuthProvidersList } from "~/features/auth/components/auth-providers-list";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { QUOTE_ROW_CLASS, QuoteRow } from "~/features/quote/components/quote-row";
 import {
@@ -20,6 +19,11 @@ import { Input } from "~/shared/components/primitives/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/shared/components/primitives/tooltip";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
+
+// Cada tarjeta de producto incluye este botón: los proveedores de login (con sus logos) se descargan al abrirlo sin sesión.
+const AuthProvidersList = lazy(() =>
+  import("~/features/auth/components/auth-providers-list").then((m) => ({ default: m.AuthProvidersList })),
+);
 
 type QuoteProduct = Pick<ProductSummary, "id" | "name">;
 
@@ -231,7 +235,15 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
                 <p className="text-sm font-medium text-foreground">{t("login_to_save_quote_title")}</p>
                 <p className="max-w-[260px] text-xs text-muted-foreground">{t("login_to_save_quote_desc")}</p>
               </div>
-              <AuthProvidersList />
+              <Suspense
+                fallback={
+                  <div className="flex justify-center py-6">
+                    <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
+                  </div>
+                }
+              >
+                <AuthProvidersList />
+              </Suspense>
             </div>
           ) : isLoading ? (
             <div className="flex justify-center py-6">

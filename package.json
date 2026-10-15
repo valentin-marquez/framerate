@@ -27,6 +27,7 @@
     "dev:normalize": "turbo run dev --filter=normalize",
     "dev:server": "turbo run dev --filter=server",
     "dev:web": "turbo run dev --filter=web",
+    "studio": "bun run --cwd apps/studio dev",
     "lint": "turbo run biome:lint",
     "prepare": "simple-git-hooks || true",
     "test": "turbo run test"

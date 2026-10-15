@@ -37,12 +37,13 @@ function categoryParam(slug: string | undefined) {
 const ALL_FACET_KEYS = new Set(Object.values(CATEGORY_FACETS).flatMap((facets) => facets.map((f) => f.key)));
 
 /**
- * Query del listado con `spec` repetible (`c.req.query()` se queda sólo con el primero). Con categoría, una clave
+ * Query del listado con `spec` y `brand` repetibles (`c.req.query()` se queda sólo con el primero). Con categoría, una clave
  * que no es faceta suya es un error; sin categoría, las claves que no son faceta de nadie se ignoran.
  */
 function listQuery(c: Context<AppEnv>, category?: Category) {
   const query = ProductListQuerySchema.parse({
     ...c.req.query(),
+    brand: c.req.queries("brand"),
     spec: c.req.queries("spec"),
     ...(category && { category }),
   });

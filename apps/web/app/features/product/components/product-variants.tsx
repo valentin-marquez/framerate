@@ -106,7 +106,7 @@ function familyOf(product: ProductDetail): { label: string; href: string | null 
   }
   return {
     label: parts.join(" "),
-    // Sin facetas (coolers) no hay filtro que muestre la familia completa.
+    // Si algún campo de la familia no es faceta, no hay filtro que la muestre completa.
     href:
       specs.length === fields.length && specs.length > 0
         ? `/categoria/${CATEGORY_SLUGS[product.category]}?${specs.join("&")}`

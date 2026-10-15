@@ -3,6 +3,8 @@
   // (apps/server y apps/ingest) declaran su propio binding a la MISMA base.
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "framerate-database",
+  // El studio (apps/studio) lee de aquí la cuenta y la base.
+  "account_id": "3f50a4a123ebcbcb917dababff3ef8b5",
   "compatibility_date": "2026-01-05",
   "d1_databases": [
     {

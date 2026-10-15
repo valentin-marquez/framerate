@@ -8,7 +8,10 @@ import {
   IconSearch,
 } from "@tabler/icons-react";
 import { createContext, type ReactNode, use, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, NavLink, useLocation, useNavigation } from "react-router";
+import { Link, NavLink, useLocation, useMatches, useNavigation, useSearchParams } from "react-router";
+import { activeFilterCount } from "~/features/catalog/components/filter-panel";
+import { RailFilters } from "~/features/catalog/components/rail-filters";
+import type { CatalogData } from "~/features/catalog/load-catalog";
 import { CategoryIcon } from "~/features/category/components/category-icon";
 import { focusSearchField, SearchField, startSearchSpotlight } from "~/features/search/components/search-field";
 import { cn } from "~/shared/lib/utils";
@@ -65,12 +68,26 @@ function RailHint({ label, collapsed, children }: { label: string; collapsed: bo
   );
 }
 
+function RailBadge({ n, className }: { n: number; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground tabular-nums",
+        className,
+      )}
+    >
+      {n}
+    </span>
+  );
+}
+
 function RailLink({
   to,
   end,
   label,
   icon,
   count,
+  badge,
   collapsed,
   onClick,
   large,
@@ -80,8 +97,10 @@ function RailLink({
   label: string;
   icon: ReactNode;
   count?: number;
+  /** Filtros aplicados en esa categoría: sustituye al conteo, y plegado va sobre el ícono. */
+  badge?: number;
   collapsed?: boolean;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   large?: boolean;
 }) {
   const { target, select } = use(RailTarget);
@@ -97,16 +116,23 @@ function RailLink({
         onClick={(e) => {
           // Ctrl/Cmd/Shift+clic abre otra pestaña: este riel no navega.
           if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) select(to);
-          onClick?.();
+          onClick?.(e);
         }}
         aria-label={collapsed ? label : undefined}
         data-current={current}
         className={cn(railLink(current), large && "h-12")}
       >
-        {icon}
+        <span className="relative shrink-0">
+          {icon}
+          {!!badge && <RailBadge n={badge} className="rail-icon absolute -top-1.5 -right-2" />}
+        </span>
         <span className="rail-label truncate">{label}</span>
-        {count !== undefined && (
-          <span className="rail-label ml-auto text-muted-foreground text-xs tabular-nums">{count}</span>
+        {badge ? (
+          <RailBadge n={badge} className="rail-label ml-auto" />
+        ) : (
+          count !== undefined && (
+            <span className="rail-label ml-auto text-muted-foreground text-xs tabular-nums">{count}</span>
+          )
         )}
       </NavLink>
     </RailHint>
@@ -186,6 +212,15 @@ export function Navbar({
   const { pathname } = useLocation();
   const pendingPath = useNavigation().location?.pathname;
   const [selected, setSelected] = useState<string | null>(null);
+  // En una categoría, la zona de categorías del riel muta a sus filtros (los datos son los del loader de esa ruta).
+  const catalog = useMatches().find((m) => m.id === "features/category/pages/category-page")?.data as
+    | CatalogData
+    | undefined;
+  const [mode, setMode] = useState<"filters" | "nav">("filters");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: al cambiar de página vuelve a los filtros.
+  useEffect(() => setMode("filters"), [pathname]);
+  const showFilters = !!catalog && mode === "filters" && wide;
+  const activeFilters = activeFilterCount(useSearchParams()[0]);
   // Cuando la URL llega (o la navegación se cancela) manda la navegación real.
   // biome-ignore lint/correctness/useExhaustiveDependencies: se limpia en cada cambio de página o de pendiente.
   useEffect(() => setSelected(null), [pathname, pendingPath]);
@@ -203,6 +238,17 @@ export function Navbar({
           setPeek(false);
           (document.activeElement as HTMLElement | null)?.blur();
         } else onCollapsedChange(!collapsed);
+        return;
+      }
+      // F alterna entre las categorías y los filtros de la categoría abierta; plegado, asoma el riel con los filtros.
+      if (e.key === "f" && catalog && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (window.matchMedia("(min-width: 64rem)").matches) {
+          e.preventDefault();
+          if (collapsed) {
+            setMode("filters");
+            setPeek((p) => !p);
+          } else setMode((m) => (m === "filters" ? "nav" : "filters"));
+        }
         return;
       }
       const shortcut = e.key === "k" && (e.ctrlKey || e.metaKey);
@@ -251,7 +297,9 @@ export function Navbar({
           if (collapsed && (e.target as HTMLElement).matches("input[data-search-field]")) setPeek(true);
         }}
         onBlur={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPeek(false);
+          // Un campo de filtros abre su lista fuera del riel (`data-rail-popup`): el foco sigue siendo del riel.
+          const to = e.relatedTarget as HTMLElement | null;
+          if (!e.currentTarget.contains(to) && !to?.closest("[data-rail-popup]")) setPeek(false);
         }}
         className={cn(
           "t-resize fixed inset-y-0 left-0 z-40 hidden scrollbar-slim flex-col gap-4 overflow-y-auto overflow-x-hidden border-border/60 border-r bg-card/40 px-3 py-3 lg:flex",
@@ -289,27 +337,59 @@ export function Navbar({
         </RailGroup>
 
         {/* El alto mínimo hace que, en una ventana muy baja, scrollee el riel entero y no se aplaste la lista. */}
-        <nav aria-label="Categorías" className="flex min-h-40 flex-1 flex-col">
-          {/* Angosto, el título cede su lugar a una línea en la columna de íconos. */}
-          <div className="relative shrink-0">
-            <p className="rail-label px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
-              Categorías
-            </p>
-            <span aria-hidden="true" className="rail-icon absolute top-1/2 left-2 h-px w-6 bg-border" />
-          </div>
-          <RailGroup className="scrollbar-slim flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
-            {categories.map((c) => (
-              <RailLink
-                key={c.id}
-                to={`/categoria/${c.slug}`}
-                label={c.label}
-                count={c.productCount}
-                collapsed={!wide}
-                icon={<CategoryIcon category={c.id} />}
-              />
-            ))}
-          </RailGroup>
-        </nav>
+        <div className="relative min-h-40 flex-1">
+          <nav
+            aria-label="Categorías"
+            inert={showFilters}
+            className={cn(
+              "absolute inset-0 flex flex-col transition-[transform,opacity] duration-base ease-in-out",
+              showFilters && "-translate-x-6 opacity-0",
+            )}
+          >
+            {/* Angosto, el título cede su lugar a una línea en la columna de íconos. */}
+            <div className="relative shrink-0">
+              <p className="rail-label px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
+                Categorías
+              </p>
+              <span aria-hidden="true" className="rail-icon absolute top-1/2 left-2 h-px w-6 bg-border" />
+            </div>
+            <RailGroup className="scrollbar-slim flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
+              {categories.map((c) => {
+                const open = !!catalog && c.slug === catalog.category;
+                return (
+                  <RailLink
+                    key={c.id}
+                    to={`/categoria/${c.slug}`}
+                    label={c.label}
+                    count={c.productCount}
+                    badge={open ? activeFilters : undefined}
+                    collapsed={!wide}
+                    // En la categoría abierta, tocarla vuelve a sus filtros en vez de recargarla sin ellos.
+                    onClick={(e) => {
+                      if (!open) return;
+                      e.preventDefault();
+                      setMode("filters");
+                      if (collapsed) setPeek(true);
+                    }}
+                    icon={<CategoryIcon category={c.id} />}
+                  />
+                );
+              })}
+            </RailGroup>
+          </nav>
+          {catalog && (
+            <section
+              aria-label="Filtros"
+              inert={!showFilters}
+              className={cn(
+                "absolute inset-0 flex flex-col transition-[transform,opacity] duration-base ease-in-out",
+                !showFilters && "translate-x-6 opacity-0",
+              )}
+            >
+              <RailFilters data={catalog} onBack={() => setMode("nav")} />
+            </section>
+          )}
+        </div>
 
         <div className="flex shrink-0 flex-col gap-3 border-border/60 border-t pt-3">
           {freshness && (

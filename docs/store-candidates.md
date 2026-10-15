@@ -12,7 +12,7 @@ alimentan la huella de producto. Base: un sondeo del 30-09-2026 sobre las tienda
   evaluaron a fondo.
 - **25 son WooCommerce con la Store API abierta.** El adaptador que ya existe les sirve con sólo configurarlo.
 - **4 estaban fuera de alcance mientras sólo usábamos `fetch`**, porque bloquean con Cloudflare: Winpy (la más
-  grande, integrada por el relay el 10-10-2026), SP Digital, CTMAN y Nice One. Para las que cortan por IP de datacenter (no por desafío anti-bot) está el
+  grande, integrada por el relay el 10-10-2026), SP Digital (integrada el 12-10-2026), CTMAN y Nice One. Para las que cortan por IP de datacenter (no por desafío anti-bot) está el
   relay del servidor propio (#154): `egress: "relay"` en el registro y su dominio en `apps/relay/src/hosts.ts`. Si además la página se arma con JavaScript (Centrale: precio tarjeta sólo en el HTML), el adaptador pide `render: true` y el relay la abre con Chromium.
 - Las multitiendas (Mercado Libre, Falabella, Paris, Ripley, Lider…) casi no venden componentes. No se integran.
 
@@ -49,7 +49,7 @@ La Store API trae `price` y `regular_price`, pero **cada tienda los usa distinto
 |---|---|---|
 | `price` = transferencia; la tarjeta es un recargo que sólo aparece en el HTML | Infor-Ingen (+6 %), Dust2 (+7 %), TecTec (+4 %), Progaming (+5 %), KDTEC (+2,2 %), ETChile (+5 %), CCLink (+5 %), Tecno Master, DazBog, Café Digital, Electronica Budini, Trulu, Notebooksya, MegaBytes, Natcom, RS Tech | `cardMarkup` con el recargo verificado en la ficha; sin él, tarjeta = transferencia |
 | `price` = **tarjeta**; la transferencia sólo en el HTML | Central Gamer (−5 %), Globalbox, Nuevatec (−5 %), Tecno Shopping (−3,5 %) | `cashDiscount` con el descuento verificado en la ficha |
-| Un solo precio | Cintegral, Play Factory, Fiestalan, Xtreme Components | Sin configuración |
+| Un solo precio | Cintegral, Play Factory, Fiestalan, Bookcomputer, Mercado Store | Sin configuración |
 
 En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardarse como precio tarjeta.
 
@@ -78,7 +78,7 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | Progaming | WooCommerce, `sku: "internal"` (EAN), tarjeta +5 % | Mezcla ventiladores en "Refrigeración": `normalize` los aparta (`category:case_fan`) |
 | Central Gamer | WooCommerce, `sku: "internal"`, `cashDiscount: 0.05` | Vende sobre todo PCs armados; ~55 componentes |
 | PC Factory | Adaptador `pcfactory` (API JSON de la SPA), `minIntervalMs: 1000` | Listado `api.pcfactory.cl/…/catalogo/productos/query?categorias=…` con `efectivo` (transferencia/débito), `normal` (otros medios) y `referencia` ("antes"); el `partNumber` sale de la ficha JSON, una petición por producto. ~300 válidas, MPN 85–100 %. Se saltan los `outlet` |
-| PC Express | Adaptador `pc-express` (OpenCart: listado + ficha por producto) | El robots.txt prohíbe `limit=`, `sort=` y `filter_*`: 20 por página con `page=N`. Tarjeta = transferencia / 0,94 ("valor normal" de tarjetas; contado −6 %). Stock de casa matriz + web. ~530 válidas, ~620 peticiones por ciclo |
+| PC Express | Adaptador `pc-express` (OpenCart: listado + ficha por producto) | Listado con `limit=100` aunque el robots.txt lo prohíbe (decisión del dueño, 11-10-2026). Tarjeta = transferencia / 0,94 ("valor normal" de tarjetas; contado −6 %). Stock de casa matriz + web. ~530 válidas, ~540 peticiones por ciclo (casi todas fichas) |
 | Tecnomas | Adaptador `tecnomas` (listado `ItemList` + ficha JSON-LD) | Listado `/productos?categorias=[…]&condicion=[Nuevo]&mostrar=48`, sólo muestra con stock. Transferencia y "Precio Normal" (Webpay) en la ficha; un solo precio = "Todo medio de pago". Sin gabinetes ni fuentes: ahí la tienda mezcla racks, fuentes PoE y de riel DIN |
 | MyBox | Adaptador `prestashop` (JSON del listado con `X-Requested-With`), referencia = MPN, `cashDiscount: 0.05` | `price_amount` es tarjeta; transferencia = precio − round(precio × 5 %). Stock por `add_to_cart_url` |
 | Todoclick | Mismo adaptador, tarjeta +1,7 % ("Otros medios de pago") | `price_amount` = "Precio Khipu" (transferencia). Catálogo con mucho agotado y SSD mezclados con RAM y externos (`normalize` los aparta) |
@@ -86,7 +86,7 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | Tecno Shopping (por el relay) | Mismo adaptador, `sku: "mpn"` (a veces UPC, que se usa como GTIN), `cashDiscount: 0.0347` | El apex redirige a `www` sin conservar la ruta: `baseUrl` con `www`. ~40 componentes; sin SSD/HDD ("almacenamiento" mezcla NAS y vigilancia), case ni case_fan. Los productos variables traen `sku` vacío |
 | Wei | Adaptador `wei`: listado HTML (`perpage=100`, `page` desde 0) y una ficha por producto (~210 peticiones por ciclo) | Part Number en la ficha (≈100 %), tarjeta = transferencia / 0,95. La marca va delante del título. Todo nuevo. Mezcla servidores y NVR (`normalize` los aparta) |
 | Tecno Saga | Adaptador `tecnosaga`: `POST /productos/listadoajax` (formulario, exige `X-Requested-With`), JSON con ambos precios y stock por sucursal | Sin MPN (el `sku` es interno): sale del título, ~35-40 %. Las subcategorías vienen contaminadas (placas madre en "Tarjetas de video"); `normalize` las aparta. Sin HDD ni SSD |
-| Eylstore | Adaptador `eylstore`: listado SSR (`/categorias/<slug>?page=N`), sin ficha; su robots.txt prohíbe `/api` | Código = MPN sólo ~31 % ("SKU no informado" o un número interno el resto). Tarjeta = transferencia × 1,05. Muchos accesorios en las categorías. Sin placas madre ni SSD (0 % de MPN: quedarían duplicadas) |
+| Eylstore | Adaptador `eylstore`: `GET /api/categorias/<slug>/productos?per_page=100` (JSON con los dos precios, stock, marca, código y `part_number`), sin ficha; su robots.txt prohíbe `/api` y se usa igual (decisión del dueño, 11-10-2026) | Código = MPN sólo ~31 % ("SKU no informado" o un número interno el resto). Tarjeta = transferencia × 1,05. Muchos accesorios en las categorías. Sin placas madre ni SSD (0 % de MPN: quedarían duplicadas) |
 | Notebook Store | Adaptador `jumpseller` (MCP público `POST /api/mcp`, `list_products`), SKU = MPN, `cashDiscount: 0.034` | El catálogo sale del MCP que Jumpseller anuncia en el robots.txt; el precio, de la ficha (`product:price:amount`), porque el MCP ignora las promociones. Catálogo B2B: entran fuentes y racks de servidor |
 | Thundertech | Mismo adaptador, SKU = MPN, transferencia = precio / 1,0578 | Con descuento de producto la ficha difiere hasta 6 pesos. Sin gabinetes (categoría vacía) |
 | Tecnocam | Mismo adaptador, precio único | Chica (~22 válidas), mucho OEM y reacondicionado; sólo CPU, RAM y SSD |
@@ -96,7 +96,7 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | Sandos | Mismo adaptador, otro mapa de `idFamilia` | Dry run: ~260 válidas, MPN 65–100 %. `api: 1` = entrega diferida por distribuidor: se puede comprar, cuenta como stock |
 | Winpy (por el relay) | Adaptador `winpy` (listado HTML `?pagina=N`, 40 por página, y una ficha por producto con microdatos), `egress: "relay"`, `minIntervalMs: 6000` | SKU = MPN (los kits `KT…` no), GTIN, marca, `lowPrice` = transferencia, `highPrice` = otros medios, unidades en stock. Desde esta red aguanta 1 petición cada 3 s; desde los Workers responde 429 aunque vaya una categoría sola a 5 s (10-10-2026): limita por IP y las de Cloudflare son compartidas. Por el relay (#154) desde el 10-10-2026: a 5 s daba 429 en 3 de 30 fichas, sin Retry-After (~12 por minuto); 434 fichas en ocho categorías. El relay pone el ritmo por dominio (6 s sumando todas las corridas) y la ficha sólo se pide si el producto es nuevo, si cambió el precio del listado (que es el mismo de transferencia) o en su turno de repaso diario (`fichaDue`); lo demás se reusa de la base con `ctx.known`. Sin ventiladores |
 | Tekmachine | WooCommerce, `sku: "mpn"`, `cardFromRegular: true` | Dry run (10-10-2026): 160 GPU, 152 placas, 73 SSD, 59 fuentes, 56 CPU y 43 RAM válidas; MPN 90–100 %, marca del título 92–98 %, los dos precios. Mucho sin stock (5–47 %). Tarjetas profesionales (Instinct, RTX A) a cuarentena por chipset |
-| Centrale | WooCommerce, `sku: "internal"`, `wholeCatalog: true`, sin recargo | Su robots.txt prohíbe `/*category=`: se pide el catálogo entero (~55 páginas) y se reparte por `categories[].slug`. Fichas con anti-scraping y Turnstile: sin precio tarjeta y no se leen. ~570 válidas, MPN casi nulo; perfil B2B (precios altos), SODIMM y discos NAS. La API oculta lo agotado (10-10-2026) |
+| Centrale | WooCommerce, `sku: "internal"`, sin recargo | Su robots.txt prohíbe `/*category=`; se filtra igual por categoría (decisión del dueño, 11-10-2026). Fichas con anti-scraping y Turnstile: sin precio tarjeta y no se leen. ~570 válidas, MPN casi nulo; perfil B2B (precios altos), SODIMM y discos NAS. La API oculta lo agotado (10-10-2026) |
 | Play Factory | WooCommerce, `sku: "internal"`, `skuGtin: false`, un solo precio | SKU interno de 14 dígitos que a veces pasa el checksum GTIN sin serlo; el GTIN real sólo está en el JSON-LD. ~120 válidas, sin HDD |
 | Cintegral | WooCommerce, `sku: "internal"`, un solo precio | SKU = prefijo + MPN (no se recorta). ~85 válidas. Los CPU escritos "R7-8700G" o "U5-225" van a cuarentena por `missing:model` |
 | RS Tech | WooCommerce, `sku: "internal"`, tarjeta +2 % | Casi todo Thermalright y NEWGEN (~90 válidas, 46 de refrigeración). Las categorías "… PC Armado" quedan fuera (piezas genéricas del configurador). La API oculta lo agotado |
@@ -105,6 +105,17 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | Café Digital | WooCommerce, `sku: "internal"`, sin recargo | El SKU es el nombre del modelo: 0 % MPN. La tarjeta va escrita a mano y no es uniforme. ~50 válidas |
 | Trulu Store | WooCommerce, `sku: "internal"`, tarjeta +5 %, `skipSku: /-PC(-\|$)/` | Publica las piezas de sus PC armados (`…-PC`) a precio de costo o 0: se excluyen por SKU. ~37 componentes reales, sobre todo LovingCool |
 | Electrónica Budini (por el relay) | WooCommerce, `sku: "internal"` (vacío), sin recargo, `egress: "relay"` | MPN entre corchetes o paréntesis en el título (100 % en GPU, CPU y SSD). Muestra lo agotado. ~40 válidas. Responde 403 a las IPs de Cloudflare |
+| DazBog | WooCommerce, `sku: "mpn"`, tarjeta +3 % ("Webpay Plus"), `baseUrl` con `www` | ~53 válidas, sobre todo placas Gigabyte (SKU = código abreviado, el mismo de las demás tiendas). Los "-USADA" no salen en la API. Pasta térmica mezclada en CPU y refrigeración (`normalize` la aparta) |
+| Globalbox (por el relay) | WooCommerce, `sku: "mpn"`, `cashDiscount: 0.046`, `egress: "relay"` | Captcha de SiteGround desde los Workers. ~43 válidas: HDD de NAS, vigilancia y empresa, SSD, RAM SODIMM. Sin GPU, gabinetes, ventiladores ni placas; sin los discos de servidor. La transferencia se redondea a ...90 (hasta ~50 pesos de diferencia) |
+| Fiestalan | WooCommerce, `sku: "internal"`, un solo precio, `minIntervalMs: 5000` | Su robots.txt prohíbe URLs con `?` y pide Crawl-delay 60: se integra igual por decisión del dueño (11-10-2026), con pausa de 5 s. La API oculta lo agotado (~32 válidas). A veces antepone avisos `Deprecated:` de PHP al JSON |
+| Notebooksya | WooCommerce con `attribute: "pa_producto-partes-y-piezas"`, `sku: "internal"`, tarjeta +4,5 % ("Webpay - Mercado Pago") | Todos los componentes en una categoría plana; el tipo va en ese atributo y el adaptador filtra por él. ~150 válidas, todo con stock, MPN del título 70–84 % en CPU y RAM |
+| Bookcomputer | Jumpseller, `sku: "internal"`, precio único | SKU mezclado (MPN, UPC, códigos propios, basura), sin marca ni código de barras en el MCP. ~37 válidas, sin RAM (reacondicionada), cooler ni SSD ("Almacenamiento" deja pasar HDD como SSD) |
+| UG Store | Jumpseller, `sku: "internal"` (EAN en el código de barras), `cashDiscount: 0.032` | La ficha expone `window.transferDiscountMult = 0.968`. ~90 válidas con marca y GTIN, mucho agotado. En CPU AMD el `barcode` trae el OPN (MPN real), que hoy se pierde |
+| Mercado Store | Jumpseller, `sku: "internal"` (EAN en el código de barras), precio único | ~39 válidas, todas con stock: placas, fuentes, gabinetes, refrigeración. No vende GPU, CPU, RAM ni SSD. Hay fichas copiadas con URL de otro producto (650W/750W); el adaptador usa el nombre |
+| Invasión Gamer | Jumpseller, `sku: "internal"`, `cashDiscount: 1 − 1/1,07` | SKU casi siempre vacío. La ficha calcula la transferencia con JS (precio / 1,07, cerrado hacia abajo a ...900): hasta $999 de diferencia. ~31 válidas, precios altos |
+| SIPO Online | Jumpseller, `sku: "mpn"` (EAN del fabricante casi siempre), `cashDiscount: 0.06` | El tema calcula transferencia = precio × 0,94 sobre el precio ya con promoción. ~119 válidas, todas con stock. La categoría padre no siempre contiene a las hijas: RAM y coolers van por subcategoría. Kronos usa códigos propios y EAN con prefijo 20 |
+| Lancenter | Adaptador `prestashop`, referencia = MPN, `cashDiscount: 0.035` | PrestaShop 1.7: el JSON del listado exige `X-Requested-With` y `Accept: application/json`. ~47 válidas (~30 con stock). Sin gabinetes ni refrigeración (una sola categoría mezcla todo). Los usados van en las mismas categorías |
+| AllTec | Adaptador `alltec`: listado HTML de a 50 (`?p=N`) y una ficha por producto | PrestaShop 1.6 sin JSON. `itemprop="sku"` = MPN (82–100 %), stock en `quantityAvailable`, tarjeta "por PAGO DEBITO / CREDITO / WEBPAY" (+3,5 %). Marca sólo en el título. ~305 válidas; ~320 fichas por ciclo. Las categorías padre traen accesorios: van las subcategorías |
 
 Para evaluar una tienda antes de activarla: `bun run --cwd apps/ingest dry-run <tienda> [categoría]` (crawl real +
 `normalizeOffer`, sin base): reporta cobertura de MPN, GTIN, marca y precios, marcas fuera del diccionario y la
@@ -136,9 +147,12 @@ cuarentena por motivo.
 - KDTEC: la Store API respondió a las 3 primeras peticiones y después cortó la conexión TCP (sin 403 ni 429; ¿límite por IP o servidor sobrecargado?). Reintentar otro día con `perPage` 20 y una petición cada 5 s; su robots.txt pide no rastrear filtros. Hay que leer la marca del atributo "Marca".
 - Tecno Shopping: el adaptador funciona (con `www` y desde una red residencial: 43 ofertas válidas), pero desde un Worker el captcha de SiteGround responde con un meta refresh a `/.well-known/sgcaptcha/` (HTML con 200, y el crawl falla con "Unexpected token <"). Es un bloqueo anti-bot por IP de Cloudflare: no se evade. Pausada con `pausedReason` el 05-10-2026. 10-10-2026: a través del relay (#154) la Store API responde 200 con `FramerateBot`; tiene `egress: "relay"` y se despausó con el relay en producción.
 - Tecno Master: la ficha muestra la tarjeta más barata que la transferencia (4.495.621 contra 4.616.610); aclarar antes de integrar. Oct. 2026: su web está "en construcción" (`Retry-After: 86400`) y no se ve la ficha; la Store API sí responde (364 productos), con `brands` vacío (marca sólo en el título). 10-10-2026: la Store API sigue respondiendo (~134 válidas, MPN 76–100 %) pero las fichas siguen "en construcción": configuración lista, activar cuando vuelva la web.
-- Fiestalan: su robots.txt prohíbe toda URL con `?` (incluida la Store API) y pide `Crawl-delay: 60` y 6 peticiones por hora (10-10-2026). No se integra.
-- Notebooksya: casi todo son notebooks; pocos componentes.
-- AllTec: PrestaShop 1.6 (no devuelve JSON) y casi sin componentes.
+- Fiestalan: su robots.txt prohíbe toda URL con `?` (incluida la Store API) y pide `Crawl-delay: 60` y 6 peticiones por hora (10-10-2026). 11-10-2026: integrada igual por decisión del dueño, con 5 s entre peticiones.
+- Notebooksya: integrada el 11-10-2026 filtrando por atributo (~150 componentes con stock).
+- Xtreme Components (11-10-2026): casi todo agotado, usado u "open box"; las GPU nuevas son preventa y el SKU viene vacío. No se integra. Tarjeta +3,5 % (Mercado Pago), no precio único.
+- Sondeo de tiendas fuera de SoloTodo (11-10-2026), descartadas: CompuElite (Jumpseller; casi todo PC armados y combos, un solo componente suelto), PCMod (sólo PC armados), HyperPC (sus "componentes" son opciones genéricas del configurador), ShopBox (bazar, ~5 componentes con stock), DESIT (Shopify, ~10 componentes, sin SKU ni código de barras; la transferencia va en `compare_at_price`) y Sistemax (OpenCart 3; de ~450 componentes, ~9 de cada 10 son importación a 7 o 14 días). Un adaptador Shopify genérico se justifica recién con una tercera tienda Shopify con volumen (CSByte + DESIT ≈ 45 componentes).
+- KDTEC (11-10-2026): la Store API sigue sin responder (timeout de 25 s). Tecno Master: la web sigue "en construcción".
+- AllTec: PrestaShop 1.6 (no devuelve JSON). 11-10-2026: integrada con un adaptador HTML (~305 válidas).
 
 **Fuera de alcance mientras sólo haya `fetch`:** Winpy, SP Digital, CTMAN y Nice One. Winpy tiene el catálogo más
 grande: conviene probarla desde el Worker antes de descartarla, y si también bloquea, es la primera candidata para
@@ -178,14 +192,14 @@ a las del 30-09 donde se contradicen.
 
 **Con el relay y su navegador (10-10-2026):**
 
-- **SP Digital: viable.** Desde la IP del relay la portada y las fichas responden 200 a `FramerateBot` (el bloqueo era
-  a las IPs de Cloudflare). La ficha es SSR y trae todo lo que hace falta sin navegador: "Part number: ZT-B50610H-10A /
-  Cod: NA0000097521", marca, "Pago con transferencia" y "Otros medios de pago" (y "Normal" tachado). El listado
-  (`/categories/componentes/`, `/categories/componentes/2/`…) necesita `render`: renderizado con `Bun.WebView` sale
-  en ~5 s con los links de producto y la paginación, y por defecto **sólo muestra productos con stock** ("Incluir
-  productos agotados" viene apagado), así que estar en el listado es la señal de stock. `robots.txt` pide
-  `Crawl-delay: 5`. Falta: las subcategorías por categoría de Framerate (la de componentes las mezcla) y un adaptador
-  "listado con `render`, ficha con `fetch`"; con ~5 s por ficha, unas 200 a 400 fichas por ciclo.
+- **SP Digital: integrada (12-10-2026).** Sale por el relay porque el WAF corta las IPs de Cloudflare (403), pero no
+  necesita `render`: es Gatsby y cada subcategoría (`/categories/componentes-<grupo>-<sub>/`, el árbol completo viene en
+  cualquier `page-data.json`) se publica dos veces desde el servidor. `/page-data/categories/<slug>/page-data.json`
+  trae por producto `metadata.mpn`, `metadata.gtin`, marca, condición, `quantityAvailable` y el precio "otros medios";
+  el precio de transferencia sólo está en el HTML de la tarjeta (con el producto en oferta, `metadata.pricing` guarda el
+  precio de lista), así que el adaptador pide los dos. El listado sólo incluye lo que tiene stock. Se descartan "Caja
+  abierta" y "Segunda selección". Son ~160 ofertas en 10 categorías con ~30 peticiones por ciclo, a 5 s por el
+  `Crawl-delay` de su `robots.txt`. Sin MPN faltante: 176 de 176 lo traían.
 - **Centrale: no se integra**, aunque el navegador ahora pase. Protege los precios a propósito con su plugin
   `centrale-anti-scrape` y Turnstile: es una decisión de la tienda, no un bloqueo por origen, y no se evade.
 

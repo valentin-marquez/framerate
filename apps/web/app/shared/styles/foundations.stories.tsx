@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "~/shared/lib/utils";
 
 /** Tokens del sistema: lo que se ajusta en `app.css` se ve reflejado aquí (y en todo el sitio). */
@@ -45,27 +46,64 @@ export const Colores: Story = {
   ),
 };
 
-const TYPE_SCALE = [
-  ["text-5xl font-semibold tracking-tight", "Título de cabecera"],
-  ["text-3xl font-semibold tracking-tight", "Título de página"],
-  ["text-xl font-semibold", "Título de sección"],
-  ["text-base font-medium", "Etiqueta destacada"],
-  ["text-base", "Texto de cuerpo: compara precios de las tiendas de Chile."],
-  ["text-sm text-muted-foreground", "Texto secundario y descripciones"],
-  ["text-xs text-muted-foreground", "8 productos desde $279.990"],
-  ["text-base font-medium tabular-nums", "$1.279.990 $879.990 $89.990"],
+const TYPE_GROUPS = [
+  ["Title", ["text-title-h1", "text-title-h2", "text-title-h3", "text-title-h4", "text-title-h5", "text-title-h6"]],
+  ["Label", ["text-label-xl", "text-label-lg", "text-label-md", "text-label-sm", "text-label-xs"]],
+  [
+    "Paragraph",
+    ["text-paragraph-xl", "text-paragraph-lg", "text-paragraph-md", "text-paragraph-sm", "text-paragraph-xs"],
+  ],
+  ["Subheading", ["text-subheading-md", "text-subheading-sm", "text-subheading-xs", "text-subheading-2xs"]],
+  ["Doc", ["text-doc-label", "text-doc-paragraph"]],
 ] as const;
+
+/** Lee los valores ya aplicados, así la historia no repite lo que dice app.css. */
+function TypeRow({ style }: { style: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [spec, setSpec] = useState("");
+  useEffect(() => {
+    if (!ref.current) return;
+    const c = getComputedStyle(ref.current);
+    const size = Number.parseFloat(c.fontSize);
+    const tracking = Math.round(((Number.parseFloat(c.letterSpacing) || 0) / size) * 1000) / 10;
+    setSpec(`${c.fontWeight} ${size}/${Number.parseFloat(c.lineHeight)} ${tracking}%`);
+  }, []);
+  return (
+    <div className="grid gap-1 sm:grid-cols-[14rem_1fr] sm:items-baseline">
+      <div>
+        <code className="font-mono text-muted-foreground text-xs">{style}</code>
+        <p className="font-mono text-muted-foreground/60 text-xs">{spec}</p>
+      </div>
+      <p ref={ref} className={cn("text-foreground", style)}>
+        Compara precios de PC en Chile
+      </p>
+      {style.startsWith("text-subheading") && (
+        <p className={cn("text-foreground uppercase sm:col-start-2", style)}>Tarjetas de video</p>
+      )}
+    </div>
+  );
+}
 
 export const Tipografia: Story = {
   name: "Tipografía",
   render: () => (
-    <div className="space-y-5">
-      {TYPE_SCALE.map(([className, text]) => (
-        <div key={className} className="grid gap-1 sm:grid-cols-[16rem_1fr] sm:items-baseline">
-          <code className="font-mono text-muted-foreground text-xs">{className}</code>
-          <p className={cn("text-foreground", className)}>{text}</p>
-        </div>
+    <div className="space-y-10">
+      <p className="max-w-prose text-paragraph-sm text-muted-foreground">
+        Escala de AlignUI: cada estilo lleva tamaño, alto de línea, interletrado y peso en una sola clase. Las escalas
+        de Tailwind que coinciden (text-sm, text-base, text-lg) toman su interletrado.
+      </p>
+      {TYPE_GROUPS.map(([group, styles]) => (
+        <section key={group} className="space-y-5">
+          <h3 className="text-subheading-sm text-muted-foreground uppercase">{group}</h3>
+          {styles.map((style) => (
+            <TypeRow key={style} style={style} />
+          ))}
+        </section>
       ))}
+      <section className="space-y-3">
+        <h3 className="text-subheading-sm text-muted-foreground uppercase">Cifras</h3>
+        <p className="font-medium text-base tabular-nums">$1.279.990 $879.990 $89.990</p>
+      </section>
     </div>
   ),
 };

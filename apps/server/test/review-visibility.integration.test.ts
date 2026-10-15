@@ -4,7 +4,7 @@ import type { Db } from "@framerate/database";
 import { createTestD1 } from "@framerate/database/testing";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { seedCatalog, testEnv } from "./helpers";
+import { refreshSummaries, seedCatalog, testEnv } from "./helpers";
 
 let db: Db;
 let dispose: () => Promise<void>;
@@ -33,6 +33,7 @@ const review = async (listingStoreExternalId: string, candidate: number) => {
     .values({ listing_id: id, candidate_product_id: candidate, score: 0.6, created_at: new Date().toISOString() })
     .returning("id")
     .executeTakeFirstOrThrow();
+  await refreshSummaries(db);
   return reviewId;
 };
 
@@ -44,6 +45,7 @@ test("una oferta con revisión pendiente sale de las listas hasta que se resuelv
   expect(ProductDetailSchema.parse(await res.json()).offers).toHaveLength(1);
 
   await db.query.updateTable("match_reviews").set({ status: "rejected" }).where("id", "=", pending).execute();
+  await refreshSummaries(db);
   expect((await page("category=cpu")).total).toBe(1);
 });
 
@@ -54,8 +56,10 @@ test("un producto con otras ofertas sigue en las listas: sólo deja de contar la
   ]);
 });
 
-const setVisible = (externalId: string, visible: 0 | 1) =>
-  db.query.updateTable("listings").set({ visible }).where("external_id", "=", externalId).execute();
+const setVisible = async (externalId: string, visible: 0 | 1) => {
+  await db.query.updateTable("listings").set({ visible }).where("external_id", "=", externalId).execute();
+  await refreshSummaries(db);
+};
 
 test("una oferta oculta (nueva, sin pasar el pipeline) no cuenta en listas, conteos ni sitemap, y su ficha no existe", async () => {
   await setVisible("3", 0);

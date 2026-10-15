@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import type { ProductDetail } from "@framerate/contracts";
-import { byteLength, DISCORD_EMBED_MAX_BYTES, discordEmbed, ogImagePath, shareDescription } from "./share";
+import {
+  byteLength,
+  DISCORD_EMBED_MAX_BYTES,
+  discordEmbed,
+  ogImagePath,
+  productJsonLd,
+  shareDescription,
+} from "./share";
 
 const offer = (slug: string, priceCash: number, inStock = true, priceCard = Math.round(priceCash * 1.05)) => ({
   id: priceCash,
@@ -88,5 +95,18 @@ describe("tarjeta de Discord", () => {
     expect(ogImagePath("msi-a520m", "https://cdn.framerate.cl/products/346cab.webp")).toBe(
       "/og/producto/msi-a520m.jpg?v=346cab",
     );
+  });
+});
+
+describe("datos estructurados", () => {
+  test("AggregateOffer con rango de precios en stock y una oferta por tienda", () => {
+    const [ld, crumbs] = productJsonLd(product(), "https://framerate.cl");
+    expect(ld.offers).toMatchObject({ lowPrice: 46_900, highPrice: 48_990, offerCount: 2 });
+    expect(crumbs.itemListElement.map((i) => i.name)).toEqual(["Inicio", "Placas madre", "MSI A520M-A PRO"]);
+  });
+
+  test("sin ofertas no emite offers (Google lo marca inválido sin lowPrice)", () => {
+    const [ld] = productJsonLd(product({ offers: [], bestPrice: null }), "https://framerate.cl");
+    expect(ld.offers).toBeUndefined();
   });
 });

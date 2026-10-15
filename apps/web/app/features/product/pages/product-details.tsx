@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { redirect } from "react-router";
 import { CommentsSection } from "~/features/comments/components/comments-section";
 import { ProductView } from "~/features/product/components/product-view";
-import { headlinePrice, ogImagePath, shareDescription } from "~/features/product/lib/share";
+import { headlinePrice, ogImagePath, productJsonLd, shareDescription } from "~/features/product/lib/share";
 import { productsService } from "~/features/product/services/products";
 import { periodFromParam } from "~/features/product/utils/price-history";
 import { isRateLimitError } from "~/shared/lib/api";
@@ -97,35 +97,15 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export default function ProductPage({ loaderData }: Route.ComponentProps) {
-  const { product, history, period, now } = loaderData;
+  const { product, history, period, now, origin } = loaderData;
   // Fuera del loader: con prefetch="intent" el loader corre al pasar el mouse y cada hover contaría como visita.
   useEffect(() => {
     productsService.trackView(product.slug).catch(() => {});
   }, [product.slug]);
 
-  const structuredData = {
-    "@context": "https://schema.org/",
-    "@type": "Product",
-    name: product.name,
-    image: product.imageUrl,
-    description: `Compra ${product.name} al mejor precio.`,
-    brand: {
-      "@type": "Brand",
-      name: product.brand || "Genérico",
-    },
-    sku: product.mpn,
-    offers: {
-      "@type": "AggregateOffer",
-      lowPrice: headlinePrice(product),
-      priceCurrency: "CLP",
-      offerCount: product.offerCount,
-      availability: `https://schema.org/${product.bestPrice === null ? "OutOfStock" : "InStock"}`,
-    },
-  };
-
   return (
     <>
-      <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+      <script type="application/ld+json">{JSON.stringify(productJsonLd(product, origin))}</script>
       <ProductView product={product} history={history} period={period} now={now} />
       <div className="mx-auto max-w-6xl px-4 pb-12">
         <CommentsSection productId={product.id} />

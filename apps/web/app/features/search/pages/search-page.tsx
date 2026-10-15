@@ -14,6 +14,8 @@ export function meta({ data }: Route.MetaArgs) {
     { property: "og:description", content: "Encuentra las mejores ofertas de hardware en Chile." },
     { property: "og:type", content: "website" },
     { property: "og:locale", content: "es_CL" },
+    // Google no quiere resultados de búsqueda interna en su índice; los enlaces sí se siguen.
+    { name: "robots", content: "noindex, follow" },
   ];
 }
 

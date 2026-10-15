@@ -4,9 +4,11 @@ import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { QuoteActions } from "~/features/quote/components/quote-actions";
+import { CompatibilityList } from "~/features/quote/components/quote-compatibility";
 import { QuoteHeader } from "~/features/quote/components/quote-header";
 import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
 import { QuoteOwnerBar } from "~/features/quote/components/quote-owner-bar";
+import { QuoteTotals } from "~/features/quote/components/quote-totals";
 import { useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/useQuotes";
 import { quotesService } from "~/features/quote/services/quotes";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
@@ -152,27 +154,42 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="min-h-screen w-full bg-background p-4 md:p-8 flex justify-center">
-      <div className="w-full max-w-6xl space-y-8">
+      <div className="w-full max-w-7xl space-y-8">
         <QuoteHeader quoteName={quote.name} author={quote.author} updatedAt={quote.updatedAt} />
 
         {isOwner && <QuoteOwnerBar quote={quote} onChange={setQuote} />}
 
-        <QuoteItemsList
-          quote={quote}
-          isOwner={isOwner}
-          onChangeQuantity={handleChangeQuantity}
-          onRemove={handleRemove}
-          onSelect={handleSelect}
-          onChooseOffer={handleChooseOffer}
-        />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+          <div className="min-w-0 lg:col-span-8">
+            <QuoteItemsList
+              quote={quote}
+              isOwner={isOwner}
+              onChangeQuantity={handleChangeQuantity}
+              onRemove={handleRemove}
+              onSelect={handleSelect}
+              onChooseOffer={handleChooseOffer}
+            />
+          </div>
 
-        {quote.items.length > 0 && (
-          <QuoteActions
-            onExportPDF={handleExportPDF}
-            onExportExcel={() => exportToExcel(quote)}
-            onCopyClipboard={() => copyToClipboard(quote)}
-          />
-        )}
+          <aside className="min-w-0 space-y-4 lg:col-span-4 lg:sticky lg:top-4">
+            <QuoteTotals
+              totalNormal={quote.totals.card}
+              totalCash={quote.totals.cash}
+              hasOutOfStockItems={quote.items.some((item) => item.isSelected && !item.offer)}
+              compatibility={quote.compatibility}
+            >
+              {quote.items.length > 0 && (
+                <QuoteActions
+                  block
+                  onExportPDF={handleExportPDF}
+                  onExportExcel={() => exportToExcel(quote)}
+                  onCopyClipboard={() => copyToClipboard(quote)}
+                />
+              )}
+            </QuoteTotals>
+            {quote.compatibility.checks.length > 0 && <CompatibilityList compatibility={quote.compatibility} />}
+          </aside>
+        </div>
       </div>
     </div>
   );

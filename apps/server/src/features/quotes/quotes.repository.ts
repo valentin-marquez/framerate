@@ -13,9 +13,10 @@ import {
   type UpdateQuoteItemRequest,
   type UpdateQuoteRequest,
 } from "@framerate/contracts";
-import { type Db, toBool } from "@framerate/database";
+import { type Db, parseJson, toBool } from "@framerate/database";
 import { sql } from "kysely";
 import { productImageUrl } from "@/features/catalog/catalog.queries";
+import { checkCompatibility, highlights, type Part } from "@/features/compatibility/compatibility";
 import { avatarUrl } from "@/features/identity/domain/avatar";
 import { newPublicId } from "@/shared/public-id";
 
@@ -145,11 +146,108 @@ function toItem(r: ItemRow, assetsBaseUrl: string | undefined): QuoteItem {
       imageUrl: productImageUrl(r, assetsBaseUrl),
     },
     offer: offerOf(r),
+    specs: [],
   };
 }
 
-function toDetail(row: SummaryRow, itemRows: ItemRow[], assetsBaseUrl: string | undefined): QuoteDetail {
-  const items = itemRows
+/** La última identidad de cada oferta activa de los ítems seleccionados: los datos de las reglas de compatibilidad. */
+const factsQuery = (db: Db, publicId: string) =>
+  db.query
+    .selectFrom("quote_items as qi")
+    .innerJoin("quotes as q", "q.id", "qi.quote_id")
+    .innerJoin("listings as l", "l.product_id", "qi.product_id")
+    .innerJoin("listing_identity as i", "i.listing_id", "l.id")
+    .select(["qi.id as item_id", "i.identity", "i.specs"])
+    .where("q.public_id", "=", publicId)
+    .where("qi.is_selected", "=", 1)
+    .where("l.is_active", "=", 1)
+    .where(
+      "i.version",
+      "=",
+      sql<number>`(select max(x.version) from listing_identity x where x.listing_id = i.listing_id)`,
+    );
+
+/**
+ * Votos de TDP por chipset para las GPU de la cotización: sólo el 39 % de las GPU trae su TDP, y el chipset lo fija.
+ * ponytail: recorre las identidades de GPU en cada lectura (~1.000 filas); índice o tabla de chipsets si crece.
+ */
+const gpuTdpQuery = (db: Db, publicId: string) =>
+  db.query
+    .selectFrom("listing_identity as i")
+    .select([
+      sql<string>`json_extract(i.identity, '$.chipset')`.as("chipset"),
+      sql<number>`json_extract(i.specs, '$.tdp_w')`.as("tdp"),
+      sql<number>`count(*)`.as("n"),
+    ])
+    .where("i.category", "=", "gpu")
+    .where(sql<number | null>`json_extract(i.specs, '$.tdp_w')`, "is not", null)
+    .where(sql<string>`json_extract(i.identity, '$.chipset')`, "in", (eb) =>
+      eb
+        .selectFrom("quote_items as qi")
+        .innerJoin("quotes as q", "q.id", "qi.quote_id")
+        .innerJoin("listings as l", "l.product_id", "qi.product_id")
+        .innerJoin("listing_identity as g", "g.listing_id", "l.id")
+        .select(sql<string>`json_extract(g.identity, '$.chipset')`.as("chipset"))
+        .where("q.public_id", "=", publicId)
+        .where("qi.is_selected", "=", 1)
+        .where("qi.slot", "=", "gpu"),
+    )
+    .groupBy(["chipset", "tdp"]);
+
+/** Lo que necesita `toDetail`, para sumarlo al mismo viaje a D1 que la escritura. */
+const detailQueries = (db: Db, publicId: string) =>
+  [
+    summariesQuery(db).where("q.public_id", "=", publicId),
+    itemsQuery(db, publicId),
+    factsQuery(db, publicId),
+    gpuTdpQuery(db, publicId),
+  ] as const;
+
+type DetailRows = [
+  ItemRow[],
+  Awaited<ReturnType<ReturnType<typeof factsQuery>["execute"]>>,
+  Awaited<ReturnType<ReturnType<typeof gpuTdpQuery>["execute"]>>,
+];
+
+/** Por campo, el valor que más ofertas del producto dicen (como `fuseSpecs`, sin separar lo de conocimiento: #127). */
+function fuseFacts(rows: { identity: string; specs: string }[]): Record<string, unknown> {
+  const votes = new Map<string, Map<string, number>>();
+  for (const row of rows) {
+    const facts = { ...parseJson<Record<string, unknown>>(row.identity, {}), ...parseJson(row.specs, {}) };
+    for (const [key, value] of Object.entries(facts)) {
+      if (value === null || value === "") continue;
+      const bucket = votes.get(key) ?? new Map<string, number>();
+      const k = JSON.stringify(value);
+      bucket.set(k, (bucket.get(k) ?? 0) + 1);
+      votes.set(key, bucket);
+    }
+  }
+  return Object.fromEntries(
+    [...votes].map(([key, bucket]) => [key, JSON.parse([...bucket].reduce((a, b) => (b[1] > a[1] ? b : a))[0])]),
+  );
+}
+
+/** Los ítems seleccionados con sus datos fusionados: alimentan la compatibilidad y los chips de specs. */
+function partsOf(items: QuoteItem[], [, factRows, tdpRows]: DetailRows): Part[] {
+  const tdpByChipset = new Map<string, { tdp: number; n: number }>();
+  for (const r of tdpRows) {
+    const best = tdpByChipset.get(r.chipset);
+    if (!best || r.n > best.n) tdpByChipset.set(r.chipset, { tdp: r.tdp, n: r.n });
+  }
+  return items
+    .filter((i) => i.isSelected)
+    .map((i) => {
+      const facts = fuseFacts(factRows.filter((r) => r.item_id === i.id));
+      if (i.product.category === "gpu" && facts.tdp_w == null && typeof facts.chipset === "string") {
+        facts.tdp_w = tdpByChipset.get(facts.chipset)?.tdp;
+      }
+      return { itemId: i.id, name: i.product.name, category: i.product.category, quantity: i.quantity, facts };
+    });
+}
+
+function toDetail(row: SummaryRow, detail: DetailRows, assetsBaseUrl: string | undefined): QuoteDetail {
+  const [itemRows] = detail;
+  const sorted = itemRows
     .map((r) => toItem(r, assetsBaseUrl))
     .sort(
       (a, b) =>
@@ -157,7 +255,17 @@ function toDetail(row: SummaryRow, itemRows: ItemRow[], assetsBaseUrl: string | 
         Number(b.isSelected) - Number(a.isSelected) ||
         a.id - b.id,
     );
-  return { ...toSummary(row, assetsBaseUrl), items, totals: quoteTotals(items) };
+  const parts = partsOf(sorted, detail);
+  const items = sorted.map((i) => {
+    const part = parts.find((p) => p.itemId === i.id);
+    return part ? { ...i, specs: highlights(i.product.category, part.facts) } : i;
+  });
+  return {
+    ...toSummary(row, assetsBaseUrl),
+    items,
+    totals: quoteTotals(items),
+    compatibility: checkCompatibility(parts),
+  };
 }
 
 export interface LoadedQuote {
@@ -171,11 +279,8 @@ export async function loadQuote(
   publicId: string,
   assetsBaseUrl: string | undefined,
 ): Promise<LoadedQuote | null> {
-  const [[row], itemRows] = await db.read([
-    summariesQuery(db).where("q.public_id", "=", publicId),
-    itemsQuery(db, publicId),
-  ]);
-  return row ? { ownerId: row.owner_id, detail: toDetail(row, itemRows, assetsBaseUrl) } : null;
+  const [[row], ...detail] = await db.read([...detailQueries(db, publicId)]);
+  return row ? { ownerId: row.owner_id, detail: toDetail(row, detail, assetsBaseUrl) } : null;
 }
 
 /** ¿Puede leerla quien mira? El dueño siempre; los demás sólo si no es privada. */
@@ -190,7 +295,7 @@ export async function createQuote(
   now: string,
 ): Promise<QuoteDetail> {
   const insert = async (publicId: string) => {
-    const [, [row], itemRows] = await db.read([
+    const [, [row], ...detail] = await db.read([
       db.query.insertInto("quotes").values({
         public_id: publicId,
         owner_id: ownerId,
@@ -200,11 +305,10 @@ export async function createQuote(
         created_at: now,
         updated_at: now,
       }),
-      summariesQuery(db).where("q.public_id", "=", publicId),
-      itemsQuery(db, publicId),
+      ...detailQueries(db, publicId),
     ]);
     if (!row) throw new Error("La cotización recién creada no se encontró");
-    return toDetail(row, itemRows, assetsBaseUrl);
+    return toDetail(row, detail, assetsBaseUrl);
   };
   // 30^10 combinaciones: un choque del UNIQUE es rarísimo y basta un reintento.
   return insert(newPublicId(10)).catch((error: Error) => {
@@ -283,7 +387,7 @@ export async function updateQuote(
   now: string,
 ): Promise<QuoteDetail | null> {
   const { name, description, visibility } = changes;
-  const [, [row], itemRows] = await db.read([
+  const [, [row], ...detail] = await db.read([
     db.query
       .updateTable("quotes")
       .set({
@@ -294,11 +398,10 @@ export async function updateQuote(
       })
       .where("public_id", "=", publicId)
       .where("owner_id", "=", ownerId),
-    summariesQuery(db).where("q.public_id", "=", publicId),
-    itemsQuery(db, publicId),
+    ...detailQueries(db, publicId),
   ]);
   if (!row || row.owner_id !== ownerId) return null;
-  return toDetail(row, itemRows, assetsBaseUrl);
+  return toDetail(row, detail, assetsBaseUrl);
 }
 
 /** Borra la cotización del dueño (sus ítems se van en cascada). `false` si no existe o no es suya. */
@@ -341,7 +444,7 @@ export async function addItem(
   const created = !current.some((i) => i.product_id === productId);
   const slotHasSelected = current.some((i) => i.slot === slot && toBool(i.is_selected));
 
-  const [, [row], itemRows] = await db.read([
+  const [, [row], ...detail] = await db.read([
     db.query
       .insertInto("quote_items")
       .values({
@@ -359,11 +462,10 @@ export async function addItem(
           updated_at: now,
         }),
       ),
-    summariesQuery(db).where("q.public_id", "=", publicId),
-    itemsQuery(db, publicId),
+    ...detailQueries(db, publicId),
   ]);
   if (!row) return "quote_not_found";
-  return { detail: toDetail(row, itemRows, assetsBaseUrl), created };
+  return { detail: toDetail(row, detail, assetsBaseUrl), created };
 }
 
 /** Ítem de una cotización del dueño, o `undefined` si no existe o no es suyo. */
@@ -403,7 +505,7 @@ export async function updateItem(
 
   // En un slot exclusivo, elegir este suelta a los demás (antes del UPDATE: el índice sólo admite uno seleccionado).
   const swap = isSelected === true && !isAdditiveSlot(item.slot);
-  const [, , [row], itemRows] = await db.read([
+  const [, , [row], ...detail] = await db.read([
     db.query
       .updateTable("quote_items")
       .set({ is_selected: 0, updated_at: now })
@@ -420,10 +522,9 @@ export async function updateItem(
         updated_at: now,
       })
       .where("id", "=", itemId),
-    summariesQuery(db).where("q.public_id", "=", publicId),
-    itemsQuery(db, publicId),
+    ...detailQueries(db, publicId),
   ]);
-  return row ? toDetail(row, itemRows, assetsBaseUrl) : null;
+  return row ? toDetail(row, detail, assetsBaseUrl) : null;
 }
 
 /**
@@ -440,7 +541,7 @@ export async function removeItem(
   const [[item]] = await db.read([ownedItemQuery(db, publicId, ownerId, itemId)]);
   if (!item) return null;
   const exclusiveSlots = QUOTE_SLOTS.filter((slot) => !isAdditiveSlot(slot));
-  const [, , [row], itemRows] = await db.read([
+  const [, , [row], ...detail] = await db.read([
     db.query.deleteFrom("quote_items").where("id", "=", itemId),
     // Idempotente: en cada slot exclusivo que se quedó sin seleccionado, sube el ítem más antiguo.
     db.query
@@ -455,8 +556,7 @@ export async function removeItem(
           .groupBy("slot")
           .having(eb.fn.sum("is_selected"), "=", 0),
       ),
-    summariesQuery(db).where("q.public_id", "=", publicId),
-    itemsQuery(db, publicId),
+    ...detailQueries(db, publicId),
   ]);
-  return row ? toDetail(row, itemRows, assetsBaseUrl) : null;
+  return row ? toDetail(row, detail, assetsBaseUrl) : null;
 }

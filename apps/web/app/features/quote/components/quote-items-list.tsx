@@ -1,10 +1,9 @@
 import { type Offer, QUOTE_SLOTS, type QuoteDetail, type QuoteItem as QuoteItemData } from "@framerate/contracts";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { QuoteSlot } from "./quote-slot";
-import { QuoteTotals } from "./quote-totals";
 
 interface QuoteItemsListProps {
-  quote: Pick<QuoteDetail, "id" | "name" | "items" | "itemCount" | "totals">;
+  quote: Pick<QuoteDetail, "id" | "name" | "items" | "itemCount"> & Partial<Pick<QuoteDetail, "compatibility">>;
   isOwner: boolean;
   onChangeQuantity: (item: QuoteItemData, quantity: number) => void;
   onRemove: (item: QuoteItemData) => void;
@@ -12,6 +11,7 @@ interface QuoteItemsListProps {
   onChooseOffer: (item: QuoteItemData, offer: Offer | null) => void;
 }
 
+/** Los slots con algo primero, en el orden del armado; los vacíos al final, como pendientes. */
 export function QuoteItemsList({
   quote,
   isOwner,
@@ -21,6 +21,8 @@ export function QuoteItemsList({
   onChooseOffer,
 }: QuoteItemsListProps) {
   const { t } = useTranslation();
+  const filled = (slot: (typeof QUOTE_SLOTS)[number]) => quote.items.some((item) => item.slot === slot);
+  const slots = [...QUOTE_SLOTS.filter(filled), ...QUOTE_SLOTS.filter((slot) => !filled(slot))];
 
   return (
     <div className="bg-card rounded-3xl border border-border/40 shadow-sm overflow-hidden">
@@ -29,21 +31,14 @@ export function QuoteItemsList({
         <span className="text-sm text-muted-foreground">{t("active_items_count", { count: quote.itemCount })}</span>
       </div>
 
-      <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-secondary/10 text-xs font-medium text-muted-foreground border-b border-border/40">
-        <div className="col-span-5">{t("product")}</div>
-        <div className="col-span-2">{t("store")}</div>
-        <div className="col-span-2 text-right">{t("price_normal")}</div>
-        <div className="col-span-2 text-right">{t("price_cash")}</div>
-        <div className="col-span-1"></div>
-      </div>
-
       <div className="divide-y divide-border/40">
-        {QUOTE_SLOTS.map((slot) => (
+        {slots.map((slot) => (
           <QuoteSlot
             key={slot}
             slot={slot}
             quote={quote}
             items={quote.items.filter((item) => item.slot === slot)}
+            compatibility={quote.compatibility}
             isOwner={isOwner}
             onChangeQuantity={onChangeQuantity}
             onRemove={onRemove}
@@ -52,12 +47,6 @@ export function QuoteItemsList({
           />
         ))}
       </div>
-
-      <QuoteTotals
-        totalNormal={quote.totals.card}
-        totalCash={quote.totals.cash}
-        hasOutOfStockItems={quote.items.some((item) => item.isSelected && !item.offer)}
-      />
     </div>
   );
 }

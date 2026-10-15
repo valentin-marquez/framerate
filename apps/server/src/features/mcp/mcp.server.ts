@@ -99,7 +99,7 @@ export function createMcpServer(db: Db, env: Env) {
         {
           q: args.consulta,
           category: args.categoria,
-          brand: args.marca,
+          brand: args.marca ? [args.marca] : undefined,
           store: args.tienda,
           minPrice: args.precioMin,
           maxPrice: args.precioMax,

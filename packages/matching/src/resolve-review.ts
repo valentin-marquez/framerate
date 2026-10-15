@@ -32,6 +32,8 @@ export async function resolveMatchReview(
   if (!review) return { status: "not_found" };
   if (review.status !== "pending") return { status: "already_resolved" };
 
+  // Productos cuyo precio cambia: el candidato y, al aceptar, el que pierde la oferta; al rechazar, el suyo.
+  const touched = [review.candidate_product_id];
   if (input.action === "accept") {
     const listing = await getListingIdentity(db, review.listing_id);
     if (!listing) return { status: "listing_missing" };
@@ -53,11 +55,7 @@ export async function resolveMatchReview(
       await moveIdentifiers(db, listing.productId, review.candidate_product_id, identifiers);
     }
     await attachIdentifiers(db, review.candidate_product_id, identifiers);
-    await refreshProductsPriceSummary(
-      db,
-      [listing.productId, review.candidate_product_id].filter((id) => id !== null),
-      new Date(input.now),
-    );
+    if (listing.productId !== null) touched.push(listing.productId);
   }
 
   if (input.action === "reject") {
@@ -72,5 +70,13 @@ export async function resolveMatchReview(
   await resolveReview(db, review.id, input.action === "accept" ? "accepted" : "rejected", input.now);
   // Una oferta que nació oculta esperando esta revisión ya puede salir (spec §8); rechazar la deja en su producto.
   await publishListing(db, review.listing_id, input.now);
+  // Al final: mientras la revisión estaba pendiente la oferta no contaba en el resumen (#169).
+  const owner = await db.query
+    .selectFrom("listings")
+    .select("product_id")
+    .where("id", "=", review.listing_id)
+    .executeTakeFirst();
+  if (owner?.product_id != null) touched.push(owner.product_id);
+  await refreshProductsPriceSummary(db, new Set(touched), new Date(input.now));
   return { status: "resolved" };
 }

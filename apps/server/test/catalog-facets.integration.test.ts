@@ -4,7 +4,7 @@ import type { Db } from "@framerate/database";
 import { createTestD1 } from "@framerate/database/testing";
 import { createApp } from "@/app";
 import type { Env } from "@/env";
-import { testEnv } from "./helpers";
+import { refreshSummaries, testEnv } from "./helpers";
 
 /** Filtro por especificación, ofertas bajo el precio habitual y facetas; respuestas validadas contra contracts. */
 
@@ -16,6 +16,7 @@ const get = (path: string) => app.request(path, undefined, env);
 const list = async (qs: string) => ProductPageSchema.parse(await (await get(`/v1/products?${qs}`)).json());
 const facets = async (slug: string, qs = "") =>
   FacetListSchema.parse(await (await get(`/v1/categories/${slug}/facets?${qs}`)).json()).items;
+const facet = async (slug: string, key: string, qs = "") => (await facets(slug, qs)).find((f) => f.key === key);
 const rows = (page: { items: { name: string; specMatch?: string }[] }) => page.items.map((p) => [p.name, p.specMatch]);
 
 beforeAll(async () => {
@@ -28,6 +29,7 @@ beforeAll(async () => {
     .values({ slug: "alfa", name: "alfa", url: "https://alfa.cl", domain: "alfa.cl", created_at: at })
     .returning("id")
     .executeTakeFirstOrThrow();
+  const references: [string, number | null][] = [];
   const seed = async (
     name: string,
     category: string,
@@ -36,6 +38,7 @@ beforeAll(async () => {
     reference: number | null,
     inStock: 0 | 1 = 1,
   ) => {
+    references.push([name.toLowerCase().replace(/\W+/g, "-"), reference]);
     const { id } = await db.query
       .insertInto("products")
       .values({
@@ -50,7 +53,7 @@ beforeAll(async () => {
       })
       .returning("id")
       .executeTakeFirstOrThrow();
-    await db.query
+    const { id: listing } = await db.query
       .insertInto("listings")
       .values({
         store_id: store,
@@ -66,18 +69,50 @@ beforeAll(async () => {
         last_seen_at: at,
         updated_at: at,
       })
-      .execute();
+      .returning("id")
+      .executeTakeFirstOrThrow();
+    return listing;
   };
+  const identity = (listing: number, version: number, specs: object, source: object) =>
+    db.query
+      .insertInto("listing_identity")
+      .values({
+        listing_id: listing,
+        version,
+        input_hash: `h${version}`,
+        model: "m",
+        category: "gpu",
+        brand: null,
+        name: "n",
+        mpn: null,
+        confidence: "high",
+        identity: "{}",
+        identity_raw: "{}",
+        specs: JSON.stringify(specs),
+        specs_source: JSON.stringify(source),
+        created_at: at,
+      })
+      .execute();
   // Atributos como JSON crudo: así entran booleanos y reales (16.0) tal como los guardaría ingest.
   await seed("Placa A", "motherboard", '{"wifi":true,"memory":"ddr5","formFactor":"atx"}', 100_000, 110_000);
   await seed("Placa B", "motherboard", '{"wifi":false,"memory":"ddr5"}', 90_000, 92_000);
   await seed("Placa C", "motherboard", '{"wifi":true}', 80_000, 100_000);
   await seed("Placa D", "motherboard", '{"wifi":true,"memory":"ddr4"}', 70_000, null);
   await seed("Placa E", "motherboard", '{"wifi":true,"memory":"ddr5"}', 60_000, 90_000, 0);
-  await seed("GPU 12", "gpu", '{"chipset":"rtx 5070","vram":12}', 600_000, null);
-  await seed("GPU 16", "gpu", '{"chipset":"rtx 5070 ti","vram":16.0}', 800_000, null);
-  await seed("GPU 8", "gpu", '{"chipset":"rtx 5060","vram":8}', 300_000, null);
+  const gpu12 = await seed("GPU 12", "gpu", '{"chipset":"rtx 5070","vram":12}', 600_000, null);
+  const gpu16 = await seed("GPU 16", "gpu", '{"chipset":"rtx 5070 ti","vram":16.0}', 800_000, null);
+  const gpu8 = await seed("GPU 8", "gpu", '{"chipset":"rx 9060 xt","vram":8}', 300_000, null);
   await seed("GPU sin vram", "gpu", '{"chipset":"rtx 5070"}', 650_000, null);
+  // Specs por oferta: se escribe distinto entre tiendas, `knowledge` no filtra y manda la última versión.
+  await identity(gpu12, 1, { memory_type: "GDDR6" }, { memory_type: "text" });
+  await identity(gpu12, 2, { memory_type: "gddr 7" }, { memory_type: "text" });
+  await identity(gpu16, 1, { memory_type: "GDDR7" }, { memory_type: "text" });
+  await identity(gpu8, 1, { memory_type: "GDDR6" }, { memory_type: "knowledge" });
+  await refreshSummaries(db);
+  // El recálculo saca el precio habitual del historial diario, que aquí no existe: se vuelve a fijar el sembrado.
+  for (const [slug, reference] of references) {
+    await db.query.updateTable("products").set({ reference_price: reference }).where("slug", "=", slug).execute();
+  }
 });
 afterAll(() => dispose());
 
@@ -164,7 +199,17 @@ describe("ofertas", () => {
 
 describe("facetas", () => {
   test("conteos sólo con stock, con unknownCount y etiquetas", async () => {
-    expect(await facets("placas-madre")).toEqual([
+    const items = await facets("placas-madre");
+    expect(items.map((f) => f.key)).toEqual([
+      "socket",
+      "chipset",
+      "formFactor",
+      "memory",
+      "wifi",
+      "m2_slots",
+      "memory_slots",
+    ]);
+    expect(items.slice(1, 5)).toEqual([
       { key: "chipset", label: "Chipset", values: [], unknownCount: 4 },
       { key: "formFactor", label: "Formato", values: [{ value: "atx", label: "ATX", count: 1 }], unknownCount: 3 },
       {
@@ -189,7 +234,8 @@ describe("facetas", () => {
   });
 
   test("cada faceta ignora su propio filtro y aplica los demás", async () => {
-    const [, , memory, wifi] = await facets("placas-madre", "spec=memory:ddr5&spec=wifi:true");
+    const qs = "spec=memory:ddr5&spec=wifi:true";
+    const [memory, wifi] = [await facet("placas-madre", "memory", qs), await facet("placas-madre", "wifi", qs)];
     // memory: sólo wifi:true (A, C, D); wifi: memory ddr5 o desconocida (A, B, C).
     expect(memory).toMatchObject({
       values: [
@@ -208,7 +254,7 @@ describe("facetas", () => {
   });
 
   test("valores con unidad en orden numérico, con deals y 400 por clave ajena", async () => {
-    const [vram] = await facets("tarjetas-de-video");
+    const vram = await facet("tarjetas-de-video", "vram");
     expect(vram).toEqual({
       key: "vram",
       label: "Memoria",
@@ -219,8 +265,31 @@ describe("facetas", () => {
       ],
       unknownCount: 1,
     });
-    const [, , memory] = await facets("placas-madre", "deals=1");
+    const memory = await facet("placas-madre", "memory", "deals=1");
     expect(memory).toMatchObject({ values: [{ value: "ddr5", count: 1 }], unknownCount: 1 });
     expect((await get("/v1/categories/placas-madre/facets?spec=vram:12")).status).toBe(400);
+  });
+
+  test("specs de las ofertas: sólo origen text, última versión, texto normalizado", async () => {
+    expect(await facet("tarjetas-de-video", "memory_type")).toEqual({
+      key: "memory_type",
+      label: "Tipo de memoria",
+      values: [{ value: "GDDR7", label: "GDDR7", count: 2 }],
+      unknownCount: 2,
+    });
+    expect(rows(await list("category=gpu&spec=memory_type:GDDR7&sort=price_asc"))).toEqual([
+      ["GPU 12", "match"],
+      ["GPU 16", "match"],
+      ["GPU 8", "unknown"],
+      ["GPU sin vram", "unknown"],
+    ]);
+  });
+
+  test("fabricante del chip derivado del chipset", async () => {
+    expect((await facet("tarjetas-de-video", "chipMaker"))?.values).toEqual([
+      { value: "nvidia", label: "NVIDIA", count: 3 },
+      { value: "amd", label: "AMD", count: 1 },
+    ]);
+    expect(rows(await list("category=gpu&spec=chipMaker:amd"))).toEqual([["GPU 8", "match"]]);
   });
 });

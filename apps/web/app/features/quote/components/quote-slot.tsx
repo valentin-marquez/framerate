@@ -4,6 +4,7 @@ import {
   isAdditiveSlot,
   type Offer,
   QUOTE_SLOT_LABELS,
+  type QuoteCompatibility,
   type QuoteItem as QuoteItemData,
   type QuoteSlot as QuoteSlotId,
   SLOT_BY_CATEGORY,
@@ -16,6 +17,7 @@ import { Button, buttonVariants } from "~/shared/components/primitives/button";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { formatCLP } from "~/shared/utils/format";
 import { SLOT_SHORT_LABELS } from "~/shared/utils/slots";
+import { issuesOf, statusOf } from "./quote-compatibility";
 
 interface QuoteSlotProps {
   slot: QuoteSlotId;
@@ -23,6 +25,7 @@ interface QuoteSlotProps {
   /** Todos los ítems del slot, también las alternativas no seleccionadas. */
   items: QuoteItemData[];
   isOwner: boolean;
+  compatibility?: QuoteCompatibility;
   onChangeQuantity: (item: QuoteItemData, quantity: number) => void;
   onRemove: (item: QuoteItemData) => void;
   onSelect: (item: QuoteItemData) => void;
@@ -40,6 +43,7 @@ export function QuoteSlot({
   quote,
   items,
   isOwner,
+  compatibility,
   onChangeQuantity,
   onRemove,
   onSelect,
@@ -85,6 +89,8 @@ export function QuoteSlot({
             key={item.id}
             item={item}
             isOwner={isOwner}
+            status={statusOf(compatibility, item.id)}
+            issues={issuesOf(compatibility, item.id)}
             onChangeQuantity={onChangeQuantity}
             onRemove={onRemove}
             onChooseOffer={onChooseOffer}

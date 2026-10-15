@@ -8,6 +8,7 @@ import {
   nextCrawlAt,
   type ProductSummary,
 } from "@framerate/contracts";
+import type { CatalogData } from "~/features/catalog/load-catalog";
 import type { Profile } from "~/features/profile/services/profiles";
 import type { ClaimableStore } from "~/features/stores/services/stores";
 
@@ -207,3 +208,21 @@ export const freshness: Freshness = {
   updatedAt: new Date(Date.now() - 23 * 60_000).toISOString(),
   nextUpdateAt: nextCrawlAt(new Date()).toISOString(),
 };
+
+/** Datos del loader de `/categoria/tarjetas-de-video`, para historias de la vista y del riel. */
+export const catalogData = (overrides: Partial<CatalogData> = {}): CatalogData =>
+  ({
+    products: rowProducts,
+    meta: { page: 2, limit: 24, total: 180, totalPages: 8 },
+    brands,
+    priceRange: { min: 279_990, max: 939_990 },
+    facets: gpuFacets,
+    trendingIds: [rowProducts[0].id],
+    rateLimited: false,
+    category: "tarjetas-de-video",
+    search: null,
+    brand: [],
+    spec: [],
+    defaultSort: "price_asc",
+    ...overrides,
+  }) as CatalogData;

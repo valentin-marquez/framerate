@@ -23,6 +23,9 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
 - **`apps/relay`**: la única pieza fuera de Cloudflare: un `Bun.serve` en Docker en el servidor del dueño (Coolify,
   `relay.nozz.skin`) que descarga páginas de las tiendas que cortan las IPs de Cloudflare (`egress: "relay"` en el
   registro de tiendas) y las devuelve tal cual a ingest. Token, lista de dominios, sin lógica de productos (#154).
+- **`apps/studio`** (Framerate Studio): explorador local de la D1 al estilo Drizzle Studio y Supabase (Kumo + Kysely), contra producción (API REST
+  de D1 con el login de wrangler) o la D1 local. No se despliega; escribe sin restricciones, así que el respaldo es
+  Time Travel de D1. Ver `docs/specs/2026-10-10-d1-studio.md`.
 - **`packages/contracts`**: esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.
 - **`packages/database`**: dueño del esquema: migraciones SQL, tipos Kysely, cliente D1 y utilidades de test
   (`@framerate/database/testing`).
@@ -52,6 +55,7 @@ bun run dev:ingest            # scraping (Cron/Queue/RPC)
 bun run dev:match             # verificación del Gatekeeper (Cron/Queue/Workers AI, remoto)
 bun run dev:normalize         # normalización con Haiku (Queue; necesita apps/normalize/.dev.vars con ANTHROPIC_API_KEY)
 bun run dev:web               # frontend
+bun run studio                # explorador de la D1 en 127.0.0.1:4983 (prod con tu login de wrangler, o local)
 bun run test                  # check-types + tests de todo el monorepo (red de seguridad antes de desplegar)
 bun test path/to/file.test.ts # un archivo (dentro de la app)
 bun run biome                 # lint + formato con escritura

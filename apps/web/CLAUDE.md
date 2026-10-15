@@ -50,7 +50,12 @@ ven en Storybook, Fundamentos/Movimiento.
 - Sistema de diseño en `.github/instructions/web.instructions.md` y en Storybook (`apps/web`): tipografía Satoshi,
   paleta neutra estilo Luma, superficies en capas (`bg-background` / `bg-card` / `bg-secondary`), radios squircle
   (`rounded-md` inputs, `rounded-xl`/`rounded-2xl` tarjetas, `rounded-3xl` modales).
+- **Texto con estilos con nombre** (escala de AlignUI, tokens de `@theme` en `app.css`): `text-title-h1` a `h6`, `text-label-xl` a `xs`, `text-paragraph-xl` a `xs`, `text-subheading-md` a `2xs` (la escala no fija mayúsculas; su interletrado de 4 a 6% pide `uppercase`) y `text-doc-label`/`text-doc-paragraph`. Una clase lleva tamaño, alto de línea, interletrado y peso: no sumarle `font-*` ni `tracking-*`. Un estilo nuevo se agrega en `app.css` **y** en `TEXT_STYLES` (`shared/lib/cn.config.ts`), si no `cn` lo toma por color y descarta uno de los dos. Se ve en Storybook, Fundamentos/Tokens, Tipografía. Los `text-3xl` a `text-5xl` con `font-semibold tracking-tight` siguen pendientes de migrar (#167).
 - **URLs públicas en español** (`/tiendas/:slug`, `/reclamar`, `/buscar`, `/categoria/:slug`, `/producto/:slug`,
   `/cotizacion/:slug`). Al renombrar una ruta, la versión vieja queda como redirect 301
   (`apps/web/app/features/stores/pages/redirect-old-*.tsx`). APIs, tablas y código, en inglés.
-- El estado de los filtros vive en los search params de la URL.
+- El estado de los filtros vive en los search params de la URL. En `/categoria/:slug` los filtros están en el **riel**:
+  el navbar lee los datos del loader de esa ruta (`useMatches`) y su zona de categorías muta a `RailFilters`
+  (`features/catalog`); `F` alterna con la lista y en teléfono es una hoja (`FiltersButton`). Marca y las facetas
+  admiten varios valores (`brand` y `spec` repetibles, "o" dentro del mismo filtro). Un filtro nuevo es una faceta en
+  `contracts` (`CATEGORY_FACETS`): el panel la dibuja solo.
