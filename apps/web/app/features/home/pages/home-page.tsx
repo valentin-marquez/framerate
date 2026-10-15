@@ -68,6 +68,8 @@ function generateJsonLd() {
 
 // Mínimo de productos para que una fila/carrusel valga la pena mostrarse.
 const MIN_ROW_PRODUCTS = 4;
+// Cada tarjeta son ~35 nodos y la home tiene una docena de filas: más tarjetas engordan el HTML y la hidratación.
+const ROW_LIMIT = 8;
 
 export async function loader() {
   let categories: Awaited<ReturnType<typeof categoriesService.getAll>> = [];
@@ -88,14 +90,14 @@ export async function loader() {
   ];
 
   const fetches = [
-    productsService.getAll({ sort: "popularity", limit: 15 }),
-    ...rowCategories.map((c) => productsService.getAll({ category: c.slug, sort: "popularity", limit: 12 })),
+    productsService.getAll({ sort: "popularity", limit: ROW_LIMIT }),
+    ...rowCategories.map((c) => productsService.getAll({ category: c.slug, sort: "popularity", limit: ROW_LIMIT })),
   ];
 
   // allSettled aísla fallos/rate-limit: una fila que falla simplemente no se renderiza.
   const [settled, drops, trending, stores] = await Promise.all([
     Promise.allSettled(fetches),
-    productsService.getDrops(12).catch((error) => {
+    productsService.getDrops(ROW_LIMIT).catch((error) => {
       if (!isRateLimitError(error)) console.error("Failed to fetch home drops", error);
       return [];
     }),

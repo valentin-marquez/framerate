@@ -12,7 +12,7 @@ interface ProductRowProps {
   /** Texto del enlace a la lista completa. */
   more?: string;
   products: ProductSummary[];
-  /** Primera fila visible: carga sus imágenes con prioridad (LCP) y entra en cascada al cargar la página. */
+  /** Fila en el primer pliegue: su primera foto carga con prioridad (LCP) y entra en cascada al cargar la página. */
   priority?: boolean;
   /** Ids en tendencia para el badge. La fila "Lo más popular" no lo pasa
    *  (ahí todo sería tendencia → ruido). */
@@ -35,7 +35,8 @@ export function ProductRow({
   if (products.length === 0) return null;
 
   return (
-    <section className="space-y-3">
+    // Las filas bajo el pliegue no pagan estilo, layout ni pintura hasta acercarse a la pantalla.
+    <section className={cn("space-y-3", !priority && "[contain-intrinsic-size:auto_245px] [content-visibility:auto]")}>
       <div className="flex items-end justify-between gap-4">
         <Link to={href} prefetch="intent" className="group inline-flex items-baseline gap-2 min-w-0">
           <h2 className="text-lg md:text-xl font-semibold tracking-tight text-foreground truncate group-hover:text-primary transition-colors">
@@ -63,7 +64,7 @@ export function ProductRow({
                 >
                   <ProductCard
                     product={product}
-                    priority={priority && index < 6}
+                    priority={priority && index === 0}
                     trending={trendingIds?.has(product.id)}
                     className="h-full"
                   />
