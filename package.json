@@ -30,6 +30,7 @@
     "dev:web": "turbo run dev --filter=web",
     "studio": "bun run --cwd apps/studio dev",
     "lint": "turbo run biome:lint",
+    "perf:telefonos": "bun scripts/perf-telefonos.ts",
     "prepare": "simple-git-hooks || true",
     "test": "turbo run test"
   },
