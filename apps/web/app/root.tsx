@@ -1,4 +1,3 @@
-import "~/shared/styles/app.css";
 import type { AuthProviders, Freshness } from "@framerate/contracts";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -38,6 +37,7 @@ import { cn } from "~/shared/lib/utils";
 import { getClientEnv } from "~/shared/services/env.server";
 import { getCookieLang, resolveLang, setLangCookie } from "~/shared/services/lang.server";
 import { getTheme } from "~/shared/services/theme.server";
+import appCssUrl from "~/shared/styles/app.css?url";
 import satoshiUrl from "~/shared/styles/fonts/Satoshi-Variable.woff2?url";
 import type { Route } from "./+types/root";
 
@@ -168,6 +168,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="color-scheme" content="light dark" />
         {canonical && <link rel="canonical" href={canonical} />}
         <Meta />
+        {/* Con precedence React la emite antes que los modulepreload de los scripts; como <link> común quedaba al final
+            del <head>, detrás de 63 scripts que le peleaban el ancho de banda en 4G lento. */}
+        <link rel="stylesheet" href={appCssUrl} precedence="default" />
 
         <script
           nonce={nonce}
