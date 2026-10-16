@@ -9,7 +9,7 @@ const SORT_OPTIONS = [
   { value: "price_desc", label: "Precio: mayor a menor" },
   { value: "popularity", label: "Más populares" },
   { value: "name", label: "Nombre" },
-  { value: "discount", label: "Mayor baja" },
+  { value: "discount", label: "Mayor descuento" },
 ] as const;
 
 const select =
