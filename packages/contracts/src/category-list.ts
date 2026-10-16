@@ -25,12 +25,15 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   motherboard: "Placas madre",
   ram: "Memoria RAM",
   psu: "Fuentes de poder",
-  ssd: "Discos SSD",
-  hdd: "Discos duros",
+  ssd: "Unidades de estado sólido (SSD)",
+  hdd: "Discos duros (HDD)",
   cpu_cooler: "Refrigeración CPU",
   case: "Gabinetes",
   case_fan: "Ventiladores",
 };
+
+/** Nombre para listas angostas (riel lateral): donde el visible no cabe, uno corto. */
+export const CATEGORY_NAV_LABELS: Record<Category, string> = { ...CATEGORY_LABELS, ssd: "Unidades SSD" };
 
 /**
  * Slug público en español para URLs (`/categoria/:slug`). Son los mismos que la

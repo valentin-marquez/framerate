@@ -1,7 +1,6 @@
-import { categoryFromSlug } from "@framerate/contracts";
+import { CATEGORY_NAV_LABELS, categoryFromSlug } from "@framerate/contracts";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { CategoryIcon } from "~/features/category/components/category-icon";
-import { categoryLabel } from "~/features/category/utils/categories";
 import { Button } from "~/shared/components/primitives/button";
 import type { CatalogData } from "../load-catalog";
 import { useFilterParams } from "../use-filter-params";
@@ -25,7 +24,7 @@ export function RailFilters({ data, onBack }: { data: CatalogData; onBack: () =>
       </button>
       <div className="flex shrink-0 items-center gap-2 px-2.5 pt-2 pb-1">
         {id && <CategoryIcon category={id} className="size-5" />}
-        <h2 className="truncate text-label-sm">{data.category ? categoryLabel(data.category) : ""}</h2>
+        <h2 className="truncate text-label-sm">{id ? CATEGORY_NAV_LABELS[id] : ""}</h2>
         <span className="ml-auto shrink-0 text-muted-foreground text-paragraph-xs tabular-nums">
           {data.meta.total.toLocaleString("es-CL")}
         </span>

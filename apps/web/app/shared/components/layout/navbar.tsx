@@ -1,4 +1,4 @@
-import type { CategoryItem, Freshness } from "@framerate/contracts";
+import { CATEGORY_NAV_LABELS, type CategoryItem, type Freshness } from "@framerate/contracts";
 import {
   IconCategory,
   IconChevronLeft,
@@ -360,7 +360,7 @@ export function Navbar({
                   <RailLink
                     key={c.id}
                     to={`/categoria/${c.slug}`}
-                    label={c.label}
+                    label={CATEGORY_NAV_LABELS[c.id]}
                     count={c.productCount}
                     badge={open ? activeFilters : undefined}
                     collapsed={!wide}
@@ -444,7 +444,7 @@ export function Navbar({
             <RailLink
               key={c.id}
               to={`/categoria/${c.slug}`}
-              label={c.label}
+              label={CATEGORY_NAV_LABELS[c.id]}
               count={c.productCount}
               large
               onClick={() => setSheetOpen(false)}
