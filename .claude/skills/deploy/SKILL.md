@@ -38,6 +38,9 @@ Dejar en producción lo commiteado, sin romper a ninguno de los dos Workers que 
       push a `main` (webhook de Forgejo). Si cambió `apps/relay`, mirar en Coolify que el deploy terminó y
       `curl https://relay.nozz.skin/health`. Su token es `RELAY_TOKEN` en Coolify y el mismo valor como secreto en
       ingest.
+   8. `apps/resizer` (#170) tampoco: es la app `framerate-resizer` de Coolify, **sin webhook**. Si cambió, apretar Deploy
+      en Coolify y probar `curl https://resizer.nozz.skin/health`. Su token es `RESIZER_TOKEN` en Coolify y como secreto
+      en ingest (`~/.config/framerate/resizer-token`).
 5. Verificar: `bunx wrangler tail framerate-ingest` (o `framerate-server`) y, si cambió el scraping, pedir un crawl
    con `POST /v1/admin/crawls` y revisar `GET /v1/admin/crawls` y la cuarentena. Para una revisión más a fondo,
    usar la skill `prod-health`.
