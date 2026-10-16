@@ -8,8 +8,8 @@ export function StoresStrip({ stores }: { stores: HomeData["stores"] }) {
   return (
     <section className="space-y-3">
       <h2 className="font-semibold text-foreground text-lg tracking-tight md:text-xl">Tiendas que comparamos</h2>
-      {/* En teléfono, dos filas con scroll horizontal que llegan al borde; desde md, la lista que envuelve. */}
-      <ul className="-mx-4 grid auto-cols-max grid-flow-col grid-rows-2 gap-2.5 overflow-x-auto overscroll-x-contain px-4 scrollbar-hide md:mx-0 md:flex md:flex-wrap md:gap-3 md:overflow-visible md:px-0">
+      {/* En teléfono, tres filas con scroll horizontal que llegan al borde; desde md, la lista que envuelve. */}
+      <ul className="-mx-4 grid auto-cols-max grid-flow-col grid-rows-3 gap-2.5 overflow-x-auto overscroll-x-contain px-4 scrollbar-hide md:mx-0 md:flex md:flex-wrap md:gap-3 md:overflow-visible md:px-0">
         {stores.map((store) => (
           <li key={store.id}>
             <Link
