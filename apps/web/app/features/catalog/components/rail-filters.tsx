@@ -16,11 +16,11 @@ export function RailFilters({ data, onBack }: { data: CatalogData; onBack: () =>
       <button
         type="button"
         onClick={onBack}
-        className="flex h-9 shrink-0 items-center gap-2 rounded-xl px-2.5 text-muted-foreground text-paragraph-sm transition-colors hover:bg-secondary/60 hover:text-foreground"
+        className="group flex h-10 shrink-0 items-center gap-2 rounded-xl border border-border bg-secondary px-3 text-foreground text-label-sm transition-colors hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <IconArrowLeft className="size-4" />
-        Categorías
-        <kbd className="ml-auto rounded-md border border-border px-1.5 text-[11px]">F</kbd>
+        <IconArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
+        Todas las categorías
+        <kbd className="ml-auto rounded-md border border-border px-1.5 text-[11px] text-muted-foreground">F</kbd>
       </button>
       <div className="flex shrink-0 items-center gap-2 px-2.5 pt-2 pb-1">
         {id && <CategoryIcon category={id} className="size-5" />}
