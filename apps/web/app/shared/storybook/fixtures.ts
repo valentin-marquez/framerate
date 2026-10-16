@@ -126,6 +126,44 @@ export const stores: ClaimableStore[] = [
   { id: "dust2", slug: "dust2", name: "Dust2", icon_url: null, domain: "dust2.cl", is_claimed: true },
 ];
 
+/** Las 24 tiendas con más ofertas (16-10-2026), con su icono del CDN: el mosaico de la home las ordena por catálogo. */
+export const homeStores: ClaimableStore[] = (
+  [
+    ["infor-ingen", "Infor-Ingen", "f7e9e6904f", 1243],
+    ["dust2", "Dust2", "403e0995ba", 1012],
+    ["tekmachine", "Tekmachine", "1c0a913bd6", 811],
+    ["myshop", "MyShop", "91cb99befc", 670],
+    ["centrale", "Centrale", "10ad97b4d4", 548],
+    ["pc-express", "PC Express", "8678d370ce", 497],
+    ["notebookstore", "Notebook Store", "a8b6372dbf", 418],
+    ["winpy", "Winpy", "2382160df8", 407],
+    ["todoclick", "Todoclick", "ed77422ae4", 395],
+    ["tecnomas", "Tecnomas", "08e88b949e", 391],
+    ["pcfactory", "PC Factory", "92bb7fcd38", 309],
+    ["alltec", "AllTec", "520695174c", 305],
+    ["sandos", "Sandos", "88f1a78f7d", 239],
+    ["wei", "Wei", "b2f05faa42", 192],
+    ["eylstore", "Eylstore", "c72e7413d2", 184],
+    ["progaming", "Progaming", "de453ea2c9", 171],
+    ["mybox", "MyBox", "a7a37e8dc0", 157],
+    ["spdigital", "SP Digital", "993b24d51e", 155],
+    ["notebooksya", "Notebooksya", "6c8ab15ffb", 150],
+    ["cclink", "CCLink", "763945e347", 125],
+    ["etchile", "ETChile", "923e7f6b22", 121],
+    ["sipo", "SIPO Online", "f79270f308", 118],
+    ["playfactory", "Play Factory", "b227821dda", 107],
+    ["nuevatec", "Nuevatec", "f3ef837699", 103],
+  ] as const
+).map(([slug, name, hash, offer_count]) => ({
+  id: slug,
+  slug,
+  name,
+  icon_url: `https://cdn.framerate.cl/stores/${slug}/icon-${hash}.webp`,
+  domain: null,
+  is_claimed: false,
+  offer_count,
+}));
+
 /** Ocho productos con id distinto, para filas y grillas que usan el id como clave. */
 export const rowProducts = [...products, ...products.map((p) => ({ ...p, id: p.id + 100, slug: `${p.slug}-b` }))];
 

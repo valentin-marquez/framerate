@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { dropProducts, rowProducts, stores } from "~/shared/storybook/fixtures";
+import { dropProducts, homeStores, rowProducts } from "~/shared/storybook/fixtures";
 import { StoresStrip } from "./home-blocks";
 import { HomeIntro } from "./home-intro";
 import { ProductRow } from "./product-row";
@@ -33,4 +33,20 @@ export const BajasDePrecio: Story = {
   ),
 };
 
-export const Tiendas: Story = { render: () => <StoresStrip stores={stores} /> };
+/**
+ * En teléfono, dos filas que avanzan solas hacia la izquierda, sin fin: arriba las 12 tiendas con más ofertas, con
+ * nombre y cifra, más lenta para que se alcance a leer; abajo el resto, sólo el ícono y más rápido. Se detienen al
+ * tocarlas o con foco; con movimiento reducido quedan quietas y se recorren a mano. Sólo animan `transform`, así que no
+ * ocupan el hilo principal. Se eligió entre cuatro composiciones (16-10-2026) por mostrar la cifra de cada tienda grande.
+ */
+export const TiendasTelefono: Story = {
+  name: "Tiendas (teléfono)",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <StoresStrip stores={homeStores} />,
+};
+
+/** Desde tablet, la lista que envuelve, en el orden de la API. */
+export const Tiendas: Story = {
+  name: "Tiendas (escritorio)",
+  render: () => <StoresStrip stores={homeStores} />,
+};

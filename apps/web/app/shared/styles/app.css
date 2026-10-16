@@ -993,6 +993,21 @@
   }
 }
 
+/* Tiendas de la home en teléfono: dos copias iguales seguidas; al llegar a la mitad el bucle vuelve sin salto. */
+.stores-marquee {
+  animation: stores-marquee var(--marquee-duration, 60s) linear infinite;
+}
+@keyframes stores-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stores-marquee {
+    animation: none;
+  }
+}
+
 @utility scrollbar-hide {
   scrollbar-width: none;
   &::-webkit-scrollbar {
