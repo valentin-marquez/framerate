@@ -49,7 +49,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
   const inStock = offers.filter((o) => o.inStock);
   const outOfStock = offers.filter((o) => !o.inStock);
   const best = offers[0];
-  const specs = withoutRepeats([...specRows(product.attributes), ...specLines(product.specs)]);
+  const specs = withoutRepeats([...specRows(product.attributes, product.category), ...specLines(product.specs)]);
   const fromKnowledge = specs.some((s) => s.knowledge);
   const summary = summarizeHistory(history, offers, period.days, now);
 
@@ -445,9 +445,10 @@ const UPPER = new Set(["chipset", "type", "interface", "formFactor", "socket"]);
 
 /** Los atributos que el matching saca del título, como filas legibles. El resto (línea, OC...) sólo le sirve al
  * matching. */
-function specRows(attributes: ProductDetail["attributes"]): SpecRow[] {
+function specRows(attributes: ProductDetail["attributes"], category: ProductDetail["category"]): SpecRow[] {
   return Object.entries(attributes).flatMap(([key, value]): SpecRow[] => {
-    const label = SPEC_LABELS[key];
+    // En una tarjeta de video el chipset es el modelo (RX 7600); así también se llama su filtro.
+    const label = key === "chipset" && category === "gpu" ? "Modelo" : SPEC_LABELS[key];
     if (!label || typeof value === "boolean") return [];
     const row = (text: string) => [{ label, value: text, knowledge: false }];
     if (typeof value === "number") return row(`${value}${UNITS[key] ?? ""}`);
