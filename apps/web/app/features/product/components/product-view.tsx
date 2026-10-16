@@ -426,7 +426,7 @@ const shortDate = (iso: string) =>
   new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString("es-CL", { day: "numeric", month: "long" });
 
 const SPEC_LABELS: Record<string, string> = {
-  chipset: "Chip",
+  chipset: "Chipset",
   vram: "Memoria",
   capacity: "Capacidad",
   type: "Tipo",
