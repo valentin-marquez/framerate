@@ -49,7 +49,7 @@ flowchart TB
     cron(("Cron Trigger<br/>17 */6 * * *"))
     crawlQ[["Queue<br/>framerate-crawl<br/>(DLQ framerate-crawl-dlq)"]]
     ingest["<b>framerate-ingest</b><br/>Worker sin HTTP público<br/>adaptadores, normalizar, matching<br/>RPC IngestRpc"]
-    images["Images<br/>IMAGES"]
+    resizer["resizer.nozz.skin<br/>sharp en el servidor propio"]
 
     d1[("D1 framerate<br/>SQLite: usuarios, catálogo,<br/>ofertas, precios, revisiones")]
     snap[("R2 framerate-snapshots<br/>respuestas crudas de tiendas")]
@@ -77,7 +77,8 @@ flowchart TB
   ingest -- "fetch" --> stores
   ingest -- "escribe catálogo" --> d1
   ingest --> snap
-  ingest -- "achica fotos" --> images --> assets
+  ingest -- "achica fotos" --> resizer
+  ingest -- "800 y 400 px" --> assets
   ingest --> emailSend
   user -. "imágenes" .-> assets
 
@@ -310,6 +311,13 @@ aparece el dato: el relay la abre en una pestaña de un Chromium que mantiene vi
 vez, imágenes, fuentes y rastreadores bloqueados, ~2 a 4 s por página) y devuelve el HTML ya ejecutado. El navegador no puede tocar la red de la
 casa (un PAC manda toda dirección privada a un proxy muerto) y, sin relay, `render` falla en vez de traer el HTML crudo.
 
+Las fotos de producto las achica `apps/resizer` (#170), otro `Bun.serve` en Docker en el mismo servidor
+(`resizer.nozz.skin`): `POST /resize?w=400|800` con la foto en el cuerpo y token, devuelve WebP; no toca R2 ni sabe de
+productos. El Cron de ingest descarga la foto de la tienda, pide las dos y guarda `products/<hash>.webp` (ficha) y
+`products/<hash>-w400.webp` (tarjetas y cotizaciones; la web la deriva con `imageVariant` de `@framerate/kit`).
+`image_key` se marca sólo con las dos guardadas. Si el resizer no responde, la corrida se corta sin marcar nada y la
+API sigue sirviendo la URL de la tienda. El mismo Cron agrega la de 400 a las copias que no la tengan (`addSmallVariants`).
+
 ## 7. Operación
 
 ```bash
@@ -321,8 +329,8 @@ bunx wrangler d1 create framerate          # pegar database_id en los 3 wrangler
                                            #   packages/database, apps/server, apps/ingest
 bunx wrangler r2 bucket create framerate-snapshots
 bunx wrangler r2 bucket lifecycle add framerate-snapshots snapshots-14d snapshots/ --expire-days 14
-# Fotos de producto: el Cron de ingest las achica una vez (binding de Images, WebP de 800 px) y cdn.framerate.cl
-# las sirve tal cual. No hace falta activar las transformaciones por URL en la zona.
+# Fotos de producto: el Cron de ingest las achica una vez con apps/resizer (WebP de 800 y 400 px) y cdn.framerate.cl
+# las sirve tal cual. No se usan las transformaciones de Cloudflare.
 bunx wrangler r2 bucket create framerate-assets --location enam
 bunx wrangler r2 bucket domain add framerate-assets --domain cdn.framerate.cl --zone-id <zone id de framerate.cl>
 bunx wrangler queues create framerate-crawl
@@ -361,7 +369,6 @@ Observabilidad: logs JSON estructurados (Workers Logs) con `feature`, `store`,
 | D1: 50M filas escritas y 25 mil millones leídas incluidas | 0 |
 | Queues: 1M operaciones incluidas (≈ 280 mensajes/día) | 0 |
 | R2: 10 GB incluidos (snapshots gzip, retención 14 días; fotos de producto ≈ 1 GB) | 0 |
-| Images (plan Free): 5.000 transformaciones únicas al mes; cada foto se procesa una sola vez, al copiarla | 0 |
 | **Total** | **≈ 5** |
 
 Pendientes que pueden sumar: Browser Rendering para tiendas que requieren

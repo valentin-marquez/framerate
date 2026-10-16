@@ -1,4 +1,5 @@
 import { type CompatCheck, type Offer, QUOTE_SLOT_LABELS, type QuoteItem as QuoteItemData } from "@framerate/contracts";
+import { imageVariant } from "@framerate/kit";
 import { IconAlertTriangle, IconExternalLink, IconMinus, IconPlus, IconTrash } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { OutboundLink } from "~/shared/components/outbound-link";
@@ -40,7 +41,7 @@ export function QuoteItem({
         <div className="size-14 shrink-0 rounded-lg bg-card p-1 border border-border/40 overflow-hidden flex items-center justify-center">
           {product.imageUrl ? (
             <AsyncImage
-              src={product.imageUrl}
+              src={imageVariant(product.imageUrl, 400)}
               alt={product.name}
               className={cn("size-full object-contain", !offer && "opacity-50 grayscale")}
             />

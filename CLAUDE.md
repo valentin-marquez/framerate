@@ -20,9 +20,11 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
   identidad anclada al texto, specs y nombre canónico en `listing_identity`, gasto en `ai_usage`. Su salida va a la
   cola `framerate-link`, que consume `apps/match`. Diseño y fases: `docs/specs/2026-10-08-preprocesador-ia.md` (#153).
 - **`apps/web`**: React Router v7 (SSR) en Workers. Sólo habla con la API (`/v1/*`), nunca con la base.
-- **`apps/relay`**: la única pieza fuera de Cloudflare: un `Bun.serve` en Docker en el servidor del dueño (Coolify,
+- **`apps/relay`**: un `Bun.serve` en Docker en el servidor del dueño (Coolify,
   `relay.nozz.skin`) que descarga páginas de las tiendas que cortan las IPs de Cloudflare (`egress: "relay"` en el
   registro de tiendas) y las devuelve tal cual a ingest. Token, lista de dominios, sin lógica de productos (#154).
+- **`apps/resizer`**: el otro servicio fuera de Cloudflare, en el mismo servidor (`resizer.nozz.skin`): achica con
+  `sharp` las fotos que ingest le manda (WebP de 800 y 400 px) y ingest las guarda en R2. Con token, sin estado (#170).
 - **`apps/studio`** (Framerate Studio): explorador local de la D1 al estilo Drizzle Studio y Supabase (Kumo + Kysely), contra producción (API REST
   de D1 con el login de wrangler) o la D1 local. No se despliega; escribe sin restricciones, así que el respaldo es
   Time Travel de D1. Ver `docs/specs/2026-10-10-d1-studio.md`.

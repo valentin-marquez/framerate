@@ -8,8 +8,6 @@ export interface Env {
   SNAPSHOTS: R2Bucket;
   /** Bucket público (cdn.framerate.cl): copia propia de las fotos de producto, bajo `products/`. */
   ASSETS: R2Bucket;
-  /** Achica las fotos de producto una sola vez antes de guardarlas en ASSETS. */
-  IMAGES: ImagesBinding;
   CRAWL_QUEUE: Queue<CrawlMessage>;
   /** Productores del pipeline (#153); los consumen `framerate-normalize` y `framerate-match`. */
   NORMALIZE_QUEUE: Queue<PipelineMessage>;
@@ -24,4 +22,7 @@ export interface Env {
   /** Relay de salida en el servidor propio (#154), para tiendas con `egress: "relay"`. `wrangler secret put RELAY_TOKEN`. */
   RELAY_URL?: string;
   RELAY_TOKEN?: string;
+  /** Achicador de fotos en el servidor propio (#170). `wrangler secret put RESIZER_TOKEN`. Sin él no se copian fotos. */
+  RESIZER_URL?: string;
+  RESIZER_TOKEN?: string;
 }

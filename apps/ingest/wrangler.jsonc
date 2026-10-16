@@ -18,7 +18,9 @@
     // `views_7d` sale de la API SQL de Analytics Engine; el token va aparte: wrangler secret put ANALYTICS_API_TOKEN.
     "CF_ACCOUNT_ID": "3f50a4a123ebcbcb917dababff3ef8b5",
     // Relay de salida (#154) para tiendas con `egress: "relay"`; el token va aparte: wrangler secret put RELAY_TOKEN.
-    "RELAY_URL": "https://relay.nozz.skin"
+    "RELAY_URL": "https://relay.nozz.skin",
+    // Achica las fotos de producto (#170); el token va aparte: wrangler secret put RESIZER_TOKEN.
+    "RESIZER_URL": "https://resizer.nozz.skin"
   },
 
   // Los crawls consumen CPU parseando JSON; subir el límite por invocación.
@@ -32,9 +34,6 @@
       "database_id": "6537cc10-7e7b-4dba-9c01-ce80e6a840eb"
     }
   ],
-
-  // Achica las fotos de producto una vez al copiarlas a ASSETS (cuenta como transformación de Images).
-  "images": { "binding": "IMAGES" },
 
   "r2_buckets": [
     // bunx wrangler r2 bucket create framerate-snapshots

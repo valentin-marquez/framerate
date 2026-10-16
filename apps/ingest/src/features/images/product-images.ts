@@ -1,20 +1,46 @@
 import type { Db } from "@framerate/database";
-import type { Logger } from "@framerate/kit";
+import { imageVariant, type Logger } from "@framerate/kit";
 import { USER_AGENT } from "@/features/ingestion/stores/http";
 
 /** Con Cron cada 6 h, los ~4000 productos que había al estrenar esto se copian en unos 4 días. */
 const BATCH = 250;
 const RETRY_AFTER_MS = 86_400_000;
 const MAX_BYTES = 10 * 1024 * 1024;
-/** Ancho de la copia: el de la foto de la ficha. La tarjeta la muestra más chica. */
+/** La copia base es la de la ficha; la de 400 px, la de tarjetas y listas (cubre pantallas de densidad 2). */
 const WIDTH = 800;
+const SMALL = 400;
+const PUT_OPTIONS = {
+  httpMetadata: { contentType: "image/webp", cacheControl: "public, max-age=31536000, immutable" },
+};
+
+/** Achica una foto a WebP del ancho dado (el resizer del servidor propio, #170). */
+export type Resize = (image: Uint8Array, width: number) => Promise<ArrayBuffer>;
+
+/** El resizer no respondió: la culpa no es de la foto, así que no se marca como fallida y se corta la corrida. */
+export class ResizerDown extends Error {}
+
+export function resizerClient(baseUrl: string, token: string, fetchImpl: typeof fetch = fetch): Resize {
+  return async (image, width) => {
+    const res = await fetchImpl(`${baseUrl.replace(/\/+$/, "")}/resize?w=${width}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/octet-stream" },
+      body: image,
+      signal: AbortSignal.timeout(30_000),
+    }).catch((error) => {
+      throw new ResizerDown(String(error));
+    });
+    // 422: la foto no se pudo leer (culpa de la foto). Lo demás es del resizer.
+    if (res.status === 422) throw new Error(`resizer: ${await res.text()}`);
+    if (!res.ok) throw new ResizerDown(`resizer: HTTP ${res.status}`);
+    return res.arrayBuffer();
+  };
+}
 
 type ImageExtension = "jpg" | "png" | "gif" | "webp";
 
 /**
  * Formato según los primeros bytes. Content-Type no sirve: hay tiendas que sirven PNG como image/jpeg, o HTML con 200.
- * Lo que no es una foto se descarta antes de procesarla (cada proceso cuenta como transformación), y nunca SVG: el
- * bucket se sirve bajo framerate.cl.
+ * Lo que no es una foto se descarta antes de mandarla al resizer, y nunca SVG: el bucket se sirve bajo framerate.cl.
  */
 export function imageExtension(b: Uint8Array): ImageExtension | null {
   const ascii = (from: number, to: number) => String.fromCharCode(...b.subarray(from, to));
@@ -34,14 +60,14 @@ export async function productImageKey(original: Uint8Array): Promise<string> {
 
 /**
  * Copia a R2 la foto de los productos que todavía no tienen copia propia (`image_key`): la achica una sola vez con el
- * binding de Images y guarda ese WebP, que cdn.framerate.cl sirve tal cual. Así cada foto cuenta una vez como
- * transformación, no cada mes que alguien la vea. Corre aparte de los crawls, de a una foto por vez, y lo que falla se
- * reintenta al día siguiente; mientras tanto la API sirve la URL de la tienda.
+ * resizer, a 800 y 400 px, y cdn.framerate.cl sirve esos WebP tal cual. `image_key` se marca sólo con las dos
+ * guardadas, así la web puede pedir la de 400 sin preguntar. Corre aparte de los crawls, de a una foto por vez, y lo
+ * que falla (también el resizer caído) se reintenta al día siguiente; mientras tanto la API sirve la URL de la tienda.
  */
 export async function copyProductImages(
   db: Db,
   bucket: Pick<R2Bucket, "put">,
-  images: Pick<ImagesBinding, "input">,
+  resize: Resize,
   now: string,
   log: Logger,
   fetchImage: typeof fetch = fetch,
@@ -63,9 +89,13 @@ export async function copyProductImages(
   for (const product of pending) {
     let key: string | null = null;
     try {
-      key = await copyImage(bucket, images, product.image_url as string, fetchImage);
+      key = await copyImage(bucket, resize, product.image_url as string, fetchImage);
       stats.copied++;
     } catch (error) {
+      if (error instanceof ResizerDown) {
+        log.error("images.resizer_down", { error });
+        break;
+      }
       stats.failed++;
       log.warn("images.copy_failed", { productId: product.id, url: product.image_url, error });
     }
@@ -80,7 +110,7 @@ export async function copyProductImages(
 
 async function copyImage(
   bucket: Pick<R2Bucket, "put">,
-  images: Pick<ImagesBinding, "input">,
+  resize: Resize,
   url: string,
   fetchImage: typeof fetch,
 ): Promise<string> {
@@ -96,13 +126,44 @@ async function copyImage(
   if (!imageExtension(original)) throw new Error("no es JPEG, PNG, GIF ni WebP");
 
   const key = await productImageKey(original);
-  const webp = await images
-    .input(new Blob([original]).stream())
-    .transform({ width: WIDTH, fit: "scale-down" })
-    .output({ format: "image/webp", quality: 85 });
-  // En bytes: R2 rechaza un stream sin largo conocido.
-  await bucket.put(key, await webp.response().arrayBuffer(), {
-    httpMetadata: { contentType: "image/webp", cacheControl: "public, max-age=31536000, immutable" },
-  });
+  await bucket.put(key, await resize(original, WIDTH), PUT_OPTIONS);
+  await bucket.put(imageVariant(key, SMALL), await resize(original, SMALL), PUT_OPTIONS);
   return key;
+}
+
+/**
+ * Relleno de la variante de 400 px para las copias guardadas antes de #170 (sólo la de 800): lista el bucket, achica
+ * la de 800 de las que no la tienen y la guarda. Sin estado: cuando ya están todas, sólo lista.
+ */
+export async function addSmallVariants(bucket: Pick<R2Bucket, "list" | "get" | "put">, resize: Resize, log: Logger) {
+  const keys = new Set<string>();
+  let cursor: string | undefined;
+  do {
+    const page = await bucket.list({ prefix: "products/", cursor });
+    for (const object of page.objects) keys.add(object.key);
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+
+  const missing = [...keys].filter((key) => imageVariant(key, SMALL) !== key && !keys.has(imageVariant(key, SMALL)));
+  const stats = { added: 0, failed: 0, remaining: Math.max(0, missing.length - BATCH) };
+  for (const key of missing.slice(0, BATCH)) {
+    try {
+      const base = await bucket.get(key);
+      if (!base) continue;
+      await bucket.put(
+        imageVariant(key, SMALL),
+        await resize(new Uint8Array(await base.arrayBuffer()), SMALL),
+        PUT_OPTIONS,
+      );
+      stats.added++;
+    } catch (error) {
+      if (error instanceof ResizerDown) {
+        log.error("images.resizer_down", { error });
+        break;
+      }
+      stats.failed++;
+      log.warn("images.variant_failed", { key, error });
+    }
+  }
+  return stats;
 }

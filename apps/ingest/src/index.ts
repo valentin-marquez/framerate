@@ -12,7 +12,7 @@ import { createDb, refreshProductsPriceSummary } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import type { Env } from "@/env";
 import { recheckClaims } from "@/features/claims/recheck";
-import { copyProductImages } from "@/features/images/product-images";
+import { addSmallVariants, copyProductImages, resizerClient } from "@/features/images/product-images";
 import { deactivateStale, purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
 import {
@@ -60,10 +60,16 @@ export default {
     if (stale.productIds.length > 0) await refreshProductsPriceSummary(createDb(env.DB), stale.productIds, new Date());
     (stale.skipped ? log.warn : log.info)("listings.stale", { deactivated: stale.deactivated, skipped: stale.skipped });
     const imageLog = log.child({ feature: "images" });
-    imageLog.info(
-      "images.copied",
-      await copyProductImages(createDb(env.DB), env.ASSETS, env.IMAGES, new Date().toISOString(), imageLog),
-    );
+    if (env.RESIZER_URL && env.RESIZER_TOKEN) {
+      const resize = resizerClient(env.RESIZER_URL, env.RESIZER_TOKEN);
+      imageLog.info(
+        "images.copied",
+        await copyProductImages(createDb(env.DB), env.ASSETS, resize, new Date().toISOString(), imageLog),
+      );
+      imageLog.info("images.variants", await addSmallVariants(env.ASSETS, resize, imageLog));
+    } else {
+      imageLog.warn("images.skipped", { reason: "sin RESIZER_URL o RESIZER_TOKEN" });
+    }
     if (env.CF_ACCOUNT_ID && env.ANALYTICS_API_TOKEN) {
       const views = await fetchViews7d(env.CF_ACCOUNT_ID, env.ANALYTICS_API_TOKEN);
       log.info("popularity.updated", await applyViews7d(createDb(env.DB), views));

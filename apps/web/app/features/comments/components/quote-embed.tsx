@@ -1,4 +1,5 @@
 import { QUOTE_SLOT_LABELS } from "@framerate/contracts";
+import { imageVariant } from "@framerate/kit";
 import { IconArrowUpRight, IconLayoutList, IconX } from "@tabler/icons-react";
 import { AnimatePresence, domMax, LazyMotion, m, usePresence } from "motion/react";
 import { useEffect, useId, useState } from "react";
@@ -216,7 +217,11 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
               <div key={item.id} className="flex items-center gap-3 py-1.5">
                 <div className="size-9 rounded-md overflow-hidden bg-secondary/40 shrink-0">
                   {item.product.imageUrl ? (
-                    <AsyncImage src={item.product.imageUrl} alt="" className="size-full object-contain" />
+                    <AsyncImage
+                      src={imageVariant(item.product.imageUrl, 400)}
+                      alt=""
+                      className="size-full object-contain"
+                    />
                   ) : null}
                 </div>
                 <div className="flex-1 min-w-0">

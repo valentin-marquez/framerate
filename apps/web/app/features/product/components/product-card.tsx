@@ -1,4 +1,5 @@
 import type { ProductSummary } from "@framerate/contracts";
+import { imageVariant } from "@framerate/kit";
 import { IconPhotoOff, IconTrendingUp } from "@tabler/icons-react";
 import { useEffect, useId, useState } from "react";
 import { Link, useViewTransitionState } from "react-router";
@@ -93,6 +94,9 @@ function ProductStage({
       />
       <AsyncImage
         src={product.imageUrl}
+        srcSet={photoSrcSet(product.imageUrl)}
+        // La foto ocupa el 58 % de la tarjeta: ~200 px en teléfono, ~300 px en la grilla de dos columnas.
+        sizes="(min-width: 768px) and (max-width: 1279px) 300px, 200px"
         alt={product.name}
         priority={priority}
         reveal="none"
@@ -261,4 +265,11 @@ export function ProductCardSkeleton({ className }: { className?: string }) {
       <Skeleton className="size-24 shrink-0 self-center rounded-2xl sm:size-28" />
     </div>
   );
+}
+
+/** La copia propia tiene variante de 400 px (#170); la URL de una tienda, no. */
+function photoSrcSet(url: string | null): string | undefined {
+  if (!url) return undefined;
+  const small = imageVariant(url, 400);
+  return small === url ? undefined : `${small} 400w, ${url} 800w`;
 }

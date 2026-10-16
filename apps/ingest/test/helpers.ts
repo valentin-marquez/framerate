@@ -113,7 +113,6 @@ export function testEnv(d1: D1Database) {
     DB: d1,
     SNAPSHOTS: {} as R2Bucket,
     ASSETS: {} as R2Bucket,
-    IMAGES: {} as ImagesBinding,
     CRAWL_QUEUE: fakeQueue(sent),
     NORMALIZE_QUEUE: fakeQueue(normalize),
     LINK_QUEUE: fakeQueue(link),

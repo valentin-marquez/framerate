@@ -2,7 +2,13 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:tes
 import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { silentLogger } from "@framerate/kit";
-import { copyProductImages, imageExtension } from "@/features/images/product-images";
+import {
+  addSmallVariants,
+  copyProductImages,
+  imageExtension,
+  type Resize,
+  ResizerDown,
+} from "@/features/images/product-images";
 
 let d1: D1Database;
 let db: Db;
@@ -35,29 +41,35 @@ function fakeFetch(routes: Record<string, () => Response>) {
   return { fetchImage, calls };
 }
 
-/** Images falso: devuelve "webp" y cuenta cuántas veces se procesó una foto (cada una es una transformación). */
-function fakeImages() {
-  const calls: unknown[] = [];
-  const images = {
-    input: () => ({
-      transform: (t: unknown) => {
-        calls.push(t);
-        return {
-          output: async () => ({ response: () => new Response("webp") }),
-        };
-      },
-    }),
-  } as unknown as Pick<ImagesBinding, "input">;
-  return { images, calls };
+/** Resizer falso: devuelve "webp-<ancho>" y anota cada ancho pedido. */
+function fakeResize(fail?: Error) {
+  const calls: number[] = [];
+  const resize: Resize = async (_image, width) => {
+    if (fail) throw fail;
+    calls.push(width);
+    return new TextEncoder().encode(`webp-${width}`).buffer as ArrayBuffer;
+  };
+  return { resize, calls };
 }
 
-function fakeBucket() {
+function fakeBucket(initial: string[] = []) {
   const puts = new Map<string, { contentType?: string; cacheControl?: string }>();
+  const bodies = new Map<string, unknown>(initial.map((key) => [key, "webp-800"]));
   const bucket = {
-    put: async (key: string, _body: unknown, options?: R2PutOptions) => {
+    put: async (key: string, body: unknown, options?: R2PutOptions) => {
       puts.set(key, options?.httpMetadata as { contentType?: string });
+      bodies.set(key, body);
     },
-  } as unknown as Pick<R2Bucket, "put">;
+    get: async (key: string) => (bodies.has(key) ? { arrayBuffer: async () => new ArrayBuffer(1) } : null),
+    // De a dos por página, para pasar por el cursor.
+    list: async ({ cursor }: R2ListOptions) => {
+      const keys = [...bodies.keys()].sort();
+      const from = Number(cursor ?? 0);
+      const objects = keys.slice(from, from + 2).map((key) => ({ key }));
+      const truncated = from + 2 < keys.length;
+      return { objects, truncated, cursor: truncated ? String(from + 2) : undefined };
+    },
+  } as unknown as Pick<R2Bucket, "put" | "get" | "list">;
   return { bucket, puts };
 }
 
@@ -79,17 +91,15 @@ describe("copia de fotos de producto a R2", () => {
     const { fetchImage } = fakeFetch({ "https://alfa.cl/a.jpg": png, "https://beta.cl/misma.jpg": png });
     const { bucket, puts } = fakeBucket();
 
-    const { images, calls } = fakeImages();
+    const { resize, calls } = fakeResize();
 
-    expect(await copyProductImages(db, bucket, images, T0, silentLogger, fetchImage)).toEqual({ copied: 2, failed: 0 });
+    expect(await copyProductImages(db, bucket, resize, T0, silentLogger, fetchImage)).toEqual({ copied: 2, failed: 0 });
 
-    const [key] = [...puts.keys()];
-    expect(puts.size).toBe(1);
-    expect(calls).toEqual([
-      { width: 800, fit: "scale-down" },
-      { width: 800, fit: "scale-down" },
-    ]);
+    const [key, small] = [...puts.keys()];
+    expect(puts.size).toBe(2);
+    expect(calls).toEqual([800, 400, 800, 400]);
     expect(key).toMatch(/^products\/[0-9a-f]{32}\.webp$/);
+    expect(small).toBe((key as string).replace(".webp", "-w400.webp"));
     expect(puts.get(key as string)).toEqual({
       contentType: "image/webp",
       cacheControl: "public, max-age=31536000, immutable",
@@ -111,22 +121,46 @@ describe("copia de fotos de producto a R2", () => {
       "https://alfa.cl/hotlink.png": () => new Response("<html>no hotlinking</html>", { status: 200 }),
     });
     const { bucket } = fakeBucket();
-    const { images, calls: processed } = fakeImages();
+    const { resize, calls: processed } = fakeResize();
 
-    expect(await copyProductImages(db, bucket, images, T0, silentLogger, fetchImage)).toEqual({ copied: 1, failed: 2 });
-    // El HTML con 200 se descarta antes de procesarlo: no gasta una transformación.
-    expect(processed.length).toBe(1);
+    expect(await copyProductImages(db, bucket, resize, T0, silentLogger, fetchImage)).toEqual({ copied: 1, failed: 2 });
+    // El HTML con 200 se descarta antes de mandarlo al resizer.
+    expect(processed).toEqual([800, 400]);
     const failed = (await all(db, "products")).filter((r) => r.image_key === null);
     expect(failed.map((r) => r.image_checked_at)).toEqual([T0, T0]);
 
     calls.length = 0;
-    expect(await copyProductImages(db, bucket, images, "2026-10-01T06:00:00.000Z", silentLogger, fetchImage)).toEqual({
+    expect(await copyProductImages(db, bucket, resize, "2026-10-01T06:00:00.000Z", silentLogger, fetchImage)).toEqual({
       copied: 0,
       failed: 0,
     });
     expect(calls).toEqual([]);
 
-    await copyProductImages(db, bucket, images, nextDay, silentLogger, fetchImage);
+    await copyProductImages(db, bucket, resize, nextDay, silentLogger, fetchImage);
     expect(calls.sort()).toEqual(["https://alfa.cl/borrada.png", "https://alfa.cl/hotlink.png"]);
+  });
+
+  test("con el resizer caído no se marca nada: se reintenta en la próxima corrida, no al día siguiente", async () => {
+    await product("a", "https://alfa.cl/a.png");
+    await product("b", "https://alfa.cl/b.png");
+    const { fetchImage, calls } = fakeFetch({ "https://alfa.cl/a.png": () => new Response(PNG) });
+    const { bucket, puts } = fakeBucket();
+    const { resize } = fakeResize(new ResizerDown("HTTP 502"));
+
+    expect(await copyProductImages(db, bucket, resize, T0, silentLogger, fetchImage)).toEqual({ copied: 0, failed: 0 });
+    expect(calls).toEqual(["https://alfa.cl/a.png"]);
+    expect(puts.size).toBe(0);
+    expect((await all(db, "products")).map((r) => r.image_checked_at)).toEqual([null, null]);
+  });
+
+  test("relleno: agrega la de 400 a las copias viejas y no repite las que ya la tienen", async () => {
+    const old = (n: number) => `products/${String(n).padStart(32, "0")}.webp`;
+    const { bucket, puts } = fakeBucket([old(1), old(2), old(2).replace(".webp", "-w400.webp"), "stores/x/icon.webp"]);
+    const { resize, calls } = fakeResize();
+
+    expect(await addSmallVariants(bucket, resize, silentLogger)).toEqual({ added: 1, failed: 0, remaining: 0 });
+    expect([...puts.keys()]).toEqual([old(1).replace(".webp", "-w400.webp")]);
+    expect(calls).toEqual([400]);
+    expect(await addSmallVariants(bucket, resize, silentLogger)).toEqual({ added: 0, failed: 0, remaining: 0 });
   });
 });
