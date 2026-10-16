@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "unlighthouse": {
+      "command": "node",
+      "args": ["node_modules/unlighthouse/bin/unlighthouse-mcp.mjs", "--site", "https://framerate.cl"]
+    }
+  }
+}

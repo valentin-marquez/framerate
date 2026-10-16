@@ -70,3 +70,6 @@ logs/
 
 # Estado local de wrangler (D1/R2/Queues simulados)
 .wrangler/
+
+# Unlighthouse (escaneos del MCP)
+.unlighthouse

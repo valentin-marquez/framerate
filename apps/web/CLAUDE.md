@@ -16,6 +16,7 @@ Queremos una web con mucho movimiento, pero que no le cueste al hilo principal (
 - **`will-change` sólo mientras dura la animación** y en pocos elementos; abusar de él consume memoria de GPU. Excepción: la foto de la tarjeta de producto (`.stage-image`), que sin capa fija salta 1 px al terminar de asentarse.
 - **Trabajo pesado fuera del hilo principal**: si una tarea puede pasar de ~10 ms (parsear, filtrar, ordenar listas grandes) se divide en trozos de ~5 ms cediendo el control (`scheduler.yield()`, o `requestAnimationFrame` + `performance.now()`), o se mueve a un Web Worker. Listas largas: `content-visibility: auto` o virtualización.
 - **Se mide, no se supone**: antes de dar por buena una animación nueva, Performance de DevTools con CPU ×4 y mirar INP/TBT. "El código es lento" no es lo mismo que "el código bloquea".
+- **Lighthouse de todo el sitio: MCP `unlighthouse`** (`.mcp.json`, fijado a `https://framerate.cl`). `scan_start` recorre las rutas, `scan_summary`/`route_audits` dicen qué página falla y por qué, y `compare_run` compara contra el escaneo anterior para confirmar una mejora tras desplegar. Para un local, `scan_start` con la URL de `bun run dev:web`. Corre con `node` y no con `bun` a propósito: usa `node:module.registerHooks`, que Bun no tiene. Los resultados quedan en `.unlighthouse/` (ignorado).
 
 ### Lenguaje de motion
 
