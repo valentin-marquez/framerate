@@ -87,36 +87,45 @@ export function AddToQuote({ product, className, label }: AddToQuoteProps) {
   const { t } = useTranslation();
   const originQuote = useQuoteInteractionStore((s) => s.originQuote);
   const { add } = useAddToQuote(product);
+  const onClick = () => (originQuote ? add(originQuote) : setPhase("open"));
 
   return (
     <>
       <div className={cn("relative", className)}>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                variant="secondary"
-                // "long" acompaña al botón grande de la tienda en la ficha: misma altura y padding.
-                size={label === "long" ? "lg" : label ? "sm" : "icon"}
-                className={cn(
-                  label ? "w-full gap-1.5 text-foreground" : "",
-                  label === "short" && "px-3",
-                  "transition-all",
-                )}
-                onClick={() => (originQuote ? add(originQuote) : setPhase("open"))}
-                aria-label={t("add_to_quote")}
-                type="button"
-              />
-            }
+        {label === "short" ? (
+          // Va en cada tarjeta (96 en la home): botón nativo sin tooltip, que con texto no muestra nada, y con clases
+          // cortas; el Button primitivo suma 857 caracteres de clases por tarjeta al HTML.
+          <button
+            type="button"
+            onClick={onClick}
+            aria-label={t("add_to_quote")}
+            className="flex h-8 w-full cursor-pointer select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-transparent bg-secondary/70 px-3 font-medium text-foreground text-sm outline-none transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
-            <IconReceipt className="size-4" />
-            {label && (
-              <span className="font-medium text-sm">{label === "short" ? t("quote_short") : t("add_to_quote")}</span>
-            )}
-          </TooltipTrigger>
+            <IconReceipt className="size-4 shrink-0" />
+            {t("quote_short")}
+          </button>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="secondary"
+                  // "long" acompaña al botón grande de la tienda en la ficha: misma altura y padding.
+                  size={label ? "lg" : "icon"}
+                  className={cn(label && "w-full gap-1.5 text-foreground", "transition-all")}
+                  onClick={onClick}
+                  aria-label={t("add_to_quote")}
+                  type="button"
+                />
+              }
+            >
+              <IconReceipt className="size-4" />
+              {label && <span className="font-medium text-sm">{t("add_to_quote")}</span>}
+            </TooltipTrigger>
 
-          {!label && <TooltipContent side="top">{t("add_to_quote")}</TooltipContent>}
-        </Tooltip>
+            {!label && <TooltipContent side="top">{t("add_to_quote")}</TooltipContent>}
+          </Tooltip>
+        )}
       </div>
 
       {phase !== "closed" && (
