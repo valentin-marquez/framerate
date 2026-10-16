@@ -18,7 +18,7 @@ import { cn } from "~/shared/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
 import { Logo } from "./logo";
-import { NavFps, OfferFreshness, TimeGradient } from "./nav-parts";
+import { OfferFreshness, TimeGradient } from "./nav-parts";
 import { UserMenu } from "./user-menu";
 
 const railLink = (current: boolean) =>
@@ -312,7 +312,6 @@ export function Navbar({
             <Logo className="size-6 shrink-0" />
             <span className="rail-label font-semibold text-lg tracking-tight">framerate</span>
           </Link>
-          <NavFps className="rail-label ml-auto" />
         </div>
 
         <SearchField className="shrink-0" />

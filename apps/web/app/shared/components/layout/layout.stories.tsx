@@ -23,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from "../primitives/dropdown-menu";
 import { AdminMenu } from "./admin-menu";
-import { NavFps } from "./nav-parts";
 import { Navbar } from "./navbar";
 import { SiteFooter } from "./site-footer";
 
@@ -139,16 +138,11 @@ export const MenuDeCuenta: Story = {
   ),
 };
 
-export const BuscadorYFps: Story = {
-  name: "Buscador con consulta y FPS",
+export const BuscadorConConsulta: Story = {
+  name: "Buscador con consulta",
   // En `/buscar` el campo muestra la consulta de la URL.
   parameters: { layout: "padded", path: "/buscar?q=rtx+5060" },
-  render: () => (
-    <div className="flex items-center gap-6">
-      <SearchField className="w-72" />
-      <NavFps />
-    </div>
-  ),
+  render: () => <SearchField className="w-72" />,
 };
 
 export const Pie: Story = { render: () => <SiteFooter /> };

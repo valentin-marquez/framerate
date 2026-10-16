@@ -1,55 +1,9 @@
 import { type Freshness, nextCrawlAt } from "@framerate/contracts";
 import { IconClock, IconFlame } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "~/shared/lib/utils";
 import { formatSpan } from "~/shared/utils/format";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
-
-/**
- * Fotogramas por segundo de esta pestaña. Cuenta cuadros con requestAnimationFrame y escribe el texto una vez por
- * segundo, sin setState por cuadro. El servidor lo dibuja vacío con el ancho reservado, así no mueve nada al hidratar.
- */
-export function NavFps({ className }: { className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    let frames = 0;
-    let last = performance.now();
-    let raf = 0;
-    const tick = (now: number) => {
-      frames++;
-      const elapsed = now - last;
-      if (elapsed >= 1000) {
-        // Tras una pestaña en segundo plano el intervalo es enorme y la lectura saldría en 0: se descarta.
-        if (elapsed < 2000) el.textContent = `${Math.round((frames * 1000) / elapsed)} FPS`;
-        frames = 0;
-        last = now;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    // Sólo cuenta mientras se ve: el bucle obliga a dibujar cada cuadro, y en el teléfono el riel está oculto.
-    const visibility = new IntersectionObserver(([entry]) => {
-      cancelAnimationFrame(raf);
-      if (!entry.isIntersecting) return;
-      frames = 0;
-      last = performance.now();
-      raf = requestAnimationFrame(tick);
-    });
-    visibility.observe(el);
-    return () => {
-      visibility.disconnect();
-      cancelAnimationFrame(raf);
-    };
-  }, []);
-  return (
-    <span
-      ref={ref}
-      aria-hidden="true"
-      className={cn("inline-block min-w-[7ch] text-right text-foreground/40 text-sm tabular-nums", className)}
-    />
-  );
-}
 
 const GRADIENTS = {
   morning: "linear-gradient(rgba(255, 183, 77, 0.2) 0%, rgba(255, 213, 79, 0.1) 50%, rgba(249, 230, 203, 0) 100%)",
