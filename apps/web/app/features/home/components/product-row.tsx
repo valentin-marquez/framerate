@@ -58,9 +58,11 @@ export function ProductRow({
           <CarouselContent className="-ml-3">
             {products.map((product, index) => (
               <CarouselItem key={product.id} className="basis-[88%] pl-3 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                {/* La primera tarjeta lleva la foto del LCP y no entra animada: su opacidad 0 inicial esperaba a que el
+                    hilo principal soltara la hidratación y en gama baja el LCP pasaba de ~2,8 a ~9,8 s. */}
                 <div
-                  className={cn("h-full", priority && index < 4 && enterClass())}
-                  style={priority && index < 4 ? enterStyle(260 + index * 50) : undefined}
+                  className={cn("h-full", priority && index > 0 && index < 4 && enterClass())}
+                  style={priority && index > 0 && index < 4 ? enterStyle(260 + index * 50) : undefined}
                 >
                   <ProductCard
                     product={product}
