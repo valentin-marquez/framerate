@@ -45,4 +45,13 @@ describe("titleTraits", () => {
     expect(titleTraits("psu", "Fuente de Poder Gamemax GZ-1000G 80PLUS GOLD 1000W").psuCode).toBe("gz1000g");
     expect(titleTraits("ssd", "SSD Western Digital Green SN350 1TB PCIe Gen3")).toEqual({ traits: "" });
   });
+
+  test("Cybenetics sale del título de las fuentes y no veta", () => {
+    const title = "Fuente Cooler Master 850W 80 Plus Gold Cybenetics Platinum LAMBDA A+";
+    expect(titleTraits("psu", title)).toMatchObject({ eta: "platinum", lambda: "a+" });
+    expect(titleTraits("psu", "Fuente 850W 80 Plus Gold")).not.toHaveProperty("eta");
+    expect(titleTraits("gpu", "Tarjeta de video ETA Gold")).not.toHaveProperty("eta");
+    // Una tienda que lo omite no separa el producto de la que lo dice.
+    expect(vetoes("psu", title, "Fuente Cooler Master 850W 80 Plus Gold")).toEqual([]);
+  });
 });

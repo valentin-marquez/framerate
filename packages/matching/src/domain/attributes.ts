@@ -387,6 +387,20 @@ const PSU_LINES = [
   "sfx",
 ] as const;
 const EFFICIENCY_ALIASES: Record<string, string> = { bronce: "bronze", platino: "platinum", platinium: "platinum" };
+// Cybenetics: ETA mide eficiencia ("Cybenetics Gold" a secas es ETA) y LAMBDA ruido. Informan, no distinguen productos.
+const CYBENETICS_ETA = /(?: cybenetics(?: eta)?| eta) (diamond|titanium|platinum|gold|silver|bronze|standard)(?= )/;
+const CYBENETICS_LAMBDA = /\blambda[\s:_-]*(a\+\+|a\+|a-|a|standard\+\+|standard\+|standard)(?![a-z0-9+-])/;
+
+/** Niveles de Cybenetics del título de una fuente: ETA (eficiencia) y LAMBDA (ruido). Sólo aparece el que se lee. */
+export function cyberneticsLevels(title: string): { eta?: string; lambda?: string } {
+  const levels: { eta?: string; lambda?: string } = {};
+  const eta = prep(title).match(CYBENETICS_ETA)?.[1];
+  if (eta) levels.eta = eta;
+  // "A-" pierde el guion en `prep`: el nivel de LAMBDA se lee del título plegado.
+  const lambda = fold(title).match(CYBENETICS_LAMBDA)?.[1];
+  if (lambda) levels.lambda = lambda;
+  return levels;
+}
 
 const psu: CategoryProfile = {
   keyFields: ["wattage", "efficiency"],
@@ -411,10 +425,13 @@ const psu: CategoryProfile = {
         }
       }
     }
+    Object.assign(a, cyberneticsLevels(title));
     // "White" suelto es el color; la certificación White sólo cuenta como "80 Plus" sin otro nivel.
-    const eff = t.match(/(?: |plus|\+)(bronze|bronce|silver|gold|platinum|platino|platinium|titanium)(?=[ +])/)?.[1];
+    // El nivel de Cybenetics no es el de 80 Plus: se saca antes de buscarlo.
+    const plus = t.replace(CYBENETICS_ETA, " ");
+    const eff = plus.match(/(?: |plus|\+)(bronze|bronce|silver|gold|platinum|platino|platinium|titanium)(?=[ +])/)?.[1];
     if (eff) a.efficiency = EFFICIENCY_ALIASES[eff] ?? eff;
-    else if (/ 80 ?\+? ?plus| 80 ?\+ ?white/.test(t)) a.efficiency = "white";
+    else if (/ 80 ?\+? ?plus| 80 ?\+ ?white/.test(plus)) a.efficiency = "white";
     const line = firstMatch(PSU_LINES, t);
     if (line) {
       const generation = t.match(new RegExp(` ${line} (\\d{1,2})(?= )`))?.[1];

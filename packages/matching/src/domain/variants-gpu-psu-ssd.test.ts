@@ -60,6 +60,30 @@ describe("fuentes", () => {
     expect(PROFILES.psu.extract("Fuente SilverStone 650W 80 Plus Bronze").efficiency).toBe("bronze");
   });
 
+  test("Cybenetics va en eta y lambda, y su nivel no se toma como el de 80 Plus", () => {
+    const both = PROFILES.psu.extract("Fuente Cooler Master 850W 80 Plus Gold Cybenetics Platinum");
+    expect(both).toMatchObject({ efficiency: "gold", eta: "platinum" });
+    // El nivel de Cybenetics puede ir antes del de 80 Plus.
+    expect(PROFILES.psu.extract("Fuente 850W Cybenetics Platinum 80 Plus Gold").efficiency).toBe("gold");
+    // Sin 80 Plus no hay certificación: antes quedaba efficiency=platinum.
+    const onlyEta = PROFILES.psu.extract("Fuente MSI 750W Cybenetics ETA Gold");
+    expect(onlyEta.eta).toBe("gold");
+    expect(onlyEta.efficiency).toBeUndefined();
+    expect(PROFILES.psu.extract("Fuente 750W ETA Diamond").eta).toBe("diamond");
+    expect(PROFILES.psu.extract("Fuente 750W 80 Plus Gold").eta).toBeUndefined();
+  });
+
+  test("LAMBDA lee el nivel de ruido, incluido A+ y A-", () => {
+    const lambda = (title: string) => PROFILES.psu.extract(title).lambda;
+    expect(lambda("Fuente 850W 80 Plus Gold Cybenetics LAMBDA A++")).toBe("a++");
+    expect(lambda("Fuente 850W Cybenetics Lambda A+ ETA Platinum")).toBe("a+");
+    expect(lambda("Fuente 850W LAMBDA A- 80 Plus Gold")).toBe("a-");
+    expect(lambda("Fuente 850W LAMBDA A")).toBe("a");
+    expect(lambda("Fuente 850W Lambda Standard++")).toBe("standard++");
+    expect(lambda("Fuente 850W 80 Plus Gold")).toBeUndefined();
+    expect(PROFILES.psu.extract("Fuente 850W Cybenetics Lambda A+ ETA Platinum").eta).toBe("platinum");
+  });
+
   test.each([
     [
       "Fuente de Poder be quiet! PURE POWER 12 850W 80 PLUS Gold",
