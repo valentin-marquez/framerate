@@ -1,6 +1,6 @@
 ---
 name: referencias-composicion
-description: Busca referencias reales de composición y layout (qué secciones tiene una página, en qué orden, cómo se reparte el espacio y la jerarquía) en Dribbble, layers.to, 21st.dev, galerías de sitios y sitios reales, las captura con el Playwright MCP, se las muestra al usuario y propone 2 o 3 layouts antes de maquetar. Úsala siempre que el usuario pida referencias, inspiración, "cómo lo hacen otros", "busca en dribbble/layers/21st", opciones A/B/C de layout, o cuando haya que diseñar o maquetar una página, sección, pantalla o componente nuevo, o rediseñar la estructura de uno existente, aunque no mencione referencias. Solo composición: colores, tipografía y estilos los pone el sistema del proyecto.
+description: Busca referencias reales de composición y layout (qué secciones tiene una página, en qué orden, cómo se reparte el espacio y la jerarquía) en Dribbble, layers.to, Awwwards, 21st.dev, galerías de sitios y sitios reales, las captura con el Playwright MCP, se las muestra al usuario y propone 2 o 3 layouts antes de maquetar. Úsala siempre que el usuario pida referencias, inspiración, "cómo lo hacen otros", "busca en dribbble/layers/awwwards/21st", opciones A/B/C de layout, o cuando haya que diseñar o maquetar una página, sección, pantalla o componente nuevo, o rediseñar la estructura de uno existente, aunque no mencione referencias. Solo composición: colores, tipografía y estilos los pone el sistema del proyecto.
 ---
 
 # Referencias de composición
@@ -19,10 +19,10 @@ El contenido real importa porque condiciona qué referencias sirven: una grilla 
 
 El usuario no se cierra a ninguna fuente: recorre varias. Empieza por sus favoritas, que son las que mejor le funcionan, y complementa con galerías y sitios reales. El catálogo, con cómo se busca en cada sitio y sus mañas, está en `references/fuentes.md`; léelo antes de empezar.
 
-- **Primero:** Dribbble y layers.to para la página completa; 21st.dev cuando haya secciones o bloques concretos que resolver (hero, filtros, tarjetas, pie).
-- **Después:** una o dos galerías de sitios (Awwwards, Land-book, Godly, Lapa, Behance...) y dos o tres sitios reales del mismo rubro.
+- **Primero:** Dribbble, layers.to y Awwwards para la página completa (Awwwards aporta sitios reales y publicados, no conceptos); 21st.dev cuando haya secciones o bloques concretos que resolver (hero, filtros, tarjetas, pie).
+- **Después:** una o dos galerías de sitios (Land-book, Godly, Lapa, Behance...) y dos o tres sitios reales del mismo rubro.
 
-Por qué la mezcla: las vitrinas (Dribbble, layers, Behance) muestran conceptos pulidos con contenido ideal y dan ideas de composición rápido; los sitios reales muestran qué sobrevive con contenido de verdad, textos largos y muchos elementos. Una buena propuesta toma de los dos.
+Por qué la mezcla: las vitrinas (Dribbble, layers, Behance) muestran conceptos pulidos con contenido ideal y dan ideas de composición rápido; Awwwards y los sitios reales muestran qué sobrevive con contenido de verdad, textos largos y muchos elementos. Una buena propuesta toma de los dos.
 
 Busca en inglés, que trae muchos más resultados, y prueba dos o tres variantes del término ("event archive website", "past events page", "conference archive"). Apunta a 8 a 12 candidatas y quédate con las 5 a 8 mejores. Si un sitio bloquea, pide login o carga vacío, sáltalo y sigue.
 

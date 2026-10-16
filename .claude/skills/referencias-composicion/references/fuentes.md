@@ -19,6 +19,13 @@ Catálogo de dónde buscar y cómo. Los patrones marcados como **verificado** se
 - Las tarjetas de la grilla no son enlaces `<a>`: abre la ficha haciendo clic en la imagen. La ficha es `https://layers.to/layers/<id>-<slug>`.
 - **Original en alta resolución** (verificado): la imagen viene como `https://layers-r2.com/cdn-cgi/image/width=2560,format=avif/<archivo>.jpg`. Quitando `cdn-cgi/image/.../` queda `https://layers-r2.com/<archivo>.jpg`, el original (3840x2880).
 
+### Awwwards
+- **Buscar:** `https://www.awwwards.com/websites/?text=<termino>` (verificado, ej. `?text=dashboard`).
+- **Por categoría:** `https://www.awwwards.com/websites/<categoria>/` (verificado con `events` y `e-commerce`).
+- Cada sitio está en `https://www.awwwards.com/sites/<slug>` (verificado). La ficha trae capturas y el enlace "Visit" al sitio publicado: visítalo y captura el sitio en vivo, sobre todo en teléfono, que las láminas casi nunca muestran.
+- **Captura original** (verificado): las miniaturas vienen como `https://assets.awwwards.com/awards/media/cache/thumb_440_330/submissions/<año>/<mes>/<archivo>`. Quitando `media/cache/thumb_440_330/` queda el original en `https://assets.awwwards.com/awards/submissions/...`.
+- Mañas: sitios premiados, muy expresivos y con mucho movimiento. Sirven para jerarquía, ritmo entre secciones y cómo se resuelve una pieza destacada; para catálogo denso pesan más los sitios reales del rubro. Si la búsqueda trae plantillas o conceptos (`template`, `concept` en el slug), descártalos.
+
 ### 21st.dev
 - **Por tipo de bloque:** `https://21st.dev/community/components/s/<categoria>` (verificado). Categorías: `hero`, `cta`, `features`, `footer`, `faq`, `pricing`, `testimonials`, `navbar`, `clients`, `comparison`, `background`, `announcement`, entre otras.
 - Cada componente está en `https://21st.dev/@<autor>/components/<slug>`.
@@ -27,7 +34,6 @@ Catálogo de dónde buscar y cómo. Los patrones marcados como **verificado** se
 
 ## Galerías de sitios
 
-- **Awwwards:** `https://www.awwwards.com/websites/<categoria>/` (verificado con `events`). Sitios reales premiados, muy expresivos; útiles para ideas de jerarquía, poco para sitios institucionales.
 - **Behance:** `https://www.behance.net/search/projects?search=<termino>`. Casos completos con varias láminas; abre el proyecto.
 - **Land-book:** `https://land-book.com/` con su buscador. Landing pages reales.
 - **Lapa Ninja:** `https://www.lapa.ninja/` con su buscador. Landings por categoría.
