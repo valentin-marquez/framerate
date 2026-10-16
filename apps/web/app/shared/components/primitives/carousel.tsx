@@ -72,7 +72,12 @@ function Carousel({ children, className, disableDrag = false }: CarouselProps) {
 
   return (
     <CarouselContext value={{ scroller, ...state, disableDrag, scrollByPage, scrollToPage, sync }}>
-      <div className={cn("group/hover relative", className)}>{children}</div>
+      {/* Se mide al primer puntero o foco y no al montar: leer scrollWidth al hidratar forzaba el layout de todas las
+          filas de la home, incluso las que content-visibility se salta (566 ms en un teléfono de gama baja). */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: los eventos sólo miden el carrusel, no son una interacción. */}
+      <div className={cn("group/hover relative", className)} onPointerEnter={sync} onFocus={sync}>
+        {children}
+      </div>
     </CarouselContext>
   );
 }
@@ -86,7 +91,7 @@ function CarouselContent({ children, className }: CarouselContentProps) {
   const { scroller, sync, disableDrag } = useCarousel();
   const drag = useRef<{ x: number; left: number; moved: boolean; samples: { x: number; t: number }[] } | null>(null);
 
-  // Estado de flechas e indicador: con el scroll (pasivo, una vez por cuadro) y con cambios de tamaño.
+  // Estado de flechas e indicador con el scroll (pasivo, una vez por cuadro); el resto, al entrar el puntero o el foco.
   useEffect(() => {
     const el = scroller.current;
     if (!el) return;
@@ -95,14 +100,10 @@ function CarouselContent({ children, className }: CarouselContentProps) {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(sync);
     };
-    sync();
     el.addEventListener("scroll", onScroll, { passive: true });
-    const resize = new ResizeObserver(onScroll);
-    resize.observe(el);
     return () => {
       cancelAnimationFrame(frame);
       el.removeEventListener("scroll", onScroll);
-      resize.disconnect();
     };
   }, [scroller, sync]);
 
