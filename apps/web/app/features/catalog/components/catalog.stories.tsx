@@ -68,7 +68,7 @@ export const PanelDeCategoria: Story = {
   name: "Panel de la categoría junto al riel (título, buscador, filtros y limpiar)",
   parameters: { path: "/categoria/tarjetas-de-video?spec=vram:8&brand=msi" },
   render: () => (
-    <div className="flex h-[34rem] w-64 flex-col gap-3 border border-border/60 bg-card/40 p-3">
+    <div className="flex h-[34rem] w-64 flex-col gap-4 border border-border/60 bg-card/40 p-3">
       <CategoryPanel data={catalogData()} />
     </div>
   ),

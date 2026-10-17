@@ -433,7 +433,7 @@ export function Navbar({
           aria-label="Filtros"
           inert={!panelOpen}
           className={cn(
-            "fixed inset-y-0 left-16 z-30 hidden w-64 flex-col gap-3 border-border/60 border-r bg-card/40 p-3",
+            "fixed inset-y-0 left-16 z-30 hidden w-64 flex-col gap-4 border-border/60 border-r bg-card/40 p-3",
             panelOpen && "lg:flex",
           )}
         >

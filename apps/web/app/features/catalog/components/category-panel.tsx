@@ -13,7 +13,7 @@ export function CategoryPanel({ data }: { data: CatalogData }) {
   const id = data.category ? categoryFromSlug(data.category) : undefined;
   return (
     <>
-      <div className="flex shrink-0 items-center gap-2 px-1">
+      <div className="flex h-10 shrink-0 items-center gap-2 px-1">
         {id && <CategoryIcon category={id} className="size-5" />}
         <h2 className="truncate font-medium text-foreground text-label-md">{id ? CATEGORY_NAV_LABELS[id] : ""}</h2>
         <span className="ml-auto shrink-0 text-muted-foreground text-paragraph-xs tabular-nums">

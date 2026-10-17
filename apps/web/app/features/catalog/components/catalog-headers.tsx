@@ -30,11 +30,11 @@ export function CategoryHeader({
   return (
     <header className="space-y-3 pt-2 md:pt-6">
       <h1 className={cn("text-pretty text-title-h4 md:text-title-h2", enterClass())}>
-        <span className="text-foreground">{id ? CATEGORY_NAV_LABELS[id] : category}.</span>{" "}
+        <span className="text-foreground">{id ? CATEGORY_NAV_LABELS[id] : category}</span>{" "}
         <span className="text-muted-foreground">
           {total > 0
-            ? `${count(total, "producto", "productos")}${priceRange?.min ? ` desde ${formatCLP(priceRange.min)}` : ""}.`
-            : "Sin productos con stock por ahora."}
+            ? `${count(total, "producto", "productos")}${priceRange?.min ? ` desde ${formatCLP(priceRange.min)}` : ""}`
+            : "Sin productos con stock por ahora"}
         </span>
       </h1>
       {stats.length > 0 && (
