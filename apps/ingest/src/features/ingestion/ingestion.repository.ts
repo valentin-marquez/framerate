@@ -288,8 +288,11 @@ export async function upsertListing(
     existing.price_card !== offer.priceCard ||
     toBool(existing.in_stock) !== offer.inStock ||
     !toBool(existing.is_active);
+  // La misma oferta en dos categorías de la tienda (Wei 1162 en cpu_cooler y case_fan, Centrale en ssd y hdd): la
+  // corrida que no es dueña sólo toca precio y stock, o cada pasada cambia el hash y Haiku la paga otra vez (#159).
+  const foreign = toBool(existing.is_active) && (existing.crawl_category ?? existing.category) !== offer.category;
   // Una `failed` agotó sus reintentos: la siguiente corrida la vuelve a intentar.
-  const changed = existing.norm_hash !== hash || existing.norm_status === "failed";
+  const changed = !foreign && (existing.norm_hash !== hash || existing.norm_status === "failed");
   const base = { listingId: existing.id, created: false };
   if (!changed && !priceChanged) return { ...base, priceChanged: false, changed: false, touchOnly: true };
 

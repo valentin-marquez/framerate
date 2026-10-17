@@ -176,6 +176,35 @@ describe("la corrida no vincula: encola", () => {
     expect(deps.sent.map((m) => m.reason)).toEqual(["new", "changed"]);
   });
 
+  test("la misma oferta en dos categorías de la tienda: la segunda corrida sólo toca precio, no el hash", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const wei = fakeStore("wei", { cpu_cooler: ["1162"], case_fan: ["1162"] });
+    wei.setOffers([offer("wei", "1", { title: "HUMMER M-360 ARGB BLACK", priceCash: 60_000 })]);
+    await crawlCategory(deps, wei.store, "cpu_cooler");
+    const first = await listingOf(deps.db, "1");
+
+    clock.advance(HOUR);
+    wei.setOffers([offer("wei", "1", { title: "HUMMER M-360 ARGB BLACK", priceCash: 55_000 })]);
+    const result = await crawlCategory(deps, wei.store, "case_fan");
+    expect(result.stats).toMatchObject({ changed: 0, enqueued: 0, priceChanges: 1, deactivated: 0 });
+    expect(await listingOf(deps.db, "1")).toMatchObject({
+      category: "cpu_cooler",
+      crawl_category: "cpu_cooler",
+      norm_hash: first.norm_hash,
+      price_cash: 55_000,
+    });
+    expect(deps.sent).toHaveLength(1);
+
+    // Si la corrida dueña deja de verla, se apaga y la otra la toma.
+    await deps.db.query.updateTable("listings").set({ is_active: 0 }).execute();
+    clock.advance(HOUR);
+    wei.setOffers([offer("wei", "1", { title: "HUMMER M-360 ARGB BLACK", priceCash: 55_000 })]);
+    await crawlCategory(deps, wei.store, "case_fan");
+    expect(await listingOf(deps.db, "1")).toMatchObject({ crawl_category: "case_fan", is_active: 1 });
+    expect(deps.sent.map((m) => m.reason)).toEqual(["new", "changed"]);
+  });
+
   test("un agotado que nunca tuvimos no se guarda ni se encola; uno conocido sí baja su stock", async () => {
     const clock = steppingClock();
     const deps = testDeps(d1, clock);

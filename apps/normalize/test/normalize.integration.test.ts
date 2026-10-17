@@ -220,6 +220,12 @@ describe("normalizeListing", () => {
     expect(h.calls).toBe(0);
     expect(link.sent).toHaveLength(1);
 
+    // Ingest la devolvió a pending con el mismo hash: también se pide el vínculo.
+    await db.query.updateTable("listings").set({ norm_status: "pending" }).where("id", "=", id).execute();
+    const pending = fakeQueue();
+    await run(id, config(h), pending);
+    expect(pending.sent).toHaveLength(1);
+
     // Ya vinculada: tampoco se vuelve a encolar.
     await db.query.updateTable("listings").set({ norm_status: "linked" }).where("id", "=", id).execute();
     const again = fakeQueue();
