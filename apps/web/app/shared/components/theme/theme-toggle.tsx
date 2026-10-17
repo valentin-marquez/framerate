@@ -5,8 +5,9 @@ import { cn } from "~/shared/lib/utils";
 import { Button } from "../primitives/button";
 
 /**
- * Alterna claro y oscuro sin sesión: guarda la cookie con la misma ruta que Ajustes. El ícono sale del `<html>` por CSS
- * (el script del head ya fijó la clase) y no del estado, para que no cambie al hidratar con el tema del sistema.
+ * Alterna claro y oscuro sin sesión: guarda la cookie con la misma ruta que Ajustes. El ícono es el del modo actual
+ * (luna en oscuro, sol en claro) y sale del `<html>` por CSS, no del estado: el script del head ya fijó la clase, así no
+ * cambia al hidratar con el tema del sistema.
  */
 export function ThemeToggle({ className }: { className?: string }) {
   const fetcher = useFetcher({ key: "theme-fetcher" });
@@ -19,8 +20,8 @@ export function ThemeToggle({ className }: { className?: string }) {
       className={cn("shrink-0 rounded-xl border-border/60", className)}
       onClick={() => fetcher.submit({ theme: dark ? "light" : "dark" }, { method: "post", action: "/theme-switcher" })}
     >
-      <IconSun className="hidden size-[18px] dark:block" />
-      <IconMoon className="size-[18px] dark:hidden" />
+      <IconMoon className="hidden size-[18px] dark:block" />
+      <IconSun className="size-[18px] dark:hidden" />
     </Button>
   );
 }
