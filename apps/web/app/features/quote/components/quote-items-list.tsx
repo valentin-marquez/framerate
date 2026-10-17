@@ -27,7 +27,7 @@ export function QuoteItemsList({
   return (
     <div className="bg-card rounded-3xl border border-border/40 shadow-sm overflow-hidden">
       <div className="p-6 border-b border-border/40 bg-secondary/5 flex justify-between items-center">
-        <h2 className="text-xl font-semibold tracking-tight">{t("components")}</h2>
+        <h2 className="text-title-h6">{t("components")}</h2>
         <span className="text-sm text-muted-foreground">{t("active_items_count", { count: quote.itemCount })}</span>
       </div>
 

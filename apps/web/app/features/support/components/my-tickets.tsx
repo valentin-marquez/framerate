@@ -93,7 +93,7 @@ export function MyTickets({
             className="flex flex-col overflow-hidden rounded-3xl border border-border bg-card lg:min-h-[34rem]"
           >
             <header className="space-y-2 border-border border-b px-4 py-4 sm:px-5 sm:py-5">
-              <h2 className="font-semibold text-foreground text-xl leading-snug tracking-tight">{shown.subject}</h2>
+              <h2 className="text-foreground text-title-h6">{shown.subject}</h2>
               <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-muted-foreground text-xs">
                 <StatusBadge status={shown.status} />
                 <span>{CATEGORY_LABELS[shown.category]}</span>

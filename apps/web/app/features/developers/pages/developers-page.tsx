@@ -186,7 +186,7 @@ export default function Developers() {
         <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-medium text-primary text-xs tracking-tight">
           Desarrolladores
         </div>
-        <h1 className="font-semibold text-4xl tracking-tight lg:text-5xl">Servidor MCP</h1>
+        <h1 className="text-title-h3 lg:text-title-h2">Servidor MCP</h1>
         <p className="max-w-2xl text-lg text-muted-foreground leading-relaxed">
           Conecta tu asistente de IA al catálogo de Framerate para buscar componentes, comparar precios entre tiendas
           chilenas y ver su historial. Es público y de sólo lectura: no necesitas cuenta ni token.

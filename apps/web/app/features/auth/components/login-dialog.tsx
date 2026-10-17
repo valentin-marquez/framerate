@@ -25,9 +25,7 @@ export function LoginCard({ returnTo, title, description }: LoginCardProps) {
           <IconLogin2 className="size-6" stroke={1.5} />
         </span>
         <div className="space-y-1">
-          <DialogTitle className="font-semibold text-foreground text-xl">
-            {title ?? "Bienvenido a Framerate"}
-          </DialogTitle>
+          <DialogTitle className="text-foreground text-title-h6">{title ?? "Bienvenido a Framerate"}</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
             {description ?? "Inicia sesión o crea tu cuenta para guardar cotizaciones y reseñar tiendas."}
           </DialogDescription>

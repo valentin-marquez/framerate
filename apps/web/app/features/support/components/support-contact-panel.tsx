@@ -240,7 +240,7 @@ export function SupportContactPanel({
             <div className="p-6">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div className="space-y-1">
-                  <h3 className="font-semibold tracking-tight text-lg">Contactar a soporte</h3>
+                  <h3 className="text-label-lg">Contactar a soporte</h3>
                   <p className="text-sm text-muted-foreground">
                     {isAuthed
                       ? "Te respondemos dentro de la plataforma. Verás las respuestas en Mis tickets."
@@ -421,7 +421,7 @@ export function SupportContactPanel({
                   <IconCircleCheck className="text-success" size={26} stroke={2} />
                 </div>
                 <div className="space-y-2 flex-1 min-w-0">
-                  <h3 className="font-semibold text-lg tracking-tight">Mensaje enviado</h3>
+                  <h3 className="text-label-lg">Mensaje enviado</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Recibimos tu ticket{" "}
                     <code className="text-xs bg-background/60 px-1.5 py-0.5 rounded border border-border/60 break-all">

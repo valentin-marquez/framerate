@@ -14,9 +14,7 @@ export function QuoteHeader({ quoteName, author, updatedAt }: QuoteHeaderProps) 
 
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-500">
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-foreground transition-colors">
-        {quoteName}
-      </h1>
+      <h1 className="text-title-h4 md:text-title-h3 lg:text-title-h2 text-foreground transition-colors">{quoteName}</h1>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium">
         <Link to={`/u/${author.username}`} className="flex items-center gap-2 group hover:text-foreground">

@@ -70,7 +70,7 @@ export default function HealthPage({ loaderData }: Route.ComponentProps) {
       <AdminTabs current="/admin/estado" />
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Estado de los sistemas</h1>
+          <h1 className="text-title-h4 md:text-title-h3">Estado de los sistemas</h1>
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
             <span
               className={cn(

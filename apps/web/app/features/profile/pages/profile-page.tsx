@@ -107,7 +107,7 @@ export function ErrorBoundary() {
       <div className="mx-auto size-16 rounded-full bg-destructive/10 flex items-center justify-center mb-6">
         <IconAlertCircle className="size-8 text-destructive" />
       </div>
-      <h1 className="text-2xl font-semibold tracking-tight mb-2">{message}</h1>
+      <h1 className="text-title-h5 mb-2">{message}</h1>
       <p className="text-muted-foreground mb-8">{details}</p>
       <Button nativeButton={false} render={<Link to="/" />}>
         {t("profile_back_home")}

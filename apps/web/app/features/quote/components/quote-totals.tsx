@@ -21,7 +21,7 @@ export function QuoteTotals({ totalNormal, totalCash, hasOutOfStockItems, compat
     <div className="bg-card rounded-3xl border border-border/40 shadow-sm p-6 space-y-4">
       <div className="space-y-1">
         <span className="text-sm text-muted-foreground">{t("total_cash")}</span>
-        <p className="text-3xl font-bold tracking-tight tabular-nums">{formatCLP(totalCash)}</p>
+        <p className="text-title-h4 tabular-nums">{formatCLP(totalCash)}</p>
         <p className="text-sm text-muted-foreground">
           {t("total_normal")}{" "}
           <span className="tabular-nums line-through decoration-muted-foreground">{formatCLP(totalNormal)}</span>

@@ -40,7 +40,7 @@ export default function Privacy() {
         <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary tracking-tight">
           Protección de datos
         </div>
-        <h1 className="text-4xl font-semibold tracking-tight lg:text-5xl">Política de privacidad</h1>
+        <h1 className="text-title-h3 lg:text-title-h2">Política de privacidad</h1>
         <p className="text-muted-foreground">
           Última actualización: <span className="font-medium text-foreground">{lastUpdate}</span>
         </p>
@@ -51,7 +51,7 @@ export default function Privacy() {
           <section className="space-y-6">
             <div className="flex items-center gap-3">
               <IconShield className="size-6 text-primary" />
-              <h2 className="text-2xl font-semibold">Nuestro compromiso</h2>
+              <h2 className="text-title-h5">Nuestro compromiso</h2>
             </div>
             <p className="leading-relaxed">
               Framerate.cl compara precios de componentes de PC en tiendas chilenas. Guardamos lo mínimo para que el
@@ -89,7 +89,7 @@ export default function Privacy() {
 
         <section className="px-4 space-y-8">
           <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <h2 className="text-title-h6 mb-3 flex items-center gap-2">
               <IconLock className="size-5 text-primary" /> Sesión y seguridad
             </h2>
             <p className="text-muted-foreground leading-relaxed">
@@ -101,7 +101,7 @@ export default function Privacy() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <h2 className="text-title-h6 mb-3 flex items-center gap-2">
               <IconDatabase className="size-5 text-primary" /> Dónde viven tus datos
             </h2>
             <p className="text-muted-foreground leading-relaxed">
@@ -112,7 +112,7 @@ export default function Privacy() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <h2 className="text-title-h6 mb-3 flex items-center gap-2">
               <IconGlobe className="size-5 text-primary" /> Imágenes y enlaces a tiendas
             </h2>
             <p className="text-muted-foreground leading-relaxed">
@@ -125,7 +125,7 @@ export default function Privacy() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <h2 className="text-title-h6 mb-3 flex items-center gap-2">
               <IconUserCheck className="size-5 text-primary" /> Tiendas verificadas
             </h2>
             <p className="text-muted-foreground leading-relaxed">
@@ -136,7 +136,7 @@ export default function Privacy() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <h2 className="text-title-h6 mb-3 flex items-center gap-2">
               <IconShield className="size-5 text-primary" /> Moderación
             </h2>
             <p className="text-muted-foreground leading-relaxed">
@@ -146,7 +146,7 @@ export default function Privacy() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <h2 className="text-title-h6 mb-3 flex items-center gap-2">
               <IconCookie className="size-5 text-primary" /> Cookies
             </h2>
             <p className="text-muted-foreground leading-relaxed">
@@ -157,7 +157,7 @@ export default function Privacy() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <h2 className="text-title-h6 mb-3 flex items-center gap-2">
               <IconClock className="size-5 text-primary" /> Cuánto tiempo los guardamos
             </h2>
             <p className="text-muted-foreground leading-relaxed">
@@ -168,7 +168,7 @@ export default function Privacy() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <h2 className="text-title-h6 mb-3 flex items-center gap-2">
               <IconUserShield className="size-5 text-primary" /> Tus derechos
             </h2>
             <p className="text-muted-foreground leading-relaxed">

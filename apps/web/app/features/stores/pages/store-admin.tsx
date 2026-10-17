@@ -89,7 +89,7 @@ export default function StoreAdmin({ loaderData }: Route.ComponentProps) {
     <main className="mx-auto max-w-3xl space-y-6 p-4 pt-8">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="font-semibold text-2xl">Administrar {store.name}</h1>
+          <h1 className="text-title-h5">Administrar {store.name}</h1>
           <p className="text-muted-foreground text-sm">
             <Link to={`/tiendas/${store.slug}`} className="hover:text-foreground">
               ← Volver a la tienda pública

@@ -10,7 +10,7 @@ interface HomeIntroProps {
 export function HomeIntro({ productCount, storeCount }: HomeIntroProps) {
   return (
     <section className="space-y-1 pt-4 pb-8 md:pb-10">
-      <h1 className={cn("font-semibold text-2xl text-foreground tracking-tight md:text-3xl", enterClass())}>
+      <h1 className={cn("text-title-h5 text-foreground md:text-title-h4", enterClass())}>
         Hardware al <span className="text-primary">mejor precio</span>
       </h1>
       <p className={cn("text-muted-foreground text-sm md:text-base", enterClass())} style={enterStyle(80)}>

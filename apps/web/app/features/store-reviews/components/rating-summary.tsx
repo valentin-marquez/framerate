@@ -29,7 +29,7 @@ export function RatingSummary({ storeSlug }: RatingSummaryProps) {
         <CardContent>
           <div className="flex flex-col items-center gap-3 py-2 sm:flex-row sm:items-center sm:gap-6 sm:py-1">
             <div className="flex flex-col items-center gap-1 sm:min-w-[120px]">
-              <span className="text-4xl font-semibold tabular-nums text-muted-foreground/40">—</span>
+              <span className="text-title-h3 tabular-nums text-muted-foreground/40">—</span>
               <RatingStars value={0} size="md" />
               <span className="text-xs text-muted-foreground">Sin reseñas todavía</span>
             </div>
@@ -50,7 +50,7 @@ export function RatingSummary({ storeSlug }: RatingSummaryProps) {
       <CardContent>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="flex flex-col items-center gap-1 sm:min-w-[120px]">
-            <span className="text-4xl font-semibold tabular-nums">{Number(avg).toFixed(1)}</span>
+            <span className="text-title-h3 tabular-nums">{Number(avg).toFixed(1)}</span>
             <RatingStars value={avg} size="md" />
             <span className="text-xs text-muted-foreground">
               {total} reseña{total === 1 ? "" : "s"}

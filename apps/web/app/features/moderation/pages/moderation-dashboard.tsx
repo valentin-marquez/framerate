@@ -183,7 +183,7 @@ export default function ModerationDashboard({ loaderData }: Route.ComponentProps
       <AdminTabs current="/admin/moderation" />
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Moderación</h1>
+          <h1 className="text-title-h4 md:text-title-h3">Moderación</h1>
           <p className="text-sm text-muted-foreground">
             {view === "cola"
               ? `${total} ${total === 1 ? "reporte pendiente" : "reportes pendientes"}`

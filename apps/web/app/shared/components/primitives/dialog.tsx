@@ -248,10 +248,7 @@ function DialogTitle({ children, className }: DialogTitleProps) {
   if (!context) throw new Error("DialogTitle must be used within Dialog");
 
   return (
-    <h2
-      id={context.ids.title}
-      className={cn("text-lg font-semibold leading-none tracking-tight text-card-foreground", className)}
-    >
+    <h2 id={context.ids.title} className={cn("text-label-lg text-card-foreground", className)}>
       {children}
     </h2>
   );

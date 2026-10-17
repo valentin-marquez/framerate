@@ -72,7 +72,7 @@ export function ProbabilityMeter({ evidence }: { evidence: ReviewEvidence }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-baseline gap-2">
-        <span className="font-semibold text-2xl tabular-nums tracking-tight">{Math.round(low * 100)}%</span>
+        <span className="text-title-h5 tabular-nums">{Math.round(low * 100)}%</span>
         <span className="text-muted-foreground text-xs">{VERDICT_LABELS[verdict]}</span>
       </div>
       <div

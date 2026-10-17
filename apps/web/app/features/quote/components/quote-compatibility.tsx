@@ -108,7 +108,7 @@ export function CompatibilityList({
       className={cn("bg-card rounded-3xl border border-border/40 shadow-sm overflow-hidden", className)}
     >
       <div className="p-6 border-b border-border/40 bg-secondary/5">
-        <h2 className="text-xl font-semibold tracking-tight">Compatibilidad</h2>
+        <h2 className="text-title-h6">Compatibilidad</h2>
       </div>
       {open.length > 0 && (
         <ul className="divide-y divide-border/40">

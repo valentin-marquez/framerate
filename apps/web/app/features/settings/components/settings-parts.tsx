@@ -19,7 +19,7 @@ export function SettingsSection({
     <section className={cn("space-y-4 border-border border-t pt-8 first:border-t-0 first:pt-0", className)}>
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="font-semibold text-foreground text-xl">{title}</h2>
+          <h2 className="text-foreground text-title-h6">{title}</h2>
           {description && <p className="text-muted-foreground text-sm">{description}</p>}
         </div>
         {action}

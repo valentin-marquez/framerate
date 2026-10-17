@@ -105,7 +105,7 @@ export function SystemCard({ system, tone, selected, to }: SystemCardProps) {
         <span className={cn("size-2 shrink-0 rounded-full", DOT[tone])} aria-hidden />
       </div>
       <div>
-        <p className="text-3xl font-semibold tabular-nums tracking-tight">{system.value}</p>
+        <p className="text-title-h4 tabular-nums">{system.value}</p>
         <p className="text-xs text-muted-foreground">{SYSTEM_CAPTIONS[system.id]}</p>
       </div>
       {system.history && system.history.length > 0 ? (
@@ -178,7 +178,7 @@ export function PipelinePanel({ pipeline, now }: { pipeline: PipelineHealth; now
 
       <PipelineBox title="Sin publicar">
         <div>
-          <p className="text-3xl font-semibold tabular-nums tracking-tight">{count(pipeline.hidden)}</p>
+          <p className="text-title-h4 tabular-nums">{count(pipeline.hidden)}</p>
           <p className="text-xs text-muted-foreground">
             {pipeline.oldestHiddenAt
               ? `ofertas ocultas, la más vieja ${timeAgo(pipeline.oldestHiddenAt, now)}`

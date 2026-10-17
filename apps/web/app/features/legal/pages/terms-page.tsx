@@ -36,7 +36,7 @@ export default function Terms() {
         <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary tracking-tight">
           Acuerdo legal
         </div>
-        <h1 className="text-4xl font-semibold tracking-tight lg:text-5xl">Términos de servicio</h1>
+        <h1 className="text-title-h3 lg:text-title-h2">Términos de servicio</h1>
         <p className="text-muted-foreground">
           Última actualización: <span className="font-medium text-foreground">{lastUpdate}</span>
         </p>

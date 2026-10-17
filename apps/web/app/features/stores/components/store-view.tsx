@@ -45,7 +45,7 @@ export function StoreView({ store, categories, viewerRole, isAuthenticated }: St
           />
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <h1 className="font-semibold text-3xl text-foreground tracking-tight">{store.name}</h1>
+              <h1 className="text-title-h4 text-foreground">{store.name}</h1>
               {store.verifiedAt && (
                 <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-1.5 py-0.5 font-medium text-foreground text-xs">
                   <IconCircleCheckFilled className="size-3.5 text-success" />
@@ -84,9 +84,7 @@ export function StoreView({ store, categories, viewerRole, isAuthenticated }: St
             href="#resenas"
             className="flex items-center gap-4 rounded-3xl border border-border bg-card p-4 transition-colors hover:border-foreground/15"
           >
-            <span className="font-semibold text-4xl text-foreground tabular-nums tracking-tight">
-              {decimal(rating.average)}
-            </span>
+            <span className="text-title-h3 text-foreground tabular-nums">{decimal(rating.average)}</span>
             <span className="space-y-1">
               <RatingStars value={rating.average} size="sm" />
               <span className="block text-muted-foreground text-xs">

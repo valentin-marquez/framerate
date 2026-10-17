@@ -175,9 +175,7 @@ export function PriceHistoryPanel({
             </p>
             {today && (
               <>
-                <p className="font-semibold text-2xl text-foreground tabular-nums tracking-tight">
-                  {formatCLP(today.cash)}
-                </p>
+                <p className="text-title-h5 text-foreground tabular-nums">{formatCLP(today.cash)}</p>
                 <p className="text-muted-foreground text-sm">
                   en {today.storeName}
                   {first && (

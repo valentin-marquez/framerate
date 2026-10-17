@@ -94,7 +94,7 @@ export default function AdminSupportPage({ loaderData }: Route.ComponentProps) {
       <AdminTabs current="/admin/support" />
       <header className="space-y-4">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="font-semibold text-3xl tracking-tight md:text-4xl">Soporte</h1>
+          <h1 className="text-title-h4 md:text-title-h3">Soporte</h1>
           <Button
             variant="outline"
             size="sm"

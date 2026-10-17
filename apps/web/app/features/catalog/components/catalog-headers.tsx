@@ -32,7 +32,7 @@ export function CategoryHeader({
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/60 to-transparent md:via-background/40" />
       <div className="flex min-h-56 flex-col justify-end gap-3 p-6 pt-24 md:min-h-72 md:p-10 md:pt-32">
-        <h1 className={cn("font-semibold text-3xl text-foreground tracking-tight md:text-5xl", enterClass())}>
+        <h1 className={cn("text-title-h4 text-foreground md:text-title-h2", enterClass())}>
           {categoryLabel(category)}
         </h1>
         <ul
@@ -54,7 +54,7 @@ export function SearchHeader({ total, search }: { total: number; search: string 
     <header className={cn("space-y-1 pt-2", enterClass())}>
       {/* Al buscar mientras se escribe, título y conteo cambian en el lugar: la key los vuelve a montar y entran
           con un deslizamiento corto (transitions.dev, "text states swap" y "number pop-in", sin desenfoque). */}
-      <h1 className="font-semibold text-3xl text-foreground tracking-tight md:text-4xl">
+      <h1 className="text-title-h4 text-foreground md:text-title-h3">
         <span key={search ?? ""} className="inline-block slide-in-from-bottom-1 fade-in-0 animate-in duration-fast">
           {search ? `“${search}”` : "Todo el catálogo"}
         </span>

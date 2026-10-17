@@ -132,7 +132,7 @@ export default function ReviewDashboard({ loaderData }: Route.ComponentProps) {
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
       <AdminTabs current="/admin/gatekeeper" />
       <header className="space-y-1">
-        <h1 className="font-semibold text-3xl tracking-tight md:text-4xl">Gatekeeper</h1>
+        <h1 className="text-title-h4 md:text-title-h3">Gatekeeper</h1>
         <p className="text-muted-foreground text-sm">
           {items.length === 0
             ? "Nada pendiente."

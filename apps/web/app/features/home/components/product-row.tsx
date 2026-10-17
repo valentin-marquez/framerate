@@ -39,7 +39,7 @@ export function ProductRow({
     <section className={cn("space-y-3", !priority && "[contain-intrinsic-size:auto_245px] [content-visibility:auto]")}>
       <div className="flex items-end justify-between gap-4">
         <Link to={href} prefetch="intent" className="group inline-flex items-baseline gap-2 min-w-0">
-          <h2 className="text-lg md:text-xl font-semibold tracking-tight text-foreground truncate group-hover:text-primary transition-colors">
+          <h2 className="text-label-lg md:text-title-h6 text-foreground truncate group-hover:text-primary transition-colors">
             {title}
           </h2>
         </Link>

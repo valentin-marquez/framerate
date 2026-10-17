@@ -318,7 +318,7 @@ export function UsersAdminView({ data, q, filter, page, selected, history, curre
       <AdminTabs current="/admin/users" />
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="font-semibold text-3xl tracking-tight md:text-4xl">Usuarios</h1>
+          <h1 className="text-title-h4 md:text-title-h3">Usuarios</h1>
           <p className="text-muted-foreground text-sm">
             {q ? `${data.counts.all} coinciden con "${q}"` : `${data.counts.all} registrados`}, {data.counts.staff} en
             el equipo

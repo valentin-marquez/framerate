@@ -19,7 +19,7 @@ export default function StoreReviewsPage({ params }: Route.ComponentProps) {
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Reseñas de {params.slug}</h1>
+        <h1 className="text-title-h5">Reseñas de {params.slug}</h1>
         <p className="text-sm text-muted-foreground">
           Comparte tu experiencia con esta tienda y ayuda a otros compradores.
         </p>

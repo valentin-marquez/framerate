@@ -40,7 +40,7 @@ export function ClaimView({
   return (
     <main className="mx-auto max-w-5xl space-y-10 px-4 py-8">
       <header className="max-w-2xl space-y-2">
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight">Verifica tu tienda</h1>
+        <h1 className="text-title-h4 text-foreground">Verifica tu tienda</h1>
         <p className="text-muted-foreground">
           Verifica que el dominio es tuyo y administra el perfil de tu tienda en Framerate.
         </p>
@@ -70,7 +70,7 @@ export function ClaimView({
       {claims.length > 0 && (
         <section className="space-y-4 border-border border-t pt-8">
           <div className="space-y-1">
-            <h2 className="font-semibold text-foreground text-xl">Tus verificaciones</h2>
+            <h2 className="text-foreground text-title-h6">Tus verificaciones</h2>
             <p className="text-muted-foreground text-sm">
               Una verificación pendiente vence a los 7 días si no encontramos el registro.
             </p>

@@ -90,15 +90,13 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
         <div className="min-w-0 space-y-8 lg:col-start-2 lg:row-span-3 lg:row-start-1">
           <header className="space-y-2">
             {product.brand && <p className="text-muted-foreground text-sm">{product.brand}</p>}
-            <h1 className="text-balance font-semibold text-3xl text-foreground tracking-tight">{product.name}</h1>
+            <h1 className="text-balance text-title-h4 text-foreground">{product.name}</h1>
           </header>
 
           <section aria-label="Precio" className="space-y-5 rounded-3xl border border-border bg-card p-5">
             {best?.inStock ? (
               <div className="space-y-1">
-                <p className="font-semibold text-4xl text-foreground tabular-nums tracking-tight">
-                  {formatCLP(best.priceCash)}
-                </p>
+                <p className="text-title-h3 text-foreground tabular-nums">{formatCLP(best.priceCash)}</p>
                 <PriceDropLine price={best.priceCash} reference={product.referencePrice} />
                 <p className="text-muted-foreground text-sm">
                   Con transferencia en {best.store.name}
@@ -109,7 +107,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
               </div>
             ) : (
               <div className="space-y-1">
-                <p className="font-semibold text-2xl text-foreground tracking-tight">Sin stock por ahora</p>
+                <p className="text-title-h5 text-foreground">Sin stock por ahora</p>
                 {best && (
                   <p className="text-muted-foreground text-sm">
                     Ninguna tienda lo tiene disponible. El último precio fue {formatCLP(best.priceCash)} en{" "}
@@ -157,7 +155,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-semibold text-foreground text-lg tracking-tight">
+            <h2 className="text-foreground text-label-lg">
               {offers.length > 1 && inStock.length > 0
                 ? `Dónde comprarlo (${inStock.length} con stock)`
                 : "Dónde comprarlo"}
@@ -220,7 +218,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
               aria-busy={changingPeriod}
               className={cn("space-y-3 transition-opacity", changingPeriod && "opacity-60")}
             >
-              <h2 className="font-semibold text-foreground text-lg tracking-tight">Cómo se ha movido el precio</h2>
+              <h2 className="text-foreground text-label-lg">Cómo se ha movido el precio</h2>
               <PriceHistoryPanel
                 productName={product.name}
                 history={history}
@@ -237,7 +235,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
           <section className="space-y-3 lg:col-start-1 lg:row-start-2">
             {specs.length > 0 && (
               <>
-                <h2 className="font-semibold text-foreground text-lg tracking-tight">Ficha técnica</h2>
+                <h2 className="text-foreground text-label-lg">Ficha técnica</h2>
                 <dl className="grid grid-cols-2 gap-2">
                   {specs.map(({ label, value, knowledge }) => (
                     <div key={label} className="rounded-2xl bg-secondary/60 px-3 py-2.5">

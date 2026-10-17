@@ -60,7 +60,7 @@ export default function TicketPage({ loaderData }: Route.ComponentProps) {
     <div className="container mx-auto max-w-3xl px-6 py-12 lg:py-20">
       <header className="mb-8 space-y-3">
         <p className="text-muted-foreground text-sm">Ticket de soporte</p>
-        <h1 className="font-semibold text-3xl tracking-tight">{ticket.subject}</h1>
+        <h1 className="text-title-h4">{ticket.subject}</h1>
         <div className="flex flex-wrap items-center gap-3 text-muted-foreground text-sm">
           <span className="inline-flex items-center gap-1.5">
             <Icon className="size-4" />

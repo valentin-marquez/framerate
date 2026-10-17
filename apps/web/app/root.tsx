@@ -287,7 +287,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         <Logo className="size-9" />
       </Link>
       <p className="font-mono text-sm tabular-nums text-muted-foreground">{status}</p>
-      <h1 className="mt-2 text-balance text-3xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="mt-2 text-balance text-title-h4">{title}</h1>
       <p className="mt-3 max-w-md text-balance text-muted-foreground">{details}</p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button size="lg" nativeButton={false} render={<Link to="/" />}>

@@ -157,7 +157,7 @@ export function FeedbackDialog({ open, onOpenChange, lang }: FeedbackDialogProps
       <div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-3xl border border-border bg-background shadow-2xl">
         <div className="flex items-start justify-between p-5 border-b border-border/60">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">{t("feedback_dialog_title")}</h2>
+            <h2 className="text-label-lg">{t("feedback_dialog_title")}</h2>
             <p className="text-sm text-muted-foreground mt-0.5">{t("feedback_dialog_desc")}</p>
           </div>
           <button

@@ -13,7 +13,7 @@ export function StoresStrip({ stores }: { stores: HomeData["stores"] }) {
   const rest = ranked.slice(TOP);
   return (
     <section className="space-y-3">
-      <h2 className="font-semibold text-foreground text-lg tracking-tight md:text-xl">Tiendas que comparamos</h2>
+      <h2 className="text-foreground text-label-lg md:text-title-h6">Tiendas que comparamos</h2>
 
       {/* Teléfono: dos filas que avanzan solas. Segundos por celda: ~28 px/s arriba (se alcanza a leer) y ~45 abajo. */}
       <div className="-mx-4 space-y-2 [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)] md:hidden">

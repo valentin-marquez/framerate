@@ -44,7 +44,7 @@ export function ProfileView({
           <Avatar src={profile.avatarUrl} name={name} />
           <div className="min-w-0 space-y-3 sm:space-y-2 sm:pt-1">
             <div>
-              <h1 className="truncate font-semibold text-2xl text-foreground tracking-tight sm:text-3xl">{name}</h1>
+              <h1 className="truncate text-title-h5 text-foreground sm:text-title-h4">{name}</h1>
               <p className="text-muted-foreground">@{profile.username}</p>
             </div>
             {profile.bio && (
@@ -74,7 +74,7 @@ export function ProfileView({
 
       <section className="min-w-0 space-y-4 border-border border-t pt-8">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-          <h2 className="font-semibold text-foreground text-xl">
+          <h2 className="text-foreground text-title-h6">
             {t(isOwner ? "profile_quotes_title_owner" : "profile_quotes_title_other", { name })}
           </h2>
           {isOwner && quotes.length > 0 && <CreateQuoteDialog />}
