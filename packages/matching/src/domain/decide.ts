@@ -46,7 +46,8 @@ const FREE_TEXT: Partial<Record<Category, readonly string[]>> = {
 };
 
 export const freeTextFields = (category: string): readonly string[] => FREE_TEXT[category as Category] ?? [];
-const spaceless = (s: string) => s.replace(/\s+/g, "");
+// Haiku a veces pega el socket al modelo ("a520m k am4", "b550m a sam4"); el chipset ya lo fija, así que no separa.
+const modelCode = (s: string) => s.replace(/(?:^| )(?:s?am[45]|(?:lga ?|s)\d{4})(?= |$)/g, "").replace(/\s+/g, "");
 
 export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison {
   const vetoes: string[] = [];
@@ -69,7 +70,7 @@ export function compare(offer: Fingerprint, candidate: Fingerprint): Comparison 
     if (sameWords && (field === "line" || field === "model" || field === "series")) continue;
     if (a === undefined || b === undefined || a === b) continue;
     // Un código de modelo no cambia por los espacios: el regex escribe "b550mk" y Haiku "b550m k".
-    if (field === "model" && typeof a === "string" && typeof b === "string" && spaceless(a) === spaceless(b)) continue;
+    if (field === "model" && typeof a === "string" && typeof b === "string" && modelCode(a) === modelCode(b)) continue;
     if (soft.has(field)) evidence.textMismatch = [...(evidence.textMismatch ?? []), field];
     else vetoes.push(`attribute:${field}`);
   }

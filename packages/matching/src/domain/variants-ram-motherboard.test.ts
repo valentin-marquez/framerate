@@ -74,6 +74,15 @@ describe("placa madre", () => {
     ).toEqual([]);
   });
 
+  test("el socket pegado al modelo por Haiku no veta", () => {
+    const fp = buildFingerprint({ category: "motherboard", title: "ASUS Prime A520M-K" });
+    const withModel = (model: string) => ({ ...fp, attributes: { ...fp.attributes, model } });
+    expect(compare(withModel("a520m k am4"), withModel("a520m k")).vetoes).toEqual([]);
+    expect(compare(withModel("b550m a sam4"), withModel("b550m a")).vetoes).toEqual([]);
+    expect(compare(withModel("z790 lga 1700"), withModel("z790")).vetoes).toEqual([]);
+    expect(compare(withModel("a520m k am4"), withModel("a520m a")).vetoes).toContain("attribute:model");
+  });
+
   test("model junta chipset, formato y la letra del sufijo", () => {
     expect(PROFILES.motherboard.extract("M/B ASUS PRIME H610M-A").model).toBe("h610ma");
     expect(PROFILES.motherboard.extract("Placa Madre ASUS PRIME A520M-K").model).toBe("a520mk");
