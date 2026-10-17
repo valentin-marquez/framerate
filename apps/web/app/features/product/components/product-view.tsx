@@ -15,6 +15,7 @@ import {
   priceVerdict,
   summarizeHistory,
 } from "~/features/product/utils/price-history";
+import { AdSlot } from "~/shared/components/ad-slot";
 import { OutboundLink } from "~/shared/components/outbound-link";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { buttonVariants } from "~/shared/components/primitives/button";
@@ -265,8 +266,12 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
           </section>
         )}
 
-        {/* Bajo la ficha técnica: en teléfono queda después de precio y tiendas, que es lo que se viene a ver. */}
-        <ProductFamily product={product} className="lg:col-start-1 lg:row-start-3" />
+        {/* Bajo la ficha técnica: en teléfono queda después de precio y tiendas, que es lo que se viene a ver. En
+            escritorio el anuncio ocupa el hueco que deja la columna izquierda junto a las tiendas y el historial. */}
+        <div className="space-y-6 lg:col-start-1 lg:row-start-3">
+          <ProductFamily product={product} />
+          <AdSlot slot="5052860512" className="h-[250px]" />
+        </div>
       </div>
     </div>
   );

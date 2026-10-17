@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect } from "react";
+import { cn } from "~/shared/lib/utils";
 
 const AD_CLIENT = "ca-pub-9835660497171893";
 const SCRIPT_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${AD_CLIENT}`;
@@ -13,7 +14,7 @@ declare global {
  * Unidad responsiva de AdSense rotulada "Anuncio": toma el ancho que le dé la columna y el alto va fijo por CSS (sin
  * `data-ad-format`, AdSense respeta el tamaño del `<ins>`), para que el anuncio no empuje la página al llegar.
  */
-export function AdSlot({ slot }: { slot: string }) {
+export function AdSlot({ slot, className = "h-[100px] @3xl:h-[90px]" }: { slot: string; className?: string }) {
   // El script entra después de hidratar: si viene en el HTML, mete el suyo en el <head> y React no lo reconoce.
   useEffect(() => {
     if (!document.querySelector(`script[src="${SCRIPT_SRC}"]`)) {
@@ -31,7 +32,7 @@ export function AdSlot({ slot }: { slot: string }) {
     <aside aria-label="Anuncio" className="min-w-0 space-y-1">
       <p className="text-label-xs text-muted-foreground">Anuncio</p>
       {/* El aviso queda debajo del anuncio: lo tapa si carga y se ve si un bloqueador lo oculta o no hay anuncio. */}
-      <div className="relative h-[100px] @3xl:h-[90px]">
+      <div className={cn("relative", className)}>
         <p className="absolute inset-0 flex items-center justify-center rounded-xl border border-border border-dashed bg-card px-6 text-balance text-center text-muted-foreground text-paragraph-xs">
           Este espacio ayuda a que Framerate siga siendo gratis. Si te sirve, considera permitir anuncios aquí.
         </p>
