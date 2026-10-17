@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test";
-import { findLd, jsonLdNodes, parseClp } from "./html";
+import { silentLogger } from "@framerate/kit";
+import type { RawOffer } from "../domain/normalize";
+import type { CrawlContext } from "./adapter";
+import { fichaDue, fichaText, findLd, jsonLdNodes, parseClp } from "./html";
 
 const page = `<html><head>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Tienda"},{"@type":["Product"],"sku":"DUAL-RTX3060-O12G-V2","gtin13":"4711081878452"}]}</script>
@@ -22,4 +25,34 @@ test("parseClp lee precios chilenos con entidades", () => {
   expect(parseClp("&#036; 639.990")).toBe(639_990);
   expect(parseClp("$1.234.990")).toBe(1_234_990);
   expect(parseClp("")).toBeNull();
+});
+
+test("fichaText: reusa el texto guardado, pide el de la nueva y reintenta la vacía sólo en su turno", async () => {
+  const saved = new Map<string, Partial<RawOffer>>([
+    ["https://t.example/con", { sourceText: "Guardado" }],
+    ["https://t.example/sin", { sourceText: null }],
+  ]);
+  const ctx = {
+    log: silentLogger,
+    known: async (url: string) => saved.get(url) as RawOffer | undefined,
+  } as unknown as CrawlContext;
+  let calls = 0;
+  const fetchText = async () => {
+    calls++;
+    return "Nuevo";
+  };
+  const slots = Array.from({ length: 4 }, (_, i) => i * 6 * 3_600_000);
+  const due = slots.find((t) => fichaDue("https://t.example/sin", t)) ?? 0;
+  const notDue = slots.find((t) => !fichaDue("https://t.example/sin", t)) ?? 0;
+
+  expect(await fichaText(ctx, "https://t.example/con", due, fetchText)).toBe("Guardado");
+  expect(await fichaText(ctx, "https://t.example/nueva", notDue, fetchText)).toBe("Nuevo");
+  expect(await fichaText(ctx, "https://t.example/sin", notDue, fetchText)).toBeNull();
+  expect(await fichaText(ctx, "https://t.example/sin", due, fetchText)).toBe("Nuevo");
+  expect(calls).toBe(2);
+
+  const failing = async () => {
+    throw new Error("429");
+  };
+  expect(await fichaText(ctx, "https://t.example/nueva", notDue, failing)).toBeNull();
 });

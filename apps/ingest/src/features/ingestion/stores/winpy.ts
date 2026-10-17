@@ -3,7 +3,7 @@ import { decodeEntities, htmlLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { getPage, parseClp } from "./html";
+import { fichaDue, getPage, parseClp } from "./html";
 
 /**
  * Winpy (Magento, HTML del servidor). El listado (`/<ruta>/?pagina=N`, 40 por página, termina cuando viene vacío)
@@ -76,15 +76,6 @@ export function listingCards(html: string): { slug: string; priceCash: number | 
     if (!slug) return [];
     return [{ slug, priceCash: parseClp(block.match(/class="valor">([^<]*)</)?.[1] ?? "") }];
   });
-}
-
-const FICHA_SLOTS = 4;
-const SLOT_MS = 6 * 60 * 60 * 1000;
-/** El cron corre cada 6 h: cada producto cae en uno de cuatro turnos y repasa su ficha una vez al día. */
-export function fichaDue(slug: string, now: number): boolean {
-  let h = 2166136261;
-  for (const ch of slug) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
-  return (h >>> 0) % FICHA_SLOTS === Math.floor(now / SLOT_MS) % FICHA_SLOTS;
 }
 
 const prop = (html: string, name: string) =>

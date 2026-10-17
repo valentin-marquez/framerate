@@ -47,3 +47,34 @@ export async function getPage(ctx: CrawlContext, url: string): Promise<string | 
     throw error;
   }
 }
+
+const FICHA_SLOTS = 4;
+const SLOT_MS = 6 * 60 * 60 * 1000;
+/** El cron corre cada 6 h: cada producto cae en uno de cuatro turnos y repasa su ficha una vez al día. */
+export function fichaDue(slug: string, now: number): boolean {
+  let h = 2166136261;
+  for (const ch of slug) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return (h >>> 0) % FICHA_SLOTS === Math.floor(now / SLOT_MS) % FICHA_SLOTS;
+}
+
+/**
+ * Texto de ficha que cuesta una petición aparte (MyShop, PrestaShop, SP Digital): el guardado se reusa, la oferta nueva
+ * lo pide al tiro y una conocida sin texto sólo en su turno diario, o una ficha vacía se pediría en cada corrida. Si la
+ * petición falla, la oferta entra igual, sin texto.
+ */
+export async function fichaText(
+  ctx: CrawlContext,
+  url: string,
+  now: number,
+  fetchText: () => Promise<string | null>,
+): Promise<string | null> {
+  const known = await ctx.known?.(url);
+  if (known?.sourceText) return known.sourceText;
+  if (known && !fichaDue(url, now)) return null;
+  try {
+    return await fetchText();
+  } catch (error) {
+    ctx.log.warn("ficha.text_failed", { url, error });
+    return null;
+  }
+}

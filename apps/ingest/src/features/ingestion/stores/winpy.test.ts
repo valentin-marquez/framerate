@@ -5,8 +5,9 @@ import type { RawOffer } from "../domain/normalize";
 // de la GPU. El kit no tiene ficha en el fixture: simula un 404 entre listado y ficha.
 import fixture from "./__fixtures__/winpy.json";
 import type { CrawlContext } from "./adapter";
+import { fichaDue } from "./html";
 import { HttpError } from "./http";
-import { createWinpyAdapter, fichaDue, listingCards, sourceTextOf, toRawOffer } from "./winpy";
+import { createWinpyAdapter, listingCards, sourceTextOf, toRawOffer } from "./winpy";
 
 const BASE = "https://www.winpy.cl";
 const GPU = "tarjeta-grafica-asus-dual-geforce-rtx-5050-oc-de-8gb-gddr6";
