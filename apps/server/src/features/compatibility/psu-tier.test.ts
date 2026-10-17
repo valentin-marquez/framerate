@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { checkCompatibility, type Part } from "./compatibility";
-import { brandKeys, matchPsuTier, parsePsuTiers, parseWattages } from "./psu-tier";
+import { BRAND_BASE, brandBase, brandKeys, matchPsuTier, parsePsuTiers, parseWattages } from "./psu-tier";
 
 // Encabezado y filas con la forma de la pestaña "Full List": marca, serie, subserie y variante sólo en la primera fila.
 const CSV = `"Brand","Series ","","","Wattages ","Tier ","Year","Size","ATX","Input","Modularity","Efficiency","Prim","Sec","Reg","ODM","Platform","Notes"
@@ -115,6 +115,23 @@ describe("vínculo de una fuente del catálogo", () => {
 
   test("la potencia sale del nombre si no viene en los datos", () => {
     expect(matchPsuTier("1st Player ACK 650W Bronze", null, of("1stplayer"))?.tier).toBe("C-");
+  });
+});
+
+describe("nota base por marca", () => {
+  test("es el rango donde cae la mitad central de sus notas; con menos de 3 no hay", () => {
+    expect(brandBase(["A", "B", "B", "C", "E", "F"])).toEqual({ tier: "E", best: "B" });
+    expect(brandBase(["B", "C"])).toBeNull();
+  });
+
+  test("se usa sólo cuando ningún modelo calza, y siempre especulativa", () => {
+    const rows = [
+      { series: "Focus", subseries: "GX", variant: "", wattages: [850], tier: "A", limited: false },
+      { series: BRAND_BASE, subseries: "", variant: "", wattages: [], tier: "C", best: "A", limited: true },
+    ];
+    expect(matchPsuTier("Seasonic Focus GX-850 850W", 850, rows)).toEqual({ tier: "A", best: "A", limited: false });
+    expect(matchPsuTier("Seasonic B12 BC-650 650W", 650, rows)).toEqual({ tier: "C", best: "A", limited: true });
+    expect(matchPsuTier("Seasonic sin potencia", null, rows)).toEqual({ tier: "C", best: "A", limited: true });
   });
 });
 

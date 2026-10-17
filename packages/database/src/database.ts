@@ -665,9 +665,11 @@ export interface PsuTierTable {
   platform: string | null;
   notes: string | null;
   source_version: string;
-  /** "sheet" (la tier list) o "own" (nota propia desde reseñas, siempre especulativa). */
+  /** "sheet" (la tier list), "own" (nota propia desde reseñas) o "brand" (nota base de la marca); las dos últimas, especulativas. */
   origin: Defaulted<string>;
   source_urls: string | null;
+  /** Sólo en las filas de marca (`series` = "*"): la mejor nota del rango; `tier` es la peor. */
+  best: string | null;
 }
 
 /** Referencia de procesadores desde las fichas oficiales (#179, migración 0029). Se reemplaza entera al importar. */

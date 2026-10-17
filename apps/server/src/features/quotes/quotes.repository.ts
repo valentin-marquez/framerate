@@ -203,7 +203,7 @@ const gpuTdpQuery = (db: Db, publicId: string) =>
 const psuTierQuery = (db: Db, publicId: string) =>
   db.query
     .selectFrom("psu_tier as t")
-    .select(["t.brand_key", "t.series", "t.subseries", "t.variant", "t.wattages", "t.tier", "t.limited"])
+    .select(["t.brand_key", "t.series", "t.subseries", "t.variant", "t.wattages", "t.tier", "t.limited", "t.best"])
     .where(({ exists, selectFrom }) =>
       exists(
         selectFrom("quote_items as qi")

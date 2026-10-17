@@ -134,7 +134,13 @@ export interface PsuTier {
   limited: boolean;
 }
 
-type Candidate = Pick<PsuTierRow, "series" | "subseries" | "variant" | "wattages" | "tier" | "limited">;
+type Candidate = Pick<PsuTierRow, "series" | "subseries" | "variant" | "wattages" | "tier" | "limited"> & {
+  /** Sólo en la fila de marca (`series` = "*"). */
+  best?: string | null;
+};
+
+/** La serie de la fila con la nota base de una marca: se usa cuando ningún modelo calza. */
+export const BRAND_BASE = "*";
 
 const letter = (tier: string) => tier[0] ?? "F";
 /** A+ < A < A- < B+ … < F: menor es mejor. */
@@ -189,6 +195,24 @@ const required = (words: string[]) => words.filter((w) => !SOFT.has(w));
  * el rango de notas (`tier` la peor, `best` la mejor). Sin fila, `null`: sin tier nunca es malo.
  */
 export function matchPsuTier(name: string, wattage: number | null, rows: readonly Candidate[]): PsuTier | null {
+  const model = matchModel(name, wattage, rows);
+  if (model) return model;
+  const base = rows.find((r) => r.series === BRAND_BASE);
+  return base ? { tier: base.tier, best: base.best ?? base.tier, limited: true } : null;
+}
+
+/**
+ * La nota base de una marca con sus propias notas: el rango donde cae la mitad central (`best` el cuartil bueno,
+ * `tier` el malo). Con menos de 3 modelos no hay base.
+ */
+export function brandBase(tiers: readonly string[]): { tier: string; best: string } | null {
+  if (tiers.length < 3) return null;
+  const sorted = [...tiers].sort((a, b) => rank(a) - rank(b));
+  const at = (q: number) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))] as string;
+  return { tier: at(0.75), best: at(0.25) };
+}
+
+function matchModel(name: string, wattage: number | null, rows: readonly Candidate[]): PsuTier | null {
   const watts = wattage ?? Number(name.match(/(\d{3,4})\s*w\b/i)?.[1] ?? 0);
   if (!watts) return null;
   // "80 Plus" no es la variante "Plus"; la planilla escribe el modelo sin la potencia ("UD-GM" es UD850GM).

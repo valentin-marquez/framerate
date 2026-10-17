@@ -1,0 +1,154 @@
+[
+  {
+    "brand": "GameMax",
+    "tier": "E",
+    "best": "D",
+    "oem": "Sohoo (Guangdong Sohoo Technology), según cultists.network y el reporte de Cybenetics del GX-1050 PRO",
+    "evidence": "measured",
+    "notes_es": "Sohoo fabrica la línea GameMax y en Cybenetics el GX-1050 PRO no corta la OCP de 12 V: pasó 127 A (145 %) sin apagarse y no recibió certificación ATX 3.1, lo que es un fallo de seguridad. La Rampage 1050 Platinum tiene una reseña positiva de Tech4Gamers en regulación, pero sin medición independiente que la respalde, así que la mejor línea queda en D. Los casos GM800 rev.2 y GP-750 vienen de tu brief: el GP-750 aparece con una 12 V menor a la esperada (cultists.network) y el teardown SH008ATX no lo encontré en ninguna fuente. Ajuste: la falla de OCP de la GX-1050 PRO se trata como E, igual que la planilla con unidades sin OCP en 12 V que sí cortan por OPP.",
+    "sources": [
+      "https://www.cybenetics.com/evaluations/psus/2654/pdf/",
+      "https://cybenetics.com/evaluations/psus/2654/ch",
+      "https://cultists.network/12197/gamemax-gx850-pro-review/",
+      "https://cultists.network/?p=12055",
+      "https://tech4gamers.com/gamemax-gx-rampage-1050w-platinum-atx-3-1-review"
+    ]
+  },
+  {
+    "brand": "Clio",
+    "tier": "E",
+    "best": "E",
+    "oem": null,
+    "evidence": "none",
+    "notes_es": "No encontré reseñas, reportes de Cybenetics ni información del fabricante para ninguno de sus modelos (ATX PRO-M-850W-FM, GS-650W, GS-750W, AC-700, ATX-600W). Lo que aparece con nombres parecidos corresponde a otras marcas, como XClio, y no lo asumí como equivalente. Queda en E por falta total de información técnica.",
+    "sources": []
+  },
+  {
+    "brand": "Einarex",
+    "tier": "E",
+    "best": "B",
+    "oem": "CWT (plataforma GPX), según el reporte de Cybenetics del Nexus L1 1000 W",
+    "evidence": "measured",
+    "notes_es": "El Nexus L1 1000 W tiene reporte de Cybenetics con OPP y OCP entre 117 % y 137 %, SCP y OTP que pasan, y cumple ATX 3.1; eso sostiene una C para la línea Nexus. La marca no publica garantía y el mismo reporte marca que no tiene protección por falla de ventilador. Las Axis Master y Maxis Bronze no aparecen en ninguna fuente, así que la nota peor es E. Ajuste: el reporte de Cybenetics de la Nexus L1 1000W (CWT GPX) pasa OCP, OPP, OTP y SCP con ripple de 31 mV, nivel B.",
+    "sources": [
+      "https://www.cybenetics.com/evaluations/psus/2634/cn/",
+      "https://xiaomitoday.com/einarex-nexus-l1-850w-review/"
+    ]
+  },
+  {
+    "brand": "EsGaming",
+    "tier": "E",
+    "best": "E",
+    "oem": null,
+    "evidence": "specs_only",
+    "notes_es": "La marca dice tener fábrica propia, pero no identifica OEM y no encontré reseñas ni reportes de Cybenetics para sus fuentes. Las fichas se contradicen: el ES-RGB750W aparece como 80 Plus Bronze en un retailer chileno y como Gold en otros, lo que es señal de ficha poco confiable.",
+    "sources": [
+      "https://www.paris.cl/fuente-de-poder-certificada-esgaming-es-rgb750w-80-bronze-MKV35MJAZ5.html",
+      "https://www.walmart.com/ip/875972452"
+    ]
+  },
+  {
+    "brand": "Snake Gamer",
+    "tier": "E",
+    "best": "E",
+    "oem": null,
+    "evidence": "specs_only",
+    "notes_es": "Sólo aparece en Mercado Libre con fichas del propio vendedor (Hydra 600 W Bronze y 850 W Gold). No encontré fabricante, certificación verificable ni reseñas; la certificación Gold del 850 W sólo figura en el título de la publicación.",
+    "sources": [
+      "https://www.mercadolibre.cl/shorts/clips/jLGqIX/fuente-poder-hydra-atx-600w-certificada-80-plus-bronze",
+      "https://www.mercadolibre.cl/tienda/snake-gamer"
+    ]
+  },
+  {
+    "brand": "NOX",
+    "tier": "E",
+    "best": "E",
+    "oem": null,
+    "evidence": "specs_only",
+    "notes_es": "No identifican fabricante. Las pruebas que encontré son una nota de lanzamiento del Hummer X 850 W y una reseña de 2020 del Hummer X 700 W sin mediciones, que declara OVP, SCP, OPP, UVP y PFC activo sin verificarlos; la reseña además señala que no tiene modo 0 dB. El Urano VX 750 W es Bronze declarado sin pruebas independientes.",
+    "sources": [
+      "https://www.profesionalreview.com/2021/07/02/nox-hummer-x-fuentes-80-plus-gold/amp/",
+      "https://hardwaresfera.com/en/analisis/fuentes-alimentacion/nox-hummer-x-700w/",
+      "https://www.electroprecio.com/fuente-de-alimentacion-nox-urano-vx-750w-ventilador-14cm-80-plus-bronze"
+    ]
+  },
+  {
+    "brand": "Xtech",
+    "tier": "F",
+    "best": "F",
+    "oem": null,
+    "evidence": "specs_only",
+    "notes_es": "La ficha de Solotodo del Xtech 700 W dice que no tiene certificación 80 Plus, que no tiene PFC activo y que tiene selector de voltaje 115/230 V, con protecciones básicas y sin fabricante ni reseñas. Sin APFC y con esa construcción es el perfil de fuente que la vara marca como insegura. Sólo verificamos el 700 W; el 600 W genérico se trata igual porque es la misma línea de venta, sin ficha propia confirmada.",
+    "sources": [
+      "https://www.solotodo.cl/products/4824-xtech-700w-700-w",
+      "https://store.intcomex.com/Product/Detail/82744"
+    ]
+  },
+  {
+    "brand": "Kronos",
+    "tier": "E",
+    "best": "E",
+    "oem": null,
+    "evidence": "specs_only",
+    "notes_es": "Sólo hay fichas de tienda en Mercado Libre que dicen que el DG850 es 80 Plus Gold, modular y con protecciones OVP, OCT y OTP, sin medición ni fabricante declarado. Un comentario en Slickdeals dice que el darkFlash DG850, con el mismo nombre, no tiene prueba de Cybenetics, y no pudimos confirmar que sea el mismo producto. No la confundas con Cronus (CWT), que es otra marca.",
+    "sources": [
+      "https://www.mercadolibre.cl/shorts/clips/zYmsBc/fuente-poder-kronos-dg850-850w-80-gold-atx-full-modular",
+      "https://slickdeals.net/f/19846869-850w-darkflash-dg850-fully-modular-80-plus-gold-atx-3-1-power-supply-69-99-free-shipping",
+      "https://www.darkflash.com/us/product/dg-series"
+    ]
+  },
+  {
+    "brand": "Mlogix",
+    "tier": "E",
+    "best": "E",
+    "oem": null,
+    "evidence": "none",
+    "notes_es": "No encontramos reseñas ni mediciones del PS750ML ni de otros modelos Mlogix. La única mención es una publicación promocional de Mercado Libre sobre el DX ATX600, sin especificaciones verificables ni fabricante declarado. Va en E por falta total de información técnica, no por señales de peligro.",
+    "sources": ["https://www.mercadolibre.com.ar/blog/fuente-mlogix-dx-atx600/1"]
+  },
+  {
+    "brand": "Aurion",
+    "tier": "E",
+    "best": "E",
+    "oem": null,
+    "evidence": "specs_only",
+    "notes_es": "Sólo hay una ficha de tienda (Paris.cl) del ADK-A850S: 80 Plus Bronze, no modular y ventilador de 120 mm. La garantía de 6 meses es el mínimo legal, no de la marca. No aparecen PFC, protecciones, fabricante ni reseñas, y tampoco encontramos señales de peligro.",
+    "sources": ["https://www.paris.cl/fuente-de-poder-850w-aurion-adk-a850s-80-plus-bronze-atx-MKF21C4QG6.html"]
+  },
+  {
+    "brand": "Morpheus",
+    "tier": "E",
+    "best": "D",
+    "oem": "Helly Technology, según ProfesionalReview para la 3.ª generación MORPHEO de ABYSM; no confirmado para el 650 W ni el 750 W",
+    "evidence": "measured",
+    "notes_es": "La línea que se vende como Morpheus es la Morpheo GX5 de ABYSM. La única reseña con mediciones (Cybenetics, ripple y regulación) es del modelo 1000 W, no del 650 W ni del 750 W; declara APFC activo y protecciones OVP, UVP, OTP, OLP, OPP y SCP, y sale bien parada. Para lo que vendemos sólo hay fichas, así que queda en D y no en C; el nombre en la ficha suele escribirse Morpheo. Ajuste: la medición es de otro modelo (Morpheo GX5 1000 W de ABYSM) y no está confirmado que sea la misma marca ni plataforma.",
+    "sources": [
+      "https://www.profesionalreview.com/2024/07/17/abysm-morpheo-gx5-1000w-review/",
+      "https://www.pcbox.com/ab226501-caja-abysm--morpheo-gx5--negro/p",
+      "https://chip7.pt/componentes-hardware/fontes-alimentacao/abysm/ab226501"
+    ]
+  },
+  {
+    "brand": "GamePro / Digital Alliance",
+    "tier": "E",
+    "best": "E",
+    "oem": null,
+    "evidence": "none",
+    "notes_es": "No encontramos reseñas ni fichas verificables de GamePro ni de Digital Alliance. El único resultado parecido es un listado \"Game Pro 600W 80 Plus Bronze\" de PCTronix en Intcomex, sin calificaciones ni fabricante, y no pudimos confirmar que sea la misma marca. Va en E por falta total de información.",
+    "sources": ["https://store.intcomex.com/Product/Detail/489564"]
+  },
+  {
+    "brand": "Apexgaming",
+    "tier": "E",
+    "best": "D",
+    "oem": "Solytech, según TechPowerUp para la línea AG de 2018; no confirmado para el AG-750M V2",
+    "evidence": "measured",
+    "notes_es": "La única reseña a fondo es del AG-850M (2018), no del V2: TechPowerUp dice que la línea usa plataforma Solytech, que su ventilador de cojinete de manga pone en duda la garantía de diez años, que es muy ruidosa y que la calidad de energía es aceptable, pero no destacada. No encontramos nada que confirme el origen en Taiwán o EE. UU. que se menciona, y los listados de Newegg muestran envío desde Hong Kong o China.",
+    "sources": [
+      "https://techpowerup.com/review/apexgaming-ag-850m",
+      "https://pcper.com/2018/05/apexgamings-850w-psu-decent-price-decent-power/",
+      "https://www.newegg.com/p/2VH-02NZ-00005",
+      "https://www.review-rating.com/en/product/apexgaming-ag-750m-v2-750w-80plus-202950"
+    ]
+  }
+]

@@ -27,6 +27,18 @@
     ]
   },
   {
+    "brand": "Einarex",
+    "series": "Nexus L1",
+    "variant": "",
+    "wattages": [750, 850, 1000],
+    "tier": "B",
+    "odm": "CWT",
+    "platform": "GPX",
+    "efficiency": "gold",
+    "notes_es": "Cybenetics (2024) del Nexus L1 1000W: CWT, plataforma GPX, OCP de 12 V al 117 a 124 %, OPP, OTP y SCP correctos, ripple de 31 mV. Las potencias menores se suponen de la misma plataforma, sin reporte propio.",
+    "sources": ["https://www.cybenetics.com/evaluations/psus/2634/"]
+  },
+  {
     "brand": "GameMax",
     "series": "VP",
     "variant": "ECO",

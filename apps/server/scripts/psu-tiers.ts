@@ -8,7 +8,7 @@
  *   bun scripts/psu-tiers.ts > /tmp/psu-tiers.sql
  *   bunx wrangler d1 execute framerate --remote --file /tmp/psu-tiers.sql
  */
-import { brandKeys, parsePsuTiers } from "../src/features/compatibility/psu-tier";
+import { BRAND_BASE, brandBase, brandKeys, parsePsuTiers } from "../src/features/compatibility/psu-tier";
 
 const SHEET = "https://docs.google.com/spreadsheets/d/1akCHL7Vhzk_EhrpIGkz8zTEvYfLDcaSpZRB6Xt6JWkc/gviz/tq?tqx=out:csv";
 const FULL_LIST = 931697732;
@@ -106,9 +106,57 @@ for (const r of rated) {
     `INSERT INTO psu_tier (brand, brand_key, series, subseries, variant, wattages, tier, limited, odm, platform, efficiency, notes, source_version, origin, source_urls) VALUES (${values.map(q).join(", ")});`,
   );
 }
+
+// Nota base por marca: de sus propias notas en la planilla, o de una investigación general para las que no están.
+const BRANDS = new URL("./psu-tiers.brands.json", import.meta.url).pathname;
+const researched = JSON.parse(await Bun.file(BRANDS).text()) as {
+  brand: string;
+  tier: string;
+  best: string;
+  notes_es: string;
+  sources: string[];
+}[];
+const bases = [
+  ...Map.groupBy(
+    rows.filter((r) => !r.limited),
+    (r) => r.brand,
+  ),
+].flatMap(([brand, rs]) => {
+  const base = brandBase(rs.map((r) => r.tier));
+  return base
+    ? [
+        {
+          brand,
+          ...base,
+          notes_es: `Nota base de la marca: la mitad central de sus ${rs.length} modelos evaluados.`,
+          sources: [] as string[],
+        },
+      ]
+    : [];
+});
+for (const b of [...bases, ...researched]) {
+  const values = [
+    b.brand,
+    ` ${brandKeys(b.brand).join(" ")} `,
+    BRAND_BASE,
+    "",
+    "",
+    "[]",
+    b.tier,
+    b.best,
+    1,
+    b.notes_es,
+    "marca",
+    "brand",
+    JSON.stringify(b.sources),
+  ];
+  lines.push(
+    `INSERT INTO psu_tier (brand, brand_key, series, subseries, variant, wattages, tier, best, limited, notes, source_version, origin, source_urls) VALUES (${values.map(q).join(", ")});`,
+  );
+}
 console.log(lines.join("\n"));
 console.error(
-  `${rows.length} filas, versión ${version}; ${untranslated} notas sin traducir; ${rated.length} notas propias`,
+  `${rows.length} filas, versión ${version}; ${untranslated} notas sin traducir; ${rated.length} notas propias; ${bases.length + researched.length} notas de marca`,
 );
 
 async function translate(notes: string[], apiKey: string): Promise<string[]> {
