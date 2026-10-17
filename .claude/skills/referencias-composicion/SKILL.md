@@ -67,9 +67,19 @@ Antes de escribir código, propone 2 o 3 layouts rotulados A, B y C:
 - Comportamiento en móvil.
 - Un esquema ASCII simple del escritorio.
 
-Recomienda uno y di por qué. Si las opciones van en una imagen o esquema rotulado, lista las opciones en ese mismo orden de letras aunque la recomendada no sea la primera. Espera a que el usuario elija o combine antes de implementar.
+Recomienda uno y di por qué. Si las opciones van en una imagen o esquema rotulado, lista las opciones en ese mismo orden de letras aunque la recomendada no sea la primera.
 
-### 7. Implementar y verificar
+### 7. Mostrar las variantes en Storybook
+
+El esquema ASCII no alcanza: el dueño decide viendo las opciones dibujadas con el sistema real. Siempre, antes de pedirle que elija:
+
+- Maqueta cada opción como componente de propuesta en `proposals/` junto al componente que reemplazan (por ejemplo `features/catalog/components/proposals/<algo>-proposals.tsx`), con los tokens y componentes que ya existen y los fixtures de `~/shared/storybook/fixtures`. El componente de producción no se toca todavía.
+- Una historia de comparación (`<algo>-proposals.stories.tsx`, título `"<Área>/Propuestas: <qué>"`) que muestre en una sola página **la versión actual rotulada 0** y debajo A, B y C, cada una con su letra y la referencia que la inspira. Si hay un caso difícil (nombre largo, sin datos, sin foto), una historia más con ese caso.
+- Levanta Storybook desde la ruta física (`cd -P /mnt/datos/dev/framerate/apps/web && bun run storybook`, puerto 6006) y abre la historia con el Playwright MCP en `http://localhost:6006/?path=/story/<id>`, o en `iframe.html?id=<id>&viewMode=story` para capturar sin el marco de Storybook. Captura a 1440 y a 390 de ancho, página completa, y muéstrale las capturas. Deja el navegador en esa vista para que pueda mirarla.
+
+Espera a que elija o combine antes de implementar. Al implementar, borra las propuestas descartadas (o la carpeta `proposals/` entera si ya no queda ninguna).
+
+### 8. Implementar y verificar
 
 - Maqueta solo con los tokens, clases y componentes que ya existen en el proyecto.
 - Al terminar, captura tu página a 1440 y 390 y compárala con la propuesta elegida: orden de secciones, jerarquía y comportamiento en móvil.
