@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useLocation, useNavigation, useSearchParams } from "react-router";
 import { Pagination, ProductGrid } from "~/features/explore/components";
 import { enterClass } from "~/shared/lib/initial-load";
@@ -22,9 +23,10 @@ export function missingSpecLabel(category: string | null, spec: string[]) {
 /**
  * Vista de catálogo: cabecera (foto de la categoría o la consulta buscada), filtros aplicados, barra de orden y
  * paginación fija y grilla paginada. Los filtros de la categoría viven en el riel (`RailFilters`).
- * Con `category` es `/categoria/:slug` y sin ella, `/buscar`.
+ * Con `category` es `/categoria/:slug` y sin ella, `/buscar`. `header` reemplaza la cabecera (lo usan las propuestas
+ * de Storybook).
  */
-export function CatalogView({ data }: { data: CatalogData }) {
+export function CatalogView({ data, header }: { data: CatalogData; header?: ReactNode }) {
   const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited } = data;
   const [params, setParams] = useSearchParams();
   const loading = useNavigation().state === "loading";
@@ -49,16 +51,17 @@ export function CatalogView({ data }: { data: CatalogData }) {
         </p>
       )}
 
-      {category ? (
-        <CategoryHeader
-          category={category}
-          total={brands.reduce((sum, b) => sum + b.count, 0) || meta.total}
-          priceRange={priceRange}
-          brandCount={brands.length}
-        />
-      ) : (
-        <SearchHeader total={meta.total} search={search} />
-      )}
+      {header ??
+        (category ? (
+          <CategoryHeader
+            category={category}
+            total={brands.reduce((sum, b) => sum + b.count, 0) || meta.total}
+            priceRange={priceRange}
+            brandCount={brands.length}
+          />
+        ) : (
+          <SearchHeader total={meta.total} search={search} />
+        ))}
 
       <div className="flex flex-col gap-3">
         <ActiveChips brands={brands} definitions={categoryFacets(category)} />

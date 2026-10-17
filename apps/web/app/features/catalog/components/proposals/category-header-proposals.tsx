@@ -67,27 +67,31 @@ export function HeaderTagline({ category, total, minPrice, brandCount }: HeaderP
 }
 
 /**
- * Hueco de AdSense rotulado "Anuncio": el alto va reservado para que el anuncio no empuje la página al llegar.
- * Banner 468×60 desde `lg`; en teléfono, 320×100 bajo la cabecera.
+ * Hueco de una unidad responsiva de AdSense rotulado "Anuncio": toma el ancho que le dé la columna y sólo el alto va
+ * reservado, para que el anuncio no empuje la página al llegar.
  */
 export function AdSlot() {
   return (
-    <aside aria-label="Anuncio" className="w-full max-w-[320px] space-y-1 lg:w-[468px] lg:max-w-none">
+    <aside aria-label="Anuncio" className="min-w-0 space-y-1">
       <p className="text-label-xs text-muted-foreground">Anuncio</p>
-      <div className="flex h-[100px] items-center justify-center rounded-xl border border-border border-dashed bg-card text-muted-foreground text-paragraph-xs lg:h-[60px]">
-        <span className="lg:hidden">320 × 100</span>
-        <span className="hidden lg:inline">468 × 60</span>
+      <div className="flex h-[100px] items-center justify-center rounded-xl border border-border border-dashed bg-card text-muted-foreground text-paragraph-xs @3xl:h-[90px]">
+        Anuncio responsivo
       </div>
     </aside>
   );
 }
 
-/** La cabecera a la izquierda y el anuncio a la derecha; en teléfono, el anuncio baja. */
+/**
+ * La cabecera y el anuncio a su derecha. Responde al ancho de la columna (con el riel abierto o cerrado), no al de la
+ * pantalla: si no caben los dos, el anuncio baja.
+ */
 export function WithAd({ children }: { children: ReactNode }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-10">
-      <div className="min-w-0">{children}</div>
-      <AdSlot />
+    <div className="@container">
+      <div className="grid gap-4 @3xl:grid-cols-[minmax(0,3fr)_minmax(16rem,2fr)] @3xl:items-end @3xl:gap-8">
+        <div className="min-w-0">{children}</div>
+        <AdSlot />
+      </div>
     </div>
   );
 }

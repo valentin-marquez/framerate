@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
-import { gpuFacets, products } from "~/shared/storybook/fixtures";
+import { Navbar } from "~/shared/components/layout/navbar";
+import { catalogData, categories, freshness, gpuFacets, products } from "~/shared/storybook/fixtures";
 import { CategoryHeader } from "../catalog-headers";
+import { CatalogView } from "../catalog-view";
 import {
   type HeaderProposalProps,
   HeaderQuickFilters,
@@ -92,4 +94,45 @@ export const ComparacionSSD: Story = {
 export const ComparacionGPU: Story = {
   name: "Comparación: tarjetas de video",
   render: () => variants(gpu, gpuFilters),
+};
+
+/** El armado de `root.tsx` en `/categoria/tarjetas-de-video`: riel con los filtros, cabecera, barra y grilla. */
+const page = (header?: ReactNode): Story => ({
+  parameters: { layout: "fullscreen", path: "/categoria/tarjetas-de-video", catalog: catalogData() },
+  render: () => (
+    <div className="flex min-h-screen flex-col">
+      <Navbar categories={categories} freshness={freshness} initialCollapsed={false} />
+      <div className="flex flex-1 flex-col lg:pl-64">
+        <main className="container mx-auto flex-1 px-4 pt-6 lg:pt-11">
+          <CatalogView data={catalogData()} header={header} />
+        </main>
+      </div>
+    </div>
+  ),
+});
+
+export const Pagina0 = { ...page(), name: "Página 0: hoy" };
+export const PaginaA = {
+  ...page(
+    <WithAd>
+      <HeaderTwoTone {...gpu} />
+    </WithAd>,
+  ),
+  name: "Página A: dos tonos y anuncio",
+};
+export const PaginaB = {
+  ...page(
+    <WithAd>
+      <HeaderTagline {...gpu} />
+    </WithAd>,
+  ),
+  name: "Página B: título grande, frase y anuncio",
+};
+export const PaginaC = {
+  ...page(
+    <WithAd>
+      <HeaderQuickFilters {...gpu} facet={memory.label} filters={gpuFilters} />
+    </WithAd>,
+  ),
+  name: "Página C: filtros rápidos y anuncio",
 };
