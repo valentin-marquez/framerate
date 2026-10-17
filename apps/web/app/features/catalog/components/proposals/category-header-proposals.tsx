@@ -1,4 +1,5 @@
 import { CATEGORY_NAV_LABELS, categoryFromSlug, type Facet } from "@framerate/contracts";
+import type { ReactNode } from "react";
 import { categoryLabel } from "~/features/category/utils/categories";
 import { formatCLP } from "~/shared/utils/format";
 
@@ -45,21 +46,49 @@ const TAGLINES: Record<string, string> = {
 /** B (Apple Store, "Store" con la frase a la derecha): título corto y grande, frase y datos alineados a la derecha. */
 export function HeaderTagline({ category, total, minPrice, brandCount }: HeaderProposalProps) {
   return (
-    <header className="grid gap-4 pt-6 pb-2 md:grid-cols-[1fr_auto] md:items-end md:pt-12">
-      <h1 className="text-title-h3 text-foreground md:text-title-h1">{shortLabel(category)}</h1>
-      <div className="space-y-1 md:max-w-xs md:pb-2 md:text-right">
-        <p className="text-foreground text-title-h6">{TAGLINES[category] ?? categoryLabel(category)}</p>
-        <p className="text-muted-foreground text-paragraph-sm">
-          {[
-            total > 0 && plural(total, "producto", "productos"),
-            minPrice && `desde ${formatCLP(minPrice)}`,
-            brandCount > 0 && plural(brandCount, "marca", "marcas"),
-          ]
-            .filter(Boolean)
-            .join(", ")}
-        </p>
+    <header className="@container pt-6 pb-2 md:pt-12">
+      <div className="grid gap-4 @3xl:grid-cols-[1fr_auto] @3xl:items-end">
+        <h1 className="text-title-h3 text-foreground md:text-title-h1">{shortLabel(category)}</h1>
+        <div className="space-y-1 @3xl:max-w-xs @3xl:pb-2 @3xl:text-right">
+          <p className="text-foreground text-title-h6">{TAGLINES[category] ?? categoryLabel(category)}</p>
+          <p className="text-muted-foreground text-paragraph-sm">
+            {[
+              total > 0 && plural(total, "producto", "productos"),
+              minPrice && `desde ${formatCLP(minPrice)}`,
+              brandCount > 0 && plural(brandCount, "marca", "marcas"),
+            ]
+              .filter(Boolean)
+              .join(", ")}
+          </p>
+        </div>
       </div>
     </header>
+  );
+}
+
+/**
+ * Hueco de AdSense rotulado "Anuncio": el alto va reservado para que el anuncio no empuje la página al llegar.
+ * Banner 468×60 desde `lg`; en teléfono, 320×100 bajo la cabecera.
+ */
+export function AdSlot() {
+  return (
+    <aside aria-label="Anuncio" className="w-full max-w-[320px] space-y-1 lg:w-[468px] lg:max-w-none">
+      <p className="text-label-xs text-muted-foreground">Anuncio</p>
+      <div className="flex h-[100px] items-center justify-center rounded-xl border border-border border-dashed bg-card text-muted-foreground text-paragraph-xs lg:h-[60px]">
+        <span className="lg:hidden">320 × 100</span>
+        <span className="hidden lg:inline">468 × 60</span>
+      </div>
+    </aside>
+  );
+}
+
+/** La cabecera a la izquierda y el anuncio a la derecha; en teléfono, el anuncio baja. */
+export function WithAd({ children }: { children: ReactNode }) {
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-10">
+      <div className="min-w-0">{children}</div>
+      <AdSlot />
+    </div>
   );
 }
 

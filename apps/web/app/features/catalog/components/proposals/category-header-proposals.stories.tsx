@@ -8,6 +8,7 @@ import {
   HeaderTagline,
   HeaderTwoTone,
   type QuickFilter,
+  WithAd,
 } from "./category-header-proposals";
 
 /** Cabecera de categoría: la actual y las propuestas A, B y C, con el nombre largo (SSD) y uno corto (GPU). */
@@ -61,18 +62,24 @@ const actual = (p: HeaderProposalProps) => (
 );
 
 const variants = (p: HeaderProposalProps, filters: QuickFilter[]) => (
-  <div className="mx-auto max-w-6xl">
+  <div className="mx-auto max-w-[61rem]">
     <Variant letter="0" title="Hoy: foto de stock en gris y datos chicos">
       {actual(p)}
     </Variant>
     <Variant letter="A" title="Dos tonos con datos reales (Apple Store), sin foto">
-      <HeaderTwoTone {...p} />
+      <WithAd>
+        <HeaderTwoTone {...p} />
+      </WithAd>
     </Variant>
     <Variant letter="B" title="Título grande y frase a la derecha (Apple Store), sin foto">
-      <HeaderTagline {...p} />
+      <WithAd>
+        <HeaderTagline {...p} />
+      </WithAd>
     </Variant>
     <Variant letter="C" title="Título y filtros rápidos con miniatura (IKEA), sin foto">
-      <HeaderQuickFilters {...p} facet={memory.label} filters={filters} />
+      <WithAd>
+        <HeaderQuickFilters {...p} facet={memory.label} filters={filters} />
+      </WithAd>
     </Variant>
   </div>
 );
