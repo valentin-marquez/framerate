@@ -60,22 +60,12 @@ export const NavbarConSesion: Story = {
 };
 
 export const NavbarCategoria: Story = {
-  name: "Navbar: en una categoría (el riel muestra sus filtros; F alterna con la lista)",
+  name: "Navbar: en una categoría (riel compacto y panel de filtros a su derecha; F lo pliega)",
   // `catalog` simula los datos del loader de la categoría, de donde el riel saca sus filtros.
   parameters: { path: "/categoria/tarjetas-de-video?brand=msi&spec=vram:8", catalog: catalogData() },
   render: () => (
     <div className="h-screen">
       <Navbar categories={categories} freshness={freshness} initialCollapsed={false} />
-    </div>
-  ),
-};
-
-export const NavbarCategoriaPlegado: Story = {
-  name: "Navbar: en una categoría con el riel plegado (el ícono lleva la cantidad de filtros)",
-  parameters: { path: "/categoria/tarjetas-de-video?brand=msi&spec=vram:8", catalog: catalogData() },
-  render: () => (
-    <div className="h-screen">
-      <Navbar categories={categories} freshness={freshness} initialCollapsed />
     </div>
   ),
 };

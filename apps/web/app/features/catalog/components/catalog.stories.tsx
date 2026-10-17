@@ -8,8 +8,8 @@ import { ActiveChips } from "./active-chips";
 import { CategoryHeader, SearchHeader } from "./catalog-headers";
 import { CatalogToolbar } from "./catalog-toolbar";
 import { CatalogView } from "./catalog-view";
+import { CategoryPanel } from "./category-panel";
 import { FilterPanel } from "./filter-panel";
-import { RailFilters } from "./rail-filters";
 
 const meta = { title: "Catálogo/Cabeceras y filtros", id: "catalogo" } satisfies Meta;
 export default meta;
@@ -65,12 +65,12 @@ export const PanelConFiltrosActivos: Story = {
   ),
 };
 
-export const PanelDelRiel: Story = {
-  name: "Panel dentro del riel (con volver y limpiar)",
+export const PanelDeCategoria: Story = {
+  name: "Panel de la categoría junto al riel (título, buscador, filtros y limpiar)",
   parameters: { path: "/categoria/tarjetas-de-video?spec=vram:8&brand=msi" },
   render: () => (
-    <div className="flex h-[34rem] w-64 flex-col border border-border/60 bg-card/40 p-3">
-      <RailFilters data={catalogData()} onBack={() => {}} />
+    <div className="flex h-[34rem] w-64 flex-col gap-3 border border-border/60 bg-card/40 p-3">
+      <CategoryPanel data={catalogData()} />
     </div>
   ),
 };

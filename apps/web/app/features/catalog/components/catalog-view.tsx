@@ -22,7 +22,7 @@ export function missingSpecLabel(category: string | null, spec: string[]) {
 
 /**
  * Vista de catálogo: cabecera (la categoría o la consulta buscada), filtros aplicados, barra de orden y
- * paginación fija y grilla paginada. Los filtros de la categoría viven en el riel (`RailFilters`).
+ * paginación fija y grilla paginada. Los filtros de la categoría viven en un panel junto al riel (`CategoryPanel`).
  * Con `category` es `/categoria/:slug` y sin ella, `/buscar`. `header` reemplaza la cabecera (Storybook la muestra
  * con el anuncio).
  */

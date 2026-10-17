@@ -101,26 +101,35 @@ function OptionList({ label, options, selected, onToggle, onClear, note }: Field
   );
 }
 
-/** El campo cerrado: el nombre a la izquierda y, si hay algo elegido, un resumen ("ASUS +1") para no tener que abrirlo. */
+/**
+ * El campo cerrado. Vacío, el nombre va dentro, como un marcador. Con algo elegido, el nombre sube a la línea del borde
+ * (con el fondo del campo que la interrumpe) y el resumen ("ASUS +1") ocupa el campo: así nunca se pisan.
+ */
 function FieldFace({ label, options, selected }: Pick<FieldProps, "label" | "options" | "selected">) {
   const first = options.find((o) => o.value === selected[0])?.label ?? selected[0];
+  const filled = selected.length > 0;
   return (
     <>
-      <span className={cn("truncate", selected.length ? "text-foreground" : "text-muted-foreground")}>{label}</span>
-      {selected.length > 0 && (
-        <span className="ml-auto shrink-0 text-label-xs text-primary">
-          {first}
-          {selected.length > 1 && ` +${selected.length - 1}`}
-        </span>
-      )}
-      <IconChevronDown className={cn("size-4 shrink-0 text-muted-foreground", selected.length === 0 && "ml-auto")} />
+      <span
+        className={cn(
+          "pointer-events-none absolute top-1/2 left-2 max-w-[calc(100%-3rem)] origin-left truncate bg-background px-1 text-muted-foreground transition-[transform] duration-fast ease-out",
+          filled ? "-translate-y-[calc(50%+1.125rem)] translate-x-1.5 scale-[0.8]" : "-translate-y-1/2",
+        )}
+      >
+        {label}
+      </span>
+      <span className="flex min-w-0 flex-1 items-center gap-1 text-label-sm text-primary">
+        {filled && <span className="truncate">{first}</span>}
+        {selected.length > 1 && <span className="shrink-0">+{selected.length - 1}</span>}
+      </span>
+      <IconChevronDown className="size-4 shrink-0 text-muted-foreground" />
     </>
   );
 }
 
 const field = (active: boolean) =>
   cn(
-    "flex h-9 w-full items-center gap-2 rounded-xl border bg-background px-3 text-left text-paragraph-sm transition-colors hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    "relative flex h-9 w-full items-center gap-2 rounded-xl border bg-background px-3 text-left text-paragraph-sm transition-colors hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     active ? "border-primary/40" : "border-border/60",
   );
 

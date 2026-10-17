@@ -9,8 +9,8 @@ import {
 } from "@tabler/icons-react";
 import { createContext, type ReactNode, use, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useMatches, useNavigation, useSearchParams } from "react-router";
+import { CategoryPanel } from "~/features/catalog/components/category-panel";
 import { activeFilterCount } from "~/features/catalog/components/filter-panel";
-import { RailFilters } from "~/features/catalog/components/rail-filters";
 import type { CatalogData } from "~/features/catalog/load-catalog";
 import { CategoryIcon } from "~/features/category/components/category-icon";
 import { focusSearchField, SearchField, startSearchSpotlight } from "~/features/search/components/search-field";
@@ -209,18 +209,24 @@ export function Navbar({
   // Asomarse: con el riel plegado, buscar lo abre por encima del contenido (sin moverlo ni cambiar la preferencia) y
   // se vuelve a plegar al salir del riel.
   const [peek, setPeek] = useState(false);
-  const wide = !collapsed || peek;
   const { pathname } = useLocation();
   const pendingPath = useNavigation().location?.pathname;
   const [selected, setSelected] = useState<string | null>(null);
-  // En una categoría, la zona de categorías del riel muta a sus filtros (los datos son los del loader de esa ruta).
+  // En una categoría, el riel queda compacto y sus filtros van en un panel a su derecha (los datos son los del loader
+  // de esa ruta). Fuera de ella, el riel sigue la preferencia guardada.
   const catalog = useMatches().find((m) => m.id === "features/category/pages/category-page")?.data as
     | CatalogData
     | undefined;
-  const [mode, setMode] = useState<"filters" | "nav">("filters");
-  // biome-ignore lint/correctness/useExhaustiveDependencies: al cambiar de página vuelve a los filtros.
-  useEffect(() => setMode("filters"), [pathname]);
-  const showFilters = !!catalog && mode === "filters" && wide;
+  const inCategory = !!catalog;
+  const [panelOpen, setPanelOpen] = useState(true);
+  const wide = !(collapsed || inCategory) || peek;
+  // El hueco del contenido en una categoría lo pone `data-panel` en el <html> (app.css): root.tsx lo fija desde la ruta y
+  // aquí sólo se cambia al plegar el panel, sin volver a renderizar la página.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (inCategory) root.dataset.panel = panelOpen ? "open" : "closed";
+    else delete root.dataset.panel;
+  }, [inCategory, panelOpen]);
   const activeFilters = activeFilterCount(useSearchParams()[0]);
   // Cuando la URL llega (o la navegación se cancela) manda la navegación real.
   // biome-ignore lint/correctness/useExhaustiveDependencies: se limpia en cada cambio de página o de pendiente.
@@ -232,32 +238,39 @@ export function Navbar({
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const typing = e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]");
-      // Ctrl/Cmd+B pliega o despliega el riel (y cierra uno asomado). Sin preventDefault, Firefox abre los marcadores.
+      // Ctrl/Cmd+B pliega o despliega el riel (y cierra uno asomado); en una categoría, el panel de filtros. Sin
+      // preventDefault, Firefox abre los marcadores.
       if (e.key === "b" && (e.ctrlKey || e.metaKey) && window.matchMedia("(min-width: 64rem)").matches) {
         e.preventDefault();
-        if (peek) {
+        if (inCategory) setPanelOpen((open) => !open);
+        else if (peek) {
           setPeek(false);
           (document.activeElement as HTMLElement | null)?.blur();
         } else onCollapsedChange(!collapsed);
         return;
       }
-      // F alterna entre las categorías y los filtros de la categoría abierta; plegado, asoma el riel con los filtros.
-      if (e.key === "f" && catalog && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // F pliega y despliega el panel de filtros de la categoría abierta.
+      if (e.key === "f" && inCategory && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (window.matchMedia("(min-width: 64rem)").matches) {
           e.preventDefault();
-          if (collapsed) {
-            setMode("filters");
-            setPeek((p) => !p);
-          } else setMode((m) => (m === "filters" ? "nav" : "filters"));
+          setPanelOpen((open) => !open);
         }
         return;
       }
       const shortcut = e.key === "k" && (e.ctrlKey || e.metaKey);
       if (shortcut || (e.key === "/" && !typing)) {
         e.preventDefault();
-        if (collapsed && window.matchMedia("(min-width: 64rem)").matches) setPeek(true);
-        focusSearchField();
-        if (shortcut) startSearchSpotlight();
+        // En una categoría el buscador vive en el panel: no hay riel plegado que asomar.
+        if (collapsed && !inCategory && window.matchMedia("(min-width: 64rem)").matches) setPeek(true);
+        const focus = () => {
+          focusSearchField();
+          if (shortcut) startSearchSpotlight();
+        };
+        // Con el panel plegado el buscador no se ve: se despliega y se enfoca cuando ya está en pantalla.
+        if (inCategory && !panelOpen) {
+          setPanelOpen(true);
+          requestAnimationFrame(focus);
+        } else focus();
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -267,23 +280,30 @@ export function Navbar({
   return (
     <RailTarget value={railTarget}>
       <TimeGradient />
-      {/* Manija fuera del riel (que recorta su contenido): sigue su borde con transform, no con left. */}
+      {/* Manija fuera del riel (que recorta su contenido): sigue su borde con transform, no con left. En una categoría
+          es la del panel de filtros: el riel siempre está compacto. */}
       <button
         type="button"
         onClick={() => {
+          if (inCategory) {
+            setPanelOpen((open) => !open);
+            return;
+          }
           setPeek(false);
           onCollapsedChange(!collapsed);
         }}
-        aria-label={collapsed ? "Desplegar menú" : "Plegar menú"}
-        aria-expanded={!collapsed}
+        aria-label={
+          inCategory ? (panelOpen ? "Plegar filtros" : "Mostrar filtros") : collapsed ? "Desplegar menú" : "Plegar menú"
+        }
+        aria-expanded={inCategory ? panelOpen : !collapsed}
         className={cn(
           "t-rail-handle fixed top-8 left-0 z-50 hidden size-6 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:grid",
-          wide ? "[--rail:16rem]" : "[--rail:4rem]",
+          inCategory ? (panelOpen ? "[--rail:20rem]" : "[--rail:4rem]") : wide ? "[--rail:16rem]" : "[--rail:4rem]",
         )}
       >
         <span className="t-icon-swap">
-          <IconChevronLeft data-on={wide} className="size-3.5" stroke={2} />
-          <IconChevronRight data-on={!wide} className="size-3.5" stroke={2} />
+          <IconChevronLeft data-on={inCategory ? panelOpen : wide} className="size-3.5" stroke={2} />
+          <IconChevronRight data-on={inCategory ? !panelOpen : !wide} className="size-3.5" stroke={2} />
         </span>
       </button>
       {/*
@@ -315,7 +335,8 @@ export function Navbar({
           </Link>
         </div>
 
-        <SearchField className="shrink-0" />
+        {/* En una categoría el buscador va en el panel de filtros, bajo el título. */}
+        {!inCategory && <SearchField className="shrink-0" />}
 
         {/* Fijo: sólo scrollea la lista de categorías. Cada zona lleva su píldora de sección activa. */}
         <RailGroup className="flex shrink-0 flex-col gap-4">
@@ -338,14 +359,7 @@ export function Navbar({
 
         {/* El alto mínimo hace que, en una ventana muy baja, scrollee el riel entero y no se aplaste la lista. */}
         <div className="relative min-h-40 flex-1">
-          <nav
-            aria-label="Categorías"
-            inert={showFilters}
-            className={cn(
-              "absolute inset-0 flex flex-col transition-[transform,opacity] duration-base ease-in-out",
-              showFilters && "-translate-x-6 opacity-0",
-            )}
-          >
+          <nav aria-label="Categorías" className="absolute inset-0 flex flex-col">
             {/* Angosto, el título cede su lugar a una línea en la columna de íconos. */}
             <div className="relative shrink-0">
               <p className="rail-label px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
@@ -364,12 +378,11 @@ export function Navbar({
                     count={c.productCount}
                     badge={open ? activeFilters : undefined}
                     collapsed={!wide}
-                    // En la categoría abierta, tocarla vuelve a sus filtros en vez de recargarla sin ellos.
+                    // En la categoría abierta, tocarla muestra sus filtros en vez de recargarla sin ellos.
                     onClick={(e) => {
                       if (!open) return;
                       e.preventDefault();
-                      setMode("filters");
-                      if (collapsed) setPeek(true);
+                      setPanelOpen(true);
                     }}
                     icon={<CategoryIcon category={c.id} />}
                   />
@@ -377,18 +390,6 @@ export function Navbar({
               })}
             </RailGroup>
           </nav>
-          {catalog && (
-            <section
-              aria-label="Filtros"
-              inert={!showFilters}
-              className={cn(
-                "absolute inset-0 flex flex-col transition-[transform,opacity] duration-base ease-in-out",
-                !showFilters && "translate-x-6 opacity-0",
-              )}
-            >
-              <RailFilters data={catalog} onBack={() => setMode("nav")} />
-            </section>
-          )}
         </div>
 
         <div className="flex shrink-0 flex-col gap-3 border-border/60 border-t pt-3">
@@ -417,6 +418,20 @@ export function Navbar({
           </div>
         </div>
       </aside>
+
+      {/* Sólo escritorio: en teléfono los filtros siguen siendo la hoja del botón Filtros. */}
+      {catalog && (
+        <aside
+          aria-label="Filtros"
+          inert={!panelOpen}
+          className={cn(
+            "fixed inset-y-0 left-16 z-30 hidden w-64 flex-col gap-3 border-border/60 border-r bg-card/40 p-3",
+            panelOpen && "lg:flex",
+          )}
+        >
+          <CategoryPanel data={catalog} />
+        </aside>
+      )}
 
       <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-border/60 border-b bg-background/85 px-3 backdrop-blur-md lg:hidden">
         <Brand compact />
