@@ -183,6 +183,39 @@ function RailGroup({ className, children }: { className?: string; children: Reac
   );
 }
 
+// Pasó la hidratación: un panel que se monta desde aquí es de una navegación y entra deslizándose; el de la carga
+// inicial ya está en su lugar.
+let hydrated = false;
+
+/**
+ * Panel de filtros a la derecha del riel compacto. Siempre montado: abrir y cerrar lo desliza desde detrás del riel
+ * (sólo transform y opacity); la caja recorta, así no se ve sobre el riel.
+ */
+function FiltersAside({ open, data }: { open: boolean; data: CatalogData }) {
+  const [enter] = useState(hydrated);
+  return (
+    <aside
+      aria-label="Filtros"
+      inert={!open}
+      className={cn(
+        "fixed inset-y-0 left-16 z-30 hidden w-64 overflow-hidden lg:block",
+        !open && "pointer-events-none",
+      )}
+    >
+      <div
+        className={cn(
+          "flex h-full flex-col gap-4 border-border/60 border-r bg-card/40 p-3 ease-out motion-reduce:transition-none",
+          "transition-[transform,opacity]",
+          open ? "translate-x-0 opacity-100 duration-base" : "-translate-x-full opacity-0 duration-fast",
+          enter && "fade-in-0 slide-in-from-left-full animate-in duration-base motion-reduce:animate-none",
+        )}
+      >
+        <CategoryPanel data={data} />
+      </div>
+    </aside>
+  );
+}
+
 /**
  * Navegación del sitio. En escritorio, un riel fijo a la izquierda con el buscador y las categorías siempre a la
  * vista, que se pliega a sólo íconos; en teléfono, una barra superior con el buscador y pestañas abajo.
@@ -218,6 +251,13 @@ export function Navbar({
     | CatalogData
     | undefined;
   const inCategory = !!catalog;
+  // Al salir de la categoría el panel sigue montado, con sus últimos datos, mientras se desliza hacia afuera.
+  const lastCatalog = useRef(catalog);
+  if (catalog) lastCatalog.current = catalog;
+  const shownCatalog = catalog ?? lastCatalog.current;
+  useEffect(() => {
+    hydrated = true;
+  }, []);
   const onProduct = pathname.startsWith("/producto/");
   const [panelOpen, setPanelOpen] = useState(true);
   const compact = collapsed || inCategory || onProduct;
@@ -428,18 +468,7 @@ export function Navbar({
       </aside>
 
       {/* Sólo escritorio: en teléfono los filtros siguen siendo la hoja del botón Filtros. */}
-      {catalog && (
-        <aside
-          aria-label="Filtros"
-          inert={!panelOpen}
-          className={cn(
-            "fixed inset-y-0 left-16 z-30 hidden w-64 flex-col gap-4 border-border/60 border-r bg-card/40 p-3",
-            panelOpen && "lg:flex",
-          )}
-        >
-          <CategoryPanel data={catalog} />
-        </aside>
-      )}
+      {shownCatalog && <FiltersAside open={inCategory && panelOpen} data={shownCatalog} />}
 
       <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-border/60 border-b bg-background/85 px-3 backdrop-blur-md lg:hidden">
         <Brand compact />
