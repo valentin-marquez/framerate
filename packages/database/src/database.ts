@@ -645,6 +645,28 @@ export interface SupportMessagesTable {
   created_at: string;
 }
 
+/** Tier de calidad de fuentes de poder (#177, migración 0028). Se reemplaza entera en cada importación. */
+export interface PsuTierTable {
+  id: Generated<number>;
+  brand: string;
+  brand_key: string;
+  series: string;
+  subseries: Defaulted<string>;
+  variant: Defaulted<string>;
+  wattages: JsonText;
+  tier: string;
+  limited: Defaulted<SqlBool>;
+  year: number | null;
+  form_factor: string | null;
+  atx_version: string | null;
+  modular: string | null;
+  efficiency: string | null;
+  odm: string | null;
+  platform: string | null;
+  notes: string | null;
+  source_version: string;
+}
+
 export interface CatalogVersionTable {
   id: number;
   version: number;
@@ -694,6 +716,7 @@ export interface Database {
   ai_usage: AiUsageTable;
   pipeline_state: PipelineStateTable;
   match_shadow: MatchShadowTable;
+  psu_tier: PsuTierTable;
 }
 
 export type ListingRow = Selectable<ListingsTable>;

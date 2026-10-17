@@ -1,4 +1,5 @@
 import type { Category, CompatCheck, CompatRule, QuoteCompatibility } from "@framerate/contracts";
+import type { PsuTier } from "./psu-tier";
 
 /**
  * Verificador de compatibilidad de una cotización (#127, docs/specs/2026-10-11-compatibilidad.md). Dominio puro: recibe
@@ -279,7 +280,41 @@ const RULES: Rule[] = [
       );
     return check("psu_wattage", "ok", involved, `La fuente de ${watts} W cubre los ${need} W estimados.`);
   },
+
+  // Calidad de la fuente (#177): uso interno, los mensajes no muestran el tier ni de dónde sale. Sin tier o con uno
+  // especulativo no hay chequeo: es una señal de más, no un dato de compatibilidad, y no debe dejar todo en desconocido.
+  ({ psu, gpu }) => {
+    const rated = psu?.facts.psu_tier as PsuTier | undefined;
+    if (!psu || !rated || rated.limited) return null;
+    const involved = [psu, gpu].filter((p): p is Part => p !== undefined);
+    const letter = rated.tier[0] ?? "F";
+    if (letter === "F")
+      return check("psu_tier", "warning", [psu], "Esta fuente tiene problemas de seguridad conocidos: elige otra.");
+    if (letter === "E")
+      return check("psu_tier", "warning", [psu], "Esta fuente es de mala calidad: no conviene para ningún equipo.");
+    const need = gpuClass(gpu);
+    return letter <= need.tier
+      ? check("psu_tier", "ok", involved, `La calidad de la fuente alcanza para ${need.label}.`)
+      : check(
+          "psu_tier",
+          "warning",
+          involved,
+          `La calidad de la fuente queda corta para ${need.label}: conviene una fuente de mejor nivel.`,
+        );
+  },
 ];
+
+/**
+ * Qué nivel de fuente pide el equipo, por el TDP de la GPU. ponytail: umbrales por TDP que tiran a pedir de más
+ * (una 9070 XT de 304 W cae en gama alta); tabla por chipset si molesta.
+ */
+function gpuClass(gpu: Part | undefined): { tier: string; label: string } {
+  if (!gpu) return { tier: "D", label: "un equipo sin tarjeta de video" };
+  const tdp = num(gpu.facts.tdp_w) ?? 0;
+  if (tdp >= 285) return { tier: "A", label: "una tarjeta de gama alta" };
+  if (tdp >= 200) return { tier: "B", label: "una tarjeta de gama media" };
+  return { tier: "C", label: "esta tarjeta" };
+}
 
 const SEVERITY = { ok: 0, unknown: 1, warning: 2, incompatible: 3 } as const;
 const STATUS = { ok: "valid", unknown: "unknown", warning: "warning", incompatible: "incompatible" } as const;

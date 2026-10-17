@@ -16,7 +16,8 @@ import {
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { sql } from "kysely";
 import { productImageUrl } from "@/features/catalog/catalog.queries";
-import { checkCompatibility, highlights, type Part } from "@/features/compatibility/compatibility";
+import { checkCompatibility, highlights, num, type Part } from "@/features/compatibility/compatibility";
+import { compact, matchPsuTier } from "@/features/compatibility/psu-tier";
 import { avatarUrl } from "@/features/identity/domain/avatar";
 import { newPublicId } from "@/shared/public-id";
 
@@ -194,6 +195,30 @@ const gpuTdpQuery = (db: Db, publicId: string) =>
     )
     .groupBy(["chipset", "tdp"]);
 
+/**
+ * Las filas de calidad de fuente (#177) de la marca de la fuente seleccionada; el vínculo fino lo hace `matchPsuTier`.
+ * La clave de marca en SQL replica `compact` para los nombres de marca reales (espacios, "!", ".", "-").
+ * ponytail: el LIKE recorre la tabla (~1.400 filas) en cada lectura; tabla de alias indexada si pesa.
+ */
+const psuTierQuery = (db: Db, publicId: string) =>
+  db.query
+    .selectFrom("psu_tier as t")
+    .select(["t.brand_key", "t.series", "t.subseries", "t.variant", "t.wattages", "t.tier", "t.limited"])
+    .where(({ exists, selectFrom }) =>
+      exists(
+        selectFrom("quote_items as qi")
+          .innerJoin("quotes as q", "q.id", "qi.quote_id")
+          .innerJoin("products as p", "p.id", "qi.product_id")
+          .select(sql<number>`1`.as("one"))
+          .where("q.public_id", "=", publicId)
+          .where("qi.is_selected", "=", 1)
+          .where("qi.slot", "=", "psu")
+          .where(
+            sql<boolean>`t.brand_key like '% ' || lower(replace(replace(replace(replace(coalesce(p.brand, substr(p.name, 1, instr(p.name, ' ') - 1)), ' ', ''), '!', ''), '.', ''), '-', '')) || ' %'`,
+          ),
+      ),
+    );
+
 /** Lo que necesita `toDetail`, para sumarlo al mismo viaje a D1 que la escritura. */
 const detailQueries = (db: Db, publicId: string) =>
   [
@@ -201,12 +226,14 @@ const detailQueries = (db: Db, publicId: string) =>
     itemsQuery(db, publicId),
     factsQuery(db, publicId),
     gpuTdpQuery(db, publicId),
+    psuTierQuery(db, publicId),
   ] as const;
 
 type DetailRows = [
   ItemRow[],
   Awaited<ReturnType<ReturnType<typeof factsQuery>["execute"]>>,
   Awaited<ReturnType<ReturnType<typeof gpuTdpQuery>["execute"]>>,
+  Awaited<ReturnType<ReturnType<typeof psuTierQuery>["execute"]>>,
 ];
 
 /** Por campo, el valor que más ofertas del producto dicen (como `fuseSpecs`, sin separar lo de conocimiento: #127). */
@@ -228,7 +255,12 @@ function fuseFacts(rows: { identity: string; specs: string }[]): Record<string, 
 }
 
 /** Los ítems seleccionados con sus datos fusionados: alimentan la compatibilidad y los chips de specs. */
-function partsOf(items: QuoteItem[], [, factRows, tdpRows]: DetailRows): Part[] {
+function partsOf(items: QuoteItem[], [, factRows, tdpRows, tierRows]: DetailRows): Part[] {
+  const tiers = tierRows.map((r) => ({
+    ...r,
+    wattages: parseJson<number[]>(r.wattages, []),
+    limited: toBool(r.limited),
+  }));
   const tdpByChipset = new Map<string, { tdp: number; n: number }>();
   for (const r of tdpRows) {
     const best = tdpByChipset.get(r.chipset);
@@ -240,6 +272,11 @@ function partsOf(items: QuoteItem[], [, factRows, tdpRows]: DetailRows): Part[] 
       const facts = fuseFacts(factRows.filter((r) => r.item_id === i.id));
       if (i.product.category === "gpu" && facts.tdp_w == null && typeof facts.chipset === "string") {
         facts.tdp_w = tdpByChipset.get(facts.chipset)?.tdp;
+      }
+      if (i.product.category === "psu") {
+        const key = ` ${compact(i.product.brand ?? i.product.name.split(" ")[0] ?? "")} `;
+        const rows = tiers.filter((r) => r.brand_key.includes(key));
+        facts.psu_tier = matchPsuTier(i.product.name, num(facts.wattage), rows) ?? undefined;
       }
       return { itemId: i.id, name: i.product.name, category: i.product.category, quantity: i.quantity, facts };
     });
