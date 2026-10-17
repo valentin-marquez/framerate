@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { IconPhotoOff } from "@tabler/icons-react";
-import { getCategoryImage } from "~/features/category/utils/categories";
-import { categories } from "~/shared/storybook/fixtures";
+import { rowProducts } from "~/shared/storybook/fixtures";
 import { AsyncImage } from "./async-image";
 import { Carousel, CarouselContent, CarouselIndicator, CarouselItem, CarouselNavigation } from "./carousel";
 import { Separator } from "./separator";
@@ -84,11 +83,11 @@ export const Carrusel: Story = {
   render: () => (
     <Carousel className="max-w-3xl">
       <CarouselContent className="-ml-3">
-        {categories.map((c) => (
-          <CarouselItem key={c.id} className="basis-1/2 pl-3 md:basis-1/3">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
-              <img src={getCategoryImage(c.slug)} alt="" className="size-full object-cover" />
-              <span className="absolute top-3 left-3 font-medium text-sm text-white">{c.label}</span>
+        {rowProducts.map((p) => (
+          <CarouselItem key={p.id} className="basis-1/2 pl-3 md:basis-1/3">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white">
+              <img src={p.imageUrl ?? ""} alt="" className="size-full object-contain p-6" />
+              <span className="absolute top-3 left-3 text-label-sm text-black">{p.brand}</span>
             </div>
           </CarouselItem>
         ))}
