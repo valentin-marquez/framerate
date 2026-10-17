@@ -26,7 +26,14 @@ export default async function handleRequest(
   ];
   // Turnstile (anti-spam del formulario de soporte sin cuenta) carga su script y su iframe desde aquí.
   const turnstile = "https://challenges.cloudflare.com";
-  // AdSense (anuncio de la categoría): su script carga otros scripts e iframes desde estos dominios.
+  // AdSense (anuncio de la categoría) carga iframes y pide datos a estos dominios. Sus scripts van aparte y con hosts
+  // exactos: un comodín como *.google.com deja entrar endpoints JSONP de Google que sirven para saltarse la CSP.
+  const adsenseScripts = [
+    "https://pagead2.googlesyndication.com",
+    "https://tpc.googlesyndication.com",
+    "https://googleads.g.doubleclick.net",
+    "https://*.adtrafficquality.google",
+  ];
   const adsense = [
     "https://*.googlesyndication.com",
     "https://*.doubleclick.net",
@@ -46,7 +53,7 @@ export default async function handleRequest(
       `'nonce-${nonce}'`,
       isDevelopment ? "'unsafe-inline'" : "",
       turnstile,
-      ...adsense,
+      ...adsenseScripts,
     ],
     workerSrc: ["'self'", isDevelopment ? "blob:" : ""],
     scriptSrcAttr: [`'nonce-${nonce}'`],
