@@ -110,7 +110,7 @@ const ACCESSORY =
 // Los que no dejan duda en cualquier posición ("Cooler Master-Cable divisor…", "… ARGB 1 TO 5 SPLITTER"): Haiku los
 // marcaba `other` y la llamada se pagaba igual (#159). "con Cable Splitter" es lo que trae un ventilador.
 const ACCESSORY_ANYWHERE =
-  /\b((?<!\bcon (cable )?)splitter|cable divisor|funda|termostato|montaje en rack|adaptador (para|de) (disipador|socket|lga)|disipador (de calor )?(para |de )?(ssd|m\.?2))\b/;
+  /\b((?<!\bcon (cable )?)splitter|cable divisor|funda|termostato|montaje en rack|bandeja de ventiladores|adaptador (para |de )?(disipador|socket|lga|water ?cooling)|disipador (de calor |aluminio )?(para |de )?(ssd|m\.?2))\b/;
 const OTHER_PRODUCT = /\b(notebook|laptop|all in one|monitor|consola|tablet)\b/;
 // En RAM y SSD "notebook"/"laptop" suele ser compatibilidad (SO-DIMM, "para PC y Laptop"): sólo cuenta al inicio.
 const OTHER_PRODUCT_START = /^(notebook|laptop|all in one|monitor|consola|tablet)\b/;

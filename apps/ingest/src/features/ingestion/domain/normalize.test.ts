@@ -163,6 +163,9 @@ describe("categorías contaminadas", () => {
     ["ssd", "Disipador de Calor para SSD M.2 HIKSEMI"],
     ["case_fan", "Unidad de Ventilación Nexxt NPF-12WMB para Montaje en Rack"],
     ["case_fan", "Termostato Linkmade RAS-1L"],
+    ["cpu_cooler", "CoolerMaster Adaptador WaterCooling LGA1700"],
+    ["cpu_cooler", "Disipador Aluminio M.2 Hiksemi Cooler MH1 (NVMe 2280, PS5/PC)"],
+    ["cpu_cooler", "NEXXT - Bandeja de Ventiladores para Rack Nexxt Solutions Infrastructure 1U 4 Fan"],
   ] as const)("accesorio en cualquier posición del título (%s): %s", (category, title) => {
     expect(reason(category, title)).toBe("category:other_product");
   });
@@ -190,6 +193,10 @@ describe("categorías contaminadas", () => {
     expect(reason("ssd", "SSD Kingston Fury Renegade 1TB NVMe M.2 con disipador")).toBe("ok");
     expect(reason("case_fan", "Ventilador Gabinete 140mm ARCTIC P14 SLIM PWM PST con Cable Splitter")).toBe("ok");
     expect(reason("case_fan", "Ventilador Gabinete 140mm ARCTIC P14 PWM PST, con Splitter")).toBe("ok");
+    expect(reason("case", "Gabinete Clio Rackmount 2U RY2U350-ATX (MicroATX/ITX, 2 Ventiladores, Negro)")).toBe("ok");
+    expect(reason("cpu_cooler", "Refrigeración Líquida Asetek Serie 6 240mm (624S-M2) sin bracket AMD/Intel")).toBe(
+      "ok",
+    );
     expect(reason("cpu_cooler", "Cooler CPU Noctua NH-D15 con adaptador LGA1700")).toBe("ok");
   });
 });
