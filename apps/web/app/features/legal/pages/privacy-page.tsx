@@ -55,8 +55,7 @@ export default function Privacy() {
             </div>
             <p className="leading-relaxed">
               Framerate.cl compara precios de componentes de PC en tiendas chilenas. Guardamos lo mínimo para que el
-              servicio funcione, no vendemos tus datos ni los usamos para publicidad, y aquí te contamos qué pasa con lo
-              que compartes.
+              servicio funcione, no vendemos tus datos, y aquí te contamos qué pasa con lo que compartes.
             </p>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -106,8 +105,9 @@ export default function Privacy() {
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               El sitio y la base de datos funcionan en <span className="font-bold">Cloudflare</span>. Cloudflare es una
-              empresa de Estados Unidos, así que tus datos pueden procesarse fuera de Chile. Aparte de Cloudflare, y de
-              Discord o Google para iniciar sesión, no compartimos tus datos con nadie.
+              empresa de Estados Unidos, así que tus datos pueden procesarse fuera de Chile. Aparte de Cloudflare, de
+              Discord o Google para iniciar sesión y de Google AdSense (ver Cookies), no compartimos tus datos con
+              nadie.
             </p>
           </div>
 
@@ -150,9 +150,29 @@ export default function Privacy() {
               <IconCookie className="size-5 text-primary" /> Cookies
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Sólo cookies técnicas: la de tu sesión, tu idioma, tu tema (claro u oscuro) y tu zona horaria, para que la
-              página llegue bien desde el servidor. No usamos cookies de publicidad ni herramientas de analítica de
-              terceros.
+              Nuestras cookies son técnicas: la de tu sesión, tu idioma, tu tema (claro u oscuro) y tu zona horaria,
+              para que la página llegue bien desde el servidor. Las páginas de categoría muestran un anuncio de{" "}
+              <span className="font-bold">Google AdSense</span>: Google y sus socios pueden usar cookies e
+              identificadores del dispositivo para mostrar anuncios según tus visitas a este y otros sitios. Puedes
+              desactivar los anuncios personalizados en{" "}
+              <a
+                href="https://adssettings.google.com"
+                className="text-primary underline"
+                rel="noopener"
+                target="_blank"
+              >
+                la configuración de anuncios de Google
+              </a>{" "}
+              y ver{" "}
+              <a
+                href="https://policies.google.com/technologies/partner-sites"
+                className="text-primary underline"
+                rel="noopener"
+                target="_blank"
+              >
+                cómo usa Google tus datos
+              </a>
+              . No usamos herramientas de analítica de terceros.
             </p>
           </div>
 

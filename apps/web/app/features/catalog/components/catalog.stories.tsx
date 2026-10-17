@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ProductGrid } from "~/features/explore/components";
-import { WithAd } from "~/shared/components/ad-slot";
 import { Navbar } from "~/shared/components/layout/navbar";
 import { brands, catalogData, categories, freshness, gpuFacets, specMatchProducts } from "~/shared/storybook/fixtures";
 import { categoryFacets } from "../load-catalog";
@@ -181,7 +180,7 @@ export const VistaSaturada: Story = {
   ),
 };
 
-/** El armado de `root.tsx` en la categoría, con el hueco de AdSense a la derecha de la cabecera (todavía sin usar). */
+/** El armado de `root.tsx` en la categoría, con el anuncio a la derecha de la cabecera. */
 export const PaginaConAnuncio: Story = {
   name: "Página de categoría con anuncio",
   parameters: { layout: "fullscreen", path: "/categoria/tarjetas-de-video", catalog: catalog() },
@@ -192,19 +191,7 @@ export const PaginaConAnuncio: Story = {
         <Navbar categories={categories} freshness={freshness} initialCollapsed={false} />
         <div className="flex flex-1 flex-col lg:pl-64">
           <main className="container mx-auto flex-1 px-4 pt-6 lg:pt-11">
-            <CatalogView
-              data={data}
-              header={
-                <WithAd>
-                  <CategoryHeader
-                    category="tarjetas-de-video"
-                    total={data.meta.total}
-                    priceRange={data.priceRange}
-                    brandCount={data.brands.length}
-                  />
-                </WithAd>
-              }
-            />
+            <CatalogView data={data} />
           </main>
         </div>
       </div>

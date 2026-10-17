@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
 import { useLocation, useNavigation, useSearchParams } from "react-router";
 import { Pagination, ProductGrid } from "~/features/explore/components";
+import { WithAd } from "~/shared/components/ad-slot";
 import { enterClass } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 import { type CatalogData, categoryFacets } from "../load-catalog";
@@ -23,10 +23,9 @@ export function missingSpecLabel(category: string | null, spec: string[]) {
 /**
  * Vista de catálogo: cabecera (la categoría o la consulta buscada), filtros aplicados, barra de orden y
  * paginación fija y grilla paginada. Los filtros de la categoría viven en un panel junto al riel (`CategoryPanel`).
- * Con `category` es `/categoria/:slug` y sin ella, `/buscar`. `header` reemplaza la cabecera (Storybook la muestra
- * con el anuncio).
+ * Con `category` es `/categoria/:slug` (con el anuncio a la derecha de la cabecera) y sin ella, `/buscar`.
  */
-export function CatalogView({ data, header }: { data: CatalogData; header?: ReactNode }) {
+export function CatalogView({ data }: { data: CatalogData }) {
   const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited } = data;
   const [params, setParams] = useSearchParams();
   const loading = useNavigation().state === "loading";
@@ -51,17 +50,18 @@ export function CatalogView({ data, header }: { data: CatalogData; header?: Reac
         </p>
       )}
 
-      {header ??
-        (category ? (
+      {category ? (
+        <WithAd slot="3200722793">
           <CategoryHeader
             category={category}
             total={brands.reduce((sum, b) => sum + b.count, 0) || meta.total}
             priceRange={priceRange}
             brandCount={brands.length}
           />
-        ) : (
-          <SearchHeader total={meta.total} search={search} />
-        ))}
+        </WithAd>
+      ) : (
+        <SearchHeader total={meta.total} search={search} />
+      )}
 
       <div className="flex flex-col gap-3">
         <ActiveChips brands={brands} definitions={categoryFacets(category)} />

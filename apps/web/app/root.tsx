@@ -169,6 +169,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light dark" />
+        <meta name="google-adsense-account" content="ca-pub-9835660497171893" />
         {canonical && <link rel="canonical" href={canonical} />}
         <Meta />
         {/* Con precedence React la emite antes que los modulepreload de los scripts; como <link> común quedaba al final

@@ -26,10 +26,19 @@ export default async function handleRequest(
   ];
   // Turnstile (anti-spam del formulario de soporte sin cuenta) carga su script y su iframe desde aquí.
   const turnstile = "https://challenges.cloudflare.com";
+  // AdSense (anuncio de la categoría): su script carga otros scripts e iframes desde estos dominios.
+  const adsense = [
+    "https://*.googlesyndication.com",
+    "https://*.doubleclick.net",
+    "https://*.google.com",
+    "https://*.googleadservices.com",
+    "https://*.adtrafficquality.google",
+    "https://*.gstatic.com",
+  ];
   const contentSecurityPolicy = buildContentSecurityPolicy({
     baseUri: ["'self'"],
     objectSrc: ["'none'"],
-    connectSrc: ["'self'", "data:", isDevelopment ? "ws:" : "", apiOrigin],
+    connectSrc: ["'self'", "data:", isDevelopment ? "ws:" : "", apiOrigin, ...adsense],
     scriptSrc: [
       "'self'",
       "'wasm-unsafe-eval'",
@@ -37,6 +46,7 @@ export default async function handleRequest(
       `'nonce-${nonce}'`,
       isDevelopment ? "'unsafe-inline'" : "",
       turnstile,
+      ...adsense,
     ],
     workerSrc: ["'self'", isDevelopment ? "blob:" : ""],
     scriptSrcAttr: [`'nonce-${nonce}'`],
@@ -44,7 +54,7 @@ export default async function handleRequest(
     // Las fuentes se sirven desde el propio sitio (Satoshi y @fontsource). `data:` porque Vite incrusta en el CSS
     // los subsets de menos de 4 KB (assetsInlineLimit), p. ej. jetbrains-mono cyrillic-ext.
     fontSrc: ["'self'", "data:"],
-    frameSrc: ["'self'", turnstile],
+    frameSrc: ["'self'", turnstile, ...adsense],
     // El formulario de login redirige al proveedor OAuth, y el navegador aplica form-action a toda la cadena: si el
     // proveedor ya tiene el consentimiento (Google) responde 302 directo al callback de la API.
     formAction: ["'self'", ...oauthProviders, apiOrigin],
