@@ -139,7 +139,11 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
         Anterior
       </button>
 
-      <div className="flex items-center gap-1 mx-2">
+      <span className="mx-2 text-muted-foreground text-sm tabular-nums sm:hidden">
+        {currentPage} de {totalPages}
+      </span>
+      {/* En teléfono los números no caben junto a Anterior y Siguiente. */}
+      <div className="mx-2 hidden items-center gap-1 sm:flex">
         {pages.map((page, idx) =>
           page === "..." ? (
             <span
