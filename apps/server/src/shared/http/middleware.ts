@@ -73,11 +73,14 @@ async function currentCatalogVersion(c: Context<AppEnv>): Promise<number> {
 /**
  * Como `edgeCache`, pero con `catalog_version` en la clave: el edge guarda horas y un precio nuevo se ve apenas termina
  * la corrida (más el minuto que cada isolate recuerda la versión). Al navegador le sigue diciendo `maxAgeSeconds`.
+ * Un deploy no vacía el edge: si cambia la forma de la respuesta de una ruta, `shape` sube y la clave vieja deja de
+ * servirse (si no, las respuestas anteriores duran hasta 6 h o hasta la próxima corrida).
  */
-export function catalogCache(maxAgeSeconds: number): MiddlewareHandler<AppEnv> {
+export function catalogCache(maxAgeSeconds: number, shape?: number): MiddlewareHandler<AppEnv> {
   return cached(maxAgeSeconds, CATALOG_EDGE_TTL, async (c) => {
     const url = new URL(c.req.url);
     url.searchParams.set("__v", String(await currentCatalogVersion(c)));
+    if (shape) url.searchParams.set("__s", String(shape));
     return url.toString();
   });
 }

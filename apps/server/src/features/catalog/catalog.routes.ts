@@ -78,7 +78,8 @@ export const catalogRoutes = new Hono<AppEnv>()
   .get("/categories/:slug/price-range", catalogCache(3600), async (c) => {
     return c.json(await priceRange(c.var.db, categoryParam(c.req.param("slug"))));
   })
-  .get("/categories/:slug/facets", catalogCache(300), async (c) => {
+  // Forma 2: las facetas con umbral (#190) traen `threshold`, etiquetas "mínima" y conteos acumulados.
+  .get("/categories/:slug/facets", catalogCache(300, 2), async (c) => {
     const category = categoryParam(c.req.param("slug"));
     return c.json(await listFacets(c.var.db, category, listQuery(c, category)));
   })
