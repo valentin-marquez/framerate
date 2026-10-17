@@ -6,7 +6,7 @@ import type { RawOffer } from "../domain/normalize";
 import fixture from "./__fixtures__/winpy.json";
 import type { CrawlContext } from "./adapter";
 import { HttpError } from "./http";
-import { createWinpyAdapter, fichaDue, listingCards, toRawOffer } from "./winpy";
+import { createWinpyAdapter, fichaDue, listingCards, sourceTextOf, toRawOffer } from "./winpy";
 
 const BASE = "https://www.winpy.cl";
 const GPU = "tarjeta-grafica-asus-dual-geforce-rtx-5050-oc-de-8gb-gddr6";
@@ -67,6 +67,7 @@ describe("adaptador Winpy", () => {
     const igual = await crawl(guardada, libre);
     expect(igual.pidioFicha).toBe(false);
     expect(igual.offers[0]).toMatchObject({ externalId: "DUAL-RTX5050-O8G", stockQuantity: 9, priceCash: 449_920 });
+    expect(igual.offers[0]?.sourceText).toBe(guardada.sourceText);
 
     expect((await crawl({ ...guardada, priceCash: 400_000 }, libre)).pidioFicha).toBe(true);
     expect((await crawl(guardada, turno)).pidioFicha).toBe(true);
@@ -98,6 +99,22 @@ describe("adaptador Winpy", () => {
       gtin: "199275573873",
     });
     expect(offers[0]?.imageUrls[0]).toMatch(/^https:\/\/www\.winpy\.cl\/files\//);
+  });
+
+  test("el texto de la ficha lleva las especificaciones primero y luego las características, sin entidades", () => {
+    const text = toRawOffer(fixture.product, `${BASE}/venta/${GPU}/`, "gpu").sourceText ?? "";
+    expect(text.split("\n").slice(0, 3)).toEqual([
+      "Modelo DUAL-RTX5050-O8G",
+      "Motor gráfico NVIDIA GeForce RTX 5050",
+      "Rendimiento de IA 433 TOPs",
+    ]);
+    expect(text).toContain("ASUS Dual GeForce RTX 5050: Potencia compacta con refrigeración avanzada");
+    expect(text).not.toMatch(/&[a-z]+;|&#|flix|\$/i);
+  });
+
+  test("sin pestañas en la ficha no hay texto", () => {
+    expect(sourceTextOf('<html><body><h1 itemprop="name">X</h1></body></html>')).toBeNull();
+    expect(toRawOffer("<html></html>", `${BASE}/venta/x/`, "gpu").sourceText).toBeNull();
   });
 
   test("un nombre con una parte en negrita se lee entero", () => {

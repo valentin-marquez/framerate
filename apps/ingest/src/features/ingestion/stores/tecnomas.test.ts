@@ -109,6 +109,19 @@ describe("adaptador Tecnomas", () => {
     expect(soldOut).toMatchObject({ inStock: false, stockQuantity: 0 });
   });
 
+  test("el texto de ficha adelanta las viñetas 'Clave: valor' a la descripción de marketing", () => {
+    const html = ficha("tarjeta-de-video-asus-dual-geforce-rtx-3060-oc");
+    const lines = toRawOffer(html, `${BASE}/producto/x`, "gpu").sourceText?.split("\n");
+    expect(lines?.slice(0, 3)).toEqual(["Marca: Asus", "Modelo: DUAL-RTX3060-O12G-V2", "Categoría: Tarjeta de Video"]);
+    expect(lines?.slice(7)).toEqual([
+      expect.stringMatching(/^ASUS Dual GeForce RTX 3060 V2 OC Edition es/),
+      "Características:",
+    ]);
+
+    const sinTexto = html.replace(/"description":"(?:[^"\\]|\\.)*",/, "");
+    expect(toRawOffer(sinTexto, `${BASE}/producto/x`, "gpu").sourceText).toBeNull();
+  });
+
   test("un listado vacío no entrega ofertas; una página sin ItemList ni aviso de vacío falla", async () => {
     const { ctx, requests } = fakeContext();
     expect(await Array.fromAsync(adapter.crawlCategory("gpu", ctx))).toEqual([]);

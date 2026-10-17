@@ -1,5 +1,5 @@
 import type { Category } from "@framerate/contracts";
-import { decodeEntities } from "@framerate/kit";
+import { decodeEntities, htmlLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
@@ -98,6 +98,27 @@ const productName = (html: string) =>
       .replace(/\s+/g, " "),
   ).trim();
 
+// Las pestañas de la ficha: "Especificaciones" (content2, tabla de pares) y "Características" (content1, marketing,
+// a veces vacía). Traen divs anidados, así que cada una se corta en el bloque hermano que la sigue y no en su `</div>`.
+const TAB_END = {
+  content1: /<label for="tab2"|<div id="content2"/,
+  content2: /<div id="promociones"|<h3 class="titHome|<section|<footer/,
+};
+
+function tabText(html: string, id: keyof typeof TAB_END): string {
+  const start = html.indexOf(`<div id="${id}"`);
+  if (start < 0) return "";
+  const rest = html.slice(start);
+  const end = rest.search(TAB_END[id]);
+  if (end < 0) return "";
+  return htmlLines(rest.slice(0, end));
+}
+
+/** Especificaciones primero: `normalizeOffer` recorta el texto y el marketing es lo que sobra. */
+export function sourceTextOf(html: string): string | null {
+  return [tabText(html, "content2"), tabText(html, "content1")].filter(Boolean).join("\n") || null;
+}
+
 export function toRawOffer(html: string, url: string, category: Category): RawOffer {
   const sku = prop(html, "sku");
   const gtinRaw = prop(html, "gtin");
@@ -122,5 +143,6 @@ export function toRawOffer(html: string, url: string, category: Category): RawOf
     mpn: sku && !/^KT\d/i.test(sku) ? sku : null,
     gtin,
     imageUrls: image ? [image] : [],
+    sourceText: sourceTextOf(html),
   };
 }

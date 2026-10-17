@@ -81,4 +81,24 @@ describe("adaptador AllTec", () => {
     const ean = (pages[STRIX] ?? "").replace(/ROG-STRIX-RTX3070TI-8G-GAMING/g, "4719512073520");
     expect(toRawOffer(ean, "2350", STRIX, "gpu")).toMatchObject({ mpn: null, gtin: "4719512073520" });
   });
+
+  test('sourceText: specs de "Más información" primero, resumen después; sin esos bloques, null', async () => {
+    const [gtx, strix, msi] = await crawl();
+    expect(msi?.sourceText).toBe(
+      [
+        "ESPECIFICACIONES:",
+        "Nombre de marketing: GeForce RTX™ 5060 Ti 8G GAMING OC",
+        "Nombre del modelo: G506T-8GC",
+        "Unidad de procesamiento de gráficos: NVIDIA® GeForce RTX™ 5060 Ti",
+        "Interfaz: PCI Express® Gen 5 x16 (usa x8)",
+        "MSI GeForce RTX™ 5060 Ti 8G GAMING OC",
+        "Desarrollado con la arquitectura NVIDIA Blackwell y DLSS 4",
+      ].join("\n"),
+    );
+    expect(gtx?.sourceText?.split("\n").slice(0, 2)).toEqual([
+      "ESPECIFICACIONES",
+      "Procesamiento de gráficos: GeForce® GTX 1660",
+    ]);
+    expect(strix?.sourceText).toBeNull();
+  });
 });

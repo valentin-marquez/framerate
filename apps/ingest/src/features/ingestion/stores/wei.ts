@@ -1,5 +1,5 @@
 import type { Category } from "@framerate/contracts";
-import { decodeEntities } from "@framerate/kit";
+import { decodeEntities, htmlLines, stripHtml } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
@@ -90,5 +90,23 @@ export function toRawOffer(html: string, url: string, category: Category): RawOf
     mpn: !gtin && part ? part : null,
     gtin,
     imageUrls: image ? [image] : [],
+    sourceText: sourceTextOf(html),
   };
+}
+
+// Pestañas de la ficha: la primera es la descripción y la segunda "Especificación Técnica". La tabla va primero porque
+// normalize recorta el texto.
+function sourceTextOf(html: string): string | null {
+  const tabs = html.match(
+    /id="tab-producto"[\s\S]*?<div class="tab-body">([\s\S]*?)<div class="window-container"/,
+  )?.[1];
+  const [, description = "", specs = ""] = (tabs ?? "").split(/<div class="tab-content[^"]*"[^>]*>/);
+  // El HTML de Wei trae saltos de línea entre celdas: se arma "clave: valor" por fila y sólo los bloques cortan línea.
+  const rows = [...specs.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map(([, row = ""]) =>
+    [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)]
+      .map(([, cell = ""]) => stripHtml(cell))
+      .filter(Boolean)
+      .join(": "),
+  );
+  return [...rows, htmlLines(description)].filter(Boolean).join("\n") || null;
 }

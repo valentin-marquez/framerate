@@ -1,5 +1,5 @@
 import type { Category } from "@framerate/contracts";
-import { decodeEntities } from "@framerate/kit";
+import { decodeEntities, htmlLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
@@ -77,5 +77,22 @@ export function toRawOffer(html: string, id: string, url: string, category: Cate
     mpn: gtin ? null : sku || null,
     gtin,
     imageUrls: image ? [image] : [],
+    sourceText: sourceTextOf(html),
   };
+}
+
+// Specs primero ("Más información", la tabla del fabricante) y el resumen de marketing después: normalize recorta.
+function sourceTextOf(html: string): string | null {
+  const specs = html.match(
+    /<section class="page-product-box"><h3[^>]*>M(?:&aacute;|á)s informaci(?:&oacute;|ó)n<\/h3>([\s\S]*?)<\/section>/,
+  )?.[1];
+  const summary = html.match(
+    /id="short_description_content"[^>]*>([\s\S]*?)<p (?:class="buttons_bottom_block"|id="pQuantityAvailable")/,
+  )?.[1];
+  return (
+    [specs, summary]
+      .map((block) => htmlLines(block ?? ""))
+      .filter(Boolean)
+      .join("\n") || null
+  );
 }

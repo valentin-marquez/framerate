@@ -1,4 +1,5 @@
 import type { Category } from "@framerate/contracts";
+import { htmlLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
@@ -29,6 +30,9 @@ const ProductSchema = z.object({
   precio_tarjeta: z.number().nullable(),
   image: z.string().nullable(),
   gallery: z.array(z.string()).default([]),
+  // `.catch`: si cambian de forma, la oferta entra igual, sólo sin texto de ficha.
+  description: z.string().catch(""),
+  specification_values: z.array(z.object({ value: z.string().catch("") })).catch([]),
 });
 const PageSchema = z.object({
   meta: z.object({ last_page: z.number() }),
@@ -84,5 +88,13 @@ export function toRawOffer(p: z.infer<typeof ProductSchema>, baseUrl: string, ca
     mpn,
     gtin,
     imageUrls: [...new Set([p.image, ...p.gallery].filter((s): s is string => !!s))],
+    sourceText: sourceTextOf(p),
   };
+}
+
+// Los valores de especificación vienen sin su nombre, pero se entienden solos ("Micro ATX (24.4 x 24.4 cm)"); van antes
+// que la descripción porque `normalizeOffer` recorta el texto. "Detalle" es un valor genérico que no dice nada.
+function sourceTextOf(p: z.infer<typeof ProductSchema>): string | null {
+  const specs = p.specification_values.map((s) => s.value.trim()).filter((v) => v && v !== "Detalle");
+  return [...specs, htmlLines(p.description)].filter(Boolean).join("\n") || null;
 }

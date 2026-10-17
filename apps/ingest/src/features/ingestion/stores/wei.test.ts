@@ -5,7 +5,7 @@ import { silentLogger } from "@framerate/kit";
 import responses from "./__fixtures__/wei.json";
 import type { CrawlContext } from "./adapter";
 import { HttpError } from "./http";
-import { createWeiAdapter } from "./wei";
+import { createWeiAdapter, toRawOffer } from "./wei";
 
 const BASE = "https://www.wei.cl";
 const pages = responses as Record<string, string>;
@@ -55,5 +55,25 @@ describe("adaptador Wei", () => {
     });
     expect(n210?.imageUrls).toEqual(["https://www.wei.cl/img/product/TVMSI00211g.jpeg"]);
     expect(gt1030).toMatchObject({ mpn: "912-V812-231", brand: "MSI" });
+  });
+
+  test("sourceText: la tabla de especificaciones como clave: valor y la descripción después; sin pestañas, null", async () => {
+    const [n210, gt1030] = await Array.fromAsync(adapter.crawlCategory("gpu", fakeContext().ctx));
+    expect(gt1030?.sourceText?.split("\n")).toEqual([
+      "NOMBRE DEL MODELO: GeForce® GT 1030 4GD4 LP OC",
+      "UNIDAD DE PROCESAMIENTO GRÁFICO: NVIDIA® GeForce® GT 1030",
+      "INTERFAZ: PCI Express 3.0 x16 (usa x4)",
+      "RELOJES CENTRALES: Impulso: 1430 MHz",
+      "NÚCLEOS: 384 Unidades",
+      "Núcleo/Memoria",
+      "Reloj de refuerzo/reloj base",
+      "1430 MHz/1189 MHz",
+      "Memoria DDR4 de 4 GB/2100 MHz",
+    ]);
+    expect(n210?.sourceText?.split("\n")[0]).toBe("Motor de gráficos: GeForce® 210");
+
+    const url = gt1030?.url ?? "";
+    const bare = (pages[url] ?? "").replace(/<div class="tab mt10" id="tab-producto">[\s\S]*<\/body>/, "</body>");
+    expect(toRawOffer(bare, url, "gpu").sourceText).toBeNull();
   });
 });

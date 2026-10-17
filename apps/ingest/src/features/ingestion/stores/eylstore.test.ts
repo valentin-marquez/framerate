@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { silentLogger } from "@framerate/kit";
-// Cuatro productos reales de `/api/categorias/…/productos` (11-10-2026), en dos páginas: sin código, con un número
-// interno y part number, con un modelo con espacios y con un MPN.
+// Cinco productos reales de `/api/categorias/…/productos` (11-10-2026), en dos páginas: sin código, con un número
+// interno y part number, con un modelo con espacios, con un MPN y una placa con especificaciones y descripción
+// (17-10-2026).
 import responses from "./__fixtures__/eylstore.json";
 import type { CrawlContext } from "./adapter";
 import { createEylstoreAdapter } from "./eylstore";
@@ -31,7 +32,7 @@ describe("adaptador Eylstore", () => {
   test("pagina la API y lee precios, stock y fotos sin entrar a la ficha", async () => {
     const offers = await Array.fromAsync(adapter.crawlCategory("motherboard", ctx));
 
-    expect(offers).toHaveLength(4);
+    expect(offers).toHaveLength(5);
     expect(offers[1]).toMatchObject({
       externalId: "procesador-amd-ryzen-5-5500-42-ghz-6-nucleos-socket-am4-pn-100-100000457box",
       brand: "AMD",
@@ -48,6 +49,21 @@ describe("adaptador Eylstore", () => {
   test("el MPN sale del part number o de un código sin espacios con letras y números", async () => {
     const offers = await Array.fromAsync(adapter.crawlCategory("motherboard", ctx));
     // Sin código, "2232" con part number, "GV-N5090GAMING OC-32GD" (con espacios) y "G5060-8S2C".
-    expect(offers.map((o) => o.mpn)).toEqual([null, "100-100000457box", null, "G5060-8S2C"]);
+    expect(offers.map((o) => o.mpn)).toEqual([null, "100-100000457box", null, "G5060-8S2C", null]);
+  });
+
+  test("el texto de ficha lleva las especificaciones antes que la descripción, sin el valor genérico 'Detalle'", async () => {
+    const offers = await Array.fromAsync(adapter.crawlCategory("motherboard", ctx));
+    expect(offers[4]?.sourceText?.split("\n").slice(0, 6)).toEqual([
+      "AMD AM5 – Ryzen™ 9000 / 8000 / 7000 Series",
+      "AMD B850",
+      "FCC, CE, ErP/EuP Ready",
+      "Micro ATX (24.4 x 24.4 cm)",
+      "12+2+1 Dr.MOS con disipador grande y capacitores 20K para mayor durabilidad",
+      expect.stringMatching(/^La ASRock B850M Steel Legend WiFi combina rendimiento/),
+    ]);
+    expect(offers[4]?.sourceText).not.toContain("<");
+    // Los otros cuatro vienen recortados sin descripción ni especificaciones.
+    expect(offers[0]?.sourceText).toBeNull();
   });
 });

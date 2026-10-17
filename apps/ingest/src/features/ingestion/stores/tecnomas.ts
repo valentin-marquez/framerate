@@ -88,5 +88,19 @@ export function toRawOffer(html: string, url: string, category: Category): RawOf
     mpn: sku && !normalizeGtin(sku) ? sku : null,
     gtin,
     imageUrls: [ld.image].flat().filter((src): src is string => typeof src === "string" && src.startsWith("http")),
+    sourceText: sourceTextOf(ld.description),
   };
+}
+
+// La descripción del JSON-LD es texto plano: marketing primero y al final viñetas "• Clave: valor". Las specs se
+// adelantan porque `normalizeOffer` recorta el texto y la ficha técnica quedaría fuera.
+function sourceTextOf(description: unknown): string | null {
+  if (typeof description !== "string") return null;
+  const lines = description
+    .split(/\n|(?=•)/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const isSpec = (line: string) => line.startsWith("•") || /^[^:.]{1,40}:\s*\S/.test(line);
+  const specs = lines.filter(isSpec).map((line) => line.replace(/^•\s*/, ""));
+  return [...specs, ...lines.filter((line) => !isSpec(line))].join("\n") || null;
 }
