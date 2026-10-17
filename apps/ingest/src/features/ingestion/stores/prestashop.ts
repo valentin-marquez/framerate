@@ -1,13 +1,16 @@
 import type { Category } from "@framerate/contracts";
+import { htmlLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
+import { fichaText } from "./html";
 
 /**
  * PrestaShop 1.7+/8: el listado de categoría (`/68-tarjeta-de-video?page=N`) devuelve JSON con `products[]` y
  * `pagination` si la petición trae `X-Requested-With: XMLHttpRequest` (es la llamada AJAX de su paginador).
- * PrestaShop 1.6 no tiene ese JSON.
+ * PrestaShop 1.6 no tiene ese JSON. El listado no trae la descripción (`description_short` es el nombre o el bloque de
+ * despacho): sale del quickview AJAX, una petición por ficha.
  */
 
 export interface PrestaShopConfig {
@@ -21,6 +24,7 @@ export interface PrestaShopConfig {
   cardMarkup?: number;
   /** `price_amount` es la tarjeta y la transferencia tiene este descuento (0.05 = −5 %). */
   cashDiscount?: number;
+  now?: () => number;
 }
 
 const PageSchema = z.object({
@@ -41,6 +45,8 @@ const ProductSchema = z.object({
 });
 type PrestaShopProduct = z.infer<typeof ProductSchema>;
 
+const QuickviewSchema = z.object({ product: z.object({ description: z.string().nullish() }) });
+
 const MAX_PAGES = 50;
 
 export function createPrestaShopAdapter(config: PrestaShopConfig): StoreAdapter {
@@ -58,7 +64,14 @@ export function createPrestaShopAdapter(config: PrestaShopConfig): StoreAdapter 
           ctx.log.info("prestashop.page", { path, page, items: products.length, pages: pagination.pages_count });
           for (const raw of products) {
             const product = ProductSchema.safeParse(raw);
-            yield product.success ? toRawOffer(product.data, category, config) : (raw as RawOffer);
+            if (!product.success) {
+              yield raw as RawOffer;
+              continue;
+            }
+            const offer = toRawOffer(product.data, category, config);
+            const now = (config.now ?? Date.now)();
+            offer.sourceText = await fichaText(ctx, offer, now, () => quickview(ctx, config.baseUrl, offer.externalId));
+            yield offer;
           }
 
           if (products.length === 0 || page >= pagination.pages_count) break;
@@ -66,6 +79,17 @@ export function createPrestaShopAdapter(config: PrestaShopConfig): StoreAdapter 
       }
     },
   };
+}
+
+async function quickview(ctx: CrawlContext, baseUrl: string, id: string): Promise<string | null> {
+  // Sin X-Requested-With: el relay no lo reenvía y las cuatro tiendas responden igual.
+  const res = await ctx.http.post(
+    `${baseUrl}/index.php?controller=product`,
+    `action=quickview&id_product=${encodeURIComponent(id)}&id_product_attribute=0&ajax=1`,
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
+  );
+  const parsed = QuickviewSchema.safeParse(JSON.parse(res.text));
+  return (parsed.success && htmlLines(parsed.data.product.description ?? "")) || null;
 }
 
 export function toRawOffer(

@@ -45,14 +45,17 @@ test("fichaText: reusa el texto guardado, pide el de la nueva y reintenta la vac
   const due = slots.find((t) => fichaDue("https://t.example/sin", t)) ?? 0;
   const notDue = slots.find((t) => !fichaDue("https://t.example/sin", t)) ?? 0;
 
-  expect(await fichaText(ctx, "https://t.example/con", due, fetchText)).toBe("Guardado");
-  expect(await fichaText(ctx, "https://t.example/nueva", notDue, fetchText)).toBe("Nuevo");
-  expect(await fichaText(ctx, "https://t.example/sin", notDue, fetchText)).toBeNull();
-  expect(await fichaText(ctx, "https://t.example/sin", due, fetchText)).toBe("Nuevo");
+  expect(await fichaText(ctx, { url: "https://t.example/con", inStock: true }, due, fetchText)).toBe("Guardado");
+  expect(await fichaText(ctx, { url: "https://t.example/nueva", inStock: true }, notDue, fetchText)).toBe("Nuevo");
+  expect(await fichaText(ctx, { url: "https://t.example/sin", inStock: true }, notDue, fetchText)).toBeNull();
+  expect(await fichaText(ctx, { url: "https://t.example/sin", inStock: true }, due, fetchText)).toBe("Nuevo");
+  expect(calls).toBe(2);
+  // Agotada y desconocida: no se guarda, así que no vale la petición.
+  expect(await fichaText(ctx, { url: "https://t.example/agotada", inStock: false }, due, fetchText)).toBeNull();
   expect(calls).toBe(2);
 
   const failing = async () => {
     throw new Error("429");
   };
-  expect(await fichaText(ctx, "https://t.example/nueva", notDue, failing)).toBeNull();
+  expect(await fichaText(ctx, { url: "https://t.example/nueva", inStock: true }, notDue, failing)).toBeNull();
 });

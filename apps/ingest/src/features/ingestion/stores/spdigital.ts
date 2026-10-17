@@ -1,21 +1,24 @@
 import type { Category } from "@framerate/contracts";
+import { htmlLines } from "@framerate/kit";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { parseClp } from "./html";
+import { fichaText, parseClp } from "./html";
 
 /**
  * SP Digital (Gatsby + Saleor). Cada subcategoría se publica dos veces, las dos desde el servidor (sin `render`):
  * `/page-data/categories/<slug>/page-data.json` trae por producto MPN, GTIN, marca, condición, stock y el precio
  * "otros medios de pago"; el HTML `/categories/<slug>/` trae las tarjetas con el precio de transferencia, que el JSON
  * no tiene cuando el producto está en oferta (ahí `metadata.pricing` guarda el precio de lista). El listado sólo
- * incluye lo que tiene stock. `robots.txt` pide `Crawl-delay: 5`. Se descartan caja abierta y segunda selección.
+ * incluye lo que tiene stock. `robots.txt` pide `Crawl-delay: 5`. Se descartan caja abierta y segunda selección. El
+ * texto de ficha sale del page-data de cada producto (`/page-data/<slug>/page-data.json`), por `fichaText`.
  */
 
 export interface SpDigitalConfig {
   baseUrl: string;
   /** Categoría Framerate → slugs de subcategoría de la tienda ("componentes-tarjeta-de-video-tarjeta-video-nvidia"). */
   categories: Partial<Record<Category, readonly string[]>>;
+  now?: () => number;
 }
 
 const MAX_PAGES = 10;
@@ -62,8 +65,12 @@ export function createSpDigitalAdapter(config: SpDigitalConfig): StoreAdapter {
             if (seen.has(item.slug)) continue;
             seen.add(item.slug);
             const offer = toRawOffer(item, cash.get(item.slug), config.baseUrl, category);
-            if (offer) yield offer;
-            else ctx.log.info("spdigital.omitido", { slug: item.slug });
+            if (offer) {
+              const sourceText = await fichaText(ctx, offer, (config.now ?? Date.now)(), async () =>
+                descriptionText((await ctx.http.get(`${config.baseUrl}/page-data/${item.slug}/page-data.json`)).text),
+              );
+              yield { ...offer, sourceText };
+            } else ctx.log.info("spdigital.omitido", { slug: item.slug });
           }
           ctx.log.info("spdigital.page", {
             slug,
@@ -76,6 +83,54 @@ export function createSpDigitalAdapter(config: SpDigitalConfig): StoreAdapter {
       }
     },
   };
+}
+
+// Descripción en EditorJS, guardada como string JSON dentro del page-data.
+const DescriptionSchema = z.object({
+  blocks: z.array(
+    z.object({
+      data: z
+        .object({
+          text: z.string().optional(),
+          items: z.array(z.unknown()).optional(),
+          content: z.array(z.array(z.unknown())).optional(),
+        })
+        .catch({}),
+    }),
+  ),
+});
+
+const ProductPageSchema = z.object({
+  result: z.object({ pageContext: z.object({ content: z.object({ description: z.string() }) }) }),
+});
+
+/** Texto de la descripción de la ficha, o null si no viene o cambió de forma. */
+export function descriptionText(pageData: string): string | null {
+  const page = ProductPageSchema.safeParse(JSON.parse(pageData));
+  if (!page.success) return null;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(page.data.result.pageContext.content.description);
+  } catch {
+    return null;
+  }
+  const doc = DescriptionSchema.safeParse(raw);
+  if (!doc.success) return null;
+  const html = doc.data.blocks
+    .flatMap(({ data }) => [
+      data.text,
+      ...(data.items ?? []).map((i) => (typeof i === "string" ? `<li>${i}</li>` : "")),
+      ...(data.content ?? []).map((row) => `<tr>${row.filter((c) => typeof c === "string").join(" ")}</tr>`),
+    ])
+    .filter(Boolean)
+    .join("<br>");
+  // Al final traen su propio SEO ("Meta Title: …"): ruido para Haiku.
+  return (
+    htmlLines(html)
+      .split("\n")
+      .filter((line) => !/^Meta (Title|Description):/i.test(line))
+      .join("\n") || null
+  );
 }
 
 /** Precio "Transferencias" de cada tarjeta del listado, por slug. */

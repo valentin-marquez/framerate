@@ -1,4 +1,5 @@
 import { decodeEntities } from "@framerate/kit";
+import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext } from "./adapter";
 import { HttpError } from "./http";
 
@@ -59,22 +60,22 @@ export function fichaDue(slug: string, now: number): boolean {
 
 /**
  * Texto de ficha que cuesta una petición aparte (MyShop, PrestaShop, SP Digital): el guardado se reusa, la oferta nueva
- * lo pide al tiro y una conocida sin texto sólo en su turno diario, o una ficha vacía se pediría en cada corrida. Si la
- * petición falla, la oferta entra igual, sin texto.
+ * lo pide al tiro y una conocida sin texto sólo en su turno diario, o una ficha vacía se pediría en cada corrida. Una
+ * agotada que nunca tuvimos no se guarda: su ficha no se pide. Si la petición falla, la oferta entra igual, sin texto.
  */
 export async function fichaText(
   ctx: CrawlContext,
-  url: string,
+  offer: Pick<RawOffer, "url" | "inStock">,
   now: number,
   fetchText: () => Promise<string | null>,
 ): Promise<string | null> {
-  const known = await ctx.known?.(url);
+  const known = await ctx.known?.(offer.url);
   if (known?.sourceText) return known.sourceText;
-  if (known && !fichaDue(url, now)) return null;
+  if (known ? !fichaDue(offer.url, now) : !offer.inStock) return null;
   try {
     return await fetchText();
   } catch (error) {
-    ctx.log.warn("ficha.text_failed", { url, error });
+    ctx.log.warn("ficha.text_failed", { url: offer.url, error });
     return null;
   }
 }

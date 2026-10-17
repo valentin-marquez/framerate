@@ -1,20 +1,29 @@
 import { describe, expect, test } from "bun:test";
 import { silentLogger } from "@framerate/kit";
-import { normalizeOffer } from "../domain/normalize";
+import { normalizeOffer, type RawOffer } from "../domain/normalize";
 // Respuestas reales de MyShop (y un ítem de Sandos), recortadas a dos páginas.
 import pages from "./__fixtures__/myshop-productos.json";
 import type { CrawlContext } from "./adapter";
 import { HttpError } from "./http";
-import { createMyShopAdapter } from "./myshop";
+import { createMyShopAdapter, descriptionOf } from "./myshop";
 
-function fakeContext() {
+// Fichas reales recortadas al input ObjectoJSON con su descripción: MyShop p38668 y una de Sandos sin descripción.
+const ficha = await Bun.file(`${import.meta.dir}/__fixtures__/myshop-ficha.html`).text();
+const fichaVacia = await Bun.file(`${import.meta.dir}/__fixtures__/myshop-ficha-sandos-vacia.html`).text();
+
+function fakeContext(fichas: (url: string) => string | null = () => null, known: RawOffer[] = []) {
   const bodies: unknown[] = [];
+  const gets: string[] = [];
   const ctx: CrawlContext = {
     log: silentLogger,
     snapshot: async () => {},
+    known: async (url) => known.find((offer) => offer.url === url),
     http: {
       get: async (url) => {
-        throw new HttpError(url, 404);
+        gets.push(url);
+        const html = fichas(url);
+        if (html === null) throw new HttpError(url, 404);
+        return { status: 200, headers: new Headers(), text: html };
       },
       async post(url, json) {
         bodies.push(json);
@@ -24,7 +33,7 @@ function fakeContext() {
       },
     },
   };
-  return { ctx, bodies };
+  return { ctx, bodies, gets };
 }
 
 describe("adaptador MyShop", () => {
@@ -74,4 +83,38 @@ describe("adaptador MyShop", () => {
     const offers = await Array.fromAsync(adapter.crawlCategory("gpu", fakeContext().ctx));
     expect(offers[4]).toMatchObject({ externalId: "11902", inStock: true, stockQuantity: 20 });
   });
+
+  test("la oferta nueva pide su ficha y trae la descripción como texto", async () => {
+    const { ctx, gets } = fakeContext(() => ficha);
+    const offers = await Array.fromAsync(adapter.crawlCategory("gpu", ctx));
+    // La agotada no se guarda: su ficha no se pide.
+    expect(gets).toHaveLength(offers.filter((o) => o.inStock).length);
+    expect(offers.find((o) => !o.inStock)?.sourceText).toBeNull();
+    expect(offers[0]?.sourceText).toContain("Especificaciones técnicas\nMarca: Airflow");
+    expect(offers[0]?.sourceText).toContain("Ruido: 22.8 dBA");
+    expect(offers[0]?.sourceText).not.toContain("<");
+  });
+
+  test("la conocida con texto no vuelve a pedir la ficha", async () => {
+    const first = await Array.fromAsync(adapter.crawlCategory("gpu", fakeContext().ctx));
+    const known = first.map((offer) => ({ ...offer, sourceText: "Guardado" }));
+    const { ctx, gets } = fakeContext(() => ficha, known);
+    const offers = await Array.fromAsync(adapter.crawlCategory("gpu", ctx));
+    expect(gets).toEqual([]);
+    expect(offers.map((offer) => offer.sourceText)).toEqual(Array(5).fill("Guardado"));
+  });
+
+  test("ficha que falla o sin input: la oferta entra igual, sin texto", async () => {
+    const { ctx } = fakeContext((url) => {
+      throw new HttpError(url, 429);
+    });
+    const offers = await Array.fromAsync(adapter.crawlCategory("gpu", ctx));
+    expect(offers).toHaveLength(5);
+    expect(offers.every((offer) => offer.sourceText === null)).toBe(true);
+    expect(descriptionOf("<html></html>")).toBeNull();
+  });
+});
+
+test('Sandos con "Ficha sin descripción" no tiene texto', () => {
+  expect(descriptionOf(fichaVacia)).toBeNull();
 });

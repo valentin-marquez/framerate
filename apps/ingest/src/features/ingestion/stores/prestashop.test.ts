@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { silentLogger } from "@framerate/kit";
-import { normalizeOffer } from "../domain/normalize";
+import { normalizeOffer, type RawOffer } from "../domain/normalize";
 // Listados AJAX reales de MyBox, Todoclick y TYT Gamer (sept. 2026), recortados a los campos que se usan.
 import listados from "./__fixtures__/prestashop-listados.json";
+// Quickview real de Lancenter (MSI GT 710, oct. 2026), recortado a `product.description`.
+import quickview from "./__fixtures__/prestashop-quickview.json";
 import type { CrawlContext } from "./adapter";
 import { HttpError } from "./http";
 import { createPrestaShopAdapter, type PrestaShopConfig, toRawOffer } from "./prestashop";
@@ -100,5 +102,66 @@ describe("adaptador PrestaShop", () => {
     const broken = [{ products: [{ id_product: "1", name: "Sin precio" }], pagination: { pages_count: 1 } }];
     const [offer] = await crawl(broken, { reference: "mpn" }).offers;
     expect(normalizeOffer(offer, "gpu")).toMatchObject({ ok: false });
+  });
+});
+
+describe("texto de ficha por quickview", () => {
+  const page = [{ products: [listados.mybox[0]?.products[0]], pagination: { pages_count: 1 } }];
+  const url = "https://mybox.cl/tarjeta-de-video/6197-tarjeta-de-video-asus-x-t1-rtx-5060-ti-gaming-8gb-oc-.html";
+
+  function run(post: CrawlContext["http"]["post"], known?: Partial<RawOffer>) {
+    const adapter = createPrestaShopAdapter({
+      baseUrl: "https://tienda.example",
+      categories: { gpu: ["68-x"] },
+      reference: "mpn",
+      now: () => 0,
+    });
+    const { ctx } = fakeContext(page, "68-x");
+    ctx.http.post = post;
+    ctx.known = async (u) => (u === url ? (known as RawOffer | undefined) : undefined);
+    return Array.fromAsync(adapter.crawlCategory("gpu", ctx));
+  }
+
+  test("oferta nueva: pide el quickview por POST y guarda la descripción como texto", async () => {
+    const calls: unknown[] = [];
+    const [offer] = await run(async (u, body, init) => {
+      calls.push({ u, body, init });
+      return { status: 200, headers: new Headers(), text: JSON.stringify(quickview) };
+    });
+    expect(calls).toEqual([
+      {
+        u: "https://tienda.example/index.php?controller=product",
+        body: "action=quickview&id_product=6197&id_product_attribute=0&ajax=1",
+        init: { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
+      },
+    ]);
+    expect(offer?.sourceText).toStartWith(
+      "Coprocesador de gráficos NVIDIA GeForce GT 710\nMarca MSI\nTamaño de memoria gráfica 2 GB",
+    );
+    expect(offer?.sourceText).not.toContain("<");
+  });
+
+  test("conocida con texto: lo reusa sin pedir el quickview", async () => {
+    let calls = 0;
+    const [offer] = await run(
+      async (u) => {
+        calls++;
+        throw new HttpError(u, 500);
+      },
+      { sourceText: "Guardado" },
+    );
+    expect(calls).toBe(0);
+    expect(offer?.sourceText).toBe("Guardado");
+  });
+
+  test("quickview que falla o cambia de forma: la oferta entra sin texto", async () => {
+    const [failed] = await run(async (u) => {
+      throw new HttpError(u, 403);
+    });
+    const [changed] = await run(async () => ({ status: 200, headers: new Headers(), text: '{"product":[]}' }));
+    for (const offer of [failed, changed]) {
+      expect(offer).toMatchObject({ externalId: "6197", sourceText: null });
+      expect(normalizeOffer(offer, "gpu").ok).toBe(true);
+    }
   });
 });
