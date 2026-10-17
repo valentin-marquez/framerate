@@ -1,6 +1,6 @@
 import { Popover } from "@base-ui/react/popover";
 import { Slider } from "@base-ui/react/slider";
-import { IconCheck, IconChevronDown, IconSearch } from "@tabler/icons-react";
+import { IconCheck, IconChevronDown, IconSearch, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
@@ -121,36 +121,69 @@ function OptionList({ label, options, selected, onToggle, onClear, note, single 
 }
 
 /**
- * El campo cerrado. Vacío, el nombre va dentro, como un marcador. Con algo elegido, el nombre sube a la línea del borde
- * (con el fondo del campo que la interrumpe) y el resumen ("ASUS +1") ocupa el campo: así nunca se pisan.
+ * Nombre y flecha del campo, dentro del botón que lo abre. Vacío, el nombre va dentro, como un marcador. Con algo
+ * elegido, sube a la línea del borde (con el fondo del campo que la interrumpe) y las etiquetas ocupan el campo: así
+ * nunca se pisan. Se ancla arriba y no al centro, porque con varias filas de etiquetas el campo crece.
  */
-function FieldFace({ label, options, selected }: Pick<FieldProps, "label" | "options" | "selected">) {
-  const first = options.find((o) => o.value === selected[0])?.label ?? selected[0];
-  const filled = selected.length > 0;
+function FieldCap({ label, filled }: { label: string; filled: boolean }) {
   return (
     <>
       <span
         className={cn(
-          "pointer-events-none absolute top-1/2 left-2 max-w-[calc(100%-3rem)] origin-left truncate bg-background px-1 text-muted-foreground transition-[transform] duration-fast ease-out",
-          filled ? "-translate-y-[calc(50%+1.125rem)] translate-x-1.5 scale-[0.8]" : "-translate-y-1/2",
+          "pointer-events-none absolute top-0 left-2 max-w-[calc(100%-3rem)] origin-left truncate bg-background px-1 text-muted-foreground transition-[transform] duration-fast ease-out",
+          filled ? "-translate-y-1/2 translate-x-1.5 scale-[0.8]" : "translate-y-[calc(1.125rem-50%)]",
         )}
       >
         {label}
       </span>
-      <span className="flex min-w-0 flex-1 items-center gap-1 text-label-sm text-primary">
-        {filled && <span className="truncate">{first}</span>}
-        {selected.length > 1 && <span className="shrink-0">+{selected.length - 1}</span>}
-      </span>
-      <IconChevronDown className="size-4 shrink-0 text-muted-foreground" />
+      <IconChevronDown className="pointer-events-none absolute top-2.5 right-3 size-4 text-muted-foreground" />
     </>
+  );
+}
+
+/**
+ * Lo elegido, una etiqueta por valor con su x para quitarlo sin abrir la lista. El contenedor deja pasar el clic al
+ * botón del campo, que está debajo: sólo las x lo reciben.
+ */
+function SelectedChips({
+  options,
+  selected,
+  onRemove,
+}: Pick<FieldProps, "options" | "selected"> & { onRemove: (value: string) => void }) {
+  return (
+    <span className="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-wrap gap-1 pr-6">
+      {selected.map((value) => {
+        const label = options.find((o) => o.value === value)?.label ?? value;
+        return (
+          <span
+            key={value}
+            className="inline-flex max-w-full items-center gap-0.5 rounded-lg bg-primary/10 py-0.5 pr-0.5 pl-2 text-label-xs text-primary"
+          >
+            <span className="truncate">{label}</span>
+            <button
+              type="button"
+              aria-label={`Quitar ${label}`}
+              onClick={() => onRemove(value)}
+              className="pointer-events-auto grid size-4 shrink-0 cursor-pointer place-items-center rounded-md text-primary/70 transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <IconX className="size-3" stroke={2.5} />
+            </button>
+          </span>
+        );
+      })}
+    </span>
   );
 }
 
 const field = (active: boolean) =>
   cn(
-    "relative flex h-9 w-full items-center gap-2 rounded-xl border bg-background px-3 text-left text-paragraph-sm transition-colors hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-    active ? "border-primary/40" : "border-border/60",
+    "relative flex min-h-9 w-full items-center gap-2 rounded-xl border bg-background px-3 text-left text-paragraph-sm transition-colors hover:border-foreground/30",
+    active ? "border-primary/40 py-1.5" : "border-border/60",
   );
+
+/** El botón que abre la lista cubre todo el campo; las etiquetas van encima, así no hay un botón dentro de otro. */
+const trigger =
+  "absolute inset-0 cursor-pointer rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
  * Un filtro como un campo: cerrado ocupa una sola fila. Abierto, la lista sale como flotante a la derecha del panel
@@ -170,12 +203,23 @@ export function FilterField({ inline, ...given }: FieldProps & { inline?: boolea
     : given;
   const active = props.selected.length > 0;
 
+  const chips = <SelectedChips options={props.options} selected={props.selected} onRemove={given.onToggle} />;
+
   if (inline) {
     return (
       <div>
-        <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} className={field(active)}>
-          <FieldFace {...props} />
-        </button>
+        <div className={field(active)}>
+          <button
+            type="button"
+            aria-label={props.label}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className={trigger}
+          >
+            <FieldCap label={props.label} filled={active} />
+          </button>
+          {chips}
+        </div>
         {open && (
           <div className="mt-1 rounded-2xl border border-border/60 bg-card/40 p-2 fade-in-0 animate-in duration-fast">
             <OptionList {...props} />
@@ -187,9 +231,12 @@ export function FilterField({ inline, ...given }: FieldProps & { inline?: boolea
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger className={field(active)}>
-        <FieldFace {...props} />
-      </Popover.Trigger>
+      <div className={field(active)}>
+        <Popover.Trigger aria-label={props.label} className={trigger}>
+          <FieldCap label={props.label} filled={active} />
+        </Popover.Trigger>
+        {chips}
+      </div>
       <Popover.Portal>
         <Popover.Positioner side="right" align="start" sideOffset={14} collisionPadding={8} className="isolate z-50">
           <Popover.Popup
