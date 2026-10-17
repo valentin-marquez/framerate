@@ -695,6 +695,28 @@ export interface CpuReferenceTable {
   memory_channels: number | null;
   max_memory_gb: number | null;
   cooler_recommendation: string | null;
+  codename: string | null;
+  lithography: string | null;
+}
+
+/** Referencia de tarjetas de video por chipset (#180, migración 0031). Se reemplaza entera al importar. */
+export interface GpuReferenceTable {
+  chipset: string;
+  brand: string;
+  name: string;
+  number: string;
+  architecture: string | null;
+  launch: string | null;
+  shader_cores: number | null;
+  board_power_w: number | null;
+  min_psu_w: number | null;
+  power_connectors: string | null;
+  memory_type: string | null;
+  vram_gb: JsonText;
+  memory_bus_bit: number | null;
+  pcie_version: string | null;
+  reference_length_mm: number | null;
+  source_url: string;
 }
 
 export interface CatalogVersionTable {
@@ -748,6 +770,7 @@ export interface Database {
   match_shadow: MatchShadowTable;
   psu_tier: PsuTierTable;
   cpu_reference: CpuReferenceTable;
+  gpu_reference: GpuReferenceTable;
 }
 
 export type ListingRow = Selectable<ListingsTable>;

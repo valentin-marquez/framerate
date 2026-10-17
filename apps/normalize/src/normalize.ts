@@ -20,6 +20,7 @@ import {
 } from "@framerate/matching/normalize";
 import { type Budget, budgetLeftUsd } from "./budget";
 import { cpuReferences, modelKey, withReference } from "./cpu-reference";
+import { baseChipset, fillFromGpuReference, gpuReferences, pickGpuReference } from "./gpu-reference";
 
 /**
  * Consumidor de `framerate-normalize` (spec 2026-10-08 §1, §4 y §7): una oferta por mensaje, una llamada a Haiku por
@@ -175,6 +176,7 @@ export async function normalizeListing(
     productId: listing.product_id,
   });
   const references = category === "cpu" ? await cpuReferences(db, title) : [];
+  const gpus = category === "gpu" ? await gpuReferences(db, title) : [];
   const input = {
     category,
     title,
@@ -184,7 +186,8 @@ export async function normalizeListing(
     sourceText: listing.source_text,
     store: listing.store,
     catalog,
-    knownModels: references.map((r) => r.model),
+    knownModels:
+      category === "gpu" ? [...new Set(gpus.map((r) => baseChipset(r.chipset)))] : references.map((r) => r.model),
   };
   let result: NormalizeCall;
   try {
@@ -288,12 +291,13 @@ export async function normalizeListing(
   // Si el modelo es uno de la ficha oficial (#179), sus specs reemplazan las de Haiku.
   const model = identity.category === "cpu" ? String(identity.identity.model ?? "") : "";
   const reference = model ? references.find((r) => modelKey(r.model) === modelKey(model)) : undefined;
-  const { specs, source: specsSource } = withReference(
-    haikuSpecs,
-    haikuSource,
-    reference,
-    String(identity.identity.packaging ?? ""),
-  );
+  const cpuSpecs = withReference(haikuSpecs, haikuSource, reference, String(identity.identity.packaging ?? ""));
+  // Tarjetas de video (#180): la referencia del chipset sólo completa, lo de la tienda gana.
+  const gpu =
+    identity.category === "gpu"
+      ? pickGpuReference(gpus, String(identity.identity.chipset ?? ""), identity.identity.vram_gb)
+      : undefined;
+  const { specs, source: specsSource } = fillFromGpuReference(cpuSpecs.specs, cpuSpecs.source, gpu);
   const row = {
     listing_id: listingId,
     version: NORMALIZER_VERSION,

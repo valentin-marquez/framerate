@@ -25,7 +25,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "a10 9700e",
@@ -53,7 +55,9 @@
     "pcie_version": "3.0",
     "memory_channels": 3,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "a12 9800",
@@ -81,7 +85,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "a12 9800e",
@@ -109,7 +115,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "a6 9500",
@@ -137,7 +145,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "a6 9500e",
@@ -165,7 +175,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "a6 9550",
@@ -193,7 +205,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "a8 9600",
@@ -221,7 +235,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "athlon 200ge",
@@ -249,7 +265,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "14nm"
   },
   {
     "model": "athlon 220ge",
@@ -277,7 +295,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "14nm"
   },
   {
     "model": "athlon 240ge",
@@ -305,7 +325,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "athlon 255e",
@@ -333,7 +355,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Athlon Legacy",
+    "lithography": null
   },
   {
     "model": "athlon 3000g",
@@ -361,7 +385,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "14nm"
   },
   {
     "model": "athlon 300ge",
@@ -389,7 +415,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Dali",
+    "lithography": "14nm"
   },
   {
     "model": "athlon 320ge",
@@ -417,7 +445,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": null,
+    "lithography": "14nm FinFET"
   },
   {
     "model": "athlon 425e",
@@ -445,7 +475,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Athlon Legacy",
+    "lithography": null
   },
   {
     "model": "athlon 460",
@@ -473,7 +505,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Athlon Legacy",
+    "lithography": null
   },
   {
     "model": "athlon 5150",
@@ -501,7 +535,9 @@
     "pcie_version": null,
     "memory_channels": 1,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Kabini",
+    "lithography": "28nm"
   },
   {
     "model": "athlon 5350",
@@ -529,7 +565,9 @@
     "pcie_version": null,
     "memory_channels": 1,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Kabini",
+    "lithography": "28nm"
   },
   {
     "model": "athlon 5370",
@@ -557,7 +595,9 @@
     "pcie_version": null,
     "memory_channels": 1,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Kabini",
+    "lithography": "28nm"
   },
   {
     "model": "athlon 620e",
@@ -585,7 +625,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Athlon Legacy",
+    "lithography": null
   },
   {
     "model": "athlon gold 3150g",
@@ -613,7 +655,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "athlon gold 3150ge",
@@ -641,7 +685,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "athlon gold pro 3150g",
@@ -669,7 +715,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "athlon gold pro 3150ge",
@@ -697,7 +745,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "athlon pro 200ge",
@@ -725,7 +775,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "athlon pro 300ge",
@@ -753,7 +805,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "athlon silver 3050ge",
@@ -781,7 +835,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "14nm"
   },
   {
     "model": "athlon silver pro 3125ge",
@@ -809,7 +865,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "athlon x4 940",
@@ -837,7 +895,9 @@
     "pcie_version": "3.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Athlon Legacy",
+    "lithography": "28nm"
   },
   {
     "model": "athlon x4 950",
@@ -865,7 +925,9 @@
     "pcie_version": "3.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Athlon Legacy",
+    "lithography": "28nm"
   },
   {
     "model": "athlon x4 970",
@@ -893,7 +955,9 @@
     "pcie_version": "3.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Athlon Legacy",
+    "lithography": "28nm"
   },
   {
     "model": "celeron g4930",
@@ -921,7 +985,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 64,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Coffee Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "celeron g5905",
@@ -949,7 +1015,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "celeron g5925",
@@ -977,7 +1045,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "celeron g6900",
@@ -1005,7 +1075,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i3 10100",
@@ -1033,7 +1105,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i3 10100f",
@@ -1061,7 +1135,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i3 10105",
@@ -1089,7 +1165,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i3 10105f",
@@ -1117,7 +1195,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i3 12100",
@@ -1145,7 +1225,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i3 12100f",
@@ -1173,7 +1255,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i3 13100",
@@ -1201,7 +1285,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i3 13100f",
@@ -1229,7 +1315,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i3 14100",
@@ -1257,7 +1345,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i3 14100f",
@@ -1285,7 +1375,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i3 6100",
@@ -1313,7 +1405,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 64,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Skylake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i3 9100",
@@ -1341,7 +1435,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 64,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Coffee Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 10400",
@@ -1369,7 +1465,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 10400f",
@@ -1397,7 +1495,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 10600k",
@@ -1425,7 +1525,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 10600kf",
@@ -1453,7 +1555,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 11400",
@@ -1481,7 +1585,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Rocket Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 11400f",
@@ -1509,7 +1615,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Rocket Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 11600k",
@@ -1537,7 +1645,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Rocket Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 12400",
@@ -1565,7 +1675,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 12400f",
@@ -1593,7 +1705,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 12600k",
@@ -1621,7 +1735,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 12600kf",
@@ -1649,7 +1765,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 13400",
@@ -1677,7 +1795,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 13400f",
@@ -1705,7 +1825,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 13500",
@@ -1733,7 +1855,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 13600k",
@@ -1761,7 +1885,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 13600kf",
@@ -1789,7 +1915,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 14400",
@@ -1817,7 +1945,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 14400f",
@@ -1845,7 +1975,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 14500",
@@ -1873,7 +2005,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 14600k",
@@ -1901,7 +2035,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 14600kf",
@@ -1929,7 +2065,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i5 7400t",
@@ -1957,7 +2095,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 64,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Kaby Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 9400",
@@ -1985,7 +2125,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Coffee Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i5 9500",
@@ -2013,7 +2155,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Coffee Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i7 10700",
@@ -2041,7 +2185,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i7 10700k",
@@ -2069,7 +2215,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Comet Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i7 11700",
@@ -2097,7 +2245,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Rocket Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i7 11700kf",
@@ -2125,7 +2275,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Rocket Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i7 12700",
@@ -2153,7 +2305,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 12700f",
@@ -2181,7 +2335,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 12700k",
@@ -2209,7 +2365,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 12700kf",
@@ -2237,7 +2395,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 13700",
@@ -2265,7 +2425,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 13700f",
@@ -2293,7 +2455,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 13700k",
@@ -2321,7 +2485,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 13700kf",
@@ -2349,7 +2515,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 14700",
@@ -2377,7 +2545,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 14700f",
@@ -2405,7 +2575,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 14700k",
@@ -2433,7 +2605,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 14700kf",
@@ -2461,7 +2635,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i7 9700f",
@@ -2489,7 +2665,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Coffee Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i9 11900k",
@@ -2517,7 +2695,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Rocket Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core i9 12900",
@@ -2545,7 +2725,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 12900f",
@@ -2573,7 +2755,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 12900k",
@@ -2601,7 +2785,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 12900kf",
@@ -2629,7 +2815,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Alder Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 13900",
@@ -2657,7 +2845,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 13900f",
@@ -2685,7 +2875,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 13900k",
@@ -2713,7 +2905,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 13900kf",
@@ -2741,7 +2935,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 14900",
@@ -2769,7 +2965,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 14900f",
@@ -2797,7 +2995,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 14900k",
@@ -2825,7 +3025,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 14900kf",
@@ -2853,7 +3055,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 192,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raptor Lake",
+    "lithography": "Intel 7"
   },
   {
     "model": "core i9 9900",
@@ -2881,7 +3085,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": 128,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Coffee Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "core ultra 5 225",
@@ -2909,7 +3115,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 5 225f",
@@ -2937,7 +3145,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 5 235",
@@ -2965,7 +3175,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 5 245k",
@@ -2993,7 +3205,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 5 245kf",
@@ -3021,7 +3235,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 5 250k plus",
@@ -3049,7 +3265,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 5 250kf plus",
@@ -3077,7 +3295,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 7 265",
@@ -3105,7 +3325,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 7 265f",
@@ -3133,7 +3355,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 7 265k",
@@ -3161,7 +3385,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 7 265kf",
@@ -3189,7 +3415,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 7 270k plus",
@@ -3217,7 +3445,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 9 285",
@@ -3245,7 +3475,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "core ultra 9 285k",
@@ -3273,7 +3505,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": 256,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Arrow Lake",
+    "lithography": "TSMC N3B"
   },
   {
     "model": "fx 4100",
@@ -3301,7 +3535,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "FX Legacy",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 4130",
@@ -3329,7 +3565,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "FX Legacy",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 4170",
@@ -3357,7 +3595,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "FX Legacy",
+    "lithography": "32nm"
   },
   {
     "model": "fx 4300",
@@ -3385,7 +3625,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": null,
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 4320",
@@ -3413,7 +3655,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 4350",
@@ -3441,7 +3685,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 6100",
@@ -3469,7 +3715,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "FX Legacy",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 6200",
@@ -3497,7 +3745,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "FX Legacy",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 6300",
@@ -3525,7 +3775,9 @@
     "pcie_version": "3.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 6350",
@@ -3553,7 +3805,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 8120",
@@ -3581,7 +3835,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "FX Legacy",
+    "lithography": "32nm"
   },
   {
     "model": "fx 8150",
@@ -3609,7 +3865,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "FX Legacy",
+    "lithography": "32nm"
   },
   {
     "model": "fx 8300",
@@ -3637,7 +3895,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 8310",
@@ -3665,7 +3925,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm"
   },
   {
     "model": "fx 8320",
@@ -3693,7 +3955,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 8320e",
@@ -3721,7 +3985,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 8350",
@@ -3749,7 +4015,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 8370",
@@ -3777,7 +4045,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 8370e",
@@ -3805,7 +4075,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 9370",
@@ -3833,7 +4105,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "fx 9590",
@@ -3861,7 +4135,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vishera",
+    "lithography": "32nm SOI"
   },
   {
     "model": "n870",
@@ -3889,7 +4165,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "p860",
@@ -3917,7 +4195,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "phenom ii 1045t",
@@ -3945,7 +4225,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "phenom ii 1075t",
@@ -3973,7 +4255,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "phenom ii 555",
@@ -4001,7 +4285,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "phenom ii 565",
@@ -4029,7 +4315,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": "45nm SOI"
   },
   {
     "model": "phenom ii 570",
@@ -4057,7 +4345,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "phenom ii 840",
@@ -4085,7 +4375,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "phenom ii 850",
@@ -4113,7 +4405,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "phenom ii 960t",
@@ -4141,7 +4435,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "phenom ii 965",
@@ -4169,7 +4465,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "phenom ii 975",
@@ -4197,7 +4495,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": "45nm SOI"
   },
   {
     "model": "phenom ii 980",
@@ -4225,7 +4525,9 @@
     "pcie_version": null,
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phenom",
+    "lithography": null
   },
   {
     "model": "pro a10 8770",
@@ -4253,7 +4555,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Carrizo",
+    "lithography": "28nm"
   },
   {
     "model": "pro a10 8770e",
@@ -4281,7 +4585,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Carrizo",
+    "lithography": "28nm"
   },
   {
     "model": "pro a10 9700",
@@ -4309,7 +4615,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "pro a10 9700e",
@@ -4337,7 +4645,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "pro a12 8870",
@@ -4365,7 +4675,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Carrizo",
+    "lithography": "28nm"
   },
   {
     "model": "pro a12 8870e",
@@ -4393,7 +4705,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Carrizo",
+    "lithography": "28nm"
   },
   {
     "model": "pro a12 9800",
@@ -4421,7 +4735,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "pro a12 9800e",
@@ -4449,7 +4765,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "pro a6 8570",
@@ -4477,7 +4795,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Carrizo",
+    "lithography": "28nm"
   },
   {
     "model": "pro a6 8570e",
@@ -4505,7 +4825,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Carrizo",
+    "lithography": "28nm"
   },
   {
     "model": "pro a6 9500",
@@ -4533,7 +4855,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "pro a6 9500e",
@@ -4561,7 +4885,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "pro a8 9600",
@@ -4589,7 +4915,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Bristol Ridge",
+    "lithography": "28nm"
   },
   {
     "model": "ryzen 3 1200",
@@ -4617,7 +4945,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 3 1300x",
@@ -4645,7 +4975,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 3 2200g",
@@ -4673,7 +5005,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm FinFET"
   },
   {
     "model": "ryzen 3 2200ge",
@@ -4701,7 +5035,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm FinFET"
   },
   {
     "model": "ryzen 3 2300x",
@@ -4729,7 +5065,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 3 3100",
@@ -4757,7 +5095,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 3200g",
@@ -4785,7 +5125,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm FinFET"
   },
   {
     "model": "ryzen 3 3200ge",
@@ -4813,7 +5155,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 3 3300x",
@@ -4841,7 +5185,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 4100",
@@ -4869,7 +5215,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 4300g",
@@ -4897,7 +5245,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 4300ge",
@@ -4925,7 +5275,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 5300g",
@@ -4953,7 +5305,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 5300ge",
@@ -4981,7 +5335,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 5305g",
@@ -5009,7 +5365,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 5305ge",
@@ -5037,7 +5395,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 8300g",
@@ -5065,7 +5425,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 3 8300ge",
@@ -5093,7 +5455,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 3 8305g",
@@ -5121,7 +5485,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 3 8305ge",
@@ -5149,7 +5515,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 3 pro 1200",
@@ -5177,7 +5545,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 3 pro 1300",
@@ -5205,7 +5575,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 3 pro 2200g",
@@ -5233,7 +5605,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm FinFET"
   },
   {
     "model": "ryzen 3 pro 2200ge",
@@ -5261,7 +5635,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm FinFET"
   },
   {
     "model": "ryzen 3 pro 3200g",
@@ -5289,7 +5665,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 3 pro 3200ge",
@@ -5317,7 +5695,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 3 pro 4350g",
@@ -5345,7 +5725,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 pro 4350ge",
@@ -5373,7 +5755,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 pro 4355g",
@@ -5401,7 +5785,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 pro 4355ge",
@@ -5429,7 +5815,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 pro 5350g",
@@ -5457,7 +5845,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 pro 5350ge",
@@ -5485,7 +5875,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 pro 5355g",
@@ -5513,7 +5905,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 pro 5355ge",
@@ -5541,7 +5935,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 3 pro 8300g",
@@ -5569,7 +5965,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 3 pro 8300ge",
@@ -5597,7 +5995,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 3 pro 8305g",
@@ -5625,7 +6025,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 3 pro 8305ge",
@@ -5653,7 +6055,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 1400",
@@ -5681,7 +6085,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 5 1500x",
@@ -5709,7 +6115,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 5 1600",
@@ -5737,7 +6145,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 5 1600x",
@@ -5765,7 +6175,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 5 2400g",
@@ -5793,7 +6205,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm FinFET"
   },
   {
     "model": "ryzen 5 2400ge",
@@ -5821,7 +6235,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm FinFET"
   },
   {
     "model": "ryzen 5 2500x",
@@ -5849,7 +6265,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 5 2600",
@@ -5877,7 +6295,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm FinFET"
   },
   {
     "model": "ryzen 5 2600e",
@@ -5905,7 +6325,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 5 2600x",
@@ -5933,7 +6355,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm FinFET"
   },
   {
     "model": "ryzen 5 3400g",
@@ -5961,7 +6385,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm FinFET"
   },
   {
     "model": "ryzen 5 3400ge",
@@ -5989,7 +6415,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 5 3500",
@@ -6017,7 +6445,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 3600",
@@ -6045,7 +6475,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 3600x",
@@ -6073,7 +6505,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 3600xt",
@@ -6101,7 +6535,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 4500",
@@ -6129,7 +6565,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 4600g",
@@ -6157,7 +6595,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 4600ge",
@@ -6185,7 +6625,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5500",
@@ -6213,7 +6655,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5500f",
@@ -6241,7 +6685,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5500gt",
@@ -6269,7 +6715,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5500x3d",
@@ -6297,7 +6745,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5600",
@@ -6325,7 +6775,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5600f",
@@ -6353,7 +6805,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5600g",
@@ -6381,7 +6835,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5600ge",
@@ -6409,7 +6865,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5600gt",
@@ -6437,7 +6895,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5600t",
@@ -6465,7 +6925,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5600x",
@@ -6493,7 +6955,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5600x3d",
@@ -6521,7 +6985,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5600xt",
@@ -6549,7 +7015,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5605g",
@@ -6577,7 +7045,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 5605ge",
@@ -6605,7 +7075,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 7400",
@@ -6633,7 +7105,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 7400f",
@@ -6661,7 +7135,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 7500",
@@ -6689,7 +7165,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 7500f",
@@ -6717,7 +7195,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 7500x3d",
@@ -6745,7 +7225,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 7600",
@@ -6773,7 +7255,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 7600x",
@@ -6801,7 +7285,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "premium_air"
+    "cooler_recommendation": "premium_air",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 7600x3d",
@@ -6829,7 +7315,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 8400f",
@@ -6857,7 +7345,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 8500g",
@@ -6885,7 +7375,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 8500ge",
@@ -6913,7 +7405,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 8505g",
@@ -6941,7 +7435,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 8505ge",
@@ -6969,7 +7465,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 8600g",
@@ -6997,7 +7495,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 8605g",
@@ -7025,7 +7525,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 9500f",
@@ -7053,7 +7555,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 9600",
@@ -7081,7 +7585,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 9600x",
@@ -7109,7 +7615,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "premium_air"
+    "cooler_recommendation": "premium_air",
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 1500",
@@ -7137,7 +7645,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 5 pro 1600",
@@ -7165,7 +7675,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 5 pro 2400g",
@@ -7193,7 +7705,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm FinFET"
   },
   {
     "model": "ryzen 5 pro 2400ge",
@@ -7221,7 +7735,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raven Ridge",
+    "lithography": "14nm FinFET"
   },
   {
     "model": "ryzen 5 pro 2600",
@@ -7249,7 +7765,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 5 pro 3350g",
@@ -7277,7 +7795,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 5 pro 3400g",
@@ -7305,7 +7825,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 5 pro 3400ge",
@@ -7333,7 +7855,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Picasso",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 5 pro 3600",
@@ -7361,7 +7885,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 4650g",
@@ -7389,7 +7915,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 4650ge",
@@ -7417,7 +7945,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 4655g",
@@ -7445,7 +7975,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 4655ge",
@@ -7473,7 +8005,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 5645",
@@ -7501,7 +8035,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 5650g",
@@ -7529,7 +8065,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 5650ge",
@@ -7557,7 +8095,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 5655g",
@@ -7585,7 +8125,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 5655ge",
@@ -7613,7 +8155,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 5 pro 7445",
@@ -7641,7 +8185,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 pro 7645",
@@ -7669,7 +8215,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 5 pro 8500g",
@@ -7697,7 +8245,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 8500ge",
@@ -7725,7 +8275,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 8505g",
@@ -7753,7 +8305,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 8505ge",
@@ -7781,7 +8335,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 8600g",
@@ -7809,7 +8365,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 8600ge",
@@ -7837,7 +8395,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 8605g",
@@ -7865,7 +8425,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 8605ge",
@@ -7893,7 +8455,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 9645",
@@ -7921,7 +8485,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 5 pro 9655",
@@ -7949,7 +8515,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 1700",
@@ -7977,7 +8545,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 7 1700x",
@@ -8005,7 +8575,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 7 1800x",
@@ -8033,7 +8605,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 7 2700",
@@ -8061,7 +8635,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm FinFET"
   },
   {
     "model": "ryzen 7 2700e",
@@ -8089,7 +8665,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 7 2700x",
@@ -8117,7 +8695,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm FinFET"
   },
   {
     "model": "ryzen 7 3700x",
@@ -8145,7 +8725,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 3800x",
@@ -8173,7 +8755,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 3800xt",
@@ -8201,7 +8785,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 4700g",
@@ -8229,7 +8815,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 4700ge",
@@ -8257,7 +8845,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 4700le",
@@ -8285,7 +8875,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5700",
@@ -8319,7 +8911,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5700g",
@@ -8347,7 +8941,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5700ge",
@@ -8375,7 +8971,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5700x",
@@ -8409,7 +9007,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5700x3d",
@@ -8437,7 +9037,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5705g",
@@ -8465,7 +9067,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5705ge",
@@ -8493,7 +9097,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5800",
@@ -8521,7 +9127,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5800x",
@@ -8549,7 +9157,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": "premium_air"
+    "cooler_recommendation": "premium_air",
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5800x3d",
@@ -8577,7 +9187,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 5800xt",
@@ -8605,7 +9217,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 7700",
@@ -8633,7 +9247,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 7 7700x",
@@ -8661,7 +9277,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "premium_air"
+    "cooler_recommendation": "premium_air",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 7 7700x3d",
@@ -8689,7 +9307,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 7 7800x3d",
@@ -8717,7 +9337,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 7 8700f",
@@ -8745,7 +9367,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 8700g",
@@ -8779,7 +9403,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 8705g",
@@ -8807,7 +9433,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 9700f",
@@ -8835,7 +9463,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 9700x",
@@ -8863,7 +9493,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "premium_air"
+    "cooler_recommendation": "premium_air",
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 9800x3d",
@@ -8891,7 +9523,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 9850x3d",
@@ -8919,7 +9553,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 pro 1700",
@@ -8947,7 +9583,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 7 pro 1700x",
@@ -8975,7 +9613,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen 7 pro 2700",
@@ -9003,7 +9643,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 7 pro 2700x",
@@ -9031,7 +9673,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Pinnacle Ridge",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen 7 pro 3700",
@@ -9059,7 +9703,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 pro 4750g",
@@ -9087,7 +9733,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 pro 4750ge",
@@ -9115,7 +9763,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Renoir",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 pro 5750g",
@@ -9143,7 +9793,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 pro 5750ge",
@@ -9171,7 +9823,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 pro 5755g",
@@ -9199,7 +9853,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 pro 5755ge",
@@ -9227,7 +9883,9 @@
     "pcie_version": "3.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cezanne",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 pro 5845",
@@ -9255,7 +9913,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 7 pro 7745",
@@ -9283,7 +9943,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 7 pro 8700g",
@@ -9311,7 +9973,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 pro 8700ge",
@@ -9339,7 +10003,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 pro 8705g",
@@ -9367,7 +10033,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 pro 8705ge",
@@ -9395,7 +10063,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Phoenix",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 pro 9745",
@@ -9423,7 +10093,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 pro 9755",
@@ -9451,7 +10123,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 7 pro 9755x3d",
@@ -9479,7 +10153,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 9 3900",
@@ -9507,7 +10183,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 9 3900x",
@@ -9535,7 +10213,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 9 3950x",
@@ -9563,7 +10243,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 9 5900",
@@ -9591,7 +10273,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 9 5900x",
@@ -9619,7 +10303,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 9 5900xt",
@@ -9647,7 +10333,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 9 5950x",
@@ -9675,7 +10363,9 @@
     "pcie_version": "4.0",
     "memory_channels": null,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 9 7900",
@@ -9703,7 +10393,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 9 7900x",
@@ -9731,7 +10423,9 @@
     "pcie_version": null,
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 9 7900x3d",
@@ -9759,7 +10453,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 9 7950x",
@@ -9787,7 +10483,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 9 7950x3d",
@@ -9815,7 +10513,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 9 9900x",
@@ -9843,7 +10543,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 9 9900x3d",
@@ -9871,7 +10573,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 9 9950x",
@@ -9899,7 +10603,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 9 9950x3d",
@@ -9927,7 +10633,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 9 9950x3d2 dual edition",
@@ -9955,7 +10663,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": "liquid"
+    "cooler_recommendation": "liquid",
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 9 pro 3900",
@@ -9983,7 +10693,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Matisse",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 9 pro 5945",
@@ -10011,7 +10723,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Vermeer",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen 9 pro 7945",
@@ -10039,7 +10753,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Raphael",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen 9 pro 9945",
@@ -10067,7 +10783,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 9 pro 9955",
@@ -10095,7 +10813,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 9 pro 9965",
@@ -10123,7 +10843,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen 9 pro 9965x3d",
@@ -10151,7 +10873,9 @@
     "pcie_version": "5.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Ridge",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 5 435g",
@@ -10179,7 +10903,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 5 435ge",
@@ -10207,7 +10933,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 5 440g",
@@ -10235,7 +10963,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 5 440ge",
@@ -10263,7 +10993,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 5 pro 435g",
@@ -10291,7 +11023,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 5 pro 435ge",
@@ -10319,7 +11053,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 5 pro 440g",
@@ -10347,7 +11083,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 5 pro 440ge",
@@ -10375,7 +11113,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 7 450g",
@@ -10403,7 +11143,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 7 450ge",
@@ -10431,7 +11173,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 7 pro 450g",
@@ -10459,7 +11203,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen ai 7 pro 450ge",
@@ -10487,7 +11233,9 @@
     "pcie_version": "4.0",
     "memory_channels": 2,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Gorgon Point",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen threadripper 1900x",
@@ -10515,7 +11263,9 @@
     "pcie_version": "3.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Summit Ridge",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen threadripper 1920x",
@@ -10543,7 +11293,9 @@
     "pcie_version": "3.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Threadripper",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen threadripper 1950x",
@@ -10571,7 +11323,9 @@
     "pcie_version": "3.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Threadripper",
+    "lithography": "14nm"
   },
   {
     "model": "ryzen threadripper 2920x",
@@ -10599,7 +11353,9 @@
     "pcie_version": "3.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Colfax",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen threadripper 2950x",
@@ -10627,7 +11383,9 @@
     "pcie_version": "3.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Colfax",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen threadripper 2970wx",
@@ -10655,7 +11413,9 @@
     "pcie_version": "3.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Colfax",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen threadripper 2990wx",
@@ -10683,7 +11443,9 @@
     "pcie_version": "3.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Colfax",
+    "lithography": "12nm"
   },
   {
     "model": "ryzen threadripper 3960x",
@@ -10711,7 +11473,9 @@
     "pcie_version": "4.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Castle Peak",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper 3970x",
@@ -10739,7 +11503,9 @@
     "pcie_version": "4.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Castle Peak",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper 3990x",
@@ -10767,7 +11533,9 @@
     "pcie_version": "4.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Castle Peak",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper 7960x",
@@ -10795,7 +11563,9 @@
     "pcie_version": "5.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Storm Peak",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen threadripper 7970x",
@@ -10823,7 +11593,9 @@
     "pcie_version": "5.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Storm Peak",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen threadripper 7980x",
@@ -10851,7 +11623,9 @@
     "pcie_version": "5.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Storm Peak",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen threadripper 9960x",
@@ -10879,7 +11653,9 @@
     "pcie_version": "5.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Shimada Peak",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen threadripper 9970x",
@@ -10907,7 +11683,9 @@
     "pcie_version": "5.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Shimada Peak",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen threadripper 9980x",
@@ -10935,7 +11713,9 @@
     "pcie_version": "5.0",
     "memory_channels": 4,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Shimada Peak",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 3955wx",
@@ -10963,7 +11743,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Castle Peak",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 3975wx",
@@ -10991,7 +11773,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Castle Peak",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 3995wx",
@@ -11019,7 +11803,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Castle Peak",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 5945wx",
@@ -11047,7 +11833,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Chagall PRO",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 5955wx",
@@ -11075,7 +11863,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Chagall PRO",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 5965wx",
@@ -11103,7 +11893,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Chagall PRO",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 5975wx",
@@ -11131,7 +11923,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Chagall PRO",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 5995wx",
@@ -11159,7 +11953,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Chagall PRO",
+    "lithography": "TSMC 7nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 7945wx",
@@ -11187,7 +11983,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Storm Peak",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 7955wx",
@@ -11215,7 +12013,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Storm Peak",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 7965wx",
@@ -11243,7 +12043,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Storm Peak",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 7975wx",
@@ -11271,7 +12073,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Storm Peak",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 7985wx",
@@ -11299,7 +12103,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Storm Peak",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 7995wx",
@@ -11327,7 +12133,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Storm Peak",
+    "lithography": "TSMC 5nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 9945wx",
@@ -11355,7 +12163,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Shimada Peak",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 9955wx",
@@ -11383,7 +12193,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Shimada Peak",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 9965wx",
@@ -11411,7 +12223,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Shimada Peak",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 9975wx",
@@ -11439,7 +12253,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Shimada Peak",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 9985wx",
@@ -11467,7 +12283,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Shimada Peak",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "ryzen threadripper pro 9995wx",
@@ -11495,7 +12313,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Shimada Peak",
+    "lithography": "TSMC 4nm FinFET"
   },
   {
     "model": "sempron 2650",
@@ -11523,7 +12343,9 @@
     "pcie_version": null,
     "memory_channels": 1,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Sempron",
+    "lithography": "28nm"
   },
   {
     "model": "sempron 3850",
@@ -11551,7 +12373,9 @@
     "pcie_version": null,
     "memory_channels": 1,
     "max_memory_gb": null,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Sempron",
+    "lithography": "28nm"
   },
   {
     "model": "xeon 6505p",
@@ -11579,7 +12403,9 @@
     "pcie_version": "5.0",
     "memory_channels": 8,
     "max_memory_gb": 4,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Granite Rapids",
+    "lithography": "Intel 3"
   },
   {
     "model": "xeon bronze 3104",
@@ -11607,7 +12433,9 @@
     "pcie_version": "3.0",
     "memory_channels": 6,
     "max_memory_gb": 768,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Skylake",
+    "lithography": "14 nm"
   },
   {
     "model": "xeon bronze 3206r",
@@ -11635,7 +12463,9 @@
     "pcie_version": "3.0",
     "memory_channels": 6,
     "max_memory_gb": 1,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cascade Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "xeon gold 5218r",
@@ -11663,7 +12493,9 @@
     "pcie_version": "3.0",
     "memory_channels": 6,
     "max_memory_gb": 1,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cascade Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "xeon gold 5315y",
@@ -11691,7 +12523,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": 6,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Ice Lake",
+    "lithography": "10 nm"
   },
   {
     "model": "xeon gold 5418y",
@@ -11719,7 +12553,9 @@
     "pcie_version": null,
     "memory_channels": 8,
     "max_memory_gb": 4,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Sapphire Rapids",
+    "lithography": "Intel 7"
   },
   {
     "model": "xeon silver 4210r",
@@ -11747,7 +12583,9 @@
     "pcie_version": "3.0",
     "memory_channels": 6,
     "max_memory_gb": 1,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Cascade Lake",
+    "lithography": "14 nm"
   },
   {
     "model": "xeon silver 4310",
@@ -11775,7 +12613,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": 6,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Ice Lake",
+    "lithography": "10 nm"
   },
   {
     "model": "xeon silver 4314",
@@ -11803,7 +12643,9 @@
     "pcie_version": "4.0",
     "memory_channels": 8,
     "max_memory_gb": 6,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Ice Lake",
+    "lithography": "10 nm"
   },
   {
     "model": "xeon silver 4410y",
@@ -11831,7 +12673,9 @@
     "pcie_version": null,
     "memory_channels": 8,
     "max_memory_gb": 4,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Sapphire Rapids",
+    "lithography": "Intel 7"
   },
   {
     "model": "xeon silver 4416+",
@@ -11859,6 +12703,8 @@
     "pcie_version": null,
     "memory_channels": 8,
     "max_memory_gb": 4,
-    "cooler_recommendation": null
+    "cooler_recommendation": null,
+    "codename": "Sapphire Rapids",
+    "lithography": "Intel 7"
   }
 ]

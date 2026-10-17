@@ -281,6 +281,15 @@ const RULES: Rule[] = [
         involved,
         `La fuente de ${watts} W queda justa para unos ${need} W de consumo: conviene un 25 % de margen.`,
       );
+    // El fabricante del chip recomienda una fuente mínima (#180) que considera picos que la suma de TDP no ve.
+    const recommended = gpu ? num(gpu.facts.min_psu_w) : null;
+    if (recommended && watts < recommended)
+      return check(
+        "psu_wattage",
+        "warning",
+        involved,
+        `La fuente de ${watts} W cubre los ${need} W estimados, pero para esta tarjeta el fabricante recomienda al menos ${recommended} W.`,
+      );
     return check("psu_wattage", "ok", involved, `La fuente de ${watts} W cubre los ${need} W estimados.`);
   },
 

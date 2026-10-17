@@ -94,6 +94,8 @@ export function fromAmd(heads: string[], cells: string[]): CpuReference | null {
       : /air/i.test(get("Recommended Cooler"))
         ? "premium_air"
         : null,
+    codename: get("Former Codename").replace(/\s+AM\d$/, "") || null,
+    lithography: get("Processor Technology for CPU Cores") || null,
   };
 }
 
@@ -133,6 +135,8 @@ export function fromIntel(name: string, url: string, s: Record<string, string>):
     memory_channels: int(s["Max # of Memory Channels"]),
     max_memory_gb: int(s["Max Memory Size (dependent on memory type)"]),
     cooler_recommendation: null,
+    codename: s["Code Name"]?.replace(/^Products formerly\s+/i, "") ?? null,
+    lithography: s.Lithography ?? s["CPU Lithography"] ?? null,
   };
 }
 

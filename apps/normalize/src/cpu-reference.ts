@@ -35,6 +35,10 @@ export interface CpuReference {
   max_memory_gb: number | null;
   /** AMD avisa en algunos modelos: "liquid" o "premium_air". */
   cooler_recommendation: string | null;
+  /** Nombre en clave de la generación: "Raphael", "Raptor Lake". */
+  codename: string | null;
+  /** Nodo de fabricación: "TSMC 5nm FinFET", "Intel 7". */
+  lithography: string | null;
 }
 
 /** Clave de comparación de modelos: "Ryzen 7 7800X3D" y "ryzen 7 7800x3d" son el mismo. */
