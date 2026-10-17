@@ -34,6 +34,12 @@ function categoryParam(slug: string | undefined) {
   return category;
 }
 
+/**
+ * Versión de la forma de lo que depende de `spec` (listado, marcas y facetas) en la caché de borde. Sube al cambiar cómo
+ * se filtra o se cuenta: la 2 es la de los umbrales (#190), con `threshold`, etiquetas "mínima" y conteos acumulados.
+ */
+const SPEC_SHAPE = 2;
+
 const ALL_FACET_KEYS = new Set(Object.values(CATEGORY_FACETS).flatMap((facets) => facets.map((f) => f.key)));
 
 /**
@@ -71,15 +77,14 @@ export const catalogRoutes = new Hono<AppEnv>()
       })),
     });
   })
-  .get("/categories/:slug/brands", catalogCache(300), async (c) => {
+  .get("/categories/:slug/brands", catalogCache(300, SPEC_SHAPE), async (c) => {
     const category = categoryParam(c.req.param("slug"));
     return c.json({ items: await listBrands(c.var.db, category, listQuery(c, category)) });
   })
   .get("/categories/:slug/price-range", catalogCache(3600), async (c) => {
     return c.json(await priceRange(c.var.db, categoryParam(c.req.param("slug"))));
   })
-  // Forma 2: las facetas con umbral (#190) traen `threshold`, etiquetas "mínima" y conteos acumulados.
-  .get("/categories/:slug/facets", catalogCache(300, 2), async (c) => {
+  .get("/categories/:slug/facets", catalogCache(300, SPEC_SHAPE), async (c) => {
     const category = categoryParam(c.req.param("slug"));
     return c.json(await listFacets(c.var.db, category, listQuery(c, category)));
   })
@@ -91,7 +96,7 @@ export const catalogRoutes = new Hono<AppEnv>()
     const updatedAt = await lastCrawlAt(c.var.db);
     return c.json({ updatedAt, nextUpdateAt: nextCrawlAt(new Date()).toISOString() });
   })
-  .get("/products", catalogCache(300), async (c) => {
+  .get("/products", catalogCache(300, SPEC_SHAPE), async (c) => {
     return c.json(await listProducts(c.var.db, listQuery(c), c.env.ASSETS_BASE_URL));
   })
   .get("/products/redirects/:slug", catalogCache(3600), async (c) => {
