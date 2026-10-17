@@ -37,10 +37,13 @@ const MARKS: Record<string, string> = {
   circ: "\u0302",
 };
 
+// Un `&#x110000;` en la ficha haría que `fromCodePoint` lance y tumbe la corrida: se deja tal cual.
+const codePoint = (m: string, n: number) => (n <= 0x10ffff ? String.fromCodePoint(n) : m);
+
 export function decodeEntities(input: string): string {
   return input
-    .replace(/&#x([\da-f]+);/gi, (_, code) => String.fromCodePoint(Number.parseInt(code, 16)))
-    .replace(/&#(\d+);/g, (m, code) => HTML_ENTITIES[m] ?? String.fromCodePoint(Number(code)))
+    .replace(/&#x([\da-f]+);/gi, (m, code) => codePoint(m, Number.parseInt(code, 16)))
+    .replace(/&#(\d+);/g, (m, code) => HTML_ENTITIES[m] ?? codePoint(m, Number(code)))
     .replace(/&([a-z])(acute|grave|tilde|uml|circ);/gi, (m, letter: string, mark: string) =>
       MARKS[mark] ? `${letter}${MARKS[mark]}`.normalize("NFC") : m,
     )
@@ -51,9 +54,26 @@ export function stripHtml(input: string): string {
   return collapseWhitespace(decodeEntities(input.replace(/<[^>]*>/g, " ")));
 }
 
-/** Como `stripHtml`, pero una línea por bloque: en las fichas "Clave\nvalor" deja de ser una sola tira de texto. */
+/**
+ * Como `stripHtml`, pero una línea por bloque (`</p>`, `</tr>`, `<br>`…): en las fichas "Clave valor" deja de ser una
+ * sola tira. Los saltos de línea del código HTML no cuentan, como en el navegador.
+ */
 export function htmlLines(input: string): string {
-  return decodeEntities(input.replace(/<br\s*\/?>|<\/(p|div|li|tr|h\d)>/gi, "\n").replace(/<[^>]*>/g, " "))
+  return textLines(
+    decodeEntities(
+      input
+        .replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, "")
+        .replace(/\s+/g, " ")
+        .replace(/<br\s*\/?>|<\/(p|div|li|tr|h\d)>/gi, "\n")
+        .replace(/<[^>]*>/g, " "),
+    ),
+  );
+}
+
+/** Texto plano a líneas limpias: sin espacios repetidos, sin vacías ni caracteres de ancho cero. */
+export function textLines(input: string): string {
+  return input
+    .replace(/[\u200b-\u200d\ufeff]/g, "")
     .split("\n")
     .map(collapseWhitespace)
     .filter(Boolean)

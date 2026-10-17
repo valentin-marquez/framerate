@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { collapseWhitespace, decodeEntities, fold, htmlLines, searchText, slugify, stripHtml } from "./text";
+import { collapseWhitespace, decodeEntities, fold, htmlLines, searchText, slugify, stripHtml, textLines } from "./text";
 
 describe("texto", () => {
   test("fold: minúsculas y sin tildes", () => {
@@ -29,12 +29,26 @@ describe("texto", () => {
     ).toBe("Especificación TÉCNICA Ñ Intel® Arc™ 90° • &aacute;");
   });
 
+  test("decodeEntities: un código fuera de Unicode queda tal cual, sin lanzar", () => {
+    expect(decodeEntities("a&#x110000;b&#99999999;c")).toBe("a&#x110000;b&#99999999;c");
+  });
+
   test("htmlLines: una línea por bloque, sin vacías", () => {
     expect(
       htmlLines(
         "<table><tr><td>MEMORIA</td><td>4 GB</td></tr><tr><td>BUS</td><td>64&nbsp;bits</td></tr></table><p></p>Fin<br>",
       ),
     ).toBe("MEMORIA 4 GB\nBUS 64 bits\nFin");
+  });
+
+  test("htmlLines: los saltos del código HTML no parten una fila, y script/style no cuentan", () => {
+    expect(
+      htmlLines("<tr>\n  <td>Modelo</td>\n  <td>DUAL-RTX5050</td>\n</tr><script>flix()</script><style>a{}</style>"),
+    ).toBe("Modelo DUAL-RTX5050");
+  });
+
+  test("textLines: texto plano a líneas, sin vacías ni espacios de ancho cero", () => {
+    expect(textLines("GPU\n\n  GeForce\u200b RTX 3060 \nCUDA cores\n")).toBe("GPU\nGeForce RTX 3060\nCUDA cores");
   });
 
   test("stripHtml: quita etiquetas, decodifica y colapsa espacios", () => {

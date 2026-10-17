@@ -1,5 +1,5 @@
 import type { Category } from "@framerate/contracts";
-import { htmlLines } from "@framerate/kit";
+import { htmlLines, textLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
@@ -160,6 +160,6 @@ export function toRawOffer(
     mpn: config.sku === "mpn" && sku && !normalizeGtin(sku) ? sku : null,
     gtin,
     imageUrls: p.images.filter((src) => src.startsWith("http")),
-    sourceText: htmlLines(p.description ?? "") || details,
+    sourceText: textLines(p.description ?? "") || details,
   };
 }
