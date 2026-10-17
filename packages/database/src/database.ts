@@ -724,6 +724,29 @@ export interface GpuReferenceTable {
   source_url: string;
 }
 
+/** Referencia de ventiladores por familia y tamaño (#181, migración 0034). Se reemplaza entera al importar. */
+export interface FanReferenceTable {
+  id: Generated<number>;
+  brand: string;
+  brand_key: string;
+  family: string;
+  size_mm: number | null;
+  rpm_min: number | null;
+  rpm_max: number | null;
+  airflow_cfm: number | null;
+  static_pressure_mmh2o: number | null;
+  noise_dba: number | null;
+  bearing: string | null;
+  fan_connector: string | null;
+  lighting: string | null;
+  controller: string | null;
+  requires_controller: number | null;
+  daisy_chain: number | null;
+  warranty_years: number | null;
+  aliases: JsonText;
+  source_url: string | null;
+}
+
 export interface CatalogVersionTable {
   id: number;
   version: number;
@@ -776,6 +799,7 @@ export interface Database {
   psu_tier: PsuTierTable;
   cpu_reference: CpuReferenceTable;
   gpu_reference: GpuReferenceTable;
+  fan_reference: FanReferenceTable;
 }
 
 export type ListingRow = Selectable<ListingsTable>;

@@ -131,7 +131,7 @@ async function ask(
     catalog_candidates: input.catalog ?? [],
     // Sólo los de la marca y categoría de la oferta: la lista entera inflaría cada llamada.
     known_lines: canonicalValues(category, resolveBrand({ category, title: input.title, brand: input.brand })),
-    known_models: category === "cpu" || category === "gpu" ? (input.knownModels ?? []) : [],
+    known_models: ["cpu", "gpu", "case_fan"].includes(category) ? (input.knownModels ?? []) : [],
   };
   const content = feedback
     ? `${JSON.stringify(listing)}\n\nYour previous answer was rejected: ${feedback}. Answer again following the schema.`
@@ -176,7 +176,7 @@ Your output has three parts with different rules.
    - cpu_cooler: model ("Forza 85", "AK620", "MasterLiquid 240L"), type (air, aio), radiator_mm, color, rgb ("true"/"false").
    - case: model ("Mitra PRO 1101C", "4000D Airflow", "NR200P"), form_factor (full_tower, mid_tower, mini_tower, sff), color, variant.
    - case_fan: model, size_mm, quantity (pack count), color, rgb ("true"/"false").
-   known_models (cpu and gpu) lists names from AMD's, Intel's and NVIDIA's official spec tables whose model number appears in the title: processor models for cpu, chipsets for gpu. When the listing is one of them, write model (cpu) or chipset (gpu) exactly as listed ("ryzen 7 7800x3d", "core ultra 5 250k plus", "rtx 5060 ti", "rx 9070 xt", "arc b580"); the suffix must match too (7600 is not 7600X, 12400 is not 12400F, 5070 is not 5070 Ti, 9070 is not 9070 XT). If none fits, write your own value from the listing.
+   known_models (cpu, gpu and case_fan) lists names from the makers' official spec tables: processor models for cpu and chipsets for gpu whose model number appears in the title, and this brand's fan families for case_fan. When the listing is one of them, write model (cpu, case_fan) or chipset (gpu) exactly as listed ("ryzen 7 7800x3d", "core ultra 5 250k plus", "rtx 5060 ti", "rx 9070 xt", "arc b580", "uni fan sl v2"); the suffix must match too (7600 is not 7600X, 12400 is not 12400F, 5070 is not 5070 Ti, 9070 is not 9070 XT). If none fits, write your own value from the listing.
    Colors are one of black, white, pink, red, blue, gray, green, purple, silver (English, lowercase), or "" when the listing does not say the color.
    known_lines lists how our catalog writes the line (the model for cpu_cooler, case and case_fan) of this brand. When the listing's line is one of them written differently (abbreviated, reordered, or with a family or marketing word: "TUF Gaming" is "tuf", "Fury Renegade" is "renegade", "ML240L Core" is "masterliquid 240l core", "XPG D35" is "gammix d35"), write exactly the listed form. A word that names another model or version makes it another line: "Renegade G5" is not "renegade", "Lancer Blade" is not "lancer", "Gaming X Trio" is not "gaming x"; then write your own value from the listing. Never pick a listed value the listing does not support.
 

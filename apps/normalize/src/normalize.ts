@@ -20,6 +20,7 @@ import {
 } from "@framerate/matching/normalize";
 import { type Budget, budgetLeftUsd } from "./budget";
 import { cpuReferences, modelKey, withReference } from "./cpu-reference";
+import { fanKey, fanReferences, fillFromFanReference, pickFanReference } from "./fan-reference";
 import { baseChipset, fillFromGpuReference, gpuReferences, pickGpuReference } from "./gpu-reference";
 
 /**
@@ -177,6 +178,7 @@ export async function normalizeListing(
   });
   const references = category === "cpu" ? await cpuReferences(db, title) : [];
   const gpus = category === "gpu" ? await gpuReferences(db, title) : [];
+  const fans = category === "case_fan" ? await fanReferences(db, listing.brand) : [];
   const input = {
     category,
     title,
@@ -187,7 +189,11 @@ export async function normalizeListing(
     store: listing.store,
     catalog,
     knownModels:
-      category === "gpu" ? [...new Set(gpus.map((r) => baseChipset(r.chipset)))] : references.map((r) => r.model),
+      category === "gpu"
+        ? [...new Set(gpus.map((r) => baseChipset(r.chipset)))]
+        : category === "case_fan"
+          ? [...new Set(fans.map((r) => r.family.toLowerCase()))]
+          : references.map((r) => r.model),
   };
   let result: NormalizeCall;
   try {
@@ -297,7 +303,16 @@ export async function normalizeListing(
     identity.category === "gpu"
       ? pickGpuReference(gpus, String(identity.identity.chipset ?? ""), identity.identity.vram_gb)
       : undefined;
-  const { specs, source: specsSource } = fillFromGpuReference(cpuSpecs.specs, cpuSpecs.source, gpu);
+  const gpuSpecs = fillFromGpuReference(cpuSpecs.specs, cpuSpecs.source, gpu);
+  // Ventiladores (#181): la ficha del fabricante completa ruido, presión, rodamiento e iluminación.
+  const fanRefs =
+    identity.category !== "case_fan"
+      ? []
+      : identity.brand && fanKey(identity.brand) !== fanKey(listing.brand ?? "")
+        ? await fanReferences(db, identity.brand)
+        : fans;
+  const fan = pickFanReference(fanRefs, String(identity.identity.model ?? ""), identity.identity.size_mm);
+  const { specs, source: specsSource } = fillFromFanReference(gpuSpecs.specs, gpuSpecs.source, fan);
   const row = {
     listing_id: listingId,
     version: NORMALIZER_VERSION,

@@ -93,7 +93,17 @@ export const SPEC_FIELDS: Record<Category, readonly string[]> = {
     "radiator_support_mm",
     "front_ports",
   ],
-  case_fan: ["rpm_max", "airflow_cfm_max", "pwm"],
+  case_fan: [
+    "rpm_max",
+    "airflow_cfm_max",
+    "pwm",
+    // Desde #181 los completa la referencia por familia; Haiku los llena si la tienda los dice.
+    "static_pressure_mmh2o",
+    "noise_dba_max",
+    "bearing",
+    "lighting",
+    "fan_controller",
+  ],
 };
 
 export const NUMERIC_IDENTITY_FIELDS = new Set([
