@@ -690,6 +690,11 @@ export interface CpuReferenceTable {
   launch: string | null;
   part_numbers: JsonText;
   source_url: string;
+  unlocked: number | null;
+  pcie_version: string | null;
+  memory_channels: number | null;
+  max_memory_gb: number | null;
+  cooler_recommendation: string | null;
 }
 
 export interface CatalogVersionTable {

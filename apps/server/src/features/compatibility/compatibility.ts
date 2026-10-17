@@ -94,13 +94,16 @@ export function largestRadiator(v: unknown): number | null {
 
 const label = (s: string) => s.toUpperCase();
 
-/** Consumo estimado: TDP del procesador y de la GPU más 75 W para el resto. `null` si no hay ninguno de los dos. */
+/**
+ * Consumo estimado: procesador y GPU más 75 W para el resto. `null` si no hay ninguno de los dos. Del procesador vale
+ * su potencia máxima de la ficha oficial (#179: un i9-14900K tiene 125 W de TDP y llega a 253 W); si no está, el TDP.
+ */
 function consumption({ cpu, gpu }: Parts): { watts: number } | { missing: Part } | null {
   if (!cpu && !gpu) return null;
   let watts = 75;
   for (const p of [cpu, gpu]) {
     if (!p) continue;
-    const tdp = num(p.facts.tdp_w);
+    const tdp = (p === cpu ? num(p.facts.max_power_w) : null) ?? num(p.facts.tdp_w);
     if (!tdp) return { missing: p };
     watts += tdp * p.quantity;
   }

@@ -72,7 +72,9 @@ export function fromAmd(heads: string[], cells: string[]): CpuReference | null {
     boost_ghz: number(get("Max. Boost Clock")),
     l3_mb: number(get("L3 Cache")),
     tdp_w: int(get("Default TDP")),
-    max_power_w: null,
+    // AMD no lo publica por modelo, pero sí la regla: PPT = 1,35 × TDP en AM4 y AM5. En Threadripper el TDP ya es el tope.
+    max_power_w:
+      /^AM[45]$/.test(socket) && int(get("Default TDP")) ? Math.round(1.35 * (int(get("Default TDP")) ?? 0)) : null,
     integrated_graphics: !graphics || /discrete/i.test(graphics) ? null : graphics.replace(/ graphics$/i, " Graphics"),
     boxed_cooler: !pib ? null : /not included/i.test(pib) ? "" : pib,
     memory_types: memoryTypes(get("System Memory Type")),
@@ -83,6 +85,15 @@ export function fromAmd(heads: string[], cells: string[]): CpuReference | null {
       .map((p) => p.replace(/\(.*?\)/g, "").trim())
       .filter(Boolean),
     source_url: AMD_SOURCE,
+    unlocked: get("Unlocked for Overclocking") ? get("Unlocked for Overclocking") === "Yes" : null,
+    pcie_version: get("PCI Express® Version").match(/\d\.\d/)?.[0] ?? null,
+    memory_channels: int(get("Memory Channels")),
+    max_memory_gb: null,
+    cooler_recommendation: /liquid/i.test(get("Recommended Cooler"))
+      ? "liquid"
+      : /air/i.test(get("Recommended Cooler"))
+        ? "premium_air"
+        : null,
   };
 }
 
@@ -112,11 +123,27 @@ export function fromIntel(name: string, url: string, s: Record<string, string>):
     launch: s["Launch Date"] ?? null,
     part_numbers: [],
     source_url: url,
+    // ARK no tiene el campo; la convención de Intel es la letra: K, KF, KS y la serie X vienen desbloqueados.
+    unlocked: /\d(k|kf|ks|x|xe)\b/.test(model),
+    pcie_version:
+      s["PCI Express Revision"]
+        ?.match(/\d\.\d/g)
+        ?.sort()
+        .at(-1) ?? null,
+    memory_channels: int(s["Max # of Memory Channels"]),
+    max_memory_gb: int(s["Max Memory Size (dependent on memory type)"]),
+    cooler_recommendation: null,
   };
 }
 
 const q = (v: unknown) =>
-  v === null || v === undefined ? "NULL" : typeof v === "number" ? String(v) : `'${String(v).replaceAll("'", "''")}'`;
+  v === null || v === undefined
+    ? "NULL"
+    : typeof v === "boolean"
+      ? String(Number(v))
+      : typeof v === "number"
+        ? String(v)
+        : `'${String(v).replaceAll("'", "''")}'`;
 
 const [mode, ...args] = process.argv.slice(2);
 if (import.meta.main && mode === "build") {

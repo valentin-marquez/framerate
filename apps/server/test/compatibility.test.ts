@@ -149,6 +149,11 @@ describe("checkCompatibility", () => {
     expect(checkCompatibility([cpu, gpu]).estimatedWatts).toBe(75 + 105 + 285);
     expect(checkCompatibility([cpu, part("gpu", {})]).estimatedWatts).toBeNull();
   });
+
+  test("del procesador vale su potencia máxima de la ficha oficial si la hay (#179)", () => {
+    const i9 = part("cpu", { socket: "LGA1700", tdp_w: 125, max_power_w: 253 });
+    expect(checkCompatibility([i9, gpu]).estimatedWatts).toBe(75 + 253 + 285);
+  });
 });
 
 describe("highlights", () => {

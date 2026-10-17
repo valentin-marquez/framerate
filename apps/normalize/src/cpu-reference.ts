@@ -28,6 +28,13 @@ export interface CpuReference {
   launch: string | null;
   part_numbers: string[];
   source_url: string;
+  unlocked: boolean | null;
+  /** "5.0", "4.0". */
+  pcie_version: string | null;
+  memory_channels: number | null;
+  max_memory_gb: number | null;
+  /** AMD avisa en algunos modelos: "liquid" o "premium_air". */
+  cooler_recommendation: string | null;
 }
 
 /** Clave de comparación de modelos: "Ryzen 7 7800X3D" y "ryzen 7 7800x3d" son el mismo. */
@@ -44,7 +51,12 @@ export async function cpuReferences(db: Db, title: string): Promise<CpuReference
   const numbers = [...new Set(title.match(/\d{3,5}/g) ?? [])];
   if (numbers.length === 0) return [];
   const rows = await db.query.selectFrom("cpu_reference").selectAll().where("number", "in", numbers).execute();
-  return rows.map((r) => ({ ...r, brand: r.brand as CpuReference["brand"], part_numbers: JSON.parse(r.part_numbers) }));
+  return rows.map((r) => ({
+    ...r,
+    brand: r.brand as CpuReference["brand"],
+    part_numbers: JSON.parse(r.part_numbers),
+    unlocked: r.unlocked === null ? null : r.unlocked === 1,
+  }));
 }
 
 const SPEC_KEYS = [
@@ -59,6 +71,8 @@ const SPEC_KEYS = [
   "tdp_w",
   "integrated_graphics",
   "memory_types",
+  // No está en SPEC_FIELDS (Haiku no lo adivina): sólo viene de la ficha, y la compatibilidad lo usa para la fuente.
+  "max_power_w",
 ] as const;
 
 /**
