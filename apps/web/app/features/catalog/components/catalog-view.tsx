@@ -23,7 +23,7 @@ export function missingSpecLabel(category: string | null, spec: string[]) {
 /**
  * Vista de catálogo: cabecera (la categoría o la consulta buscada), filtros aplicados, barra de orden y
  * paginación fija y grilla paginada. Los filtros de la categoría viven en un panel junto al riel (`CategoryPanel`).
- * Con `category` es `/categoria/:slug` (con el anuncio a la derecha de la cabecera) y sin ella, `/buscar`.
+ * Con `category` es `/categoria/:slug` y sin ella, `/buscar`; en las dos, el anuncio va a la derecha de la cabecera.
  */
 export function CatalogView({ data }: { data: CatalogData }) {
   const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited } = data;
@@ -50,18 +50,18 @@ export function CatalogView({ data }: { data: CatalogData }) {
         </p>
       )}
 
-      {category ? (
-        <WithAd slot="3200722793">
+      <WithAd slot="3200722793">
+        {category ? (
           <CategoryHeader
             category={category}
             total={brands.reduce((sum, b) => sum + b.count, 0) || meta.total}
             priceRange={priceRange}
             brandCount={brands.length}
           />
-        </WithAd>
-      ) : (
-        <SearchHeader total={meta.total} search={search} />
-      )}
+        ) : (
+          <SearchHeader total={meta.total} search={search} />
+        )}
+      </WithAd>
 
       <div className="flex flex-col gap-3">
         <ActiveChips brands={brands} definitions={categoryFacets(category)} />
