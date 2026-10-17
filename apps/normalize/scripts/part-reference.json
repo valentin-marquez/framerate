@@ -1,6 +1,99 @@
 [
   {
     "category": "case",
+    "brand": "ADATA",
+    "model": "INVADER X BTF",
+    "specs": {
+      "supported_motherboard_form_factors": "ATX, mATX, ITX",
+      "max_gpu_length_mm": 400,
+      "radiator_support_mm": "techo 360",
+      "max_psu_length_mm": 240,
+      "included_fans": 5
+    },
+    "aliases": ["invader x btf"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-component-invader-x-btf-mid-tower-chassis"
+  },
+  {
+    "category": "case",
+    "brand": "ADATA",
+    "model": "INVADER X MINI Saga Series",
+    "specs": {
+      "supported_motherboard_form_factors": "ATX",
+      "max_gpu_length_mm": 330,
+      "included_fans": 5
+    },
+    "aliases": ["invader x mini"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-components-invader-x-mini-saga-series"
+  },
+  {
+    "category": "case",
+    "brand": "ADATA",
+    "model": "LANDER 300",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX",
+      "max_gpu_length_mm": 390,
+      "radiator_support_mm": "techo 360",
+      "max_psu_length_mm": 200,
+      "included_fans": 4
+    },
+    "aliases": ["lander 300"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-components-lander-300"
+  },
+  {
+    "category": "case",
+    "brand": "ADATA",
+    "model": "LANDER 500",
+    "specs": {
+      "supported_motherboard_form_factors": "ATX, mATX, ITX",
+      "max_gpu_length_mm": 340,
+      "radiator_support_mm": "frente 360, atrás 120",
+      "max_psu_length_mm": 170,
+      "included_fans": 4
+    },
+    "aliases": ["lander 500"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-components-lander-500"
+  },
+  {
+    "category": "case",
+    "brand": "ADATA",
+    "model": "VALOR AIR PLUS",
+    "specs": {
+      "supported_motherboard_form_factors": "ITX, mATX, ATX",
+      "max_gpu_length_mm": 340,
+      "max_cpu_cooler_height_mm": 160,
+      "radiator_support_mm": "frente 360, techo 240, atrás 120",
+      "max_psu_length_mm": 170,
+      "included_fans": 4
+    },
+    "aliases": ["valor air plus"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-components-valor-air-plus"
+  },
+  {
+    "category": "case",
+    "brand": "ADATA",
+    "model": "VALOR AIR PRO",
+    "specs": {
+      "supported_motherboard_form_factors": "E-ATX, ATX",
+      "max_gpu_length_mm": 400,
+      "radiator_support_mm": "frente 360, techo 360",
+      "included_fans": 4
+    },
+    "aliases": ["valor air pro"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-components-valor-air-pro"
+  },
+  {
+    "category": "case",
+    "brand": "ADATA",
+    "model": "VALOR MESH",
+    "specs": {
+      "supported_motherboard_form_factors": "ATX, mATX, ITX",
+      "included_fans": 4
+    },
+    "aliases": ["valor mesh", "valor mesh compact mid tower"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-component-valor-mesh-compact-mid-tower-chassis"
+  },
+  {
+    "category": "case",
     "brand": "Antec",
     "model": "AX20 Elite",
     "specs": {
@@ -41,8 +134,8 @@
       "max_psu_length_mm": 295,
       "included_fans": 4
     },
-    "aliases": ["ax27 rgb elite"],
-    "source_url": "https://antec.com/product/case/ax27-rgb-elite.php"
+    "aliases": ["ax27 elite", "ax27 rgb elite"],
+    "source_url": "https://antec.com/product/case/ax27-rgb-elite"
   },
   {
     "category": "case",
@@ -107,7 +200,7 @@
   {
     "category": "case",
     "brand": "Antec",
-    "model": "C5 Curve ARGB",
+    "model": "C5 CURVE ARGB",
     "specs": {
       "supported_motherboard_form_factors": "ATX, mATX, ITX",
       "max_gpu_length_mm": 410,
@@ -116,8 +209,8 @@
       "max_psu_length_mm": 240,
       "included_fans": 4
     },
-    "aliases": ["c5 curve argb", "c5 curvo argb"],
-    "source_url": "https://antec.com/product/case/c5-curve-argb.php"
+    "aliases": ["c5 curve", "c5 curve argb", "c5 curvo argb"],
+    "source_url": "https://www.antec.com/product/case/c5-curve-argb"
   },
   {
     "category": "case",
@@ -204,8 +297,8 @@
       "max_psu_length_mm": 240,
       "included_fans": 3
     },
-    "aliases": ["cx600m trio argb", "cx600m trio"],
-    "source_url": "https://antec.com/product/case/cx600m-trio-argb.php"
+    "aliases": ["cx600m", "cx600m trio argb", "cx600m trio"],
+    "source_url": "https://antec.com/product/case/cx600m-trio-argb"
   },
   {
     "category": "case",
@@ -265,6 +358,21 @@
     },
     "aliases": ["dark cube"],
     "source_url": "https://www.antec.com/product/case/dark-cube"
+  },
+  {
+    "category": "case",
+    "brand": "Antec",
+    "model": "DP505 White",
+    "specs": {
+      "supported_motherboard_form_factors": "E-ATX, ATX, mATX, ITX",
+      "max_gpu_length_mm": 375,
+      "max_cpu_cooler_height_mm": 170,
+      "radiator_support_mm": "frente 360, techo 360, atrás 120",
+      "max_psu_length_mm": 410,
+      "included_fans": 3
+    },
+    "aliases": ["dp505"],
+    "source_url": "https://www.antec.com/product/case/dp505-white"
   },
   {
     "category": "case",
@@ -368,6 +476,48 @@
   },
   {
     "category": "case",
+    "brand": "Arctic",
+    "model": "Xtender VG (Black)",
+    "specs": {
+      "supported_motherboard_form_factors": "E-ATX, ATX, mATX, ITX",
+      "max_gpu_length_mm": 482,
+      "max_cpu_cooler_height_mm": 171,
+      "radiator_support_mm": "techo 420, lado 420",
+      "max_psu_length_mm": 318,
+      "included_fans": 5
+    },
+    "aliases": ["xtender vg"],
+    "source_url": "https://www.arctic.de/en/Xtender-VG-Black/ACPCC00016A"
+  },
+  {
+    "category": "case",
+    "brand": "ASUS",
+    "model": "A21",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX",
+      "max_gpu_length_mm": 380,
+      "max_cpu_cooler_height_mm": 165
+    },
+    "aliases": ["a21"],
+    "source_url": "https://www.asus.com/motherboards-components/gaming-cases/asus/asus-a21-case"
+  },
+  {
+    "category": "case",
+    "brand": "ASUS",
+    "model": "Prime AP201 MicroATX Case",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX, ITX",
+      "max_gpu_length_mm": 338,
+      "max_cpu_cooler_height_mm": 170,
+      "radiator_support_mm": "techo 360, atrás 120",
+      "max_psu_length_mm": 180,
+      "included_fans": 1
+    },
+    "aliases": ["prime ap201"],
+    "source_url": "https://www.asus.com/Motherboards-Components/Gaming-Cases/PRIME/ASUS-Prime-AP201-MicroATX-Case"
+  },
+  {
+    "category": "case",
     "brand": "ASUS",
     "model": "ProArt PA401 Wood Edition",
     "specs": {
@@ -388,6 +538,36 @@
     },
     "aliases": ["hyperion gr701"],
     "source_url": "https://rog.asus.com/us/cases/rog-hyperion-gr701-model/"
+  },
+  {
+    "category": "case",
+    "brand": "ASUS",
+    "model": "TUF Gaming GT301",
+    "specs": {
+      "supported_motherboard_form_factors": "ATX",
+      "max_gpu_length_mm": 320,
+      "max_cpu_cooler_height_mm": 160,
+      "radiator_support_mm": "frente 360, atrás 120",
+      "max_psu_length_mm": 160,
+      "included_fans": 4
+    },
+    "aliases": ["tuf gt301"],
+    "source_url": "https://www.asus.com/Motherboards-Components/Gaming-Cases/TUF-Gaming/TUF-Gaming-GT301"
+  },
+  {
+    "category": "case",
+    "brand": "ASUS",
+    "model": "TUF Gaming GT302 ARGB",
+    "specs": {
+      "supported_motherboard_form_factors": "E-ATX, ATX, mATX, ITX",
+      "max_gpu_length_mm": 407,
+      "max_cpu_cooler_height_mm": 165,
+      "radiator_support_mm": "frente 280, techo 360, atrás 140",
+      "max_psu_length_mm": 220,
+      "included_fans": 4
+    },
+    "aliases": ["gt302 argb", "tuf gt302 argb"],
+    "source_url": "https://www.asus.com/motherboards-components/gaming-cases/tuf-gaming/tuf-gaming-gt302-argb"
   },
   {
     "category": "case",
@@ -466,6 +646,21 @@
   {
     "category": "case",
     "brand": "Cooler Master",
+    "model": "Elite 302",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX, ITX",
+      "max_gpu_length_mm": 365,
+      "max_cpu_cooler_height_mm": 163.5,
+      "radiator_support_mm": "frente 360, techo 280, atrás 120",
+      "max_psu_length_mm": 160,
+      "included_fans": 3
+    },
+    "aliases": ["elite 302"],
+    "source_url": "https://www.coolermaster.com/en-global/products/elite-302"
+  },
+  {
+    "category": "case",
+    "brand": "Cooler Master",
     "model": "Elite 350",
     "specs": {
       "supported_motherboard_form_factors": "mATX, ITX",
@@ -477,6 +672,19 @@
     },
     "aliases": ["elite 350"],
     "source_url": "https://www.coolermaster.com/en-global/products/elite-350.html"
+  },
+  {
+    "category": "case",
+    "brand": "Cooler Master",
+    "model": "Elite 481 Wood",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX",
+      "max_gpu_length_mm": 410,
+      "radiator_support_mm": "techo 360, lado 280, fondo 360",
+      "included_fans": 3
+    },
+    "aliases": ["elite 481 wood", "elite 481"],
+    "source_url": "https://www.coolermaster.com/en-global/products/elite-481-wood"
   },
   {
     "category": "case",
@@ -526,6 +734,18 @@
   {
     "category": "case",
     "brand": "Cooler Master",
+    "model": "Elite 690 Wood",
+    "specs": {
+      "max_gpu_length_mm": 425,
+      "radiator_support_mm": "techo 360, lado 240",
+      "included_fans": 3
+    },
+    "aliases": ["elite 690 wood", "elite 690"],
+    "source_url": "https://www.coolermaster.com/en-global/products/elite-690-wood"
+  },
+  {
+    "category": "case",
+    "brand": "Cooler Master",
     "model": "HAF 500",
     "specs": {
       "supported_motherboard_form_factors": "E-ATX, ATX, mATX, ITX",
@@ -552,6 +772,17 @@
     },
     "aliases": ["haf 700 evo"],
     "source_url": "https://www.coolermaster.com/en-global/products/haf-700-evo.html"
+  },
+  {
+    "category": "case",
+    "brand": "Cooler Master",
+    "model": "MasterBox MB511 ARGB",
+    "specs": {
+      "radiator_support_mm": "frente 360, techo 360",
+      "included_fans": 3
+    },
+    "aliases": ["mb511 argb"],
+    "source_url": "https://www.coolermaster.com/en-global/products/masterbox-mb511-argb"
   },
   {
     "category": "case",
@@ -627,6 +858,19 @@
     },
     "aliases": ["td500 mesh v2"],
     "source_url": "https://www.coolermaster.com/en-global/products/masterbox-td500-mesh-v2.html"
+  },
+  {
+    "category": "case",
+    "brand": "Cooler Master",
+    "model": "MasterFrame 400 Mesh",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX, ITX",
+      "max_gpu_length_mm": 390,
+      "radiator_support_mm": "techo 360",
+      "included_fans": 1
+    },
+    "aliases": ["masterframe 400 mesh"],
+    "source_url": "https://www.coolermaster.com/en-global/products/masterframe-400-mesh"
   },
   {
     "category": "case",
@@ -717,6 +961,96 @@
     },
     "aliases": ["td500 mesh v2"],
     "source_url": "https://www.coolermaster.com/en-global/products/masterbox-td500-mesh-v2/"
+  },
+  {
+    "category": "case",
+    "brand": "Corsair",
+    "model": "3500X RS-R ARGB",
+    "specs": {
+      "supported_motherboard_form_factors": "ITX, mATX, ATX, E-ATX",
+      "max_gpu_length_mm": 425,
+      "max_cpu_cooler_height_mm": 170,
+      "radiator_support_mm": "techo 360, atrás 120",
+      "max_psu_length_mm": 180,
+      "included_fans": 3
+    },
+    "aliases": ["3500x rs r argb"],
+    "source_url": "https://www.corsair.com/us/en/p/pc-cases/cc-9011322-ww/3500x-rs-r-argb-mid-tower-pc-case-cc-9011322-ww"
+  },
+  {
+    "category": "case",
+    "brand": "Corsair",
+    "model": "480T Airflow",
+    "specs": {
+      "supported_motherboard_form_factors": "ITX, mATX, ATX, E-ATX",
+      "max_gpu_length_mm": 400,
+      "max_cpu_cooler_height_mm": 165,
+      "radiator_support_mm": "techo 360, atrás 120",
+      "max_psu_length_mm": 220,
+      "included_fans": 0
+    },
+    "aliases": ["480t airflow"],
+    "source_url": "https://www.corsair.com/us/en/p/pc-cases/cc-9011271-ww/480t-airflow-tempered-%D7%96%D7%9B%D7%95%D7%9B%D7%99%D7%AA-mid-tower-case-black-cc-9011271-ww"
+  },
+  {
+    "category": "case",
+    "brand": "Corsair",
+    "model": "FRAME 4000D",
+    "specs": {
+      "supported_motherboard_form_factors": "ITX, mATX, ATX, E-ATX",
+      "max_gpu_length_mm": 430,
+      "max_cpu_cooler_height_mm": 170,
+      "radiator_support_mm": "techo 360, atrás 140",
+      "max_psu_length_mm": 220,
+      "included_fans": 0
+    },
+    "aliases": ["frame 4000d"],
+    "source_url": "https://www.corsair.com/us/en/p/pc-cases/cc-9011290-ww/frame-4000d-modular-mid-tower-pc-case-cc-9011290-ww"
+  },
+  {
+    "category": "case",
+    "brand": "Corsair",
+    "model": "FRAME 4000X RS",
+    "specs": {
+      "supported_motherboard_form_factors": "ITX, mATX, ATX, E-ATX",
+      "max_gpu_length_mm": 430,
+      "max_cpu_cooler_height_mm": 170,
+      "radiator_support_mm": "techo 360, atrás 140",
+      "max_psu_length_mm": 220,
+      "included_fans": 4
+    },
+    "aliases": ["4000x"],
+    "source_url": "https://www.corsair.com/us/en/p/pc-cases/cc-9011302-ww/frame-4000x-rs-mid-tower-pc-case-cc-9011302-ww"
+  },
+  {
+    "category": "case",
+    "brand": "Corsair",
+    "model": "FRAME 4500X RS-R ARGB",
+    "specs": {
+      "supported_motherboard_form_factors": "ITX, mATX, ATX, E-ATX",
+      "max_gpu_length_mm": 460,
+      "max_cpu_cooler_height_mm": 185,
+      "radiator_support_mm": "techo 360, atrás 140",
+      "max_psu_length_mm": 250,
+      "included_fans": 3
+    },
+    "aliases": ["frame 4500x"],
+    "source_url": "https://www.corsair.com/us/en/p/pc-cases/cc-9011314-ww/frame-4500x-rs-r-argb-panoramic-glass-mid-tower-pc-case-cc-9011314-ww"
+  },
+  {
+    "category": "case",
+    "brand": "Corsair",
+    "model": "iCUE 5000X RGB QL Edition",
+    "specs": {
+      "supported_motherboard_form_factors": "ITX, mATX, ATX, E-ATX",
+      "max_gpu_length_mm": 420,
+      "max_cpu_cooler_height_mm": 170,
+      "radiator_support_mm": "frente 360, techo 360",
+      "max_psu_length_mm": 250,
+      "included_fans": 4
+    },
+    "aliases": ["5000x", "5000x rgb"],
+    "source_url": "https://www.corsair.com/us/en/p/pc-cases/cc-9011233-ww/icue-5000x-rgb-ql-edition-mid-tower-atx-case-true-white-cc-9011233-ww"
   },
   {
     "category": "case",
@@ -1212,6 +1546,35 @@
     },
     "aliases": ["uniface rgb"],
     "source_url": "https://cougargaming.com/us/products/cases/uniface-rgb/"
+  },
+  {
+    "category": "case",
+    "brand": "Deepcool",
+    "model": "MATREXX 55 MESH",
+    "specs": {
+      "supported_motherboard_form_factors": "ITX, mATX, ATX",
+      "max_gpu_length_mm": 380,
+      "max_cpu_cooler_height_mm": 160,
+      "radiator_support_mm": "frente 360, techo 280, atrás 120",
+      "max_psu_length_mm": 170
+    },
+    "aliases": ["matrexx 55"],
+    "source_url": "https://www.deepcool.com/products/Cases/Matrexx-55-Mesh-Mid-Tower-ATX-Case/2021/4655.shtml"
+  },
+  {
+    "category": "case",
+    "brand": "Deepcool",
+    "model": "MATREXX 70 ADD-RGB 3F",
+    "specs": {
+      "supported_motherboard_form_factors": "E-ATX, ATX, mATX, ITX",
+      "max_gpu_length_mm": 380,
+      "max_cpu_cooler_height_mm": 170,
+      "radiator_support_mm": "frente 360, techo 360, atrás 120",
+      "max_psu_length_mm": 200,
+      "included_fans": 4
+    },
+    "aliases": ["matrexx 70"],
+    "source_url": "https://www.deepcool.com/products/Cases/Matrexx-70-Tempered-Glass-Mid-Tower-ATX-Case/2021/4650.shtml"
   },
   {
     "category": "case",
@@ -1949,6 +2312,17 @@
   {
     "category": "case",
     "brand": "Gigabyte",
+    "model": "C301 GLASS",
+    "specs": {
+      "supported_motherboard_form_factors": "E-ATX, ATX, mATX, ITX",
+      "included_fans": 4
+    },
+    "aliases": ["c301 glass"],
+    "source_url": "https://www.gigabyte.com/PC-Case/GB-C301G-TYPE-C"
+  },
+  {
+    "category": "case",
+    "brand": "Gigabyte",
     "model": "C500 Panoramic Stealth",
     "specs": {
       "supported_motherboard_form_factors": "ITX, mATX, ATX",
@@ -1974,6 +2348,159 @@
     },
     "aliases": ["a3"],
     "source_url": "https://lian-li.com/product/a3-matx/"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MAG FORGE M100A",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX",
+      "max_gpu_length_mm": 300
+    },
+    "aliases": ["forge m100a"],
+    "source_url": "https://www.msi.com/PC-Case/MAG-FORGE-M100A"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MAG PANO 100R PZ / WHITE",
+    "specs": {
+      "supported_motherboard_form_factors": "ATX, mATX, ITX",
+      "max_gpu_length_mm": 400,
+      "max_cpu_cooler_height_mm": 166,
+      "radiator_support_mm": "techo 360, lado 360, fondo 360, atrás 120",
+      "max_psu_length_mm": 200,
+      "included_fans": 4
+    },
+    "aliases": ["pano 100r pz"],
+    "source_url": "https://www.msi.com/PC-Case/MAG-PANO-100R-PZ"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MAG PANO 110R PZ / WHITE",
+    "specs": {
+      "supported_motherboard_form_factors": "ATX, mATX, ITX",
+      "max_gpu_length_mm": 400,
+      "max_cpu_cooler_height_mm": 160,
+      "radiator_support_mm": "techo 360, atrás 120",
+      "max_psu_length_mm": 200,
+      "included_fans": 4
+    },
+    "aliases": ["pano 110r pz"],
+    "source_url": "https://www.msi.com/PC-Case/MAG-PANO-110R-PZ"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MAG PANO 130R PZ / WHITE",
+    "specs": {
+      "supported_motherboard_form_factors": "ATX, mATX, ITX",
+      "max_gpu_length_mm": 400,
+      "max_cpu_cooler_height_mm": 165,
+      "radiator_support_mm": "techo 360, lado 360, atrás 120",
+      "max_psu_length_mm": 180,
+      "included_fans": 4
+    },
+    "aliases": ["pano 130r pz"],
+    "source_url": "https://www.msi.com/PC-Case/MAG-PANO-130R-PZ"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MAG PANO M100R PZ / WHITE",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX, ITX",
+      "max_gpu_length_mm": 390,
+      "max_cpu_cooler_height_mm": 175,
+      "radiator_support_mm": "techo 360, atrás 140",
+      "max_psu_length_mm": 200,
+      "included_fans": 4
+    },
+    "aliases": ["pano m100r pz"],
+    "source_url": "https://www.msi.com/PC-Case/MAG-PANO-M100R-PZ"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MAG SHIELD M301",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX, ITX",
+      "max_gpu_length_mm": 250
+    },
+    "aliases": ["shield m301"],
+    "source_url": "https://www.msi.com/PC-Case/MAG-SHIELD-M301"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MAG VAMPIRIC 100R",
+    "specs": {
+      "max_gpu_length_mm": 300,
+      "max_cpu_cooler_height_mm": 160,
+      "radiator_support_mm": "frente 240, atrás 120",
+      "max_psu_length_mm": 270,
+      "included_fans": 2
+    },
+    "aliases": ["vampiric 100r"],
+    "source_url": "https://www.msi.com/PC-case/MAG-VAMPIRIC-100R"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MEG MAESTRO 900R",
+    "specs": {
+      "supported_motherboard_form_factors": "E-ATX, ATX, mATX, ITX",
+      "max_gpu_length_mm": 440,
+      "max_cpu_cooler_height_mm": 170,
+      "included_fans": 3
+    },
+    "aliases": ["maestro 900r"],
+    "source_url": "https://www.msi.com/PC-Case/MEG-MAESTRO-900R"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MPG GUNGNIR 110R",
+    "specs": {
+      "supported_motherboard_form_factors": "ATX, mATX, ITX",
+      "max_gpu_length_mm": 340,
+      "max_cpu_cooler_height_mm": 165,
+      "radiator_support_mm": "frente 360, techo 240, atrás 120",
+      "max_psu_length_mm": 250,
+      "included_fans": 4
+    },
+    "aliases": ["gungnir 110r"],
+    "source_url": "https://www.msi.com/PC-case/MPG-GUNGNIR-110R"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "MPG GUNGNIR 300R AIRFLOW / WHITE",
+    "specs": {
+      "supported_motherboard_form_factors": "E-ATX, ATX, mATX, ITX",
+      "max_gpu_length_mm": 360,
+      "max_cpu_cooler_height_mm": 175,
+      "radiator_support_mm": "frente 360, techo 360, atrás 140",
+      "included_fans": 4
+    },
+    "aliases": ["gungnir 300r airflow", "300r airflow"],
+    "source_url": "https://www.msi.com/PC-Case/MPG-GUNGNIR-300R-AIRFLOW"
+  },
+  {
+    "category": "case",
+    "brand": "MSI",
+    "model": "PRO FORGE M051A",
+    "specs": {
+      "supported_motherboard_form_factors": "mATX, ITX",
+      "max_gpu_length_mm": 300,
+      "max_cpu_cooler_height_mm": 160,
+      "radiator_support_mm": "techo 240, atrás 120",
+      "max_psu_length_mm": 170,
+      "included_fans": 4
+    },
+    "aliases": ["pro forge m051a"],
+    "source_url": "https://www.msi.com/PC-Case/PRO-FORGE-M051A"
   },
   {
     "category": "case",
@@ -2424,6 +2951,77 @@
   },
   {
     "category": "cpu_cooler",
+    "brand": "ADATA",
+    "model": "LEVANTE X 240",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["levante 240"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-component-levante-x-240"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ADATA",
+    "model": "LEVANTE X 360",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "fan_count": 3,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["levante 360"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-component-levante-x-360"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ADATA",
+    "model": "MAESTRO PLUS 42SA",
+    "specs": {
+      "type": "air",
+      "sockets": "LGA1851, AM5",
+      "tdp_rating_w": 220,
+      "noise_dba_max": 22,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["maestro plus 42sa"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-component-maestro-plus-42SA"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ADATA",
+    "model": "MAESTRO PLUS 62DA",
+    "specs": {
+      "type": "air",
+      "sockets": "LGA1851, AM5",
+      "tdp_rating_w": 250,
+      "noise_dba_max": 22,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["maestro plus 62da"],
+    "source_url": "https://www.xpg.com/en/xpg/pc-component-maestro-plus-62DA"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Antec",
+    "model": "A30 NEO",
+    "specs": {
+      "type": "air",
+      "height_mm": 146,
+      "fan_size_mm": 92,
+      "fan_count": 1,
+      "sockets": "LGA115X, LGA1200, LGA1700, AM3, AM4, AM5",
+      "noise_dba_max": 23.2
+    },
+    "aliases": ["a30 neo"],
+    "source_url": "https://antec.com/product/cooling/a30-neo"
+  },
+  {
+    "category": "cpu_cooler",
     "brand": "Antec",
     "model": "A400 RGB",
     "specs": {
@@ -2485,6 +3083,312 @@
   },
   {
     "category": "cpu_cooler",
+    "brand": "Antec",
+    "model": "VORTEX LUM 240 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "sockets": "LGA115X, LGA1200, LGA1700, LGA1851, AM3, AM4, AM5",
+      "tdp_rating_w": 260,
+      "noise_dba_max": 31,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["vortex lum 240 argb", "vortex 240 argb"],
+    "source_url": "https://antec.com/product/cooling/vortex-lum-240-argb.php"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Antec",
+    "model": "VORTEX LUM 360 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "sockets": "LGA115X, LGA1200, LGA1700, LGA1851, AM3, AM4, AM5, TR4",
+      "tdp_rating_w": 280,
+      "noise_dba_max": 31,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["vortex lum 360 argb", "vortex 360 argb", "vortex lum 360 argb white"],
+    "source_url": "https://antec.com/product/cooling/vortex-lum-360-argb.php"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Antec",
+    "model": "VORTEX VIEW 360 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "sockets": "LGA115X, LGA1200, LGA1700, LGA1851, AM4, AM5",
+      "noise_dba_max": 28.6,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["vortex view 360"],
+    "source_url": "https://antec.com/product/cooling/vortex-view-360"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Freezer 36",
+    "specs": {
+      "type": "air",
+      "height_mm": 159,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4"
+    },
+    "aliases": ["freezer 36"],
+    "source_url": "https://www.arctic.de/en/Freezer-36"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Freezer 36 A-RGB (Black)",
+    "specs": {
+      "type": "air",
+      "height_mm": 159,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["freezer 36 a rgb"],
+    "source_url": "https://www.arctic.de/en/Freezer-36-A-RGB"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Freezer 36 CO",
+    "specs": {
+      "type": "air",
+      "height_mm": 159,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4"
+    },
+    "aliases": ["freezer 36 co"],
+    "source_url": "https://www.arctic.de/en/Freezer-36-CO/ACFRE00122A"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Freezer 8A",
+    "specs": {
+      "type": "air",
+      "height_mm": 136,
+      "fan_size_mm": 100,
+      "fan_count": 1,
+      "sockets": "AM5, AM4"
+    },
+    "aliases": ["freezer 8a"],
+    "source_url": "https://www.arctic.de/en/Freezer-8A/ACFRE00161A"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Freezer 8i CO",
+    "specs": {
+      "type": "air",
+      "height_mm": 136,
+      "fan_size_mm": 100,
+      "fan_count": 1,
+      "sockets": "LGA1851, LGA1700"
+    },
+    "aliases": ["freezer 8i co"],
+    "source_url": "https://www.arctic.de/en/Freezer-8i-CO/ACFRE00191A"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III 240",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4"
+    },
+    "aliases": ["liquid freezer iii 240"],
+    "source_url": "https://www.arctic.de/en/Liquid-Freezer-III-240/ACFRE00134A"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III 240 A-RGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["liquid freezer iii 240 a rgb", "freezer iii 240 a rgb"],
+    "source_url": "https://www.arctic.de/en/Liquid-Freezer-III-240-A-RGB/ACFRE00142A"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III 280",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 280,
+      "fan_size_mm": 140,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4"
+    },
+    "aliases": ["liquid freezer iii 280"],
+    "source_url": "https://www.arctic.de/en/liquid-freezer-III-280"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III 420 A-RGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 420,
+      "fan_size_mm": 140,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["liquid freezer iii 420 a rgb", "freezer iii 420 a rgb"],
+    "source_url": "https://www.arctic.de/en/Liquid-Freezer-III-420-A-RGB/ACFRE00145A"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III Pro 240",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4"
+    },
+    "aliases": ["liquid freezer iii pro 240"],
+    "source_url": "https://www.arctic.de/en/Liquid-Freezer-III-Pro-240/ACFRE00178A"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III Pro 240 A-RGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["liquid freezer iii pro 240 a rgb"],
+    "source_url": "https://www.arctic.de/en/Liquid-Freezer-III-Pro-240-A-RGB/ACFRE00182A"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III Pro 280",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 280,
+      "fan_size_mm": 140,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4"
+    },
+    "aliases": ["liquid freezer iii pro 280"],
+    "source_url": "https://www.arctic.de/en/Liquid-Freezer-III-Pro-280"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III Pro 280 A-RGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 280,
+      "fan_size_mm": 140,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["liquid freezer iii pro 280 argb"],
+    "source_url": "https://www.arctic.de/en/Liquid-Freezer-III-Pro-280-A-RGB/LFIII-Pro-280-ARGB"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III Pro 360 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["liquid freezer iii pro 360", "liquid freezer iii pro 360 argb"],
+    "source_url": "https://www.arctic.de/en/Liquid-Freezer-III-Pro-360-ARGB"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Arctic",
+    "model": "Liquid Freezer III Pro 420",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 420,
+      "fan_size_mm": 140,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, AM5, AM4"
+    },
+    "aliases": ["liquid freezer iii pro 420"],
+    "source_url": "https://www.arctic.de/en/Liquid-Freezer-III-Pro-420/ACFRE00181A"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "Prime LC 240 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["prime lc 240 argb"],
+    "source_url": "https://www.asus.com/motherboards-components/cooling/prime/prime-lc-240-argb"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "Prime LC 360 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 34,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["prime lc 360 argb"],
+    "source_url": "https://www.asus.com/motherboards-components/cooling/prime/prime-lc-360-argb"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "ROG RYUJIN III 240 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 36.45,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["rog ryujin iii 240 argb"],
+    "source_url": "https://rog.asus.com/cooling/cpu-liquid-coolers/rog-ryujin/rog-ryujin-iii-240-argb"
+  },
+  {
+    "category": "cpu_cooler",
     "brand": "ASUS",
     "model": "ROG Ryujin III 360 ARGB",
     "specs": {
@@ -2517,6 +3421,204 @@
   },
   {
     "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "ROG RYUO III 240 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 36.45,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["rog ryuo iii 240 argb"],
+    "source_url": "https://rog.asus.com/cooling/cpu-liquid-coolers/rog-ryuo/rog-ryuo-iii-240-argb-model"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "ROG RYUO IV 360 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 30.7,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["rog ryuo iv 360", "rog ryuo iv 360 argb", "rog ryuo iv 360 argb white"],
+    "source_url": "https://rog.asus.com/cooling/cpu-liquid-coolers/rog-ryuo/rog-ryuo-iv-360-argb"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "ROG RYUO IV SLC 360 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "noise_dba_max": 39.6,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["rog ryuo iv slc 360 argb"],
+    "source_url": "https://rog.asus.com/cooling/cpu-liquid-coolers/rog-ryuo/rog-ryuo-iv-slc-360-argb"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "ROG Strix LC 240",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1200, LGA115X, LGA2011, LGA2066, AM5, AM4, TR4"
+    },
+    "aliases": ["rog strix lc 240"],
+    "source_url": "https://rog.asus.com/Cooling/CPU-Liquid-Coolers/ROG-Strix-LC/ROG-STRIX-LC-240-Model"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "ROG Strix LC III 240 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 36,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["rog strix lc 240 argb"],
+    "source_url": "https://rog.asus.com/cooling/cpu-liquid-coolers/rog-strix-lc/rog-strix-lc-iii-240-argb"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "ROG Strix LC III 360 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 36,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["rog strix lc iii 360 argb"],
+    "source_url": "https://rog.asus.com/cooling/cpu-liquid-coolers/rog-strix-lc/rog-strix-lc-iii-360-argb"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "ROG Strix LC III 360 ARGB LCD",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 36,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["rog strix lc iii 360 argb lcd"],
+    "source_url": "https://rog.asus.com/cooling/cpu-liquid-coolers/rog-strix-lc/rog-strix-lc-iii-360-argb-lcd"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "TUF GAMING LC 240 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 29,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["tuf lc 240 argb"],
+    "source_url": "https://www.asus.com/Motherboards-Components/Cooling/TUF-Gaming/TUF-GAMING-LC-240-ARGB"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "TUF Gaming LC III 240 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "sockets": "LGA1851, LGA1700, LGA1200, AM5, AM4",
+      "noise_dba_max": 37.4,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["tuf lc iii 240 argb"],
+    "source_url": "https://www.asus.com/motherboards-components/cooling/tuf-gaming/tuf-gaming-lc-iii-240-argb"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "TUF Gaming LC III 360 ARGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, LGA1200, AM5, AM4",
+      "noise_dba_max": 37.4,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["tuf lc iii 360"],
+    "source_url": "https://www.asus.com/motherboards-components/cooling/tuf-gaming/tuf-gaming-lc-iii-360-argb"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "ASUS",
+    "model": "TUF Gaming LC III 360 ARGB LCD",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, LGA1200, AM5, AM4",
+      "noise_dba_max": 37.4,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["tuf lc iii 360 argb lcd"],
+    "source_url": "https://www.asus.com/motherboards-components/cooling/tuf-gaming/tuf-gaming-lc-iii-360-argb-lcd"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "be quiet!",
+    "model": "DARK ROCK PRO 5",
+    "specs": {
+      "type": "air",
+      "height_mm": 168,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "tdp_rating_w": 270,
+      "noise_dba_max": 23.3,
+      "lighting": "none"
+    },
+    "aliases": ["dark rock pro 5"],
+    "source_url": "https://www.bequiet.com/en/cpucooler/4466%20BQ%20Dark%20Rock%20Pro%205"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "be quiet!",
+    "model": "Light Loop",
+    "specs": {
+      "type": "aio",
+      "fan_size_mm": 120,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["light loop"],
+    "source_url": "https://www.bequiet.com/en/watercooler/light-loop/5181"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "be quiet!",
+    "model": "Pure Loop 3",
+    "specs": {
+      "type": "aio"
+    },
+    "aliases": ["pure loop 3"],
+    "source_url": "https://www.bequiet.com/en/watercooler/pure-loop-3/6134"
+  },
+  {
+    "category": "cpu_cooler",
     "brand": "be quiet!",
     "model": "Pure Rock 3",
     "specs": {
@@ -2542,6 +3644,49 @@
     },
     "aliases": ["pure rock 3 lx"],
     "source_url": "https://www.bequiet.com/en/cpucooler/5592"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "be quiet!",
+    "model": "PURE ROCK PRO 3",
+    "specs": {
+      "type": "air",
+      "height_mm": 155,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "tdp_rating_w": 250,
+      "noise_dba_max": 34.8,
+      "lighting": "none"
+    },
+    "aliases": ["pure rock pro 3"],
+    "source_url": "https://www.bequiet.com/en/cpucooler/5599"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "be quiet!",
+    "model": "PURE ROCK PRO 3 LX",
+    "specs": {
+      "type": "air",
+      "height_mm": 155,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "tdp_rating_w": 250,
+      "noise_dba_max": 34.8
+    },
+    "aliases": ["pure rock pro 3 lx"],
+    "source_url": "https://www.bequiet.com/en/cpucooler/5601"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "be quiet!",
+    "model": "Silent Loop 3",
+    "specs": {
+      "type": "aio"
+    },
+    "aliases": ["silent loop 3"],
+    "source_url": "https://www.bequiet.com/en/watercooler/silent-loop-3/5395"
   },
   {
     "category": "cpu_cooler",
@@ -2720,6 +3865,22 @@
   },
   {
     "category": "cpu_cooler",
+    "brand": "Cooler Master",
+    "model": "V4 Alpha 3DHP Black",
+    "specs": {
+      "type": "air",
+      "height_mm": 161,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 22.6,
+      "lighting": "none"
+    },
+    "aliases": ["v4 alpha 3dhp"],
+    "source_url": "https://www.coolermaster.com/en-global/products/v4-alpha-3dhp-black"
+  },
+  {
+    "category": "cpu_cooler",
     "brand": "Corsair",
     "model": "iCUE H100i ELITE LCD XT",
     "specs": {
@@ -2732,6 +3893,106 @@
     },
     "aliases": ["h100i elite lcd xt"],
     "source_url": "https://www.corsair.com/us/en/p/cpu-coolers/cw-9060074-ww/icue-h100i-elite-lcd-xt-aio-cpu-liquid-cooler-cw-9060074-ww"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Corsair",
+    "model": "iCUE H100i RGB ELITE",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "sockets": "LGA1700, LGA1200, LGA115X, LGA2011, LGA2066, AM5, AM4, TR4",
+      "noise_dba_max": 28.9
+    },
+    "aliases": ["h100i elite"],
+    "source_url": "https://www.corsair.com/us/en/p/cpu-coolers/cw-9060058-ww/icue-h100i-rgb-elite-liquid-cpu-cooler-cw-9060058-ww"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Corsair",
+    "model": "iCUE H100x RGB ELITE",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2
+    },
+    "aliases": ["h100x rgb elite"],
+    "source_url": "https://www.corsair.com/us/en/p/cpu-coolers/cw-9060065-ww/icue-h100x-rgb-elite-liquid-cpu-cooler"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Corsair",
+    "model": "iCUE H60x RGB ELITE",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 120,
+      "fan_size_mm": 120,
+      "fan_count": 1
+    },
+    "aliases": ["h60x rgb elite"],
+    "source_url": "https://www.corsair.com/us/en/p/cpu-coolers/cw-9060064-ww/icue-h60x-rgb-elite-liquid-cpu-cooler"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Corsair",
+    "model": "iCUE LINK H100i RGB",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1700, AM5",
+      "lighting": "proprietary"
+    },
+    "aliases": ["link h100i rgb"],
+    "source_url": "https://www.corsair.com/us/en/p/cpu-coolers/CW-9061001-WW/icue-link-h100i-rgb-aio-liquid-cpu-cooler-cw-9061001-ww"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Corsair",
+    "model": "iCUE LINK TITAN 240 RX LCD",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "noise_dba_max": 36,
+      "lighting": "proprietary"
+    },
+    "aliases": ["link titan 240 rx"],
+    "source_url": "https://www.corsair.com/us/en/p/cpu-coolers/CW-9061022-WW/icue-link-titan-240-rx-lcd-liquid-cpu-cooler-cw-9061022-ww"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Corsair",
+    "model": "iCUE LINK TITAN 360 RX LCD",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "noise_dba_max": 36,
+      "lighting": "proprietary"
+    },
+    "aliases": ["link titan 360 rx"],
+    "source_url": "https://www.corsair.com/us/en/p/cpu-coolers/CW-9061023-WW/icue-link-titan-360-rx-lcd-liquid-cpu-cooler-cw-9061023-ww"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Corsair",
+    "model": "NAUTILUS 240 RS",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "noise_dba_max": 36
+    },
+    "aliases": ["nautilus 240 rs"],
+    "source_url": "https://www.corsair.com/us/en/p/cpu-coolers/CW-9060088-WW/nautilus-240-rs-liquid-cpu-cooler-cw-9060088-ww"
   },
   {
     "category": "cpu_cooler",
@@ -2857,6 +4118,38 @@
   {
     "category": "cpu_cooler",
     "brand": "Deepcool",
+    "model": "AK400",
+    "specs": {
+      "type": "air",
+      "height_mm": 155,
+      "fan_size_mm": 120,
+      "fan_count": 1,
+      "sockets": "LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "tdp_rating_w": 220,
+      "noise_dba_max": 29
+    },
+    "aliases": ["ak400"],
+    "source_url": "https://www.deepcool.com/products/Cooling/cpuaircoolers/AK400-Performance-CPU-Cooler/2021/15222.shtml"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Deepcool",
+    "model": "AK500 DIGITAL PRO",
+    "specs": {
+      "type": "air",
+      "height_mm": 162,
+      "fan_size_mm": 120,
+      "fan_count": 1,
+      "sockets": "LGA2066, LGA2011, LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 25,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["ak500 digital pro"],
+    "source_url": "https://www.deepcool.com/products/Cooling/cpuaircoolers/AK500-Digital-Pro-Cooler-With-Multi-line-Display-1851-1700-AM5/2024/19791.shtml"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Deepcool",
     "model": "AK620",
     "specs": {
       "type": "air",
@@ -2870,6 +4163,86 @@
     },
     "aliases": ["ak620"],
     "source_url": "https://www.deepcool.com/download/pdf/AK620_Series.pdf"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Deepcool",
+    "model": "ASSASSIN 4S",
+    "specs": {
+      "type": "air",
+      "height_mm": 164,
+      "fan_size_mm": 140,
+      "fan_count": 1,
+      "sockets": "LGA2066, LGA2011, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 29.3
+    },
+    "aliases": ["assassin 4s"],
+    "source_url": "https://deepcool.com/products/Cooling/cpuaircoolers/Assassin-4S-Minimalistic-Premium-CPU-Air-Cooler-1700-AM5/2023/17881.shtml"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Deepcool",
+    "model": "LE240 V2",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 31.6,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["le240 v2"],
+    "source_url": "https://deepcool.com/products/Cooling/cpuliquidcoolers/LE240-V2-Liquid-CPU-Cooler-1851-1700-AM5/2025/20136.shtml"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Deepcool",
+    "model": "LE240 WH V2",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 31.6,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["le240 wh v2"],
+    "source_url": "https://deepcool.com/products/Cooling/cpuliquidcoolers/LE240-WH-V2-Liquid-CPU-Cooler-1851-1700-AM5/2025/20137.shtml"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Deepcool",
+    "model": "LE360 V2",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 31.6,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["le360"],
+    "source_url": "https://deepcool.com/products/Cooling/cpuliquidcoolers/LE360-V2-Liquid-CPU-Cooler-1851-1700-AM5/2025/20138.shtml"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "Deepcool",
+    "model": "LE520",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "tdp_rating_w": 220,
+      "noise_dba_max": 32.9,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["le520"],
+    "source_url": "https://deepcool.com/products/Cooling/cpuliquidcoolers/LE520-240mm-Liquid-CPU-Cooler/2022/16608.shtml"
   },
   {
     "category": "cpu_cooler",
@@ -3257,6 +4630,21 @@
   },
   {
     "category": "cpu_cooler",
+    "brand": "Lian Li",
+    "model": "HydroShift II LCD-S",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "noise_dba_max": 33,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["hydroshift lcd s"],
+    "source_url": "https://lian-li.com/product/hydroshift-ii-lcd-s"
+  },
+  {
+    "category": "cpu_cooler",
     "brand": "Montech",
     "model": "NX400 ARGB",
     "specs": {
@@ -3273,7 +4661,22 @@
   {
     "category": "cpu_cooler",
     "brand": "MSI",
-    "model": "MAG CoreLiquid A13 240 White",
+    "model": "MAG CORELIQUID 240R V2",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, LGA2011, LGA2066, AM5, AM4, AM3, FM2",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid 240r v2"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-240R-V2"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MAG CORELIQUID A13 240 / WHITE",
     "specs": {
       "type": "aio",
       "radiator_mm": 240,
@@ -3283,8 +4686,157 @@
       "noise_dba_max": 31.1,
       "lighting": "argb_5v"
     },
-    "aliases": ["coreliquid a13 240 white"],
-    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-A13-240/Specification"
+    "aliases": ["coreliquid a13 240", "coreliquid a13 240 white"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-A13-240"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MAG CORELIQUID A13 360",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360
+    },
+    "aliases": ["coreliquid a13 360"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-A13-360"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MAG CORELIQUID A15 240",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "noise_dba_max": 28.7,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid a15 240"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-A15-240"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MAG CORELIQUID A15 360",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, AM5, AM4",
+      "noise_dba_max": 20,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid a15 360"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-A15-360"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MAG CORELIQUID C360",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, LGA2011, LGA2066, AM5, AM4, AM3, FM2, TR4",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid c360"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-C360"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MAG CORELIQUID E360 / WHITE",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "fan_size_mm": 120,
+      "fan_count": 3,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4, TR4",
+      "noise_dba_max": 20,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid e360"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-E360"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MAG CORELIQUID I240 / WHITE",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, AM5, AM4",
+      "noise_dba_max": 20,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid i240"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-I240"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MAG CORELIQUID M240",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, LGA2011, LGA2066, AM5, AM4",
+      "noise_dba_max": 20,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid m240"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-M240"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MAG CORELIQUID M360",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 360,
+      "sockets": "LGA1700, LGA1200, LGA115X, LGA2011, LGA2066, AM5, AM4, TR4",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid m360"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MAG-CORELIQUID-M360"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MPG CORELIQUID D240",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_count": 2,
+      "sockets": "LGA1700, AM5",
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid d240"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MPG-CORELIQUID-D240"
+  },
+  {
+    "category": "cpu_cooler",
+    "brand": "MSI",
+    "model": "MPG CORELIQUID K240 V2",
+    "specs": {
+      "type": "aio",
+      "radiator_mm": 240,
+      "fan_size_mm": 120,
+      "fan_count": 2,
+      "sockets": "LGA1851, LGA1700, LGA1200, LGA115X, LGA2066, LGA2011, AM5, AM4, AM3, FM2, TR4",
+      "noise_dba_max": 20,
+      "lighting": "argb_5v"
+    },
+    "aliases": ["coreliquid k240 v2"],
+    "source_url": "https://www.msi.com/Liquid-Cooling/MPG-CORELIQUID-K240-V2"
   },
   {
     "category": "cpu_cooler",
