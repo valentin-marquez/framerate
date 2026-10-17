@@ -785,7 +785,8 @@
   :root[data-rail="collapsed"] .load-bar {
     left: 4rem;
   }
-  /* En una categoría el riel siempre es compacto (4 rem) y, con el panel de filtros abierto, éste suma 16 rem. */
+  /* En una categoría y en la ficha de un producto el riel siempre es compacto (4 rem); en la categoría, con el panel de
+     filtros abierto, éste suma 16 rem. */
   :root[data-panel] .page-content {
     padding-left: 4rem;
   }

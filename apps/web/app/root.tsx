@@ -29,6 +29,7 @@ import { Toaster } from "~/shared/components/primitives/sonner";
 import { useNonce } from "~/shared/hooks/use-nonce";
 import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
 import { api, isRateLimitError } from "~/shared/lib/api";
+import { trackLocation } from "~/shared/lib/category-memory";
 import { useTheme } from "~/shared/lib/client";
 import { markInitialLoadDone } from "~/shared/lib/initial-load";
 import { getQueryClient } from "~/shared/lib/query-client";
@@ -160,9 +161,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       className={savedTheme ?? undefined}
       data-theme={savedTheme ?? "system"}
       data-rail={railCollapsed ? "collapsed" : "open"}
-      // En una categoría el contenido deja sitio al panel de filtros desde el HTML del servidor; plegarlo lo cambia
-      // el Navbar directo en el <html>, y React no lo pisa mientras la ruta no cambie de grupo.
-      data-panel={pathname.startsWith("/categoria/") ? "open" : undefined}
+      // En una categoría el contenido deja sitio al panel de filtros desde el HTML del servidor, y en la ficha de un
+      // producto sólo al riel compacto ("none"); plegar el panel lo cambia el Navbar directo en el <html>, y React no lo
+      // pisa mientras la ruta no cambie de grupo.
+      data-panel={pathname.startsWith("/categoria/") ? "open" : pathname.startsWith("/producto/") ? "none" : undefined}
       suppressHydrationWarning
     >
       <head>
@@ -221,6 +223,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
   });
 
   const navigating = useNavigation().state !== "idle";
+
+  // La miga de una ficha vuelve a la última lista de su categoría, con sus filtros.
+  const { pathname, search } = useLocation();
+  useEffect(() => trackLocation(pathname + search), [pathname, search]);
 
   useEffect(() => {
     const root = window.document.documentElement;

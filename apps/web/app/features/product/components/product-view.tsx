@@ -1,6 +1,7 @@
 import { CATEGORY_LABELS, CATEGORY_SLUGS, type Offer, type PricePoint, type ProductDetail } from "@framerate/contracts";
-import { IconChevronDown, IconChevronRight, IconExternalLink, IconPhotoOff } from "@tabler/icons-react";
-import { Link, useLocation, useNavigation, useSearchParams } from "react-router";
+import { IconArrowLeft, IconChevronDown, IconChevronRight, IconExternalLink, IconPhotoOff } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { ReportButton } from "~/features/moderation";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
@@ -19,6 +20,7 @@ import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/shared/components/primitives/select";
 import { StoreLogo } from "~/shared/components/store-logo";
+import { cameFrom, lastCategoryUrl } from "~/shared/lib/category-memory";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import { priceDrop } from "../utils/price-drop";
@@ -378,13 +380,39 @@ function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: numbe
 }
 
 function Breadcrumb({ category }: { category: ProductDetail["category"] }) {
+  const navigate = useNavigate();
+  const slug = CATEGORY_SLUGS[category];
+  // Igual en servidor y en el primer render del cliente; ya montado, la última lista vista con sus filtros.
+  const [href, setHref] = useState(`/categoria/${slug}`);
+  useEffect(() => setHref(lastCategoryUrl(slug) ?? `/categoria/${slug}`), [slug]);
   return (
     <nav aria-label="Migas" className="flex items-center gap-1.5 text-muted-foreground text-xs">
+      <button
+        type="button"
+        aria-label="Volver atrás"
+        // Con historial es "atrás"; si la ficha se abrió directa, lleva a la lista de su categoría.
+        onClick={() => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate(href))}
+        className="mr-1 grid size-7 shrink-0 cursor-pointer place-items-center rounded-full border border-border/60 transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <IconArrowLeft className="size-3.5" />
+      </button>
       <Link to="/" className="hover:text-foreground">
         Inicio
       </Link>
       <IconChevronRight className="size-3" />
-      <Link to={`/categoria/${CATEGORY_SLUGS[category]}`} className="hover:text-foreground">
+      <Link
+        to={href}
+        onClick={(e) => {
+          // Con Ctrl, Cmd o Mays, o con otro botón, el enlace abre aparte como siempre.
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          // Si veníamos de esa lista, es volver atrás: mismos filtros y mismo scroll.
+          if (cameFrom(href)) {
+            e.preventDefault();
+            navigate(-1);
+          }
+        }}
+        className="hover:text-foreground"
+      >
         {CATEGORY_LABELS[category]}
       </Link>
     </nav>

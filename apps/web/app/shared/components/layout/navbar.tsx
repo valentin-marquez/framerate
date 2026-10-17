@@ -213,20 +213,23 @@ export function Navbar({
   const pendingPath = useNavigation().location?.pathname;
   const [selected, setSelected] = useState<string | null>(null);
   // En una categoría, el riel queda compacto y sus filtros van en un panel a su derecha (los datos son los del loader
-  // de esa ruta). Fuera de ella, el riel sigue la preferencia guardada.
+  // de esa ruta); en la ficha de un producto queda compacto sin panel. Fuera de ellas, sigue la preferencia guardada.
   const catalog = useMatches().find((m) => m.id === "features/category/pages/category-page")?.data as
     | CatalogData
     | undefined;
   const inCategory = !!catalog;
+  const onProduct = pathname.startsWith("/producto/");
   const [panelOpen, setPanelOpen] = useState(true);
-  const wide = !(collapsed || inCategory) || peek;
-  // El hueco del contenido en una categoría lo pone `data-panel` en el <html> (app.css): root.tsx lo fija desde la ruta y
+  const compact = collapsed || inCategory || onProduct;
+  const wide = !compact || peek;
+  // El hueco del contenido en esas páginas lo pone `data-panel` en el <html> (app.css): root.tsx lo fija desde la ruta y
   // aquí sólo se cambia al plegar el panel, sin volver a renderizar la página.
   useEffect(() => {
     const root = document.documentElement;
     if (inCategory) root.dataset.panel = panelOpen ? "open" : "closed";
+    else if (onProduct) root.dataset.panel = "none";
     else delete root.dataset.panel;
-  }, [inCategory, panelOpen]);
+  }, [inCategory, onProduct, panelOpen]);
   const activeFilters = activeFilterCount(useSearchParams()[0]);
   // Cuando la URL llega (o la navegación se cancela) manda la navegación real.
   // biome-ignore lint/correctness/useExhaustiveDependencies: se limpia en cada cambio de página o de pendiente.
@@ -243,10 +246,12 @@ export function Navbar({
       if (e.key === "b" && (e.ctrlKey || e.metaKey) && window.matchMedia("(min-width: 64rem)").matches) {
         e.preventDefault();
         if (inCategory) setPanelOpen((open) => !open);
-        else if (peek) {
-          setPeek(false);
-          (document.activeElement as HTMLElement | null)?.blur();
-        } else onCollapsedChange(!collapsed);
+        else if (!onProduct) {
+          if (peek) {
+            setPeek(false);
+            (document.activeElement as HTMLElement | null)?.blur();
+          } else onCollapsedChange(!collapsed);
+        }
         return;
       }
       // F pliega y despliega el panel de filtros de la categoría abierta.
@@ -261,7 +266,7 @@ export function Navbar({
       if (shortcut || (e.key === "/" && !typing)) {
         e.preventDefault();
         // En una categoría el buscador vive en el panel: no hay riel plegado que asomar.
-        if (collapsed && !inCategory && window.matchMedia("(min-width: 64rem)").matches) setPeek(true);
+        if (compact && !inCategory && window.matchMedia("(min-width: 64rem)").matches) setPeek(true);
         const focus = () => {
           focusSearchField();
           if (shortcut) startSearchSpotlight();
@@ -297,7 +302,9 @@ export function Navbar({
         }
         aria-expanded={inCategory ? panelOpen : !collapsed}
         className={cn(
-          "t-rail-handle fixed top-8 left-0 z-50 hidden size-6 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:grid",
+          "t-rail-handle fixed top-8 left-0 z-50 hidden size-6 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          // En la ficha el riel es siempre compacto: no hay manija.
+          !onProduct && "lg:grid",
           inCategory ? (panelOpen ? "[--rail:20rem]" : "[--rail:4rem]") : wide ? "[--rail:16rem]" : "[--rail:4rem]",
         )}
       >
@@ -315,7 +322,7 @@ export function Navbar({
         data-wide={wide}
         style={{ viewTransitionName: "nav-rail" }}
         onFocus={(e) => {
-          if (collapsed && (e.target as HTMLElement).matches("input[data-search-field]")) setPeek(true);
+          if (compact && (e.target as HTMLElement).matches("input[data-search-field]")) setPeek(true);
         }}
         onBlur={(e) => {
           // Un campo de filtros abre su lista fuera del riel (`data-rail-popup`): el foco sigue siendo del riel.
@@ -335,8 +342,26 @@ export function Navbar({
           </Link>
         </div>
 
-        {/* En una categoría el buscador va en el panel de filtros, bajo el título. */}
-        {!inCategory && <SearchField className="shrink-0" />}
+        {/* El mismo riel con o sin filtros. En una categoría el buscador de verdad va en el panel, bajo el título: la lupa
+            lo despliega si estaba plegado y lo enfoca, en vez de asomar el riel. */}
+        {inCategory ? (
+          <button
+            type="button"
+            aria-label="Buscar productos"
+            onClick={() => {
+              if (panelOpen) focusSearchField();
+              else {
+                setPanelOpen(true);
+                requestAnimationFrame(focusSearchField);
+              }
+            }}
+            className="grid h-10 w-full shrink-0 cursor-pointer place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <IconSearch className="size-4" />
+          </button>
+        ) : (
+          <SearchField className="shrink-0" />
+        )}
 
         {/* Fijo: sólo scrollea la lista de categorías. Cada zona lleva su píldora de sección activa. */}
         <RailGroup className="flex shrink-0 flex-col gap-4">

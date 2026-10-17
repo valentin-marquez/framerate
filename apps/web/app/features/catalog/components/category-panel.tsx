@@ -20,7 +20,7 @@ export function CategoryPanel({ data }: { data: CatalogData }) {
           {data.meta.total.toLocaleString("es-CL")}
         </span>
       </div>
-      <SearchField className="shrink-0" />
+      <SearchField withinCategory className="shrink-0" />
       {/* El desvanecido de abajo avisa que hay más campos sin poner una barra de scroll gruesa. */}
       <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto overflow-x-hidden [mask-image:linear-gradient(to_bottom,black_calc(100%-24px),transparent)]">
         <FilterPanel data={data} />

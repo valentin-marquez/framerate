@@ -30,12 +30,15 @@ export function startSearchSpotlight() {
  * actualiza en su lugar (como el buscador de 21st). La primera búsqueda deja una entrada en el historial; las
  * siguientes la reemplazan, así "atrás" no recorre letra por letra. Sin JS es un formulario GET normal.
  */
-export function SearchField({ className }: { className?: string }) {
+export function SearchField({ className, withinCategory }: { className?: string; withinCategory?: boolean }) {
   const { pathname } = useLocation();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const navigation = useNavigation();
-  const onResults = pathname === "/buscar";
+  // Con `withinCategory` (el panel de una categoría) busca sin salir de ella, conservando sus filtros: la página y el
+  // panel siguen montados y el campo no pierde el foco. Si no, lleva a `/buscar`.
+  const target = withinCategory ? pathname : "/buscar";
+  const onResults = pathname === target;
   const urlQuery = onResults ? (params.get("q") ?? "") : "";
 
   const [value, setValue] = useState(urlQuery);
@@ -52,13 +55,13 @@ export function SearchField({ className }: { className?: string }) {
     const q = raw.trim();
     if (q === sent.current && onResults) return;
     sent.current = q;
-    // En /buscar se conservan los filtros (marca, orden) y se vuelve a la primera página.
+    // En los resultados se conservan los filtros (marca, orden) y se vuelve a la primera página.
     const next = new URLSearchParams(onResults ? params : undefined);
     next.delete("page");
     if (q) next.set("q", q);
     else next.delete("q");
     const query = next.toString();
-    navigate(`/buscar${query ? `?${query}` : ""}`, { replace: onResults, preventScrollReset: onResults });
+    navigate(`${target}${query ? `?${query}` : ""}`, { replace: onResults, preventScrollReset: onResults });
   };
 
   useEffect(() => {
@@ -69,11 +72,11 @@ export function SearchField({ className }: { className?: string }) {
     return () => clearTimeout(id);
   });
 
-  const loading = navigation.state === "loading" && navigation.location.pathname === "/buscar";
+  const loading = navigation.state === "loading" && navigation.location.pathname === target;
 
   return (
     <form
-      action="/buscar"
+      action={target}
       className={cn("relative", className)}
       onSubmit={(e) => {
         e.preventDefault();
