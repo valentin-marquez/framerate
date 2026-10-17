@@ -882,6 +882,19 @@
 [data-wide="false"] [data-search-field]::placeholder {
   opacity: 0;
 }
+/* Angosto, el buscador es sólo la lupa, como los demás íconos del riel: sin relleno lateral (pl-9, pr-9 lo ensanchaban
+   más que su caja), sin borde ni fondo, y el fondo suave sólo al pasar el cursor. Lo escrito queda oculto: sin el
+   relleno ya no se sale de la caja. */
+[data-wide="false"] [data-search-field] {
+  padding-inline: 0;
+  border-color: transparent;
+  background-color: transparent;
+  color: transparent;
+  caret-color: transparent;
+}
+[data-wide="false"] [data-search-field]:hover {
+  background-color: color-mix(in oklab, var(--color-secondary) 60%, transparent);
+}
 [data-wide="false"] [data-search-field] ~ button {
   opacity: 0;
   pointer-events: none;
@@ -930,6 +943,10 @@
 .beam[data-active="true"],
 :focus-within > .beam {
   opacity: 1;
+}
+/* Con el riel plegado el buscador es sólo la lupa: sin luz (la especificidad le gana al hover y al foco de arriba). */
+[data-wide="false"] form > .beam {
+  opacity: 0;
 }
 .beam > span {
   position: absolute;
