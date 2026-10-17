@@ -1,0 +1,324 @@
+[
+  {
+    "brand": "GameMax",
+    "series": "GM",
+    "variant": "",
+    "wattages": [800],
+    "tier": "E",
+    "odm": "GameMax",
+    "platform": null,
+    "efficiency": "bronze",
+    "notes_es": "Única medición: Cybenetics de la GM800 rev.2 (2019), fabricada por la propia GameMax. Ripple de 12 V aceptable a plena carga, pero OPP sin medir y sin OCP ni OTP declarados. Puede no ser la revisión que se vende hoy.",
+    "sources": ["https://www.cybenetics.com/evaluations/psus/584/"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GX PRO Platinum",
+    "variant": "",
+    "wattages": [1050],
+    "tier": "E",
+    "odm": "Sohoo",
+    "platform": null,
+    "efficiency": "platinum",
+    "notes_es": "Cybenetics (2024): el OCP de 12 V no cortó ni al 145 % de carga y la etiqueta declara un riel de -12 V que no tiene, así que no cumple ATX 3.1. El OPP sí funciona y Tech4Gamers midió ripple bajo (18 mV en 12 V).",
+    "sources": [
+      "https://www.cybenetics.com/evaluations/psus/2654/",
+      "https://tech4gamers.com/gamemax-gx-rampage-1050w-platinum-atx-3-1-review"
+    ]
+  },
+  {
+    "brand": "GameMax",
+    "series": "VP",
+    "variant": "ECO",
+    "wattages": [450, 500, 600, 700, 800],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "bronze",
+    "notes_es": "No encontré reseñas con mediciones eléctricas ni evaluación de Cybenetics para la serie VP. Las fichas de GameMax indican 80 Plus Bronze y ventilador de 120 mm con modo ECO, pero son afirmaciones del fabricante. No revisé las fichas individuales de cada wattage.",
+    "sources": ["https://gamemaxpc.com/en/vp-gamer/1108.html", "https://www.cybenetics.com/evaluations/psus/2654/"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "VP",
+    "variant": "RGB",
+    "wattages": [500, 600, 700, 800],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "bronze",
+    "notes_es": "Las fichas de GameMax de VP-600 RGB y VP-700 RGB indican 80 Plus Bronze, sin datos de ripple, protecciones ni transientes. No encontré reseñas ni desmontajes de VP-500 RGB ni VP-800 RGB, así que no hay nota.",
+    "sources": ["https://gamemaxpc.com/de/list_245/4545.html", "https://gamemaxpc.com/ru/list_180/4018.html"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "VP",
+    "variant": "",
+    "wattages": [500],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "bronze",
+    "notes_es": "Para el VP-500 sin sufijo sólo hay una ficha del fabricante que dice 80 Plus Bronze. No encontré reseña, Cybenetics ni desmontaje que confirme OEM, protecciones o ripple.",
+    "sources": ["https://gamemaxpc.com/en/vp-gamer/1108.html"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GP",
+    "variant": "",
+    "wattages": [500, 550, 650, 850],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "bronze",
+    "notes_es": "Para GP-500, GP-550, GP-650 y GP-850 no encontré reseñas con mediciones ni Cybenetics. La reseña de GP-650 de gsmgotech dice que no incluye pruebas eléctricas y sólo cita la ficha, y la ficha de GP-850 indica 80 Plus Bronze sin más datos.",
+    "sources": [
+      "https://www.gsmgotech.com/2020/07/review-gamemax-gp-650-power-supply-650w.html",
+      "https://www.awd-it.co.uk/gamemax-gp850-850w-80-bronze-rated-non-modular-psu-gp-850.html"
+    ]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GP",
+    "variant": "",
+    "wattages": [750],
+    "tier": null,
+    "odm": "Sohoo (Guangdong Sohoo Technology)",
+    "platform": "SH008ATX",
+    "efficiency": "bronze",
+    "notes_es": "Un desmontaje de Cultists Network identifica el GP-750 como fabricado por Sohoo, con plataforma SH008ATX. El mismo autor dice que no hizo pruebas eléctricas y que el riel de 12 V (54 A) sugiere un máximo realista de unos 650 W, así que no hay nota. Sohoo también aparece como OEM del GX-1050 PRO y el RGB-1050 PRO en Cybenetics, pero esas series no son las pedidas.",
+    "sources": [
+      "https://cultists.network/12055/gamemax-gp750-review/",
+      "https://www.cybenetics.com/evaluations/psus/2192/"
+    ]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GP",
+    "variant": "B",
+    "wattages": [650],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "bronze",
+    "notes_es": "La ficha de GameMax del GP 650B indica 80 Plus Bronze, ATX 3.1, PFC activo y regulación DC-DC dual para 3.3 V y 5 V con ±2 % de voltaje, pero son afirmaciones del fabricante. No encontré reseña con ripple, OCP, OPP ni transientes para este modelo.",
+    "sources": ["https://gamemaxpc.com/gp-performance/6747.html"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GP",
+    "variant": "W",
+    "wattages": [650],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "bronze",
+    "notes_es": "No encontré ninguna fuente técnica ni ficha específica para el GP-650W en las búsquedas. Sin evidencia, la nota queda en null hasta que aparezca una reseña con mediciones.",
+    "sources": []
+  },
+  {
+    "brand": "GameMax",
+    "series": "GP",
+    "variant": "Performance",
+    "wattages": [650],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "bronze",
+    "notes_es": "No pude confirmar la ficha de GP Performance 650W en las búsquedas, así que no tengo datos de topología, protecciones ni garantía. Sin reseña con mediciones, la nota queda en null.",
+    "sources": []
+  },
+  {
+    "brand": "GameMax",
+    "series": "GE",
+    "variant": "ECO",
+    "wattages": [650, 750],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "bronze",
+    "notes_es": "Las fichas de GameMax de GE-650 y GE-750 declaran ATX 3.1, PCIe 5.1, 80 Plus Bronze y protecciones OVP, UVP, OCP, SCP, OTP y OPP, pero se contradicen en el tipo de PFC (double forward o APFC) y en la eficiencia (85 % o 88 % máximo). No encontré Cybenetics ni reseñas con mediciones, así que no hay nota.",
+    "sources": ["https://gamemaxpc.com/en/ge-eco-gamer/6972.html", "https://gamemaxpc.com/ge-eco-gamer/6655.html"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GS",
+    "variant": "SFX",
+    "wattages": [650, 750, 850],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "gold",
+    "notes_es": "No encontramos ninguna medición (Cybenetics ni reseña con pruebas eléctricas) para GS-650G, GS-750G ni GS-850G, y ningún sitio técnico nombra su OEM o topología. La ficha oficial de GameMax confirma formato SFX modular, pero no declara protecciones, APFC, garantía ni grado 80 Plus; los 5 años de garantía y el grado Gold vienen de la nota de prensa, no de una prueba. Tampoco encontramos variante ATX de esta serie en las fuentes revisadas.",
+    "sources": [
+      "https://gamemaxpc.com/en/gs-sfx-psu/1566.html",
+      "https://gamemaxpc.com/gs-sfx-psu/1567.html",
+      "https://www.thefpsreview.com/2024/12/11/gamemax-launches-gs-sfx-gold-series-atx-3-1-and-pcie-5-1-power-supplies-with-up-to-850-watts-of-output-capacity/"
+    ]
+  },
+  {
+    "brand": "GameMax",
+    "series": "SF",
+    "variant": "SFX",
+    "wattages": [650, 750, 850],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": null,
+    "notes_es": "No encontramos ninguna fuente que mencione los modelos SF650, SF750 ni SF850 de GameMax, ni en la web del fabricante ni en reseñas o bases de Cybenetics. La línea SFX Gold que sí aparece documentada es la GS, así que conviene revisar la etiqueta exacta de la caja antes de asignarle una nota.",
+    "sources": [
+      "https://www.thefpsreview.com/2024/12/11/gamemax-launches-gs-sfx-gold-series-atx-3-1-and-pcie-5-1-power-supplies-with-up-to-850-watts-of-output-capacity/",
+      "https://gamemaxpc.com/en/gs-sfx-psu/1566.html"
+    ]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GX-750",
+    "variant": "Gold",
+    "wattages": [750],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "gold",
+    "notes_es": "No encontramos reseña con mediciones ni reporte de Cybenetics para esta serie. Sólo hay fichas de tiendas, y el reporte de Cybenetics que aparece es del Seasonic Focus GX-750, que es otro producto.",
+    "sources": []
+  },
+  {
+    "brand": "GameMax",
+    "series": "GX-800",
+    "variant": "Gold",
+    "wattages": [800],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "gold (no verificado)",
+    "notes_es": "La ficha oficial declara PFC activo y protecciones OCP, OPP, SCP, OVP, OTP y UVP, pero no hay mediciones de ripple ni de protecciones. El 'ripple menor a 1 %' que aparece en reseñas es de un Cougar GX 800W, no de GameMax, así que no se usa.",
+    "sources": [
+      "https://gamemaxpc.com/gx-rampage-rpg/1463.html",
+      "https://www.kitguru.net/components/power-supplies/zardon/cougar-gx-800w-power-supply-review/"
+    ]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GX 1050W semimodular",
+    "variant": "Silver",
+    "wattages": [1050],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "silver",
+    "notes_es": "No encontramos reporte ni reseña de esta serie. Los listados de GameMax GM-1050 que aparecen pertenecen a otra línea y no sirven como evidencia.",
+    "sources": []
+  },
+  {
+    "brand": "GameMax",
+    "series": "GX Rampage GX-750",
+    "variant": "Gold",
+    "wattages": [750],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "gold (no verificado)",
+    "notes_es": "No hay reseña ni reporte técnico del GX-750 Rampage Gold ATX 3.0. Algunas páginas de GameMax de la serie GX-750 listan ATX 3.1, así que hay que confirmar el SKU exacto antes de asignar nota.",
+    "sources": ["https://gamemaxpc.com/gx-rampage-rpg/1206.html"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GX Rampage GX1050",
+    "variant": "",
+    "wattages": [1050],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": null,
+    "notes_es": "No encontramos reseña ni reporte para la GX1050 Rampage sin PRO. Las pruebas que sí existen son de la variante PRO, y una nota de blog dice que la caja trae 80 Plus Bronze, lo que contradice la ficha Platinum de la PRO.",
+    "sources": ["https://www.tech-critter.com/gamemax-gx-rampage-1050w-overview"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GX PRO 1050G",
+    "variant": "Gold",
+    "wattages": [1050],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "gold",
+    "notes_es": "No hay reseña con mediciones ni reporte de Cybenetics para el GX PRO 1050G. La tienda danesa lo lista como Gold y ATX 3.1, pero eso es una declaración de venta y no evidencia de calidad.",
+    "sources": ["https://www.dcs.dk/en/p/1003967770"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GX PRO 1250G",
+    "variant": "Gold",
+    "wattages": [1250],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "gold",
+    "notes_es": "No encontramos reseña ni reporte técnico para el GX PRO 1250G. Sólo hay fichas de tiendas y de GameMax, sin mediciones.",
+    "sources": []
+  },
+  {
+    "brand": "GameMax",
+    "series": "GX PRO 1250",
+    "variant": "Platinum",
+    "wattages": [1250],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "platinum (declarada)",
+    "notes_es": "Sólo hay fichas oficiales: PFC activo, siete protecciones declaradas y condensadores japoneses de 105 °C declarados, sin años de garantía en la ficha. No hay reporte de Cybenetics ni reseña con mediciones, así que no se asigna nota.",
+    "sources": ["https://gamemaxpc.com/gx-rampage-rpg/1403.html"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "GZ",
+    "variant": "",
+    "wattages": [750, 850, 1000, 1200],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "gold",
+    "notes_es": "No encontré reseñas con mediciones eléctricas ni informe de Cybenetics para ningún modelo de la serie GZ, así que no se puede asignar nota. La ficha oficial de GameMax del GZ 850G y del GZ 1200G indica Active PFC, ATX 3.1, 5 años de garantía y protecciones OPP/OVP/OCP/OTP/UVP/SCP declaradas, pero sin pruebas. El 750G y el 1000G no los revisé en detalle.",
+    "sources": ["https://gamemaxpc.com/gz-psu/6377.html", "https://gamemaxpc.com/gz-psu/6379.html"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "Lion Core",
+    "variant": "1000P y 1200P",
+    "wattages": [1000, 1200],
+    "tier": null,
+    "odm": "Sohoo (confirmado sólo para el 1000P)",
+    "platform": "controlador LLC MPS 1213 (según la ficha oficial del 1200P)",
+    "efficiency": "platinum",
+    "notes_es": "El informe de Cybenetics del 1000P (25PS3093A) confirma el OEM Sohoo, 92,478 % de eficiencia a 230 V y 14,18 dBA, pero sus protecciones aparecen sólo como presentes, sin medir, y no trae ripple, así que no alcanza para B ni C. Del 1200P sólo hay ficha oficial, que habla de garantía de por vida sin años; no encontré mediciones.",
+    "sources": ["https://cybenetics.com/ISO17025/psus/3093", "https://gamemaxpc.com/lion-core/5648.html"]
+  },
+  {
+    "brand": "GameMax",
+    "series": "PG5",
+    "variant": "",
+    "wattages": [1050],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "platinum",
+    "notes_es": "No encontré ningún modelo llamado PG5 en GameMax ni en tiendas, así que no puedo asociarle mediciones. El GX-1050 PRO (Rampage 1050W, Platinum, full modular) es el más cercano: su informe de Cybenetics (24PS2654A) muestra que el OCP en 12 V no corta al 145 % y lo marca como no compatible con ATX 3.1. No lo asigno a PG5 sin confirmar la identidad en la etiqueta.",
+    "sources": [
+      "https://www.cybenetics.com/evaluations/psus/2654/cn/",
+      "https://tech4gamers.com/gamemax-gx-rampage-1050w-platinum-atx-3-1-review"
+    ]
+  },
+  {
+    "brand": "GameMax",
+    "series": "RGB-Smart",
+    "variant": "850 PRO",
+    "wattages": [850],
+    "tier": null,
+    "odm": null,
+    "platform": null,
+    "efficiency": "gold",
+    "notes_es": "Sólo hay ficha oficial de GameMax, que indica LLC + DC-DC, 80 Plus Gold, protecciones OPP/OVP/UVP/SCP/OCP declaradas y condensadores japoneses, pero no menciona APFC ni años de garantía. La reseña que encontré (Enos Tech) es un unboxing sin mediciones, y no hay informe de Cybenetics ni de HWBusters para este modelo, así que queda sin nota.",
+    "sources": ["https://gamemaxpc.com/de/list_243/4527.html"]
+  }
+]

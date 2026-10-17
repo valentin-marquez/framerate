@@ -665,6 +665,9 @@ export interface PsuTierTable {
   platform: string | null;
   notes: string | null;
   source_version: string;
+  /** "sheet" (la tier list) o "own" (nota propia desde reseñas, siempre especulativa). */
+  origin: Defaulted<string>;
+  source_urls: string | null;
 }
 
 /** Referencia de procesadores desde las fichas oficiales (#179, migración 0029). Se reemplaza entera al importar. */

@@ -1,6 +1,7 @@
 /**
  * Reemplaza `psu_tier` (#177) con la versión actual de la tier list de fuentes. Uso interno: ver la migración 0028.
- * Las notas van en español: las traducciones viven en `psu-tiers.es.json`, y las notas nuevas se traducen con Haiku
+ * Además suma las notas propias de `psu-tiers.extra.json` (marcas que la planilla no evalúa, desde reseñas con
+ * mediciones), siempre como especulativas. Las notas van en español: las traducciones viven en `psu-tiers.es.json`, y las notas nuevas se traducen con Haiku
  * si hay `ANTHROPIC_API_KEY` (si no, quedan en inglés y el script lo avisa).
  *
  *   cd apps/server
@@ -13,6 +14,7 @@ const SHEET = "https://docs.google.com/spreadsheets/d/1akCHL7Vhzk_EhrpIGkz8zTEvY
 const FULL_LIST = 931697732;
 const ABOUT = 1719706335;
 const CACHE = new URL("./psu-tiers.es.json", import.meta.url).pathname;
+const EXTRA = new URL("./psu-tiers.extra.json", import.meta.url).pathname;
 
 const sheet = async (gid: number) => {
   const res = await fetch(`${SHEET}&gid=${gid}`);
@@ -67,8 +69,47 @@ for (const r of rows) {
     `INSERT INTO psu_tier (brand, brand_key, series, subseries, variant, wattages, tier, limited, year, form_factor, atx_version, modular, efficiency, odm, platform, notes, source_version) VALUES (${values.map(q).join(", ")});`,
   );
 }
+
+// Notas propias para marcas que la planilla no evalúa: siempre especulativas, con sus fuentes.
+const extra = JSON.parse(await Bun.file(EXTRA).text()) as {
+  brand: string;
+  series: string;
+  variant?: string;
+  wattages: number[];
+  tier: string | null;
+  odm?: string | null;
+  platform?: string | null;
+  efficiency?: string | null;
+  notes_es?: string;
+  sources: string[];
+}[];
+const rated = extra.filter((r) => r.tier);
+for (const r of rated) {
+  const values = [
+    r.brand,
+    ` ${brandKeys(r.brand).join(" ")} `,
+    r.series,
+    "",
+    r.variant ?? "",
+    JSON.stringify(r.wattages),
+    r.tier,
+    1,
+    r.odm ?? null,
+    r.platform ?? null,
+    r.efficiency ?? null,
+    r.notes_es ?? null,
+    "propia",
+    "own",
+    JSON.stringify(r.sources),
+  ];
+  lines.push(
+    `INSERT INTO psu_tier (brand, brand_key, series, subseries, variant, wattages, tier, limited, odm, platform, efficiency, notes, source_version, origin, source_urls) VALUES (${values.map(q).join(", ")});`,
+  );
+}
 console.log(lines.join("\n"));
-console.error(`${rows.length} filas, versión ${version}; ${untranslated} notas sin traducir`);
+console.error(
+  `${rows.length} filas, versión ${version}; ${untranslated} notas sin traducir; ${rated.length} notas propias`,
+);
 
 async function translate(notes: string[], apiKey: string): Promise<string[]> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
