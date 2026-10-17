@@ -26,14 +26,10 @@ export default async function handleRequest(
   ];
   // Turnstile (anti-spam del formulario de soporte sin cuenta) carga su script y su iframe desde aquí.
   const turnstile = "https://challenges.cloudflare.com";
-  // AdSense (anuncio de la categoría) carga iframes y pide datos a estos dominios. Sus scripts van aparte y con hosts
-  // exactos: un comodín como *.google.com deja entrar endpoints JSONP de Google que sirven para saltarse la CSP.
-  const adsenseScripts = [
-    "https://pagead2.googlesyndication.com",
-    "https://tpc.googlesyndication.com",
-    "https://googleads.g.doubleclick.net",
-    "https://*.adtrafficquality.google",
-  ];
+  // AdSense (anuncio de la categoría) carga iframes y pide datos a estos dominios. Sus scripts no van por host: los de
+  // Google tienen endpoints JSONP que sirven para saltarse la CSP. Con 'strict-dynamic' basta el nonce: lo que cargue
+  // un script con nonce (el bundle, que agrega adsbygoogle.js y Turnstile) hereda el permiso, y los hosts y 'self' se
+  // ignoran. Quedan sólo para navegadores sin CSP 3. En dev no va, porque Vite inyecta scripts sin nonce.
   const adsense = [
     "https://*.googlesyndication.com",
     "https://*.doubleclick.net",
@@ -51,9 +47,9 @@ export default async function handleRequest(
       "'wasm-unsafe-eval'",
       "'unsafe-eval'",
       `'nonce-${nonce}'`,
-      isDevelopment ? "'unsafe-inline'" : "",
+      isDevelopment ? "'unsafe-inline'" : "'strict-dynamic'",
       turnstile,
-      ...adsenseScripts,
+      "https://pagead2.googlesyndication.com",
     ],
     workerSrc: ["'self'", isDevelopment ? "blob:" : ""],
     scriptSrcAttr: [`'nonce-${nonce}'`],

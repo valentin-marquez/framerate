@@ -32,7 +32,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export default function Privacy() {
-  const lastUpdate = "1 de octubre de 2026";
+  const lastUpdate = "16 de octubre de 2026";
 
   return (
     <div className="container mx-auto max-w-4xl px-6 py-12 lg:py-20">
