@@ -126,7 +126,7 @@ function specValue(key: string) {
   const value =
     key === "socket" ? sql`(CASE WHEN ${raw} GLOB '[0-9][0-9][0-9][0-9]' THEN 'LGA' || ${raw} ELSE ${raw} END)` : raw;
   return sql<string | null>`(SELECT ${value} FROM listings l JOIN listing_identity i ON i.listing_id = l.id
-    WHERE l.product_id = p.id AND l.is_active = 1 AND json_extract(i.specs_source, ${path}) = 'text'
+    WHERE l.product_id = p.id AND l.is_active = 1 AND json_extract(i.specs_source, ${path}) IN ('text', 'reference')
       AND i.version = (SELECT max(x.version) FROM listing_identity x WHERE x.listing_id = l.id)
       AND ${value} IS NOT NULL
     GROUP BY 1 ORDER BY count(*) DESC, 1 LIMIT 1)`;

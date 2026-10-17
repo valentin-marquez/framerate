@@ -20,6 +20,18 @@ describe("fuseSpecs", () => {
     ]);
   });
 
+  test("lo de la ficha oficial gana aunque más tiendas digan otra cosa (#179)", () => {
+    const specs = fuseSpecs("cpu", [
+      row({ socket: "LGA 1700", tdp_w: 125 }, { socket: "text", tdp_w: "text" }),
+      row({ socket: "LGA 1700", tdp_w: 125 }, { socket: "text", tdp_w: "text" }),
+      row({ socket: "LGA1700", tdp_w: 65 }, { socket: "reference", tdp_w: "reference" }),
+    ]);
+    expect(specs).toEqual([
+      { key: "socket", value: "LGA1700", knowledge: false },
+      { key: "tdp_w", value: 65, knowledge: false },
+    ]);
+  });
+
   test("ignora campos de otra categoría y valores vacíos", () => {
     expect(fuseSpecs("gpu", [row({ socket: "AM5", memory_type: "" }), row({ tdp_w: 220 })])).toEqual([
       { key: "tdp_w", value: 220, knowledge: false },

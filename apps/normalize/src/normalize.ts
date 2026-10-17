@@ -19,6 +19,7 @@ import {
   usageUsd,
 } from "@framerate/matching/normalize";
 import { type Budget, budgetLeftUsd } from "./budget";
+import { cpuReferences, modelKey, withReference } from "./cpu-reference";
 
 /**
  * Consumidor de `framerate-normalize` (spec 2026-10-08 §1, §4 y §7): una oferta por mensaje, una llamada a Haiku por
@@ -173,6 +174,7 @@ export async function normalizeListing(
     gtin: listing.gtin,
     productId: listing.product_id,
   });
+  const references = category === "cpu" ? await cpuReferences(db, title) : [];
   const input = {
     category,
     title,
@@ -182,6 +184,7 @@ export async function normalizeListing(
     sourceText: listing.source_text,
     store: listing.store,
     catalog,
+    knownModels: references.map((r) => r.model),
   };
   let result: NormalizeCall;
   try {
@@ -274,14 +277,23 @@ export async function normalizeListing(
     sameAs,
   });
 
-  const specs: Record<string, IdentityValue> = {};
-  const specsSource: Record<string, "text" | "knowledge"> = {};
+  const haikuSpecs: Record<string, IdentityValue> = {};
+  const haikuSource: Record<string, string> = {};
   const fromKnowledge = new Set(output.specs_from_knowledge);
   for (const [field, value] of Object.entries(output.specs)) {
     if (value === null) continue;
-    specs[field] = value;
-    specsSource[field] = fromKnowledge.has(field) ? "knowledge" : "text";
+    haikuSpecs[field] = value;
+    haikuSource[field] = fromKnowledge.has(field) ? "knowledge" : "text";
   }
+  // Si el modelo es uno de la ficha oficial (#179), sus specs reemplazan las de Haiku.
+  const model = identity.category === "cpu" ? String(identity.identity.model ?? "") : "";
+  const reference = model ? references.find((r) => modelKey(r.model) === modelKey(model)) : undefined;
+  const { specs, source: specsSource } = withReference(
+    haikuSpecs,
+    haikuSource,
+    reference,
+    String(identity.identity.packaging ?? ""),
+  );
   const row = {
     listing_id: listingId,
     version: NORMALIZER_VERSION,

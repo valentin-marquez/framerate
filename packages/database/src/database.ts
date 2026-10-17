@@ -667,6 +667,31 @@ export interface PsuTierTable {
   source_version: string;
 }
 
+/** Referencia de procesadores desde las fichas oficiales (#179, migración 0029). Se reemplaza entera al importar. */
+export interface CpuReferenceTable {
+  model: string;
+  brand: string;
+  name: string;
+  number: string;
+  socket: string | null;
+  cores_total: number | null;
+  cores_performance: number | null;
+  cores_efficiency: number | null;
+  threads: number | null;
+  base_ghz: number | null;
+  boost_ghz: number | null;
+  l3_mb: number | null;
+  tdp_w: number | null;
+  max_power_w: number | null;
+  integrated_graphics: string | null;
+  boxed_cooler: string | null;
+  memory_types: string | null;
+  memory_max_mt_s: number | null;
+  launch: string | null;
+  part_numbers: JsonText;
+  source_url: string;
+}
+
 export interface CatalogVersionTable {
   id: number;
   version: number;
@@ -717,6 +742,7 @@ export interface Database {
   pipeline_state: PipelineStateTable;
   match_shadow: MatchShadowTable;
   psu_tier: PsuTierTable;
+  cpu_reference: CpuReferenceTable;
 }
 
 export type ListingRow = Selectable<ListingsTable>;

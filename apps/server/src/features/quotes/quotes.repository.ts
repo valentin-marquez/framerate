@@ -158,7 +158,7 @@ const factsQuery = (db: Db, publicId: string) =>
     .innerJoin("quotes as q", "q.id", "qi.quote_id")
     .innerJoin("listings as l", "l.product_id", "qi.product_id")
     .innerJoin("listing_identity as i", "i.listing_id", "l.id")
-    .select(["qi.id as item_id", "i.identity", "i.specs"])
+    .select(["qi.id as item_id", "i.identity", "i.specs", "i.specs_source"])
     .where("q.public_id", "=", publicId)
     .where("qi.is_selected", "=", 1)
     .where("l.is_active", "=", 1)
@@ -236,16 +236,20 @@ type DetailRows = [
   Awaited<ReturnType<ReturnType<typeof psuTierQuery>["execute"]>>,
 ];
 
-/** Por campo, el valor que más ofertas del producto dicen (como `fuseSpecs`, sin separar lo de conocimiento: #127). */
-function fuseFacts(rows: { identity: string; specs: string }[]): Record<string, unknown> {
+/**
+ * Por campo, el valor que más ofertas del producto dicen (como `fuseSpecs`, sin separar lo de conocimiento: #127). Lo
+ * de la ficha oficial (`reference`, #179) le gana a cualquier cantidad de votos.
+ */
+function fuseFacts(rows: { identity: string; specs: string; specs_source: string }[]): Record<string, unknown> {
   const votes = new Map<string, Map<string, number>>();
   for (const row of rows) {
     const facts = { ...parseJson<Record<string, unknown>>(row.identity, {}), ...parseJson(row.specs, {}) };
+    const source = parseJson<Record<string, string>>(row.specs_source, {});
     for (const [key, value] of Object.entries(facts)) {
       if (value === null || value === "") continue;
       const bucket = votes.get(key) ?? new Map<string, number>();
       const k = JSON.stringify(value);
-      bucket.set(k, (bucket.get(k) ?? 0) + 1);
+      bucket.set(k, (bucket.get(k) ?? 0) + (source[key] === "reference" ? 1000 : 1));
       votes.set(key, bucket);
     }
   }
