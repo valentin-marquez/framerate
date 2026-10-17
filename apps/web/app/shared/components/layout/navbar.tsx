@@ -17,6 +17,7 @@ import { focusSearchField, SearchField, startSearchSpotlight } from "~/features/
 import { cn } from "~/shared/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
+import { ThemeToggle } from "../theme/theme-toggle";
 import { Logo } from "./logo";
 import { OfferFreshness, TimeGradient } from "./nav-parts";
 import { UserMenu } from "./user-menu";
@@ -402,18 +403,25 @@ export function Navbar({
               </div>
             </div>
           )}
-          <UserMenu
-            align="start"
-            side={wide ? "top" : "right"}
-            railLabel
-            loginClassName="h-9 w-full justify-start gap-2 overflow-hidden rounded-xl px-2.5"
-          />
+          {/* Ancho: el botón de tema a la derecha de la cuenta; angosto, sobre ella. */}
+          <div className={cn("flex gap-2", wide ? "items-center" : "flex-col-reverse items-center")}>
+            <div className={cn(wide ? "min-w-0 flex-1" : "w-full")}>
+              <UserMenu
+                align="start"
+                side={wide ? "top" : "right"}
+                railLabel
+                loginClassName="h-9 w-full justify-start gap-2 overflow-hidden rounded-xl px-2.5"
+              />
+            </div>
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
 
       <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-border/60 border-b bg-background/85 px-3 backdrop-blur-md lg:hidden">
         <Brand compact />
         <SearchField className="flex-1" />
+        <ThemeToggle />
         <UserMenu />
       </header>
 
