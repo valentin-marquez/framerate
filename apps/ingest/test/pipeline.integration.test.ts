@@ -1,7 +1,13 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { crawlCategory } from "@/features/ingestion/crawl-category";
-import { deactivateStale, purgeQuarantine } from "@/features/ingestion/ingestion.repository";
+import {
+  closeStuckRuns,
+  deactivateStale,
+  ensureStore,
+  purgeQuarantine,
+  startRun,
+} from "@/features/ingestion/ingestion.repository";
 import { fakeStore, offer, steppingClock, testDeps } from "./helpers";
 
 /**
@@ -109,6 +115,26 @@ describe("cuarentena", () => {
     expect(await all(deps.db, "quarantine")).toHaveLength(0);
     await crawlCategory(deps, tienda.store, "gpu");
     expect(await all(deps.db, "quarantine")).toHaveLength(1);
+  });
+});
+
+describe("corridas sin cierre", () => {
+  test("el Cron marca failed las running pasado el umbral; no toca las recientes ni las cerradas", async () => {
+    const deps = testDeps(d1, steppingClock());
+    const now = new Date("2026-10-17T06:17:00.000Z");
+    const { id: storeId } = await ensureStore(
+      deps.db,
+      { slug: "alfa", name: "Alfa", url: "https://alfa.example" },
+      now.toISOString(),
+    );
+    await startRun(deps.db, { id: "vieja", storeId, category: "gpu", now: "2026-10-17T00:19:00.000Z" });
+    await startRun(deps.db, { id: "reciente", storeId, category: "cpu", now: "2026-10-17T06:10:00.000Z" });
+
+    expect(await closeStuckRuns(deps.db, now)).toBe(1);
+    const runs = Object.fromEntries((await all(deps.db, "crawl_runs")).map((r) => [r.id, r]));
+    expect(runs.vieja).toMatchObject({ status: "failed", finished_at: now.toISOString() });
+    expect(runs.reciente).toMatchObject({ status: "running", finished_at: null });
+    expect(await closeStuckRuns(deps.db, now)).toBe(0);
   });
 });
 

@@ -1,4 +1,4 @@
-import type { Category } from "@framerate/contracts";
+import { type Category, HEALTH_THRESHOLDS } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { fromBool, parseJson, toBool, toJson } from "@framerate/database";
 import { sql } from "kysely";
@@ -85,6 +85,25 @@ export async function finishRun(
     })
     .where("id", "=", runId)
     .execute();
+}
+
+/**
+ * Corridas que siguen `running` después del umbral de atascadas de la salud: el Worker murió a mitad (CPU o
+ * subrequests) sin llegar a `finishRun`. La más larga medida dura ~4,5 min.
+ */
+export async function closeStuckRuns(db: Db, now: Date): Promise<number> {
+  const before = new Date(now.getTime() - HEALTH_THRESHOLDS.stuckRunMinutes * 60_000).toISOString();
+  const result = await db.query
+    .updateTable("crawl_runs")
+    .set({
+      status: "failed",
+      error: "Sin cierre: el Worker terminó a mitad de la corrida",
+      finished_at: now.toISOString(),
+    })
+    .where("status", "=", "running")
+    .where("started_at", "<", before)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows);
 }
 
 /** Un rechazo que ya está registrado con el mismo hash no se repite (UNIQUE de 0022). Devuelve si se insertó. */

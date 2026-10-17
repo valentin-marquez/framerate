@@ -13,7 +13,7 @@ import { createLogger } from "@framerate/kit";
 import type { Env } from "@/env";
 import { recheckClaims } from "@/features/claims/recheck";
 import { addSmallVariants, copyProductImages, resizerClient } from "@/features/images/product-images";
-import { deactivateStale, purgeQuarantine } from "@/features/ingestion/ingestion.repository";
+import { closeStuckRuns, deactivateStale, purgeQuarantine } from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
 import {
   enqueueAllCrawls,
@@ -48,6 +48,7 @@ export class IngestRpc extends WorkerEntrypoint<Env> implements IngestService {
 
 export default {
   async scheduled(controller, env) {
+    log.info("runs.closed_stuck", { closed: await closeStuckRuns(createDb(env.DB), new Date()) });
     const enqueued = await enqueueAllCrawls(env, `cron:${controller.cron}`);
     log.info("cron.enqueued", { enqueued, cron: controller.cron });
     log.info("normalize.retried", { retried: await retryStuckNormalize(env, new Date()) });
