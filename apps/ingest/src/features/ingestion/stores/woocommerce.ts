@@ -78,6 +78,8 @@ const WcProductSchema = z.object({
 });
 type WcProduct = z.infer<typeof WcProductSchema>;
 
+const STOCK_STATUSES = "stock_status[]=instock&stock_status[]=outofstock&stock_status[]=onbackorder&";
+
 export function createWooCommerceAdapter(config: WooCommerceConfig): StoreAdapter {
   const perPage = config.perPage ?? 100;
   const maxPages = config.maxPages ?? 50;
@@ -91,7 +93,9 @@ export function createWooCommerceAdapter(config: WooCommerceConfig): StoreAdapte
           const filter = config.attribute
             ? `attributes[0][attribute]=${config.attribute}&attributes[0][slug][]=${encodeURIComponent(slug)}&`
             : `category=${encodeURIComponent(slug)}&`;
-          const url = `${config.baseUrl}/wp-json/wc/store/v1/products?${filter}per_page=${perPage}&page=${page}`;
+          // Con "ocultar agotados" la Store API omite los agotados: sin pedirlos, una categoría agotada entera llega
+          // vacía, la corrida falla por el resguardo y lo que teníamos sigue con stock (Dazbog, RAM, 16-10-2026).
+          const url = `${config.baseUrl}/wp-json/wc/store/v1/products?${filter}${STOCK_STATUSES}per_page=${perPage}&page=${page}`;
           const res = await ctx.http.get(url);
           await ctx.snapshot(`${slug}/page-${page}.json`, res.text);
 

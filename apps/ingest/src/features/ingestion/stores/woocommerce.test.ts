@@ -36,7 +36,8 @@ function fakeContext(pages: Record<string, { body: unknown; totalPages?: number 
 }
 
 const api = (slug: string, page: number) =>
-  `https://tienda.example/wp-json/wc/store/v1/products?category=${slug}&per_page=2&page=${page}`;
+  `https://tienda.example/wp-json/wc/store/v1/products?category=${slug}&${STOCK}per_page=2&page=${page}`;
+const STOCK = "stock_status[]=instock&stock_status[]=outofstock&stock_status[]=onbackorder&";
 
 describe("adaptador WooCommerce", () => {
   const adapter = createWooCommerceAdapter({
@@ -105,7 +106,7 @@ describe("adaptador WooCommerce", () => {
       categories: { gpu: ["tarjeta-de-video"] },
     });
     const url =
-      "https://tienda.example/wp-json/wc/store/v1/products?attributes[0][attribute]=pa_tipo&attributes[0][slug][]=tarjeta-de-video&per_page=2&page=1";
+      "https://tienda.example/wp-json/wc/store/v1/products?attributes[0][attribute]=pa_tipo&attributes[0][slug][]=tarjeta-de-video&stock_status[]=instock&stock_status[]=outofstock&stock_status[]=onbackorder&per_page=2&page=1";
     const { ctx } = fakeContext({ [url]: { body: [products[0]] } });
     expect(await Array.fromAsync(porAtributo.crawlCategory("gpu", ctx))).toHaveLength(1);
   });
