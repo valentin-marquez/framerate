@@ -24,18 +24,16 @@ export function CategoryPanel({ data }: { data: CatalogData }) {
       {/* El desvanecido de abajo avisa que hay más campos sin poner una barra de scroll gruesa. */}
       <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto overflow-x-hidden [mask-image:linear-gradient(to_bottom,black_calc(100%-24px),transparent)]">
         <FilterPanel data={data} />
-      </div>
-      {count > 0 && (
-        <div className="shrink-0 border-border/60 border-t pt-2">
+        {count > 0 && (
           <Button
             variant="outline"
-            className="w-full"
+            className="mt-4 w-full"
             onClick={() => update({ brand: null, min_price: null, max_price: null, spec: null })}
           >
             Limpiar {count} {count === 1 ? "filtro" : "filtros"}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }
