@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { collapseWhitespace, decodeEntities, fold, searchText, slugify, stripHtml } from "./text";
+import { collapseWhitespace, decodeEntities, fold, htmlLines, searchText, slugify, stripHtml } from "./text";
 
 describe("texto", () => {
   test("fold: minúsculas y sin tildes", () => {
@@ -19,6 +19,22 @@ describe("texto", () => {
     expect(decodeEntities("AMD &amp; Intel &quot;OC&quot; &#8211; &#233; &desconocida;")).toBe(
       'AMD & Intel "OC" - é &desconocida;',
     );
+  });
+
+  test("decodeEntities: tildes, ñ, símbolos y hexadecimales de las fichas (Wei, Winpy, AllTec)", () => {
+    expect(
+      decodeEntities(
+        "Especificaci&oacute;n T&Eacute;CNICA &Ntilde; Intel&reg; Arc&trade; 90&deg; &#x2022; &amp;aacute;",
+      ),
+    ).toBe("Especificación TÉCNICA Ñ Intel® Arc™ 90° • &aacute;");
+  });
+
+  test("htmlLines: una línea por bloque, sin vacías", () => {
+    expect(
+      htmlLines(
+        "<table><tr><td>MEMORIA</td><td>4 GB</td></tr><tr><td>BUS</td><td>64&nbsp;bits</td></tr></table><p></p>Fin<br>",
+      ),
+    ).toBe("MEMORIA 4 GB\nBUS 64 bits\nFin");
   });
 
   test("stripHtml: quita etiquetas, decodifica y colapsa espacios", () => {

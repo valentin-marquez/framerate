@@ -11,11 +11,39 @@ const HTML_ENTITIES: Record<string, string> = {
   "&#8211;": "-",
   "&#8212;": "-",
   "&#8243;": '"',
+  "&reg;": "®",
+  "&trade;": "™",
+  "&copy;": "©",
+  "&deg;": "°",
+  "&ordm;": "º",
+  "&ordf;": "ª",
+  "&bull;": "•",
+  "&middot;": "·",
+  "&hellip;": "...",
+  "&laquo;": "«",
+  "&raquo;": "»",
+  "&iquest;": "¿",
+  "&iexcl;": "¡",
+  "&times;": "x",
+  "&micro;": "µ",
+};
+
+// `&aacute;`, `&Ntilde;`, `&uuml;`…: la letra más su marca combinada.
+const MARKS: Record<string, string> = {
+  acute: "\u0301",
+  grave: "\u0300",
+  tilde: "\u0303",
+  uml: "\u0308",
+  circ: "\u0302",
 };
 
 export function decodeEntities(input: string): string {
   return input
+    .replace(/&#x([\da-f]+);/gi, (_, code) => String.fromCodePoint(Number.parseInt(code, 16)))
     .replace(/&#(\d+);/g, (m, code) => HTML_ENTITIES[m] ?? String.fromCodePoint(Number(code)))
+    .replace(/&([a-z])(acute|grave|tilde|uml|circ);/gi, (m, letter: string, mark: string) =>
+      MARKS[mark] ? `${letter}${MARKS[mark]}`.normalize("NFC") : m,
+    )
     .replace(/&[a-z]+;/gi, (m) => HTML_ENTITIES[m.toLowerCase()] ?? m);
 }
 
