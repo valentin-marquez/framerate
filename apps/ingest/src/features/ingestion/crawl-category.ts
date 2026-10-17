@@ -110,6 +110,10 @@ export async function crawlCategory(
       stats.valid++;
 
       const upsert = await upsertListing(db, storeRow.id, offer, now(), await normHash(offer));
+      if (!upsert) {
+        stats.skippedOutOfStock++;
+        continue;
+      }
       if (upsert.created) stats.created++;
       else stats.updated++;
       if (upsert.priceChanged && !upsert.created) stats.priceChanges++;

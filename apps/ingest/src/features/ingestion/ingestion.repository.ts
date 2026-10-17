@@ -25,6 +25,8 @@ export interface CrawlStats {
   changed: number;
   enqueued: number;
   quarantineNew: number;
+  /** Agotadas que nunca tuvimos: válidas, pero no se guardan. */
+  skippedOutOfStock: number;
 }
 
 export const emptyStats = (): CrawlStats => ({
@@ -41,6 +43,7 @@ export const emptyStats = (): CrawlStats => ({
   changed: 0,
   enqueued: 0,
   quarantineNew: 0,
+  skippedOutOfStock: 0,
 });
 
 /** Dominio de la tienda sin "www." (base del reclamo por DNS). */
@@ -179,7 +182,7 @@ export async function upsertListing(
   offer: NormalizedOffer,
   now: string,
   hash: string,
-): Promise<UpsertResult> {
+): Promise<UpsertResult | null> {
   const existing = await db.query
     .selectFrom("listings")
     .selectAll()
@@ -217,6 +220,10 @@ export async function upsertListing(
     in_stock: fromBool(offer.inStock),
     observed_at: now,
   };
+
+  // WooCommerce trae también los agotados (para bajar el stock de lo que teníamos): uno que nunca vimos no se guarda,
+  // o cada tienda nueva encola miles en Haiku sin que se muestren (7.500 el 17-10-2026). Entra cuando tenga stock.
+  if (!existing && !offer.inStock) return null;
 
   if (!existing) {
     await db.batch([

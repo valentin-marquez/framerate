@@ -176,6 +176,24 @@ describe("la corrida no vincula: encola", () => {
     expect(deps.sent.map((m) => m.reason)).toEqual(["new", "changed"]);
   });
 
+  test("un agotado que nunca tuvimos no se guarda ni se encola; uno conocido sí baja su stock", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const alfa = fakeStore("alfa", { gpu: ["gpu"] });
+    const MSI = { category: "gpu" as const, title: "MSI RTX 4060 Ventus 2X 8GB", priceCash: 320_000 };
+    alfa.setOffers([offer("alfa", "1", GPU), offer("alfa", "2", { ...MSI, inStock: false })]);
+
+    const first = await crawlCategory(deps, alfa.store, "gpu");
+    expect(first.stats).toMatchObject({ valid: 2, created: 1, enqueued: 1, skippedOutOfStock: 1 });
+    expect((await all(deps.db, "listings")).map((l) => l.external_id)).toEqual(["1"]);
+
+    clock.advance(SIX_HOURS);
+    alfa.setOffers([offer("alfa", "1", { ...GPU, inStock: false }), offer("alfa", "2", MSI)]);
+    const second = await crawlCategory(deps, alfa.store, "gpu");
+    expect(second.stats).toMatchObject({ created: 1, priceChanges: 1, skippedOutOfStock: 0 });
+    expect(await listingOf(deps.db, "1")).toMatchObject({ in_stock: 0, is_active: 1 });
+  });
+
   test("la oferta que desaparece antes de normalizarse se desactiva como cualquier otra", async () => {
     const clock = steppingClock();
     const deps = testDeps(d1, clock);
