@@ -155,7 +155,9 @@ describe("pipeline", () => {
   });
 
   test("gasto de IA por propósito, hoy y en el ciclo, con el tope de hoy y aviso al 90 %", async () => {
-    const budgetEnv = testEnv(d1, {}, { ANTHROPIC_MONTHLY_USD: "30", ANTHROPIC_CYCLE_DAY: "17" }).env;
+    // Nunca el día de hoy: si el ciclo empezara hoy, el gasto de su primera hora también sería "hoy".
+    const cycleDay = String((new Date().getUTCDate() % 28) + 1);
+    const budgetEnv = testEnv(d1, {}, { ANTHROPIC_MONTHLY_USD: "30", ANTHROPIC_CYCLE_DAY: cycleDay }).env;
     const withBudget = async () =>
       HealthSchema.parse(
         await (
