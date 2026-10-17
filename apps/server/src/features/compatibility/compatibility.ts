@@ -1,4 +1,5 @@
 import type { Category, CompatCheck, CompatRule, QuoteCompatibility } from "@framerate/contracts";
+import type { PsuTier } from "./psu-tier";
 
 /**
  * Verificador de compatibilidad de una cotización (#127, docs/specs/2026-10-11-compatibilidad.md). Dominio puro: recibe
@@ -93,13 +94,16 @@ export function largestRadiator(v: unknown): number | null {
 
 const label = (s: string) => s.toUpperCase();
 
-/** Consumo estimado: TDP del procesador y de la GPU más 75 W para el resto. `null` si no hay ninguno de los dos. */
+/**
+ * Consumo estimado: procesador y GPU más 75 W para el resto. `null` si no hay ninguno de los dos. Del procesador vale
+ * su potencia máxima de la ficha oficial (#179: un i9-14900K tiene 125 W de TDP y llega a 253 W); si no está, el TDP.
+ */
 function consumption({ cpu, gpu }: Parts): { watts: number } | { missing: Part } | null {
   if (!cpu && !gpu) return null;
   let watts = 75;
   for (const p of [cpu, gpu]) {
     if (!p) continue;
-    const tdp = num(p.facts.tdp_w);
+    const tdp = (p === cpu ? num(p.facts.max_power_w) : null) ?? num(p.facts.tdp_w);
     if (!tdp) return { missing: p };
     watts += tdp * p.quantity;
   }
@@ -277,9 +281,70 @@ const RULES: Rule[] = [
         involved,
         `La fuente de ${watts} W queda justa para unos ${need} W de consumo: conviene un 25 % de margen.`,
       );
+    // El fabricante del chip recomienda una fuente mínima (#180) que considera picos que la suma de TDP no ve.
+    const recommended = gpu ? num(gpu.facts.min_psu_w) : null;
+    if (recommended && watts < recommended)
+      return check(
+        "psu_wattage",
+        "warning",
+        involved,
+        `La fuente de ${watts} W cubre los ${need} W estimados, pero para esta tarjeta el fabricante recomienda al menos ${recommended} W.`,
+      );
     return check("psu_wattage", "ok", involved, `La fuente de ${watts} W cubre los ${need} W estimados.`);
   },
+
+  // Calidad de la fuente (#177): uso interno, los mensajes no muestran el tier ni de dónde sale. Sin tier no hay
+  // chequeo: es una señal de más, no un dato de compatibilidad, y no debe dejar todo en desconocido. Una nota
+  // especulativa (de la marca, propia o con * en la planilla) sólo advierte si todo su rango es E o F: callar ahí
+  // sería recomendar sin respaldo; lo demás especulativo no opina.
+  ({ psu, gpu }) => {
+    const rated = psu?.facts.psu_tier as PsuTier | undefined;
+    if (!psu || !rated) return null;
+    const involved = [psu, gpu].filter((p): p is Part => p !== undefined);
+    // Con un rango de notas (la tienda no dice la revisión) sólo se decide si todo el rango da la misma respuesta.
+    const worst = rated.tier[0] ?? "F";
+    const best = rated.best?.[0] ?? worst;
+    if (rated.limited) {
+      if (best === "F")
+        return check("psu_tier", "warning", [psu], "Hay señales de que esta fuente no es segura: mejor elige otra.");
+      if (best >= "E")
+        return check(
+          "psu_tier",
+          "warning",
+          [psu],
+          "Hay poca información sobre la calidad de esta fuente y lo que hay no es bueno: conviene una de una marca con respaldo.",
+        );
+      return null;
+    }
+    if (best === "F")
+      return check("psu_tier", "warning", [psu], "Esta fuente tiene problemas de seguridad conocidos: elige otra.");
+    if (best >= "E")
+      return check("psu_tier", "warning", [psu], "Esta fuente es de mala calidad: no conviene para ningún equipo.");
+    const need = gpuClass(gpu);
+    if (worst <= need.tier)
+      return check("psu_tier", "ok", involved, `La calidad de la fuente alcanza para ${need.label}.`);
+    if (best > need.tier)
+      return check(
+        "psu_tier",
+        "warning",
+        involved,
+        `La calidad de la fuente queda corta para ${need.label}: conviene una fuente de mejor nivel.`,
+      );
+    return null;
+  },
 ];
+
+/**
+ * Qué nivel de fuente pide el equipo, por el TDP de la GPU. ponytail: umbrales por TDP que tiran a pedir de más
+ * (una 9070 XT de 304 W cae en gama alta); tabla por chipset si molesta.
+ */
+function gpuClass(gpu: Part | undefined): { tier: string; label: string } {
+  if (!gpu) return { tier: "D", label: "un equipo sin tarjeta de video" };
+  const tdp = num(gpu.facts.tdp_w) ?? 0;
+  if (tdp >= 285) return { tier: "A", label: "una tarjeta de gama alta" };
+  if (tdp >= 200) return { tier: "B", label: "una tarjeta de gama media" };
+  return { tier: "C", label: "esta tarjeta" };
+}
 
 const SEVERITY = { ok: 0, unknown: 1, warning: 2, incompatible: 3 } as const;
 const STATUS = { ok: "valid", unknown: "unknown", warning: "warning", incompatible: "incompatible" } as const;

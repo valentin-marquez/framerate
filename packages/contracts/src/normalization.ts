@@ -83,7 +83,16 @@ export const SPEC_FIELDS: Record<Category, readonly string[]> = {
   psu: ["atx_version", "fanless", "length_mm", "pcie_12vhpwr", "pcie_6_plus_2_pin", "sata_connectors"],
   ssd: ["read_speed_mb_s", "write_speed_mb_s", "nand_type", "dram_cache", "tbw", "controller"],
   hdd: ["cache_mb", "usage"],
-  cpu_cooler: ["height_mm", "fan_size_mm", "fan_count", "tdp_rating_w", "sockets"],
+  cpu_cooler: [
+    "height_mm",
+    "fan_size_mm",
+    "fan_count",
+    "tdp_rating_w",
+    "sockets",
+    "ram_clearance_mm",
+    "noise_dba_max",
+    "lighting",
+  ],
   case: [
     "supported_motherboard_form_factors",
     "side_panel",
@@ -92,8 +101,19 @@ export const SPEC_FIELDS: Record<Category, readonly string[]> = {
     "included_fans",
     "radiator_support_mm",
     "front_ports",
+    "max_psu_length_mm",
   ],
-  case_fan: ["rpm_max", "airflow_cfm_max", "pwm"],
+  case_fan: [
+    "rpm_max",
+    "airflow_cfm_max",
+    "pwm",
+    // Desde #181 los completa la referencia por familia; Haiku los llena si la tienda los dice.
+    "static_pressure_mmh2o",
+    "noise_dba_max",
+    "bearing",
+    "lighting",
+    "fan_controller",
+  ],
 };
 
 export const NUMERIC_IDENTITY_FIELDS = new Set([

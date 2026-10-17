@@ -19,6 +19,10 @@ import {
   usageUsd,
 } from "@framerate/matching/normalize";
 import { type Budget, budgetLeftUsd } from "./budget";
+import { cpuReferences, modelKey, withReference } from "./cpu-reference";
+import { fanKey, fanReferences, fillFromFanReference, pickFanReference } from "./fan-reference";
+import { baseChipset, fillFromGpuReference, gpuReferences, pickGpuReference } from "./gpu-reference";
+import { fillFromPartReference, PART_CATEGORIES, partKey, partReferences, pickPartReference } from "./part-reference";
 
 /**
  * Consumidor de `framerate-normalize` (spec 2026-10-08 §1, §4 y §7): una oferta por mensaje, una llamada a Haiku por
@@ -173,6 +177,10 @@ export async function normalizeListing(
     gtin: listing.gtin,
     productId: listing.product_id,
   });
+  const references = category === "cpu" ? await cpuReferences(db, title) : [];
+  const gpus = category === "gpu" ? await gpuReferences(db, title) : [];
+  const fans = category === "case_fan" ? await fanReferences(db, listing.brand) : [];
+  const parts = await partReferences(db, category, listing.brand);
   const input = {
     category,
     title,
@@ -182,6 +190,14 @@ export async function normalizeListing(
     sourceText: listing.source_text,
     store: listing.store,
     catalog,
+    knownModels:
+      category === "gpu"
+        ? [...new Set(gpus.map((r) => baseChipset(r.chipset)))]
+        : category === "case_fan"
+          ? [...new Set(fans.map((r) => r.family.toLowerCase()))]
+          : PART_CATEGORIES.has(category)
+            ? [...new Set(parts.map((r) => r.model.toLowerCase()))]
+            : references.map((r) => r.model),
   };
   let result: NormalizeCall;
   try {
@@ -274,14 +290,42 @@ export async function normalizeListing(
     sameAs,
   });
 
-  const specs: Record<string, IdentityValue> = {};
-  const specsSource: Record<string, "text" | "knowledge"> = {};
+  const haikuSpecs: Record<string, IdentityValue> = {};
+  const haikuSource: Record<string, string> = {};
   const fromKnowledge = new Set(output.specs_from_knowledge);
   for (const [field, value] of Object.entries(output.specs)) {
     if (value === null) continue;
-    specs[field] = value;
-    specsSource[field] = fromKnowledge.has(field) ? "knowledge" : "text";
+    haikuSpecs[field] = value;
+    haikuSource[field] = fromKnowledge.has(field) ? "knowledge" : "text";
   }
+  // Si el modelo es uno de la ficha oficial (#179), sus specs reemplazan las de Haiku.
+  const model = identity.category === "cpu" ? String(identity.identity.model ?? "") : "";
+  const reference = model ? references.find((r) => modelKey(r.model) === modelKey(model)) : undefined;
+  const cpuSpecs = withReference(haikuSpecs, haikuSource, reference, String(identity.identity.packaging ?? ""));
+  // Tarjetas de video (#180): la referencia del chipset sólo completa, lo de la tienda gana.
+  const gpu =
+    identity.category === "gpu"
+      ? pickGpuReference(gpus, String(identity.identity.chipset ?? ""), identity.identity.vram_gb)
+      : undefined;
+  const gpuSpecs = fillFromGpuReference(cpuSpecs.specs, cpuSpecs.source, gpu);
+  // Ventiladores (#181): la ficha del fabricante completa ruido, presión, rodamiento e iluminación.
+  const fanRefs =
+    identity.category !== "case_fan"
+      ? []
+      : identity.brand && fanKey(identity.brand) !== fanKey(listing.brand ?? "")
+        ? await fanReferences(db, identity.brand)
+        : fans;
+  const fan = pickFanReference(fanRefs, String(identity.identity.model ?? ""), identity.identity.size_mm);
+  const fanSpecs = fillFromFanReference(gpuSpecs.specs, gpuSpecs.source, fan);
+  // Coolers y gabinetes (#182): alto, radiador, sockets, largo de GPU, lo que usan las reglas de compatibilidad.
+  const partRefs =
+    !PART_CATEGORIES.has(identity.category) || identity.category !== category
+      ? []
+      : identity.brand && partKey(identity.brand) !== partKey(listing.brand ?? "")
+        ? await partReferences(db, identity.category, identity.brand)
+        : parts;
+  const part = pickPartReference(partRefs, String(identity.identity.model ?? ""), identity.identity.radiator_mm);
+  const { specs, source: specsSource } = fillFromPartReference(fanSpecs.specs, fanSpecs.source, part);
   const row = {
     listing_id: listingId,
     version: NORMALIZER_VERSION,

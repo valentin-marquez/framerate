@@ -645,6 +645,120 @@ export interface SupportMessagesTable {
   created_at: string;
 }
 
+/** Tier de calidad de fuentes de poder (#177, migración 0028). Se reemplaza entera en cada importación. */
+export interface PsuTierTable {
+  id: Generated<number>;
+  brand: string;
+  brand_key: string;
+  series: string;
+  subseries: Defaulted<string>;
+  variant: Defaulted<string>;
+  wattages: JsonText;
+  tier: string;
+  limited: Defaulted<SqlBool>;
+  year: number | null;
+  form_factor: string | null;
+  atx_version: string | null;
+  modular: string | null;
+  efficiency: string | null;
+  odm: string | null;
+  platform: string | null;
+  notes: string | null;
+  source_version: string;
+  /** "sheet" (la tier list), "own" (nota propia desde reseñas) o "brand" (nota base de la marca); las dos últimas, especulativas. */
+  origin: Defaulted<string>;
+  source_urls: string | null;
+  /** Sólo en las filas de marca (`series` = "*"): la mejor nota del rango; `tier` es la peor. */
+  best: string | null;
+}
+
+/** Referencia de procesadores desde las fichas oficiales (#179, migración 0029). Se reemplaza entera al importar. */
+export interface CpuReferenceTable {
+  model: string;
+  brand: string;
+  name: string;
+  number: string;
+  socket: string | null;
+  cores_total: number | null;
+  cores_performance: number | null;
+  cores_efficiency: number | null;
+  threads: number | null;
+  base_ghz: number | null;
+  boost_ghz: number | null;
+  l3_mb: number | null;
+  tdp_w: number | null;
+  max_power_w: number | null;
+  integrated_graphics: string | null;
+  boxed_cooler: string | null;
+  memory_types: string | null;
+  memory_max_mt_s: number | null;
+  launch: string | null;
+  part_numbers: JsonText;
+  source_url: string;
+  unlocked: number | null;
+  pcie_version: string | null;
+  memory_channels: number | null;
+  max_memory_gb: number | null;
+  cooler_recommendation: string | null;
+  codename: string | null;
+  lithography: string | null;
+}
+
+/** Referencia de tarjetas de video por chipset (#180, migración 0031). Se reemplaza entera al importar. */
+export interface GpuReferenceTable {
+  chipset: string;
+  brand: string;
+  name: string;
+  number: string;
+  architecture: string | null;
+  launch: string | null;
+  shader_cores: number | null;
+  board_power_w: number | null;
+  min_psu_w: number | null;
+  power_connectors: string | null;
+  memory_type: string | null;
+  vram_gb: JsonText;
+  memory_bus_bit: number | null;
+  pcie_version: string | null;
+  reference_length_mm: number | null;
+  source_url: string;
+}
+
+/** Referencia de ventiladores por familia y tamaño (#181, migración 0034). Se reemplaza entera al importar. */
+export interface FanReferenceTable {
+  id: Generated<number>;
+  brand: string;
+  brand_key: string;
+  family: string;
+  size_mm: number | null;
+  rpm_min: number | null;
+  rpm_max: number | null;
+  airflow_cfm: number | null;
+  static_pressure_mmh2o: number | null;
+  noise_dba: number | null;
+  bearing: string | null;
+  fan_connector: string | null;
+  lighting: string | null;
+  controller: string | null;
+  requires_controller: number | null;
+  daisy_chain: number | null;
+  warranty_years: number | null;
+  aliases: JsonText;
+  source_url: string | null;
+}
+
+/** Referencia por modelo de coolers y gabinetes (#182, migración 0035), con las specs en JSON. */
+export interface PartReferenceTable {
+  id: Generated<number>;
+  category: string;
+  brand: string;
+  brand_key: string;
+  model: string;
+  specs: JsonText;
+  aliases: JsonText;
+  source_url: string | null;
+}
+
 export interface CatalogVersionTable {
   id: number;
   version: number;
@@ -694,6 +808,11 @@ export interface Database {
   ai_usage: AiUsageTable;
   pipeline_state: PipelineStateTable;
   match_shadow: MatchShadowTable;
+  psu_tier: PsuTierTable;
+  cpu_reference: CpuReferenceTable;
+  gpu_reference: GpuReferenceTable;
+  fan_reference: FanReferenceTable;
+  part_reference: PartReferenceTable;
 }
 
 export type ListingRow = Selectable<ListingsTable>;

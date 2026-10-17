@@ -149,6 +149,17 @@ describe("checkCompatibility", () => {
     expect(checkCompatibility([cpu, gpu]).estimatedWatts).toBe(75 + 105 + 285);
     expect(checkCompatibility([cpu, part("gpu", {})]).estimatedWatts).toBeNull();
   });
+
+  test("bajo la fuente mínima que recomienda el fabricante de la tarjeta, advierte aunque la suma alcance (#180)", () => {
+    const rtx = part("gpu", { tdp_w: 250, min_psu_w: 650 });
+    expect(results([cpu, rtx, part("psu", { wattage: 600 })]).psu_wattage).toBe("warning");
+    expect(results([cpu, rtx, part("psu", { wattage: 650 })]).psu_wattage).toBe("ok");
+  });
+
+  test("del procesador vale su potencia máxima de la ficha oficial si la hay (#179)", () => {
+    const i9 = part("cpu", { socket: "LGA1700", tdp_w: 125, max_power_w: 253 });
+    expect(checkCompatibility([i9, gpu]).estimatedWatts).toBe(75 + 253 + 285);
+  });
 });
 
 describe("highlights", () => {

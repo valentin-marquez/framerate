@@ -15,6 +15,7 @@ export const COMPAT_RULES = [
   "cooler_socket",
   "cooler_missing",
   "psu_wattage",
+  "psu_tier",
 ] as const;
 export type CompatRule = (typeof COMPAT_RULES)[number];
 
