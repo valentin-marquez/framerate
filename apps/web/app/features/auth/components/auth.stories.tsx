@@ -7,11 +7,12 @@ import { LoginCard, LoginDialog } from "./login-dialog";
 
 const meta = {
   title: "Cuenta/Login",
-  // Los proveedores salen del loader raíz; aquí se simulan Discord y Google para ver la jerarquía de botones.
+  // Los proveedores salen del loader raíz; aquí se simulan Google y Discord, en el orden de la API, para ver la
+  // jerarquía de botones (el primero es el destacado).
   parameters: {
     providers: [
-      { id: "discord", label: "Discord" },
       { id: "google", label: "Google" },
+      { id: "discord", label: "Discord" },
     ],
   },
 } satisfies Meta;

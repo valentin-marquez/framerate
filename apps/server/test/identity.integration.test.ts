@@ -70,7 +70,7 @@ describe("configuración de Better Auth", () => {
     const ids = AuthProvidersSchema.parse(await json(await request("/v1/auth/providers", {}, all3))).items.map(
       (p) => p.id,
     );
-    expect(ids).toEqual(["discord", "google", "facebook"]);
+    expect(ids).toEqual(["google", "discord", "facebook"]);
   });
 
   test("cada proveedor habilitado arma su URL de autorización (configuración válida, sin red)", async () => {

@@ -19,8 +19,9 @@ describe("registro de proveedores", () => {
       GOOGLE_CLIENT_ID: "g",
       GOOGLE_CLIENT_SECRET: "g",
     };
-    expect(enabledProviders(env).map((p) => p.id)).toEqual(["discord", "google"]);
-    expect(Object.keys(buildSocialProviders(env))).toEqual(["discord", "google"]);
+    // El orden del registro es el de los botones del login: Google primero.
+    expect(enabledProviders(env).map((p) => p.id)).toEqual(["google", "discord"]);
+    expect(Object.keys(buildSocialProviders(env))).toEqual(["google", "discord"]);
   });
 
   test("las opciones llevan las credenciales de cada proveedor", () => {

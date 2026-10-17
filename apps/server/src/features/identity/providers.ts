@@ -35,7 +35,14 @@ export interface ProviderDefinition {
   options(clientId: string, clientSecret: string): Record<string, unknown>;
 }
 
+// El orden es el de los botones del login: el primero es el destacado.
 export const PROVIDERS: readonly ProviderDefinition[] = [
+  {
+    id: "google",
+    label: "Google",
+    credentials: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+    options: (clientId, clientSecret) => ({ clientId, clientSecret }),
+  },
   {
     id: "discord",
     label: "Discord",
@@ -47,12 +54,6 @@ export const PROVIDERS: readonly ProviderDefinition[] = [
       // El handle de Discord es el mejor candidato de username (la API lo normaliza y lo hace único).
       mapProfileToUser: (profile: { username?: string }) => ({ username: profile.username }),
     }),
-  },
-  {
-    id: "google",
-    label: "Google",
-    credentials: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
-    options: (clientId, clientSecret) => ({ clientId, clientSecret }),
   },
   {
     id: "facebook",
