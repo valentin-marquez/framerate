@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { cn } from "~/shared/lib/utils";
 
 const AD_CLIENT = "ca-pub-9835660497171893";
@@ -16,6 +16,7 @@ declare global {
  */
 export function AdSlot({ slot, className = "h-[100px] @3xl:h-[90px]" }: { slot: string; className?: string }) {
   // El script entra después de hidratar: si viene en el HTML, mete el suyo en el <head> y React no lo reconoce.
+  const pushed = useRef(false);
   useEffect(() => {
     if (!document.querySelector(`script[src="${SCRIPT_SRC}"]`)) {
       const script = document.createElement("script");
@@ -24,8 +25,14 @@ export function AdSlot({ slot, className = "h-[100px] @3xl:h-[90px]" }: { slot: 
       script.crossOrigin = "anonymous";
       document.head.appendChild(script);
     }
-    window.adsbygoogle = window.adsbygoogle ?? [];
-    window.adsbygoogle.push({});
+    // StrictMode corre el efecto dos veces en desarrollo: un segundo push con el <ins> ya ocupado lanza TagError, y como
+    // sale del efecto tumbaba la página entera. Un fallo de AdSense nunca debe llegar al usuario.
+    if (pushed.current) return;
+    pushed.current = true;
+    try {
+      window.adsbygoogle = window.adsbygoogle ?? [];
+      window.adsbygoogle.push({});
+    } catch {}
   }, []);
 
   return (
