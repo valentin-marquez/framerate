@@ -342,26 +342,9 @@ export function Navbar({
           </Link>
         </div>
 
-        {/* El mismo riel con o sin filtros. En una categoría el buscador de verdad va en el panel, bajo el título: la lupa
-            lo despliega si estaba plegado y lo enfoca, en vez de asomar el riel. */}
-        {inCategory ? (
-          <button
-            type="button"
-            aria-label="Buscar productos"
-            onClick={() => {
-              if (panelOpen) focusSearchField();
-              else {
-                setPanelOpen(true);
-                requestAnimationFrame(focusSearchField);
-              }
-            }}
-            className="grid h-10 w-full shrink-0 cursor-pointer place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <IconSearch className="size-4" />
-          </button>
-        ) : (
-          <SearchField className="shrink-0" />
-        )}
+        {/* El riel plegado se ve igual en todas las vistas. En una categoría el buscador va en el panel, bajo el título, y
+            aquí queda el hueco de la lupa, vacío, para que los íconos de abajo no suban. */}
+        {inCategory ? <div aria-hidden="true" className="h-10 shrink-0" /> : <SearchField className="shrink-0" />}
 
         {/* Fijo: sólo scrollea la lista de categorías. Cada zona lleva su píldora de sección activa. */}
         <RailGroup className="flex shrink-0 flex-col gap-4">
