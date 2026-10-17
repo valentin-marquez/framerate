@@ -189,7 +189,8 @@ let hydrated = false;
 
 /**
  * Panel de filtros a la derecha del riel compacto. Siempre montado: abrir y cerrar lo desliza desde detrás del riel
- * (sólo transform y opacity); la caja recorta, así no se ve sobre el riel.
+ * (sólo transform, sin fundido, para que se lea como movimiento de lado a lado); la caja recorta, así no se ve sobre
+ * el riel.
  */
 function FiltersAside({ open, data }: { open: boolean; data: CatalogData }) {
   const [enter] = useState(hydrated);
@@ -204,10 +205,9 @@ function FiltersAside({ open, data }: { open: boolean; data: CatalogData }) {
     >
       <div
         className={cn(
-          "flex h-full flex-col gap-4 border-border/60 border-r bg-card/40 p-3 ease-out motion-reduce:transition-none",
-          "transition-[transform,opacity]",
-          open ? "translate-x-0 opacity-100 duration-base" : "-translate-x-full opacity-0 duration-fast",
-          enter && "fade-in-0 slide-in-from-left-full animate-in duration-base motion-reduce:animate-none",
+          "flex h-full flex-col gap-4 border-border/60 border-r bg-card/40 p-3 transition-transform duration-base ease-in-out motion-reduce:transition-none",
+          open ? "translate-x-0" : "-translate-x-full",
+          enter && "slide-in-from-left-full animate-in duration-base ease-in-out motion-reduce:animate-none",
         )}
       >
         <CategoryPanel data={data} />
