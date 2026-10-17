@@ -5,11 +5,16 @@ import { cn } from "~/shared/lib/utils";
 
 const DEBOUNCE_MS = 250;
 
-/** Enfoca el buscador visible: el navbar monta uno en el riel y otro en la barra del teléfono. */
+// El navbar monta uno en el riel y otro en la barra del teléfono; en una categoría el del riel sigue montado pero
+// inerte (se desvanece), y el que cuenta es el del panel.
+const visibleSearchField = () =>
+  [...document.querySelectorAll<HTMLInputElement>("input[data-search-field]")].find(
+    (el) => el.offsetParent !== null && !el.closest("[inert]"),
+  );
+
+/** Enfoca el buscador visible. */
 export function focusSearchField() {
-  [...document.querySelectorAll<HTMLInputElement>("input[data-search-field]")]
-    .find((el) => el.offsetParent !== null)
-    ?.focus();
+  visibleSearchField()?.focus();
 }
 
 const stopSpotlight = () => delete document.documentElement.dataset.searchSpotlight;
@@ -19,9 +24,7 @@ const stopSpotlight = () => delete document.documentElement.dataset.searchSpotli
  * `[data-search-spotlight]` en app.css). Se levanta al escribir, al salir del campo o con Esc.
  */
 export function startSearchSpotlight() {
-  const input = [...document.querySelectorAll<HTMLInputElement>("input[data-search-field]")].find(
-    (el) => el.offsetParent !== null,
-  );
+  const input = visibleSearchField();
   if (input && !input.value) document.documentElement.dataset.searchSpotlight = "true";
 }
 

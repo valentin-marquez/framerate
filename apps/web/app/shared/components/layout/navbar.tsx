@@ -383,8 +383,17 @@ export function Navbar({
         </div>
 
         {/* El riel plegado se ve igual en todas las vistas. En una categoría el buscador va en el panel, bajo el título, y
-            aquí queda el hueco de la lupa, vacío, para que los íconos de abajo no suban. */}
-        {inCategory ? <div aria-hidden="true" className="h-10 shrink-0" /> : <SearchField className="shrink-0" />}
+            aquí queda el hueco de la lupa, vacío, para que los íconos de abajo no suban: el campo sigue montado y se
+            desvanece, no desaparece de golpe al achicarse el riel. */}
+        <div
+          inert={inCategory}
+          className={cn(
+            "shrink-0 transition-opacity duration-base ease-out",
+            inCategory && "pointer-events-none opacity-0",
+          )}
+        >
+          <SearchField />
+        </div>
 
         {/* Fijo: sólo scrollea la lista de categorías. Cada zona lleva su píldora de sección activa. */}
         <RailGroup className="flex shrink-0 flex-col gap-4">
@@ -452,17 +461,32 @@ export function Navbar({
               </div>
             </div>
           )}
-          {/* Ancho: el botón de tema a la derecha de la cuenta; angosto, sobre ella. */}
-          <div className={cn("flex gap-2", wide ? "items-center" : "flex-col-reverse items-center")}>
-            <div className={cn(wide ? "min-w-0 flex-1" : "w-full")}>
-              <UserMenu
-                align="start"
-                side={wide ? "top" : "right"}
-                railLabel
-                loginClassName="h-9 w-full justify-start gap-2 overflow-hidden rounded-xl px-2.5"
-              />
+          {/* Ancho: el botón de tema a la derecha de la cuenta; angosto, sobre ella. Siempre en el mismo sitio del DOM:
+              sube o baja con transform y la cuenta cede el lugar con el relleno, así no salta al plegar el riel. */}
+          <div className={cn("relative transition-[padding-top] duration-base ease-in-out", !wide && "pt-11")}>
+            <div
+              className={cn(
+                "flex h-12 items-center transition-[padding-right] duration-base ease-in-out",
+                wide && "pr-12",
+              )}
+            >
+              <div className="w-full min-w-0">
+                <UserMenu
+                  align="start"
+                  side={wide ? "top" : "right"}
+                  railLabel
+                  loginClassName="h-9 w-full justify-start gap-2 overflow-hidden rounded-xl px-2.5"
+                />
+              </div>
             </div>
-            <ThemeToggle />
+            <div
+              className={cn(
+                "absolute top-0 right-0 transition-transform duration-base ease-in-out",
+                wide ? "translate-y-1.5" : "-translate-x-0.5",
+              )}
+            >
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </aside>
