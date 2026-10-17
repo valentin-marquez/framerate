@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ProductGrid } from "~/features/explore/components";
-import { brands, catalogData, gpuFacets, specMatchProducts } from "~/shared/storybook/fixtures";
+import { WithAd } from "~/shared/components/ad-slot";
+import { Navbar } from "~/shared/components/layout/navbar";
+import { brands, catalogData, categories, freshness, gpuFacets, specMatchProducts } from "~/shared/storybook/fixtures";
 import { categoryFacets } from "../load-catalog";
 import { ActiveChips } from "./active-chips";
 import { CategoryHeader, SearchHeader } from "./catalog-headers";
@@ -17,6 +19,13 @@ export const CabeceraDeCategoria: Story = {
   name: "Cabecera de categoría",
   render: () => (
     <CategoryHeader category="tarjetas-de-video" total={8} priceRange={{ min: 279_990, max: 939_990 }} brandCount={3} />
+  ),
+};
+
+export const CabeceraDeCategoriaLarga: Story = {
+  name: "Cabecera de categoría con nombre largo",
+  render: () => (
+    <CategoryHeader category="ssd" total={162} priceRange={{ min: 23_900, max: 4_513_087 }} brandCount={33} />
   ),
 };
 
@@ -170,4 +179,35 @@ export const VistaSaturada: Story = {
       })}
     />
   ),
+};
+
+/** El armado de `root.tsx` en la categoría, con el hueco de AdSense a la derecha de la cabecera (todavía sin usar). */
+export const PaginaConAnuncio: Story = {
+  name: "Página de categoría con anuncio",
+  parameters: { layout: "fullscreen", path: "/categoria/tarjetas-de-video", catalog: catalog() },
+  render: () => {
+    const data = catalog();
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Navbar categories={categories} freshness={freshness} initialCollapsed={false} />
+        <div className="flex flex-1 flex-col lg:pl-64">
+          <main className="container mx-auto flex-1 px-4 pt-6 lg:pt-11">
+            <CatalogView
+              data={data}
+              header={
+                <WithAd>
+                  <CategoryHeader
+                    category="tarjetas-de-video"
+                    total={data.meta.total}
+                    priceRange={data.priceRange}
+                    brandCount={data.brands.length}
+                  />
+                </WithAd>
+              }
+            />
+          </main>
+        </div>
+      </div>
+    );
+  },
 };

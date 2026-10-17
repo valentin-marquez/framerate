@@ -21,10 +21,10 @@ export function missingSpecLabel(category: string | null, spec: string[]) {
 }
 
 /**
- * Vista de catálogo: cabecera (foto de la categoría o la consulta buscada), filtros aplicados, barra de orden y
+ * Vista de catálogo: cabecera (la categoría o la consulta buscada), filtros aplicados, barra de orden y
  * paginación fija y grilla paginada. Los filtros de la categoría viven en el riel (`RailFilters`).
- * Con `category` es `/categoria/:slug` y sin ella, `/buscar`. `header` reemplaza la cabecera (lo usan las propuestas
- * de Storybook).
+ * Con `category` es `/categoria/:slug` y sin ella, `/buscar`. `header` reemplaza la cabecera (Storybook la muestra
+ * con el anuncio).
  */
 export function CatalogView({ data, header }: { data: CatalogData; header?: ReactNode }) {
   const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited } = data;

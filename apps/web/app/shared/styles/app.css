@@ -516,27 +516,6 @@
   animation-delay: var(--delay, 0ms);
 }
 
-/* Parallax de la foto de cabecera con el scroll: lo resuelve el compositor (transform), sin JS ni listeners. */
-@keyframes parallax-y {
-  to {
-    transform: translateY(10%) scale(1.06);
-  }
-}
-
-@supports (animation-timeline: scroll()) {
-  .parallax-y {
-    animation: parallax-y linear both;
-    animation-timeline: scroll(root);
-    animation-range: 0 480px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .parallax-y {
-    animation: none;
-  }
-}
-
 /* transitions-dev — copy this :root block into your project once.
    Every transition snippet reads from these semantic names. */
 :root {
@@ -675,6 +654,7 @@
   transition: width var(--transition-duration-base) var(--ease-in-out);
 }
 @media (prefers-reduced-motion: reduce) {
+  /* biome-ignore lint/style/noDescendingSpecificity: el !important ya le gana a la regla de arriba */
   .t-resize {
     /* biome-ignore lint/complexity/noImportantStyles: guard de movimiento reducido del snippet de transitions.dev */
     transition: none !important;
@@ -1043,9 +1023,9 @@
 
 /*
  * Cambio de página: View Transitions de React Router (`<Link viewTransition>`). La página se funde y la foto compartida
- * viaja a su lugar nuevo: `category-photo` (ficha de categoría → cabecera) y `product-photo` (tarjeta → ficha). El
- * nombre tiene que ser único al capturar, o el navegador cancela la transición: las fichas y tarjetas lo llevan sólo
- * durante la suya (`useViewTransitionState` / `isTransitioning` de NavLink).
+ * viaja a su lugar nuevo: `product-photo` (tarjeta → ficha). El nombre tiene que ser único al capturar, o el
+ * navegador cancela la transición: las tarjetas lo llevan sólo durante la suya (`useViewTransitionState` /
+ * `isTransitioning` de NavLink).
  */
 ::view-transition-group(*),
 ::view-transition-old(*),
@@ -1062,14 +1042,11 @@
   animation: none;
 }
 
-::view-transition-group(category-photo),
 ::view-transition-group(product-photo) {
   animation-timing-function: var(--ease-in-out);
 }
 
 /* Origen y destino tienen otra proporción: cada captura llena el grupo recortada, sin estirarse ni desbordar. */
-::view-transition-old(category-photo),
-::view-transition-new(category-photo),
 ::view-transition-old(product-photo),
 ::view-transition-new(product-photo) {
   height: 100%;

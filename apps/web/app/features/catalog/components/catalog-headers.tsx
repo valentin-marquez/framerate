@@ -1,10 +1,15 @@
-import { categoryLabel, getCategoryImage } from "~/features/category/utils/categories";
+import { CATEGORY_NAV_LABELS, categoryFromSlug } from "@framerate/contracts";
 import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import type { CatalogData } from "../load-catalog";
 
-/** Cabecera de una categoría: foto con los bordes difuminados y tres datos rápidos. */
+const count = (n: number, one: string, many: string) => `${n.toLocaleString("es-CL")} ${n === 1 ? one : many}`;
+
+/**
+ * Cabecera de una categoría, en dos tonos (Apple Store, "The latest. Take a look at what's new."): el nombre corto del
+ * riel y, en gris, cuántos productos hay y desde cuánto. El nombre largo queda en el `<title>`.
+ */
 export function CategoryHeader({
   category,
   total,
@@ -16,34 +21,32 @@ export function CategoryHeader({
   priceRange: CatalogData["priceRange"];
   brandCount: number;
 }) {
+  const id = categoryFromSlug(category);
   const stats = [
-    total > 0 && `${total.toLocaleString("es-CL")} ${total === 1 ? "producto" : "productos"}`,
-    priceRange?.max && `${formatCLP(priceRange.min ?? 0)} a ${formatCLP(priceRange.max)}`,
-    brandCount > 0 && `${brandCount} ${brandCount === 1 ? "marca" : "marcas"}`,
+    brandCount > 0 && count(brandCount, "marca", "marcas"),
+    total > 1 && priceRange?.max && `hasta ${formatCLP(priceRange.max)}`,
   ].filter(Boolean);
 
   return (
-    <header className="relative isolate overflow-hidden rounded-3xl" style={{ viewTransitionName: "category-photo" }}>
-      <img
-        src={getCategoryImage(category)}
-        alt=""
-        fetchPriority="high"
-        className="parallax-y absolute inset-0 -z-10 size-full object-cover opacity-90 grayscale [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_92%)]"
-      />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/60 to-transparent md:via-background/40" />
-      <div className="flex min-h-56 flex-col justify-end gap-3 p-6 pt-24 md:min-h-72 md:p-10 md:pt-32">
-        <h1 className={cn("text-title-h4 text-foreground md:text-title-h2", enterClass())}>
-          {categoryLabel(category)}
-        </h1>
+    <header className="space-y-3 pt-2 md:pt-6">
+      <h1 className={cn("text-pretty text-title-h4 md:text-title-h2", enterClass())}>
+        <span className="text-foreground">{id ? CATEGORY_NAV_LABELS[id] : category}.</span>{" "}
+        <span className="text-muted-foreground">
+          {total > 0
+            ? `${count(total, "producto", "productos")}${priceRange?.min ? ` desde ${formatCLP(priceRange.min)}` : ""}.`
+            : "Sin productos con stock por ahora."}
+        </span>
+      </h1>
+      {stats.length > 0 && (
         <ul
-          className={cn("flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm", enterClass())}
+          className={cn("flex flex-wrap gap-x-4 gap-y-1 text-label-sm text-muted-foreground", enterClass())}
           style={enterStyle(90)}
         >
           {stats.map((s) => (
             <li key={String(s)}>{s}</li>
           ))}
         </ul>
-      </div>
+      )}
     </header>
   );
 }
