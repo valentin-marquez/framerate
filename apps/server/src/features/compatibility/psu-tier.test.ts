@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { checkCompatibility, type Part } from "./compatibility";
-import { brandKeys, matchPsuTier, parsePsuTiers } from "./psu-tier";
+import { brandKeys, matchPsuTier, parsePsuTiers, parseWattages } from "./psu-tier";
 
 // Encabezado y filas con la forma de la pestaña "Full List": marca, serie, subserie y variante sólo en la primera fila.
 const CSV = `"Brand","Series ","","","Wattages ","Tier ","Year","Size","ATX","Input","Modularity","Efficiency","Prim","Sec","Reg","ODM","Platform","Notes"
@@ -54,7 +54,7 @@ describe("vínculo de una fuente del catálogo", () => {
     expect(matchPsuTier(name, watts, of(brand))?.tier).toBe(tier);
   });
 
-  test("el año de la variante no se exige; lo que queda empatado con letras distintas no tiene tier", () => {
+  test("el año de la variante no se exige; lo empatado devuelve el rango de notas", () => {
     expect(matchPsuTier("Corsair RM850x 850W 80 Plus Gold", 850, of("corsair"))?.tier).toBe("A");
     expect(matchPsuTier("Corsair RM850x Shift 850W 80 Plus Gold", 850, of("corsair"))?.tier).toBe("B+");
     const sameYearless = [
@@ -62,8 +62,50 @@ describe("vínculo de una fuente del catálogo", () => {
       { series: "CX", subseries: "2023 (Black Label)", variant: "", wattages: [750], tier: "C", limited: false },
       { series: "CX", subseries: "2016", variant: "", wattages: [750], tier: "B", limited: false },
     ];
-    expect(matchPsuTier("Corsair CX750 750W", 750, sameYearless)).toBeNull();
-    expect(matchPsuTier("Corsair CX750 750W", 750, sameYearless.slice(0, 2))?.tier).toBe("C-");
+    expect(matchPsuTier("Corsair CX750 750W", 750, sameYearless)).toMatchObject({ tier: "C-", best: "B" });
+    expect(matchPsuTier("Corsair CX750 750W", 750, sameYearless.slice(0, 2))).toMatchObject({ tier: "C-", best: "C" });
+  });
+
+  const row = (series: string, subseries: string, variant: string, wattages: number[], tier: string) => ({
+    series,
+    subseries,
+    variant,
+    wattages,
+    tier,
+    limited: false,
+  });
+
+  test("un rango de potencias cubre las de por medio", () => {
+    expect(parseWattages("550-850W")).toEqual([550, 600, 650, 700, 750, 800, 850]);
+    expect(parseWattages("650/750/850W")).toEqual([650, 750, 850]);
+  });
+
+  test("la abreviatura entre paréntesis vale por el nombre, y las palabras descriptivas no se exigen", () => {
+    const antec = [
+      row("Cuprum Strike (CSK)", "", "Bronze", [550], "E"),
+      row("High Current Gamer (HCG)", "", "Pro Platinum ATX 3.1", [1000], "A"),
+      row("GSK ATX 3.1", "", "V2", [850], "B"),
+    ];
+    expect(matchPsuTier("Antec CSK550 550W 80 Plus Bronze", 550, antec)?.tier).toBe("E");
+    expect(matchPsuTier("Antec HCG1000 PRO Platinum 1000W", 1000, antec)?.tier).toBe("A");
+    expect(matchPsuTier("Antec GSK850 V2 850W 80 Plus Gold", 850, antec)?.tier).toBe("B");
+  });
+
+  test("80 Plus no es la variante Plus, y GF no calza con GF1 si hay una fila de GF1", () => {
+    const tt = [
+      row("Toughpower", "GF", "Plus", [750], "A"),
+      row("Toughpower", "GF A3", "Global (FAGK-H)", [750], "B"),
+      row("Toughpower", "GF1", "Snow", [750], "A+"),
+      row("Toughpower", "GF1", "", [750], "A+"),
+    ];
+    expect(matchPsuTier("Thermaltake Toughpower GF A3 750W 80 Plus Gold", 750, tt)?.tier).toBe("B");
+    expect(matchPsuTier("Thermaltake Toughpower GF1 750W 80 Plus Gold", 750, tt)?.tier).toBe("A+");
+  });
+
+  test("una serie de una letra calza si va pegada a la potencia", () => {
+    const nzxt = [row("C Series", "Gold", "ATX 3.1 (2024)", [850], "A+")];
+    expect(matchPsuTier("NZXT C850 Gold ATX 3.1 850W", 850, nzxt)?.tier).toBe("A+");
+    expect(matchPsuTier("NZXT 850W Gold Modular", 850, nzxt)).toBeNull();
   });
 
   test("sin serie en el nombre o sin la potencia en la fila no hay vínculo", () => {
@@ -77,12 +119,12 @@ describe("vínculo de una fuente del catálogo", () => {
 });
 
 describe("regla psu_tier", () => {
-  const psu = (tier: string, limited = false): Part => ({
+  const psu = (tier: string, limited = false, best = tier): Part => ({
     itemId: 1,
     name: "Fuente",
     category: "psu",
     quantity: 1,
-    facts: { wattage: 1000, psu_tier: { tier, limited } },
+    facts: { wattage: 1000, psu_tier: { tier, best, limited } },
   });
   const gpu = (tdp: number): Part => ({ itemId: 2, name: "GPU", category: "gpu", quantity: 1, facts: { tdp_w: tdp } });
   const tierCheck = (parts: Part[]) => checkCompatibility(parts).checks.find((c) => c.rule === "psu_tier");
@@ -97,6 +139,13 @@ describe("regla psu_tier", () => {
     ["F", 115, "warning"],
   ] as const)("tier %s con una GPU de %i W: %s", (tier, tdp, result) => {
     expect(tierCheck([psu(tier), gpu(tdp)])?.result).toBe(result);
+  });
+
+  test("con un rango de notas sólo decide si todo el rango da la misma respuesta", () => {
+    expect(tierCheck([psu("C", false, "B"), gpu(250)])).toBeUndefined();
+    expect(tierCheck([psu("C", false, "B"), gpu(115)])?.result).toBe("ok");
+    expect(tierCheck([psu("C", false, "B"), gpu(360)])?.result).toBe("warning");
+    expect(tierCheck([psu("F", false, "E"), gpu(115)])?.message).toMatch(/mala calidad/);
   });
 
   test("sin GPU basta una fuente de nivel D", () => {

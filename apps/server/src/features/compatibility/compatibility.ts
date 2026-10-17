@@ -299,20 +299,24 @@ const RULES: Rule[] = [
     const rated = psu?.facts.psu_tier as PsuTier | undefined;
     if (!psu || !rated || rated.limited) return null;
     const involved = [psu, gpu].filter((p): p is Part => p !== undefined);
-    const letter = rated.tier[0] ?? "F";
-    if (letter === "F")
+    // Con un rango de notas (la tienda no dice la revisión) sólo se decide si todo el rango da la misma respuesta.
+    const worst = rated.tier[0] ?? "F";
+    const best = rated.best?.[0] ?? worst;
+    if (best === "F")
       return check("psu_tier", "warning", [psu], "Esta fuente tiene problemas de seguridad conocidos: elige otra.");
-    if (letter === "E")
+    if (best >= "E")
       return check("psu_tier", "warning", [psu], "Esta fuente es de mala calidad: no conviene para ningún equipo.");
     const need = gpuClass(gpu);
-    return letter <= need.tier
-      ? check("psu_tier", "ok", involved, `La calidad de la fuente alcanza para ${need.label}.`)
-      : check(
-          "psu_tier",
-          "warning",
-          involved,
-          `La calidad de la fuente queda corta para ${need.label}: conviene una fuente de mejor nivel.`,
-        );
+    if (worst <= need.tier)
+      return check("psu_tier", "ok", involved, `La calidad de la fuente alcanza para ${need.label}.`);
+    if (best > need.tier)
+      return check(
+        "psu_tier",
+        "warning",
+        involved,
+        `La calidad de la fuente queda corta para ${need.label}: conviene una fuente de mejor nivel.`,
+      );
+    return null;
   },
 ];
 
