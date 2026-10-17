@@ -50,7 +50,7 @@ export function CatalogView({ data }: { data: CatalogData }) {
         </p>
       )}
 
-      <WithAd slot="3200722793">
+      <WithAd slot={category ? "3200722793" : "8952577073"}>
         {category ? (
           <CategoryHeader
             category={category}
