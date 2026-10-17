@@ -27,6 +27,8 @@ export type FacetValue = z.infer<typeof FacetValueSchema>;
 export const FacetSchema = z.object({
   key: z.string(),
   label: z.string(),
+  /** Filtro de un solo valor que cumple ese valor o más (`min`) o menos (`max`); sus conteos son acumulados. */
+  threshold: z.enum(["min", "max"]).optional(),
   values: z.array(FacetValueSchema),
   /** Productos con stock sin este dato: aparecen al final si se filtra por la faceta. */
   unknownCount: z.number().int().nonnegative(),

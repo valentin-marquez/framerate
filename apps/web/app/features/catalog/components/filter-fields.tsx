@@ -13,8 +13,18 @@ export interface FieldOption {
 
 const SEARCH_FROM = 8;
 
-/** Una fila de valor: caja, etiqueta y conteo. Sin resultados queda apagada, salvo que ya esté marcada. */
-function Option({ option, on, onClick }: { option: FieldOption; on: boolean; onClick: () => void }) {
+/** Una fila de valor: caja (círculo si se elige uno solo), etiqueta y conteo. Sin resultados queda apagada, salvo que ya esté marcada. */
+function Option({
+  option,
+  on,
+  single,
+  onClick,
+}: {
+  option: FieldOption;
+  on: boolean;
+  single?: boolean;
+  onClick: () => void;
+}) {
   const empty = option.count === 0 && !on;
   return (
     <button
@@ -30,7 +40,8 @@ function Option({ option, on, onClick }: { option: FieldOption; on: boolean; onC
     >
       <span
         className={cn(
-          "grid size-4 shrink-0 place-items-center rounded-md border transition-colors",
+          "grid size-4 shrink-0 place-items-center border transition-colors",
+          single ? "rounded-full" : "rounded-md",
           on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background",
         )}
       >
@@ -56,10 +67,12 @@ interface FieldProps {
   onClear: () => void;
   /** Nota al pie de la lista (los productos sin el dato, por ejemplo). */
   note?: string;
+  /** Se elige un solo valor (un mínimo o un máximo): elegirlo cierra la lista. */
+  single?: boolean;
 }
 
 /** Valores con casilla y conteo: se pueden elegir varios y la lista queda abierta. Con muchos, se busca. */
-function OptionList({ label, options, selected, onToggle, onClear, note }: FieldProps) {
+function OptionList({ label, options, selected, onToggle, onClear, note, single }: FieldProps) {
   const [query, setQuery] = useState("");
   const found = query ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase())) : options;
   return (
@@ -84,7 +97,13 @@ function OptionList({ label, options, selected, onToggle, onClear, note }: Field
           </p>
         )}
         {found.map((o) => (
-          <Option key={o.value} option={o} on={selected.includes(o.value)} onClick={() => onToggle(o.value)} />
+          <Option
+            key={o.value}
+            option={o}
+            on={selected.includes(o.value)}
+            single={single}
+            onClick={() => onToggle(o.value)}
+          />
         ))}
       </div>
       {note && <p className="px-2.5 pt-1.5 text-muted-foreground text-paragraph-xs">{note}</p>}
@@ -138,8 +157,17 @@ const field = (active: boolean) =>
  * (no empuja a los demás ni agranda el panel); en una hoja (`inline`), donde un flotante se recortaría, se despliega
  * debajo del campo. `data-rail-popup` avisa al riel de que el foco sigue dentro de él.
  */
-export function FilterField({ inline, ...props }: FieldProps & { inline?: boolean }) {
+export function FilterField({ inline, ...given }: FieldProps & { inline?: boolean }) {
   const [open, setOpen] = useState(false);
+  const props = given.single
+    ? {
+        ...given,
+        onToggle: (value: string) => {
+          given.onToggle(value);
+          setOpen(false);
+        },
+      }
+    : given;
   const active = props.selected.length > 0;
 
   if (inline) {
@@ -158,7 +186,7 @@ export function FilterField({ inline, ...props }: FieldProps & { inline?: boolea
   }
 
   return (
-    <Popover.Root>
+    <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger className={field(active)}>
         <FieldFace {...props} />
       </Popover.Trigger>

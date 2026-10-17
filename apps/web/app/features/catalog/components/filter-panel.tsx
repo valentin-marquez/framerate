@@ -1,4 +1,4 @@
-import { facetValueLabel } from "@framerate/contracts";
+import { facetOptionLabel } from "@framerate/contracts";
 import { type CatalogData, categoryFacets } from "../load-catalog";
 import { specValue, useFilterParams } from "../use-filter-params";
 import { type FieldOption, FilterField, PriceSlider } from "./filter-fields";
@@ -80,8 +80,9 @@ export function FilterPanel({
             key={f.key}
             inline={inline}
             label={f.label}
-            options={withSelected(f.values, selected, (v) => facetValueLabel(def, v))}
+            options={withSelected(f.values, selected, (v) => facetOptionLabel(def, v))}
             selected={selected}
+            single={!!def.threshold}
             note={
               f.unknownCount > 0
                 ? `${f.unknownCount.toLocaleString("es-CL")} sin este dato ${f.unknownCount === 1 ? "aparece" : "aparecen"} al final`
@@ -89,7 +90,9 @@ export function FilterPanel({
             }
             onToggle={(value) => {
               const token = `${f.key}:${value}`;
-              update({ spec: specs.includes(token) ? specs.filter((t) => t !== token) : [...specs, token] });
+              // Un mínimo o un máximo es uno solo: elegir otro valor reemplaza al anterior.
+              const others = def.threshold ? specs.filter((t) => specValue(t, f.key) === null) : specs;
+              update({ spec: specs.includes(token) ? specs.filter((t) => t !== token) : [...others, token] });
             }}
             onClear={() => update({ spec: specs.filter((t) => specValue(t, f.key) === null) })}
           />

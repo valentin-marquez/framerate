@@ -209,12 +209,14 @@ export const brands = [
 export const gpuFacets: Facet[] = [
   {
     key: "vram",
-    label: "Memoria",
+    label: "Memoria mínima",
+    threshold: "min",
+    // Acumulado: cada valor cuenta los productos con ese valor o más.
     values: [
-      { value: "6", label: "6 GB", count: 1 },
-      { value: "8", label: "8 GB", count: 5 },
-      { value: "12", label: "12 GB", count: 2 },
-      { value: "16", label: "16 GB", count: 3 },
+      { value: "6", label: "6 GB o más", count: 11 },
+      { value: "8", label: "8 GB o más", count: 10 },
+      { value: "12", label: "12 GB o más", count: 5 },
+      { value: "16", label: "16 GB o más", count: 3 },
     ],
     unknownCount: 12,
   },

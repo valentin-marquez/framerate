@@ -18,6 +18,11 @@ export interface FacetDefinition {
   unit?: string;
   /** Etiquetas de valores categóricos; los que no estén se muestran tal cual. */
   values?: Record<string, string>;
+  /**
+   * Umbral en vez de valor exacto: se elige un solo valor y cumple ese valor o más (`min`) o ese valor o menos (`max`).
+   * Con `values`, el orden de sus claves (de menor a mayor) es el de la escala (la certificación 80 Plus).
+   */
+  threshold?: "min" | "max";
 }
 
 const MEMORY_TYPES = { ddr3: "DDR3", ddr4: "DDR4", ddr5: "DDR5" };
@@ -28,14 +33,14 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
   gpu: [
     { key: "chipMaker", label: "Fabricante del chip", values: { nvidia: "NVIDIA", amd: "AMD", intel: "Intel" } },
     { key: "chipset", label: "Modelo" },
-    { key: "vram", label: "Memoria", unit: "GB" },
+    { key: "vram", label: "Memoria mínima", unit: "GB", threshold: "min" },
     { key: "memory_type", label: "Tipo de memoria", source: "specs" },
-    { key: "memory_bus_bit", label: "Bus de memoria", unit: "bits", source: "specs" },
+    { key: "memory_bus_bit", label: "Bus de memoria mínimo", unit: "bits", source: "specs", threshold: "min" },
   ],
   cpu: [
     { key: "model", label: "Modelo" },
     { key: "socket", label: "Socket", source: "specs" },
-    { key: "cores_total", label: "Núcleos", unit: "núcleos", source: "specs" },
+    { key: "cores_total", label: "Núcleos mínimos", unit: "núcleos", source: "specs", threshold: "min" },
     {
       key: "includes_cooler",
       label: "Disipador",
@@ -49,23 +54,24 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     { key: "formFactor", label: "Formato", values: { eatx: "E-ATX", atx: "ATX", matx: "Micro ATX", itx: "Mini ITX" } },
     { key: "memory", label: "Memoria", values: MEMORY_TYPES },
     { key: "wifi", label: "Wi-Fi", values: YES_NO("Con Wi-Fi", "Sin Wi-Fi") },
-    { key: "m2_slots", label: "Ranuras M.2", unit: "M.2", source: "specs" },
-    { key: "memory_slots", label: "Ranuras de memoria", unit: "ranuras", source: "specs" },
+    { key: "m2_slots", label: "Ranuras M.2 mínimas", unit: "M.2", source: "specs", threshold: "min" },
+    { key: "memory_slots", label: "Ranuras de memoria mínimas", unit: "ranuras", source: "specs", threshold: "min" },
   ],
   ram: [
     { key: "type", label: "Tipo", values: MEMORY_TYPES },
-    { key: "capacity", label: "Capacidad", unit: "GB" },
-    { key: "speed", label: "Velocidad", unit: "MT/s" },
+    { key: "capacity", label: "Capacidad mínima", unit: "GB", threshold: "min" },
+    { key: "speed", label: "Velocidad mínima", unit: "MT/s", threshold: "min" },
     { key: "modules", label: "Módulos", values: { "1": "1 módulo", "2": "Kit de 2", "4": "Kit de 4" } },
     { key: "formFactor", label: "Formato", values: { dimm: "PC (DIMM)", sodimm: "Notebook (SO-DIMM)" } },
-    { key: "casLatency", label: "Latencia", unit: "CL" },
+    { key: "casLatency", label: "Latencia máxima", unit: "CL", threshold: "max" },
     { key: "rgb", label: "Iluminación", values: YES_NO("Con RGB", "Sin RGB") },
   ],
   psu: [
-    { key: "wattage", label: "Potencia", unit: "W" },
+    { key: "wattage", label: "Potencia mínima", unit: "W", threshold: "min" },
     {
       key: "efficiency",
-      label: "Certificación",
+      label: "Certificación mínima",
+      threshold: "min",
       values: {
         white: "80 Plus",
         bronze: "80 Plus Bronze",
@@ -79,13 +85,13 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     { key: "formFactor", label: "Formato", values: { atx: "ATX", sfx: "SFX" } },
   ],
   ssd: [
-    { key: "capacity", label: "Capacidad", unit: "GB" },
+    { key: "capacity", label: "Capacidad mínima", unit: "GB", threshold: "min" },
     { key: "interface", label: "Interfaz", values: { nvme: "NVMe", sata: "SATA" } },
     { key: "formFactor", label: "Formato", values: { "2.5": '2,5"', "2230": "M.2 2230", "2280": "M.2 2280" } },
     { key: "pcieGen", label: "PCIe", values: { "3": "PCIe 3.0", "4": "PCIe 4.0", "5": "PCIe 5.0" } },
   ],
   hdd: [
-    { key: "capacity", label: "Capacidad", unit: "GB" },
+    { key: "capacity", label: "Capacidad mínima", unit: "GB", threshold: "min" },
     { key: "rpm", label: "Velocidad", unit: "RPM" },
     { key: "formFactor", label: "Formato", values: { "2.5": '2,5"', "3.5": '3,5"' } },
   ],
@@ -145,6 +151,19 @@ export function facetValueLabel(facet: FacetDefinition, value: string): string {
   }
   if (facet.unit === "CL") return `CL${value}`;
   return facet.unit ? `${value} ${facet.unit}` : value.toUpperCase();
+}
+
+/** Valor como opción de un filtro con umbral: "12 GB o más", "CL16 o menos", "80 Plus Gold o superior". */
+export function facetOptionLabel(facet: FacetDefinition, value: string): string {
+  const label = facetValueLabel(facet, value);
+  if (facet.threshold === "max") return `${label} o menos`;
+  if (facet.threshold === "min") return `${label}${facet.values ? " o superior" : " o más"}`;
+  return label;
+}
+
+/** Valores de una faceta con umbral y escala propia (la certificación), de menor a mayor; null si compara por número. */
+export function facetScale(facet: FacetDefinition): string[] | null {
+  return facet.threshold && facet.values ? Object.keys(facet.values) : null;
 }
 
 export function facetsFor(category: Category): FacetDefinition[] {

@@ -1,4 +1,4 @@
-import { type BrandCount, type FacetDefinition, facetValueLabel } from "@framerate/contracts";
+import { type BrandCount, type FacetDefinition, facetOptionLabel } from "@framerate/contracts";
 import { IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatCLP } from "~/shared/utils/format";
@@ -32,7 +32,7 @@ export function ActiveChips({ brands, definitions }: { brands: BrandCount[]; def
   for (const token of specs) {
     const facet = definitions.find((f) => specValue(token, f.key) !== null);
     if (!facet) continue;
-    const label = `${facet.label}: ${facetValueLabel(facet, specValue(token, facet.key) ?? "")}`;
+    const label = `${facet.label}: ${facetOptionLabel(facet, specValue(token, facet.key) ?? "")}`;
     chips.push({ label, clear: { spec: specs.filter((t) => t !== token) } });
   }
   if (params.get("q")) chips.push({ label: `“${params.get("q")}”`, clear: { q: null } });

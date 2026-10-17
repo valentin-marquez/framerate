@@ -103,6 +103,11 @@ beforeAll(async () => {
   const gpu16 = await seed("GPU 16", "gpu", '{"chipset":"rtx 5070 ti","vram":16.0}', 800_000, null);
   const gpu8 = await seed("GPU 8", "gpu", '{"chipset":"rx 9060 xt","vram":8}', 300_000, null);
   await seed("GPU sin vram", "gpu", '{"chipset":"rtx 5070"}', 650_000, null);
+  await seed("RAM CL16", "ram", '{"capacity":16,"casLatency":16}', 50_000, null);
+  await seed("RAM CL30", "ram", '{"capacity":32,"casLatency":30}', 90_000, null);
+  await seed("Fuente Bronze", "psu", '{"wattage":650,"efficiency":"bronze"}', 60_000, null);
+  await seed("Fuente Gold", "psu", '{"wattage":850,"efficiency":"gold"}', 110_000, null);
+  await seed("Fuente Platinum", "psu", '{"wattage":1000,"efficiency":"platinum"}', 180_000, null);
   // Specs por oferta: se escribe distinto entre tiendas, `knowledge` no filtra y manda la última versión.
   await identity(gpu12, 1, { memory_type: "GDDR6" }, { memory_type: "text" });
   await identity(gpu12, 2, { memory_type: "gddr 7" }, { memory_type: "text" });
@@ -137,18 +142,52 @@ describe("filtro por especificación", () => {
     expect(rows(await list("category=motherboard&spec=wifi:false"))).toEqual([["Placa B", "match"]]);
   });
 
-  test("OR dentro de una clave, AND entre claves, y reales enteros como enteros", async () => {
-    expect(rows(await list("category=gpu&spec=vram:12&spec=vram:16&sort=price_asc"))).toEqual([
+  test("OR dentro de una clave y AND entre claves", async () => {
+    expect(rows(await list("category=gpu&spec=chipset:rtx 5070&spec=chipset:rx 9060 xt&sort=price_asc"))).toEqual([
+      ["GPU 8", "match"],
+      ["GPU 12", "match"],
+      ["GPU sin vram", "match"],
+    ]);
+    const page = await list("category=gpu&spec=chipset:rtx 5070&spec=chipset:rtx 5070 ti&spec=vram:12&sort=price_asc");
+    expect(rows(page)).toEqual([
       ["GPU 12", "match"],
       ["GPU 16", "match"],
       ["GPU sin vram", "unknown"],
     ]);
-    const page = await list("category=gpu&spec=vram:12&spec=vram:16&spec=chipset:rtx 5070&sort=price_asc");
-    expect(rows(page)).toEqual([
+    expect(page.specUnknown).toBe(1);
+  });
+
+  test("umbral mínimo: ese valor o más, con reales enteros como enteros y los sin dato al final", async () => {
+    expect(rows(await list("category=gpu&spec=vram:12&sort=price_asc"))).toEqual([
       ["GPU 12", "match"],
+      ["GPU 16", "match"],
       ["GPU sin vram", "unknown"],
     ]);
-    expect(page.specUnknown).toBe(1);
+    expect(rows(await list("category=gpu&spec=vram:16&sort=price_asc"))).toEqual([
+      ["GPU 16", "match"],
+      ["GPU sin vram", "unknown"],
+    ]);
+    // Con varios valores manda el menos exigente.
+    expect((await list("category=gpu&spec=vram:12&spec=vram:16")).total).toBe(3);
+  });
+
+  test("umbral máximo: ese valor o menos", async () => {
+    expect(rows(await list("category=ram&spec=casLatency:16"))).toEqual([["RAM CL16", "match"]]);
+    expect(rows(await list("category=ram&spec=casLatency:30&sort=price_asc"))).toEqual([
+      ["RAM CL16", "match"],
+      ["RAM CL30", "match"],
+    ]);
+  });
+
+  test("umbral con escala: la certificación compara por posición, no por texto", async () => {
+    expect(rows(await list("category=psu&spec=efficiency:gold&sort=price_asc"))).toEqual([
+      ["Fuente Gold", "match"],
+      ["Fuente Platinum", "match"],
+    ]);
+    expect((await list("category=psu&spec=efficiency:bronze")).total).toBe(3);
+    expect(rows(await list("category=psu&spec=efficiency:gold&spec=wattage:900"))).toEqual([
+      ["Fuente Platinum", "match"],
+    ]);
   });
 
   test("sin spec no hay specMatch ni specUnknown; referencePrice en listado y ficha", async () => {
@@ -169,7 +208,7 @@ describe("filtro por especificación", () => {
     expect(res.status).toBe(400);
     expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("invalid_request");
     const page = await list("spec=nada:1");
-    expect(page.total).toBe(8);
+    expect(page.total).toBe(13);
     expect(page.specUnknown).toBeUndefined();
   });
 });
@@ -255,19 +294,45 @@ describe("facetas", () => {
 
   test("valores con unidad en orden numérico, con deals y 400 por clave ajena", async () => {
     const vram = await facet("tarjetas-de-video", "vram");
+    // Es un umbral: cada valor cuenta los productos con ese valor o más.
     expect(vram).toEqual({
       key: "vram",
-      label: "Memoria",
+      label: "Memoria mínima",
+      threshold: "min",
       values: [
-        { value: "8", label: "8 GB", count: 1 },
-        { value: "12", label: "12 GB", count: 1 },
-        { value: "16", label: "16 GB", count: 1 },
+        { value: "8", label: "8 GB o más", count: 3 },
+        { value: "12", label: "12 GB o más", count: 2 },
+        { value: "16", label: "16 GB o más", count: 1 },
       ],
       unknownCount: 1,
     });
     const memory = await facet("placas-madre", "memory", "deals=1");
     expect(memory).toMatchObject({ values: [{ value: "ddr5", count: 1 }], unknownCount: 1 });
     expect((await get("/v1/categories/placas-madre/facets?spec=vram:12")).status).toBe(400);
+  });
+
+  test("umbrales: el máximo cuenta hacia abajo, la escala de certificación en su orden, y se ignora el propio filtro", async () => {
+    expect(await facet("memorias-ram", "casLatency")).toEqual({
+      key: "casLatency",
+      label: "Latencia máxima",
+      threshold: "max",
+      values: [
+        { value: "16", label: "CL16 o menos", count: 1 },
+        { value: "30", label: "CL30 o menos", count: 2 },
+      ],
+      unknownCount: 0,
+    });
+    expect((await facet("fuentes-de-poder", "efficiency"))?.values).toEqual([
+      { value: "bronze", label: "80 Plus Bronze o superior", count: 3 },
+      { value: "gold", label: "80 Plus Gold o superior", count: 2 },
+      { value: "platinum", label: "80 Plus Platinum o superior", count: 1 },
+    ]);
+    // Con 850 W o más sólo quedan la Gold y la Platinum, y el filtro propio de la certificación no acota sus opciones.
+    const efficiency = await facet("fuentes-de-poder", "efficiency", "spec=efficiency:platinum&spec=wattage:850");
+    expect(efficiency?.values).toEqual([
+      { value: "gold", label: "80 Plus Gold o superior", count: 2 },
+      { value: "platinum", label: "80 Plus Platinum o superior", count: 1 },
+    ]);
   });
 
   test("specs de las ofertas: sólo origen text, última versión, texto normalizado", async () => {

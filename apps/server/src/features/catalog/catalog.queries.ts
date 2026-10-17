@@ -1,6 +1,7 @@
 import type {
   BrandCount,
   Category,
+  FacetDefinition,
   FacetList,
   Offer,
   PricePoint,
@@ -12,7 +13,7 @@ import type {
   ProductVariant,
   Sitemap,
 } from "@framerate/contracts";
-import { CATEGORY_FACETS, CATEGORY_SLUGS, facetValueLabel } from "@framerate/contracts";
+import { CATEGORY_FACETS, CATEGORY_SLUGS, facetOptionLabel, facetScale } from "@framerate/contracts";
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { searchText, slugify } from "@framerate/kit";
 import { normalizeGtin, normalizeMpn, titleTokens } from "@framerate/matching";
@@ -132,7 +133,30 @@ function specValue(key: string) {
     GROUP BY 1 ORDER BY count(*) DESC, 1 LIMIT 1)`;
 }
 
-/** Valores pedidos por clave: OR dentro de una clave, AND entre claves. */
+/** La faceta de una clave; sin categoría (búsqueda global) vale la primera con esa clave. */
+const facetOf = (category: Category | undefined, key: string) =>
+  (category ? CATEGORY_FACETS[category] : Object.values(CATEGORY_FACETS).flat()).find((f) => f.key === key);
+
+/**
+ * Faceta con umbral: cumple el valor medido igual o por encima (`min`) o por debajo (`max`) de lo pedido. Con varios
+ * valores en la URL manda el menos exigente. Sin el dato no se excluye (queda "unknown"), como con los valores exactos.
+ */
+function thresholdFilter(facet: FacetDefinition, value: ReturnType<typeof specValue>, picked: string[]) {
+  const scale = facetScale(facet);
+  const bounds = picked.map((v) => (scale ? scale.indexOf(v) : Number(v))).filter((n) => Number.isFinite(n) && n >= 0);
+  if (bounds.length === 0) return sql<boolean>`1`;
+  const bound = facet.threshold === "max" ? Math.max(...bounds) : Math.min(...bounds);
+  // Las posiciones y las claves salen de `CATEGORY_FACETS`, no de la URL: literales, sin gastar variables de D1.
+  const measured = scale
+    ? sql`(CASE ${value} ${sql.join(
+        scale.map((k, i) => sql`WHEN ${sql.lit(k)} THEN ${sql.lit(i)}`),
+        sql` `,
+      )} END)`
+    : sql`CAST(${value} AS REAL)`;
+  return sql<boolean>`coalesce(${measured} ${facet.threshold === "max" ? sql`<=` : sql`>=`} ${bound}, 1)`;
+}
+
+/** Valores pedidos por clave: OR dentro de una clave, AND entre claves (en una faceta con umbral, un solo límite). */
 function specGroups(spec: ListFilters["spec"]): Map<string, string[]> {
   const groups = new Map<string, string[]>();
   for (const { key, value } of spec ?? []) groups.set(key, [...(groups.get(key) ?? []), value]);
@@ -180,8 +204,13 @@ function filteredQuery(
   for (const [key, values] of specGroups(filters.spec)) {
     if (key === skipSpecKey) continue;
     const value = specValue(key);
-    // Sin el dato el IN da NULL y no excluye; así la subconsulta de specs se evalúa una vez por producto.
-    base = base.where(sql<boolean>`coalesce(${value} IN (${sql.join(values)}), 1)`);
+    const facet = facetOf(filters.category, key);
+    // Sin el dato la comparación da NULL y no excluye; así la subconsulta de specs se evalúa una vez por producto.
+    base = base.where(
+      facet?.threshold
+        ? thresholdFilter(facet, value, values)
+        : sql<boolean>`coalesce(${value} IN (${sql.join(values)}), 1)`,
+    );
     unknown.push(value);
   }
   const isUnknown =
@@ -289,15 +318,28 @@ export async function listFacets(db: Db, category: Category, filters: ListFilter
   return {
     items: facets.map((facet, i) => {
       const rows = results[i] ?? [];
+      const scale = facetScale(facet);
       const values = rows
-        .filter((r): r is { value: string; count: number } => r.value !== null && Number(r.count) > 0)
-        .map((r) => ({ value: r.value, label: facetValueLabel(facet, r.value), count: Number(r.count) }));
+        .filter(
+          (r): r is { value: string; count: number } =>
+            r.value !== null && Number(r.count) > 0 && (!scale || scale.includes(r.value)),
+        )
+        .map((r) => ({ value: r.value, label: facetOptionLabel(facet, r.value), count: Number(r.count) }));
+      const at = (v: string) => (scale ? scale.indexOf(v) : Number(v));
       values.sort((a, b) =>
-        facet.unit ? Number(a.value) - Number(b.value) : b.count - a.count || a.value.localeCompare(b.value, "es"),
+        facet.unit || facet.threshold
+          ? at(a.value) - at(b.value)
+          : b.count - a.count || a.value.localeCompare(b.value, "es"),
       );
+      // Un umbral cuenta lo que cumple "ese valor o más" (o "o menos"): conteos acumulados desde el extremo.
+      if (facet.threshold) {
+        let sum = 0;
+        for (const v of facet.threshold === "min" ? [...values].reverse() : values) v.count = sum += v.count;
+      }
       return {
         key: facet.key,
         label: facet.label,
+        ...(facet.threshold && { threshold: facet.threshold }),
         values,
         unknownCount: Number(rows.find((r) => r.value === null)?.count ?? 0),
       };
