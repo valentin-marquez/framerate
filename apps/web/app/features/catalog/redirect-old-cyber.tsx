@@ -1,8 +1,8 @@
 import { redirect } from "react-router";
 
-/** El evento Cyber pasó: su lista de bajas es el catálogo ordenado por mayor baja. */
+/** El evento Cyber pasó. */
 export function loader() {
-  throw redirect("/buscar?sort=discount", 301);
+  throw redirect("/", 301);
 }
 
 export default function RedirectOldCyber() {
