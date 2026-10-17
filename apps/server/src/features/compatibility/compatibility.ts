@@ -293,15 +293,29 @@ const RULES: Rule[] = [
     return check("psu_wattage", "ok", involved, `La fuente de ${watts} W cubre los ${need} W estimados.`);
   },
 
-  // Calidad de la fuente (#177): uso interno, los mensajes no muestran el tier ni de dónde sale. Sin tier o con uno
-  // especulativo no hay chequeo: es una señal de más, no un dato de compatibilidad, y no debe dejar todo en desconocido.
+  // Calidad de la fuente (#177): uso interno, los mensajes no muestran el tier ni de dónde sale. Sin tier no hay
+  // chequeo: es una señal de más, no un dato de compatibilidad, y no debe dejar todo en desconocido. Una nota
+  // especulativa (de la marca, propia o con * en la planilla) sólo advierte si todo su rango es E o F: callar ahí
+  // sería recomendar sin respaldo; lo demás especulativo no opina.
   ({ psu, gpu }) => {
     const rated = psu?.facts.psu_tier as PsuTier | undefined;
-    if (!psu || !rated || rated.limited) return null;
+    if (!psu || !rated) return null;
     const involved = [psu, gpu].filter((p): p is Part => p !== undefined);
     // Con un rango de notas (la tienda no dice la revisión) sólo se decide si todo el rango da la misma respuesta.
     const worst = rated.tier[0] ?? "F";
     const best = rated.best?.[0] ?? worst;
+    if (rated.limited) {
+      if (best === "F")
+        return check("psu_tier", "warning", [psu], "Hay señales de que esta fuente no es segura: mejor elige otra.");
+      if (best >= "E")
+        return check(
+          "psu_tier",
+          "warning",
+          [psu],
+          "Hay poca información sobre la calidad de esta fuente y lo que hay no es bueno: conviene una de una marca con respaldo.",
+        );
+      return null;
+    }
     if (best === "F")
       return check("psu_tier", "warning", [psu], "Esta fuente tiene problemas de seguridad conocidos: elige otra.");
     if (best >= "E")

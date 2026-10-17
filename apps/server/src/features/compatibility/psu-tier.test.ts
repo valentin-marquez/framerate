@@ -169,8 +169,11 @@ describe("regla psu_tier", () => {
     expect(tierCheck([psu("D")])?.result).toBe("ok");
   });
 
-  test("un tier especulativo o sin vínculo no agrega chequeo", () => {
-    expect(tierCheck([psu("F", true), gpu(360)])).toBeUndefined();
+  test("una nota especulativa sólo advierte si todo su rango es E o F; sin vínculo no hay chequeo", () => {
+    expect(tierCheck([psu("F", true), gpu(360)])?.message).toMatch(/no es segura/);
+    expect(tierCheck([psu("E", true), gpu(115)])?.message).toMatch(/poca información/);
+    expect(tierCheck([psu("E", true, "C"), gpu(115)])).toBeUndefined();
+    expect(tierCheck([psu("C", true), gpu(360)])).toBeUndefined();
     expect(tierCheck([{ ...psu("A"), facts: { wattage: 1000 } }, gpu(360)])).toBeUndefined();
   });
 
