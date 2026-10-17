@@ -24,9 +24,9 @@ describe("texto", () => {
   test("decodeEntities: tildes, ñ, símbolos y hexadecimales de las fichas (Wei, Winpy, AllTec)", () => {
     expect(
       decodeEntities(
-        "Especificaci&oacute;n T&Eacute;CNICA &Ntilde; Intel&reg; Arc&trade; 90&deg; &#x2022; &amp;aacute;",
+        "Especificaci&oacute;n T&Eacute;CNICA &Ntilde; Intel&reg; Arc&trade; 90&deg; &#x2022; &amp;aacute; WHITE &ndash; 1600 &plusmn;10%",
       ),
-    ).toBe("Especificación TÉCNICA Ñ Intel® Arc™ 90° • &aacute;");
+    ).toBe("Especificación TÉCNICA Ñ Intel® Arc™ 90° • &aacute; WHITE - 1600 ±10%");
   });
 
   test("decodeEntities: un código fuera de Unicode queda tal cual, sin lanzar", () => {

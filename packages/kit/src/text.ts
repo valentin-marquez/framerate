@@ -26,6 +26,16 @@ const HTML_ENTITIES: Record<string, string> = {
   "&iexcl;": "¡",
   "&times;": "x",
   "&micro;": "µ",
+  "&ndash;": "-",
+  "&mdash;": "-",
+  "&minus;": "-",
+  "&plusmn;": "±",
+  "&lsquo;": "'",
+  "&rsquo;": "'",
+  "&ldquo;": '"',
+  "&rdquo;": '"',
+  "&frac12;": "1/2",
+  "&sup2;": "²",
 };
 
 // `&aacute;`, `&Ntilde;`, `&uuml;`…: la letra más su marca combinada.
