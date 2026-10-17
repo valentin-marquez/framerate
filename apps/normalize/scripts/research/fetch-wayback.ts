@@ -21,10 +21,10 @@ const specScore = (t: string) =>
   (t.match(/\d{2,3}(\.\d)?\s*mm/gi) ?? []).length +
   (t.match(/socket|lga|am5|radiator|vga|graphics card|cpu cooler|clearance/gi) ?? []).length;
 const name = (u: string) =>
-  u
+  `${u
     .replace(/^https?:\/\//, "")
     .replace(/[^a-z0-9]+/gi, "_")
-    .slice(0, 150) + ".txt";
+    .slice(0, 150)}.txt`;
 const idx: Record<string, string> = {};
 const stats = { ok: 0, poor: 0, fail: 0 };
 let i = 0;

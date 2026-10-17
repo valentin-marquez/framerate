@@ -155,6 +155,18 @@ describe("categorías contaminadas", () => {
     expect(reason("case_fan", "Cable Splitter ARGB 3 vias")).toBe("category:other_product");
   });
 
+  test.each([
+    ["case_fan", "Cooler Master-Cable divisor de ventilador RGB 1 a 3"],
+    ["case_fan", "COOLER MASTER ARGB 1 TO 5 SPLITTER"],
+    ["cpu_cooler", "CoolerMaster Adaptador para disipador por aire LGA1700"],
+    ["cpu_cooler", "FUNDA DE TUBO ENFRIADOR COOLER MASTER LED TUBE"],
+    ["ssd", "Disipador de Calor para SSD M.2 HIKSEMI"],
+    ["case_fan", "Unidad de Ventilación Nexxt NPF-12WMB para Montaje en Rack"],
+    ["case_fan", "Termostato Linkmade RAS-1L"],
+  ] as const)("accesorio en cualquier posición del título (%s): %s", (category, title) => {
+    expect(reason(category, title)).toBe("category:other_product");
+  });
+
   test("fuentes publicadas como gabinete, SSD como disco duro y coolers de CPU como ventilador", () => {
     expect(reason("case", "FUENTE DE PODER GAMEMAX GP-650B 650W 80 PLUS BRONZE")).toBe("category:psu");
     expect(reason("case", "EVGA SUPERNOVA 1000 P3 1000W 80 PLUS PLATINUM")).toBe("category:psu");
@@ -175,6 +187,10 @@ describe("categorías contaminadas", () => {
     expect(reason("case_fan", "KIT GAMEMAX KF300WH ARGB (INCLUYE HUB)")).toBe("ok");
     expect(reason("case_fan", "Ventilador ARGB 120mm para gabinete Mid Tower")).toBe("ok");
     expect(reason("case_fan", "Ventilador 140mm torre gamer")).toBe("ok");
+    expect(reason("ssd", "SSD Kingston Fury Renegade 1TB NVMe M.2 con disipador")).toBe("ok");
+    expect(reason("case_fan", "Ventilador Gabinete 140mm ARCTIC P14 SLIM PWM PST con Cable Splitter")).toBe("ok");
+    expect(reason("case_fan", "Ventilador Gabinete 140mm ARCTIC P14 PWM PST, con Splitter")).toBe("ok");
+    expect(reason("cpu_cooler", "Cooler CPU Noctua NH-D15 con adaptador LGA1700")).toBe("ok");
   });
 });
 

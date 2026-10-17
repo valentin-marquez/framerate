@@ -60,7 +60,7 @@ for (const [category, cats] of Object.entries(CATS)) {
       .sort((a, b) => a.title.length - b.title.length)[0];
     if (!ok) continue;
     hit++;
-    const file = ok.url.replace(/^https?:\/\//, "").replace(/[^a-z0-9]+/gi, "_") + ".txt";
+    const file = `${ok.url.replace(/^https?:\/\//, "").replace(/[^a-z0-9]+/gi, "_")}.txt`;
     await Bun.write(
       `.wrangler/dataset/pages/${file}`,
       `URL: ${ok.url}\nTÍTULO: ${ok.title}\n\n${ok.text.slice(0, 40000)}`,
@@ -76,7 +76,7 @@ for (const [category, cats] of Object.entries(CATS)) {
   }
   console.log(
     category,
-    `${urls.length} páginas, ${pages.length} leídas, ${hit}/${models[category]!.length} modelos calzan`,
+    `${urls.length} páginas, ${pages.length} leídas, ${hit}/${models[category]?.length} modelos calzan`,
   );
 }
 await Bun.write(".wrangler/dataset/extract-4.input.json", JSON.stringify(plan, null, 1));

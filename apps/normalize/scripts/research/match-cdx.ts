@@ -31,7 +31,7 @@ const plan: any[] = [];
 const stats: string[] = [];
 for (const [brand, cats] of Object.entries(missing)) {
   if (!urls[brand]) continue;
-  const cands = urls[brand]!.filter(isEn).map((u) => ({
+  const cands = urls[brand]?.filter(isEn).map((u) => ({
     u,
     t: new Set(
       toks(

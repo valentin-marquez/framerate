@@ -17,13 +17,13 @@ for (const i of ["w0", "w1", "w2", 0, 1, 2, 3, 4]) {
     // Si el nombre del AIO trae la medida del radiador, gana el nombre (Iceberg 120 Rainbow con "240" en la tabla).
     const named = String(r.model ?? "").match(/\b(120|240|280|360|420)\b/)?.[1];
     if (r.type === "aio" && named) r.radiator_mm = Number(named);
-    out[c]!.push(r);
+    out[c]?.push(r);
   }
 }
 for (const c of ["cpu_cooler", "case"])
   for (let i = 0; i <= 4; i++) {
     const path = `${D}/${c}-${i}.json`;
-    if (await Bun.file(path).exists()) out[c]!.push(...(await Bun.file(path).json()));
+    if (await Bun.file(path).exists()) out[c]?.push(...(await Bun.file(path).json()));
   }
 for (const [c, rows] of Object.entries(out)) {
   await Bun.write(`${D}/${c}-all.json`, JSON.stringify(rows));

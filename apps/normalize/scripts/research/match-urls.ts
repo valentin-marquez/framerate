@@ -40,7 +40,7 @@ for (const category of ["cpu_cooler", "case"]) {
     (r: any) => r.stock === 1 && r.m && urls[r.brand],
   );
   for (const brand of new Set(rows.map((r: any) => r.brand as string))) {
-    const cands = urls[brand]!.map((u) => ({ u, t: new Set(toks(slug(u))), len: slug(u).length }));
+    const cands = urls[brand]?.map((u) => ({ u, t: new Set(toks(slug(u))), len: slug(u).length }));
     let hit = 0,
       total = 0;
     for (const r of rows.filter((x: any) => x.brand === brand)) {

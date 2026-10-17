@@ -19,10 +19,10 @@ const strip = (html: string) =>
 const blocked = (t: string) =>
   /just a moment|un momento|access denied|attention required|verify you are human/i.test(t.slice(0, 600));
 const name = (u: string) =>
-  u
+  `${u
     .replace(/^https?:\/\//, "")
     .replace(/[^a-z0-9]+/gi, "_")
-    .slice(0, 150) + ".txt";
+    .slice(0, 150)}.txt`;
 const result: Record<string, string> = {};
 async function viaFetch(u: string) {
   const r = await fetch(u, {

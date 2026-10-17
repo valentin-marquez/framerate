@@ -74,6 +74,9 @@ export async function normalizeListing(
     .innerJoin("stores as s", "s.id", "l.store_id")
     .select([
       "l.title",
+      "l.store_id",
+      "l.external_id",
+      "l.url",
       "l.product_id",
       "l.raw_title",
       "l.brand",
@@ -261,9 +264,36 @@ export async function normalizeListing(
     mpn: listing.mpn,
   });
   if (!identity) {
-    // `other`: accesorio, bundle o notebook. Sin identidad no hay vínculo; a las 24 h match la publica por regex.
+    // `other`: accesorio, bundle o notebook. Sin identidad no hay vínculo y queda oculta; en `quarantine` se ve por qué
+    // (#159), colgada de la última corrida de su tienda y categoría (`run_id` es obligatorio).
     log.warn("normalize.category_other", { listingId, title, reason: output.category_reason });
-    await markFailed(db, listingId, now);
+    const lastRun = await db.query
+      .selectFrom("crawl_runs")
+      .select("id")
+      .where("store_id", "=", listing.store_id)
+      .where("category", "=", category)
+      .orderBy("started_at", "desc")
+      .limit(1)
+      .executeTakeFirst();
+    await db.batch([
+      ...(lastRun
+        ? [
+            db.query
+              .insertInto("quarantine")
+              .orIgnore()
+              .values({
+                run_id: lastRun.id,
+                store_id: listing.store_id,
+                external_id: listing.external_id,
+                reason: "category:other",
+                payload: JSON.stringify({ title, url: listing.url, category, reason: output.category_reason }),
+                norm_hash: listing.norm_hash,
+                created_at: at,
+              }),
+          ]
+        : []),
+      db.query.updateTable("listings").set({ norm_status: "failed", norm_at: at }).where("id", "=", listingId),
+    ]);
     return { status: "failed" };
   }
   if (identity.category !== category) {

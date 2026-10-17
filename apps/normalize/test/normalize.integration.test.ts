@@ -325,11 +325,18 @@ describe("normalizeListing", () => {
     expect((await listingRow(id)).norm_status).toBe("failed");
   });
 
-  test("category other: sin identidad, queda failed", async () => {
+  test("category other: sin identidad, queda failed y en cuarentena con su motivo", async () => {
     const id = await seedListing();
-    const out = await run(id, config(fakeHaiku(ok({ category: "other", category_reason: "es un kit con cooler" }))));
-    expect(out).toEqual({ status: "failed" });
+    await db.query
+      .insertInto("crawl_runs")
+      .values({ id: "run-1", store_id: await storeId(), category: "ram", status: "succeeded", started_at: at })
+      .execute();
+    const other = fakeHaiku(ok({ category: "other", category_reason: "es un kit con cooler" }));
+    expect(await run(id, config(other))).toEqual({ status: "failed" });
     expect((await listingRow(id)).norm_status).toBe("failed");
+    const [q] = await all(db, "quarantine");
+    expect(q).toMatchObject({ run_id: "run-1", external_id: "1", reason: "category:other", norm_hash: "hash-1" });
+    expect(JSON.parse(String(q?.payload))).toMatchObject({ title: TITLE, reason: "es un kit con cooler" });
   });
 
   test("tope del día agotado: no llama y espera una hora", async () => {

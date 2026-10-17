@@ -107,6 +107,10 @@ const MULTI = /\bpack de\b|\b(pack|kit)\b.*\s\+\s/;
 // Accesorios que las tiendas meten en cualquier categoría: el título empieza por lo que realmente son.
 const ACCESSORY =
   /^(plataforma|soporte|kit de cables|cables?|hub|fan hub|controlador(a)?|adaptador|kit adaptador|kit de montaje|kit para|bracket|pasta|thermal pads?|tira led)\b/;
+// Los que no dejan duda en cualquier posición ("Cooler Master-Cable divisor…", "… ARGB 1 TO 5 SPLITTER"): Haiku los
+// marcaba `other` y la llamada se pagaba igual (#159). "con Cable Splitter" es lo que trae un ventilador.
+const ACCESSORY_ANYWHERE =
+  /\b((?<!\bcon (cable )?)splitter|cable divisor|funda|termostato|montaje en rack|adaptador (para|de) (disipador|socket|lga)|disipador (de calor )?(para |de )?(ssd|m\.?2))\b/;
 const OTHER_PRODUCT = /\b(notebook|laptop|all in one|monitor|consola|tablet)\b/;
 // En RAM y SSD "notebook"/"laptop" suele ser compatibilidad (SO-DIMM, "para PC y Laptop"): sólo cuenta al inicio.
 const OTHER_PRODUCT_START = /^(notebook|laptop|all in one|monitor|consola|tablet)\b/;
@@ -170,7 +174,8 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
   }
   const otherProduct = raw.category === "ram" || raw.category === "ssd" ? OTHER_PRODUCT_START : OTHER_PRODUCT;
   if (otherProduct.test(folded)) return { ok: false, externalId, reason: "category:other_product" };
-  if (ACCESSORY.test(folded)) return { ok: false, externalId, reason: "category:other_product" };
+  if (ACCESSORY.test(folded) || ACCESSORY_ANYWHERE.test(folded))
+    return { ok: false, externalId, reason: "category:other_product" };
   const misplaced = MISPLACED[raw.category]?.find(([test]) => test(folded));
   if (misplaced) return { ok: false, externalId, reason: misplaced[1] };
 
