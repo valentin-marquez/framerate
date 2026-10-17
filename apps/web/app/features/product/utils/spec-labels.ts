@@ -115,7 +115,9 @@ export function specLines(specs: readonly ProductSpec[]): SpecRow[] {
           : "No"
         : typeof value === "number"
           ? `${number.format(value)}${unit ? ` ${unit}` : ""}`
-          : (VALUES[value] ?? value);
+          : Object.hasOwn(VALUES, value)
+            ? VALUES[value]
+            : value;
     return [{ label, value: text, knowledge }];
   });
 }
