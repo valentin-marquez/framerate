@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { cleanTitle, normalizeOffer, type RawOffer } from "./normalize";
+import { SOURCE_TEXT_MAX } from "@framerate/contracts";
+import { cleanTitle, clipSourceText, normalizeOffer, type RawOffer } from "./normalize";
 
 test("cleanTitle quita las barras separadoras y el ruido comercial", () => {
   expect(cleanTitle("Nvidia RTX 3050 | MSI Ventus 2X | 6GB GDDR6")).toBe("Nvidia RTX 3050 MSI Ventus 2X 6GB GDDR6");
@@ -219,5 +220,24 @@ describe("identificadores del título", () => {
   test("el MPN publicado por la tienda gana al del título", () => {
     const r = normalizeOffer({ ...base, title: `${base.title} [DUAL-RTX4070S-12G]` }, "gpu");
     expect(r.ok && r.offer.mpn).toBe("DUALRTX4070SO12G");
+  });
+});
+
+describe("clipSourceText", () => {
+  const prose = "Lleva tu setup al siguiente nivel. ".repeat(60);
+  const specs = `Especificaciones\n${"Tamaño: 120 mm\n".repeat(150)}`;
+
+  test("una ficha que cabe queda igual", () => {
+    expect(clipSourceText("Tamaño: 120 mm")).toBe("Tamaño: 120 mm");
+  });
+
+  test("larga y con sección de especificaciones: empieza en la sección", () => {
+    expect(clipSourceText(prose + specs)).toBe(specs);
+    expect(clipSourceText(prose + specs + specs)).toHaveLength(SOURCE_TEXT_MAX);
+  });
+
+  test("un 'ver especificaciones' al final no se lleva la ficha", () => {
+    const text = `${prose}${prose}Ver especificaciones en el sitio del fabricante.`;
+    expect(clipSourceText(text)).toBe(text.slice(0, SOURCE_TEXT_MAX));
   });
 });

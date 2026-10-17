@@ -23,6 +23,15 @@ export function stripHtml(input: string): string {
   return collapseWhitespace(decodeEntities(input.replace(/<[^>]*>/g, " ")));
 }
 
+/** Como `stripHtml`, pero una línea por bloque: en las fichas "Clave\nvalor" deja de ser una sola tira de texto. */
+export function htmlLines(input: string): string {
+  return decodeEntities(input.replace(/<br\s*\/?>|<\/(p|div|li|tr|h\d)>/gi, "\n").replace(/<[^>]*>/g, " "))
+    .split("\n")
+    .map(collapseWhitespace)
+    .filter(Boolean)
+    .join("\n");
+}
+
 export function collapseWhitespace(input: string): string {
   return input.replace(/\s+/g, " ").trim();
 }

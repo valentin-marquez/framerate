@@ -1,4 +1,5 @@
 import type { Category } from "@framerate/contracts";
+import { htmlLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
@@ -51,6 +52,8 @@ const ProductSchema = z.object({
   stock_available: z.boolean(),
   images: z.array(z.string()).default([]),
   categories: z.array(z.string()).default([]),
+  // Texto plano con saltos de línea; el MCP lo agregó después de septiembre de 2026 y no está documentado.
+  description: z.string().nullable().default(null),
 });
 type JumpsellerProduct = z.infer<typeof ProductSchema>;
 
@@ -91,6 +94,7 @@ export function createJumpsellerAdapter(config: JumpsellerConfig): StoreAdapter 
             seen.add(product.id);
 
             let listed = product.price;
+            let details: string | null = null;
             // Las fichas de productos agotados no se piden: basta el precio del MCP.
             if (product.stock_available) {
               const ficha = await getPage(ctx, product.url);
@@ -98,8 +102,9 @@ export function createJumpsellerAdapter(config: JumpsellerConfig): StoreAdapter 
               await ctx.snapshot(`fichas/${externalId(product)}.html`, ficha);
               // Sin el meta queda 0 y `normalize` lo manda a cuarentena: mejor que callar una promoción.
               listed = Number(ficha.match(/<meta property="product:price:amount" content="([\d.]+)"/)?.[1] ?? 0);
+              details = customFields(ficha);
             }
-            yield toRawOffer(product, Math.round(listed), category, config);
+            yield toRawOffer(product, Math.round(listed), category, config, details);
           }
 
           if (items.length < perPage) break;
@@ -118,6 +123,16 @@ function parseItems(text: string): unknown[] {
   return items;
 }
 
+/** Valrod deja `description` vacía y pone la ficha en campos personalizados ("Certificado: 80 PLUS Bronze"). */
+function customFields(html: string): string | null {
+  const rows = [
+    ...html.matchAll(
+      /<div class="product-details__title">([\s\S]*?)<\/div>\s*<div class="product-details__value"[^>]*>([\s\S]*?)<\/div>/g,
+    ),
+  ].map(([, title = "", value = ""]) => `${htmlLines(title)} ${htmlLines(value)}`);
+  return rows.join("\n") || null;
+}
+
 const externalId = (p: JumpsellerProduct) => p.id.split("/").pop() ?? p.id;
 
 export function toRawOffer(
@@ -125,6 +140,7 @@ export function toRawOffer(
   listed: number,
   category: Category,
   config: Pick<JumpsellerConfig, "sku" | "cashDiscount">,
+  details: string | null = null,
 ): RawOffer {
   const sku = p.sku?.trim() || null;
   const barcode = p.barcode?.trim() || null;
@@ -144,5 +160,6 @@ export function toRawOffer(
     mpn: config.sku === "mpn" && sku && !normalizeGtin(sku) ? sku : null,
     gtin,
     imageUrls: p.images.filter((src) => src.startsWith("http")),
+    sourceText: htmlLines(p.description ?? "") || details,
   };
 }

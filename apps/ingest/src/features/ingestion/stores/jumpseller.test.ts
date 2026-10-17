@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { silentLogger } from "@framerate/kit";
-// Respuestas reales del MCP de NotebookStore y Valrod, sin descripciones; de las fichas sólo quedan sus metas de precio.
+// Respuestas reales del MCP de NotebookStore y Valrod con una descripción recortada; de las fichas quedan sus metas de
+// precio y, en la de Valrod, dos de sus campos personalizados.
 import fixture from "./__fixtures__/jumpseller.json";
 import type { CrawlContext } from "./adapter";
 import { HttpError } from "./http";
@@ -83,6 +84,25 @@ describe("adaptador Jumpseller", () => {
       ["25055159", false, 84_990, null],
       // El MCP dice 74.990; la ficha, con la promoción, 54.990.
       ["25422286", true, 54_990, null],
+    ]);
+  });
+
+  test("el texto de la ficha sale de la descripción del MCP, o de los campos personalizados si viene vacía", async () => {
+    const config = { baseUrl: "https://tienda.example", sku: "mpn" as const, perPage: 2 };
+    const gpu = createJumpsellerAdapter({
+      ...config,
+      categories: { gpu: ["equipos/componentes-informaticos/tarjetas-de-video"] },
+    });
+    const [rtx, gt] = await Array.fromAsync(gpu.crawlCategory("gpu", fakeContext().ctx));
+    expect(rtx?.sourceText).toBe("GPU\nGeForce® RTX 3060\nCUDA cores\n3584\nVideo Memory\n12GB GDDR6");
+    expect(gt?.sourceText).toBeNull();
+
+    const psu = createJumpsellerAdapter({ ...config, categories: { psu: ["hardware/fuentes-de-poder"] } });
+    const offers = await Array.fromAsync(psu.crawlCategory("psu", fakeContext().ctx));
+    expect(offers.map((o) => o.sourceText)).toEqual([
+      // Agotada: sin ficha, sin texto.
+      null,
+      "Proteccion: PROTECCIONES COMPLETAS CON SCP, OCP, OVP, UVP, OPP\nCertificado: 80 PLUS Bronze",
     ]);
   });
 

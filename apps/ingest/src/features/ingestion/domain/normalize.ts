@@ -218,9 +218,24 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
       stockQuantity: raw.inStock ? raw.stockQuantity : 0,
       attributes: fingerprint.attributes,
       fingerprint,
-      sourceText: raw.sourceText?.trim().slice(0, SOURCE_TEXT_MAX) || null,
+      sourceText: clipSourceText(raw.sourceText?.trim() ?? "") || null,
     },
   };
+}
+
+const SPECS_HEADING = /especificaciones|specifications|ficha t[eé]cnica|caracter[ií]sticas t[eé]cnicas/i;
+// Menos que esto después del título es un "ver especificaciones" suelto, no la sección.
+const SPECS_MIN = 1000;
+
+/**
+ * Al tope de caracteres: si la ficha se pasa y tiene una sección de especificaciones, se corta desde ahí. Antes suele ir
+ * prosa de marketing (Thundertech, Infor-Ingen: ~1.000 caracteres) y los datos quedaban fuera del recorte.
+ */
+export function clipSourceText(text: string): string {
+  if (text.length <= SOURCE_TEXT_MAX) return text;
+  const at = text.search(SPECS_HEADING);
+  const from = at > 0 && text.length - at >= SPECS_MIN ? at : 0;
+  return text.slice(from, from + SOURCE_TEXT_MAX);
 }
 
 export type HashInput = Pick<NormalizedOffer, "category" | "rawTitle" | "brand" | "mpn" | "gtin" | "sourceText">;
