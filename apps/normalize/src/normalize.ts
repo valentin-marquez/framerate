@@ -22,6 +22,7 @@ import { type Budget, budgetLeftUsd } from "./budget";
 import { cpuReferences, modelKey, withReference } from "./cpu-reference";
 import { fanKey, fanReferences, fillFromFanReference, pickFanReference } from "./fan-reference";
 import { baseChipset, fillFromGpuReference, gpuReferences, pickGpuReference } from "./gpu-reference";
+import { fillFromPartReference, PART_CATEGORIES, partKey, partReferences, pickPartReference } from "./part-reference";
 
 /**
  * Consumidor de `framerate-normalize` (spec 2026-10-08 §1, §4 y §7): una oferta por mensaje, una llamada a Haiku por
@@ -179,6 +180,7 @@ export async function normalizeListing(
   const references = category === "cpu" ? await cpuReferences(db, title) : [];
   const gpus = category === "gpu" ? await gpuReferences(db, title) : [];
   const fans = category === "case_fan" ? await fanReferences(db, listing.brand) : [];
+  const parts = await partReferences(db, category, listing.brand);
   const input = {
     category,
     title,
@@ -193,7 +195,9 @@ export async function normalizeListing(
         ? [...new Set(gpus.map((r) => baseChipset(r.chipset)))]
         : category === "case_fan"
           ? [...new Set(fans.map((r) => r.family.toLowerCase()))]
-          : references.map((r) => r.model),
+          : PART_CATEGORIES.has(category)
+            ? [...new Set(parts.map((r) => r.model.toLowerCase()))]
+            : references.map((r) => r.model),
   };
   let result: NormalizeCall;
   try {
@@ -312,7 +316,16 @@ export async function normalizeListing(
         ? await fanReferences(db, identity.brand)
         : fans;
   const fan = pickFanReference(fanRefs, String(identity.identity.model ?? ""), identity.identity.size_mm);
-  const { specs, source: specsSource } = fillFromFanReference(gpuSpecs.specs, gpuSpecs.source, fan);
+  const fanSpecs = fillFromFanReference(gpuSpecs.specs, gpuSpecs.source, fan);
+  // Coolers y gabinetes (#182): alto, radiador, sockets, largo de GPU, lo que usan las reglas de compatibilidad.
+  const partRefs =
+    !PART_CATEGORIES.has(identity.category) || identity.category !== category
+      ? []
+      : identity.brand && partKey(identity.brand) !== partKey(listing.brand ?? "")
+        ? await partReferences(db, identity.category, identity.brand)
+        : parts;
+  const part = pickPartReference(partRefs, String(identity.identity.model ?? ""), identity.identity.radiator_mm);
+  const { specs, source: specsSource } = fillFromPartReference(fanSpecs.specs, fanSpecs.source, part);
   const row = {
     listing_id: listingId,
     version: NORMALIZER_VERSION,

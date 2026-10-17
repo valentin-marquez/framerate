@@ -66,6 +66,8 @@ const SPECS: Record<string, [label: string, unit?: string]> = {
   included_fans: ["Ventiladores incluidos"],
   radiator_support_mm: ["Radiadores compatibles", "mm"],
   front_ports: ["Puertos frontales"],
+  ram_clearance_mm: ["Espacio para la RAM", "mm"],
+  max_psu_length_mm: ["Fuente de hasta", "mm"],
   rpm_max: ["Velocidad máxima", "RPM"],
   airflow_cfm_max: ["Flujo de aire", "CFM"],
   pwm: ["Control PWM"],

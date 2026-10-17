@@ -747,6 +747,18 @@ export interface FanReferenceTable {
   source_url: string | null;
 }
 
+/** Referencia por modelo de coolers y gabinetes (#182, migración 0035), con las specs en JSON. */
+export interface PartReferenceTable {
+  id: Generated<number>;
+  category: string;
+  brand: string;
+  brand_key: string;
+  model: string;
+  specs: JsonText;
+  aliases: JsonText;
+  source_url: string | null;
+}
+
 export interface CatalogVersionTable {
   id: number;
   version: number;
@@ -800,6 +812,7 @@ export interface Database {
   cpu_reference: CpuReferenceTable;
   gpu_reference: GpuReferenceTable;
   fan_reference: FanReferenceTable;
+  part_reference: PartReferenceTable;
 }
 
 export type ListingRow = Selectable<ListingsTable>;
