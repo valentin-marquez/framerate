@@ -55,7 +55,7 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     { key: "memory", label: "Memoria", values: MEMORY_TYPES },
     { key: "wifi", label: "Wi-Fi", values: YES_NO("Con Wi-Fi", "Sin Wi-Fi") },
     { key: "m2_slots", label: "Ranuras M.2 mínimas", unit: "M.2", source: "specs", threshold: "min" },
-    { key: "memory_slots", label: "Ranuras de memoria mínimas", unit: "ranuras", source: "specs", threshold: "min" },
+    { key: "memory_slots", label: "Ranuras de memoria", unit: "ranuras", source: "specs" },
   ],
   ram: [
     { key: "type", label: "Tipo", values: MEMORY_TYPES },
