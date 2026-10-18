@@ -110,7 +110,9 @@ export async function loader() {
     ),
   ]);
 
-  const rows: HomeRow[] = [{ key: "popular", title: "Lo más popular", href: "/buscar", products: popular }];
+  const rows: HomeRow[] = [
+    { key: "popular", title: "Lo más popular", href: "/buscar?sort=popularity", products: popular },
+  ];
   for (const c of categories) {
     const products = (await rowBySlug.get(c.slug)) ?? [];
     rows.push({ key: c.slug, title: c.label, href: `/categoria/${c.slug}`, products });
