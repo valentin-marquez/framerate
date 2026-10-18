@@ -97,7 +97,7 @@ const OTHER_PRODUCT = /\b(notebook|laptop|all in one|monitor|consola|tablet)\b/;
 const OTHER_PRODUCT_START = /^(notebook|laptop|all in one|monitor|consola|tablet)\b/;
 const FAN_TITLE = /^(ventilador|pack|kit)\b/;
 const CPU_COOLER_CUE = /\b(cpu|torre|tower|disipador|heatpipes?|liquid[ao]|aio|water|lga ?\d{4}|am[45])\b/;
-const HDD_TITLE = /\b(hdd|ultrastar|ironwolf|skyhawk|exos|n300|purple|[57]200 ?rpm)\b/;
+const HDD_TITLE = /\b(hdd|lff|ultrastar|ironwolf|skyhawk|exos|barracuda|n300|purple|[57]200 ?rpm|(7\.2|10|15)k)\b/;
 const EXTERNAL_DRIVE = /\b(extern[oa]s?|portatil|portable|usb)\b/;
 
 /** Lo que las tiendas meten en la categoría equivocada, con el motivo de lo que realmente es. */
@@ -116,7 +116,7 @@ const MISPLACED: Partial<Record<Category, Array<[misplaced: (title: string) => b
   ],
   ssd: [
     [(t) => EXTERNAL_DRIVE.test(t), "category:external_drive"],
-    // Discos mecánicos que Bookcomputer publica en "Almacenamiento" (Ultrastar, WD Purple, N300).
+    // Discos mecánicos publicados como SSD: Bookcomputer (Ultrastar, WD Purple, N300) y los de servidor (7.2K, 10K, LFF).
     [(t) => HDD_TITLE.test(t) && !/\b(ssd|nvme|m\.?2)\b/.test(t), "category:hdd"],
     [(t) => /\bddr[345]\b|\b(pendrive|micro ?sd|sdxc|sdhc|tarjeta de memoria)\b/.test(t), "category:other_product"],
   ],

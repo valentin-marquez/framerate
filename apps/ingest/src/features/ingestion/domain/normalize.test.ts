@@ -177,6 +177,9 @@ describe("categorías contaminadas", () => {
     expect(reason("hdd", "DISCO SSD SATA ADATA SU650 1TB")).toBe("category:ssd");
     expect(reason("ssd", "Disco Duro Seagate Ultrastar 7K6000 4TB")).toBe("category:hdd");
     expect(reason("ssd", "Disco WD Purple 4TB 5400 RPM")).toBe("category:hdd");
+    expect(reason("ssd", "Disco 1.2TB 10K RPM SAS 12GBPS 512N 2.5IN HOT R650-R450")).toBe("category:hdd");
+    expect(reason("ssd", "Disco Server 1TB SATA 7.2K LFF RW HDD (ML30/MicroServer)")).toBe("category:hdd");
+    expect(reason("ssd", 'Lenovo ThinkSystem 1.92 TB hot-swap 2.5" SAS')).not.toBe("category:hdd");
     expect(reason("ssd", "SSD WD Blue SN580 1TB NVMe")).not.toBe("category:hdd");
     expect(reason("case_fan", "Cougar Single Tower Air Cooler FORZA 50")).toBe("category:cpu_cooler");
   });
