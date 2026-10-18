@@ -1,6 +1,13 @@
 import { CATEGORY_LABELS, CATEGORY_SLUGS, type Offer, type PricePoint, type ProductDetail } from "@framerate/contracts";
-import { IconArrowLeft, IconChevronDown, IconChevronRight, IconExternalLink, IconPhotoOff } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import {
+  IconArrowLeft,
+  IconCheck,
+  IconChevronDown,
+  IconChevronRight,
+  IconExternalLink,
+  IconPhotoOff,
+} from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { ReportButton } from "~/features/moderation";
@@ -20,6 +27,7 @@ import { OutboundLink } from "~/shared/components/outbound-link";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/shared/components/primitives/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/shared/components/primitives/tooltip";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cameFrom, lastCategoryUrl } from "~/shared/lib/category-memory";
 import { cn } from "~/shared/lib/utils";
@@ -384,6 +392,49 @@ function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: numbe
   );
 }
 
+/** Página actual de la miga: tocar el nombre copia el enlace, y el mismo globo de "Copiar enlace" pasa a "Copiado". */
+function CopyCrumb({ name }: { name: string }) {
+  const [hover, setHover] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+    } catch {
+      return;
+    }
+    setCopied(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(false), 1800);
+  };
+  return (
+    <>
+      <Tooltip open={hover || copied} onOpenChange={setHover}>
+        <TooltipTrigger
+          render={
+            <button
+              type="button"
+              aria-current="page"
+              onClick={copy}
+              className="min-w-0 cursor-pointer truncate rounded-sm text-foreground decoration-muted-foreground/60 decoration-dotted underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          }
+        >
+          {name}
+        </TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={8}>
+          <span className="flex items-center gap-1.5">
+            {copied && <IconCheck className="size-3.5" stroke={2.25} />}
+            {copied ? "Copiado" : "Copiar enlace"}
+          </span>
+        </TooltipContent>
+      </Tooltip>
+      <output className="sr-only">{copied ? "Enlace copiado" : ""}</output>
+    </>
+  );
+}
+
 function Breadcrumb({ category, name }: { category: ProductDetail["category"]; name: string }) {
   const navigate = useNavigate();
   const slug = CATEGORY_SLUGS[category];
@@ -421,9 +472,7 @@ function Breadcrumb({ category, name }: { category: ProductDetail["category"]; n
         {CATEGORY_LABELS[category]}
       </Link>
       <IconChevronRight className="size-3 shrink-0" />
-      <span aria-current="page" title={name} className="min-w-0 truncate text-foreground">
-        {name}
-      </span>
+      <CopyCrumb name={name} />
     </nav>
   );
 }
