@@ -226,7 +226,7 @@ El matching es **IA primero** (#153, #156): ninguna oferta se vincula por regex.
 
 La huella guardada en `products` es la verdad: `loadCandidates` no la recalcula desde el nombre (sólo deriva una
 de lectura si el producto no tiene atributos). Los extractores por regex de `attributes.ts` y `buildFingerprint`
-quedan como ayuda: compuertas de cuarentena en `normalizeOffer` (`REQUIRED_ATTRIBUTES`), anclaje de la identidad al
+quedan como ayuda: compuertas de cuarentena en `normalizeOffer` (`MISPLACED`), anclaje de la identidad al
 texto y huella de una oferta sin identidad. Vocabulario canónico en `packages/matching/src/domain/vocabulary.ts`.
 
 Principio: **preferimos duplicados antes que fusiones erróneas.** Un duplicado

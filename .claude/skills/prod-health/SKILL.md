@@ -87,9 +87,8 @@ where s.version=(select max(version) from match_shadow s2 where s2.listing_id=s.
 
 - **Ofertas por producto cerca de 1** con varias tiendas: casi no hay fusiones entre tiendas. Mirar las revisiones
   pendientes antes de tocar umbrales.
-- **`attribute:missing:*` con productos reales** es un extractor que no entiende el título: agregar el título como
-  test en `packages/matching/src/domain/matching.test.ts` y arreglar `attributes.ts`. Con accesorios o basura, la
-  cuarentena está haciendo su trabajo.
+- **`category:other` con productos reales** es Haiku descartando algo que sí es de la categoría: mirar el `reason`
+  del payload. Desde #14 ya no hay `attribute:missing:*`; las filas viejas se purgan solas a los 14 días.
 - **`condition:not_new`** es correcto para usados y open box; revisar sólo si aparecen productos nuevos.
 
 ## Trampas

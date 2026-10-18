@@ -79,25 +79,6 @@ const PRICE_RANGE: Record<Category, [min: number, max: number]> = {
   case_fan: [2_000, 1_000_000],
 };
 
-/**
- * Atributos sin los cuales la oferta no es confiable. Si el extractor no los
- * encuentra, casi siempre es un accesorio mal categorizado (soporte de GPU,
- * cable riser) o un título que el extractor aún no entiende: ambos casos se
- * revisan en cuarentena en lugar de ensuciar el catálogo.
- */
-const REQUIRED_ATTRIBUTES: Record<Category, readonly string[]> = {
-  gpu: ["chipset"],
-  cpu: ["model"],
-  motherboard: ["chipset"],
-  ram: ["type", "capacity"],
-  psu: ["wattage"],
-  ssd: ["capacity"],
-  hdd: ["capacity"],
-  cpu_cooler: [],
-  case: [],
-  case_fan: [],
-};
-
 const NOT_NEW =
   /\b(usad[oa]s?|reacondicionad[oa]s?|refurbished|open ?box|caja abierta|caja (mala|danada)|seminuev[oa]s?|segunda mano|outlet)\b/;
 const BUNDLE = /\b(combo|bundle|kit (pc|gamer)|pc armad[oa])\b/;
@@ -196,11 +177,8 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
     mpn: normalizeMpn(raw.mpn) ?? inTitle.mpn,
     gtin: normalizeGtin(raw.gtin) ?? inTitle.gtin,
   });
-  for (const field of REQUIRED_ATTRIBUTES[raw.category]) {
-    if (fingerprint.attributes[field] === undefined) {
-      return { ok: false, externalId, reason: `attribute:missing:${field}` };
-    }
-  }
+  // Sin compuerta por atributos faltantes (#14): el título que la regex no entiende lo resuelve Haiku, que además
+  // marca `other` los accesorios y corrige la categoría.
 
   return {
     ok: true,

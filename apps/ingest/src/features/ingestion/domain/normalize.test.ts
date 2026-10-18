@@ -203,6 +203,18 @@ describe("categorías contaminadas", () => {
     );
     expect(reason("cpu_cooler", "Cooler CPU Noctua NH-D15 con adaptador LGA1700")).toBe("ok");
   });
+
+  test.each([
+    ["gpu", "Tarjeta gráfica PNY NVIDIA RTX A1000 de 8GB GDDR6"],
+    ["gpu", "Tarjeta de Video Gigabyte 1660 SUPER OC 6G"],
+    ["gpu", "Tarjeta de Video ASRock Intel Arc Pro B60 Creator 24GB GDDR6"],
+    ["motherboard", "Placa Madre Gigabyte TRX50 AERO D (sTR5, DDR5 4400/7800MHz, M.2 x4, E-ATX)"],
+    ["cpu", "Procesador para Servidor Lenovo AMD EPYC 7282, 2.8GHz, 16 Núcleos 32 Hilos, 64 MB caché"],
+    ["cpu", "PROCESADOR AMD R5-5600GT 3.60GHz AM4"],
+  ] as const)("un título que la regex no entiende pasa a Haiku, no a cuarentena (%s): %s", (category, title) => {
+    const r = normalizeOffer({ ...base, category, title, mpn: null, priceCash: 300_000, priceCard: 300_000 }, category);
+    expect(r.ok ? "ok" : r.reason).toBe("ok");
+  });
 });
 
 describe("identificadores del título", () => {
