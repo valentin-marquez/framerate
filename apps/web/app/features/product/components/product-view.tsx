@@ -69,7 +69,7 @@ export function ProductView({ product, history, period, now }: ProductViewProps)
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
-      <Breadcrumb category={product.category} />
+      <Breadcrumb category={product.category} name={product.name} />
 
       {/* minmax(0,1fr) también en teléfono: si no, la columna crece hasta el texto más largo sin cortar y se sale. */}
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-10">
@@ -384,7 +384,7 @@ function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: numbe
   );
 }
 
-function Breadcrumb({ category }: { category: ProductDetail["category"] }) {
+function Breadcrumb({ category, name }: { category: ProductDetail["category"]; name: string }) {
   const navigate = useNavigate();
   const slug = CATEGORY_SLUGS[category];
   // Igual en servidor y en el primer render del cliente; ya montado, la última lista vista con sus filtros.
@@ -401,10 +401,10 @@ function Breadcrumb({ category }: { category: ProductDetail["category"] }) {
       >
         <IconArrowLeft className="size-3.5" />
       </button>
-      <Link to="/" className="hover:text-foreground">
+      <Link to="/" className="shrink-0 hover:text-foreground">
         Inicio
       </Link>
-      <IconChevronRight className="size-3" />
+      <IconChevronRight className="size-3 shrink-0" />
       <Link
         to={href}
         onClick={(e) => {
@@ -416,10 +416,14 @@ function Breadcrumb({ category }: { category: ProductDetail["category"] }) {
             navigate(-1);
           }
         }}
-        className="hover:text-foreground"
+        className="shrink-0 hover:text-foreground"
       >
         {CATEGORY_LABELS[category]}
       </Link>
+      <IconChevronRight className="size-3 shrink-0" />
+      <span aria-current="page" title={name} className="min-w-0 truncate text-foreground">
+        {name}
+      </span>
     </nav>
   );
 }
