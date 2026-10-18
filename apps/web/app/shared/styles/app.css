@@ -653,6 +653,14 @@
 :root[data-motion="rich"] .t-resize {
   transition: width var(--transition-duration-base) var(--ease-in-out);
 }
+/* Pie del riel: la cuenta le cede el lugar al botón de tema con el relleno (layout, dentro del riel), así que, igual que
+   el ancho, sólo con equipo holgado; el botón sube y baja con transform en todos. */
+:root[data-motion="rich"] .t-rail-foot {
+  transition: padding-top var(--transition-duration-base) var(--ease-in-out);
+}
+:root[data-motion="rich"] .t-rail-account {
+  transition: padding-right var(--transition-duration-base) var(--ease-in-out);
+}
 @media (prefers-reduced-motion: reduce) {
   /* biome-ignore lint/style/noDescendingSpecificity: el !important ya le gana a la regla de arriba */
   .t-resize {

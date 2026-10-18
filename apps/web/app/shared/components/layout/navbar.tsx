@@ -463,13 +463,8 @@ export function Navbar({
           )}
           {/* Ancho: el botón de tema a la derecha de la cuenta; angosto, sobre ella. Siempre en el mismo sitio del DOM:
               sube o baja con transform y la cuenta cede el lugar con el relleno, así no salta al plegar el riel. */}
-          <div className={cn("relative transition-[padding-top] duration-base ease-in-out", !wide && "pt-11")}>
-            <div
-              className={cn(
-                "flex h-12 items-center transition-[padding-right] duration-base ease-in-out",
-                wide && "pr-12",
-              )}
-            >
+          <div className={cn("t-rail-foot relative", !wide && "pt-11")}>
+            <div className={cn("t-rail-account flex h-12 items-center", wide && "pr-12")}>
               <div className="w-full min-w-0">
                 <UserMenu
                   align="start"
@@ -481,7 +476,7 @@ export function Navbar({
             </div>
             <div
               className={cn(
-                "absolute top-0 right-0 transition-transform duration-base ease-in-out",
+                "absolute top-0 right-0 transition-transform duration-base ease-in-out motion-reduce:transition-none",
                 wide ? "translate-y-1.5" : "-translate-x-0.5",
               )}
             >
