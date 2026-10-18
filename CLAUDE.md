@@ -73,8 +73,9 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
   está en la skill `/deploy`.
 - **Nunca desplegar sin que quien trabaja lo pida explícitamente**, ni para "probar". Commit y push sí se hacen tras
   cada tanda. Los dos despliegan: **sólo desde `main` actualizado y con el árbol limpio**, si no se pisa lo que desplegó
-  el otro. Push: `git push origin <rama>` (`origin` es Forgejo, `git.nozz.skin`; GitHub ya no se usa); nunca usar
-  credenciales pegadas en el chat.
+  el otro. Push: `git push origin <rama>` (`origin` es Forgejo, `git.nozz.skin`). GitHub
+  (`valentin-marquez/framerate`, público) es un push mirror de Forgejo: nunca se pushea ahí directo, y todo lo que
+  llega a Forgejo, ramas incluidas, queda público. Nunca usar credenciales pegadas en el chat.
 - Salud de producción (consultas D1 de sólo lectura): skill `/prod-health`.
 
 ## En un PC nuevo o con una persona nueva
@@ -143,7 +144,7 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
 - Biome para lint y formato (`biome.json` extiende `@framerate/config/biome`). Hooks (`simple-git-hooks`):
   pre-commit `bun run biome:check`; pre-push `bun run biome:check && bun run build`.
 - **Commits en Conventional Commits, en español**: `tipo(scope): descripción` (`feat`, `fix`, `refactor`, `chore`,
-  `docs`, `style`, `test`, `perf`). **No agregar** la línea `Co-Authored-By: Claude ...`.
+  `docs`, `style`, `test`, `perf`). La línea `Co-Authored-By` de un agente se puede dejar.
 - Secretos sólo con `bunx wrangler secret put <NOMBRE>`; nunca en el repo.
 
 ## Dónde mirar
