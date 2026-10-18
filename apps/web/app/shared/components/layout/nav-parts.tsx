@@ -73,11 +73,12 @@ function freshnessText({ updatedAt, nextUpdateAt }: Freshness, now: number) {
   };
 }
 
+// En claro, tonos más hondos que en oscuro: sobre el gris del riel los -600 quedaban en 2,7:1 de contraste.
 const HEAT_TEXT: Record<Heat, string> = {
-  calm: "text-foreground/40",
-  warm: "text-amber-600 dark:text-amber-400",
-  hot: "text-orange-600 dark:text-orange-400",
-  fire: "font-medium text-red-600 dark:text-red-400",
+  calm: "text-foreground/60 dark:text-foreground/40",
+  warm: "text-amber-800 dark:text-amber-400",
+  hot: "text-orange-800 dark:text-orange-400",
+  fire: "font-medium text-red-700 dark:text-red-400",
 };
 const HEAT_BAR: Record<Heat, string> = {
   calm: "bg-foreground/30",

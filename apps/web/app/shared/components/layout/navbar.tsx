@@ -26,7 +26,9 @@ const railLink = (current: boolean) =>
   cn(
     "relative flex h-9 items-center gap-3 rounded-xl px-2.5 text-sm transition-[color,background-color,scale] active:scale-[0.985]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-    current ? "bg-secondary text-foreground" : "text-foreground/65 hover:bg-secondary/60 hover:text-foreground",
+    current
+      ? "bg-secondary text-foreground"
+      : "text-foreground/75 hover:bg-secondary/60 hover:text-foreground dark:text-foreground/65",
   );
 
 /**
@@ -205,7 +207,7 @@ function FiltersAside({ open, data }: { open: boolean; data: CatalogData }) {
     >
       <div
         className={cn(
-          "flex h-full flex-col gap-4 border-border/60 border-r bg-card/40 p-3 transition-transform duration-base ease-in-out motion-reduce:transition-none",
+          "rail-surface flex h-full flex-col gap-4 border-border/60 border-r p-3 transition-transform duration-base ease-in-out motion-reduce:transition-none",
           open ? "translate-x-0" : "-translate-x-full",
           enter && "slide-in-from-left-full animate-in duration-base ease-in-out motion-reduce:animate-none",
         )}
@@ -392,9 +394,9 @@ export function Navbar({
               if (!e.currentTarget.contains(to) && !to?.closest("[data-rail-popup]")) setPeek(false);
             }}
             className={cn(
-              "t-resize fixed inset-y-0 left-0 z-40 hidden scrollbar-slim flex-col gap-4 overflow-y-auto overflow-x-hidden border-border/60 border-r bg-card/40 px-3 py-3 lg:flex",
+              "t-resize fixed inset-y-0 left-0 z-40 hidden scrollbar-slim flex-col gap-4 overflow-y-auto overflow-x-hidden border-border/60 border-r px-3 py-3 lg:flex",
               wide ? "w-64" : "w-16",
-              peek && "bg-card shadow-2xl",
+              peek ? "bg-card shadow-2xl" : "rail-surface",
             )}
           >
             <div className="flex h-10 shrink-0 items-center gap-2 px-2">
