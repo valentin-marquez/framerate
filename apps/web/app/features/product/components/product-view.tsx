@@ -1,9 +1,9 @@
 import { CATEGORY_LABELS, CATEGORY_SLUGS, type Offer, type PricePoint, type ProductDetail } from "@framerate/contracts";
 import {
   IconArrowLeft,
-  IconCheck,
   IconChevronDown,
   IconChevronRight,
+  IconCopy,
   IconExternalLink,
   IconPhotoOff,
 } from "@tabler/icons-react";
@@ -27,7 +27,6 @@ import { OutboundLink } from "~/shared/components/outbound-link";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/shared/components/primitives/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "~/shared/components/primitives/tooltip";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cameFrom, lastCategoryUrl } from "~/shared/lib/category-memory";
 import { cn } from "~/shared/lib/utils";
@@ -392,9 +391,8 @@ function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: numbe
   );
 }
 
-/** Página actual de la miga: tocar el nombre copia el enlace, y el mismo globo de "Copiar enlace" pasa a "Copiado". */
+/** Página actual de la miga: tocar el nombre o su ícono copia el enlace; el ícono pasa a un check que se dibuja. */
 function CopyCrumb({ name }: { name: string }) {
-  const [hover, setHover] = useState(false);
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -410,26 +408,48 @@ function CopyCrumb({ name }: { name: string }) {
   };
   return (
     <>
-      <Tooltip open={hover || copied} onOpenChange={setHover}>
-        <TooltipTrigger
-          render={
-            <button
-              type="button"
-              aria-current="page"
-              onClick={copy}
-              className="min-w-0 cursor-pointer truncate rounded-sm text-foreground decoration-muted-foreground/60 decoration-dotted underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          }
-        >
+      <button
+        type="button"
+        aria-current="page"
+        aria-label={`${name}, copiar enlace`}
+        onClick={copy}
+        className="group flex min-w-0 cursor-pointer items-center gap-1.5 rounded-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span title={name} className="min-w-0 truncate">
           {name}
-        </TooltipTrigger>
-        <TooltipContent side="bottom" sideOffset={8}>
-          <span className="flex items-center gap-1.5">
-            {copied && <IconCheck className="size-3.5" stroke={2.25} />}
-            {copied ? "Copiado" : "Copiar enlace"}
-          </span>
-        </TooltipContent>
-      </Tooltip>
+        </span>
+        <span
+          className={cn(
+            "relative grid size-5 shrink-0 place-items-center rounded-md transition-colors",
+            copied ? "text-primary" : "text-muted-foreground group-hover:bg-secondary/60 group-hover:text-foreground",
+          )}
+        >
+          <IconCopy
+            className={cn("absolute size-3.5 transition-opacity duration-fast ease-out", copied && "opacity-0")}
+          />
+          {/* El trazo se dibuja con stroke-dashoffset (sólo pinta, no recalcula layout). */}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            className="absolute size-3.5"
+          >
+            <path
+              d="M5 12.5l4.5 4.5L19 7.5"
+              pathLength={1}
+              style={{
+                strokeDasharray: 1,
+                strokeDashoffset: copied ? 0 : 1,
+                transition: copied ? "stroke-dashoffset 300ms var(--ease-out) 80ms" : "none",
+              }}
+            />
+          </svg>
+        </span>
+      </button>
       <output className="sr-only">{copied ? "Enlace copiado" : ""}</output>
     </>
   );
