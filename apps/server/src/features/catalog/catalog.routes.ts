@@ -37,9 +37,10 @@ function categoryParam(slug: string | undefined) {
 /**
  * Versión de la forma de lo que depende de `spec` (listado, marcas y facetas) en la caché de borde. Sube al cambiar cómo
  * se filtra o se cuenta: la 2 es la de los umbrales (#190), con `threshold`, etiquetas "mínima" y conteos acumulados; la
- * 3, cuando las ranuras de memoria de las placas volvieron a ser un valor exacto.
+ * 3, cuando las ranuras de memoria de las placas volvieron a ser un valor exacto; la 4, con las facetas de specs con
+ * escalones (#192).
  */
-const SPEC_SHAPE = 3;
+const SPEC_SHAPE = 4;
 
 const ALL_FACET_KEYS = new Set(Object.values(CATEGORY_FACETS).flatMap((facets) => facets.map((f) => f.key)));
 

@@ -319,7 +319,7 @@ export async function listFacets(db: Db, category: Category, filters: ListFilter
     items: facets.map((facet, i) => {
       const rows = results[i] ?? [];
       const scale = facetScale(facet);
-      const values = rows
+      let values = rows
         .filter(
           (r): r is { value: string; count: number } =>
             r.value !== null && Number(r.count) > 0 && (!scale || scale.includes(r.value)),
@@ -331,8 +331,19 @@ export async function listFacets(db: Db, category: Category, filters: ListFilter
           ? at(a.value) - at(b.value)
           : b.count - a.count || a.value.localeCompare(b.value, "es"),
       );
-      // Un umbral cuenta lo que cumple "ese valor o más" (o "o menos"): conteos acumulados desde el extremo.
-      if (facet.threshold) {
+      if (facet.steps && facet.threshold) {
+        // Cada escalón cuenta lo medido que lo cumple; los conteos ya salen acumulados.
+        const meets = (v: string, step: number) =>
+          facet.threshold === "min" ? Number.parseFloat(v) >= step : Number.parseFloat(v) <= step;
+        values = facet.steps
+          .map((step) => ({
+            value: String(step),
+            label: facetOptionLabel(facet, String(step)),
+            count: values.filter((v) => meets(v.value, step)).reduce((sum, v) => sum + v.count, 0),
+          }))
+          .filter((v) => v.count > 0);
+      } else if (facet.threshold) {
+        // Un umbral cuenta lo que cumple "ese valor o más" (o "o menos"): conteos acumulados desde el extremo.
         let sum = 0;
         for (const v of facet.threshold === "min" ? [...values].reverse() : values) v.count = sum += v.count;
       }

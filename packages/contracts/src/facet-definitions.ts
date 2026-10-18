@@ -23,6 +23,8 @@ export interface FacetDefinition {
    * Con `values`, el orden de sus claves (de menor a mayor) es el de la escala (la certificación 80 Plus).
    */
   threshold?: "min" | "max";
+  /** Con umbral numérico: las opciones son estos escalones y no cada valor medido (hay 158 largos de GPU distintos). */
+  steps?: readonly number[];
 }
 
 const MEMORY_TYPES = { ddr3: "DDR3", ddr4: "DDR4", ddr5: "DDR5" };
@@ -36,11 +38,23 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     { key: "vram", label: "Memoria mínima", unit: "GB", threshold: "min" },
     { key: "memory_type", label: "Tipo de memoria", source: "specs" },
     { key: "memory_bus_bit", label: "Bus de memoria mínimo", unit: "bits", source: "specs", threshold: "min" },
+    {
+      key: "length_mm",
+      label: "Largo máximo",
+      unit: "mm",
+      source: "specs",
+      threshold: "max",
+      steps: [200, 250, 300, 330, 360],
+    },
+    { key: "slots", label: "Ranuras máximas", unit: "ranuras", source: "specs", threshold: "max", steps: [2, 2.5, 3] },
+    { key: "min_psu_w", label: "Fuente recomendada máxima", unit: "W", source: "specs", threshold: "max" },
   ],
   cpu: [
     { key: "model", label: "Modelo" },
     { key: "socket", label: "Socket", source: "specs" },
     { key: "cores_total", label: "Núcleos mínimos", unit: "núcleos", source: "specs", threshold: "min" },
+    { key: "threads", label: "Hilos mínimos", unit: "hilos", source: "specs", threshold: "min" },
+    { key: "tdp_w", label: "TDP máximo", unit: "W", source: "specs", threshold: "max", steps: [35, 65, 105, 125, 170] },
     {
       key: "includes_cooler",
       label: "Disipador",
@@ -56,6 +70,7 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     { key: "wifi", label: "Wi-Fi", values: YES_NO("Con Wi-Fi", "Sin Wi-Fi") },
     { key: "m2_slots", label: "Ranuras M.2 mínimas", unit: "M.2", source: "specs", threshold: "min" },
     { key: "memory_slots", label: "Ranuras de memoria", unit: "ranuras", source: "specs" },
+    { key: "memory_max_gb", label: "Memoria admitida", unit: "GB", source: "specs", threshold: "min" },
   ],
   ram: [
     { key: "type", label: "Tipo", values: MEMORY_TYPES },
@@ -89,6 +104,22 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     { key: "interface", label: "Interfaz", values: { nvme: "NVMe", sata: "SATA" } },
     { key: "formFactor", label: "Formato", values: { "2.5": '2,5"', "2230": "M.2 2230", "2280": "M.2 2280" } },
     { key: "pcieGen", label: "PCIe", values: { "3": "PCIe 3.0", "4": "PCIe 4.0", "5": "PCIe 5.0" } },
+    {
+      key: "read_speed_mb_s",
+      label: "Lectura mínima",
+      unit: "MB/s",
+      source: "specs",
+      threshold: "min",
+      steps: [500, 2000, 3500, 5000, 7000, 10000, 14000],
+    },
+    {
+      key: "tbw",
+      label: "Durabilidad mínima",
+      unit: "TBW",
+      source: "specs",
+      threshold: "min",
+      steps: [150, 300, 600, 1200],
+    },
   ],
   hdd: [
     { key: "capacity", label: "Capacidad mínima", unit: "GB", threshold: "min" },
@@ -98,6 +129,14 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
   cpu_cooler: [
     { key: "type", label: "Tipo", values: { air: "Por aire", aio: "Refrigeración líquida" } },
     { key: "radiatorMm", label: "Radiador", unit: "mm" },
+    {
+      key: "height_mm",
+      label: "Alto máximo",
+      unit: "mm",
+      source: "specs",
+      threshold: "max",
+      steps: [140, 150, 160, 165, 170],
+    },
   ],
   case: [
     {
@@ -114,6 +153,22 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       },
     },
     { key: "color", label: "Color", values: COLORS },
+    {
+      key: "max_gpu_length_mm",
+      label: "Largo de GPU admitido",
+      unit: "mm",
+      source: "specs",
+      threshold: "min",
+      steps: [250, 300, 350, 400, 450],
+    },
+    {
+      key: "max_cpu_cooler_height_mm",
+      label: "Alto de cooler admitido",
+      unit: "mm",
+      source: "specs",
+      threshold: "min",
+      steps: [150, 160, 170, 180],
+    },
   ],
   case_fan: [
     { key: "sizeMm", label: "Tamaño", unit: "mm" },
@@ -122,6 +177,23 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       label: "Cantidad",
       values: { "1": "1 ventilador", "2": "Pack de 2", "3": "Pack de 3", "4": "Pack de 4" },
     },
+    {
+      key: "airflow_cfm_max",
+      label: "Flujo de aire mínimo",
+      unit: "CFM",
+      source: "specs",
+      threshold: "min",
+      steps: [30, 40, 50, 60, 70],
+    },
+    {
+      key: "noise_dba_max",
+      label: "Ruido máximo",
+      unit: "dBA",
+      source: "specs",
+      threshold: "max",
+      steps: [20, 25, 30, 35],
+    },
+    { key: "pwm", label: "Control de velocidad", values: YES_NO("Con PWM", "Sin PWM"), source: "specs" },
   ],
 };
 
@@ -150,7 +222,7 @@ export function facetValueLabel(facet: FacetDefinition, value: string): string {
     if (Number.isFinite(gb) && gb >= 1000) return `${(gb / 1000).toLocaleString("es-CL")} TB`;
   }
   if (facet.unit === "CL") return `CL${value}`;
-  return facet.unit ? `${value} ${facet.unit}` : value.toUpperCase();
+  return facet.unit ? `${value.replace(".", ",")} ${facet.unit}` : value.toUpperCase();
 }
 
 /** Valor como opción de un filtro con umbral: "12 GB o más", "CL16 o menos", "80 Plus Gold o superior". */

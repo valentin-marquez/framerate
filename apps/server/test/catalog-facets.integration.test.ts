@@ -110,8 +110,19 @@ beforeAll(async () => {
   await seed("Fuente Platinum", "psu", '{"wattage":1000,"efficiency":"platinum"}', 180_000, null);
   // Specs por oferta: se escribe distinto entre tiendas, `knowledge` no filtra y manda la última versión.
   await identity(gpu12, 1, { memory_type: "GDDR6" }, { memory_type: "text" });
-  await identity(gpu12, 2, { memory_type: "gddr 7" }, { memory_type: "text" });
-  await identity(gpu16, 1, { memory_type: "GDDR7" }, { memory_type: "text" });
+  await identity(
+    gpu12,
+    2,
+    { memory_type: "gddr 7", length_mm: 245, slots: 2.5 },
+    { memory_type: "text", length_mm: "text", slots: "text" },
+  );
+  // Hay tiendas que dejan el número dentro de un texto: SQLite lo lee igual al comparar.
+  await identity(
+    gpu16,
+    1,
+    { memory_type: "GDDR7", length_mm: "310 (con soporte)" },
+    { memory_type: "text", length_mm: "text" },
+  );
   await identity(gpu8, 1, { memory_type: "GDDR6" }, { memory_type: "knowledge" });
   await refreshSummaries(db);
   // El recálculo saca el precio habitual del historial diario, que aquí no existe: se vuelve a fijar el sembrado.
@@ -247,6 +258,7 @@ describe("facetas", () => {
       "wifi",
       "m2_slots",
       "memory_slots",
+      "memory_max_gb",
     ]);
     expect(items.slice(1, 5)).toEqual([
       { key: "chipset", label: "Chipset", values: [], unknownCount: 4 },
@@ -356,5 +368,29 @@ describe("facetas", () => {
       { value: "amd", label: "AMD", count: 1 },
     ]);
     expect(rows(await list("category=gpu&spec=chipMaker:amd"))).toEqual([["GPU 8", "match"]]);
+  });
+
+  test("escalones: las opciones son los escalones que alguien cumple, no cada largo medido", async () => {
+    expect(await facet("tarjetas-de-video", "length_mm")).toEqual({
+      key: "length_mm",
+      label: "Largo máximo",
+      threshold: "max",
+      values: [
+        { value: "250", label: "250 mm o menos", count: 1 },
+        { value: "300", label: "300 mm o menos", count: 1 },
+        { value: "330", label: "330 mm o menos", count: 2 },
+        { value: "360", label: "360 mm o menos", count: 2 },
+      ],
+      unknownCount: 2,
+    });
+    expect(rows(await list("category=gpu&spec=length_mm:300&sort=price_asc"))).toEqual([
+      ["GPU 12", "match"],
+      ["GPU 8", "unknown"],
+      ["GPU sin vram", "unknown"],
+    ]);
+    expect((await facet("tarjetas-de-video", "slots"))?.values).toEqual([
+      { value: "2.5", label: "2,5 ranuras o menos", count: 1 },
+      { value: "3", label: "3 ranuras o menos", count: 1 },
+    ]);
   });
 });
