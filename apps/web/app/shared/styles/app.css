@@ -932,6 +932,14 @@
   .dark .rail-surface {
     background-color: color-mix(in oklab, var(--card) 40%, transparent);
   }
+  /* El riel principal, con el mismo color pero opaco: mezclado de antemano con el fondo, no se ve a través de él
+     mientras se anima (el panel de filtros que se desliza por detrás, o la página que se corre). */
+  .rail-solid {
+    background-color: color-mix(in oklab, var(--card) 26%, var(--background));
+  }
+  .dark .rail-solid {
+    background-color: color-mix(in oklab, var(--card) 40%, var(--background));
+  }
   /* El texto atenuado del riel y del panel, más oscuro sólo en claro (≈6,5:1 sobre su fondo, como en oscuro): con el
      0,52 global quedaba en 4,6:1. Los menús que se abren fuera del riel siguen con el token de siempre. */
   :root:not(.dark) :is(aside[data-wide], .rail-surface) {

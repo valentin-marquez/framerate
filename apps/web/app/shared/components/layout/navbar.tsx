@@ -396,7 +396,7 @@ export function Navbar({
             className={cn(
               "t-resize fixed inset-y-0 left-0 z-40 hidden scrollbar-slim flex-col gap-4 overflow-y-auto overflow-x-hidden border-border/60 border-r px-3 py-3 lg:flex",
               wide ? "w-64" : "w-16",
-              peek ? "bg-card shadow-2xl" : "rail-surface",
+              peek ? "bg-card shadow-2xl" : "rail-solid",
             )}
           >
             <div className="flex h-10 shrink-0 items-center gap-2 px-2">
