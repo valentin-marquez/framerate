@@ -1,8 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import { createTestD1 } from "@framerate/database/testing";
 import { Hono } from "hono";
 import type { AppEnv } from "@/app";
+import { createApp } from "@/app";
+import type { Env } from "@/env";
 import { handleError } from "@/shared/http/errors";
 import { rateLimit } from "@/shared/http/middleware";
+import { testEnv } from "./helpers";
 
 /** Cada visitante debe tener su propio cupo, también cuando el SSR de la web llama por service binding. */
 
@@ -45,5 +49,33 @@ describe("clave del límite", () => {
   test("responde 429 al pasarse del cupo", async () => {
     const { request } = appWithLimiter();
     expect((await request({ "cf-connecting-ip": "bloqueada" })).status).toBe(429);
+  });
+});
+
+describe("rutas con límite", () => {
+  // #195: el catálogo sale de la caché del edge y el SSR hace varias llamadas por página; lo que escribe sigue con cupo.
+  test("el catálogo no gasta cupo y las tiendas sí", async () => {
+    const { d1, dispose } = await createTestD1();
+    const keys: string[] = [];
+    const { env } = testEnv(
+      d1,
+      {},
+      {
+        PUBLIC_RATE_LIMITER: {
+          limit: async ({ key }: { key: string }) => {
+            keys.push(key);
+            return { success: true };
+          },
+        } as unknown as Env["PUBLIC_RATE_LIMITER"],
+      },
+    );
+    const app = createApp();
+    const headers = { "cf-connecting-ip": "1.1.1.1" };
+    await app.request("/v1/categories", { headers }, env);
+    await app.request("/v1/products/redirects/nada", { headers }, env);
+    expect(keys).toEqual([]);
+    await app.request("/v1/stores/alfa", { headers }, env);
+    expect(keys).toEqual(["1.1.1.1"]);
+    await dispose();
   });
 });

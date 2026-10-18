@@ -160,10 +160,15 @@ export function createApp() {
   translationFeedbackApi.use("*", optionalUser);
   translationFeedbackApi.route("/", translationFeedbackRoutes);
 
+  // Sin límite por IP: sus lecturas salen de la caché del edge y el SSR hace varias llamadas por página, así que un
+  // rastreo normal (Googlebot incluido) se quedaba sin cupo (#195). Un scraper se frena con el WAF de la zona.
+  const catalogApi = new Hono<AppEnv>();
+  catalogApi.use("*", credentialedCors);
+  catalogApi.route("/", catalogRoutes);
+
   const publicApi = new Hono<AppEnv>();
   publicApi.use("*", credentialedCors);
   publicApi.use("*", rateLimit);
-  publicApi.route("/", catalogRoutes);
   publicApi.route("/", storesRoutes);
   publicApi.route("/", storeManagementRoutes);
   publicApi.route("/users", publicProfileRoutes);
@@ -196,6 +201,7 @@ export function createApp() {
   app.route("/v1/comments", commentsApi);
   app.route("/v1/products/:id/comments", productCommentsApi);
   app.route("/v1/admin", adminApi);
+  app.route("/v1", catalogApi);
   app.route("/v1", publicApi);
 
   app.notFound(notFound);
