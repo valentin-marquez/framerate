@@ -31,6 +31,7 @@ import { useOptionalRequestInfo } from "~/shared/hooks/use-request-info";
 import { api, isRateLimitError } from "~/shared/lib/api";
 import { trackLocation } from "~/shared/lib/category-memory";
 import { useTheme } from "~/shared/lib/client";
+import { isMobileRequest } from "~/shared/lib/device";
 import { markInitialLoadDone } from "~/shared/lib/initial-load";
 import { getQueryClient } from "~/shared/lib/query-client";
 import type { Lang } from "~/shared/lib/translations";
@@ -124,6 +125,8 @@ export async function loader({ request }: Route.LoaderArgs) {
       freshness,
       // Riel del navbar plegado: lo sabe el servidor para no mover el layout al hidratar.
       railCollapsed: /(?:^|;\s*)rail=collapsed/.test(request.headers.get("Cookie") ?? ""),
+      // Un teléfono no recibe el riel ni el panel de filtros: ocultos igual se renderizaban y se hidrataban (#193).
+      mobile: isMobileRequest(request),
       requestInfo: {
         clientEnv,
         userPrefs: { theme: getTheme(request), lang },
@@ -209,7 +212,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { categories: initialCategories, railCollapsed } = loaderData;
+  const { categories: initialCategories, railCollapsed, mobile } = loaderData;
   const theme = useTheme();
 
   const { data: categories } = useCategories({ initialData: initialCategories });
@@ -257,7 +260,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
           navigating ? "scale-x-75 opacity-100 duration-[3000ms] ease-out" : "scale-x-100 opacity-0 duration-300",
         )}
       />
-      <Navbar categories={categories ?? []} freshness={freshness} initialCollapsed={railCollapsed} />
+      <Navbar categories={categories ?? []} freshness={freshness} initialCollapsed={railCollapsed} mobile={mobile} />
 
       {/* El hueco del riel (w-64, o w-16 plegado) sale de `data-rail` en app.css. */}
       <div className="page-content flex flex-1 flex-col">

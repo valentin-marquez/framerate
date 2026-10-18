@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import { markdownResponse, varyByAccept } from "../app/features/agents/markdown.server";
 import { setServerContext } from "../app/shared/lib/api";
+import { varyByDevice } from "../app/shared/lib/device";
 
 declare module "react-router" {
   export interface RouterContextProvider {
@@ -49,7 +50,7 @@ export default {
           ),
         ),
     );
-    return withApiCookies(response, setCookies);
+    return withApiCookies(varyByDevice(response), setCookies);
   },
 } satisfies ExportedHandler<Env>;
 

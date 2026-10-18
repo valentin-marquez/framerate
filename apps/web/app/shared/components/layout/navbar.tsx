@@ -224,13 +224,27 @@ export function Navbar({
   categories,
   freshness,
   initialCollapsed,
+  mobile = false,
 }: {
   categories: CategoryItem[];
   /** Sin dato (la API falló) no se muestra. */
   freshness?: Freshness;
   initialCollapsed: boolean;
+  /** El servidor vio un teléfono: no manda el riel ni el panel de filtros, que son sólo de escritorio. */
+  mobile?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
+  // Si después la pantalla es ancha (teléfono en horizontal, ventana que crece), el riel y el panel se montan entonces.
+  const [wideScreen, setWideScreen] = useState(false);
+  useEffect(() => {
+    if (!mobile) return;
+    const query = window.matchMedia("(min-width: 64rem)");
+    const sync = () => setWideScreen(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, [mobile]);
+  const showDesktop = !mobile || wideScreen;
   // El hueco del contenido lo pone `data-rail` en el <html> (app.css): plegar no vuelve a renderizar la página.
   const onCollapsedChange = (next: boolean) => {
     setCollapsed(next);
@@ -325,169 +339,190 @@ export function Navbar({
   return (
     <RailTarget value={railTarget}>
       <TimeGradient />
-      {/* Manija fuera del riel (que recorta su contenido): sigue su borde con transform, no con left. En una categoría
+      {showDesktop && (
+        <>
+          {/* Manija fuera del riel (que recorta su contenido): sigue su borde con transform, no con left. En una categoría
           es la del panel de filtros: el riel siempre está compacto. */}
-      <button
-        type="button"
-        onClick={() => {
-          if (inCategory) {
-            setPanelOpen((open) => !open);
-            return;
-          }
-          setPeek(false);
-          onCollapsedChange(!collapsed);
-        }}
-        aria-label={
-          inCategory ? (panelOpen ? "Plegar filtros" : "Mostrar filtros") : collapsed ? "Desplegar menú" : "Plegar menú"
-        }
-        aria-expanded={inCategory ? panelOpen : !collapsed}
-        className={cn(
-          "t-rail-handle fixed top-8 left-0 z-50 hidden size-6 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          // En la ficha el riel es siempre compacto: no hay manija.
-          !onProduct && "lg:grid",
-          inCategory ? (panelOpen ? "[--rail:20rem]" : "[--rail:4rem]") : wide ? "[--rail:16rem]" : "[--rail:4rem]",
-        )}
-      >
-        <span className="t-icon-swap">
-          <IconChevronLeft data-on={inCategory ? panelOpen : wide} className="size-3.5" stroke={2} />
-          <IconChevronRight data-on={inCategory ? !panelOpen : !wide} className="size-3.5" stroke={2} />
-        </span>
-      </button>
-      {/*
+          <button
+            type="button"
+            onClick={() => {
+              if (inCategory) {
+                setPanelOpen((open) => !open);
+                return;
+              }
+              setPeek(false);
+              onCollapsedChange(!collapsed);
+            }}
+            aria-label={
+              inCategory
+                ? panelOpen
+                  ? "Plegar filtros"
+                  : "Mostrar filtros"
+                : collapsed
+                  ? "Desplegar menú"
+                  : "Plegar menú"
+            }
+            aria-expanded={inCategory ? panelOpen : !collapsed}
+            className={cn(
+              "t-rail-handle fixed top-8 left-0 z-50 hidden size-6 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              // En la ficha el riel es siempre compacto: no hay manija.
+              !onProduct && "lg:grid",
+              inCategory ? (panelOpen ? "[--rail:20rem]" : "[--rail:4rem]") : wide ? "[--rail:16rem]" : "[--rail:4rem]",
+            )}
+          >
+            <span className="t-icon-swap">
+              <IconChevronLeft data-on={inCategory ? panelOpen : wide} className="size-3.5" stroke={2} />
+              <IconChevronRight data-on={inCategory ? !panelOpen : !wide} className="size-3.5" stroke={2} />
+            </span>
+          </button>
+          {/*
         Un solo diseño para plegado y desplegado: los íconos quedan en la misma columna (centro a 32 px) y sólo cambia
         el ancho; lo que no cabe se recorta y las etiquetas se desvanecen (.rail-label en app.css). `data-rail`
         desplaza el contenido (asomarse no lo mueve).
       */}
-      <aside
-        data-wide={wide}
-        style={{ viewTransitionName: "nav-rail" }}
-        onFocus={(e) => {
-          if (compact && (e.target as HTMLElement).matches("input[data-search-field]")) setPeek(true);
-        }}
-        onBlur={(e) => {
-          // Un campo de filtros abre su lista fuera del riel (`data-rail-popup`): el foco sigue siendo del riel.
-          const to = e.relatedTarget as HTMLElement | null;
-          if (!e.currentTarget.contains(to) && !to?.closest("[data-rail-popup]")) setPeek(false);
-        }}
-        className={cn(
-          "t-resize fixed inset-y-0 left-0 z-40 hidden scrollbar-slim flex-col gap-4 overflow-y-auto overflow-x-hidden border-border/60 border-r bg-card/40 px-3 py-3 lg:flex",
-          wide ? "w-64" : "w-16",
-          peek && "bg-card shadow-2xl",
-        )}
-      >
-        <div className="flex h-10 shrink-0 items-center gap-2 px-2">
-          <Link to="/" prefetch="intent" className="flex shrink-0 items-center gap-2 text-foreground">
-            <Logo className="size-6 shrink-0" />
-            <span className="rail-label font-semibold text-lg tracking-tight">framerate</span>
-          </Link>
-        </div>
+          <aside
+            data-wide={wide}
+            style={{ viewTransitionName: "nav-rail" }}
+            onFocus={(e) => {
+              if (compact && (e.target as HTMLElement).matches("input[data-search-field]")) setPeek(true);
+            }}
+            onBlur={(e) => {
+              // Un campo de filtros abre su lista fuera del riel (`data-rail-popup`): el foco sigue siendo del riel.
+              const to = e.relatedTarget as HTMLElement | null;
+              if (!e.currentTarget.contains(to) && !to?.closest("[data-rail-popup]")) setPeek(false);
+            }}
+            className={cn(
+              "t-resize fixed inset-y-0 left-0 z-40 hidden scrollbar-slim flex-col gap-4 overflow-y-auto overflow-x-hidden border-border/60 border-r bg-card/40 px-3 py-3 lg:flex",
+              wide ? "w-64" : "w-16",
+              peek && "bg-card shadow-2xl",
+            )}
+          >
+            <div className="flex h-10 shrink-0 items-center gap-2 px-2">
+              <Link to="/" prefetch="intent" className="flex shrink-0 items-center gap-2 text-foreground">
+                <Logo className="size-6 shrink-0" />
+                <span className="rail-label font-semibold text-lg tracking-tight">framerate</span>
+              </Link>
+            </div>
 
-        {/* El riel plegado se ve igual en todas las vistas. En una categoría el buscador va en el panel, bajo el título, y
+            {/* El riel plegado se ve igual en todas las vistas. En una categoría el buscador va en el panel, bajo el título, y
             aquí queda el hueco de la lupa, vacío, para que los íconos de abajo no suban: el campo sigue montado y se
             desvanece, no desaparece de golpe al achicarse el riel. */}
-        <div
-          inert={inCategory}
-          className={cn(
-            "shrink-0 transition-opacity duration-base ease-out",
-            inCategory && "pointer-events-none opacity-0",
-          )}
-        >
-          <SearchField />
-        </div>
-
-        {/* Fijo: sólo scrollea la lista de categorías. Cada zona lleva su píldora de sección activa. */}
-        <RailGroup className="flex shrink-0 flex-col gap-4">
-          <nav aria-label="Principal" className="flex flex-col gap-0.5">
-            <RailLink
-              to="/"
-              end
-              label="Inicio"
-              collapsed={!wide}
-              icon={<IconHome className="size-[18px] shrink-0" stroke={1.75} />}
-            />
-            <RailLink
-              to="/buscar"
-              label="Todo el catálogo"
-              collapsed={!wide}
-              icon={<IconLayoutGrid className="size-[18px] shrink-0" stroke={1.75} />}
-            />
-          </nav>
-        </RailGroup>
-
-        {/* El alto mínimo hace que, en una ventana muy baja, scrollee el riel entero y no se aplaste la lista. */}
-        <div className="relative min-h-40 flex-1">
-          <nav aria-label="Categorías" className="absolute inset-0 flex flex-col">
-            {/* Angosto, el título cede su lugar a una línea en la columna de íconos. */}
-            <div className="relative shrink-0">
-              <p className="rail-label px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
-                Categorías
-              </p>
-              <span aria-hidden="true" className="rail-icon absolute top-1/2 left-2 h-px w-6 bg-border" />
-            </div>
-            <RailGroup className="scrollbar-slim flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
-              {categories.map((c) => {
-                const open = !!catalog && c.slug === catalog.category;
-                return (
-                  <RailLink
-                    key={c.id}
-                    to={`/categoria/${c.slug}`}
-                    label={CATEGORY_NAV_LABELS[c.id]}
-                    count={c.productCount}
-                    badge={open ? activeFilters : undefined}
-                    collapsed={!wide}
-                    // En la categoría abierta, tocarla muestra sus filtros en vez de recargarla sin ellos.
-                    onClick={(e) => {
-                      if (!open) return;
-                      e.preventDefault();
-                      setPanelOpen(true);
-                    }}
-                    icon={<CategoryIcon category={c.id} />}
-                  />
-                );
-              })}
-            </RailGroup>
-          </nav>
-        </div>
-
-        <div className="flex shrink-0 flex-col gap-3 border-border/60 border-t pt-3">
-          {freshness && (
-            // Ancho: el texto con la barra; angosto: el reloj (o la llama) en la columna de íconos, en el mismo lugar.
-            <div className="relative">
-              <div className="rail-label">
-                <OfferFreshness freshness={freshness} collapsed={false} />
-              </div>
-              <div className="rail-icon absolute top-0 left-0.5">
-                <OfferFreshness freshness={freshness} collapsed />
-              </div>
-            </div>
-          )}
-          {/* Ancho: el botón de tema a la derecha de la cuenta; angosto, sobre ella. Siempre en el mismo sitio del DOM:
-              sube o baja con transform y la cuenta cede el lugar con el relleno, así no salta al plegar el riel. */}
-          <div className={cn("t-rail-foot relative", !wide && "pt-11")}>
-            <div className={cn("t-rail-account flex h-12 items-center", wide && "pr-12")}>
-              <div className="w-full min-w-0">
-                <UserMenu
-                  align="start"
-                  side={wide ? "top" : "right"}
-                  railLabel
-                  loginClassName="h-9 w-full justify-start gap-2 overflow-hidden rounded-xl px-2.5"
-                />
-              </div>
-            </div>
             <div
+              inert={inCategory}
               className={cn(
-                "absolute top-0 right-0 transition-transform duration-base ease-in-out motion-reduce:transition-none",
-                wide ? "translate-y-1.5" : "-translate-x-0.5",
+                "shrink-0 transition-opacity duration-base ease-out",
+                inCategory && "pointer-events-none opacity-0",
               )}
             >
-              <ThemeToggle />
+              <SearchField />
             </div>
-          </div>
-        </div>
-      </aside>
 
-      {/* Sólo escritorio: en teléfono los filtros siguen siendo la hoja del botón Filtros. */}
-      {shownCatalog && <FiltersAside open={inCategory && panelOpen} data={shownCatalog} />}
+            {/* Fijo: sólo scrollea la lista de categorías. Cada zona lleva su píldora de sección activa. */}
+            <RailGroup className="flex shrink-0 flex-col gap-4">
+              <nav aria-label="Principal" className="flex flex-col gap-0.5">
+                <RailLink
+                  to="/"
+                  end
+                  label="Inicio"
+                  collapsed={!wide}
+                  icon={<IconHome className="size-[18px] shrink-0" stroke={1.75} />}
+                />
+                <RailLink
+                  to="/buscar"
+                  label="Todo el catálogo"
+                  collapsed={!wide}
+                  icon={<IconLayoutGrid className="size-[18px] shrink-0" stroke={1.75} />}
+                />
+              </nav>
+            </RailGroup>
+
+            {/* El alto mínimo hace que, en una ventana muy baja, scrollee el riel entero y no se aplaste la lista. */}
+            <div className="relative min-h-40 flex-1">
+              <nav aria-label="Categorías" className="absolute inset-0 flex flex-col">
+                {/* Angosto, el título cede su lugar a una línea en la columna de íconos. */}
+                <div className="relative shrink-0">
+                  <p className="rail-label px-2.5 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
+                    Categorías
+                  </p>
+                  <span aria-hidden="true" className="rail-icon absolute top-1/2 left-2 h-px w-6 bg-border" />
+                </div>
+                <RailGroup className="scrollbar-slim flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
+                  {categories.map((c) => {
+                    const open = !!catalog && c.slug === catalog.category;
+                    return (
+                      <RailLink
+                        key={c.id}
+                        to={`/categoria/${c.slug}`}
+                        label={CATEGORY_NAV_LABELS[c.id]}
+                        count={c.productCount}
+                        badge={open ? activeFilters : undefined}
+                        collapsed={!wide}
+                        // En la categoría abierta, tocarla muestra sus filtros en vez de recargarla sin ellos.
+                        onClick={(e) => {
+                          if (!open) return;
+                          e.preventDefault();
+                          setPanelOpen(true);
+                        }}
+                        icon={<CategoryIcon category={c.id} />}
+                      />
+                    );
+                  })}
+                </RailGroup>
+              </nav>
+            </div>
+
+            <div className="flex shrink-0 flex-col gap-3 border-border/60 border-t pt-3">
+              {freshness && (
+                // Ancho: el texto con la barra; angosto: el reloj (o la llama) en la columna de íconos, en el mismo lugar.
+                <div className="relative">
+                  <div className="rail-label">
+                    <OfferFreshness freshness={freshness} collapsed={false} />
+                  </div>
+                  <div className="rail-icon absolute top-0 left-0.5">
+                    <OfferFreshness freshness={freshness} collapsed />
+                  </div>
+                </div>
+              )}
+              {/* Ancho: el botón de tema a la derecha de la cuenta; angosto, sobre ella. Siempre en el mismo sitio del DOM:
+              sube o baja con transform y la cuenta cede el lugar con el relleno, así no salta al plegar el riel. */}
+              <div className={cn("t-rail-foot relative", !wide && "pt-11")}>
+                <div className={cn("t-rail-account flex h-12 items-center", wide && "pr-12")}>
+                  <div className="w-full min-w-0">
+                    <UserMenu
+                      align="start"
+                      side={wide ? "top" : "right"}
+                      railLabel
+                      loginClassName="h-9 w-full justify-start gap-2 overflow-hidden rounded-xl px-2.5"
+                    />
+                  </div>
+                </div>
+                <div
+                  className={cn(
+                    "absolute top-0 right-0 transition-transform duration-base ease-in-out motion-reduce:transition-none",
+                    wide ? "translate-y-1.5" : "-translate-x-0.5",
+                  )}
+                >
+                  <ThemeToggle />
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Sólo escritorio: en teléfono los filtros siguen siendo la hoja del botón Filtros. */}
+          {shownCatalog && <FiltersAside open={inCategory && panelOpen} data={shownCatalog} />}
+        </>
+      )}
+      {/* Sin riel, los enlaces a las categorías (los que sigue un rastreador móvil) no estarían en el HTML: van aquí,
+          fuera de la vista; a la vista están en la hoja "Categorías". */}
+      {!showDesktop && (
+        <nav aria-label="Categorías" className="sr-only">
+          {categories.map((c) => (
+            <Link key={c.id} to={`/categoria/${c.slug}`} prefetch="none" tabIndex={-1}>
+              {CATEGORY_NAV_LABELS[c.id]}
+            </Link>
+          ))}
+        </nav>
+      )}
 
       <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-border/60 border-b bg-background/85 px-3 backdrop-blur-md lg:hidden">
         <Brand compact />
