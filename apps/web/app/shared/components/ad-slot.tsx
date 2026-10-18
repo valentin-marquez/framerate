@@ -43,9 +43,8 @@ export function AdSlot({ slot, className = "h-[100px] @3xl:h-[90px]" }: { slot: 
         <p className="absolute inset-0 flex items-center justify-center rounded-xl border border-border border-dashed bg-card px-6 text-balance text-center text-muted-foreground text-paragraph-xs">
           Este espacio ayuda a que Framerate siga siendo gratis. Si te sirve, considera permitir anuncios aquí.
         </p>
-        {/* Sin anuncio que servir, AdSense deja un iframe en blanco encima del aviso: un bloque blanco en modo oscuro. */}
         <ins
-          className="adsbygoogle relative block size-full overflow-hidden rounded-xl data-[ad-status=unfilled]:hidden"
+          className="adsbygoogle relative block size-full overflow-hidden rounded-xl"
           data-ad-client={AD_CLIENT}
           data-ad-slot={slot}
         />
