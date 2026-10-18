@@ -1105,6 +1105,15 @@
 ::view-transition-new(nav-rail) {
   animation: none;
 }
+/* Si el riel cambia de ancho en la transición (inicio → ficha), el grupo no lo anima: estiraría la captura viva
+   mientras el riel anima su propio ancho con otra duración. Pasa al ancho nuevo de una vez, bajo el fundido. */
+::view-transition-group(nav-rail) {
+  animation: none;
+}
+/* biome-ignore lint/correctness/noUnknownPseudoClass: Biome aún no conoce :active-view-transition (Chrome 134+) */
+:root:active-view-transition .t-resize {
+  transition: none;
+}
 
 ::view-transition-group(product-photo) {
   animation-timing-function: var(--ease-in-out);
