@@ -5,9 +5,9 @@ import { PAGE_SIZES } from "../load-catalog";
 import { useFilterParams } from "../use-filter-params";
 
 const SORT_OPTIONS = [
+  { value: "popularity", label: "Más populares" },
   { value: "price_asc", label: "Precio: menor a mayor" },
   { value: "price_desc", label: "Precio: mayor a menor" },
-  { value: "popularity", label: "Más populares" },
   { value: "name", label: "Nombre" },
   { value: "discount", label: "Mayor descuento" },
 ] as const;
