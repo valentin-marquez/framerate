@@ -5,10 +5,10 @@ import { cn } from "~/shared/lib/utils";
 const PATHS: Record<Category, React.ReactNode> = {
   gpu: (
     <>
-      <rect x="2" y="5" width="20" height="12" rx="2" />
-      <circle cx="8.5" cy="11" r="3" />
-      <circle cx="16" cy="11" r="2" />
-      <path d="M6 17v2.5h9V17" />
+      <rect x="1.5" y="5" width="21" height="12" rx="2" />
+      <circle cx="7.5" cy="11" r="3" />
+      <circle cx="16.5" cy="11" r="3" />
+      <path d="M4.5 17v2.5h9V17" />
     </>
   ),
   cpu: (
