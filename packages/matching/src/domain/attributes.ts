@@ -162,11 +162,14 @@ const cpu: CategoryProfile = {
   discriminators: ["model", "packaging"],
   keyIsUnique: true,
   extract(title) {
-    // "7800X 3D" (PC Express) es el 7800X3D.
-    const t = prep(title).replace(/(\d{4}x) (3d)(?= )/g, "$1$2");
+    // "7800X 3D" (PC Express) es el 7800X3D; "9950X3DAMD" (Notebooksya) trae la marca pegada al modelo.
+    const t = prep(title)
+      .replace(/(\d{4}x) (3d)(?= )/g, "$1$2")
+      .replace(/(\d[a-z0-9]*?)(amd|intel)(?= )/g, "$1 $2");
     const a: Attributes = {};
-    const ryzen = t.match(/ ryzen ?(threadripper )?(\d) ?(pro )?(\d{4}[a-z0-9]{0,4})(?= )/);
-    const ultra = t.match(/ ultra ?i?([3579]) ?(\d{3}[a-z]{0,2})(?= )/);
+    // "R5-5500" y "U7-265K" (Cintegral) son Ryzen 5 5500 y Core Ultra 7 265K.
+    const ryzen = t.match(/ (?:ryzen ?(threadripper )?|r)(\d) ?(pro )?(\d{4}[a-z0-9]{0,4})(?= )/);
+    const ultra = t.match(/ (?:ultra ?i?|u)([3579]) ?(\d{3}[a-z]{0,2})(?= )/);
     const core = t.match(/ (?:core )?i([3579]) ?(\d{4,5}[a-z]{0,3})(?= )/);
     // Threadripper sin tier ("Threadripper 9970X"), Xeon con su serie y las gamas de entrada.
     const threadripper = t.match(/ threadripper ?(pro )?(\d{4}[a-z]{0,2})(?= )/);
@@ -415,7 +418,8 @@ const psu: CategoryProfile = {
       if (watts >= 200 && watts <= 2500) a.wattage = watts;
     } else {
       // Watts dentro del modelo (A750GLS, CX750, HX1500i). Múltiplo de 50 para no tomar años ni otros números.
-      for (const m of t.matchAll(/ [a-z]{0,3}(\d{3,4})([a-z]{0,3})(?= )/g)) {
+      // "1200P3" (ROG-THOR-1200P3) termina en dígito.
+      for (const m of t.matchAll(/ [a-z]{0,3}(\d{3,4})([a-z]{0,3}\d?)(?= )/g)) {
         // "2050rpm" o "1000ma" no son watts.
         if (/^(rpm|ma|mah|mm|hz|mhz|cfm|gb|tb|mb)$/.test(m[2] ?? "")) continue;
         const watts = Number(m[1]);

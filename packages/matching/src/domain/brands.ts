@@ -47,7 +47,7 @@ const BRANDS: Record<string, string[]> = {
   "be quiet!": ["be quiet"],
   Cougar: ["cougar"],
   Xigmatek: ["xigmatek"],
-  Newgen: ["newgen"],
+  Newgen: ["newgen", "nwg"],
   Kronos: ["kronos"],
   BIWIN: ["biwin"],
   Acer: ["acer"],
@@ -84,7 +84,7 @@ const BRANDS: Record<string, string[]> = {
   Lenovo: ["lenovo"],
   Dell: ["dell"],
   HP: ["hp"],
-  Clio: ["clio"],
+  Clio: ["clio", "ciio"],
   Macrovip: ["macrovip"],
   GamePro: ["gamepro"],
   "Thermal Hero": ["thermal hero"],
@@ -111,6 +111,17 @@ const BRANDS: Record<string, string[]> = {
   Shanghao: ["shanghao"],
   Kston: ["kston"],
   HEX: ["hex"],
+  // Marcas de las tiendas nuevas del 10 y 11-10-2026 (#159).
+  Sama: ["sama"],
+  Stylos: ["stylos"],
+  Jonsbo: ["jonsbo"],
+  BitFenix: ["bitfenix"],
+  Segotep: ["segotep"],
+  GamerStorm: ["gamerstorm"],
+  Alseye: ["alseye"],
+  Coolmoon: ["coolmoon"],
+  "WJ Coolman": ["wj coolman"],
+  PCCOOLER: ["pccooler", "pc cooler"],
 };
 
 /** Texto comparable: sin tildes, minúsculas, separadores unificados a un espacio. */

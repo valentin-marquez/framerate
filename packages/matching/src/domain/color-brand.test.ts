@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { Category } from "@framerate/contracts";
 import { PROFILES } from "./attributes";
-import { canonicalBrand } from "./brands";
+import { canonicalBrand, detectBrand } from "./brands";
 import { compare } from "./decide";
 import { buildFingerprint } from "./fingerprint";
 
@@ -83,4 +83,13 @@ describe("marca", () => {
     });
     expect(ram.brand).toBe(canonicalBrand("ADATA"));
   });
+});
+
+test("marcas de las tiendas nuevas (#159)", () => {
+  expect(detectBrand("Gabinete BitFenix/ Light ATX")).toBe("BitFenix");
+  expect(detectBrand("Gabinete NWG Phantom")).toBe("Newgen");
+  expect(detectBrand("Gabinete Jonsbo D31 Mesh")).toBe("Jonsbo");
+  expect(detectBrand("Cooler PCCOOLER RZ620")).toBe("PCCOOLER");
+  expect(detectBrand("Fuente WJ Coolman 600W")).toBe("WJ Coolman");
+  expect(detectBrand("Gabinete Segotep Lux")).toBe("Segotep");
 });

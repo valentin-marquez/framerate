@@ -72,6 +72,12 @@ describe("atributos por categoría", () => {
     expect(PROFILES.cpu.extract("Procesador Intel Core i5-14600K LGA1700").model).toBe("core i5 14600k");
     expect(PROFILES.cpu.extract("Intel Core Ultra 7 265K").model).toBe("core ultra 7 265k");
     expect(PROFILES.cpu.extract("Ryzen 5 5600 vs 5600X").model).toBe("ryzen 5 5600");
+    // Abreviaturas de Cintegral y marca pegada al modelo de Notebooksya (#159).
+    expect(PROFILES.cpu.extract("Procesador R7-8700G AM5").model).toBe("ryzen 7 8700g");
+    expect(PROFILES.cpu.extract("CPU R5-5500 AM4").model).toBe("ryzen 5 5500");
+    expect(PROFILES.cpu.extract("CORE U5-225 LGA1851").model).toBe("core ultra 5 225");
+    expect(PROFILES.cpu.extract("Procesador Intel U7-265K").model).toBe("core ultra 7 265k");
+    expect(PROFILES.cpu.extract("Procesador AMD Ryzen 9 9950X3DAMD").model).toBe("ryzen 9 9950x3d");
     expect(PROFILES.cpu.extract("Procesador AMD Ryzen Threadripper 9970X 32 Cores").model).toBe("threadripper 9970x");
     expect(PROFILES.cpu.extract("Procesador Intel Xeon Silver 4416+ - 2 GHz").model).toBe("xeon silver 4416+");
     expect(PROFILES.cpu.extract("INTEL CPU CELERON G5925 3.6GHZ").model).toBe("celeron g5925");
@@ -272,6 +278,7 @@ describe("atributos por categoría", () => {
     expect(PROFILES.ssd.extract("Cofre Vantec SATA 6Gb/s").capacity).toBeUndefined();
     expect(PROFILES.psu.extract("Cooler Hyper 212 Black 2050rpm").wattage).toBeUndefined();
     expect(PROFILES.psu.extract("Fuente Corsair CX750 80 Plus Bronze").wattage).toBe(750);
+    expect(PROFILES.psu.extract("Fuente de poder ROG-THOR-1200P3").wattage).toBe(1200);
   });
 });
 
