@@ -91,8 +91,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       // Fallthrough al 404.
     }
 
-    // Sin ficha a la cual mandarla, 404: una búsqueda vacía Google la cuenta como soft 404.
-    throw new Response("Producto no encontrado", { status: 404 });
+    // Sin ficha a la cual mandarla, 410 para que Google la saque antes que con un 404 (#194). No a una búsqueda: Google
+    // la cuenta como soft 404.
+    throw new Response("Producto no encontrado", { status: 410 });
   }
 }
 

@@ -54,7 +54,7 @@ export const links: Route.LinksFunction = () => [
 
 export function meta({ error }: Route.MetaArgs) {
   if (error) {
-    const notFound = isRouteErrorResponse(error) && error.status === 404;
+    const notFound = isRouteErrorResponse(error) && (error.status === 404 || error.status === 410);
     return [{ title: notFound ? "Página no encontrada - Framerate" : "Error - Framerate" }];
   }
   return [
@@ -280,6 +280,10 @@ const ERROR_COPY: Record<number, { title: string; details: string }> = {
   404: {
     title: "No encontramos esta página",
     details: "Puede que el enlace esté roto o que la página ya no exista.",
+  },
+  410: {
+    title: "Este producto ya no está en Framerate",
+    details: "Su ficha se retiró del catálogo. Puede que haya vuelto con otro nombre: búscalo en el catálogo.",
   },
 };
 

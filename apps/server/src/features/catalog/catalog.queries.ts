@@ -595,14 +595,17 @@ export async function resolveRedirect(db: Db, oldSlug: string): Promise<string |
 
 /**
  * Las fichas del sistema anterior cerraban en un id de 13 dígitos con uno o dos guiones, y justo antes llevaban el
- * MPN o el GTIN (`asus-prime-b550m-a-ac-90mb15k0-mvaay0-1782355372370`, #145). Se prueba el slug sin sufijo y después
- * los últimos 1 a 4 tramos como identificador, del más largo al más corto; sólo vale si apunta a un único producto.
+ * MPN o el GTIN (`asus-prime-b550m-a-ac-90mb15k0-mvaay0-1782355372370`, #145); una de v2 borrada que volvió a entrar
+ * con otro nombre también suele cerrar en su MPN (#194). Se prueba el slug sin sufijo y después los últimos 1 a 4
+ * tramos como identificador, del más largo al más corto; sólo vale si apunta a un único producto.
  */
 async function resolveLegacySlug(db: Db, slug: string): Promise<string | null> {
-  const base = slug.match(/^(.+?)--?\d{13}$/)?.[1];
-  if (!base) return null;
-  const same = await db.query.selectFrom("products").select("slug").where("slug", "=", base).executeTakeFirst();
-  if (same) return same.slug;
+  const legacy = slug.match(/^(.+?)--?\d{13}$/)?.[1];
+  if (legacy) {
+    const same = await db.query.selectFrom("products").select("slug").where("slug", "=", legacy).executeTakeFirst();
+    if (same) return same.slug;
+  }
+  const base = legacy ?? slug;
 
   const parts = base.split("-");
   const codes = [4, 3, 2, 1].flatMap((n) => {

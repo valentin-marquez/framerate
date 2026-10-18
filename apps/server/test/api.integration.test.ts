@@ -281,6 +281,16 @@ describe("catálogo: filtros, orden y datos auxiliares", () => {
     expect((await get("/v1/products/redirects/480gb-2-5-sata-mv480gb-1782433181001")).status).toBe(404);
   });
 
+  // #194: una ficha de v2 borrada cuyo producto volvió a entrar con otro nombre.
+  test("un slug de v2 que ya no existe va a la ficha de hoy por su MPN", async () => {
+    expect(
+      (await (await get("/v1/products/redirects/asus-dual-rtx-4070s-dual-rtx4070s-o12g")).json()) as object,
+    ).toEqual({
+      slug: "asus-dual-rtx-4070-super-oc-12gb",
+    });
+    expect((await get("/v1/products/redirects/cougar-unity360-fb-argb-360mm-negro")).status).toBe(404);
+  });
+
   test("un producto sin ofertas activas conserva su ficha y no aparece en el catálogo", async () => {
     const detail = ProductDetailSchema.parse(await (await get("/v1/products/corsair-rm750e-750w")).json());
     expect(detail.offers).toEqual([]);
