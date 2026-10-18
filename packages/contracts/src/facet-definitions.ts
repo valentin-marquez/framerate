@@ -37,7 +37,7 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     { key: "chipset", label: "Modelo" },
     { key: "vram", label: "Memoria mínima", unit: "GB", threshold: "min" },
     { key: "memory_type", label: "Tipo de memoria", source: "specs" },
-    { key: "memory_bus_bit", label: "Bus de memoria mínimo", unit: "bits", source: "specs", threshold: "min" },
+    { key: "memory_bus_bit", label: "Bus de memoria", unit: "bits", source: "specs" },
     {
       key: "length_mm",
       label: "Largo máximo",
