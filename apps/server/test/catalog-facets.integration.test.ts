@@ -259,6 +259,9 @@ describe("facetas", () => {
       "m2_slots",
       "memory_slots",
       "memory_max_gb",
+      "memory_max_speed_mt_s",
+      "pcie_x16_slots",
+      "sata_ports",
     ]);
     expect(items.slice(1, 5)).toEqual([
       { key: "chipset", label: "Chipset", values: [], unknownCount: 4 },
