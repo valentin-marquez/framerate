@@ -20,18 +20,19 @@ const PATHS: Record<Category, React.ReactNode> = {
   ),
   motherboard: (
     <>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <rect x="6.5" y="6.5" width="6" height="6" rx="1" />
-      <path d="M15.5 6.5v6M18 6.5v6M6.5 16h11M6.5 18.5h6" />
+      <rect x="3" y="2" width="18" height="20" rx="2" />
+      <rect x="6.5" y="5.5" width="6" height="6.5" rx="1" />
+      <path d="M15.5 5.5V12M18 5.5V12M6.5 16.5h11M6.5 19h6" />
     </>
   ),
   ram: (
     <>
-      <path d="M3.5 7h17A1.5 1.5 0 0 1 22 8.5V15H2V8.5A1.5 1.5 0 0 1 3.5 7Z" />
-      <rect x="5" y="9.5" width="3" height="3" rx=".5" />
-      <rect x="10.5" y="9.5" width="3" height="3" rx=".5" />
-      <rect x="16" y="9.5" width="3" height="3" rx=".5" />
-      <path d="M4 15v2.5h7V15M13 15v2.5h7V15" />
+      <path d="M3.5 6H20.5A1.5 1.5 0 0 1 22 7.5V9.5a1.25 1.25 0 0 0 0 2.5V14A1.5 1.5 0 0 1 20.5 15.5H3.5A1.5 1.5 0 0 1 2 14V12a1.25 1.25 0 0 0 0-2.5V7.5A1.5 1.5 0 0 1 3.5 6Z" />
+      <rect x="4.1" y="8.85" width="2.3" height="3.8" rx=".6" strokeWidth="1.1" />
+      <rect x="8.6" y="8.85" width="2.3" height="3.8" rx=".6" strokeWidth="1.1" />
+      <rect x="13.1" y="8.85" width="2.3" height="3.8" rx=".6" strokeWidth="1.1" />
+      <rect x="17.6" y="8.85" width="2.3" height="3.8" rx=".6" strokeWidth="1.1" />
+      <path d="M2.5 15.5v3h6v-3M11.5 15.5v3h10v-3" />
     </>
   ),
   psu: (
