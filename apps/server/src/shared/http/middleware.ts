@@ -102,7 +102,8 @@ function cached(
       return res;
     }
 
-    await next();
+    // Un fallo llega a D1: ahí sí cuenta el cupo, si no basta un parámetro inventado para saltarse la caché (#195).
+    await rateLimit(c, next);
     if (c.res.status === 200) {
       const stored = c.res.clone();
       stored.headers.set("Cache-Control", `public, max-age=${edgeMaxAge}`);

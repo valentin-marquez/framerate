@@ -54,7 +54,7 @@ describe("clave del límite", () => {
 
 describe("rutas con límite", () => {
   // #195: el catálogo sale de la caché del edge y el SSR hace varias llamadas por página; lo que escribe sigue con cupo.
-  test("el catálogo no gasta cupo y las tiendas sí", async () => {
+  test("leer el catálogo no gasta cupo; las tiendas y registrar una visita sí", async () => {
     const { d1, dispose } = await createTestD1();
     const keys: string[] = [];
     const { env } = testEnv(
@@ -76,6 +76,45 @@ describe("rutas con límite", () => {
     expect(keys).toEqual([]);
     await app.request("/v1/stores/alfa", { headers }, env);
     expect(keys).toEqual(["1.1.1.1"]);
+    await app.request("/v1/products/corsair-rm750e-750w/view", { method: "POST", headers }, env);
+    expect(keys).toEqual(["1.1.1.1", "1.1.1.1"]);
     await dispose();
+  });
+
+  test("un fallo de caché del catálogo gasta cupo y un acierto no", async () => {
+    const { d1, dispose } = await createTestD1();
+    const keys: string[] = [];
+    const { env } = testEnv(
+      d1,
+      {},
+      {
+        PUBLIC_RATE_LIMITER: {
+          limit: async ({ key }: { key: string }) => {
+            keys.push(key);
+            return { success: true };
+          },
+        } as unknown as Env["PUBLIC_RATE_LIMITER"],
+      },
+    );
+    const stored = new Map<string, Response>();
+    const g = globalThis as { caches?: unknown };
+    g.caches = {
+      default: {
+        match: async (req: Request) => stored.get(req.url)?.clone(),
+        put: async (req: Request, res: Response) => void stored.set(req.url, res),
+      },
+    };
+    const ctx = { waitUntil: async (p: Promise<unknown>) => await p, passThroughOnException: () => {}, props: {} };
+    const app = createApp();
+    const headers = { "cf-connecting-ip": "1.1.1.1" };
+    try {
+      await app.request("/v1/categories?x=1", { headers }, env, ctx);
+      expect(keys).toEqual(["1.1.1.1"]);
+      await app.request("/v1/categories?x=1", { headers }, env, ctx);
+      expect(keys).toEqual(["1.1.1.1"]);
+    } finally {
+      delete g.caches;
+      await dispose();
+    }
   });
 });

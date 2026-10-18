@@ -160,10 +160,11 @@ export function createApp() {
   translationFeedbackApi.use("*", optionalUser);
   translationFeedbackApi.route("/", translationFeedbackRoutes);
 
-  // Sin límite por IP: sus lecturas salen de la caché del edge y el SSR hace varias llamadas por página, así que un
-  // rastreo normal (Googlebot incluido) se quedaba sin cupo (#195). Un scraper se frena con el WAF de la zona.
+  // Un acierto de caché no gasta cupo: el SSR hace varias llamadas por página y un rastreo normal (Googlebot incluido)
+  // se quedaba sin él (#195). Los fallos los cuenta `cached`; las escrituras, este middleware.
   const catalogApi = new Hono<AppEnv>();
   catalogApi.use("*", credentialedCors);
+  catalogApi.use("*", (c, next) => (c.req.method === "GET" || c.req.method === "HEAD" ? next() : rateLimit(c, next)));
   catalogApi.route("/", catalogRoutes);
 
   const publicApi = new Hono<AppEnv>();
