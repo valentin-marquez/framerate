@@ -270,6 +270,12 @@ describe("separar fusiones", () => {
     expect(result).toMatchObject({ status: "split", created: true });
     expect(await productOf(id)).not.toBe(target);
     expect(await productOf(id)).not.toBeNull();
+    const created = await db.query
+      .selectFrom("products")
+      .select("published_at")
+      .where("id", "=", (await productOf(id)) as number)
+      .executeTakeFirstOrThrow();
+    expect(created.published_at).toBe(NOW);
   });
 
   test("revert en bloque: sólo decisiones ai: vigentes del modelo y rango pedidos", async () => {

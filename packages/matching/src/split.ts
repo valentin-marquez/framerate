@@ -7,6 +7,7 @@ import {
   detachIdentifiers,
   getListingIdentity,
   listingFingerprint,
+  publishListing,
   setListingProduct,
 } from "./repository";
 
@@ -72,6 +73,8 @@ export async function splitListing(
     createdBy: input.decidedBy,
     now: input.now,
   });
+  // El producto nuevo nace sin publicar: si la oferta ya se veía, sin esto desaparece del catálogo.
+  if (listing.visible === 1) await publishListing(db, listing.id, input.now);
   await refreshProductsPriceSummary(db, [from, target], new Date(input.now));
   return { status: "split", productId: target, created: !existing };
 }

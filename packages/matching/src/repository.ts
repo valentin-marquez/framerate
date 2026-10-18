@@ -572,7 +572,17 @@ export async function closeObsoleteReview(
 export async function getListingIdentity(db: Db, listingId: number) {
   return db.query
     .selectFrom("listings")
-    .select(["id", "product_id as productId", "category", "title", "brand", "mpn", "gtin", "image_url as imageUrl"])
+    .select([
+      "id",
+      "product_id as productId",
+      "category",
+      "title",
+      "brand",
+      "mpn",
+      "gtin",
+      "image_url as imageUrl",
+      "visible",
+    ])
     .where("id", "=", listingId)
     .executeTakeFirst();
 }
