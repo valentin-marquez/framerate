@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** Resultado del verificador de compatibilidad de una cotización (#127, docs/specs/2026-10-11-compatibilidad.md). */
+/** Resultado del verificador de compatibilidad de una cotización (#127, spec en #206). */
 
 export const COMPAT_RULES = [
   "socket",

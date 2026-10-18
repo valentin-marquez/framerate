@@ -1,6 +1,6 @@
 /**
  * Referencia de tarjetas de video por chipset (#180). AMD y NVIDIA se bajan sin navegador; Intel ARK corta sin él, así
- * que sus fichas de Arc se bajan con Playwright (docs/specs/2026-10-16-referencia-procesadores.md) y quedan en
+ * que sus fichas de Arc se bajan con Playwright (#207) y quedan en
  * gpu-reference.intel.json:
  *
  *   bun scripts/gpu-reference.ts build      baja AMD y NVIDIA, suma Intel y escribe gpu-reference.json

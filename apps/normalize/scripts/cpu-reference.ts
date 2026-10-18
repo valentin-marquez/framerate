@@ -2,7 +2,7 @@
  * Referencia de procesadores (#179). Tres pasos, cada uno revisable antes de aplicar:
  *
  * 1. Armar `cpu-reference.json` desde lo bajado de las fichas oficiales con Playwright (Intel corta las peticiones sin
- *    navegador; las extracciones están en docs/specs/2026-10-16-referencia-procesadores.md):
+ *    navegador; las extracciones están en #207):
  *      bun scripts/cpu-reference.ts build <amd.json> <intel.json>
  * 2. Cargar la tabla:
  *      bun scripts/cpu-reference.ts sql > /tmp/cpu-reference.sql

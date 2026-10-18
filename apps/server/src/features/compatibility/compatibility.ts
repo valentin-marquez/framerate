@@ -2,7 +2,7 @@ import type { Category, CompatCheck, CompatRule, QuoteCompatibility } from "@fra
 import type { PsuTier } from "./psu-tier";
 
 /**
- * Verificador de compatibilidad de una cotización (#127, docs/specs/2026-10-11-compatibilidad.md). Dominio puro: recibe
+ * Verificador de compatibilidad de una cotización (#127, spec en #206). Dominio puro: recibe
  * los ítems seleccionados con sus datos ya fusionados (identidad + specs) y devuelve un chequeo por regla aplicable.
  * Desconocido nunca es incompatible: lo que un normalizador no reconoce queda `null`.
  */

@@ -18,7 +18,7 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
   crédito de Anthropic; ver #149). Cada modelo nuevo entra en sombra antes de decidir (`MATCH_MODE`, #117).
 - **`apps/normalize`**: Worker que normaliza cada oferta una sola vez con Claude Haiku (cola `framerate-normalize`):
   identidad anclada al texto, specs y nombre canónico en `listing_identity`, gasto en `ai_usage`. Su salida va a la
-  cola `framerate-link`, que consume `apps/match`. Diseño y fases: `docs/specs/2026-10-08-preprocesador-ia.md` (#153).
+  cola `framerate-link`, que consume `apps/match`. Diseño y fases: #204 (#153).
 - **`apps/web`**: React Router v7 (SSR) en Workers. Sólo habla con la API (`/v1/*`), nunca con la base.
 - **`apps/relay`**: un `Bun.serve` en Docker en el servidor del dueño (Coolify,
   `relay.nozz.skin`) que descarga páginas de las tiendas que cortan las IPs de Cloudflare (`egress: "relay"` en el
@@ -27,7 +27,7 @@ Lee `docs/architecture.md` antes de tocar código del backend. Todo corre en Clo
   `sharp` las fotos que ingest le manda (WebP de 800 y 400 px) y ingest las guarda en R2. Con token, sin estado (#170).
 - **`apps/studio`** (Framerate Studio): explorador local de la D1 al estilo Drizzle Studio y Supabase (Kumo + Kysely), contra producción (API REST
   de D1 con el login de wrangler) o la D1 local. No se despliega; escribe sin restricciones, así que el respaldo es
-  Time Travel de D1. Ver `docs/specs/2026-10-10-d1-studio.md`.
+  Time Travel de D1. Ver #205.
 - **`packages/contracts`**: esquemas Zod de la API y contrato RPC `server`↔`ingest`, compartidos con `apps/web`.
 - **`packages/database`**: dueño del esquema: migraciones SQL, tipos Kysely, cliente D1 y utilidades de test
   (`@framerate/database/testing`).
@@ -76,6 +76,8 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
   el otro. Push: `git push origin <rama>` (`origin` es Forgejo, `git.nozz.skin`). GitHub
   (`valentin-marquez/framerate`, público) es un push mirror de Forgejo: nunca se pushea ahí directo, y todo lo que
   llega a Forgejo, ramas incluidas, queda público. Nunca usar credenciales pegadas en el chat.
+- Cada deploy se registra como un comentario en el issue fijado #196 (qué Workers y versiones, con qué commit,
+  migraciones, qué entra, qué se verificó y qué queda pendiente).
 - Salud de producción (consultas D1 de sólo lectura): skill `/prod-health`.
 
 ## En un PC nuevo o con una persona nueva
@@ -105,7 +107,7 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
 
 ## Cómo trabajar aquí
 
-- **Las tareas salen del tablero de Forgejo**, no de `TODO.md`: issues de `valentin/framerate` con milestones y labels,
+- **Las tareas salen del tablero de Forgejo**: issues de `valentin/framerate` con milestones y labels,
   en el orden del Roadmap fijado (#67). Desde la raíz del repo `tea` usa el login de quien lo corre. Listar:
   `tea issues --repo valentin/framerate`; leer uno: `tea api /repos/valentin/framerate/issues/<n>`.
 - **Quién toma qué:** cualquiera puede tomar cualquier issue del Roadmap, incluidos `server`, `ingest` y `matching`; lo
@@ -144,7 +146,7 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
 - Biome para lint y formato (`biome.json` extiende `@framerate/config/biome`). Hooks (`simple-git-hooks`):
   pre-commit `bun run biome:check`; pre-push `bun run biome:check && bun run build`.
 - **Commits en Conventional Commits, en español**: `tipo(scope): descripción` (`feat`, `fix`, `refactor`, `chore`,
-  `docs`, `style`, `test`, `perf`). La línea `Co-Authored-By` de un agente se puede dejar.
+  `docs`, `style`, `test`, `perf`).
 - Secretos sólo con `bunx wrangler secret put <NOMBRE>`; nunca en el repo.
 
 ## Dónde mirar
@@ -153,4 +155,6 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
 - `docs/architecture.md` (arquitectura, operación, plan), `docs/data-model.md`, `docs/identity.md`,
   `docs/stores.md` (reclamo de tiendas), `docs/store-candidates.md` (qué tiendas integrar y cómo).
 - [Issues de Forgejo](https://git.nozz.skin/valentin/framerate/issues) y su Roadmap (#67): pendientes concretos.
-  `TODO.md`: registro de deploys. `FUTURE.md`: visión de producto.
+  #196: registro de deploys. `FUTURE.md`: visión de producto.
+- Specs, planes, investigaciones y propuestas de composición van a un issue con la label `spec` (o como comentario
+  del issue que resuelven), no a archivos del repo: lo que se commitea queda público en GitHub.
