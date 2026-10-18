@@ -32,19 +32,20 @@
  * Jerarquía de texto: foreground (100 %), muted-foreground (~64 %). Separadores y bordes: tinta al 8 %.
  */
 :root {
-  --background: oklch(0.978 0 0);
+  /* Superficies apagadas: ni el fondo ni las tarjetas llegan al blanco puro, que en pantalla encandila. */
+  --background: oklch(0.93 0 0);
   --foreground: oklch(0.2 0 0);
-  --card: oklch(1 0 0);
+  --card: oklch(0.968 0 0);
   --card-foreground: oklch(0.2 0 0);
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.968 0 0);
   --popover-foreground: oklch(0.2 0 0);
   --primary: oklch(0.2 0 0);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.948 0 0);
+  --secondary: oklch(0.9 0 0);
   --secondary-foreground: oklch(0.48 0 0);
-  --muted: oklch(0.948 0 0);
+  --muted: oklch(0.9 0 0);
   --muted-foreground: oklch(0.52 0 0);
-  --accent: oklch(0.948 0 0);
+  --accent: oklch(0.9 0 0);
   --accent-foreground: oklch(0.2 0 0);
   --destructive: oklch(0.6119 0.2261 25.77);
   --destructive-foreground: oklch(82.559% 0.05205 18.163);

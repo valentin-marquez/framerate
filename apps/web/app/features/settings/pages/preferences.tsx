@@ -187,9 +187,9 @@ function ThemeCard({
 // Copia fija de los tokens de cada tema (app.css): la vista previa debe verse igual sin importar el tema activo.
 const PREVIEW_TOKENS = {
   light: {
-    background: "oklch(0.978 0 0)",
-    card: "oklch(1 0 0)",
-    secondary: "oklch(0.948 0 0)",
+    background: "oklch(0.93 0 0)",
+    card: "oklch(0.968 0 0)",
+    secondary: "oklch(0.9 0 0)",
     border: "oklch(0.2 0 0 / 0.08)",
     foreground: "oklch(0.2 0 0)",
     muted: "oklch(0.52 0 0)",
