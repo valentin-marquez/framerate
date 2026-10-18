@@ -41,7 +41,8 @@
         // Una oferta por invocación: con 5 en paralelo son 5 llamadas a Haiku a la vez (1,3 a 9,7 s cada una).
         "max_batch_size": 1,
         "max_concurrency": 5,
-        // Las esperas por tope o por pausa consumen un intento cada hora: 6 cubren 6 h antes de la DLQ.
+        // La espera por pausa consume un intento cada hora (6 cubren 6 h antes de la DLQ); la del tope, hasta el día UTC
+        // siguiente en tramos de 12 h como máximo.
         "max_retries": 6,
         "dead_letter_queue": "framerate-normalize-dlq"
       }

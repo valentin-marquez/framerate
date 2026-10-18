@@ -50,6 +50,8 @@ export interface Context {
 // Peor caso medido por oferta (ficha sin caché, dos llamadas): se reserva antes de preguntar.
 const USD_PER_OFFER = 0.002;
 const HOUR_S = 3600;
+/** Lo más que Queues deja posponer un mensaje. */
+const MAX_DELAY_S = 12 * HOUR_S;
 const RATE_LIMIT_DELAYS_S = [60, 300, 900];
 
 const AI_ACTOR = `ai:${NORMALIZE_MODEL}`;
@@ -134,8 +136,12 @@ export async function normalizeListing(
   }
   const budgetLeft = await budgetLeftUsd(db, config, now);
   if (budgetLeft < USD_PER_OFFER) {
-    log.warn("normalize.budget_wait", { listingId, budgetLeft });
-    return wait("budget", HOUR_S);
+    // Hasta que el tope se renueva (día UTC siguiente), no una hora: con 6 intentos por hora lo que llega después de
+    // gastar el día cae a la DLQ, y `retryStuck` lo reencola 24 h después a la misma hora, otra vez sin tope.
+    const nextDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+    const delaySeconds = Math.min(MAX_DELAY_S, Math.max(60, Math.ceil((nextDay - now.getTime()) / 1000)));
+    log.warn("normalize.budget_wait", { listingId, budgetLeft, delaySeconds });
+    return wait("budget", delaySeconds);
   }
 
   // Una fila de `ai_usage` por llamada real: el normalizador puede hacer hasta cuatro (reintento por JSON inválido,

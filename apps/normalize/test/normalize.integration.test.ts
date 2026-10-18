@@ -345,13 +345,14 @@ describe("normalizeListing", () => {
     expect(JSON.parse(String(q?.payload))).toMatchObject({ title: TITLE, reason: "es un kit con cooler" });
   });
 
-  test("tope del día agotado: no llama y espera una hora", async () => {
+  test("tope del día agotado: no llama y espera al día siguiente, hasta 12 h", async () => {
     const id = await seedListing();
     const h = fakeHaiku(ok());
+    // A las 12:00 UTC faltan 12 h para que se renueve el tope, justo lo más que Queues deja posponer.
     expect(await run(id, config(h, { monthlyUsd: 0 }))).toEqual({
       status: "wait",
       reason: "budget",
-      delaySeconds: 3600,
+      delaySeconds: 43_200,
     });
     expect(h.calls).toBe(0);
     expect((await listingRow(id)).norm_status).toBe("pending");
