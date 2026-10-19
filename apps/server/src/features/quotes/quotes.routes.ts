@@ -1,6 +1,7 @@
 import {
   AddQuoteItemRequestSchema,
   CreateQuoteRequestSchema,
+  PublicQuotesQuerySchema,
   QuoteCondenseQuerySchema,
   QuoteListQuerySchema,
   UpdateQuoteItemRequestSchema,
@@ -18,10 +19,14 @@ import {
   condensePlan,
   createQuote,
   deleteQuote,
+  likedByViewer,
+  likeQuote,
   listPublicQuotes,
   listQuotes,
+  listTopQuotes,
   loadQuote,
   removeItem,
+  unlikeQuote,
   updateItem,
   updateQuote,
 } from "./quotes.repository";
@@ -53,10 +58,29 @@ export const quotesRoutes = new Hono<AppEnv>()
     if (!result) throw new AppError(404, "user_not_found", "Usuario no encontrado");
     return c.json(result);
   })
+  .get("/public", async (c) => {
+    const { limit, page } = PublicQuotesQuerySchema.parse(c.req.query());
+    return c.json(await listTopQuotes(c.var.db, limit, page, c.env.ASSETS_BASE_URL));
+  })
   .get("/:id", async (c) => {
+    const viewer = c.get("user");
     const quote = await loadQuote(c.var.db, c.req.param("id"), c.env.ASSETS_BASE_URL);
-    if (!quote || !canRead(quote, c.get("user")?.id)) throw quoteNotFound();
-    return c.json(quote.detail);
+    if (!quote || !canRead(quote, viewer?.id)) throw quoteNotFound();
+    const likedByMe = viewer ? await likedByViewer(c.var.db, c.req.param("id"), viewer.id) : false;
+    return c.json({ ...quote.detail, likedByMe });
+  })
+  .put("/:id/like", async (c) => {
+    const user = currentUser(c);
+    assertNotBanned(user);
+    const result = await likeQuote(c.var.db, c.req.param("id"), user.id, new Date().toISOString());
+    if (result === "not_found") throw quoteNotFound();
+    if (result === "own") throw new AppError(403, "own_quote", "No puedes dar me gusta a tu propia cotización");
+    return c.json(result);
+  })
+  .delete("/:id/like", async (c) => {
+    const result = await unlikeQuote(c.var.db, c.req.param("id"), currentUser(c).id);
+    if (!result) throw quoteNotFound();
+    return c.json(result);
   })
   .get("/:id/condense", async (c) => {
     const user = currentUser(c);

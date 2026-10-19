@@ -494,8 +494,16 @@ export interface QuotesTable {
   analysis_status: Defaulted<"unknown" | "valid" | "warning" | "incompatible">;
   analysis: string | null;
   analyzed_at: string | null;
+  /** Mantenido por triggers sobre `quote_likes` (0036). */
+  like_count: Defaulted<number>;
   created_at: string;
   updated_at: string;
+}
+
+export interface QuoteLikesTable {
+  quote_id: number;
+  user_id: string;
+  created_at: string;
 }
 
 export interface QuoteItemsTable {
@@ -789,6 +797,7 @@ export interface Database {
   quote_items: QuoteItemsTable;
   comments: CommentsTable;
   comment_likes: CommentLikesTable;
+  quote_likes: QuoteLikesTable;
   reports: ReportsTable;
   moderation_actions: ModerationActionsTable;
   translation_feedback: TranslationFeedbackTable;

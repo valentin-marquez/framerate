@@ -25,6 +25,7 @@ export default [
   route("perfil", "features/profile/pages/profile-page.tsx", { id: "profile-me" }),
   route("u/:username", "features/profile/pages/profile-page.tsx", { id: "profile-user" }),
   route("cotizacion/:slug", "features/quote/pages/quote-details.tsx"),
+  route("cotizaciones", "features/quote/pages/public-quotes-page.tsx"),
 
   // rutas privadas (requerir inicio de sesión)
   route("ajustes", "features/settings/pages/layout.tsx", [

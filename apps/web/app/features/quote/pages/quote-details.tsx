@@ -14,6 +14,7 @@ import { QuoteActions } from "~/features/quote/components/quote-actions";
 import { CompatibilityList } from "~/features/quote/components/quote-compatibility";
 import { QuoteHeader } from "~/features/quote/components/quote-header";
 import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
+import { QuoteLikeButton } from "~/features/quote/components/quote-like-button";
 import { QuoteOwnerBar } from "~/features/quote/components/quote-owner-bar";
 import { QuoteTotals } from "~/features/quote/components/quote-totals";
 import { useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/useQuotes";
@@ -78,6 +79,21 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     toast.error(message);
     revalidator.revalidate();
   };
+  /** Se ve al instante; si el servidor falla, vuelve como estaba. */
+  const handleToggleLike = () => {
+    const wasLiked = quote.likedByMe;
+    const show = (likedByMe: boolean, likeCount: number) =>
+      setQuote((current) => ({ ...current, likedByMe, likeCount }));
+    show(!wasLiked, Math.max(0, quote.likeCount + (wasLiked ? -1 : 1)));
+    (wasLiked ? quotesService.unlike(quote.id) : quotesService.like(quote.id)).then(
+      (result) => show(result.likedByMe, result.likeCount),
+      () => {
+        show(wasLiked, quote.likeCount);
+        toast.error(t("quote_like_error"));
+      },
+    );
+  };
+
   const showItems = (items: QuoteItem[]) => setQuote((current) => ({ ...current, items, totals: quoteTotals(items) }));
 
   const handleChangeQuantity = (item: QuoteItem, quantity: number) => {
@@ -209,7 +225,16 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   return (
     <div className="min-h-screen w-full p-4 md:p-8 flex justify-center">
       <div className="w-full max-w-7xl space-y-8">
-        <QuoteHeader quoteName={quote.name} author={quote.author} updatedAt={quote.updatedAt} />
+        <QuoteHeader quoteName={quote.name} author={quote.author} updatedAt={quote.updatedAt}>
+          {quote.visibility === "public" && (
+            <QuoteLikeButton
+              liked={quote.likedByMe}
+              count={quote.likeCount}
+              disabled={!user || isOwner}
+              onToggle={handleToggleLike}
+            />
+          )}
+        </QuoteHeader>
 
         {isOwner && <QuoteOwnerBar quote={quote} onChange={setQuote} />}
 

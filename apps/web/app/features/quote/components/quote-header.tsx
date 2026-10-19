@@ -1,5 +1,6 @@
 import type { QuoteAuthor } from "@framerate/contracts";
 import { IconCalendar, IconUser } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "~/shared/hooks/use-translation";
 
@@ -7,9 +8,11 @@ interface QuoteHeaderProps {
   quoteName: string;
   author: QuoteAuthor;
   updatedAt: string;
+  /** Lo que va al final de la fila de datos (el me gusta). */
+  children?: ReactNode;
 }
 
-export function QuoteHeader({ quoteName, author, updatedAt }: QuoteHeaderProps) {
+export function QuoteHeader({ quoteName, author, updatedAt, children }: QuoteHeaderProps) {
   const { t } = useTranslation();
 
   return (
@@ -40,6 +43,7 @@ export function QuoteHeader({ quoteName, author, updatedAt }: QuoteHeaderProps) 
             })}
           </span>
         </div>
+        {children}
       </div>
     </div>
   );

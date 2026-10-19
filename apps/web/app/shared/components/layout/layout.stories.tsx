@@ -9,6 +9,7 @@ import {
   categories,
   dropProducts,
   freshness,
+  publicQuotes,
   rowProducts,
   sessions,
   stores,
@@ -152,6 +153,7 @@ export const EstructuraDelSitio: Story = {
             stores={stores}
             trendingIds={[rowProducts[2].id]}
             drops={dropProducts}
+            quotes={publicQuotes}
             rows={[
               { key: "popular", title: "Lo más popular", href: "/buscar", products: rowProducts },
               {

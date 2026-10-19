@@ -21,6 +21,7 @@ export const USER_REFERENCES: Readonly<Record<string, readonly string[]>> = {
   store_reviews: ["user_id", "owner_response_by", "deleted_by"],
   store_review_votes: ["user_id"],
   quotes: ["owner_id"],
+  quote_likes: ["user_id"],
   comments: ["author_id", "deleted_by"],
   comment_likes: ["user_id"],
   reports: ["reporter_id", "claimed_by", "resolved_by"],

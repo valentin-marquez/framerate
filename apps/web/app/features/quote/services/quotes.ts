@@ -1,8 +1,10 @@
 import type {
   AddQuoteItemRequest,
   CreateQuoteRequest,
+  PublicQuote,
   QuoteCondensePlan,
   QuoteDetail,
+  QuoteLike,
   QuotePage,
   UpdateQuoteItemRequest,
   UpdateQuoteRequest,
@@ -18,6 +20,14 @@ export const quotesService = {
   /** Las públicas de un usuario. */
   getByUsername: (username: string, page = 1, pageSize = 10) =>
     api.get<QuotePage>(`/v1/quotes/user/${username}`, { params: pageParams(page, pageSize) }),
+
+  /** Las públicas con más "me gusta" (el inicio). */
+  getPublic: (limit = 5, page = 1) =>
+    api.get<PublicQuote[]>("/v1/quotes/public", { params: { limit: String(limit), page: String(page) } }),
+
+  like: (id: string) => api.put<QuoteLike>(`/v1/quotes/${id}/like`, {}),
+
+  unlike: (id: string) => api.delete<QuoteLike>(`/v1/quotes/${id}/like`),
 
   create: (data: CreateQuoteRequest) => api.post<QuoteDetail>("/v1/quotes", data),
 

@@ -85,6 +85,7 @@ const quote = (id: string, name: string, itemCount: number, visibility: QuoteSum
   description: null,
   visibility,
   itemCount,
+  likeCount: 0,
   author: { username: "ana", displayName: "Ana Pérez", avatarUrl: null },
   createdAt: "2026-09-20T12:00:00.000Z",
   updatedAt: "2026-09-28T12:00:00.000Z",

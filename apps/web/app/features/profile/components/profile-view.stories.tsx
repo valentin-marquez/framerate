@@ -24,7 +24,17 @@ const quote = (
   itemCount: number,
   visibility: QuoteSummary["visibility"],
   updatedAt: string,
-): QuoteSummary => ({ id, name, description, itemCount, visibility, author, createdAt: updatedAt, updatedAt });
+): QuoteSummary => ({
+  id,
+  name,
+  description,
+  itemCount,
+  likeCount: 0,
+  visibility,
+  author,
+  createdAt: updatedAt,
+  updatedAt,
+});
 
 const quotes = [
   quote(

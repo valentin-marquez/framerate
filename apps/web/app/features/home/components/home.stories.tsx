@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { dropProducts, homeStores, rowProducts } from "~/shared/storybook/fixtures";
+import { dropProducts, homeStores, publicQuotes, rowProducts } from "~/shared/storybook/fixtures";
 import { StoresStrip } from "./home-blocks";
 import { HomeIntro } from "./home-intro";
 import { ProductRow } from "./product-row";
+import { PublicQuotes } from "./public-quotes";
 
 const meta = { title: "Home/Bloques" } satisfies Meta;
 export default meta;
@@ -49,4 +50,27 @@ export const TiendasTelefono: Story = {
 export const Tiendas: Story = {
   name: "Tiendas (escritorio)",
   render: () => <StoresStrip stores={homeStores} />,
+};
+
+/**
+ * De más a menos "me gusta": la primera en grande, con su collage, descripción y total, y las siguientes en una lista.
+ * Se eligió entre tres composiciones (A filas, B carrusel, C destacada y lista) el 19-10-2026. Con menos de tres
+ * cotizaciones no se muestra.
+ */
+export const CotizacionesPopulares: Story = {
+  name: "Cotizaciones populares",
+  render: () => <PublicQuotes quotes={publicQuotes} />,
+};
+
+export const CotizacionesSinFotos: Story = {
+  name: "Cotizaciones populares sin fotos",
+  render: () => (
+    <PublicQuotes
+      quotes={publicQuotes.map((q, i) => ({
+        ...q,
+        images: [],
+        name: i === 0 ? "Armado para jugar en 1440p y editar video los fines de semana con mucho espacio" : q.name,
+      }))}
+    />
+  ),
 };

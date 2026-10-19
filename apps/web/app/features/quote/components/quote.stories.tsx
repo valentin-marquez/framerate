@@ -145,6 +145,8 @@ const quote: QuoteDetail = {
   description: null,
   visibility: "public",
   itemCount: items.filter((i) => i.isSelected).length,
+  likeCount: 12,
+  likedByMe: false,
   author,
   createdAt: "2026-09-20T12:00:00.000Z",
   updatedAt: "2026-09-28T15:00:00.000Z",

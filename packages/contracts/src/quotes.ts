@@ -27,6 +27,7 @@ export const QuoteSummarySchema = z.object({
   visibility: QuoteVisibilitySchema,
   /** Ítems seleccionados (los que cuentan en el total). */
   itemCount: z.number().int().nonnegative(),
+  likeCount: z.number().int().nonnegative(),
   author: QuoteAuthorSchema,
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -67,6 +68,8 @@ export const QuoteItemSchema = z.object({
 export type QuoteItem = z.infer<typeof QuoteItemSchema>;
 
 export const QuoteDetailSchema = QuoteSummarySchema.extend({
+  /** Sólo `GET /v1/quotes/:id` lo calcula para quien mira; las respuestas de edición (del dueño) siempre dicen `false`. */
+  likedByMe: z.boolean(),
   items: z.array(QuoteItemSchema),
   /** Suma de los ítems seleccionados con oferta, por su cantidad. */
   totals: z.object({ cash: z.number().int().nonnegative(), card: z.number().int().nonnegative() }),
@@ -115,6 +118,22 @@ export type QuoteCondensePlan = z.infer<typeof QuoteCondensePlanSchema>;
 
 export const QuotePageSchema = pageSchema(QuoteSummarySchema);
 export type QuotePage = z.infer<typeof QuotePageSchema>;
+
+/** Una cotización pública en el inicio: el resumen, lo que cuesta hoy y fotos de hasta cuatro de sus componentes. */
+export const PublicQuoteSchema = QuoteSummarySchema.extend({
+  totalCash: z.number().int().nonnegative(),
+  images: z.array(z.url()).max(4),
+});
+export type PublicQuote = z.infer<typeof PublicQuoteSchema>;
+
+export const PublicQuotesQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(20).default(5),
+  page: z.coerce.number().int().min(1).max(500).default(1),
+});
+export type PublicQuotesQuery = z.infer<typeof PublicQuotesQuerySchema>;
+
+export const QuoteLikeSchema = z.object({ likeCount: z.number().int().nonnegative(), likedByMe: z.boolean() });
+export type QuoteLike = z.infer<typeof QuoteLikeSchema>;
 
 export const QuoteListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(500).default(1),

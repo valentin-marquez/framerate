@@ -1,4 +1,4 @@
-import type { CategoryItem, ProductSummary } from "@framerate/contracts";
+import type { CategoryItem, ProductSummary, PublicQuote } from "@framerate/contracts";
 import type { ClaimableStore } from "~/features/stores/services/stores";
 
 export interface HomeRow {
@@ -15,5 +15,7 @@ export interface HomeData {
   /** Bajas de precio (lo mismo que `/buscar?sort=discount`); vacía, la fila no se muestra. */
   drops: ProductSummary[];
   trendingIds: number[];
+  /** Las públicas con más "me gusta"; con menos de tres, la sección no se muestra. */
+  quotes: PublicQuote[];
   stores: ClaimableStore[];
 }

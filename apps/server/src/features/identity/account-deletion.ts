@@ -81,6 +81,7 @@ export async function deleteAccount(db: Db, user: SessionUser, now: string): Pro
       .where("owner_id", "=", id),
     db.query.deleteFrom("store_review_votes").where("user_id", "=", id),
     db.query.deleteFrom("comment_likes").where("user_id", "=", id),
+    db.query.deleteFrom("quote_likes").where("user_id", "=", id),
     db.query
       .updateTable("store_reviews")
       .set({ body: null, is_pinned: 0, deleted_at: now, deleted_by: id, deletion_reason: "author" })

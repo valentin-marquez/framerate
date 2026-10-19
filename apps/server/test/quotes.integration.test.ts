@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { ApiErrorSchema, QuoteCondensePlanSchema, QuoteDetailSchema, QuotePageSchema } from "@framerate/contracts";
+import {
+  ApiErrorSchema,
+  PublicQuoteSchema,
+  QuoteCondensePlanSchema,
+  QuoteDetailSchema,
+  QuoteLikeSchema,
+  QuotePageSchema,
+} from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { createApp } from "@/app";
@@ -210,6 +217,93 @@ describe("visibilidad", () => {
     expect((await call(beto, `/v1/quotes/${quote.id}/items/${item.id}`, "PATCH", { quantity: 2 })).status).toBe(404);
     expect((await call(beto, `/v1/quotes/${quote.id}/items/${item.id}`, "DELETE")).status).toBe(404);
     expect((await all(db, "quote_items")).length).toBe(1);
+  });
+});
+
+describe("me gusta y cotizaciones populares", () => {
+  const like = (actor: string, quoteId: string) => call(actor, `/v1/quotes/${quoteId}/like`, "PUT");
+  const publicList = async (query = "") => {
+    const res = await call("anon", `/v1/quotes/public${query}`);
+    expect(res.status).toBe(200);
+    return PublicQuoteSchema.array().parse(await res.json());
+  };
+
+  test("dar y quitar el me gusta es idempotente, cuenta una vez por persona y se ve en el detalle", async () => {
+    const quote = await createQuote(ana, { name: "Pública", visibility: "public" });
+
+    expect(QuoteLikeSchema.parse(await (await like(beto, quote.id)).json())).toEqual({ likeCount: 1, likedByMe: true });
+    expect(QuoteLikeSchema.parse(await (await like(beto, quote.id)).json())).toEqual({ likeCount: 1, likedByMe: true });
+    expect(await detail(beto, quote.id)).toMatchObject({ likeCount: 1, likedByMe: true });
+    expect(await detail("anon", quote.id)).toMatchObject({ likeCount: 1, likedByMe: false });
+
+    const res = await call(beto, `/v1/quotes/${quote.id}/like`, "DELETE");
+    expect(QuoteLikeSchema.parse(await res.json())).toEqual({ likeCount: 0, likedByMe: false });
+    expect((await detail(beto, quote.id)).likeCount).toBe(0);
+  });
+
+  test("exige sesión, no vale en la propia ni en las que no son públicas", async () => {
+    const quote = await createQuote(ana, { name: "Pública", visibility: "public" });
+    const priv = await createQuote(ana, { name: "Privada" });
+    const unlisted = await createQuote(ana, { name: "Con link", visibility: "unlisted" });
+
+    expect((await like("anon", quote.id)).status).toBe(401);
+    const own = await like(ana, quote.id);
+    expect(own.status).toBe(403);
+    expect(await code(own)).toBe("own_quote");
+    for (const id of [priv.id, unlisted.id, "noexiste1"]) expect((await like(beto, id)).status).toBe(404);
+    expect((await call(beto, `/v1/quotes/${priv.id}/like`, "DELETE")).status).toBe(404);
+    expect(await all(db, "quote_likes")).toEqual([]);
+  });
+
+  test("un usuario sancionado no puede dar me gusta", async () => {
+    const quote = await createQuote(ana, { name: "Pública", visibility: "public" });
+    await db.query
+      .insertInto("user_bans")
+      .values({ user_id: beto, reason: "spam", banned_by: ana, created_at: new Date().toISOString() })
+      .execute();
+    expect((await like(beto, quote.id)).status).toBe(403);
+  });
+
+  test("la lista pública va de más a menos me gusta, sin privadas ni vacías, con total y fotos", async () => {
+    const a = await createQuote(ana, { name: "Poco querida", visibility: "public" });
+    const b = await createQuote(ana, { name: "Muy querida", visibility: "public" });
+    const empty = await createQuote(ana, { name: "Vacía", visibility: "public" });
+    const priv = await createQuote(ana, { name: "Privada" });
+    for (const q of [a, b, priv]) await addItem(ana, q.id, seed.ryzen);
+    await addItem(ana, b.id, seed.asus);
+    const carla = await createUser(env, db, { name: "Carla", username: "carla" });
+    await like(beto, b.id);
+    await like(carla, b.id);
+    await like(beto, a.id);
+    await like(beto, empty.id);
+
+    const list = await publicList();
+    expect(list.map((q) => [q.name, q.likeCount])).toEqual([
+      ["Muy querida", 2],
+      ["Poco querida", 1],
+    ]);
+    const [top] = list;
+    const expected = (await detail(ana, b.id)).totals.cash;
+    expect(top?.totalCash).toBe(expected);
+    expect(top?.totalCash).toBeGreaterThan(0);
+    expect(top?.author.username).toBe("ana");
+    expect((await publicList("?limit=1")).map((q) => q.name)).toEqual(["Muy querida"]);
+    expect((await publicList("?limit=1&page=2")).map((q) => q.name)).toEqual(["Poco querida"]);
+    expect(await publicList("?limit=1&page=3")).toEqual([]);
+    expect((await call("anon", "/v1/quotes/public?limit=99")).status).toBe(400);
+  });
+
+  test("al hacerse privada deja de aparecer en la lista y al borrarla se van sus me gusta", async () => {
+    const quote = await createQuote(ana, { name: "Pública", visibility: "public" });
+    await addItem(ana, quote.id, seed.ryzen);
+    await like(beto, quote.id);
+    expect(await publicList()).toHaveLength(1);
+
+    await call(ana, `/v1/quotes/${quote.id}`, "PATCH", { visibility: "private" });
+    expect(await publicList()).toEqual([]);
+
+    await call(ana, `/v1/quotes/${quote.id}`, "DELETE");
+    expect(await all(db, "quote_likes")).toEqual([]);
   });
 });
 

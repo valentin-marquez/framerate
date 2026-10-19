@@ -1,11 +1,13 @@
 import {
   type Category,
   isAdditiveSlot,
+  type PublicQuote,
   QUOTE_SLOTS,
   type QuoteCondensePlan,
   type QuoteDetail,
   type QuoteItem,
   type QuoteItemOffer,
+  type QuoteLike,
   type QuotePage,
   type QuoteSummary,
   type QuoteVisibility,
@@ -35,6 +37,7 @@ const SUMMARY_COLUMNS = [
   "q.name",
   "q.description",
   "q.visibility",
+  "q.like_count",
   "q.created_at",
   "q.updated_at",
   "u.username",
@@ -61,6 +64,7 @@ function toSummary(row: SummaryRow, assetsBaseUrl: string | undefined): QuoteSum
     description: row.description,
     visibility: row.visibility,
     itemCount: Number(row.item_count),
+    likeCount: row.like_count,
     author: {
       username: row.username,
       displayName: row.display_name,
@@ -305,6 +309,7 @@ function toDetail(row: SummaryRow, detail: DetailRows, assetsBaseUrl: string | u
   });
   return {
     ...toSummary(row, assetsBaseUrl),
+    likedByMe: false,
     items,
     totals: quoteTotals(items),
     compatibility: checkCompatibility(parts),
@@ -671,4 +676,97 @@ export async function condensePlan(
     })),
     stores: [...perStore].map(([storeId, entry]) => ({ ...storeOf(storeId), ...entry })),
   };
+}
+
+/** Las públicas con más "me gusta" (con al menos un componente), con lo que cuestan hoy y fotos de sus componentes. */
+export async function listTopQuotes(
+  db: Db,
+  limit: number,
+  page: number,
+  assetsBaseUrl: string | undefined,
+): Promise<PublicQuote[]> {
+  const rows = await summariesQuery(db)
+    .where("q.visibility", "=", "public")
+    .where(sql<boolean>`${selectedCount} > 0`)
+    .orderBy("q.like_count", "desc")
+    .orderBy("q.updated_at", "desc")
+    .orderBy("q.id", "desc")
+    .limit(limit)
+    .offset((page - 1) * limit)
+    .execute();
+  if (rows.length === 0) return [];
+  const [items] = await db.read([
+    db.query
+      .selectFrom("quote_items as qi")
+      .innerJoin("products as p", "p.id", "qi.product_id")
+      .leftJoin("listings as o", (join) => join.on(sql<boolean>`o.id = ${offerListingId}`))
+      .select(["qi.quote_id", "qi.quantity", "p.image_url", "p.image_key", "o.price_cash"])
+      .where(
+        "qi.quote_id",
+        "in",
+        rows.map((r) => r.id),
+      )
+      .where("qi.is_selected", "=", 1)
+      .orderBy("qi.position")
+      .orderBy("qi.id"),
+  ]);
+  return rows.map((row) => {
+    const own = items.filter((i) => i.quote_id === row.id);
+    return {
+      ...toSummary(row, assetsBaseUrl),
+      totalCash: own.reduce((sum, i) => sum + (i.price_cash ?? 0) * i.quantity, 0),
+      images: own
+        .map((i) => productImageUrl(i, assetsBaseUrl))
+        .filter((url): url is string => url !== null)
+        .slice(0, 4),
+    };
+  });
+}
+
+const likeState = (db: Db, publicId: string) =>
+  db.query
+    .selectFrom("quotes")
+    .select(["id", "owner_id", "visibility", "like_count"])
+    .where("public_id", "=", publicId);
+
+/** ¿Le dio "me gusta" quien mira? */
+export async function likedByViewer(db: Db, publicId: string, userId: string): Promise<boolean> {
+  const row = await db.query
+    .selectFrom("quote_likes as l")
+    .innerJoin("quotes as q", "q.id", "l.quote_id")
+    .select("l.quote_id")
+    .where("q.public_id", "=", publicId)
+    .where("l.user_id", "=", userId)
+    .executeTakeFirst();
+  return row !== undefined;
+}
+
+/** Sólo las públicas y ajenas reciben "me gusta" (la propia sería inflarse el ranking); idempotente si ya lo había dado. */
+export async function likeQuote(
+  db: Db,
+  publicId: string,
+  userId: string,
+  now: string,
+): Promise<QuoteLike | "not_found" | "own"> {
+  const [quote] = await likeState(db, publicId).execute();
+  if (!quote || quote.visibility !== "public") return "not_found";
+  if (quote.owner_id === userId) return "own";
+  const [, [row]] = await db.read([
+    db.query
+      .insertInto("quote_likes")
+      .values({ quote_id: quote.id, user_id: userId, created_at: now })
+      .onConflict((oc) => oc.doNothing()),
+    likeState(db, publicId),
+  ]);
+  return { likeCount: row?.like_count ?? quote.like_count, likedByMe: true };
+}
+
+export async function unlikeQuote(db: Db, publicId: string, userId: string): Promise<QuoteLike | null> {
+  const [quote] = await likeState(db, publicId).execute();
+  if (!quote || quote.visibility !== "public") return null;
+  const [, [row]] = await db.read([
+    db.query.deleteFrom("quote_likes").where("quote_id", "=", quote.id).where("user_id", "=", userId),
+    likeState(db, publicId),
+  ]);
+  return { likeCount: row?.like_count ?? quote.like_count, likedByMe: false };
 }

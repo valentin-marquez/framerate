@@ -7,6 +7,7 @@ import {
   type Me,
   nextCrawlAt,
   type ProductSummary,
+  type PublicQuote,
 } from "@framerate/contracts";
 import type { CatalogData } from "~/features/catalog/load-catalog";
 import type { Profile } from "~/features/profile/services/profiles";
@@ -266,3 +267,48 @@ export const catalogData = (overrides: Partial<CatalogData> = {}): CatalogData =
     defaultSort: "price_asc",
     ...overrides,
   }) as CatalogData;
+
+const quoteOf = (
+  id: string,
+  name: string,
+  username: string,
+  displayName: string,
+  itemCount: number,
+  totalCash: number,
+  likeCount: number,
+  images: string[],
+  description: string | null = null,
+): PublicQuote => ({
+  id,
+  name,
+  description,
+  visibility: "public",
+  itemCount,
+  likeCount,
+  author: { username, displayName, avatarUrl: null },
+  createdAt: "2026-10-01T12:00:00.000Z",
+  updatedAt: "2026-10-12T12:00:00.000Z",
+  totalCash,
+  images,
+});
+
+const [img0, img1, img2, img3] = products.flatMap((p) => (p.imageUrl ? [p.imageUrl] : []));
+
+/** Cotizaciones públicas del inicio, de más a menos "me gusta". */
+export const publicQuotes: PublicQuote[] = [
+  quoteOf(
+    "K7M2P9X4RT",
+    "Gamer 1440p sin dramas",
+    "ana",
+    "Ana Rojas",
+    9,
+    1_049_990,
+    148,
+    [img0, img1, img2, img3],
+    "Ryzen 5 y RTX 5060 Ti para jugar fluido a 1440p sin pasarse del presupuesto.",
+  ),
+  quoteOf("H3N8V2Q6WZ", "Streaming silencioso", "ignacio", "Ignacio", 7, 889_990, 96, [img1, img2, img3, img0]),
+  quoteOf("T9C4X7M2KD", "Oficina y edición liviana", "pedro_m", "Pedro Muñoz", 8, 639_990, 61, [img2, img3]),
+  quoteOf("R2W5J8N3PF", "Mini ITX para el living", "vale", "Vale", 8, 1_279_990, 40, [img3, img0, img1, img2]),
+  quoteOf("F6Z3D9K4SB", "Primera PC económica", "cami", "Camila Soto", 6, 489_990, 23, [img0]),
+];

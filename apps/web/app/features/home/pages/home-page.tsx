@@ -3,6 +3,7 @@ import { categoriesService } from "@/features/category/services/categories";
 import { productsService } from "@/features/product/services/products";
 import { HomeContent } from "~/features/home/components/home-content";
 import type { HomeData, HomeRow } from "~/features/home/types";
+import { quotesService } from "~/features/quote/services/quotes";
 import { storesService } from "~/features/stores/services/stores";
 import { isRateLimitError } from "~/shared/lib/api";
 import type { Route } from "./+types/home-page";
@@ -93,7 +94,7 @@ export async function loader() {
     }),
   );
 
-  const [categories, popular, drops, trending, stores] = await Promise.all([
+  const [categories, popular, drops, trending, quotes, stores] = await Promise.all([
     categoriesService.getAll().catch((error) => {
       if (!isRateLimitError(error)) console.error("Failed to fetch categories", error);
       return [] as Awaited<ReturnType<typeof categoriesService.getAll>>;
@@ -104,6 +105,7 @@ export async function loader() {
       return [];
     }),
     productsService.getTrending(40).catch(() => ({ ids: [] as number[] })),
+    quotesService.getPublic(5).catch(() => []),
     storesService.listClaimable().then(
       (r) => r.stores.filter((s) => (s.offer_count ?? 0) > 0),
       () => [],
@@ -123,6 +125,7 @@ export async function loader() {
     rows: rows.filter((r) => r.products.length >= MIN_ROW_PRODUCTS),
     drops,
     trendingIds: trending.ids,
+    quotes,
     stores,
   } satisfies HomeData;
 }
