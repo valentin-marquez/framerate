@@ -496,6 +496,8 @@ export async function listPendingReviews(db: Db, limit: number) {
       "p.image_url as candidateImageUrl",
     ])
     .where("r.status", "=", "pending")
+    // La de una oferta que la tienda dejó de publicar vuelve sola si la oferta vuelve (#100).
+    .where("l.is_active", "=", 1)
     // Con veredicto de framerate-match (#117), lo más probable de ser el mismo producto primero; sin él, al final.
     .orderBy(sql`coalesce(min(json_extract(r.evidence, '$.ai.pAB'), json_extract(r.evidence, '$.ai.pBA')), -1)`, "desc")
     .orderBy("r.score", "desc")
