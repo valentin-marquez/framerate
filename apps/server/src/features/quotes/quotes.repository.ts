@@ -608,7 +608,12 @@ export async function removeItem(
  * Propuesta para comprar en menos tiendas: usa las ofertas activas y con stock de cada ítem seleccionado y la compara
  * con comprar cada uno en su tienda más barata. `null` si la cotización no existe o no es del dueño.
  */
-export async function condensePlan(db: Db, publicId: string, ownerId: string): Promise<QuoteCondensePlan | null> {
+export async function condensePlan(
+  db: Db,
+  publicId: string,
+  ownerId: string,
+  storeValue: number,
+): Promise<QuoteCondensePlan | null> {
   const [[quote], rows] = await db.read([
     db.query.selectFrom("quotes").select("id").where("public_id", "=", publicId).where("owner_id", "=", ownerId),
     db.query
@@ -641,7 +646,7 @@ export async function condensePlan(db: Db, publicId: string, ownerId: string): P
     byItem.set(r.item_id, item);
   }
 
-  const plan = planCondense([...byItem.values()]);
+  const plan = planCondense([...byItem.values()], { storeValue });
   const storeOf = (id: number) => stores.get(id) ?? { slug: "", name: "" };
   const quantities = new Map([...byItem.values()].map((i) => [i.itemId, i.quantity]));
   const perStore = new Map<number, { itemIds: number[]; subtotalCash: number }>();

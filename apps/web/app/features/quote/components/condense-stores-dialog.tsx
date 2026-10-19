@@ -1,6 +1,11 @@
-import { CONDENSE_MAX_EXTRA, type QuoteCondensePlan, type QuoteDetail } from "@framerate/contracts";
+import {
+  CONDENSE_MAX_EXTRA,
+  CONDENSE_STORE_VALUE,
+  type QuoteCondensePlan,
+  type QuoteDetail,
+} from "@framerate/contracts";
 import { IconBuildingStore, IconInfoCircle, IconLoader2 } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCondensePlan } from "~/features/quote/hooks/useQuotes";
 import { Button } from "~/shared/components/primitives/button";
 import {
@@ -12,6 +17,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/shared/components/primitives/dialog";
+import { Input } from "~/shared/components/primitives/input";
+import { Label } from "~/shared/components/primitives/label";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { formatCLP } from "~/shared/utils/format";
 
@@ -43,13 +50,31 @@ export function CondenseStoresDialog({ quote, onApply, defaultOpen }: CondenseSt
   );
 }
 
+/** El número que se escribe se aplica cuando se deja de teclear: cada cambio es una consulta al servidor. */
+function useDebounced<T>(value: T, ms: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), ms);
+    return () => clearTimeout(id);
+  }, [value, ms]);
+  return debounced;
+}
+
 function CondensePanel({
   quote,
   onApply,
   onClose,
 }: Pick<CondenseStoresDialogProps, "quote" | "onApply"> & { onClose: () => void }) {
   const { t } = useTranslation();
-  const { data: plan, isLoading, isError } = useCondensePlan(quote.id);
+  const [typed, setTyped] = useState(String(CONDENSE_STORE_VALUE));
+  // Un campo vacío o inválido no consulta: se queda el último valor bueno.
+  const parsed = Number.parseInt(typed, 10);
+  const storeValue = useDebounced(Number.isFinite(parsed) && parsed >= 0 ? Math.min(parsed, 1_000_000) : null, 400);
+  const [lastValue, setLastValue] = useState(CONDENSE_STORE_VALUE);
+  useEffect(() => {
+    if (storeValue !== null) setLastValue(storeValue);
+  }, [storeValue]);
+  const { data: plan, isLoading, isError, isPlaceholderData } = useCondensePlan(quote.id, lastValue);
   const [applying, setApplying] = useState(false);
 
   const apply = async (chosen: QuoteCondensePlan) => {
@@ -112,13 +137,35 @@ function CondensePanel({
         </p>
       )}
 
+      <div className="space-y-1.5 rounded-2xl bg-secondary/40 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="condense-store-value" className="text-sm">
+            {t("quote_condense_value_label")}
+          </Label>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground text-sm">$</span>
+            <Input
+              id="condense-store-value"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1000}
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              className="w-28 text-right tabular-nums"
+            />
+          </div>
+        </div>
+        <p className="text-muted-foreground text-xs">{t("quote_condense_value_hint")}</p>
+      </div>
+
       <DialogFooter>
         <Button variant="ghost" size="sm" onClick={onClose}>
           {t("cancel")}
         </Button>
         {plan?.improves && (
-          <Button size="sm" disabled={applying} onClick={() => apply(plan)}>
-            {applying && <IconLoader2 className="size-4 animate-spin" />}
+          <Button size="sm" disabled={applying || isPlaceholderData} onClick={() => apply(plan)}>
+            {(applying || isPlaceholderData) && <IconLoader2 className="size-4 animate-spin" />}
             {t("quote_condense_apply", { count: plan.storesAfter })}
           </Button>
         )}

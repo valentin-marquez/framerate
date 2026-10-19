@@ -6,6 +6,7 @@ import type {
   QuoteItem,
   QuoteSlot,
 } from "@framerate/contracts";
+import { CONDENSE_STORE_VALUE } from "@framerate/contracts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "~/shared/components/primitives/button";
 import { quoteKeys } from "~/shared/lib/query-keys";
@@ -334,14 +335,19 @@ const condensePlan: QuoteCondensePlan = {
 
 export const CondensarTiendas: Story = {
   name: "Condensar tiendas: propuesta abierta",
-  decorators: [withQueryData([[quoteKeys.condense(quote.id), condensePlan]])],
+  decorators: [withQueryData([[quoteKeys.condense(quote.id, CONDENSE_STORE_VALUE), condensePlan]])],
   render: () => <CondenseStoresDialog quote={quote} onApply={async () => {}} defaultOpen />,
 };
 
 export const CondensarTiendasSinMejora: Story = {
   name: "Condensar tiendas: ya compras en las menos posibles",
   decorators: [
-    withQueryData([[quoteKeys.condense(quote.id), { ...condensePlan, improves: false, storesAfter: 4, extraCash: 0 }]]),
+    withQueryData([
+      [
+        quoteKeys.condense(quote.id, CONDENSE_STORE_VALUE),
+        { ...condensePlan, improves: false, storesAfter: 4, extraCash: 0 },
+      ],
+    ]),
   ],
   render: () => <CondenseStoresDialog quote={quote} onApply={async () => {}} defaultOpen />,
 };

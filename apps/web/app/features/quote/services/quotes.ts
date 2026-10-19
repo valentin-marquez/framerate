@@ -23,8 +23,9 @@ export const quotesService = {
 
   getById: (id: string) => api.get<QuoteDetail>(`/v1/quotes/${id}`),
 
-  /** Cómo comprar en menos tiendas (sólo el dueño). */
-  getCondensePlan: (id: string) => api.get<QuoteCondensePlan>(`/v1/quotes/${id}/condense`),
+  /** Cómo comprar en menos tiendas (sólo el dueño), aceptando pagar hasta `storeValue` de más por cada tienda evitada. */
+  getCondensePlan: (id: string, storeValue: number) =>
+    api.get<QuoteCondensePlan>(`/v1/quotes/${id}/condense`, { params: { storeValue: String(storeValue) } }),
 
   update: (id: string, data: UpdateQuoteRequest) => api.patch<QuoteDetail>(`/v1/quotes/${id}`, data),
 

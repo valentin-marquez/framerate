@@ -1,6 +1,7 @@
 import {
   AddQuoteItemRequestSchema,
   CreateQuoteRequestSchema,
+  QuoteCondenseQuerySchema,
   QuoteListQuerySchema,
   UpdateQuoteItemRequestSchema,
   UpdateQuoteRequestSchema,
@@ -59,7 +60,8 @@ export const quotesRoutes = new Hono<AppEnv>()
   })
   .get("/:id/condense", async (c) => {
     const user = currentUser(c);
-    const plan = await condensePlan(c.var.db, c.req.param("id"), user.id);
+    const { storeValue } = QuoteCondenseQuerySchema.parse(c.req.query());
+    const plan = await condensePlan(c.var.db, c.req.param("id"), user.id, storeValue);
     if (!plan) throw quoteNotFound();
     return c.json(plan);
   })

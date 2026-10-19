@@ -283,7 +283,10 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_condense_error: "No pudimos calcular la propuesta. Intenta de nuevo.",
     quote_condense_summary:
       "De {before} tiendas a {after}, por {extra} más que comprar cada pieza donde es más barata.",
-    quote_condense_none: "Ya compras en la menor cantidad de tiendas posible.",
+    quote_condense_none: "Con ese valor no hay una combinación que valga la pena.",
+    quote_condense_value_label: "Pagar de más por cada tienda que se evita",
+    quote_condense_value_hint:
+      "Es lo que vale para ti el envío y el tiempo de una compra menos. Súbelo para juntar más tiendas, bájalo para cuidar el precio.",
     quote_condense_one: "1 componente",
     quote_condense_many: "{count} componentes",
     quote_condense_kept:
@@ -675,7 +678,10 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_condense_error: "We could not work out the proposal. Please try again.",
     quote_condense_summary:
       "From {before} stores to {after}, for {extra} more than buying each part where it is cheapest.",
-    quote_condense_none: "You already buy from the fewest stores possible.",
+    quote_condense_none: "With that value there is no combination worth it.",
+    quote_condense_value_label: "Extra to pay for each store avoided",
+    quote_condense_value_hint:
+      "What the shipping and time of one less order is worth to you. Raise it to merge more stores, lower it to protect the price.",
     quote_condense_one: "1 component",
     quote_condense_many: "{count} components",
     quote_condense_kept:

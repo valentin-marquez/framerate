@@ -3,7 +3,7 @@ import { pageSchema, StoreSummarySchema } from "./catalog";
 import { CategorySchema } from "./categories";
 import { QuoteCompatibilitySchema } from "./compatibility";
 import { PublicProfileSchema } from "./identity";
-import { QUOTE_SLOTS, QUOTE_VISIBILITIES, QUOTES_MAX_PAGE_SIZE } from "./quote-slots";
+import { CONDENSE_STORE_VALUE, QUOTE_SLOTS, QUOTE_VISIBILITIES, QUOTES_MAX_PAGE_SIZE } from "./quote-slots";
 
 /**
  * Cotizaciones (armador de PC): `/v1/quotes/*`. Cada ítem ocupa un slot del armado. En los slots exclusivos se
@@ -75,6 +75,12 @@ export const QuoteDetailSchema = QuoteSummarySchema.extend({
 export type QuoteDetail = z.infer<typeof QuoteDetailSchema>;
 
 const CondenseStoreSchema = z.object({ slug: z.string(), name: z.string() });
+
+/** Cuánto de más se acepta pagar por cada tienda que se evita; sin valor, el de siempre. */
+export const QuoteCondenseQuerySchema = z.object({
+  storeValue: z.coerce.number().int().min(0).max(1_000_000).default(CONDENSE_STORE_VALUE),
+});
+export type QuoteCondenseQuery = z.infer<typeof QuoteCondenseQuerySchema>;
 
 /**
  * Propuesta para comprar en menos tiendas (`GET /v1/quotes/:id/condense`, sólo el dueño). Se compara con comprar cada

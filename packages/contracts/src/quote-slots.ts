@@ -17,6 +17,9 @@ export type QuoteSlot = (typeof QUOTE_SLOTS)[number];
 /** Condensar la compra no mueve un ítem a una tienda donde cuesta, por unidad, más de esto sobre su precio más barato. */
 export const CONDENSE_MAX_EXTRA = 30_000;
 
+/** Lo que vale evitar una tienda (envío y tiempo): condensar sólo conviene si cada tienda de menos cuesta hasta esto de más. */
+export const CONDENSE_STORE_VALUE = 10_000;
+
 /** Slot que ocupa cada categoría; el servidor lo deriva al agregar un producto, el cliente no lo elige. */
 export const SLOT_BY_CATEGORY: Record<Category, QuoteSlot> = {
   gpu: "gpu",

@@ -1,9 +1,11 @@
-import { CONDENSE_MAX_EXTRA } from "@framerate/contracts";
+import { CONDENSE_MAX_EXTRA, CONDENSE_STORE_VALUE } from "@framerate/contracts";
 
 /**
- * Condensar la compra: el menor conjunto de tiendas que cubre todos los ítems, sin costos de envío. Un ítem sólo puede
- * ir a una tienda donde cuesta, por unidad, a lo más `maxExtra` sobre su precio más barato; entre los conjuntos del
- * mismo tamaño gana el que cuesta menos. Dominio puro: la consulta de ofertas vive en el repositorio.
+ * Condensar la compra, sin costos de envío: asigna cada ítem a una tienda de modo que minimice
+ * `plata de más + storeValue × tiendas distintas`, donde `storeValue` es lo que vale evitar una tienda (envío y
+ * tiempo). Así condensa sólo si cada tienda de menos cuesta hasta `storeValue` de más; en un empate gana el de menos
+ * tiendas. Un ítem sólo puede ir a una tienda donde cuesta, por unidad, a lo más `maxExtra` sobre su precio más barato.
+ * Dominio puro: la consulta de ofertas vive en el repositorio.
  */
 
 export interface CondenseOffer {
@@ -36,12 +38,22 @@ export interface Condensed {
   extraCash: number;
 }
 
+export interface CondenseOptions {
+  /** Tope por unidad sobre el precio más barato para mover un ítem a otra tienda. */
+  maxExtra?: number;
+  /** Cuánto de más vale evitar una tienda. */
+  storeValue?: number;
+}
+
 /** Corta la búsqueda exacta si una cotización rara la dispara; queda lo mejor encontrado, nunca peor que lo base. */
 const NODE_LIMIT = 200_000;
 
 const byPrice = (a: CondenseOffer, b: CondenseOffer) => a.priceCash - b.priceCash || a.listingId - b.listingId;
 
-export function planCondense(items: CondenseItem[], maxExtra = CONDENSE_MAX_EXTRA): Condensed {
+export function planCondense(
+  items: CondenseItem[],
+  { maxExtra = CONDENSE_MAX_EXTRA, storeValue = CONDENSE_STORE_VALUE }: CondenseOptions = {},
+): Condensed {
   const rows = items.flatMap((item) => {
     // La mejor oferta de cada tienda, de la más barata a la más cara.
     const perStore = new Map<number, CondenseOffer>();
@@ -49,57 +61,63 @@ export function planCondense(items: CondenseItem[], maxExtra = CONDENSE_MAX_EXTR
       if (!perStore.has(offer.storeId)) perStore.set(offer.storeId, offer);
     const cheapest = [...perStore.values()][0];
     if (!cheapest) return [];
-    const allowed = new Map([...perStore].filter(([, offer]) => offer.priceCash - cheapest.priceCash <= maxExtra));
+    const allowed = [...perStore.values()].filter((offer) => offer.priceCash - cheapest.priceCash <= maxExtra);
     return [{ itemId: item.itemId, quantity: item.quantity, perStore, cheapest, allowed }];
   });
-  type Row = (typeof rows)[number];
 
+  // Los ítems con menos tiendas posibles primero: acotan más la búsqueda.
+  const order = [...rows].sort((a, b) => a.allowed.length - b.allowed.length);
   const cheapestStores = new Set(rows.map((r) => r.cheapest.storeId));
-  const cheapestCost = rows.reduce((sum, r) => sum + r.cheapest.priceCash * r.quantity, 0);
-  const bestIn = (row: Row, stores: Set<number>) =>
-    [...row.allowed.values()].filter((o) => stores.has(o.storeId)).sort(byPrice)[0];
-  const costOf = (stores: Set<number>) =>
-    rows.reduce((sum, r) => sum + (bestIn(r, stores)?.priceCash ?? 0) * r.quantity, 0);
+  let best = {
+    score: storeValue * cheapestStores.size,
+    stores: cheapestStores.size,
+    picks: order.map((r) => r.cheapest),
+  };
 
-  let best = { stores: cheapestStores, cost: cheapestCost };
-  const chosen = new Set<number>();
+  const used = new Map<number, number>();
+  const picks: CondenseOffer[] = [];
   let nodes = 0;
-  const visit = () => {
+  const visit = (i: number, extra: number) => {
     if (++nodes > NODE_LIMIT) return;
-    const uncovered = rows.filter((r) => ![...r.allowed.keys()].some((id) => chosen.has(id)));
-    if (uncovered.length === 0) {
-      const cost = costOf(chosen);
-      if (chosen.size < best.stores.size || (chosen.size === best.stores.size && cost < best.cost)) {
-        best = { stores: new Set(chosen), cost };
-      }
+    // La plata de más sólo sube: si ya no se puede mejorar el puntaje, no se sigue.
+    const score = extra + storeValue * used.size;
+    if (score > best.score) return;
+    const row = order[i];
+    if (!row) {
+      if (score < best.score || used.size < best.stores) best = { score, stores: used.size, picks: [...picks] };
       return;
     }
-    if (chosen.size >= best.stores.size) return;
-    // Se ramifica sobre el ítem con menos tiendas posibles: es el que más acota la búsqueda.
-    const next = uncovered.reduce((a, b) => (b.allowed.size < a.allowed.size ? b : a));
-    for (const storeId of next.allowed.keys()) {
-      chosen.add(storeId);
-      visit();
-      chosen.delete(storeId);
+    for (const offer of row.allowed) {
+      used.set(offer.storeId, (used.get(offer.storeId) ?? 0) + 1);
+      picks[i] = offer;
+      visit(i + 1, extra + (offer.priceCash - row.cheapest.priceCash) * row.quantity);
+      const left = (used.get(offer.storeId) ?? 1) - 1;
+      if (left === 0) used.delete(offer.storeId);
+      else used.set(offer.storeId, left);
     }
   };
-  visit();
+  visit(0, 0);
 
-  const assignments = rows.map((row): CondenseAssignment => {
-    const offer = bestIn(row, best.stores) ?? row.cheapest;
-    const keptByLimit = [...best.stores].some(
-      (storeId) => storeId !== offer.storeId && row.perStore.has(storeId) && !row.allowed.has(storeId),
+  const planStores = new Set(best.picks.map((o) => o.storeId));
+  const assignments = order.map((row, i): CondenseAssignment => {
+    const offer = best.picks[i] ?? row.cheapest;
+    const keptByLimit = [...planStores].some(
+      (storeId) =>
+        storeId !== offer.storeId &&
+        row.perStore.has(storeId) &&
+        !row.allowed.some((allowedOffer) => allowedOffer.storeId === storeId),
     );
     return { itemId: row.itemId, offer, cheapest: row.cheapest, keptByLimit };
   });
+  const quantities = new Map(rows.map((r) => [r.itemId, r.quantity]));
   const extraCash = assignments.reduce(
-    (sum, a, i) => sum + (a.offer.priceCash - a.cheapest.priceCash) * (rows[i]?.quantity ?? 1),
+    (sum, a) => sum + (a.offer.priceCash - a.cheapest.priceCash) * (quantities.get(a.itemId) ?? 1),
     0,
   );
   return {
     assignments,
     storesBefore: cheapestStores.size,
-    storesAfter: new Set(assignments.map((a) => a.offer.storeId)).size,
+    storesAfter: planStores.size,
     extraCash,
   };
 }

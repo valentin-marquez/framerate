@@ -397,12 +397,14 @@ describe("condensar tiendas", () => {
         .executeTakeFirstOrThrow()
     ).id;
   }
-  const condense = (actor: string, quoteId: string) => call(actor, `/v1/quotes/${quoteId}/condense`);
+  const condense = (actor: string, quoteId: string, query = "") =>
+    call(actor, `/v1/quotes/${quoteId}/condense${query}`);
   const patchItem = (actor: string, quoteId: string, itemId: number, body: unknown) =>
     call(actor, `/v1/quotes/${quoteId}/items/${itemId}`, "PATCH", body);
 
-  test("junta la compra en una tienda por lo que cuesta de más, y el plan se puede aplicar", async () => {
-    const ryzenBeta = await ryzenInBeta(440_000);
+  test("junta la compra en una tienda si el aumento vale la pena, y el plan se puede aplicar", async () => {
+    // Juntarlas en beta cuesta $5.000 más y se evita una tienda, que por defecto vale $10.000.
+    const ryzenBeta = await ryzenInBeta(425_000);
     const quote = await createQuote(ana);
     await addItem(ana, quote.id, seed.asus);
     await addItem(ana, quote.id, seed.ryzen);
@@ -410,9 +412,9 @@ describe("condensar tiendas", () => {
     const res = await condense(ana, quote.id);
     expect(res.status).toBe(200);
     const plan = QuoteCondensePlanSchema.parse(await res.json());
-    expect(plan).toMatchObject({ improves: true, storesBefore: 2, storesAfter: 1, extraCash: 20_000 });
+    expect(plan).toMatchObject({ improves: true, storesBefore: 2, storesAfter: 1, extraCash: 5_000 });
     expect(plan.stores).toEqual([
-      { slug: "beta", name: "beta", itemIds: expect.any(Array), subtotalCash: 599_990 + 440_000 },
+      { slug: "beta", name: "beta", itemIds: expect.any(Array), subtotalCash: 599_990 + 425_000 },
     ]);
     const ryzen = plan.items.find((i) => i.listingId === ryzenBeta);
     expect(ryzen).toMatchObject({
@@ -425,15 +427,30 @@ describe("condensar tiendas", () => {
     const applied = QuoteDetailSchema.parse(
       await (await patchItem(ana, quote.id, ryzen?.itemId ?? 0, { listingId: ryzenBeta })).json(),
     );
-    expect(applied.totals.cash).toBe(599_990 + 440_000);
+    expect(applied.totals.cash).toBe(599_990 + 425_000);
   });
 
-  test("no mueve un ítem a una tienda donde cuesta más de $30.000 sobre su mínimo, y no mejora", async () => {
+  test("el valor por tienda evitada es editable: con $20.000 se acepta un aumento que con $10.000 no", async () => {
     await ryzenInBeta(440_000);
     const quote = await createQuote(ana);
     await addItem(ana, quote.id, seed.asus);
+    await addItem(ana, quote.id, seed.ryzen);
+    const plan = async (query: string) =>
+      QuoteCondensePlanSchema.parse(await (await condense(ana, quote.id, query)).json());
+
+    // Juntar cuesta $20.000 más: por defecto una tienda vale $10.000 y no conviene.
+    expect(await plan("")).toMatchObject({ improves: false, storesAfter: 2, extraCash: 0 });
+    expect(await plan("?storeValue=20000")).toMatchObject({ improves: true, storesAfter: 1, extraCash: 20_000 });
+    expect(await plan("?storeValue=0")).toMatchObject({ improves: false, storesAfter: 2 });
+
+    expect((await condense(ana, quote.id, "?storeValue=-1")).status).toBe(400);
+    expect((await condense(ana, quote.id, "?storeValue=mucho")).status).toBe(400);
+  });
+
+  test("no mueve un ítem a una tienda donde cuesta más de $30.000 sobre su mínimo, y no mejora", async () => {
+    const quote = await createQuote(ana);
+    await addItem(ana, quote.id, seed.asus);
     // Con el Ryzen sólo en alfa, la ASUS tendría que ir a alfa por $50.010 más: pasa el tope.
-    await db.query.deleteFrom("listings").where("external_id", "=", "ryzen-beta").execute();
     await addItem(ana, quote.id, seed.ryzen);
 
     const plan = QuoteCondensePlanSchema.parse(await (await condense(ana, quote.id)).json());
