@@ -286,6 +286,46 @@ export async function detachIdentifiers(db: Db, productId: number, fp: Identifie
     .execute();
 }
 
+/**
+ * Le quita al producto los MPN y GTIN que ninguna de sus ofertas publica ya (la tienda cambió el código y el viejo
+ * quedó, #99). Un MPN cuenta como publicado si lo trae `listings.mpn` o lo que Haiku leyó de la oferta en su última
+ * versión (`listing_identity.mpn`): la huella también lo toma de ahí.
+ */
+export async function pruneStaleIdentifiers(db: Db, productId: number) {
+  const [stored, listings, identities] = await Promise.all([
+    db.query.selectFrom("product_identifiers").selectAll().where("product_id", "=", productId).execute(),
+    db.query.selectFrom("listings").select(["mpn", "gtin"]).where("product_id", "=", productId).execute(),
+    db.query
+      .selectFrom("listing_identity as i")
+      .innerJoin("listings as l", "l.id", "i.listing_id")
+      .select("i.mpn")
+      .where("l.product_id", "=", productId)
+      .where((eb) =>
+        eb(
+          "i.version",
+          "=",
+          eb
+            .selectFrom("listing_identity as v")
+            .select((e) => e.fn.max("v.version").as("latest"))
+            .whereRef("v.listing_id", "=", "i.listing_id"),
+        ),
+      )
+      .execute(),
+  ]);
+  if (stored.length === 0) return;
+  const published = new Set([
+    ...listings.flatMap((l) => [`mpn:${normalizeMpn(l.mpn)}`, `gtin:${normalizeGtin(l.gtin)}`]),
+    ...identities.map((i) => `mpn:${normalizeMpn(i.mpn)}`),
+  ]);
+  const stale = stored.filter((s) => !published.has(`${s.kind}:${s.value}`));
+  if (stale.length === 0) return;
+  await db.query
+    .deleteFrom("product_identifiers")
+    .where("product_id", "=", productId)
+    .where((eb) => eb.or(stale.map((s) => eb.and([eb("kind", "=", s.kind), eb("value", "=", s.value)]))))
+    .execute();
+}
+
 export async function createProduct(
   db: Db,
   input: { name: string; fingerprint: Fingerprint; imageUrl: string | null; now: string },

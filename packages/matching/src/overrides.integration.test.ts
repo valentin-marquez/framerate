@@ -240,6 +240,74 @@ describe("identificador de otro producto", () => {
     );
     expect(await all(db, "product_identifiers")).toContainEqual({ kind: "mpn", value: MPN, product_id: current });
   });
+
+  describe("MPN que la tienda cambió (#99)", () => {
+    const OLD = "CMH32GX5M2B5600C36";
+    const identifiersOf = async (productId: number) =>
+      (await all(db, "product_identifiers")).filter((i) => i.product_id === productId).map((i) => i.value);
+    const rematch = (id: number, productId: number) =>
+      matchListing(db, {
+        listingId: id,
+        currentProductId: productId,
+        offer: offerOf(),
+        canonicalName: TITLE,
+        now: NOW,
+      });
+
+    test("el vínculo se queda y el MPN viejo, que ninguna oferta publica, sale del producto", async () => {
+      await seedStore();
+      const current = await product("current", TITLE, "Corsair", OLD);
+      const id = await listing("1", current);
+      await decide(id, current, "identifier");
+      expect((await rematch(id, current)).outcome).toBe("kept");
+      expect(await identifiersOf(current)).toEqual([MPN]);
+    });
+
+    test("si otra oferta del producto sigue publicando el MPN viejo, se queda", async () => {
+      await seedStore();
+      const current = await product("current", TITLE, "Corsair", OLD);
+      await listing("2", current, TITLE, OLD);
+      const id = await listing("1", current);
+      await decide(id, current, "identifier");
+      await rematch(id, current);
+      expect((await identifiersOf(current)).sort()).toEqual([MPN, OLD].sort());
+    });
+
+    test("un MPN que sólo viene de lo que Haiku leyó de la oferta cuenta como publicado", async () => {
+      await seedStore();
+      const current = await product("current", TITLE, "Corsair", OLD);
+      const id = await listing("1", current, TITLE, null);
+      await db.query
+        .insertInto("listing_identity")
+        .values({
+          listing_id: id,
+          version: 1,
+          input_hash: "h",
+          model: "m",
+          category: "ram",
+          brand: "Corsair",
+          name: TITLE,
+          mpn: OLD,
+          confidence: "high",
+          identity: "{}",
+          identity_raw: "{}",
+          specs: "{}",
+          specs_source: "{}",
+          same_as: null,
+          created_at: NOW,
+        })
+        .execute();
+      await decide(id, current, "identifier");
+      await matchListing(db, {
+        listingId: id,
+        currentProductId: current,
+        offer: offerOf(TITLE, OLD),
+        canonicalName: TITLE,
+        now: NOW,
+      });
+      expect(await identifiersOf(current)).toEqual([OLD]);
+    });
+  });
 });
 
 /** Oferta que la IA movió de `provisional` a `target` (como `resolveMatchReview`). */

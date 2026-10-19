@@ -17,6 +17,7 @@ import {
   loadLinkState,
   markSameStore,
   overrideKind,
+  pruneStaleIdentifiers,
   setListingProduct,
 } from "./repository";
 
@@ -92,6 +93,8 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
       await attachIdentifiers(db, productId, fp);
       return { outcome: "kept" as const, unlinked, reviewClosed };
     };
+    // Antes de comparar: un MPN que la tienda ya cambió no puede dar conflicto contra la propia oferta (#99).
+    await pruneStaleIdentifiers(db, productId);
     const link = await loadLinkState(db, listingId, productId);
     // Los identificadores que sólo aporta esta oferta no cuentan: si no, el vínculo se confirmaría solo.
     const ownOnly = {
