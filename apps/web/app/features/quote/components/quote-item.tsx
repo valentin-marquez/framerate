@@ -1,11 +1,13 @@
 import { type CompatCheck, type Offer, QUOTE_SLOT_LABELS, type QuoteItem as QuoteItemData } from "@framerate/contracts";
 import { imageVariant } from "@framerate/kit";
-import { IconAlertTriangle, IconExternalLink, IconMinus, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconExternalLink, IconMinus, IconPlus, IconTrash } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { OutboundLink } from "~/shared/components/outbound-link";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
+import { Badge } from "~/shared/components/primitives/badge";
 import { Button } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
+import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import { CompatibilityIssue, STATUS_DOT } from "./quote-compatibility";
@@ -33,6 +35,7 @@ export function QuoteItem({
   onRemove,
   onChooseOffer,
 }: QuoteItemProps) {
+  const { t } = useTranslation();
   const { product, offer, quantity } = item;
 
   return (
@@ -112,6 +115,12 @@ export function QuoteItem({
               <span className="text-xs text-muted-foreground">
                 con tarjeta <span className="tabular-nums">{formatCLP(offer.priceCard * quantity)}</span>
               </span>
+              {isOwner && item.isSelected && item.chosenListingId === null && (
+                <Badge variant="secondary" className="gap-1">
+                  <IconCheck className="size-3" />
+                  {t("quote_cheapest_badge")}
+                </Badge>
+              )}
             </>
           )}
         </div>

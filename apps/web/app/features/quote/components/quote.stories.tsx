@@ -205,6 +205,26 @@ export const ListaDelDueno: Story = {
   render: () => <div className="max-w-3xl">{list(true)}</div>,
 };
 
+export const ListaConTiendaFijada: Story = {
+  name: "Lista de componentes: dueño con una tienda fijada a mano",
+  render: () => (
+    <div className="max-w-3xl">
+      <QuoteItemsList
+        quote={{
+          ...quote,
+          items: quote.items.map((i, n) => (n === 0 ? { ...i, chosenListingId: i.offer?.id ?? 1 } : i)),
+        }}
+        isOwner
+        onChangeQuantity={noop}
+        onRemove={noop}
+        onSelect={noop}
+        onChooseOffer={noop}
+        onChooseCheapest={noop}
+      />
+    </div>
+  ),
+};
+
 export const ListaDeVisitante: Story = {
   name: "Lista de componentes: visitante",
   render: () => <div className="max-w-3xl">{list(false)}</div>,

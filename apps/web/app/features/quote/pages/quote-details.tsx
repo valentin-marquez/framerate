@@ -14,6 +14,7 @@ import { quotesService } from "~/features/quote/services/quotes";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { copyToClipboard, exportToExcel } from "~/features/quote/utils/quote-export";
 import { useTranslation } from "~/shared/hooks/use-translation";
+import { formatCLP } from "~/shared/utils/format";
 import type { Route } from "./+types/quote-details";
 
 export function meta({ data }: Route.MetaArgs) {
@@ -122,6 +123,30 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     );
   };
 
+  /**
+   * Vuelve al mejor precio cada ítem con la tienda fijada a mano. Las respuestas de los PATCH en paralelo pueden llegar
+   * en cualquier orden, así que al final se pide la cotización una vez y esa es la que cuenta.
+   */
+  const handleChooseCheapest = async () => {
+    const pinned = quote.items.filter((i) => i.isSelected && i.chosenListingId !== null);
+    if (pinned.length === 0) return;
+    const before = quote.totals.cash;
+    showItems(quote.items.map((i) => (pinned.includes(i) ? { ...i, chosenListingId: null } : i)));
+    inFlight.current += 1;
+    try {
+      await Promise.all(
+        pinned.map((i) => updateItem.mutateAsync({ quoteId: quote.id, itemId: i.id, data: { listingId: null } })),
+      );
+      const fresh = await quotesService.getById(quote.id);
+      inFlight.current -= 1;
+      if (inFlight.current === 0) setQuote(fresh);
+      const saved = before - fresh.totals.cash;
+      toast.success(saved > 0 ? t("quote_cheapest_saved", { amount: formatCLP(saved) }) : t("quote_cheapest_already"));
+    } catch {
+      fail(t("quote_update_error"));
+    }
+  };
+
   const handleRemove = (item: QuoteItem) => {
     showItems(quote.items.filter((i) => i.id !== item.id));
     inFlight.current += 1;
@@ -168,6 +193,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
               onRemove={handleRemove}
               onSelect={handleSelect}
               onChooseOffer={handleChooseOffer}
+              onChooseCheapest={handleChooseCheapest}
             />
           </div>
 
