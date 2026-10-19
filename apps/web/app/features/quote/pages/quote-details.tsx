@@ -153,7 +153,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-background p-4 md:p-8 flex justify-center">
+    <div className="min-h-screen w-full p-4 md:p-8 flex justify-center">
       <div className="w-full max-w-7xl space-y-8">
         <QuoteHeader quoteName={quote.name} author={quote.author} updatedAt={quote.updatedAt} />
 
