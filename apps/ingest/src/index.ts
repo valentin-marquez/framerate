@@ -13,7 +13,12 @@ import { createLogger } from "@framerate/kit";
 import type { Env } from "@/env";
 import { recheckClaims } from "@/features/claims/recheck";
 import { addSmallVariants, copyProductImages, resizerClient } from "@/features/images/product-images";
-import { closeStuckRuns, deactivateStale, purgeQuarantine } from "@/features/ingestion/ingestion.repository";
+import {
+  closeStuckRuns,
+  deactivateStale,
+  purgeDeletedAccountTickets,
+  purgeQuarantine,
+} from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
 import {
   enqueueAllCrawls,
@@ -57,6 +62,7 @@ export default {
       await recheckClaims(createDb(env.DB), new Date().toISOString(), undefined, emailSender(env)),
     );
     log.info("quarantine.purged", { deleted: await purgeQuarantine(createDb(env.DB), new Date()) });
+    log.info("support.purged", { tickets: await purgeDeletedAccountTickets(createDb(env.DB), new Date()) });
     const stale = await deactivateStale(createDb(env.DB), new Date());
     if (stale.productIds.length > 0) await refreshProductsPriceSummary(createDb(env.DB), stale.productIds, new Date());
     (stale.skipped ? log.warn : log.info)("listings.stale", { deactivated: stale.deactivated, skipped: stale.skipped });

@@ -201,8 +201,11 @@ Errores (formato `{ error: { code, message } }` de la API):
   listas filtran `deleted_at`), y sus sesiones y proveedores vinculados se borran.
 - Lo que publicó se despublica: sus cotizaciones se borran, y sus reseñas y comentarios quedan eliminados por el autor
   (`deletion_reason = 'author'`, sin texto; los triggers recalculan promedios y contadores). Sus votos y likes se quitan.
-- Los **tickets de soporte se conservan** tal cual (pueden ser una solicitud de derechos ARCO); falta definir por cuánto
-  tiempo y purgarlos. Como la fila de `users` no se borra, el `CHECK` de `support_tickets` no se dispara.
+- Los **tickets de soporte se conservan** tal cual (pueden ser una solicitud de derechos ARCO) durante 12 meses desde la
+  baja. Pasado ese plazo el Cron de `apps/ingest` (`purgeDeletedAccountTickets`) borra sus mensajes y deja el correo
+  como `eliminado+ticket<id>@framerate.invalid` y el asunto como "Ticket eliminado"; la fila (categoría, estado, fechas)
+  queda para acreditar cómo se gestionó. Los tickets que llegaron por correo sin cuenta no se purgan. Como la fila de
+  `users` no se borra, el `CHECK` de `support_tickets` no se dispara.
 - Bloqueos (409): `sole_owner` si es el único dueño de una organización con tiendas (que sume otro dueño o libere la
   tienda antes) y `last_admin` si es el último administrador.
 - Los reclamos de tienda en curso (`pending` o `verified`) pasan a `expired`.

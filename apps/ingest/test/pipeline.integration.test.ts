@@ -1,10 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { crawlCategory } from "@/features/ingestion/crawl-category";
 import {
   closeStuckRuns,
   deactivateStale,
   ensureStore,
+  purgeDeletedAccountTickets,
   purgeQuarantine,
   startRun,
 } from "@/features/ingestion/ingestion.repository";
@@ -115,6 +117,84 @@ describe("cuarentena", () => {
     expect(await all(deps.db, "quarantine")).toHaveLength(0);
     await crawlCategory(deps, tienda.store, "gpu");
     expect(await all(deps.db, "quarantine")).toHaveLength(1);
+  });
+});
+
+describe("tickets de soporte de cuentas dadas de baja", () => {
+  const NOW = new Date("2026-10-19T12:00:00.000Z");
+  const daysAgo = (days: number) => new Date(NOW.getTime() - days * 86_400_000).toISOString();
+
+  async function ticket(db: Db, handle: string, deletedDaysAgo: number | null, withAccount = true) {
+    const at = daysAgo(1);
+    if (withAccount) {
+      await db.query
+        .insertInto("users")
+        .values({
+          id: handle,
+          email: `${handle}@example.com`,
+          username: handle,
+          display_name: handle,
+          created_at: at,
+          updated_at: at,
+          deleted_at: deletedDaysAgo === null ? null : daysAgo(deletedDaysAgo),
+        })
+        .execute();
+    }
+    const row = await db.query
+      .insertInto("support_tickets")
+      .values({
+        public_id: `T-${handle}`,
+        user_id: withAccount ? handle : null,
+        email: `${handle}@example.com`,
+        category: "data_request",
+        subject: `Quiero mis datos ${handle}`,
+        source: withAccount ? "web" : "email",
+        created_at: at,
+        updated_at: at,
+        last_message_at: at,
+      })
+      .returning("id")
+      .executeTakeFirstOrThrow();
+    await db.query
+      .insertInto("support_messages")
+      .values({ ticket_id: row.id, author_role: "user", body: `Mi RUT es ${handle}`, created_at: at })
+      .execute();
+    return row.id;
+  }
+
+  test("pasados 12 meses de la baja se borran los mensajes y se anonimizan correo y asunto; el resto queda igual", async () => {
+    const { db } = testDeps(d1, steppingClock());
+    const vencido = await ticket(db, "vencida", 366);
+    await ticket(db, "reciente", 364);
+    await ticket(db, "activa", null);
+    await ticket(db, "anonimo", null, false);
+
+    expect(await purgeDeletedAccountTickets(db, NOW)).toBe(1);
+
+    const tickets = await all(db, "support_tickets");
+    const purged = tickets.find((t) => t.id === vencido);
+    expect(purged).toMatchObject({
+      user_id: "vencida",
+      email: `eliminado+ticket${vencido}@framerate.invalid`,
+      subject: "Ticket eliminado",
+      category: "data_request",
+      status: "open",
+    });
+    expect(tickets.filter((t) => t.id !== vencido).map((t) => t.email)).toEqual([
+      "reciente@example.com",
+      "activa@example.com",
+      "anonimo@example.com",
+    ]);
+    const messages = await all(db, "support_messages");
+    expect(messages.map((m) => m.body)).toEqual(["Mi RUT es reciente", "Mi RUT es activa", "Mi RUT es anonimo"]);
+  });
+
+  test("una segunda pasada no vuelve a tocar lo ya purgado", async () => {
+    const { db } = testDeps(d1, steppingClock());
+    await ticket(db, "vencida", 400);
+
+    expect(await purgeDeletedAccountTickets(db, NOW)).toBe(1);
+    expect(await purgeDeletedAccountTickets(db, NOW)).toBe(0);
   });
 });
 

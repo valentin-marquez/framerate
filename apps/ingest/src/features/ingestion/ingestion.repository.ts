@@ -179,6 +179,30 @@ export async function purgeQuarantine(db: Db, now: Date): Promise<number> {
   return Number(result.numDeletedRows);
 }
 
+const SUPPORT_RETENTION_DAYS = 365;
+const PURGED_TICKET_EMAIL = "eliminado+%@framerate.invalid";
+
+/**
+ * Tickets de soporte de cuentas dadas de baja (#91): pasado el plazo desde `users.deleted_at` se borran sus mensajes y
+ * se anonimizan correo y asunto. La fila queda para acreditar cómo se gestionó (una solicitud ARCO, Ley 19.628). El
+ * correo anonimizado hace de marca: repetir la pasada, o retomarla tras un corte, no hace nada.
+ */
+export async function purgeDeletedAccountTickets(db: Db, now: Date): Promise<number> {
+  const before = new Date(now.getTime() - SUPPORT_RETENTION_DAYS * 86_400_000).toISOString();
+  const due = db.query
+    .selectFrom("support_tickets")
+    .select("id")
+    .where("email", "not like", PURGED_TICKET_EMAIL)
+    .where("user_id", "in", db.query.selectFrom("users").select("id").where("deleted_at", "<", before));
+  await db.query.deleteFrom("support_messages").where("ticket_id", "in", due).execute();
+  const result = await db.query
+    .updateTable("support_tickets")
+    .set({ email: sql<string>`'eliminado+ticket' || id || '@framerate.invalid'`, subject: "Ticket eliminado" })
+    .where("id", "in", due)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows);
+}
+
 export interface UpsertResult {
   listingId: number;
   created: boolean;
