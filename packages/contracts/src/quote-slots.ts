@@ -72,14 +72,14 @@ const PSU_SIZES = [450, 500, 550, 600, 650, 700, 750, 800, 850, 1000, 1200, 1300
 const nextPsuSize = (watts: number) => PSU_SIZES.find((size) => size >= watts) ?? Math.ceil(watts / 100) * 100;
 
 /**
- * Fuente para un consumo estimado. Mínimo: un 30 % de margen (lo habitual es 20 a 30 %, con el extremo alto por los
- * picos de la tarjeta). Recomendada: que el equipo trabaje cerca del 60 % de la carga de la fuente, donde rinde mejor
- * y más silenciosa (se apunta a entre el 50 y el 60 %), y al menos un escalón sobre el mínimo. Ej.: 463 W da mínima
- * de 650 W y recomendada de 750 W.
+ * Fuente para un consumo estimado. Mínimo: un 50 % de margen, bastante sobre el 20 a 30 % que suelen dar las
+ * calculadoras, por los picos de la tarjeta (decisión del dueño). Recomendada: consumo por 1,8, que deja al equipo
+ * cerca del 55 % de la carga de la fuente, donde rinde mejor y más silenciosa, y al menos un escalón sobre el mínimo.
+ * Ej.: 463 W da mínima de 700 W y recomendada de 850 W.
  */
 export function psuSizing(estimatedWatts: number) {
-  const minimum = nextPsuSize(estimatedWatts * 1.3);
-  const recommended = nextPsuSize(Math.max(estimatedWatts * 1.6, minimum + 1));
+  const minimum = nextPsuSize(estimatedWatts * 1.5);
+  const recommended = nextPsuSize(Math.max(estimatedWatts * 1.8, minimum + 1));
   return { minimum, recommended };
 }
 
