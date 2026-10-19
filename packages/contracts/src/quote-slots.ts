@@ -66,5 +66,22 @@ export function quoteTotals(items: readonly QuoteItem[]) {
   return { cash, card };
 }
 
+/** Potencias en las que se venden las fuentes: el cálculo termina en una de ellas, no en un número suelto. */
+const PSU_SIZES = [450, 500, 550, 600, 650, 700, 750, 800, 850, 1000, 1200, 1300, 1600] as const;
+
+const nextPsuSize = (watts: number) => PSU_SIZES.find((size) => size >= watts) ?? Math.ceil(watts / 100) * 100;
+
+/**
+ * Fuente para un consumo estimado. Mínimo: un 30 % de margen (lo habitual es 20 a 30 %, con el extremo alto por los
+ * picos de la tarjeta). Recomendada: que el equipo trabaje cerca del 60 % de la carga de la fuente, donde rinde mejor
+ * y más silenciosa (se apunta a entre el 50 y el 60 %), y al menos un escalón sobre el mínimo. Ej.: 463 W da mínima
+ * de 650 W y recomendada de 750 W.
+ */
+export function psuSizing(estimatedWatts: number) {
+  const minimum = nextPsuSize(estimatedWatts * 1.3);
+  const recommended = nextPsuSize(Math.max(estimatedWatts * 1.6, minimum + 1));
+  return { minimum, recommended };
+}
+
 /** Tope de `pageSize`: pedir más da 400, no una página más grande. */
 export const QUOTES_MAX_PAGE_SIZE = 50;

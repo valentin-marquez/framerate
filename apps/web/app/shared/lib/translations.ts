@@ -276,7 +276,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_cheapest_saved: "Ahorras {amount}",
     quote_cheapest_already: "Cada componente ya está en la tienda más barata",
     quote_psu_recommendation:
-      "Se recomienda una fuente de unos {watts}W aproximadamente, cerca del doble del consumo estimado",
+      "Se recomienda una fuente de {recommended}W y, como mínimo, una de {minimum}W para dejar margen sobre el consumo estimado",
     quote_condense_button: "Condensar tiendas",
     quote_condense_title: "Condensar la compra",
     quote_condense_loading: "Calculando la mejor combinación…",
@@ -676,7 +676,8 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_cheapest_badge: "Cheapest",
     quote_cheapest_saved: "You save {amount}",
     quote_cheapest_already: "Every component is already at the cheapest store",
-    quote_psu_recommendation: "A power supply of roughly {watts}W is recommended, close to double the estimated draw",
+    quote_psu_recommendation:
+      "A {recommended}W power supply is recommended, and at least {minimum}W to leave headroom over the estimated draw",
     quote_condense_button: "Consolidate stores",
     quote_condense_title: "Consolidate the purchase",
     quote_condense_loading: "Working out the best combination…",

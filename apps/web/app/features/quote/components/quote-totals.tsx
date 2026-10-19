@@ -1,4 +1,4 @@
-import type { QuoteCompatibility } from "@framerate/contracts";
+import { psuSizing, type QuoteCompatibility } from "@framerate/contracts";
 import { IconAlertTriangle, IconBolt } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "~/shared/hooks/use-translation";
@@ -13,9 +13,6 @@ interface QuoteTotalsProps {
   /** Acciones al pie de la tarjeta ("Guardar como"). */
   children?: ReactNode;
 }
-
-/** Cerca del doble del consumo (una fuente rinde mejor cerca de la mitad de su carga), en múltiplos de 50 W. */
-const recommendedPsuWatts = (estimatedWatts: number) => Math.ceil((estimatedWatts * 2) / 50) * 50;
 
 /** Resumen del armado: total, estado de compatibilidad, consumo estimado y acciones. */
 export function QuoteTotals({ totalNormal, totalCash, hasOutOfStockItems, compatibility, children }: QuoteTotalsProps) {
@@ -45,7 +42,7 @@ export function QuoteTotals({ totalNormal, totalCash, hasOutOfStockItems, compat
             <span className="text-muted-foreground">de consumo estimado</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            {t("quote_psu_recommendation", { watts: recommendedPsuWatts(compatibility.estimatedWatts) })}
+            {t("quote_psu_recommendation", psuSizing(compatibility.estimatedWatts))}
           </p>
         </div>
       )}
