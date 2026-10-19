@@ -10,7 +10,7 @@ import { getGradient } from "~/shared/utils/gradients";
 export const MIN_PUBLIC_QUOTES = 3;
 
 export const authorLine = (quote: PublicQuote) =>
-  `${quote.author.displayName} con ${quote.itemCount} ${quote.itemCount === 1 ? "componente" : "componentes"}`;
+  `@${quote.author.username} con ${quote.itemCount} ${quote.itemCount === 1 ? "componente" : "componentes"}`;
 
 export function Likes({ count }: { count: number }) {
   return (
