@@ -64,6 +64,26 @@ export function Collage({ quote, className }: { quote: PublicQuote; className?: 
   );
 }
 
+/** Las dos fotos que dan la cara de la cotización (las primeras por importancia: gabinete, procesador...) en una fila. */
+function Thumbs({ quote }: { quote: PublicQuote }) {
+  return (
+    <span className="pointer-events-none flex shrink-0 gap-1">
+      {[0, 1].map((i) => {
+        const src = quote.images[i];
+        return (
+          <span key={i} className="relative size-10 overflow-hidden rounded-lg bg-white">
+            {src ? (
+              <img src={src} alt="" loading="lazy" className="absolute inset-0 size-full object-contain" />
+            ) : (
+              <span className="absolute inset-0 opacity-55" style={{ background: getGradient(`${quote.id}${i}`) }} />
+            )}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 /** Cotizaciones públicas de más "me gusta" a menos: la primera en grande y las siguientes en una lista. */
 export function PublicQuotes({ quotes }: { quotes: PublicQuote[] }) {
   const [top, ...rest] = quotes;
@@ -105,6 +125,7 @@ export function PublicQuotes({ quotes }: { quotes: PublicQuote[] }) {
               <span className="pointer-events-none w-5 shrink-0 text-center font-mono text-muted-foreground text-sm tabular-nums">
                 {i + 2}
               </span>
+              <Thumbs quote={quote} />
               <span className="pointer-events-none min-w-0 flex-1">
                 <span className="block truncate font-medium text-foreground text-sm">{quote.name}</span>
                 <span className="block truncate font-mono text-muted-foreground text-xs tabular-nums">
