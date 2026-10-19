@@ -5,10 +5,23 @@ import {
   IconChevronRight,
   IconHome,
   IconLayoutGrid,
+  IconLayoutList,
+  IconPlus,
   IconSearch,
 } from "@tabler/icons-react";
-import { createContext, type ReactNode, use, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  createContext,
+  lazy,
+  type ReactNode,
+  Suspense,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Link, NavLink, useLocation, useMatches, useNavigation, useSearchParams } from "react-router";
+import { useProfile, useUser } from "~/features/auth/hooks/useAuth";
 import { CategoryPanel } from "~/features/catalog/components/category-panel";
 import { activeFilterCount } from "~/features/catalog/components/filter-panel";
 import type { CatalogData } from "~/features/catalog/load-catalog";
@@ -21,6 +34,14 @@ import { ThemeToggle } from "../theme/theme-toggle";
 import { Logo } from "./logo";
 import { OfferFreshness, TimeGradient } from "./nav-parts";
 import { UserMenu } from "./user-menu";
+
+// Los diálogos se descargan al abrirse por primera vez: el navbar está en todas las páginas y no deben pesar en la carga.
+const LoginDialog = lazy(() =>
+  import("~/features/auth/components/login-dialog").then((m) => ({ default: m.LoginDialog })),
+);
+const CreateQuoteDialog = lazy(() =>
+  import("~/features/quote/components/create-quote-dialog").then((m) => ({ default: m.CreateQuoteDialog })),
+);
 
 const railLink = (current: boolean) =>
   cn(
@@ -139,6 +160,100 @@ function RailLink({
         )}
       </NavLink>
     </RailHint>
+  );
+}
+
+/**
+ * Entrada a las cotizaciones. Con sesión van a tu perfil, donde están listadas; sin ella, al ingreso (`/perfil` sólo
+ * devuelve al inicio). Crear abre el diálogo de siempre. Cada diálogo queda montado tras abrirse, para cerrar con su
+ * animación.
+ */
+function useQuoteEntry() {
+  const user = useUser();
+  const profile = useProfile();
+  const [open, setOpen] = useState<"login" | "create" | null>(null);
+  const [mounted, setMounted] = useState<"login" | "create" | null>(null);
+  const show = (dialog: "login" | "create") => {
+    setMounted(dialog);
+    setOpen(dialog);
+  };
+  const onOpenChange = (next: boolean) => {
+    if (!next) setOpen(null);
+  };
+  const dialogs = mounted && (
+    <Suspense fallback={null}>
+      {mounted === "login" ? (
+        <LoginDialog open={open === "login"} onOpenChange={onOpenChange} />
+      ) : (
+        <CreateQuoteDialog open={open === "create"} onOpenChange={onOpenChange} />
+      )}
+    </Suspense>
+  );
+  return { signedIn: !!user, href: profile?.username ? `/u/${profile.username}` : "/perfil", show, dialogs };
+}
+
+/**
+ * Fila "Cotizaciones" del riel, con un "+" para crear a su derecha (sólo con sesión). Fila y "+" comparten celda de una
+ * grilla y no una caja `relative`: la píldora de sección mide el enlace con `offsetTop` y ese ancestro la descuadraría.
+ */
+function QuotesRailRow({ collapsed }: { collapsed: boolean }) {
+  const { signedIn, href, show, dialogs } = useQuoteEntry();
+  const icon = <IconLayoutList className="size-[18px] shrink-0" stroke={1.75} />;
+  return (
+    <div className="grid items-center [&>*]:col-start-1 [&>*]:row-start-1">
+      {signedIn ? (
+        <RailLink to={href} label="Cotizaciones" collapsed={collapsed} icon={icon} />
+      ) : (
+        <RailHint label="Cotizaciones" collapsed={collapsed}>
+          <button
+            type="button"
+            aria-label={collapsed ? "Cotizaciones" : undefined}
+            onClick={() => show("login")}
+            className={cn(railLink(false), "w-full cursor-pointer")}
+          >
+            {icon}
+            <span className="rail-label truncate">Cotizaciones</span>
+          </button>
+        </RailHint>
+      )}
+      {signedIn && (
+        <button
+          type="button"
+          aria-label="Crear cotización"
+          title="Crear cotización"
+          onClick={() => show("create")}
+          className="rail-label z-10 mr-1.5 flex size-6 cursor-pointer items-center justify-center justify-self-end rounded-lg text-foreground/70 transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <IconPlus className="size-3.5" stroke={2} />
+        </button>
+      )}
+      {dialogs}
+    </div>
+  );
+}
+
+/** Pestaña "Cotizaciones" de la barra inferior del teléfono: crear queda en el perfil y en el menú del avatar. */
+function QuotesTab() {
+  const { signedIn, href, show, dialogs } = useQuoteEntry();
+  const content = (
+    <>
+      <IconLayoutList className="size-5" stroke={1.75} />
+      Cotizaciones
+    </>
+  );
+  return (
+    <>
+      {signedIn ? (
+        <NavLink to={href} prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
+          {content}
+        </NavLink>
+      ) : (
+        <button type="button" className={tabClass(false)} onClick={() => show("login")}>
+          {content}
+        </button>
+      )}
+      {dialogs}
+    </>
   );
 }
 
@@ -435,6 +550,7 @@ export function Navbar({
                   collapsed={!wide}
                   icon={<IconLayoutGrid className="size-[18px] shrink-0" stroke={1.75} />}
                 />
+                <QuotesRailRow collapsed={!wide} />
               </nav>
             </RailGroup>
 
@@ -535,7 +651,7 @@ export function Navbar({
 
       <nav
         aria-label="Atajos"
-        className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-3 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         <NavLink to="/" end prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
           <IconHome className="size-5" stroke={1.75} />
@@ -549,6 +665,7 @@ export function Navbar({
           <IconSearch className="size-5" stroke={1.75} />
           Buscar
         </button>
+        <QuotesTab />
       </nav>
 
       <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
