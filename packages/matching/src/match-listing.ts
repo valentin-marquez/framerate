@@ -87,6 +87,11 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
 
   if (input.currentProductId !== null) {
     const productId = input.currentProductId;
+    // Un vínculo que se queda también entrega al producto los códigos que la oferta empezó a publicar (#103).
+    const keep = async () => {
+      await attachIdentifiers(db, productId, fp);
+      return { outcome: "kept" as const, unlinked, reviewClosed };
+    };
     const link = await loadLinkState(db, listingId, productId);
     // Los identificadores que sólo aporta esta oferta no cuentan: si no, el vínculo se confirmaría solo.
     const ownOnly = {
@@ -99,8 +104,8 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
       return { outcome: "kept", unlinked, categoryMismatch: true, reviewClosed };
     }
     const override = await overrideKind(db, listingId, productId);
-    if (override === "force") return { outcome: "kept", unlinked, reviewClosed };
-    if (link.method === "manual" && override !== "forbid") return { outcome: "kept", unlinked, reviewClosed };
+    if (override === "force") return keep();
+    if (link.method === "manual" && override !== "forbid") return keep();
     const check = current && compare(fp, current.fingerprint);
     const vetoes = override === "forbid" ? ["forbidden"] : check ? check.vetoes : ["product_missing"];
     let evidence: Record<string, unknown> = { previousProductId: productId, vetoes };
@@ -117,7 +122,7 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
           moveTo = await ownerThatLinks(db, listingId, fp, productId);
           if (moveTo) evidence = { ...evidence, identifierOwner: moveTo.productId };
         }
-        if (!moveTo) return { outcome: "kept", unlinked, reviewClosed };
+        if (!moveTo) return keep();
       } else {
         // Por regex (`legacy`, `fallback`) se re-decide siempre, como antes.
         const again =
@@ -126,7 +131,7 @@ export async function matchListing(db: Db, input: MatchListingInput): Promise<Ma
           evidence = { ...evidence, redecided: again.kind, score: check.score, sameStore: link.olderSameStore };
         } else {
           moveTo = check.evidence.identifier ? null : await ownerThatLinks(db, listingId, fp, productId);
-          if (!moveTo) return { outcome: "kept", unlinked, reviewClosed };
+          if (!moveTo) return keep();
           evidence = { ...evidence, identifierOwner: moveTo.productId };
         }
       }

@@ -218,6 +218,28 @@ describe("identificador de otro producto", () => {
     expect(forbidden.outcome).toBe("kept");
     expect(await productOf(founder)).toBe(alone);
   });
+
+  test("el vínculo que se queda le pasa al producto el MPN que la oferta empezó a publicar", async () => {
+    await seedStore();
+    const current = await product("current", TITLE, "Corsair");
+    await db.query
+      .insertInto("product_identifiers")
+      .values({ kind: "gtin", value: GTIN, product_id: current })
+      .execute();
+    const other = await listing("2", current, TITLE, null);
+    await db.query.updateTable("listings").set({ gtin: GTIN }).where("id", "=", other).execute();
+    const id = await listing("1", current);
+    await db.query.updateTable("listings").set({ gtin: GTIN }).where("id", "=", id).execute();
+    await decide(id, current, "identifier");
+    const offer = {
+      ...offerOf(),
+      fingerprint: buildFingerprint({ category: "ram", title: TITLE, brand: "Corsair", mpn: MPN, gtin: GTIN }),
+    };
+    expect((await matchListing(db, { listingId: id, currentProductId: current, offer, now: NOW })).outcome).toBe(
+      "kept",
+    );
+    expect(await all(db, "product_identifiers")).toContainEqual({ kind: "mpn", value: MPN, product_id: current });
+  });
 });
 
 /** Oferta que la IA movió de `provisional` a `target` (como `resolveMatchReview`). */
