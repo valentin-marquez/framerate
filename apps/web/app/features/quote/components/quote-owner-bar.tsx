@@ -65,7 +65,7 @@ export function QuoteOwnerBar({ quote, onChange }: QuoteOwnerBarProps) {
               className={cn(
                 "cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
                 quote.visibility === visibility
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-card text-foreground shadow-sm dark:bg-secondary"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
