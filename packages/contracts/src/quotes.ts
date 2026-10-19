@@ -100,8 +100,6 @@ export const QuoteCondensePlanSchema = z.object({
       priceCash: z.number().int().nonnegative(),
       cheapestStore: CondenseStoreSchema,
       cheapestPriceCash: z.number().int().nonnegative(),
-      /** Otra tienda del plan lo tiene, pero a más del tope sobre su precio más barato: se queda donde está. */
-      keptByLimit: z.boolean(),
     }),
   ),
   stores: z.array(

@@ -455,10 +455,7 @@ describe("condensar tiendas", () => {
 
     const plan = QuoteCondensePlanSchema.parse(await (await condense(ana, quote.id)).json());
     expect(plan).toMatchObject({ improves: false, storesBefore: 2, storesAfter: 2, extraCash: 0 });
-    expect(plan.items.find((i) => i.cheapestPriceCash === 599_990)).toMatchObject({
-      store: { slug: "beta" },
-      keptByLimit: true,
-    });
+    expect(plan.items.find((i) => i.cheapestPriceCash === 599_990)).toMatchObject({ store: { slug: "beta" } });
   });
 
   test("una cotización vacía no tiene nada que condensar; sólo el dueño la consulta", async () => {

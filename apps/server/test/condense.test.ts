@@ -42,8 +42,6 @@ describe("planCondense", () => {
     expect([2, 5].map((id) => storeOf(plan, id))).toEqual([TECNOMAS, TECNOMAS]);
     expect([1, 6].map((id) => storeOf(plan, id))).toEqual([TEKMACHINE, TEKMACHINE]);
     expect([3, 4].map((id) => storeOf(plan, id))).toEqual([NUEVATEC, NUEVATEC]);
-    expect(plan.assignments.find((a) => a.itemId === 4)?.keptByLimit).toBe(true);
-    expect(plan.assignments.filter((a) => a.keptByLimit)).toHaveLength(1);
   });
 
   test("juntar dos piezas por $10.000 más condensa (lo que vale una tienda) y un peso más no", () => {

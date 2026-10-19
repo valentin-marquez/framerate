@@ -1,10 +1,5 @@
-import {
-  CONDENSE_MAX_EXTRA,
-  CONDENSE_STORE_VALUE,
-  type QuoteCondensePlan,
-  type QuoteDetail,
-} from "@framerate/contracts";
-import { IconBuildingStore, IconInfoCircle, IconLoader2 } from "@tabler/icons-react";
+import { CONDENSE_STORE_VALUE, type QuoteCondensePlan, type QuoteDetail } from "@framerate/contracts";
+import { IconBuildingStore, IconLoader2 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useCondensePlan } from "~/features/quote/hooks/useQuotes";
 import { Button } from "~/shared/components/primitives/button";
@@ -23,7 +18,7 @@ import { useTranslation } from "~/shared/hooks/use-translation";
 import { formatCLP } from "~/shared/utils/format";
 
 interface CondenseStoresDialogProps {
-  quote: Pick<QuoteDetail, "id" | "items">;
+  quote: Pick<QuoteDetail, "id">;
   /** Fija la tienda de cada ítem del plan y deja la cotización al día. */
   onApply: (plan: QuoteCondensePlan) => Promise<void>;
   defaultOpen?: boolean;
@@ -87,9 +82,6 @@ function CondensePanel({
     }
   };
 
-  const names = new Map(quote.items.map((item) => [item.id, item.product.name]));
-  const kept = plan?.items.filter((i) => i.keptByLimit).map((i) => names.get(i.itemId) ?? "") ?? [];
-
   return (
     <>
       <DialogHeader>
@@ -130,13 +122,6 @@ function CondensePanel({
         </ul>
       )}
 
-      {plan?.improves && kept.length > 0 && (
-        <p className="flex items-start gap-2 text-muted-foreground text-xs">
-          <IconInfoCircle className="mt-0.5 size-3.5 shrink-0" />
-          {t("quote_condense_kept", { names: kept.join(", "), limit: formatCLP(CONDENSE_MAX_EXTRA) })}
-        </p>
-      )}
-
       <div className="space-y-1.5 rounded-2xl bg-secondary/40 p-4">
         <div className="flex items-center justify-between gap-3">
           <Label htmlFor="condense-store-value" className="text-sm">
@@ -152,7 +137,7 @@ function CondensePanel({
               step={1000}
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
-              className="w-28 text-right tabular-nums"
+              className="w-28 text-right tabular-nums text-foreground"
             />
           </div>
         </div>

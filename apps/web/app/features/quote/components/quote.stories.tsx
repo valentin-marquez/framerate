@@ -306,7 +306,6 @@ const condensePlan: QuoteCondensePlan = {
       priceCash: 397_900,
       cheapestStore: { slug: "tectec", name: "TecTec" },
       cheapestPriceCash: 389_990,
-      keptByLimit: false,
     },
     {
       itemId: 7,
@@ -315,7 +314,6 @@ const condensePlan: QuoteCondensePlan = {
       priceCash: 155_990,
       cheapestStore: { slug: "tecnomas", name: "Tecnomas" },
       cheapestPriceCash: 155_990,
-      keptByLimit: false,
     },
     {
       itemId: 2,
@@ -324,7 +322,6 @@ const condensePlan: QuoteCondensePlan = {
       priceCash: 649_990,
       cheapestStore: { slug: "nuevatec", name: "Nuevatec" },
       cheapestPriceCash: 649_990,
-      keptByLimit: true,
     },
   ],
   stores: [

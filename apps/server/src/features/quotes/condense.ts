@@ -25,8 +25,6 @@ export interface CondenseAssignment {
   itemId: number;
   offer: CondenseOffer;
   cheapest: CondenseOffer;
-  /** Otra tienda del plan lo tiene, pero pasado el tope: se queda donde está. */
-  keptByLimit: boolean;
 }
 
 export interface Condensed {
@@ -62,7 +60,7 @@ export function planCondense(
     const cheapest = [...perStore.values()][0];
     if (!cheapest) return [];
     const allowed = [...perStore.values()].filter((offer) => offer.priceCash - cheapest.priceCash <= maxExtra);
-    return [{ itemId: item.itemId, quantity: item.quantity, perStore, cheapest, allowed }];
+    return [{ itemId: item.itemId, quantity: item.quantity, cheapest, allowed }];
   });
 
   // Los ítems con menos tiendas posibles primero: acotan más la búsqueda.
@@ -101,13 +99,7 @@ export function planCondense(
   const planStores = new Set(best.picks.map((o) => o.storeId));
   const assignments = order.map((row, i): CondenseAssignment => {
     const offer = best.picks[i] ?? row.cheapest;
-    const keptByLimit = [...planStores].some(
-      (storeId) =>
-        storeId !== offer.storeId &&
-        row.perStore.has(storeId) &&
-        !row.allowed.some((allowedOffer) => allowedOffer.storeId === storeId),
-    );
-    return { itemId: row.itemId, offer, cheapest: row.cheapest, keptByLimit };
+    return { itemId: row.itemId, offer, cheapest: row.cheapest };
   });
   const quantities = new Map(rows.map((r) => [r.itemId, r.quantity]));
   const extraCash = assignments.reduce(

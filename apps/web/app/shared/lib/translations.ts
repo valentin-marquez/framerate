@@ -289,8 +289,6 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
       "Es lo que vale para ti el envío y el tiempo de una compra menos. Súbelo para juntar más tiendas, bájalo para cuidar el precio.",
     quote_condense_one: "1 componente",
     quote_condense_many: "{count} componentes",
-    quote_condense_kept:
-      "{names}: se queda donde está porque en otra tienda cuesta más de {limit} sobre su precio más barato.",
     quote_condense_apply: "Aplicar: {count} tiendas",
     quote_condense_done: "Compras en {count} tiendas, por {extra} más",
     quote_offer_prices: "{cash} efectivo, {card} tarjeta",
@@ -684,8 +682,6 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
       "What the shipping and time of one less order is worth to you. Raise it to merge more stores, lower it to protect the price.",
     quote_condense_one: "1 component",
     quote_condense_many: "{count} components",
-    quote_condense_kept:
-      "{names}: stays where it is because in another store it costs more than {limit} above its cheapest price.",
     quote_condense_apply: "Apply: {count} stores",
     quote_condense_done: "You buy from {count} stores, for {extra} more",
     quote_offer_prices: "{cash} cash, {card} card",

@@ -668,7 +668,6 @@ export async function condensePlan(
       priceCash: a.offer.priceCash,
       cheapestStore: storeOf(a.cheapest.storeId),
       cheapestPriceCash: a.cheapest.priceCash,
-      keptByLimit: a.keptByLimit,
     })),
     stores: [...perStore].map(([storeId, entry]) => ({ ...storeOf(storeId), ...entry })),
   };
