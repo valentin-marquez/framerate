@@ -14,6 +14,9 @@ interface QuoteTotalsProps {
   children?: ReactNode;
 }
 
+/** Cerca del doble del consumo (una fuente rinde mejor cerca de la mitad de su carga), en múltiplos de 50 W. */
+const recommendedPsuWatts = (estimatedWatts: number) => Math.ceil((estimatedWatts * 2) / 50) * 50;
+
 /** Resumen del armado: total, estado de compatibilidad, consumo estimado y acciones. */
 export function QuoteTotals({ totalNormal, totalCash, hasOutOfStockItems, compatibility, children }: QuoteTotalsProps) {
   const { t } = useTranslation();
@@ -35,10 +38,15 @@ export function QuoteTotals({ totalNormal, totalCash, hasOutOfStockItems, compat
       )}
       {compatibility && <CompatibilityBar compatibility={compatibility} />}
       {compatibility?.estimatedWatts && (
-        <div className="flex items-center gap-1.5 text-sm">
-          <IconBolt size={16} className="text-warn" />
-          <span className="tabular-nums">~{compatibility.estimatedWatts} W</span>
-          <span className="text-muted-foreground">de consumo estimado</span>
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-sm">
+            <IconBolt size={16} className="text-warn" />
+            <span className="tabular-nums">~{compatibility.estimatedWatts} W</span>
+            <span className="text-muted-foreground">de consumo estimado</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t("quote_psu_recommendation", { watts: recommendedPsuWatts(compatibility.estimatedWatts) })}
+          </p>
         </div>
       )}
       {children}
