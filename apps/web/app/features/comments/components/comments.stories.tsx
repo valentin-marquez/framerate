@@ -125,7 +125,7 @@ export const Cuerpo: Story = {
     <CommentBody
       className="max-w-2xl"
       body={
-        "Revisa la ficha: https://framerate.cl/producto/rtx-5060 y compara con `RTX 5060 Ti`.\n\n```ts\nconst presupuesto = 600_000;\n```\nUna cotización compartida: https://framerate.cl/cotizacion/abc123"
+        "Revisa la ficha: https://framerate.cl/producto/rtx-5060 y compara con `RTX 5060 Ti`.\n\n```ts\nconst presupuesto = 600_000;\n```\nUna cotización compartida: https://framerate.cl/cotizacion/44CDZ8FTM2"
       }
     />
   ),

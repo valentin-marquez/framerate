@@ -5,16 +5,10 @@
  * the comment form's paste handler (offers to publish private quotes inline).
  */
 
-const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-
+// `public_id` of a quote: 10 uppercase characters without 0, 1, I, L, O or U (`newPublicId(10)` in the server's
+// quotes repository). Case matters: the API compares it as written, so it is never lowercased.
 const QUOTE_URL_RE =
-  /https?:\/\/(?:framerate\.cl|localhost(?::\d+)?|127\.0\.0\.1(?::\d+)?)\/cotizacion\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/gi;
-
-export function isQuoteUrl(url: string): string | null {
-  const single = new RegExp(QUOTE_URL_RE.source, "i");
-  const match = single.exec(url);
-  return match ? match[1].toLowerCase() : null;
-}
+  /https?:\/\/(?:framerate\.cl|localhost(?::\d+)?|127\.0\.0\.1(?::\d+)?)\/cotizacion\/([A-HJKMNP-TV-Z2-9]{10})\b/g;
 
 export interface QuoteUrlMatch {
   start: number;
@@ -24,15 +18,10 @@ export interface QuoteUrlMatch {
 }
 
 export function findQuoteUrls(text: string): QuoteUrlMatch[] {
-  const matches: QuoteUrlMatch[] = [];
-  const re = new RegExp(QUOTE_URL_RE.source, "gi");
-  let m: RegExpExecArray | null = re.exec(text);
-  while (m !== null) {
-    const id = UUID_RE.exec(m[0])?.[0]?.toLowerCase();
-    if (id) {
-      matches.push({ start: m.index, end: m.index + m[0].length, url: m[0], quoteId: id });
-    }
-    m = re.exec(text);
-  }
-  return matches;
+  return Array.from(text.matchAll(QUOTE_URL_RE), (m) => ({
+    start: m.index,
+    end: m.index + m[0].length,
+    url: m[0],
+    quoteId: m[1] as string,
+  }));
 }
