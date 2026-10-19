@@ -64,6 +64,32 @@ export function Collage({ quote, className }: { quote: PublicQuote; className?: 
   );
 }
 
+/** Tarjeta grande de `/cotizaciones`: el collage de cuatro fotos arriba y, abajo, nombre, autor, total y me gusta. */
+export function PublicQuoteCard({ quote, rank }: { quote: PublicQuote; rank: number }) {
+  return (
+    <div className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-border/40 bg-card transition-colors hover:border-primary/40">
+      <CardLink quote={quote} />
+      <span className="pointer-events-none relative block">
+        <Collage quote={quote} className="aspect-[4/3] w-full" />
+        <span className="absolute top-2 left-2 rounded-lg bg-background/90 px-2 py-0.5 font-mono text-foreground text-xs tabular-nums">
+          #{rank}
+        </span>
+      </span>
+      <span className="pointer-events-none flex flex-1 flex-col gap-1.5 p-4">
+        <span className="line-clamp-2 text-foreground text-label-lg transition-colors group-hover:text-primary">
+          {quote.name}
+        </span>
+        {quote.description && <span className="line-clamp-2 text-muted-foreground text-sm">{quote.description}</span>}
+        <span className="text-muted-foreground text-xs">{authorLine(quote)}</span>
+        <span className="mt-auto flex items-center justify-between pt-2">
+          <span className="font-mono text-foreground tabular-nums">{formatCLP(quote.totalCash)}</span>
+          <LikeSlot quote={quote} />
+        </span>
+      </span>
+    </div>
+  );
+}
+
 /** Las dos fotos que dan la cara de la cotización (las primeras por importancia: gabinete, procesador...) en una fila. */
 function Thumbs({ quote }: { quote: PublicQuote }) {
   return (
@@ -105,7 +131,7 @@ export function PublicQuotes({ quotes }: { quotes: PublicQuote[] }) {
           <CardLink quote={top} />
           <Collage quote={top} className="pointer-events-none aspect-[4/3] w-full sm:w-2/5" />
           <span className="pointer-events-none flex flex-1 flex-col gap-2 p-4">
-            <span className="font-mono text-muted-foreground text-xs">Las más queridas, #1</span>
+            <span className="font-mono text-muted-foreground text-xs">La más querida, #1</span>
             <span className="text-foreground text-title-h6 transition-colors group-hover:text-primary">{top.name}</span>
             {top.description && <span className="line-clamp-3 text-muted-foreground text-sm">{top.description}</span>}
             <span className="text-muted-foreground text-xs">{authorLine(top)}</span>
