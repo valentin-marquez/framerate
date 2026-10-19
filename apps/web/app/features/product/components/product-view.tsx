@@ -7,8 +7,9 @@ import {
   IconExternalLink,
   IconPhotoOff,
 } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
+import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { ReportButton } from "~/features/moderation";
 import { AddToQuote } from "~/features/product/components/add-to-quote";
@@ -28,6 +29,7 @@ import { AsyncImage } from "~/shared/components/primitives/async-image";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/shared/components/primitives/select";
 import { StoreLogo } from "~/shared/components/store-logo";
+import { useTranslation } from "~/shared/hooks/use-translation";
 import { cameFrom, lastCategoryUrl } from "~/shared/lib/category-memory";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
@@ -391,67 +393,32 @@ function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: numbe
   );
 }
 
-/** Página actual de la miga: tocar el nombre o su ícono copia el enlace; el ícono pasa a un check que se dibuja. */
+/** Página actual de la miga: tocar el nombre o su ícono copia el enlace y avisa como el "Copiar enlace" de las cotizaciones. */
 function CopyCrumb({ name }: { name: string }) {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const { t } = useTranslation();
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
     } catch {
       return;
     }
-    setCopied(true);
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setCopied(false), 1800);
+    toast.success(t("link_copied"));
   };
   return (
-    <>
-      <button
-        type="button"
-        aria-current="page"
-        aria-label={`${name}, copiar enlace`}
-        onClick={copy}
-        className="group flex min-w-0 cursor-pointer items-center gap-1.5 rounded-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span title={name} className="min-w-0 truncate">
-          {name}
-        </span>
-        <span
-          className={cn(
-            "relative grid size-5 shrink-0 place-items-center rounded-md transition-colors",
-            copied ? "text-primary" : "text-muted-foreground group-hover:bg-secondary/60 group-hover:text-foreground",
-          )}
-        >
-          <IconCopy
-            className={cn("absolute size-3.5 transition-opacity duration-fast ease-out", copied && "opacity-0")}
-          />
-          {/* El trazo se dibuja con stroke-dashoffset (sólo pinta, no recalcula layout). */}
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            className="absolute size-3.5"
-          >
-            <path
-              d="M5 12.5l4.5 4.5L19 7.5"
-              pathLength={1}
-              style={{
-                strokeDasharray: 1,
-                strokeDashoffset: copied ? 0 : 1,
-                transition: copied ? "stroke-dashoffset 300ms var(--ease-out) 80ms" : "none",
-              }}
-            />
-          </svg>
-        </span>
-      </button>
-      <output className="sr-only">{copied ? "Enlace copiado" : ""}</output>
-    </>
+    <button
+      type="button"
+      aria-current="page"
+      aria-label={`${name}, copiar enlace`}
+      onClick={copy}
+      className="group flex min-w-0 cursor-pointer items-center gap-1.5 rounded-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span title={name} className="min-w-0 truncate">
+        {name}
+      </span>
+      <span className="grid size-5 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors group-hover:bg-secondary/60 group-hover:text-foreground">
+        <IconCopy className="size-3.5" />
+      </span>
+    </button>
   );
 }
 
