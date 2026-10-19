@@ -1,6 +1,7 @@
 import type {
   AddQuoteItemRequest,
   CreateQuoteRequest,
+  QuoteCondensePlan,
   QuoteDetail,
   QuotePage,
   UpdateQuoteItemRequest,
@@ -21,6 +22,9 @@ export const quotesService = {
   create: (data: CreateQuoteRequest) => api.post<QuoteDetail>("/v1/quotes", data),
 
   getById: (id: string) => api.get<QuoteDetail>(`/v1/quotes/${id}`),
+
+  /** Cómo comprar en menos tiendas (sólo el dueño). */
+  getCondensePlan: (id: string) => api.get<QuoteCondensePlan>(`/v1/quotes/${id}/condense`),
 
   update: (id: string, data: UpdateQuoteRequest) => api.patch<QuoteDetail>(`/v1/quotes/${id}`, data),
 

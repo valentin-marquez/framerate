@@ -14,6 +14,7 @@ import { AppError } from "@/shared/http/errors";
 import {
   addItem,
   canRead,
+  condensePlan,
   createQuote,
   deleteQuote,
   listPublicQuotes,
@@ -55,6 +56,12 @@ export const quotesRoutes = new Hono<AppEnv>()
     const quote = await loadQuote(c.var.db, c.req.param("id"), c.env.ASSETS_BASE_URL);
     if (!quote || !canRead(quote, c.get("user")?.id)) throw quoteNotFound();
     return c.json(quote.detail);
+  })
+  .get("/:id/condense", async (c) => {
+    const user = currentUser(c);
+    const plan = await condensePlan(c.var.db, c.req.param("id"), user.id);
+    if (!plan) throw quoteNotFound();
+    return c.json(plan);
   })
   .patch("/:id", async (c) => {
     const user = currentUser(c);

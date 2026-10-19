@@ -74,6 +74,41 @@ export const QuoteDetailSchema = QuoteSummarySchema.extend({
 });
 export type QuoteDetail = z.infer<typeof QuoteDetailSchema>;
 
+const CondenseStoreSchema = z.object({ slug: z.string(), name: z.string() });
+
+/**
+ * Propuesta para comprar en menos tiendas (`GET /v1/quotes/:id/condense`, sólo el dueño). Se compara con comprar cada
+ * ítem en su tienda más barata; no incluye envíos. `improves` es falso cuando ya no se puede usar menos tiendas.
+ */
+export const QuoteCondensePlanSchema = z.object({
+  improves: z.boolean(),
+  storesBefore: z.number().int().nonnegative(),
+  storesAfter: z.number().int().nonnegative(),
+  /** Lo que cuesta de más el plan frente a la tienda más barata de cada ítem, por sus cantidades. */
+  extraCash: z.number().int().nonnegative(),
+  items: z.array(
+    z.object({
+      itemId: z.number().int(),
+      listingId: z.number().int(),
+      store: CondenseStoreSchema,
+      priceCash: z.number().int().nonnegative(),
+      cheapestStore: CondenseStoreSchema,
+      cheapestPriceCash: z.number().int().nonnegative(),
+      /** Otra tienda del plan lo tiene, pero a más del tope sobre su precio más barato: se queda donde está. */
+      keptByLimit: z.boolean(),
+    }),
+  ),
+  stores: z.array(
+    z.object({
+      slug: z.string(),
+      name: z.string(),
+      itemIds: z.array(z.number().int()),
+      subtotalCash: z.number().int().nonnegative(),
+    }),
+  ),
+});
+export type QuoteCondensePlan = z.infer<typeof QuoteCondensePlanSchema>;
+
 export const QuotePageSchema = pageSchema(QuoteSummarySchema);
 export type QuotePage = z.infer<typeof QuotePageSchema>;
 

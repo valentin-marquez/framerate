@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { ApiErrorSchema, QuoteDetailSchema, QuotePageSchema } from "@framerate/contracts";
+import { ApiErrorSchema, QuoteCondensePlanSchema, QuoteDetailSchema, QuotePageSchema } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { createApp } from "@/app";
@@ -369,6 +369,89 @@ describe("alternativa y tienda elegidas", () => {
     const item = itemOf(await detail(ana, quote.id), seed.asus);
     expect((await patchItem(beto, quote.id, item.id, { listingId: seed.listings.l1 })).status).toBe(404);
     expect((await patchItem("anon", quote.id, item.id, { isSelected: true })).status).toBe(401);
+  });
+});
+
+describe("condensar tiendas", () => {
+  /** Otra oferta del Ryzen, en beta, para que pueda juntarse con la ASUS. */
+  async function ryzenInBeta(price: number) {
+    const at = new Date().toISOString();
+    return (
+      await db.query
+        .insertInto("listings")
+        .values({
+          store_id: seed.beta,
+          product_id: seed.ryzen,
+          external_id: "ryzen-beta",
+          url: "https://beta.cl/p/ryzen",
+          title: "oferta ryzen beta",
+          category: "cpu",
+          price_cash: price,
+          price_card: price,
+          in_stock: 1,
+          first_seen_at: at,
+          last_seen_at: at,
+          updated_at: at,
+        })
+        .returning("id")
+        .executeTakeFirstOrThrow()
+    ).id;
+  }
+  const condense = (actor: string, quoteId: string) => call(actor, `/v1/quotes/${quoteId}/condense`);
+  const patchItem = (actor: string, quoteId: string, itemId: number, body: unknown) =>
+    call(actor, `/v1/quotes/${quoteId}/items/${itemId}`, "PATCH", body);
+
+  test("junta la compra en una tienda por lo que cuesta de más, y el plan se puede aplicar", async () => {
+    const ryzenBeta = await ryzenInBeta(440_000);
+    const quote = await createQuote(ana);
+    await addItem(ana, quote.id, seed.asus);
+    await addItem(ana, quote.id, seed.ryzen);
+
+    const res = await condense(ana, quote.id);
+    expect(res.status).toBe(200);
+    const plan = QuoteCondensePlanSchema.parse(await res.json());
+    expect(plan).toMatchObject({ improves: true, storesBefore: 2, storesAfter: 1, extraCash: 20_000 });
+    expect(plan.stores).toEqual([
+      { slug: "beta", name: "beta", itemIds: expect.any(Array), subtotalCash: 599_990 + 440_000 },
+    ]);
+    const ryzen = plan.items.find((i) => i.listingId === ryzenBeta);
+    expect(ryzen).toMatchObject({
+      store: { slug: "beta" },
+      cheapestStore: { slug: "alfa" },
+      cheapestPriceCash: 420_000,
+    });
+
+    // Aplicar es fijar cada oferta del plan con el PATCH de siempre.
+    const applied = QuoteDetailSchema.parse(
+      await (await patchItem(ana, quote.id, ryzen?.itemId ?? 0, { listingId: ryzenBeta })).json(),
+    );
+    expect(applied.totals.cash).toBe(599_990 + 440_000);
+  });
+
+  test("no mueve un ítem a una tienda donde cuesta más de $30.000 sobre su mínimo, y no mejora", async () => {
+    await ryzenInBeta(440_000);
+    const quote = await createQuote(ana);
+    await addItem(ana, quote.id, seed.asus);
+    // Con el Ryzen sólo en alfa, la ASUS tendría que ir a alfa por $50.010 más: pasa el tope.
+    await db.query.deleteFrom("listings").where("external_id", "=", "ryzen-beta").execute();
+    await addItem(ana, quote.id, seed.ryzen);
+
+    const plan = QuoteCondensePlanSchema.parse(await (await condense(ana, quote.id)).json());
+    expect(plan).toMatchObject({ improves: false, storesBefore: 2, storesAfter: 2, extraCash: 0 });
+    expect(plan.items.find((i) => i.cheapestPriceCash === 599_990)).toMatchObject({
+      store: { slug: "beta" },
+      keptByLimit: true,
+    });
+  });
+
+  test("una cotización vacía no tiene nada que condensar; sólo el dueño la consulta", async () => {
+    const quote = await createQuote(ana);
+    const empty = QuoteCondensePlanSchema.parse(await (await condense(ana, quote.id)).json());
+    expect(empty).toMatchObject({ improves: false, storesBefore: 0, storesAfter: 0, extraCash: 0, items: [] });
+
+    expect((await condense(beto, quote.id)).status).toBe(404);
+    expect((await condense("anon", quote.id)).status).toBe(401);
+    expect((await condense(ana, "NOEXISTE00")).status).toBe(404);
   });
 });
 

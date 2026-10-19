@@ -19,6 +19,15 @@ export function useQuote(id: string) {
   });
 }
 
+/** El plan sale de los precios de ahora: se pide al abrir el panel y se descarta al cerrarlo (`gcTime: 0`). */
+export function useCondensePlan(id: string) {
+  return useQuery({
+    queryKey: quoteKeys.condense(id),
+    queryFn: () => quotesService.getCondensePlan(id),
+    gcTime: 0,
+  });
+}
+
 type CreateInput = Parameters<typeof quotesService.create>[0];
 type AddItemInput = Parameters<typeof quotesService.addItem>[1];
 type UpdateItemInput = Parameters<typeof quotesService.updateItem>[2];

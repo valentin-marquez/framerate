@@ -1,4 +1,11 @@
-import { isAdditiveSlot, type Offer, type QuoteDetail, type QuoteItem, quoteTotals } from "@framerate/contracts";
+import {
+  isAdditiveSlot,
+  type Offer,
+  type QuoteCondensePlan,
+  type QuoteDetail,
+  type QuoteItem,
+  quoteTotals,
+} from "@framerate/contracts";
 import { useEffect, useRef, useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
@@ -147,6 +154,28 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     }
   };
 
+  /**
+   * Aplica el plan de comprar en menos tiendas: fija la oferta de cada ítem que cambia de tienda (el servidor ya
+   * respetó el tope por ítem) y vuelve a pedir la cotización una vez, por el mismo motivo que arriba.
+   */
+  const handleCondense = async (plan: QuoteCondensePlan) => {
+    const changes = plan.items.filter((p) => quote.items.find((i) => i.id === p.itemId)?.offer?.id !== p.listingId);
+    inFlight.current += 1;
+    try {
+      await Promise.all(
+        changes.map((p) =>
+          updateItem.mutateAsync({ quoteId: quote.id, itemId: p.itemId, data: { listingId: p.listingId } }),
+        ),
+      );
+      const fresh = await quotesService.getById(quote.id);
+      inFlight.current -= 1;
+      if (inFlight.current === 0) setQuote(fresh);
+      toast.success(t("quote_condense_done", { count: plan.storesAfter, extra: formatCLP(plan.extraCash) }));
+    } catch {
+      fail(t("quote_update_error"));
+    }
+  };
+
   const handleRemove = (item: QuoteItem) => {
     showItems(quote.items.filter((i) => i.id !== item.id));
     inFlight.current += 1;
@@ -194,6 +223,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
               onSelect={handleSelect}
               onChooseOffer={handleChooseOffer}
               onChooseCheapest={handleChooseCheapest}
+              onCondense={handleCondense}
             />
           </div>
 

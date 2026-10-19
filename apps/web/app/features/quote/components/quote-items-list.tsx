@@ -1,7 +1,14 @@
-import { type Offer, QUOTE_SLOTS, type QuoteDetail, type QuoteItem as QuoteItemData } from "@framerate/contracts";
+import {
+  type Offer,
+  QUOTE_SLOTS,
+  type QuoteCondensePlan,
+  type QuoteDetail,
+  type QuoteItem as QuoteItemData,
+} from "@framerate/contracts";
 import { IconTag } from "@tabler/icons-react";
 import { Button } from "~/shared/components/primitives/button";
 import { useTranslation } from "~/shared/hooks/use-translation";
+import { CondenseStoresDialog } from "./condense-stores-dialog";
 import { QuoteSlot } from "./quote-slot";
 
 interface QuoteItemsListProps {
@@ -13,6 +20,8 @@ interface QuoteItemsListProps {
   onChooseOffer: (item: QuoteItemData, offer: Offer | null) => void;
   /** Vuelve al mejor precio todos los ítems con la tienda fijada a mano. */
   onChooseCheapest?: () => void;
+  /** Aplica el plan de comprar en menos tiendas que muestra el panel "Condensar tiendas". */
+  onCondense?: (plan: QuoteCondensePlan) => Promise<void>;
 }
 
 /** Los slots con algo primero, en el orden del armado; los vacíos al final, como pendientes. */
@@ -24,11 +33,14 @@ export function QuoteItemsList({
   onSelect,
   onChooseOffer,
   onChooseCheapest,
+  onCondense,
 }: QuoteItemsListProps) {
   const { t } = useTranslation();
   const filled = (slot: (typeof QUOTE_SLOTS)[number]) => quote.items.some((item) => item.slot === slot);
   const slots = [...QUOTE_SLOTS.filter(filled), ...QUOTE_SLOTS.filter((slot) => !filled(slot))];
   const hasPinned = quote.items.some((item) => item.isSelected && item.chosenListingId !== null);
+  // Con menos de dos ítems con precio no hay nada que juntar.
+  const priced = quote.items.filter((item) => item.isSelected && item.offer).length;
 
   return (
     <div className="bg-card rounded-3xl border border-border/40 shadow-sm overflow-hidden">
@@ -41,6 +53,7 @@ export function QuoteItemsList({
               {t("quote_cheapest_all")}
             </Button>
           )}
+          {isOwner && onCondense && priced >= 2 && <CondenseStoresDialog quote={quote} onApply={onCondense} />}
           <span className="text-sm text-muted-foreground">{t("active_items_count", { count: quote.itemCount })}</span>
         </div>
       </div>
