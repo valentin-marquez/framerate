@@ -130,6 +130,11 @@ describe("checkCompatibility", () => {
     const sodimm = part("ram", { type: "ddr5", form_factor: "sodimm", modules: 1 });
     expect(results([mb, sodimm]).memory_form_factor).toBe("warning");
     expect(results([cpu, part("cpu_cooler", { type: "air", sockets: "LGA1700" })]).cooler_socket).toBe("warning");
+    expect(results([cpu, part("cpu_cooler", { type: "air", sockets: "LGA1700, LGA1851, AMD" })]).cooler_socket).toBe(
+      "warning",
+    );
+    expect(results([cpu, part("cpu_cooler", { type: "air", sockets: "Intel/AMD" })]).cooler_socket).toBe("warning");
+    expect(results([cpu, part("cpu_cooler", { type: "air", sockets: "Intel" })]).cooler_socket).toBe("unknown");
     expect(results([cpu]).cooler_missing).toBe("warning");
     // 75 + 105 + 285 = 465 W: 500 W alcanza pero sin 25 % de margen; 450 W no alcanza.
     expect(results([cpu, gpu, part("psu", { wattage: 500 })]).psu_wattage).toBe("warning");

@@ -237,6 +237,19 @@ const RULES: Rule[] = [
     const s = socket(cpu.facts.socket);
     const list = sockets(cooler.facts.sockets);
     if (!s) return unknown("cooler_socket", [cpu, cooler], "el socket", cpu);
+    // "Intel/AMD" o "AM4, AM5, Intel": nombra la marca del procesador sin ninguno de sus sockets (#178).
+    const intel = s.startsWith("lga");
+    const text = String(cooler.facts.sockets);
+    const vague =
+      text.toLowerCase().includes(intel ? "intel" : "amd") &&
+      ![...(list ?? [])].some((x) => x.startsWith("lga") === intel);
+    if (vague && !list?.has(s))
+      return check(
+        "cooler_socket",
+        "warning",
+        [cpu, cooler],
+        `El cooler dice "${text}" sin listar sockets: confirma que soporte ${label(s)}.`,
+      );
     if (!list) return unknown("cooler_socket", [cpu, cooler], "qué sockets soporta", cooler);
     // Advertencia y no incompatible: muchos coolers suman sockets con un kit aparte y no lo listan.
     return list.has(s)
