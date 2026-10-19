@@ -113,7 +113,8 @@ export function sourceTextOf(html: string): string | null {
 export function toRawOffer(html: string, url: string, category: Category): RawOffer {
   const sku = prop(html, "sku");
   const gtinRaw = prop(html, "gtin");
-  const gtin = normalizeGtin(gtinRaw) ? gtinRaw : null;
+  // Winpy pone el mismo GTIN en todas sus fichas (433 de 433 el 18-10-2026): es un relleno, no del fabricante (#211).
+  const gtin = normalizeGtin(gtinRaw) && normalizeGtin(gtinRaw) !== "00199275573873" ? gtinRaw : null;
   const units = Number(prop(html, "offerCount") || 0);
   // og:image es la miniatura relativa ("/files/tumb_42844-....jpg"); sin "tumb_" es la foto grande.
   const thumb = decodeEntities(html.match(/property="og:image" content="([^"]+)"/)?.[1] ?? "");

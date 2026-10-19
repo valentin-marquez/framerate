@@ -97,7 +97,8 @@ describe("adaptador Winpy", () => {
       stockQuantity: 4,
       brand: "Asus",
       mpn: "DUAL-RTX5050-O8G",
-      gtin: "199275573873",
+      // El GTIN de la ficha es el relleno que Winpy pone en todas (#211).
+      gtin: null,
     });
     expect(offers[0]?.imageUrls[0]).toMatch(/^https:\/\/www\.winpy\.cl\/files\//);
   });
