@@ -9,14 +9,13 @@ import {
   type QuoteSlot as QuoteSlotId,
   SLOT_BY_CATEGORY,
 } from "@framerate/contracts";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { QuoteItem } from "~/features/quote/components/quote-item";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
-import { Button, buttonVariants } from "~/shared/components/primitives/button";
-import { useTranslation } from "~/shared/hooks/use-translation";
-import { formatCLP } from "~/shared/utils/format";
+import { buttonVariants } from "~/shared/components/primitives/button";
 import { SLOT_SHORT_LABELS } from "~/shared/utils/slots";
+import { QuoteAlternatives } from "./quote-alternatives";
 import { issuesOf, statusOf } from "./quote-compatibility";
 
 interface QuoteSlotProps {
@@ -49,7 +48,6 @@ export function QuoteSlot({
   onSelect,
   onChooseOffer,
 }: QuoteSlotProps) {
-  const { t } = useTranslation();
   const setOriginQuote = useQuoteInteractionStore((s) => s.setOriginQuote);
   const shown = isAdditiveSlot(slot) ? items : items.filter((item) => item.isSelected);
   const alternatives = items.filter((item) => !shown.includes(item));
@@ -98,41 +96,7 @@ export function QuoteSlot({
         ))}
       </div>
       {alternatives.length > 0 && (
-        <div className="bg-secondary/5 border-t border-border/40 px-6 py-3 space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">
-            {t("quote_alternatives", { slot: QUOTE_SLOT_LABELS[slot].toLowerCase() })}
-          </p>
-          <ul className="divide-y divide-border/40">
-            {alternatives.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 py-2">
-                <div className="min-w-0 flex-1">
-                  <Link to={`/producto/${item.product.slug}`} className="block truncate text-sm hover:text-primary">
-                    {item.product.name}
-                  </Link>
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {item.offer ? formatCLP(item.offer.priceCash) : t("out_of_stock")}
-                  </span>
-                </div>
-                {isOwner && (
-                  <>
-                    <Button variant="outline" size="sm" onClick={() => onSelect(item)}>
-                      {t("quote_use_this")}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-muted-foreground hover:text-destructive"
-                      aria-label={t("remove_product_error")}
-                      onClick={() => onRemove(item)}
-                    >
-                      <IconTrash size={16} />
-                    </Button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <QuoteAlternatives items={alternatives} isOwner={isOwner} onSelect={onSelect} onRemove={onRemove} />
       )}
     </div>
   );

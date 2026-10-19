@@ -211,6 +211,37 @@ export const ListaVacia: Story = {
   ),
 };
 
+/** El caso difícil: cinco alternativas de RAM guardadas (el acordeón empieza cerrado). */
+export const ListaConMuchasAlternativas: Story = {
+  name: "Lista de componentes: dueño con 5 alternativas de RAM",
+  render: () => (
+    <div className="max-w-3xl">
+      <QuoteItemsList
+        quote={{
+          ...quote,
+          items: [
+            ...quote.items,
+            item(21, "ram", "ram", "X-Micro 8GB DDR5 4800 CL40", "X-Micro", 105_990, { isSelected: false }),
+            item(22, "ram", "ram", "Hikvision HSC304U16Z1 4GB DDR3 1600", "Hikvision", 17_990, { isSelected: false }),
+            item(23, "ram", "ram", "Kingston ValueRAM 512MB PC100 SDRAM DIMM", "Kingston", 29_900, {
+              isSelected: false,
+            }),
+            item(24, "ram", "ram", "Corsair Vengeance 16GB DDR5 5600 CL36", "Corsair", 98_990, { isSelected: false }),
+            item(25, "ram", "ram", "G.Skill Ripjaws S5 32GB DDR5 6000 CL30", "G.Skill", 165_990, {
+              isSelected: false,
+            }),
+          ],
+        }}
+        isOwner
+        onChangeQuantity={noop}
+        onRemove={noop}
+        onSelect={noop}
+        onChooseOffer={noop}
+      />
+    </div>
+  ),
+};
+
 export const ListaDelDueno: Story = {
   name: "Lista de componentes: dueño",
   render: () => <div className="max-w-3xl">{list(true)}</div>,
