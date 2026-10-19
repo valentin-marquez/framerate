@@ -128,6 +128,9 @@ const MISPLACED: Partial<Record<Category, Array<[misplaced: (title: string) => b
   // potencia y certificación.
   case: [
     [(t) => /^fuente\b/.test(t) || (!/\b(gabinete|case|chasis|torre|tower)\b/.test(t) && isPsu(t)), "category:psu"],
+    // Racks de red ("Nexxt 19″ 42U 600×1000", KDTEC): unidades de rack sin formato de placa. Un chasis rackmount
+    // ATX sí es un gabinete.
+    [(t) => /\b\d{1,2} ?u\b/.test(t) && !/itx|atx/.test(t), "category:other_product"],
   ],
 };
 

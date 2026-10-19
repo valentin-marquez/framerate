@@ -50,6 +50,8 @@ const BRANDS: Record<string, string[]> = {
   Newgen: ["newgen", "nwg"],
   Kronos: ["kronos"],
   BIWIN: ["biwin"],
+  Primus: ["primus"],
+  PCTronix: ["pctronix"],
   Acer: ["acer"],
   Deepcool: ["deepcool"],
   Arctic: ["arctic", "artic"],

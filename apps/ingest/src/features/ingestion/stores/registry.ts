@@ -985,6 +985,34 @@ export const STORES: readonly StoreDefinition[] = [
     }),
   },
   {
+    slug: "kdtec",
+    name: "KDTEC",
+    url: "https://kdtec.cl",
+    // Desde la red residencial (la del relay) no abre ni el TCP; desde los Workers responde (19-10-2026).
+    // La Store API responde en ~1 s, pero algunas fichas dan 524 tras dos minutos: el listado no las pide.
+    minIntervalMs: 5000,
+    adapter: createWooCommerceAdapter({
+      baseUrl: "https://kdtec.cl",
+      // SKU mixto: MPN y códigos de mayorista ("VC407ASU73"). El MPN real va en la fila "Número de parte" de la
+      // descripción, que el adaptador lee. Tarjeta de crédito o débito +2,2 % (verificado en 2 fichas, 19-10-2026).
+      sku: "internal",
+      cardMarkup: 0.022,
+      categories: {
+        gpu: ["tarjetas-video"],
+        cpu: ["procesadores"],
+        motherboard: ["placas-madre"],
+        ram: ["memorias-ram"],
+        psu: ["fuentes-poder", "fuentes-gamer"],
+        ssd: ["disco-ssd"],
+        hdd: ["disco-duro-interno"],
+        // Mezcla disipadores, AIO, ventiladores y pasta térmica: `normalize` los separa.
+        cpu_cooler: ["refrigeracion"],
+        case: ["gabinetes"],
+        case_fan: ["refrigeracion"],
+      },
+    }),
+  },
+  {
     slug: "bookcomputer",
     name: "Bookcomputer",
     url: "https://www.bookcomputer.cl",

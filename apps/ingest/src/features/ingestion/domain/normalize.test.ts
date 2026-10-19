@@ -174,6 +174,12 @@ describe("categorías contaminadas", () => {
   test("fuentes publicadas como gabinete, SSD como disco duro y coolers de CPU como ventilador", () => {
     expect(reason("case", "FUENTE DE PODER GAMEMAX GP-650B 650W 80 PLUS BRONZE")).toBe("category:psu");
     expect(reason("case", "EVGA SUPERNOVA 1000 P3 1000W 80 PLUS PLATINUM")).toBe("category:psu");
+    expect(reason("case", "Gabinete Nexxt Solutions de 19″, 600×1000, 42U, SKD, 4 ventiladores, Negro")).toBe(
+      "category:other_product",
+    );
+    expect(reason("case", 'Gabinete de Rack Nexxt Solutions NPC-F9U66B 19" 9U 600x600mm 2 Ventiladores')).toBe(
+      "category:other_product",
+    );
     expect(reason("hdd", "DISCO SSD SATA ADATA SU650 1TB")).toBe("category:ssd");
     expect(reason("ssd", "Disco Duro Seagate Ultrastar 7K6000 4TB")).toBe("category:hdd");
     expect(reason("ssd", "Disco WD Purple 4TB 5400 RPM")).toBe("category:hdd");
