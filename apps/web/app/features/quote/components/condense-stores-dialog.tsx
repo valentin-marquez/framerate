@@ -86,7 +86,7 @@ function CondensePanel({
     <>
       <DialogHeader>
         <DialogTitle>{t("quote_condense_title")}</DialogTitle>
-        <DialogDescription>
+        <DialogDescription className="text-foreground">
           {isLoading
             ? t("quote_condense_loading")
             : isError || !plan

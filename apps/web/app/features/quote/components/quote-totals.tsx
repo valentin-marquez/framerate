@@ -41,7 +41,7 @@ export function QuoteTotals({ totalNormal, totalCash, hasOutOfStockItems, compat
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-sm">
             <IconBolt size={16} className="text-warn" />
-            <span className="tabular-nums">~{compatibility.estimatedWatts} W</span>
+            <span className="tabular-nums">~{compatibility.estimatedWatts}W</span>
             <span className="text-muted-foreground">de consumo estimado</span>
           </div>
           <p className="text-xs text-muted-foreground">
