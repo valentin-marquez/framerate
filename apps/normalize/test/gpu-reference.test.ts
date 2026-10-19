@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { canonicalChipset, fromAmd, fromNvidia } from "../scripts/gpu-reference";
+import { canonicalChipset, fromAmd, fromNvidia, withBaseRows } from "../scripts/gpu-reference";
 import { chipsetNumber, fillFromGpuReference, type GpuReference, pickGpuReference } from "../src/gpu-reference";
 
 describe("chipsets", () => {
@@ -105,4 +105,17 @@ describe("relleno", () => {
       architecture: "reference",
     });
   });
+});
+
+test("las variantes sin chipset solo suman la fila base con la de mayor consumo", () => {
+  const variant = (chipset: string, gb: number, w: number) =>
+    ({ chipset, name: `GeForce RTX 3050 (${gb} GB)`, vram_gb: [gb], board_power_w: w }) as GpuReference;
+  const rows = withBaseRows([variant("rtx 3050 6gb", 6, 70), variant("rtx 3050 8gb", 8, 130)]);
+  expect(pickGpuReference(rows, "RTX 3050", null)).toMatchObject({
+    chipset: "rtx 3050",
+    name: "GeForce RTX 3050",
+    board_power_w: 130,
+    vram_gb: [6, 8],
+  });
+  expect(withBaseRows(rows)).toHaveLength(3);
 });

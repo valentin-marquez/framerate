@@ -177,6 +177,24 @@ export function fromNvidia(html: string, url: string): GpuReference[] {
   });
 }
 
+/**
+ * NVIDIA publica la 3050 sólo como "(8 GB)" y "(6 GB)": sin una fila del chipset solo, la oferta que no dice su memoria
+ * no encuentra referencia (#185). Esa fila toma la variante de mayor consumo, como la 3080, con todas las memorias.
+ */
+export function withBaseRows(rows: GpuReference[]): GpuReference[] {
+  const have = new Set(rows.map((r) => r.chipset));
+  const bases = new Map<string, GpuReference>();
+  for (const r of rows) {
+    const chipset = r.chipset.replace(/ \d+gb$/, "");
+    if (chipset === r.chipset || have.has(chipset)) continue;
+    const prev = bases.get(chipset);
+    const top = prev && (prev.board_power_w ?? 0) >= (r.board_power_w ?? 0) ? prev : r;
+    const vram_gb = [...new Set([...(prev?.vram_gb ?? []), ...r.vram_gb])].sort((a, b) => a - b);
+    bases.set(chipset, { ...top, chipset, name: top.name.replace(/\s*\(.*?\)/g, ""), vram_gb });
+  }
+  return [...rows, ...bases.values()];
+}
+
 /** Una ficha de Intel ARK de una Arc de escritorio. Las A-series y las B-series nombran distinto la memoria. */
 export function fromIntelArc(name: string, url: string, s: Record<string, string>): GpuReference {
   const chipset = canonicalChipset(
@@ -259,7 +277,7 @@ if (import.meta.main && mode === "build") {
     if (found.length === 0) console.error(`sin tabla: ${url}`);
     for (const r of found) rows.set(r.chipset, r);
   }
-  const sorted = [...rows.values()].sort((a, b) => a.chipset.localeCompare(b.chipset));
+  const sorted = withBaseRows([...rows.values()]).sort((a, b) => a.chipset.localeCompare(b.chipset));
   await Bun.write(DATA, `${JSON.stringify(sorted, null, 1)}\n`);
   console.error(`${sorted.length} chipsets (${sorted.filter((r) => r.brand === "amd").length} AMD)`);
 } else if (import.meta.main && mode === "sql") {

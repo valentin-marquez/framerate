@@ -1080,6 +1080,24 @@
     "source_url": "https://www.amd.com/en/products/specifications/graphics.html"
   },
   {
+    "chipset": "rtx 3050",
+    "brand": "nvidia",
+    "name": "GeForce RTX 3050",
+    "number": "3050",
+    "architecture": "Ampere",
+    "launch": null,
+    "shader_cores": 2560,
+    "board_power_w": 130,
+    "min_psu_w": 550,
+    "power_connectors": "1x PCIe 8-pin",
+    "memory_type": "GDDR6",
+    "vram_gb": [6, 8],
+    "memory_bus_bit": 128,
+    "pcie_version": "4.0",
+    "reference_length_mm": null,
+    "source_url": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3050/"
+  },
+  {
     "chipset": "rtx 3050 6gb",
     "brand": "nvidia",
     "name": "GeForce RTX 3050 (6 GB)",
