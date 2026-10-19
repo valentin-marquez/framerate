@@ -275,7 +275,8 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_cheapest_badge: "Más barato",
     quote_cheapest_saved: "Ahorras {amount}",
     quote_cheapest_already: "Cada componente ya está en la tienda más barata",
-    quote_psu_recommendation: "Se recomienda una fuente de unos {watts} W, cerca del doble del consumo estimado.",
+    quote_psu_recommendation:
+      "Se recomienda una fuente de unos {watts}W aproximadamente, cerca del doble del consumo estimado",
     quote_offer_prices: "{cash} efectivo, {card} tarjeta",
     quote_offers_loading: "Cargando tiendas…",
     quote_offers_error: "No pudimos cargar las tiendas.",
@@ -654,7 +655,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_cheapest_badge: "Cheapest",
     quote_cheapest_saved: "You save {amount}",
     quote_cheapest_already: "Every component is already at the cheapest store",
-    quote_psu_recommendation: "A power supply of about {watts} W is recommended, close to double the estimated draw.",
+    quote_psu_recommendation: "A power supply of roughly {watts}W is recommended, close to double the estimated draw",
     quote_offer_prices: "{cash} cash, {card} card",
     quote_offers_loading: "Loading stores…",
     quote_offers_error: "We could not load the stores.",
