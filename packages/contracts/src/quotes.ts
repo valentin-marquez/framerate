@@ -123,6 +123,8 @@ export type QuotePage = z.infer<typeof QuotePageSchema>;
 export const PublicQuoteSchema = QuoteSummarySchema.extend({
   totalCash: z.number().int().nonnegative(),
   images: z.array(z.url()).max(4),
+  /** Para quien mira; `false` sin sesión. */
+  likedByMe: z.boolean(),
 });
 export type PublicQuote = z.infer<typeof PublicQuoteSchema>;
 

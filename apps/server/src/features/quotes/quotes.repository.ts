@@ -678,14 +678,40 @@ export async function condensePlan(
   };
 }
 
+/** Qué componentes dan la cara de una cotización, del que más la identifica al que menos; sin foto, pasa el siguiente. */
+const COLLAGE_ORDER: readonly string[] = [
+  "case",
+  "cpu",
+  "motherboard",
+  "gpu",
+  "ram",
+  "psu",
+  "ssd",
+  "hdd",
+  "cpu_cooler",
+  "case_fan",
+];
+const collageRank = (category: string) => {
+  const rank = COLLAGE_ORDER.indexOf(category);
+  return rank === -1 ? COLLAGE_ORDER.length : rank;
+};
+
 /** Las públicas con más "me gusta" (con al menos un componente), con lo que cuestan hoy y fotos de sus componentes. */
 export async function listTopQuotes(
   db: Db,
   limit: number,
   page: number,
+  viewerId: string | undefined,
   assetsBaseUrl: string | undefined,
 ): Promise<PublicQuote[]> {
   const rows = await summariesQuery(db)
+    .select(
+      viewerId
+        ? sql<number>`exists(select 1 from quote_likes l where l.quote_id = q.id and l.user_id = ${viewerId})`.as(
+            "liked",
+          )
+        : sql<number>`0`.as("liked"),
+    )
     .where("q.visibility", "=", "public")
     .where(sql<boolean>`${selectedCount} > 0`)
     .orderBy("q.like_count", "desc")
@@ -700,7 +726,7 @@ export async function listTopQuotes(
       .selectFrom("quote_items as qi")
       .innerJoin("products as p", "p.id", "qi.product_id")
       .leftJoin("listings as o", (join) => join.on(sql<boolean>`o.id = ${offerListingId}`))
-      .select(["qi.quote_id", "qi.quantity", "p.image_url", "p.image_key", "o.price_cash"])
+      .select(["qi.quote_id", "qi.quantity", "p.category", "p.image_url", "p.image_key", "o.price_cash"])
       .where(
         "qi.quote_id",
         "in",
@@ -714,8 +740,10 @@ export async function listTopQuotes(
     const own = items.filter((i) => i.quote_id === row.id);
     return {
       ...toSummary(row, assetsBaseUrl),
+      likedByMe: Boolean(row.liked),
       totalCash: own.reduce((sum, i) => sum + (i.price_cash ?? 0) * i.quantity, 0),
       images: own
+        .toSorted((a, b) => collageRank(a.category) - collageRank(b.category))
         .map((i) => productImageUrl(i, assetsBaseUrl))
         .filter((url): url is string => url !== null)
         .slice(0, 4),

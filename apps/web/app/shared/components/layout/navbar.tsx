@@ -193,7 +193,7 @@ function useQuoteEntry() {
 }
 
 /**
- * Fila "Cotizaciones" del riel, con un "+" para crear a su derecha (sólo con sesión). Fila y "+" comparten celda de una
+ * Fila "Mis cotizaciones" del riel, con un "+" para crear a su derecha (sólo con sesión). Fila y "+" comparten celda de una
  * grilla y no una caja `relative`: la píldora de sección mide el enlace con `offsetTop` y ese ancestro la descuadraría.
  */
 function QuotesRailRow({ collapsed }: { collapsed: boolean }) {
@@ -202,17 +202,17 @@ function QuotesRailRow({ collapsed }: { collapsed: boolean }) {
   return (
     <div className="grid items-center [&>*]:col-start-1 [&>*]:row-start-1">
       {signedIn ? (
-        <RailLink to={href} label="Cotizaciones" collapsed={collapsed} icon={icon} />
+        <RailLink to={href} label="Mis cotizaciones" collapsed={collapsed} icon={icon} />
       ) : (
-        <RailHint label="Cotizaciones" collapsed={collapsed}>
+        <RailHint label="Mis cotizaciones" collapsed={collapsed}>
           <button
             type="button"
-            aria-label={collapsed ? "Cotizaciones" : undefined}
+            aria-label={collapsed ? "Mis cotizaciones" : undefined}
             onClick={() => show("login")}
             className={cn(railLink(false), "w-full cursor-pointer")}
           >
             {icon}
-            <span className="rail-label truncate">Cotizaciones</span>
+            <span className="rail-label truncate">Mis cotizaciones</span>
           </button>
         </RailHint>
       )}

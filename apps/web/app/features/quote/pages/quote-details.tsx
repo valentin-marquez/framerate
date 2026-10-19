@@ -14,7 +14,7 @@ import { QuoteActions } from "~/features/quote/components/quote-actions";
 import { CompatibilityList } from "~/features/quote/components/quote-compatibility";
 import { QuoteHeader } from "~/features/quote/components/quote-header";
 import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
-import { QuoteLikeButton } from "~/features/quote/components/quote-like-button";
+import { QuoteLikeButton, useLikeHint } from "~/features/quote/components/quote-like-button";
 import { QuoteOwnerBar } from "~/features/quote/components/quote-owner-bar";
 import { QuoteTotals } from "~/features/quote/components/quote-totals";
 import { useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/useQuotes";
@@ -64,6 +64,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   const { t } = useTranslation();
 
   const isOwner = !!user && user.username === quote.author.username;
+  const likeHint = useLikeHint(!!user, isOwner);
 
   /**
    * El cambio se ve al instante y la respuesta del servidor (que trae la cotización completa) lo confirma. Con
@@ -231,6 +232,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
               liked={quote.likedByMe}
               count={quote.likeCount}
               disabled={!user || isOwner}
+              hint={likeHint}
               onToggle={handleToggleLike}
             />
           )}

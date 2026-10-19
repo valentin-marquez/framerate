@@ -290,6 +290,7 @@ const quoteOf = (
   updatedAt: "2026-10-12T12:00:00.000Z",
   totalCash,
   images,
+  likedByMe: false,
 });
 
 const [img0, img1, img2, img3] = products.flatMap((p) => (p.imageUrl ? [p.imageUrl] : []));

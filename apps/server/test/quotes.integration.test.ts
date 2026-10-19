@@ -278,6 +278,12 @@ describe("me gusta y cotizaciones populares", () => {
     await like(beto, empty.id);
 
     const list = await publicList();
+    expect(list.every((q) => !q.likedByMe)).toBe(true);
+    const asBeto = PublicQuoteSchema.array().parse(await (await call(beto, "/v1/quotes/public")).json());
+    expect(asBeto.map((q) => [q.name, q.likedByMe])).toEqual([
+      ["Muy querida", true],
+      ["Poco querida", true],
+    ]);
     expect(list.map((q) => [q.name, q.likeCount])).toEqual([
       ["Muy querida", 2],
       ["Poco querida", 1],
@@ -291,6 +297,25 @@ describe("me gusta y cotizaciones populares", () => {
     expect((await publicList("?limit=1&page=2")).map((q) => q.name)).toEqual(["Poco querida"]);
     expect(await publicList("?limit=1&page=3")).toEqual([]);
     expect((await call("anon", "/v1/quotes/public?limit=99")).status).toBe(400);
+  });
+
+  test("las fotos van por importancia (gabinete, procesador, placa, gráfica) y sin foto pasa el siguiente", async () => {
+    const quote = await createQuote(ana, { name: "Pública", visibility: "public" });
+    await db.query
+      .updateTable("products")
+      .set({ image_url: "https://img.test/gpu.png" })
+      .where("id", "=", seed.asus)
+      .execute();
+    await db.query
+      .updateTable("products")
+      .set({ image_url: "https://img.test/cpu.png" })
+      .where("id", "=", seed.ryzen)
+      .execute();
+    await addItem(ana, quote.id, seed.asus);
+    await addItem(ana, quote.id, seed.ryzen);
+
+    const [top] = await publicList();
+    expect(top?.images).toEqual(["https://img.test/cpu.png", "https://img.test/gpu.png"]);
   });
 
   test("al hacerse privada deja de aparecer en la lista y al borrarla se van sus me gusta", async () => {

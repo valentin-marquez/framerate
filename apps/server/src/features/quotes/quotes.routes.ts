@@ -60,7 +60,7 @@ export const quotesRoutes = new Hono<AppEnv>()
   })
   .get("/public", async (c) => {
     const { limit, page } = PublicQuotesQuerySchema.parse(c.req.query());
-    return c.json(await listTopQuotes(c.var.db, limit, page, c.env.ASSETS_BASE_URL));
+    return c.json(await listTopQuotes(c.var.db, limit, page, c.get("user")?.id, c.env.ASSETS_BASE_URL));
   })
   .get("/:id", async (c) => {
     const viewer = c.get("user");

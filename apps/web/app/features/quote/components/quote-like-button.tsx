@@ -7,10 +7,19 @@ interface QuoteLikeButtonProps {
   count: number;
   /** Sin sesión o en la propia cotización sólo se ve la cifra. */
   disabled?: boolean;
+  /** Por qué no se puede, al pasar el cursor. */
+  hint?: string;
   onToggle: () => void;
 }
 
-export function QuoteLikeButton({ liked, count, disabled, onToggle }: QuoteLikeButtonProps) {
+/** El aviso de un me gusta que no se puede dar; sin aviso cuando sí se puede. */
+export function useLikeHint(isSignedIn: boolean, isOwner: boolean) {
+  const { t } = useTranslation();
+  if (isOwner) return t("quote_like_own");
+  return isSignedIn ? undefined : t("quote_like_login");
+}
+
+export function QuoteLikeButton({ liked, count, disabled, hint, onToggle }: QuoteLikeButtonProps) {
   const { t } = useTranslation();
   return (
     <button
@@ -18,6 +27,7 @@ export function QuoteLikeButton({ liked, count, disabled, onToggle }: QuoteLikeB
       onClick={onToggle}
       disabled={disabled}
       aria-pressed={liked}
+      title={disabled ? hint : undefined}
       aria-label={t(liked ? "quote_unlike" : "quote_like")}
       className={cn(
         "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-border/50 px-3 text-sm tabular-nums transition-colors enabled:hover:text-rose-600 disabled:cursor-default dark:enabled:hover:text-rose-400",
