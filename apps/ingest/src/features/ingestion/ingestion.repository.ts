@@ -225,6 +225,7 @@ export async function upsertListing(
   offer: NormalizedOffer,
   now: string,
   hash: string,
+  legacyHash?: string,
 ): Promise<UpsertResult | null> {
   const existing = await db.query
     .selectFrom("listings")
@@ -315,20 +316,37 @@ export async function upsertListing(
   // La misma oferta en dos categorías de la tienda (Wei 1162 en cpu_cooler y case_fan, Centrale en ssd y hdd): la
   // corrida que no es dueña sólo toca precio y stock, o cada pasada cambia el hash y Haiku la paga otra vez (#159).
   const foreign = toBool(existing.is_active) && (existing.crawl_category ?? existing.category) !== offer.category;
+  // Hash viejo (con texto de ficha) de la misma entrada: se reescribe al nuevo sin volver a Haiku.
+  const legacy =
+    !foreign && existing.norm_hash !== hash && existing.norm_hash === legacyHash && existing.norm_status !== "failed";
   // Una `failed` agotó sus reintentos: la siguiente corrida la vuelve a intentar.
-  const changed = !foreign && (existing.norm_hash !== hash || existing.norm_status === "failed");
+  const changed = !foreign && !legacy && (existing.norm_hash !== hash || existing.norm_status === "failed");
   const base = { listingId: existing.id, created: false };
-  if (!changed && !priceChanged) return { ...base, priceChanged: false, changed: false, touchOnly: true };
+  if (!changed && !priceChanged && !legacy) return { ...base, priceChanged: false, changed: false, touchOnly: true };
 
   const update = db.query
     .updateTable("listings")
-    .set(changed ? { ...identityFields, ...priceFields, norm_status: "pending" } : priceFields)
+    .set(
+      changed
+        ? { ...identityFields, ...priceFields, norm_status: "pending" }
+        : legacy
+          ? { ...priceFields, norm_hash: hash }
+          : priceFields,
+    )
     .where("id", "=", existing.id);
-  await db.batch(
-    priceChanged
-      ? [update, db.query.insertInto("price_points").values({ listing_id: existing.id, ...pricePoint })]
-      : [update],
-  );
+  await db.batch([
+    update,
+    ...(legacy
+      ? [
+          db.query
+            .updateTable("listing_identity")
+            .set({ input_hash: hash })
+            .where("listing_id", "=", existing.id)
+            .where("input_hash", "=", legacyHash),
+        ]
+      : []),
+    ...(priceChanged ? [db.query.insertInto("price_points").values({ listing_id: existing.id, ...pricePoint })] : []),
+  ]);
   return { ...base, priceChanged, changed, touchOnly: false };
 }
 

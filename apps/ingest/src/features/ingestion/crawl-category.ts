@@ -1,7 +1,7 @@
 import { type Category, NORMALIZER_VERSION, type PipelineMessage } from "@framerate/contracts";
 import { type Db, refreshPriceSummary } from "@framerate/database";
 import type { Clock, Logger } from "@framerate/kit";
-import { normalizeOffer, normHash, rawHashInput } from "./domain/normalize";
+import { legacyNormHash, normalizeOffer, normHash, rawHashInput } from "./domain/normalize";
 import {
   addToQuarantine,
   type CrawlStats,
@@ -109,7 +109,14 @@ export async function crawlCategory(
       seen.add(offer.externalId);
       stats.valid++;
 
-      const upsert = await upsertListing(db, storeRow.id, offer, now(), await normHash(offer));
+      const upsert = await upsertListing(
+        db,
+        storeRow.id,
+        offer,
+        now(),
+        await normHash(offer),
+        await legacyNormHash(offer),
+      );
       if (!upsert) {
         stats.skippedOutOfStock++;
         continue;

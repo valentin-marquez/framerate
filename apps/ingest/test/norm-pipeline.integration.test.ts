@@ -3,7 +3,7 @@ import { type EnqueuePipelineRequest, NORMALIZER_VERSION, SOURCE_TEXT_MAX } from
 import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { crawlCategory } from "@/features/ingestion/crawl-category";
-import { normalizeOffer } from "@/features/ingestion/domain/normalize";
+import { legacyNormHash, normalizeOffer } from "@/features/ingestion/domain/normalize";
 import { knownOffers } from "@/features/ingestion/ingestion.repository";
 import { requestPipeline, retryStuckNormalize } from "@/features/ingestion/runtime";
 import { toRawOffer } from "@/features/ingestion/stores/woocommerce";
@@ -135,7 +135,7 @@ describe("la corrida no vincula: encola", () => {
     expect(deps.sent).toHaveLength(1);
   });
 
-  test("cambio de título o de ficha: pending otra vez y encolada como cambiada, sin ocultarla", async () => {
+  test("cambio de título: pending otra vez y encolada como cambiada, sin ocultarla", async () => {
     const clock = steppingClock();
     const deps = testDeps(d1, clock);
     const alfa = fakeStore("alfa", { gpu: ["gpu"] });
@@ -152,14 +152,6 @@ describe("la corrida no vincula: encola", () => {
     expect(retitled).toMatchObject({ norm_status: "pending", visible: 1 });
     expect(retitled.norm_hash).not.toBe(first);
     expect(deps.sent[1]).toEqual({ listingId: id, version: NORMALIZER_VERSION, reason: "changed" });
-
-    clock.advance(SIX_HOURS);
-    alfa.setOffers([
-      offer("alfa", "1", { ...GPU, title: "ASUS Dual RTX 4070 SUPER OC 12GB White", sourceText: "Ficha nueva" }),
-    ]);
-    await crawlCategory(deps, alfa.store, "gpu");
-    expect((await listingOf(deps.db, "1")).norm_hash).not.toBe(retitled.norm_hash);
-    expect(deps.sent).toHaveLength(3);
   });
 
   test("una oferta failed se reintenta en la siguiente corrida aunque no cambie", async () => {
@@ -409,5 +401,33 @@ describe("RPC enqueuePipeline", () => {
     expect(link).toEqual([{ listingId: l1.id, version: NORMALIZER_VERSION, reason: "relink" }]);
     expect(normalize).toEqual([]);
     expect((await listingOf(db, "1")).norm_status).toBe("linked");
+  });
+});
+
+describe("el texto de ficha no entra al hash", () => {
+  test("la ficha que cambia sola no vuelve a Haiku; el hash viejo se reescribe sin encolar", async () => {
+    const clock = steppingClock();
+    const deps = testDeps(d1, clock);
+    const alfa = fakeStore("alfa", { gpu: ["gpu"] });
+    alfa.setOffers([offer("alfa", "1", { ...GPU, sourceText: "Ficha A" })]);
+    await crawlCategory(deps, alfa.store, "gpu");
+    const first = await listingOf(deps.db, "1");
+
+    clock.advance(SIX_HOURS);
+    alfa.setOffers([offer("alfa", "1", { ...GPU, sourceText: "Ficha B" })]);
+    expect((await crawlCategory(deps, alfa.store, "gpu")).stats).toMatchObject({ changed: 0, enqueued: 0 });
+    expect((await listingOf(deps.db, "1")).norm_hash).toBe(first.norm_hash);
+
+    // Una oferta normalizada con el hash viejo (que incluía la ficha) pasa al nuevo, con su identidad, sin Haiku.
+    const parsed = normalizeOffer(offer("alfa", "1", { ...GPU, sourceText: "Ficha B" }), "gpu");
+    if (!parsed.ok) throw new Error(parsed.reason);
+    const legacy = await legacyNormHash(parsed.offer);
+    await deps.db.query.updateTable("listings").set({ norm_hash: legacy, norm_status: "linked" }).execute();
+    await addIdentity(deps.db, first.id, legacy);
+    clock.advance(SIX_HOURS);
+    expect((await crawlCategory(deps, alfa.store, "gpu")).stats).toMatchObject({ changed: 0, enqueued: 0 });
+    expect(await listingOf(deps.db, "1")).toMatchObject({ norm_hash: first.norm_hash, norm_status: "linked" });
+    expect(await all(deps.db, "listing_identity")).toMatchObject([{ input_hash: first.norm_hash }]);
+    expect(deps.sent).toHaveLength(1);
   });
 });

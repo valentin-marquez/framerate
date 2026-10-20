@@ -226,18 +226,40 @@ export type HashInput = Pick<NormalizedOffer, "category" | "rawTitle" | "brand" 
 
 /**
  * `listings.norm_hash`: lo que, si cambia, obliga a normalizar de nuevo (spec 2026-10-08 §4). Precio, stock, fotos y
- * URL quedan fuera. Subir `NORMALIZER_VERSION` cambia todos los hashes.
+ * URL quedan fuera. Subir `NORMALIZER_VERSION` cambia todos los hashes. El texto de ficha también queda fuera: algunas
+ * tiendas lo varían entre corridas (Winpy, Centrale, Notebook Store: ~150 ofertas pagadas varias veces al día en
+ * 10-2026). Haiku lo sigue leyendo cuando el título, la marca o los identificadores cambian.
  */
 export async function normHash(input: HashInput): Promise<string> {
-  const key = [
-    NORMALIZER_VERSION,
-    input.category,
-    fold(input.rawTitle),
-    input.mpn ?? "",
-    input.gtin ?? "",
-    input.brand ?? "",
-    fold(input.sourceText ?? "").slice(0, SOURCE_TEXT_MAX),
-  ].join("|");
+  return sha256(
+    [
+      NORMALIZER_VERSION,
+      input.category,
+      fold(input.rawTitle),
+      input.mpn ?? "",
+      input.gtin ?? "",
+      input.brand ?? "",
+    ].join("|"),
+  );
+}
+
+// ponytail: transición del hash con texto de ficha, para no pagar Haiku otra vez por todo el catálogo. Se borra junto con
+// su rama en `upsertListing` cuando ingest haya pasado una vez por todas las tiendas después del deploy.
+export async function legacyNormHash(input: HashInput): Promise<string> {
+  return sha256(
+    [
+      NORMALIZER_VERSION,
+      input.category,
+      fold(input.rawTitle),
+      input.mpn ?? "",
+      input.gtin ?? "",
+      input.brand ?? "",
+      fold(input.sourceText ?? "").slice(0, SOURCE_TEXT_MAX),
+    ].join("|"),
+  );
+}
+
+async function sha256(key: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(key));
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
 }
