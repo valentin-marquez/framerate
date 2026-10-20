@@ -62,10 +62,9 @@ export function QuoteCard({ quote, rank }: QuoteCardProps) {
           </p>
         ))}
       </div>
-      <div className="mt-auto flex items-center justify-between gap-2 border-border border-t px-3 py-2">
-        <span className="min-w-0 truncate text-label-sm text-foreground tabular-nums">
-          {formatCLP(quote.totalCash)}
-        </span>
+      {/* En teléfono, a dos columnas, el total y el me gusta van en líneas propias: juntos se cortaba el total. */}
+      <div className="mt-auto flex flex-col items-start gap-1 border-border sm:flex-row sm:items-center sm:justify-between sm:gap-2 border-t px-3 py-2">
+        <span className="shrink-0 text-label-sm text-foreground tabular-nums">{formatCLP(quote.totalCash)}</span>
         <span className="relative z-10 shrink-0">
           <QuoteLikeToggle quote={quote} />
         </span>
