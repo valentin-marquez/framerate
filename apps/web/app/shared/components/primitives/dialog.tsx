@@ -183,6 +183,9 @@ function DialogContent({ children, className, container }: DialogContentProps) {
   const context = use(DialogContext);
   if (!context) throw new Error("DialogContent must be used within Dialog");
   const { isOpen, setIsOpen, dialogRef, ids } = context;
+  // Un arrastre que empieza en un campo y suelta sobre el velo también dispara `click` en el <dialog>: sólo cierra un
+  // clic que se presionó en el velo.
+  const pressedOnBackdrop = useRef(false);
   // Al cerrar sigue montado hasta que termina la salida.
   const [rendered, setRendered] = useState(isOpen);
   if (isOpen && !rendered) setRendered(true);
@@ -197,10 +200,14 @@ function DialogContent({ children, className, container }: DialogContentProps) {
         aria-labelledby={ids.title}
         aria-describedby={ids.description}
         aria-modal="true"
+        onPointerDown={(e) => {
+          pressedOnBackdrop.current = e.target === dialogRef.current;
+        }}
         onClick={(e) => {
-          if (e.target === dialogRef.current) {
+          if (e.target === dialogRef.current && pressedOnBackdrop.current) {
             setIsOpen(false);
           }
+          pressedOnBackdrop.current = false;
         }}
         onAnimationEnd={(e) => {
           // También llega la del ::backdrop (mismo target, misma duración): la que llegue primero cierra.
