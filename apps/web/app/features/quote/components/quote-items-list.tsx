@@ -206,7 +206,7 @@ function SlotRow({
                   item={item}
                   onChangeQuantity={onChangeQuantity}
                   onRemove={onRemove}
-                  className="pointer-events-auto relative z-10 ml-auto hidden md:flex"
+                  className="pointer-events-auto relative z-10 mr-4 ml-auto hidden md:flex"
                 />
               )}
             </span>
