@@ -5,65 +5,13 @@ import { buttonVariants } from "~/shared/components/primitives/button";
 import { Carousel, CarouselContent, CarouselItem } from "~/shared/components/primitives/carousel";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
+import { QuoteCard } from "./quote-card";
 import { QuoteLikeToggle } from "./quote-like-toggle";
 
 export const PUBLIC_QUOTES_PAGE_SIZE = 18;
 
 const componentes = (n: number) => `${n} ${n === 1 ? "componente" : "componentes"}`;
 const pageHref = (n: number) => (n === 1 ? "/cotizaciones" : `/cotizaciones?pagina=${n}`);
-
-/** Las cuatro primeras fotos del armado en 2x2 sobre el fondo de producto; donde falta una, queda el fondo. */
-function Collage({ images }: { images: string[] }) {
-  return (
-    <div aria-hidden className="grid aspect-[4/3] grid-cols-2 grid-rows-2 bg-[var(--product-stage)] p-3">
-      {images.slice(0, 4).map((src) => (
-        <img
-          key={src}
-          src={imageVariant(src, 400)}
-          alt=""
-          loading="lazy"
-          className="size-full min-h-0 object-contain p-3 mix-blend-multiply"
-        />
-      ))}
-    </div>
-  );
-}
-
-function TopCard({ quote, rank }: { quote: PublicQuote; rank: number }) {
-  return (
-    <article className="group relative flex h-full w-full flex-col overflow-hidden rounded-3xl border border-border bg-card transition-colors hover:border-foreground/15">
-      <div className="relative">
-        <Collage images={quote.images} />
-        <span className="absolute top-3 left-3 inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-card px-2 text-label-sm text-foreground tabular-nums shadow-sm">
-          {rank}
-        </span>
-      </div>
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="min-w-0 space-y-0.5">
-          <h2 className="line-clamp-2 text-label-md text-foreground">
-            {/* El enlace cubre la tarjeta (::after); el me gusta queda por encima. */}
-            <Link
-              to={`/cotizacion/${quote.id}`}
-              prefetch="intent"
-              className="after:absolute after:inset-0 after:z-[1] after:rounded-3xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
-            >
-              {quote.name}
-            </Link>
-          </h2>
-          <p className="text-muted-foreground text-paragraph-xs">
-            @{quote.author.username} con {componentes(quote.itemCount)}
-          </p>
-        </div>
-        <div className="mt-auto flex items-center justify-between gap-2 border-border border-t pt-3">
-          <span className="text-label-lg text-foreground tabular-nums">{formatCLP(quote.totalCash)}</span>
-          <span className="relative z-10 shrink-0">
-            <QuoteLikeToggle quote={quote} />
-          </span>
-        </div>
-      </div>
-    </article>
-  );
-}
 
 function Row({ quote, rank }: { quote: PublicQuote; rank: number }) {
   return (
@@ -140,7 +88,7 @@ export function PublicQuotesList({ page, quotes }: { page: number; quotes: Publi
             <CarouselContent className="-ml-3">
               {top.map((quote, i) => (
                 <CarouselItem key={quote.id} className="basis-[80%] pl-3">
-                  <TopCard quote={quote} rank={i + 1} />
+                  <QuoteCard quote={quote} rank={i + 1} />
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -148,7 +96,7 @@ export function PublicQuotesList({ page, quotes }: { page: number; quotes: Publi
           <ol className="hidden grid-cols-3 gap-3 md:grid">
             {top.map((quote, i) => (
               <li key={quote.id} className="flex">
-                <TopCard quote={quote} rank={i + 1} />
+                <QuoteCard quote={quote} rank={i + 1} />
               </li>
             ))}
           </ol>
