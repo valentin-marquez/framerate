@@ -126,7 +126,9 @@ function CondensePanel(props: PanelProps) {
  */
 function CondenseChooser({ quote, onApply, onClose, data }: PanelProps & { data: QuoteCondenseOptions }) {
   const { t } = useTranslation();
-  const [chosen, setChosen] = useState(() => recommendedOf(data).stores);
+  // La parada que ya está aplicada (si coincide con una): el diálogo abre en ella y la marca.
+  const applied = data.options.find((o) => o.available && isCurrent(o, quote))?.stores;
+  const [chosen, setChosen] = useState(() => applied ?? recommendedOf(data).stores);
   const [applying, setApplying] = useState(false);
   const presets = presetsOf(data);
   const option = data.options.find((o) => o.stores === chosen && o.available) ?? recommendedOf(data);
@@ -175,7 +177,14 @@ function CondenseChooser({ quote, onApply, onClose, data }: PanelProps & { data:
                     active && "border-foreground/40 bg-secondary/40",
                   )}
                 >
-                  <StoreDots used={p.option.stores} max={dots} />
+                  <span className="flex items-center justify-between gap-2">
+                    <StoreDots used={p.option.stores} max={dots} />
+                    {p.option.stores === applied && (
+                      <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[11px] text-foreground leading-none">
+                        Aplicada
+                      </span>
+                    )}
+                  </span>
                   <span className="block">
                     <span className="block truncate text-label-xs text-muted-foreground">{p.label}</span>
                     <span className="block text-foreground text-label-sm tabular-nums sm:text-label-lg">
@@ -197,7 +206,7 @@ function CondenseChooser({ quote, onApply, onClose, data }: PanelProps & { data:
               );
             })}
           </div>
-          <Riel data={data} chosen={option.stores} onChoose={setChosen} />
+          <Riel data={data} chosen={option.stores} applied={applied} onChoose={setChosen} />
         </div>
 
         <StoreRoute option={option} />
@@ -227,10 +236,13 @@ function CondenseChooser({ quote, onApply, onClose, data }: PanelProps & { data:
 function Riel({
   data,
   chosen,
+  applied,
   onChoose,
 }: {
   data: QuoteCondenseOptions;
   chosen: number;
+  /** La parada que ya está aplicada hoy, si coincide con una. */
+  applied?: number;
   onChoose: (stores: number) => void;
 }) {
   const name = useId();
@@ -332,11 +344,7 @@ function Riel({
             key={o.stores}
             className={cn(
               "absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors",
-              !o.available
-                ? "size-2 border border-foreground/30 border-dashed bg-background"
-                : i <= at
-                  ? "size-1 bg-background/80"
-                  : "size-2 bg-foreground/30",
+              !o.available ? "size-2 bg-destructive" : i <= at ? "size-1 bg-background/80" : "size-2 bg-foreground/30",
             )}
             style={{ left: `${(i / last) * 100}%` }}
           />
@@ -382,6 +390,7 @@ function Riel({
               ) : (
                 "No disponible"
               )}
+              {o.stores === applied && <span className="block text-[11px] text-foreground">Aplicada</span>}
             </button>
           );
         })}
