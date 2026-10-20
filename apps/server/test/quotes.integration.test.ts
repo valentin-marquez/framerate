@@ -264,12 +264,13 @@ describe("me gusta y cotizaciones populares", () => {
     expect((await like(beto, quote.id)).status).toBe(403);
   });
 
-  test("la lista pública va de más a menos me gusta, sin privadas ni vacías, con total y fotos", async () => {
+  test("la lista pública va de más a menos me gusta, sólo con las públicas (ni privadas ni con enlace) y no vacías, con total y fotos", async () => {
     const a = await createQuote(ana, { name: "Poco querida", visibility: "public" });
     const b = await createQuote(ana, { name: "Muy querida", visibility: "public" });
     const empty = await createQuote(ana, { name: "Vacía", visibility: "public" });
     const priv = await createQuote(ana, { name: "Privada" });
-    for (const q of [a, b, priv]) await addItem(ana, q.id, seed.ryzen);
+    const unlisted = await createQuote(ana, { name: "Con enlace", visibility: "unlisted" });
+    for (const q of [a, b, priv, unlisted]) await addItem(ana, q.id, seed.ryzen);
     await addItem(ana, b.id, seed.asus);
     const carla = await createUser(env, db, { name: "Carla", username: "carla" });
     await like(beto, b.id);
