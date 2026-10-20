@@ -49,8 +49,7 @@ export function QuoteSpecs({ quote }: { quote: PublicQuote }) {
     <p key={name ?? total?.[0]} className="flex min-w-0 items-center gap-1">
       {name && <span className={cn(CHIP, "min-w-0 truncate")}>{name}</span>}
       {total && (
-        // Ancho fijo: el rótulo arranca siempre en el mismo punto y la cifra queda a la derecha.
-        <span className={cn(CHIP, "ml-auto flex w-[5.5rem] shrink-0 justify-between tabular-nums")}>
+        <span className={cn(CHIP, "flex shrink-0 gap-1 tabular-nums")}>
           <span>{total[0]}</span>
           <span>{total[1]}</span>
         </span>
