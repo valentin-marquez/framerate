@@ -259,7 +259,7 @@ export function AddToQuoteDialog({ product, closing, onClose, onClosed }: AddToQ
               <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <ul className="max-h-80 overflow-y-auto">
+            <ul className="scrollbar-slim max-h-80 overflow-y-auto">
               <li>
                 {showForm ? (
                   <form onSubmit={create} className="flex items-center gap-2 px-2 py-1.5">

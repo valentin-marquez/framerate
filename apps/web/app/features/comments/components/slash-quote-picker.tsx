@@ -85,7 +85,7 @@ export function SlashQuotePicker({ state, onSelect, onActiveChange, onClose, ori
               <span>{query ? `Tus cotizaciones con "${query}"` : "Tus cotizaciones"}</span>
               <kbd className="text-[10px] text-muted-foreground/70 font-mono">esc</kbd>
             </div>
-            <ul ref={listRef} className="max-h-72 overflow-y-auto p-1">
+            <ul ref={listRef} className="scrollbar-slim max-h-72 overflow-y-auto p-1">
               {isLoading && (
                 <li className="px-3 py-3 text-sm text-muted-foreground inline-flex items-center gap-2">
                   <IconLoader2 className="size-3.5 animate-spin" />

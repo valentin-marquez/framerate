@@ -28,7 +28,7 @@ interface CondenseStoresDialogProps {
 
 /** Diálogo en escritorio, hoja inferior en teléfono (mismas clases que la hoja de filtros). */
 const SHEET =
-  "max-h-[85dvh] overflow-y-auto bg-card p-0 max-sm:top-auto max-sm:bottom-0 max-sm:w-full max-sm:max-w-none max-sm:translate-y-0 max-sm:rounded-t-3xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0 max-sm:zoom-in-100 max-sm:zoom-out-100 max-sm:slide-in-from-bottom-24 max-sm:slide-out-to-bottom-24 sm:w-[calc(100%-2rem)] sm:rounded-3xl";
+  "scrollbar-slim max-h-[85dvh] overflow-y-auto bg-card p-0 max-sm:top-auto max-sm:bottom-0 max-sm:w-full max-sm:max-w-none max-sm:translate-y-0 max-sm:rounded-t-3xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0 max-sm:zoom-in-100 max-sm:zoom-out-100 max-sm:slide-in-from-bottom-24 max-sm:slide-out-to-bottom-24 sm:w-[calc(100%-2rem)] sm:rounded-3xl";
 
 const TITLE = "Comprar en menos tiendas";
 const storesLabel = (n: number) => (n === 1 ? "1 tienda" : `${n} tiendas`);

@@ -209,7 +209,7 @@ function QuoteQuickViewContent({ quote, quoteId, onClose, titleId }: QuoteQuickV
 
       {quote.description && <p className="px-5 pt-3 text-sm text-muted-foreground line-clamp-3">{quote.description}</p>}
 
-      <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
+      <div className="scrollbar-slim flex-1 overflow-y-auto px-5 py-3 space-y-2">
         {items.length ? (
           items.slice(0, 8).map((item) => {
             const price = item.offer?.priceCash ?? null;

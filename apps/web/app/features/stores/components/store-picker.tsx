@@ -56,7 +56,7 @@ export function StorePicker({ onSelect, busy }: StorePickerProps) {
         />
       </div>
 
-      <div className="max-h-80 overflow-y-auto rounded-xl border border-border/40 bg-background">
+      <div className="scrollbar-slim max-h-80 overflow-y-auto rounded-xl border border-border/40 bg-background">
         {loading ? (
           <div className="flex items-center justify-center gap-2 p-8 text-muted-foreground text-sm">
             <IconLoader2 className="size-4 animate-spin" />

@@ -301,7 +301,7 @@ function SlotRow({
               <p className="border-border border-b px-3 py-1.5 text-label-xs text-muted-foreground">
                 Alternativas guardadas
               </p>
-              <ul className="max-h-60 divide-y divide-border overflow-y-auto">
+              <ul className="scrollbar-slim max-h-60 divide-y divide-border overflow-y-auto">
                 {alternatives.map((alt) => {
                   const altCash = lineCash(alt);
                   const diff = altCash !== null && chosenCash !== null ? altCash - chosenCash : null;
