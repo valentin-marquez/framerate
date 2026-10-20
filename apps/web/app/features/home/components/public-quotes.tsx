@@ -34,11 +34,17 @@ export function LikeSlot({ quote }: { quote: PublicQuote }) {
   );
 }
 
-/** Una foto en su celda: entra entera y centrada; donde falta, un degradado propio de la cotización. */
+const FADE_EDGES =
+  "[mask-composite:intersect] [mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent),linear-gradient(to_bottom,transparent,black_7%,black_93%,transparent)]";
+
+/**
+ * Una foto en su celda: entra entera y centrada; donde falta, un degradado propio de la cotización. Sus bordes se
+ * difuminan un poco hacia el blanco de la cuadrícula, así que entre dos fotos no queda una línea marcada.
+ */
 function Photo({ quote, index, className }: { quote: PublicQuote; index: number; className?: string }) {
   const src = quote.images[index];
   return (
-    <span className={cn("relative block min-h-0 min-w-0 overflow-hidden bg-white", className)}>
+    <span className={cn("relative block min-h-0 min-w-0 overflow-hidden bg-white", FADE_EDGES, className)}>
       {src ? (
         <img src={src} alt="" loading="lazy" className="absolute inset-0 size-full object-contain" />
       ) : (
@@ -51,7 +57,7 @@ function Photo({ quote, index, className }: { quote: PublicQuote; index: number;
 /** Las fotos de los componentes en cuadrícula, en cuatro celdas iguales (las primeras por importancia de la API). */
 export function Collage({ quote, className }: { quote: PublicQuote; className?: string }) {
   return (
-    <span className={cn("grid shrink-0 grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden bg-secondary/40", className)}>
+    <span className={cn("grid shrink-0 grid-cols-2 grid-rows-2 overflow-hidden bg-white", className)}>
       {[0, 1, 2, 3].map((i) => (
         <Photo key={i} quote={quote} index={i} />
       ))}
@@ -137,7 +143,7 @@ export function PublicQuotes({ quotes }: { quotes: PublicQuote[] }) {
         {rest.map((quote, i) => (
           <div key={quote.id} className={cn(bentoCell, cellOf(i).cell)}>
             <CardLink quote={quote} />
-            <span className={cn("pointer-events-none grid grid-cols-2 gap-0.5 bg-secondary/40", cellOf(i).photos)}>
+            <span className={cn("pointer-events-none grid grid-cols-2 bg-white", cellOf(i).photos)}>
               <Photo quote={quote} index={0} />
               <Photo quote={quote} index={1} />
             </span>
