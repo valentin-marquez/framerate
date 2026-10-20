@@ -254,7 +254,7 @@ export function PriceHistoryPanel({
       </div>
 
       <Dialog open={full} onOpenChange={setFull}>
-        <DialogContent className="scrollbar-slim max-h-[94dvh] w-[min(96vw,1180px)] max-w-none overflow-y-auto p-4 sm:p-6">
+        <DialogContent className="scrollbar-slim [&::-webkit-scrollbar-track]:my-4 max-h-[94dvh] w-[min(96vw,1180px)] max-w-none overflow-y-auto p-4 sm:p-6">
           <FullHistory
             key={`${period.key}-${days.length}`}
             productName={productName}
