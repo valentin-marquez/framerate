@@ -18,24 +18,11 @@ const LOOK: Record<CompatCheck["result"], { icon: ComponentType<IconProps>; tone
 };
 const ORDER: CompatCheck["result"][] = ["incompatible", "warning", "unknown", "ok"];
 
-export const STATUS_DOT: Record<CompatCheck["result"], string> = {
-  incompatible: "bg-destructive",
-  warning: "bg-warn",
-  unknown: "bg-muted-foreground/40",
-  ok: "bg-success",
-};
-
 /** Lo que hay que corregir en un ítem: va en línea, bajo su nombre, como el aviso de stock. */
 export const issuesOf = (compatibility: QuoteCompatibility | undefined, itemId: number) =>
   compatibility?.checks.filter(
     (c) => c.itemIds.includes(itemId) && (c.result === "incompatible" || c.result === "warning"),
   ) ?? [];
-
-/** El peor resultado de los chequeos que involucran al ítem; `undefined` si ninguno lo revisa. */
-export const statusOf = (compatibility: QuoteCompatibility | undefined, itemId: number) => {
-  const mine = compatibility?.checks.filter((c) => c.itemIds.includes(itemId)).map((c) => c.result) ?? [];
-  return ORDER.find((r) => mine.includes(r));
-};
 
 export function CompatibilityIssue({ check }: { check: CompatCheck }) {
   const { icon: Icon, tone } = LOOK[check.result];
