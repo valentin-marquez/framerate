@@ -1,9 +1,4 @@
-import {
-  CONDENSE_STORE_VALUE,
-  QUOTE_SLOT_LABELS,
-  type QuoteCondensePlan,
-  type QuoteDetail,
-} from "@framerate/contracts";
+import { CONDENSE_STORE_VALUE, QUOTE_SLOT_LABELS, type QuoteDetail } from "@framerate/contracts";
 import { IconBuildingStore } from "@tabler/icons-react";
 import { useState } from "react";
 import { Button } from "~/shared/components/primitives/button";
@@ -19,6 +14,7 @@ import {
 import { Input } from "~/shared/components/primitives/input";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { formatCLP } from "~/shared/utils/format";
+import type { QuoteCondensePlan } from "../fixtures";
 
 interface CondenseDialogProps {
   quote: Pick<QuoteDetail, "items">;

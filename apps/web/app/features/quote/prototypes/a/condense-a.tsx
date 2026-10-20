@@ -1,4 +1,4 @@
-import { CONDENSE_STORE_VALUE, type QuoteCondensePlan, type QuoteDetail } from "@framerate/contracts";
+import { CONDENSE_STORE_VALUE, type QuoteDetail } from "@framerate/contracts";
 import { imageVariant } from "@framerate/kit";
 import { IconBuildingStore, IconChevronDown } from "@tabler/icons-react";
 import { useId, useState } from "react";
@@ -16,6 +16,7 @@ import { Input } from "~/shared/components/primitives/input";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
+import type { QuoteCondensePlan } from "../fixtures";
 
 type PlanItem = QuoteCondensePlan["items"][number];
 interface Option {

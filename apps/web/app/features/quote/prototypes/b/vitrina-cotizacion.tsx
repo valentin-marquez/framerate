@@ -5,7 +5,6 @@ import {
   QUOTE_SLOT_LABELS,
   QUOTE_SLOTS,
   type QuoteCompatibility,
-  type QuoteCondensePlan,
   type QuoteDetail,
   type QuoteItem as QuoteItemData,
 } from "@framerate/contracts";
@@ -51,6 +50,7 @@ import {
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
+import type { QuoteCondensePlan } from "../fixtures";
 import { Collage, componentes } from "./piezas";
 import { VitrinaCondensar } from "./vitrina-condensar";
 

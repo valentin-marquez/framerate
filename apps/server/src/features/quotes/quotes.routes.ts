@@ -2,7 +2,6 @@ import {
   AddQuoteItemRequestSchema,
   CreateQuoteRequestSchema,
   PublicQuotesQuerySchema,
-  QuoteCondenseQuerySchema,
   QuoteListQuerySchema,
   UpdateQuoteItemRequestSchema,
   UpdateQuoteRequestSchema,
@@ -16,7 +15,7 @@ import { AppError } from "@/shared/http/errors";
 import {
   addItem,
   canRead,
-  condensePlan,
+  condenseOptions,
   createQuote,
   deleteQuote,
   likeQuote,
@@ -82,10 +81,9 @@ export const quotesRoutes = new Hono<AppEnv>()
   })
   .get("/:id/condense", async (c) => {
     const user = currentUser(c);
-    const { storeValue } = QuoteCondenseQuerySchema.parse(c.req.query());
-    const plan = await condensePlan(c.var.db, c.req.param("id"), user.id, storeValue);
-    if (!plan) throw quoteNotFound();
-    return c.json(plan);
+    const options = await condenseOptions(c.var.db, c.req.param("id"), user.id);
+    if (!options) throw quoteNotFound();
+    return c.json(options);
   })
   .patch("/:id", async (c) => {
     const user = currentUser(c);

@@ -1,5 +1,5 @@
 import type { UpdateQuoteRequest } from "@framerate/contracts";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { quotesService } from "~/features/quote/services/quotes";
 import { quoteKeys } from "~/shared/lib/query-keys";
 
@@ -19,16 +19,12 @@ export function useQuote(id: string) {
   });
 }
 
-/**
- * El plan sale de los precios de ahora: se pide al abrir el panel y se descarta al cerrarlo (`gcTime: 0`). Al cambiar
- * el valor por tienda se pide de nuevo y mientras tanto se sigue viendo el anterior, sin parpadeo.
- */
-export function useCondensePlan(id: string, storeValue: number) {
+/** Las opciones salen de los precios de ahora: se piden al abrir el panel y se descartan al cerrarlo (`gcTime: 0`). */
+export function useCondenseOptions(id: string) {
   return useQuery({
-    queryKey: quoteKeys.condense(id, storeValue),
-    queryFn: () => quotesService.getCondensePlan(id, storeValue),
+    queryKey: quoteKeys.condense(id),
+    queryFn: () => quotesService.getCondenseOptions(id),
     gcTime: 0,
-    placeholderData: keepPreviousData,
   });
 }
 

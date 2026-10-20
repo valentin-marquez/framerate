@@ -1,5 +1,5 @@
 import { Slider } from "@base-ui/react/slider";
-import { CONDENSE_STORE_VALUE, type QuoteCondensePlan, type QuoteDetail } from "@framerate/contracts";
+import { CONDENSE_STORE_VALUE, type QuoteDetail } from "@framerate/contracts";
 import { IconBuildingStore } from "@tabler/icons-react";
 import { useState } from "react";
 import { Button } from "~/shared/components/primitives/button";
@@ -16,6 +16,7 @@ import { Input } from "~/shared/components/primitives/input";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
+import type { QuoteCondensePlan } from "../fixtures";
 
 const MAX = 50_000;
 const STEP = 1_000;

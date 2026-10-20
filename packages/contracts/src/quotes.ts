@@ -3,7 +3,7 @@ import { pageSchema, StoreSummarySchema } from "./catalog";
 import { CategorySchema } from "./categories";
 import { QuoteCompatibilitySchema } from "./compatibility";
 import { PublicProfileSchema } from "./identity";
-import { CONDENSE_STORE_VALUE, QUOTE_SLOTS, QUOTE_VISIBILITIES, QUOTES_MAX_PAGE_SIZE } from "./quote-slots";
+import { QUOTE_SLOTS, QUOTE_VISIBILITIES, QUOTES_MAX_PAGE_SIZE } from "./quote-slots";
 
 /**
  * Cotizaciones (armador de PC): `/v1/quotes/*`. Cada ítem ocupa un slot del armado. En los slots exclusivos se
@@ -77,44 +77,52 @@ export const QuoteDetailSchema = QuoteSummarySchema.extend({
 });
 export type QuoteDetail = z.infer<typeof QuoteDetailSchema>;
 
-const CondenseStoreSchema = z.object({ slug: z.string(), name: z.string() });
-
-/** Cuánto de más se acepta pagar por cada tienda que se evita; sin valor, el de siempre. */
-export const QuoteCondenseQuerySchema = z.object({
-  storeValue: z.coerce.number().int().min(0).max(1_000_000).default(CONDENSE_STORE_VALUE),
+/** Una opción de comprar en menos tiendas: el plan más barato que usa `stores` tiendas, repartido por tienda. */
+export const QuoteCondenseOptionSchema = z.object({
+  stores: z.number().int().positive(),
+  available: z.boolean(),
+  /** Por qué no hay plan con esas tiendas ("Ninguna tienda tiene los 6 componentes"). */
+  unavailableReason: z.string().optional(),
+  totalCash: z.number().int().nonnegative(),
+  /** Lo que cuesta de más frente a la tienda más barata de cada ítem, por sus cantidades. */
+  extraCash: z.number().int().nonnegative(),
+  /** La de menor `extraCash + CONDENSE_STORE_VALUE × tiendas`. */
+  recommended: z.boolean(),
+  split: z.array(
+    z.object({
+      store: StoreSummarySchema.omit({ url: true }),
+      subtotalCash: z.number().int().nonnegative(),
+      items: z.array(
+        z.object({
+          itemId: z.number().int(),
+          listingId: z.number().int(),
+          slot: QuoteSlotSchema,
+          name: z.string(),
+          quantity: z.number().int().min(1),
+          priceCash: z.number().int().nonnegative(),
+          /** Si es el precio más bajo del ítem. */
+          cheapest: z.boolean(),
+          /** Lo que cuesta de más esta línea (por la cantidad) frente a su tienda más barata. */
+          extraCash: z.number().int().nonnegative(),
+        }),
+      ),
+    }),
+  ),
 });
-export type QuoteCondenseQuery = z.infer<typeof QuoteCondenseQuerySchema>;
+export type QuoteCondenseOption = z.infer<typeof QuoteCondenseOptionSchema>;
 
 /**
- * Propuesta para comprar en menos tiendas (`GET /v1/quotes/:id/condense`, sólo el dueño). Se compara con comprar cada
- * ítem en su tienda más barata; no incluye envíos. `improves` es falso cuando ya no se puede usar menos tiendas.
+ * Comprar en menos tiendas (`GET /v1/quotes/:id/condense`, sólo el dueño): una opción por número de tiendas, de 1 al
+ * reparto más barato, sin envíos. `storesNow`: tiendas en que compra hoy la cotización.
  */
-export const QuoteCondensePlanSchema = z.object({
-  improves: z.boolean(),
-  storesBefore: z.number().int().nonnegative(),
-  storesAfter: z.number().int().nonnegative(),
-  /** Lo que cuesta de más el plan frente a la tienda más barata de cada ítem, por sus cantidades. */
-  extraCash: z.number().int().nonnegative(),
-  items: z.array(
-    z.object({
-      itemId: z.number().int(),
-      listingId: z.number().int(),
-      store: CondenseStoreSchema,
-      priceCash: z.number().int().nonnegative(),
-      cheapestStore: CondenseStoreSchema,
-      cheapestPriceCash: z.number().int().nonnegative(),
-    }),
-  ),
-  stores: z.array(
-    z.object({
-      slug: z.string(),
-      name: z.string(),
-      itemIds: z.array(z.number().int()),
-      subtotalCash: z.number().int().nonnegative(),
-    }),
-  ),
+export const QuoteCondenseOptionsSchema = z.object({
+  /** Ítems seleccionados con al menos una oferta. */
+  itemCount: z.number().int().nonnegative(),
+  storesNow: z.number().int().nonnegative(),
+  minTotalCash: z.number().int().nonnegative(),
+  options: z.array(QuoteCondenseOptionSchema),
 });
-export type QuoteCondensePlan = z.infer<typeof QuoteCondensePlanSchema>;
+export type QuoteCondenseOptions = z.infer<typeof QuoteCondenseOptionsSchema>;
 
 export const QuotePageSchema = pageSchema(QuoteSummarySchema);
 export type QuotePage = z.infer<typeof QuotePageSchema>;

@@ -1,18 +1,11 @@
-import type {
-  Category,
-  QuoteCompatibility,
-  QuoteCondensePlan,
-  QuoteDetail,
-  QuoteItem,
-  QuoteSlot,
-} from "@framerate/contracts";
-import { CONDENSE_STORE_VALUE } from "@framerate/contracts";
+import type { Category, QuoteCompatibility, QuoteDetail, QuoteItem, QuoteSlot } from "@framerate/contracts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import QuoteRoute from "~/features/quote/pages/quote-details";
 import { Button } from "~/shared/components/primitives/button";
 import { quoteKeys } from "~/shared/lib/query-keys";
 import { sessions } from "~/shared/storybook/fixtures";
 import { withQueryData } from "~/shared/storybook/with-query-data";
+import { highEndCondense, lowEndCondense } from "./condense-options.fixtures";
 import { CondenseStoresDialog } from "./condense-stores-dialog";
 import { CreateQuoteDialog } from "./create-quote-dialog";
 import { QuoteActions } from "./quote-actions";
@@ -162,43 +155,6 @@ const quote: QuoteDetail = {
   compatibility,
 };
 
-const condensePlan: QuoteCondensePlan = {
-  improves: true,
-  storesBefore: 4,
-  storesAfter: 2,
-  extraCash: 17_910,
-  items: [
-    {
-      itemId: 1,
-      listingId: 101,
-      store: { slug: "tecnomas", name: "Tecnomas" },
-      priceCash: 397_900,
-      cheapestStore: { slug: "tectec", name: "TecTec" },
-      cheapestPriceCash: 389_990,
-    },
-    {
-      itemId: 7,
-      listingId: 102,
-      store: { slug: "tecnomas", name: "Tecnomas" },
-      priceCash: 155_990,
-      cheapestStore: { slug: "tecnomas", name: "Tecnomas" },
-      cheapestPriceCash: 155_990,
-    },
-    {
-      itemId: 2,
-      listingId: 103,
-      store: { slug: "nuevatec", name: "Nuevatec" },
-      priceCash: 649_990,
-      cheapestStore: { slug: "nuevatec", name: "Nuevatec" },
-      cheapestPriceCash: 649_990,
-    },
-  ],
-  stores: [
-    { slug: "tecnomas", name: "Tecnomas", itemIds: [1, 7], subtotalCash: 553_890 },
-    { slug: "nuevatec", name: "Nuevatec", itemIds: [2], subtotalCash: 649_990 },
-  ],
-};
-
 /** El selector de tienda pide las ofertas del producto: aquí sólo la que ya trae la cotización. */
 const offersOf = (detail: QuoteDetail): [readonly unknown[], unknown][] =>
   detail.items.flatMap((i) =>
@@ -229,9 +185,7 @@ const visitor = { ...sessions.user, user: { ...sessions.user.user, username: "be
 export const Dueno: Story = {
   name: "Dueño con alternativas y una tienda fijada",
   parameters: { layout: "fullscreen", session: sessions.user },
-  decorators: [
-    withQueryData([...offersOf(withPinned), [quoteKeys.condense(quote.id, CONDENSE_STORE_VALUE), condensePlan]]),
-  ],
+  decorators: [withQueryData([...offersOf(withPinned), [quoteKeys.condense(quote.id), highEndCondense]])],
   render: page(withPinned),
 };
 
@@ -318,20 +272,13 @@ export const CrearCotizacion: Story = {
 };
 
 export const CondensarTiendas: Story = {
-  name: "Condensar tiendas: propuesta abierta",
-  decorators: [withQueryData([[quoteKeys.condense(quote.id, CONDENSE_STORE_VALUE), condensePlan]])],
+  name: "Condensar tiendas: gama alta",
+  decorators: [withQueryData([[quoteKeys.condense(quote.id), highEndCondense]])],
   render: () => <CondenseStoresDialog quote={quote} onApply={async () => {}} defaultOpen />,
 };
 
-export const CondensarTiendasSinMejora: Story = {
-  name: "Condensar tiendas: ya compras en las menos posibles",
-  decorators: [
-    withQueryData([
-      [
-        quoteKeys.condense(quote.id, CONDENSE_STORE_VALUE),
-        { ...condensePlan, improves: false, storesAfter: 4, extraCash: 0 },
-      ],
-    ]),
-  ],
+export const CondensarTiendasGamaBaja: Story = {
+  name: "Condensar tiendas: gama baja, sin una tienda con todo",
+  decorators: [withQueryData([[quoteKeys.condense(quote.id), lowEndCondense]])],
   render: () => <CondenseStoresDialog quote={quote} onApply={async () => {}} defaultOpen />,
 };

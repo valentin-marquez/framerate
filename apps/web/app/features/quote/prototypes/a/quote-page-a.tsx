@@ -3,7 +3,6 @@ import {
   psuSizing,
   QUOTE_SLOT_LABELS,
   QUOTE_SLOTS,
-  type QuoteCondensePlan,
   type QuoteDetail,
   type QuoteItem,
   type QuoteSlot,
@@ -36,6 +35,7 @@ import { ButtonGroup } from "~/shared/components/primitives/button-group";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
+import type { QuoteCondensePlan } from "../fixtures";
 import { CondenseA } from "./condense-a";
 
 const noop = () => {};

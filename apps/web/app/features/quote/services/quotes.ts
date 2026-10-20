@@ -2,7 +2,7 @@ import type {
   AddQuoteItemRequest,
   CreateQuoteRequest,
   PublicQuote,
-  QuoteCondensePlan,
+  QuoteCondenseOptions,
   QuoteDetail,
   QuoteLike,
   QuotePage,
@@ -33,9 +33,8 @@ export const quotesService = {
 
   getById: (id: string) => api.get<QuoteDetail>(`/v1/quotes/${id}`),
 
-  /** Cómo comprar en menos tiendas (sólo el dueño), aceptando pagar hasta `storeValue` de más por cada tienda evitada. */
-  getCondensePlan: (id: string, storeValue: number) =>
-    api.get<QuoteCondensePlan>(`/v1/quotes/${id}/condense`, { params: { storeValue: String(storeValue) } }),
+  /** Opciones para comprar en menos tiendas, una por número de tiendas (sólo el dueño). */
+  getCondenseOptions: (id: string) => api.get<QuoteCondenseOptions>(`/v1/quotes/${id}/condense`),
 
   update: (id: string, data: UpdateQuoteRequest) => api.patch<QuoteDetail>(`/v1/quotes/${id}`, data),
 

@@ -1,4 +1,4 @@
-import type { PublicQuote, QuoteCondensePlan, QuoteDetail } from "@framerate/contracts";
+import type { PublicQuote, QuoteDetail } from "@framerate/contracts";
 
 // Datos reales de producción (2026-10-19) para comparar las composiciones A, B y C con el mismo contenido.
 // Prototipo descartable: no se importa fuera de `prototypes/`.
@@ -821,6 +821,24 @@ export const withAlternatives: QuoteDetail = (() => {
     ],
   };
 })();
+
+/** El contrato anterior de condensar (un solo plan), que siguen usando estos prototipos. */
+type CondenseStore = { slug: string; name: string };
+export interface QuoteCondensePlan {
+  improves: boolean;
+  storesBefore: number;
+  storesAfter: number;
+  extraCash: number;
+  items: {
+    itemId: number;
+    listingId: number;
+    store: CondenseStore;
+    priceCash: number;
+    cheapestStore: CondenseStore;
+    cheapestPriceCash: number;
+  }[];
+  stores: (CondenseStore & { itemIds: number[]; subtotalCash: number })[];
+}
 
 /** Plan de condensar inventado sobre `highEnd`: de 4 tiendas a 2 pagando $17.910 más. */
 export const condensePlan: QuoteCondensePlan = (() => {

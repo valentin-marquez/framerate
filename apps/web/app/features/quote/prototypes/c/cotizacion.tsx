@@ -7,7 +7,6 @@ import {
   QUOTE_SLOT_LABELS,
   QUOTE_SLOTS,
   type QuoteCompatibility,
-  type QuoteCondensePlan,
   type QuoteDetail,
   type QuoteItem,
   type QuoteSlot,
@@ -38,6 +37,7 @@ import { Button, buttonVariants } from "~/shared/components/primitives/button";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
+import type { QuoteCondensePlan } from "../fixtures";
 import { CondenseDialog } from "./condensar";
 import { componentes } from "./ranking";
 

@@ -8,7 +8,7 @@ export const quoteKeys = {
   list: (page: number, limit: number) => [...quoteKeys.lists(), page, limit] as const,
   details: () => [...quoteKeys.all, "detail"] as const,
   detail: (id: string) => [...quoteKeys.details(), id] as const,
-  condense: (id: string, storeValue: number) => [...quoteKeys.all, "condense", id, storeValue] as const,
+  condense: (id: string) => [...quoteKeys.all, "condense", id] as const,
 };
 
 // Fase 3: comments

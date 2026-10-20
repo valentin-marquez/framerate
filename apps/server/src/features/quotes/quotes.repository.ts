@@ -3,12 +3,13 @@ import {
   isAdditiveSlot,
   type PublicQuote,
   QUOTE_SLOTS,
-  type QuoteCondensePlan,
+  type QuoteCondenseOptions,
   type QuoteDetail,
   type QuoteItem,
   type QuoteItemOffer,
   type QuoteLike,
   type QuotePage,
+  type QuoteSlot,
   type QuoteSummary,
   type QuoteVisibility,
   quoteTotals,
@@ -23,7 +24,7 @@ import { checkCompatibility, highlights, num, type Part } from "@/features/compa
 import { compact, matchPsuTier } from "@/features/compatibility/psu-tier";
 import { avatarUrl } from "@/features/identity/domain/avatar";
 import { newPublicId } from "@/shared/public-id";
-import { type CondenseOffer, planCondense } from "./condense";
+import { type CondenseItem, planCondenseOptions } from "./condense";
 
 /**
  * Acceso a datos de cotizaciones. Cada operación hace pocos viajes a D1 (~150 ms cada uno desde Chile): las lecturas
@@ -627,30 +628,31 @@ export async function removeItem(
 }
 
 /**
- * Propuesta para comprar en menos tiendas: usa las ofertas activas y con stock de cada ítem seleccionado y la compara
- * con comprar cada uno en su tienda más barata. `null` si la cotización no existe o no es del dueño.
+ * Opciones para comprar en menos tiendas: con las ofertas activas y con stock de cada ítem seleccionado, el mejor plan
+ * para cada número de tiendas. `storesNow` cuenta las tiendas de la oferta con que cuenta hoy cada ítem (también las
+ * fijadas a mano). `null` si la cotización no existe o no es del dueño.
  */
-export async function condensePlan(
-  db: Db,
-  publicId: string,
-  ownerId: string,
-  storeValue: number,
-): Promise<QuoteCondensePlan | null> {
+export async function condenseOptions(db: Db, publicId: string, ownerId: string): Promise<QuoteCondenseOptions | null> {
   const [[quote], rows] = await db.read([
     db.query.selectFrom("quotes").select("id").where("public_id", "=", publicId).where("owner_id", "=", ownerId),
     db.query
       .selectFrom("quote_items as qi")
       .innerJoin("quotes as q", "q.id", "qi.quote_id")
+      .innerJoin("products as p", "p.id", "qi.product_id")
       .innerJoin("listings as l", "l.product_id", "qi.product_id")
       .innerJoin("stores as s", "s.id", "l.store_id")
       .select([
         "qi.id as item_id",
+        "qi.slot",
         "qi.quantity",
+        "p.name as product_name",
+        offerListingId.as("offer_id"),
         "l.id as listing_id",
         "l.price_cash",
         "s.id as store_id",
         "s.slug as store_slug",
         "s.name as store_name",
+        "s.scraped_icon_url as store_icon_url",
       ])
       .where("q.public_id", "=", publicId)
       .where("q.owner_id", "=", ownerId)
@@ -660,38 +662,55 @@ export async function condensePlan(
   ]);
   if (!quote) return null;
 
-  const stores = new Map(rows.map((r) => [r.store_id, { slug: r.store_slug, name: r.store_name }]));
-  const byItem = new Map<number, { itemId: number; quantity: number; offers: CondenseOffer[] }>();
+  const stores = new Map(
+    rows.map((r) => [r.store_id, { slug: r.store_slug, name: r.store_name, iconUrl: r.store_icon_url }]),
+  );
+  const items = new Map<number, CondenseItem & { slot: QuoteSlot; name: string }>();
   for (const r of rows) {
-    const item = byItem.get(r.item_id) ?? { itemId: r.item_id, quantity: r.quantity, offers: [] };
+    const item = items.get(r.item_id) ?? {
+      itemId: r.item_id,
+      slot: r.slot,
+      name: r.product_name,
+      quantity: r.quantity,
+      offers: [],
+    };
     item.offers.push({ listingId: r.listing_id, storeId: r.store_id, priceCash: r.price_cash });
-    byItem.set(r.item_id, item);
+    items.set(r.item_id, item);
   }
+  const ordered = [...items.values()].sort(
+    (a, b) => QUOTE_SLOTS.indexOf(a.slot) - QUOTE_SLOTS.indexOf(b.slot) || a.itemId - b.itemId,
+  );
+  const result = planCondenseOptions(ordered);
+  const storesNow = new Set(rows.filter((r) => r.listing_id === r.offer_id).map((r) => r.store_id)).size;
 
-  const plan = planCondense([...byItem.values()], { storeValue });
-  const storeOf = (id: number) => stores.get(id) ?? { slug: "", name: "" };
-  const quantities = new Map([...byItem.values()].map((i) => [i.itemId, i.quantity]));
-  const perStore = new Map<number, { itemIds: number[]; subtotalCash: number }>();
-  for (const a of plan.assignments) {
-    const entry = perStore.get(a.offer.storeId) ?? { itemIds: [], subtotalCash: 0 };
-    entry.itemIds.push(a.itemId);
-    entry.subtotalCash += a.offer.priceCash * (quantities.get(a.itemId) ?? 1);
-    perStore.set(a.offer.storeId, entry);
-  }
   return {
-    improves: plan.storesAfter < plan.storesBefore,
-    storesBefore: plan.storesBefore,
-    storesAfter: plan.storesAfter,
-    extraCash: plan.extraCash,
-    items: plan.assignments.map((a) => ({
-      itemId: a.itemId,
-      listingId: a.offer.listingId,
-      store: storeOf(a.offer.storeId),
-      priceCash: a.offer.priceCash,
-      cheapestStore: storeOf(a.cheapest.storeId),
-      cheapestPriceCash: a.cheapest.priceCash,
-    })),
-    stores: [...perStore].map(([storeId, entry]) => ({ ...storeOf(storeId), ...entry })),
+    itemCount: result.itemCount,
+    storesNow,
+    minTotalCash: result.minTotalCash,
+    options: result.options.map(({ picks, ...option }) => {
+      const split = new Map<number, QuoteCondenseOptions["options"][number]["split"][number]>();
+      for (const { itemId, quantity, offer, cheapest } of picks) {
+        const item = items.get(itemId) as (typeof ordered)[number];
+        const entry = split.get(offer.storeId) ?? {
+          store: stores.get(offer.storeId) ?? { slug: "", name: "", iconUrl: null },
+          subtotalCash: 0,
+          items: [],
+        };
+        entry.subtotalCash += offer.priceCash * quantity;
+        entry.items.push({
+          itemId,
+          listingId: offer.listingId,
+          slot: item.slot,
+          name: item.name,
+          quantity,
+          priceCash: offer.priceCash,
+          cheapest: offer.priceCash === cheapest.priceCash,
+          extraCash: (offer.priceCash - cheapest.priceCash) * quantity,
+        });
+        split.set(offer.storeId, entry);
+      }
+      return { ...option, split: [...split.values()].sort((a, b) => b.subtotalCash - a.subtotalCash) };
+    }),
   };
 }
 

@@ -1,7 +1,7 @@
 import {
   isAdditiveSlot,
   type Offer,
-  type QuoteCondensePlan,
+  type QuoteCondenseOption,
   type QuoteDetail,
   type QuoteItem,
   quoteTotals,
@@ -173,11 +173,14 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   };
 
   /**
-   * Aplica el plan de comprar en menos tiendas: fija la oferta de cada ítem que cambia de tienda (el servidor ya
-   * respetó el tope por ítem) y vuelve a pedir la cotización una vez, por el mismo motivo que arriba.
+   * Aplica la opción elegida de comprar en menos tiendas: fija la oferta de cada ítem que cambia y vuelve a pedir la
+   * cotización una vez, por el mismo motivo que arriba.
    */
-  const handleCondense = async (plan: QuoteCondensePlan) => {
-    const changes = plan.items.filter((p) => quote.items.find((i) => i.id === p.itemId)?.offer?.id !== p.listingId);
+  const handleCondense = async (option: QuoteCondenseOption) => {
+    const changes = option.split
+      .flatMap((s) => s.items)
+      .filter((p) => quote.items.find((i) => i.id === p.itemId)?.offer?.id !== p.listingId);
+    if (changes.length === 0) return;
     inFlight.current += 1;
     try {
       await Promise.all(
@@ -189,10 +192,12 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
       inFlight.current -= 1;
       if (inFlight.current === 0) setQuote(fresh);
       toast.success(
-        t(plan.storesAfter === 1 ? "quote_condense_done_one" : "quote_condense_done", {
-          count: plan.storesAfter,
-          extra: formatCLP(plan.extraCash),
-        }),
+        option.extraCash === 0
+          ? t("quote_cheapest_already")
+          : t(option.stores === 1 ? "quote_condense_done_one" : "quote_condense_done", {
+              count: option.stores,
+              extra: formatCLP(option.extraCash),
+            }),
       );
     } catch {
       fail(t("quote_update_error"));

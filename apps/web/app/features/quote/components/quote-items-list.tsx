@@ -6,7 +6,7 @@ import {
   type Offer,
   QUOTE_SLOT_LABELS,
   QUOTE_SLOTS,
-  type QuoteCondensePlan,
+  type QuoteCondenseOption,
   type QuoteDetail,
   type QuoteItem,
   type QuoteSlot,
@@ -48,7 +48,7 @@ interface QuoteItemsListProps extends Handlers {
   /** Vuelve al mejor precio todos los ítems con la tienda fijada a mano. */
   onChooseCheapest: () => void;
   /** Aplica el plan de comprar en menos tiendas que muestra el panel "Condensar tiendas". */
-  onCondense: (plan: QuoteCondensePlan) => Promise<void>;
+  onCondense: (option: QuoteCondenseOption) => Promise<void>;
 }
 
 /** Agregar lleva a la página de la categoría del slot (en storage, la primera: SSD): ahí se elige y se agrega. */
