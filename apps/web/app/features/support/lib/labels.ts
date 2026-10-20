@@ -42,11 +42,11 @@ export const STATUS_LABELS: Record<SupportStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<SupportStatus, string> = {
-  open: "text-warn-ink bg-warn/10",
-  in_progress: "text-primary bg-primary/10",
-  waiting_user: "text-primary bg-primary/10",
-  resolved: "text-success-ink bg-success/10",
-  closed: "text-muted-foreground bg-secondary",
+  open: "text-warn-ink bg-warn/10 select-none",
+  in_progress: "text-primary bg-primary/10 select-none",
+  waiting_user: "text-primary bg-primary/10 select-none",
+  resolved: "text-success-ink bg-success/10 select-none",
+  closed: "text-muted-foreground bg-secondary select-none",
 };
 
 const SOURCES: Record<string, { label: string; Icon: typeof IconHelp }> = {
