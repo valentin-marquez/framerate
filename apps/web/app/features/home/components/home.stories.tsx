@@ -53,24 +53,12 @@ export const Tiendas: Story = {
 };
 
 /**
- * De más a menos "me gusta": la primera en grande, con su collage, descripción y total, y las siguientes en una lista.
- * Se eligió entre tres composiciones (A filas, B carrusel, C destacada y lista) el 19-10-2026. Con menos de tres
- * cotizaciones no se muestra.
+ * Fila en carrusel de más a menos "me gusta": la tarjeta de cotización repite la de producto, con las cuatro fotos del
+ * armado en el panel derecho (variante C de tres, 20-10-2026). Con menos de tres cotizaciones no se muestra.
  */
 export const CotizacionesPopulares: Story = {
   name: "Cotizaciones populares",
   render: () => <PublicQuotes quotes={publicQuotes} />,
-};
-
-/** Con tres o cuatro públicas, las últimas celdas se ensanchan para no dejar huecos. */
-export const CotizacionesPocas: Story = {
-  name: "Cotizaciones populares (tres y cuatro)",
-  render: () => (
-    <div className="space-y-10">
-      <PublicQuotes quotes={publicQuotes.slice(0, 3)} />
-      <PublicQuotes quotes={publicQuotes.slice(0, 4)} />
-    </div>
-  ),
 };
 
 export const CotizacionesSinFotos: Story = {

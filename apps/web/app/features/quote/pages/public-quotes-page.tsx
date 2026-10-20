@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { PRODUCT_GRID_CLASS } from "~/features/explore/components/product-grid-skeleton";
-import { PublicQuoteCard } from "~/features/home/components/public-quotes";
+import { QuoteCard } from "~/features/quote/components/quote-card";
 import { quotesService } from "~/features/quote/services/quotes";
 import { buttonVariants } from "~/shared/components/primitives/button";
 import type { Route } from "./+types/public-quotes-page";
@@ -42,7 +42,7 @@ export default function PublicQuotesPage({ loaderData: { page, quotes } }: Route
         <ol className={PRODUCT_GRID_CLASS}>
           {quotes.map((quote, i) => (
             <li key={quote.id} className="flex">
-              <PublicQuoteCard quote={quote} rank={(page - 1) * PAGE_SIZE + i + 1} />
+              <QuoteCard quote={quote} rank={(page - 1) * PAGE_SIZE + i + 1} />
             </li>
           ))}
         </ol>
