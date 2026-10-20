@@ -270,6 +270,9 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_choose_store: "Elegir tienda",
     quote_best_price: "Mejor precio disponible",
     quote_best_price_hint: "Siempre cuenta la tienda más barata con stock.",
+    quote_author_pick: "La elegida por el autor",
+    quote_author_pick_hint:
+      "Vuelve a la tienda con la que el autor armó la cotización. Tu elección no la cambia para los demás.",
     quote_cheapest_all: "Más barato en todo",
     quote_cheapest_badge: "Más barato",
     quote_cheapest_saved: "Ahorras {amount}",
@@ -654,6 +657,8 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_choose_store: "Choose store",
     quote_best_price: "Best available price",
     quote_best_price_hint: "The cheapest store in stock always counts.",
+    quote_author_pick: "The author's choice",
+    quote_author_pick_hint: "Goes back to the store the author picked. Your choice does not change it for others.",
     quote_cheapest_all: "Cheapest for everything",
     quote_cheapest_badge: "Cheapest",
     quote_cheapest_saved: "You save {amount}",

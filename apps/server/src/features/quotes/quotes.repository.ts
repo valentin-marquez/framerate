@@ -632,9 +632,19 @@ export async function removeItem(
  * para cada número de tiendas. `storesNow` cuenta las tiendas de la oferta con que cuenta hoy cada ítem (también las
  * fijadas a mano). `null` si la cotización no existe o no es del dueño.
  */
-export async function condenseOptions(db: Db, publicId: string, ownerId: string): Promise<QuoteCondenseOptions | null> {
+/** Lo puede pedir quien pueda leer la cotización (el dueño, o cualquiera si no es privada). */
+export async function condenseOptions(
+  db: Db,
+  publicId: string,
+  viewerId: string | undefined,
+): Promise<QuoteCondenseOptions | null> {
+  // Ningún usuario tiene id vacío: sin sesión sólo entran las que no son privadas.
   const [[quote], rows] = await db.read([
-    db.query.selectFrom("quotes").select("id").where("public_id", "=", publicId).where("owner_id", "=", ownerId),
+    db.query
+      .selectFrom("quotes as q")
+      .select("q.id")
+      .where("q.public_id", "=", publicId)
+      .where((eb) => eb.or([eb("q.owner_id", "=", viewerId ?? ""), eb("q.visibility", "!=", "private")])),
     db.query
       .selectFrom("quote_items as qi")
       .innerJoin("quotes as q", "q.id", "qi.quote_id")
@@ -655,7 +665,7 @@ export async function condenseOptions(db: Db, publicId: string, ownerId: string)
         "s.scraped_icon_url as store_icon_url",
       ])
       .where("q.public_id", "=", publicId)
-      .where("q.owner_id", "=", ownerId)
+      .where((eb) => eb.or([eb("q.owner_id", "=", viewerId ?? ""), eb("q.visibility", "!=", "private")]))
       .where("qi.is_selected", "=", 1)
       .where("l.is_active", "=", 1)
       .where("l.in_stock", "=", 1),

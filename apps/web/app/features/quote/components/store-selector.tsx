@@ -23,10 +23,12 @@ interface StoreSelectorProps {
   /** Sólo la flecha, para ponerla junto al nombre de la tienda en la fila. */
   compact?: boolean;
   className?: string;
+  /** Quien mira una cotización ajena: elige sólo para sí. La primera opción vuelve a la oferta que dejó el autor. */
+  viewer?: boolean;
 }
 
 /** Elegir con qué tienda cuenta un ítem: una de sus ofertas con stock, o siempre el mejor precio. */
-export function StoreSelector({ item, onChoose, compact, className }: StoreSelectorProps) {
+export function StoreSelector({ item, onChoose, compact, className, viewer }: StoreSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const offers = useQuery({
@@ -76,10 +78,12 @@ export function StoreSelector({ item, onChoose, compact, className }: StoreSelec
         </DialogHeader>
 
         <ul className="grid gap-2">
-          <Row selected={item.chosenListingId === null} onClick={() => choose(null)}>
+          <Row selected={!viewer && item.chosenListingId === null} onClick={() => choose(null)}>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{t("quote_best_price")}</p>
-              <p className="text-xs text-muted-foreground">{t("quote_best_price_hint")}</p>
+              <p className="text-sm font-medium">{t(viewer ? "quote_author_pick" : "quote_best_price")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t(viewer ? "quote_author_pick_hint" : "quote_best_price_hint")}
+              </p>
             </div>
           </Row>
 
@@ -88,7 +92,7 @@ export function StoreSelector({ item, onChoose, compact, className }: StoreSelec
           {offers.data?.map((offer) => (
             <Row
               key={offer.id}
-              selected={item.chosenListingId === offer.id}
+              selected={viewer ? item.offer?.id === offer.id : item.chosenListingId === offer.id}
               disabled={!offer.inStock}
               onClick={() => choose(offer)}
             >

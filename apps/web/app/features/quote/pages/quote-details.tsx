@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
+import { productsService } from "~/features/product/services/products";
 import { QuoteActions } from "~/features/quote/components/quote-actions";
 import { QuoteHeader } from "~/features/quote/components/quote-header";
 import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
@@ -118,6 +119,77 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
       { quoteId: quote.id, itemId: item.id, data: { isSelected: true } },
       { onSuccess: settle, onError: () => fail(t("quote_update_error")) },
     );
+  };
+
+  /**
+   * Quien mira una cotización ajena elige las tiendas sólo para sí: no se llama al servidor, así que los demás la siguen
+   * viendo como la dejó el autor, y "Guardar como" (PDF, Excel, portapapeles) sale con las tiendas que escogió. Elegir
+   * `null` vuelve a la que dejó el autor.
+   */
+  const withOffer = (item: QuoteItem, offer: Offer | null, pinned = true): QuoteItem => {
+    if (offer) {
+      const { id, store, url, priceCash, priceCard } = offer;
+      return { ...item, chosenListingId: pinned ? id : null, offer: { id, store, url, priceCash, priceCard } };
+    }
+    const original = loaderData.quote.items.find((i) => i.id === item.id);
+    return original ? { ...item, chosenListingId: original.chosenListingId, offer: original.offer } : item;
+  };
+  const offersOf = async (item: QuoteItem) => (await productsService.getBySlug(item.product.slug)).offers;
+
+  const handleViewerOffer = (item: QuoteItem, offer: Offer | null) =>
+    showItems(quote.items.map((i) => (i.id === item.id ? withOffer(i, offer) : i)));
+
+  /** La oferta más barata con stock de cada ítem elegido, mirada ahora en las tiendas. */
+  const handleViewerCheapest = async () => {
+    const targets = quote.items.filter((i) => i.isSelected);
+    try {
+      const lists = await Promise.all(targets.map(offersOf));
+      const best = new Map<number, Offer>();
+      targets.forEach((item, k) => {
+        const cheapest = lists[k]?.filter((o) => o.inStock).sort((a, b) => a.priceCash - b.priceCash)[0];
+        if (cheapest) best.set(item.id, cheapest);
+      });
+      const items = quote.items.map((i) => (best.has(i.id) ? withOffer(i, best.get(i.id) ?? null, false) : i));
+      const saved = quote.totals.cash - quoteTotals(items).cash;
+      showItems(items);
+      toast.success(saved > 0 ? t("quote_cheapest_saved", { amount: formatCLP(saved) }) : t("quote_cheapest_already"));
+    } catch {
+      toast.error(t("quote_update_error"));
+    }
+  };
+
+  /** Aplica la opción de comprar en menos tiendas sólo en esta vista; trae de las fichas las ofertas que faltan. */
+  const handleViewerCondense = async (option: QuoteCondenseOption) => {
+    const changes = option.split
+      .flatMap((s) => s.items)
+      .filter((p) => quote.items.find((i) => i.id === p.itemId)?.offer?.id !== p.listingId);
+    if (changes.length === 0) return;
+    try {
+      const picked = await Promise.all(
+        changes.map(async (p) => {
+          const item = quote.items.find((i) => i.id === p.itemId);
+          const offer = item ? (await offersOf(item)).find((o) => o.id === p.listingId) : undefined;
+          return [p.itemId, offer] as const;
+        }),
+      );
+      const byItem = new Map(picked);
+      showItems(
+        quote.items.map((i) => {
+          const offer = byItem.get(i.id);
+          return offer ? withOffer(i, offer) : i;
+        }),
+      );
+      toast.success(
+        option.extraCash === 0
+          ? t("quote_cheapest_already")
+          : t(option.stores === 1 ? "quote_condense_done_one" : "quote_condense_done", {
+              count: option.stores,
+              extra: formatCLP(option.extraCash),
+            }),
+      );
+    } catch {
+      toast.error(t("quote_update_error"));
+    }
   };
 
   const handleChooseOffer = (item: QuoteItem, offer: Offer | null) => {
@@ -292,9 +364,9 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
           onChangeQuantity={handleChangeQuantity}
           onRemove={handleRemove}
           onSelect={handleSelect}
-          onChooseOffer={handleChooseOffer}
-          onChooseCheapest={handleChooseCheapest}
-          onCondense={handleCondense}
+          onChooseOffer={isOwner ? handleChooseOffer : handleViewerOffer}
+          onChooseCheapest={isOwner ? handleChooseCheapest : handleViewerCheapest}
+          onCondense={isOwner ? handleCondense : handleViewerCondense}
         />
       </div>
     </div>

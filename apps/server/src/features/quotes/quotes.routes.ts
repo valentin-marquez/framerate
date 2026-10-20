@@ -80,8 +80,7 @@ export const quotesRoutes = new Hono<AppEnv>()
     return c.json(result);
   })
   .get("/:id/condense", async (c) => {
-    const user = currentUser(c);
-    const options = await condenseOptions(c.var.db, c.req.param("id"), user.id);
+    const options = await condenseOptions(c.var.db, c.req.param("id"), c.get("user")?.id);
     if (!options) throw quoteNotFound();
     return c.json(options);
   })

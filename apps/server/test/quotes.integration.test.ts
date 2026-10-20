@@ -630,13 +630,17 @@ describe("condensar tiendas", () => {
     });
   });
 
-  test("una cotización vacía no tiene opciones; sólo el dueño la consulta", async () => {
+  test("una cotización vacía no tiene opciones; la privada sólo la consulta el dueño y las demás cualquiera", async () => {
     const quote = await createQuote(ana);
     expect(await options(quote.id)).toEqual({ itemCount: 0, storesNow: 0, minTotalCash: 0, options: [] });
 
     expect((await condense(beto, quote.id)).status).toBe(404);
-    expect((await condense("anon", quote.id)).status).toBe(401);
+    expect((await condense("anon", quote.id)).status).toBe(404);
     expect((await condense(ana, "NOEXISTE00")).status).toBe(404);
+
+    await call(ana, `/v1/quotes/${quote.id}`, "PATCH", { visibility: "unlisted" });
+    expect((await condense(beto, quote.id)).status).toBe(200);
+    expect((await condense("anon", quote.id)).status).toBe(200);
   });
 });
 

@@ -13,15 +13,7 @@ import {
   SLOT_BY_CATEGORY,
 } from "@framerate/contracts";
 import { imageVariant } from "@framerate/kit";
-import {
-  IconAlertTriangle,
-  IconChevronDown,
-  IconExternalLink,
-  IconMinus,
-  IconPlus,
-  IconTag,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconAlertTriangle, IconChevronDown, IconMinus, IconPlus, IconTag, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
@@ -224,17 +216,15 @@ function SlotRow({
             >
               <StoreLogo store={offer.store} className="size-5 rounded-sm text-[9px]" />
               <span className="truncate text-label-xs text-muted-foreground">{offer.store.name}</span>
-              {!isOwner && <IconExternalLink className="size-3 shrink-0 text-muted-foreground" />}
             </OutboundLink>
           )}
-          {isOwner && (
-            <StoreSelector
-              item={item}
-              compact
-              onChoose={(chosen) => onChooseOffer(item, chosen)}
-              className="pointer-events-auto relative z-10"
-            />
-          )}
+          <StoreSelector
+            item={item}
+            compact
+            viewer={!isOwner}
+            onChoose={(chosen) => onChooseOffer(item, chosen)}
+            className="pointer-events-auto relative z-10"
+          />
         </span>
         <span className="flex items-center justify-end gap-1.5 text-label-sm tabular-nums">
           {offer && item.chosenListingId === null && (
@@ -399,7 +389,7 @@ export function QuoteItemsList({ quote, isOwner, onChooseCheapest, onCondense, .
         <h2 className="text-foreground text-label-md">
           {t("components")} <span className="text-muted-foreground text-paragraph-sm tabular-nums">{count}</span>
         </h2>
-        {isOwner && (hasPinned || priced >= 2) && (
+        {(hasPinned || priced >= 2) && (
           <div className="flex flex-wrap items-center gap-1">
             {hasPinned && (
               <Button variant="ghost" size="sm" onClick={onChooseCheapest}>
