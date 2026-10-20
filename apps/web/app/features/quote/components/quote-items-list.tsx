@@ -86,6 +86,48 @@ interface SlotRowProps extends Handlers {
   isOwner: boolean;
 }
 
+/** Quitar el ítem y cambiar sus unidades. */
+function QuantityControl({
+  item,
+  onChangeQuantity,
+  onRemove,
+  className,
+}: Pick<SlotRowProps, "item" | "onChangeQuantity" | "onRemove"> & { className?: string }) {
+  const { quantity } = item;
+  return (
+    <span className={cn("flex shrink-0 items-center gap-1", className)}>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        aria-label="Quitar de la cotización"
+        className="text-muted-foreground hover:text-destructive"
+        onClick={() => onRemove(item)}
+      >
+        <IconTrash />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon-xs"
+        aria-label="Menos unidades"
+        disabled={quantity <= 1}
+        onClick={() => onChangeQuantity(item, quantity - 1)}
+      >
+        <IconMinus />
+      </Button>
+      <span className="w-6 text-center text-label-sm tabular-nums">{quantity}</span>
+      <Button
+        variant="outline"
+        size="icon-xs"
+        aria-label="Más unidades"
+        disabled={quantity >= 99}
+        onClick={() => onChangeQuantity(item, quantity + 1)}
+      >
+        <IconPlus />
+      </Button>
+    </span>
+  );
+}
+
 /** Un componente en una línea; al tocarlo se despliegan specs, tarjeta, avisos, tienda y alternativas. */
 function SlotRow({
   item,
@@ -128,7 +170,7 @@ function SlotRow({
         </span>
         <span className="flex min-w-0 items-center gap-3 max-md:contents">
           <Thumb item={item} />
-          <span className="min-w-0">
+          <span className="min-w-0 flex-1">
             <span className="block truncate text-muted-foreground text-label-xs md:hidden">
               {QUOTE_SLOT_LABELS[item.slot]}
               {quantity > 1 && <span className="tabular-nums"> ×{quantity}</span>}
@@ -158,6 +200,14 @@ function SlotRow({
                   +{alternatives.length}
                   <span className="sr-only"> alternativas</span>
                 </span>
+              )}
+              {isOwner && (
+                <QuantityControl
+                  item={item}
+                  onChangeQuantity={onChangeQuantity}
+                  onRemove={onRemove}
+                  className="pointer-events-auto relative z-10 ml-auto hidden md:flex"
+                />
               )}
             </span>
           </span>
@@ -262,36 +312,12 @@ function SlotRow({
                 )
               )}
               {isOwner && (
-                <span className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label="Quitar de la cotización"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={() => onRemove(item)}
-                  >
-                    <IconTrash />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon-xs"
-                    aria-label="Menos unidades"
-                    disabled={quantity <= 1}
-                    onClick={() => onChangeQuantity(item, quantity - 1)}
-                  >
-                    <IconMinus />
-                  </Button>
-                  <span className="w-6 text-center text-label-sm tabular-nums">{quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="icon-xs"
-                    aria-label="Más unidades"
-                    disabled={quantity >= 99}
-                    onClick={() => onChangeQuantity(item, quantity + 1)}
-                  >
-                    <IconPlus />
-                  </Button>
-                </span>
+                <QuantityControl
+                  item={item}
+                  onChangeQuantity={onChangeQuantity}
+                  onRemove={onRemove}
+                  className="md:hidden"
+                />
               )}
             </div>
           </div>
