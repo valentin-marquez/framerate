@@ -732,8 +732,12 @@ const collageRank = (category: string) => {
   return rank === -1 ? COLLAGE_ORDER.length : rank;
 };
 
-/** Qué componentes se nombran en el texto de la tarjeta; la RAM y los discos van como cifra total. */
-const HIGHLIGHT_ORDER = ["cpu", "gpu", "motherboard", "case", "psu", "cpu_cooler", "case_fan"] as const;
+/** Qué componentes se nombran en el texto de la tarjeta, por prioridad; los que no están aquí van después, así toda cotización tiene texto. */
+const HIGHLIGHT_ORDER: readonly string[] = ["cpu", "gpu", "motherboard", "case", "psu", "cpu_cooler", "case_fan"];
+const highlightRank = (category: string) => {
+  const rank = HIGHLIGHT_ORDER.indexOf(category);
+  return rank === -1 ? HIGHLIGHT_ORDER.length : rank;
+};
 
 /** GB que suman los ítems de esas categorías (`attributes.capacity`, por la cantidad); `null` si ninguno la trae. */
 function totalGb(items: { category: string; quantity: number; attributes: string }[], categories: string[]) {
@@ -801,10 +805,10 @@ export async function listTopQuotes(
     return {
       ...toSummary(row, assetsBaseUrl),
       likedByMe: Boolean(row.liked),
-      highlights: HIGHLIGHT_ORDER.flatMap((category) => own.find((i) => i.category === category)?.name ?? []).slice(
-        0,
-        2,
-      ),
+      highlights: own
+        .toSorted((a, b) => highlightRank(a.category) - highlightRank(b.category))
+        .map((i) => i.name)
+        .slice(0, 2),
       ramGb: totalGb(own, ["ram"]),
       storageGb: totalGb(own, ["ssd", "hdd"]),
       totalCash: own.reduce((sum, i) => sum + (i.price_cash ?? 0) * i.quantity, 0),
