@@ -212,7 +212,7 @@ function SlotRow({
             </span>
           </span>
         </span>
-        <span className="hidden min-w-0 items-center gap-2 md:flex">
+        <span className="hidden min-w-0 items-center gap-1 md:flex">
           {offer && (
             <OutboundLink
               href={offer.url}
@@ -225,6 +225,14 @@ function SlotRow({
               <StoreLogo store={offer.store} className="size-5 rounded-sm text-[9px]" />
               <span className="truncate text-label-xs text-muted-foreground">{offer.store.name}</span>
             </OutboundLink>
+          )}
+          {isOwner && (
+            <StoreSelector
+              item={item}
+              compact
+              onChoose={(chosen) => onChooseOffer(item, chosen)}
+              className="pointer-events-auto relative z-10"
+            />
           )}
         </span>
         <span className="flex items-center justify-end gap-1.5 text-label-sm tabular-nums">
@@ -291,25 +299,18 @@ function SlotRow({
               </Link>
             </div>
             <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
-              {isOwner ? (
-                <span className="flex min-w-0 items-center gap-2">
-                  {offer && <StoreLogo store={offer.store} className="size-5 rounded-sm text-[9px]" />}
-                  <StoreSelector item={item} onChoose={(chosen) => onChooseOffer(item, chosen)} />
-                </span>
-              ) : (
-                offer && (
-                  <OutboundLink
-                    href={offer.url}
-                    source="quote_item"
-                    listingId={String(offer.id)}
-                    productId={String(product.id)}
-                    className="flex min-w-0 items-center gap-2 text-label-sm hover:text-primary"
-                  >
-                    <StoreLogo store={offer.store} className="size-5 rounded-sm text-[9px]" />
-                    <span className="truncate">Ir a {offer.store.name}</span>
-                    <IconExternalLink className="size-3 shrink-0 text-muted-foreground" />
-                  </OutboundLink>
-                )
+              {!isOwner && offer && (
+                <OutboundLink
+                  href={offer.url}
+                  source="quote_item"
+                  listingId={String(offer.id)}
+                  productId={String(product.id)}
+                  className="flex min-w-0 items-center gap-2 text-label-sm hover:text-primary"
+                >
+                  <StoreLogo store={offer.store} className="size-5 rounded-sm text-[9px]" />
+                  <span className="truncate">Ir a {offer.store.name}</span>
+                  <IconExternalLink className="size-3 shrink-0 text-muted-foreground" />
+                </OutboundLink>
               )}
               {isOwner && (
                 <QuantityControl

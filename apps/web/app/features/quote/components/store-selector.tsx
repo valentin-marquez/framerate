@@ -20,10 +20,13 @@ interface StoreSelectorProps {
   item: QuoteItem;
   /** `null` = mejor precio disponible. */
   onChoose: (offer: Offer | null) => void;
+  /** Sólo la flecha, para ponerla junto al nombre de la tienda en la fila. */
+  compact?: boolean;
+  className?: string;
 }
 
 /** Elegir con qué tienda cuenta un ítem: una de sus ofertas con stock, o siempre el mejor precio. */
-export function StoreSelector({ item, onChoose }: StoreSelectorProps) {
+export function StoreSelector({ item, onChoose, compact, className }: StoreSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const offers = useQuery({
@@ -41,13 +44,30 @@ export function StoreSelector({ item, onChoose }: StoreSelectorProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button
-          type="button"
-          className="flex min-w-0 cursor-pointer items-center gap-1 text-sm font-medium hover:text-primary"
-        >
-          <span className="truncate">{item.offer?.store.name ?? t("quote_choose_store")}</span>
-          <IconChevronDown size={14} className="shrink-0 text-muted-foreground" />
-        </button>
+        {compact ? (
+          <button
+            type="button"
+            aria-label={t("quote_choose_store")}
+            title={t("quote_choose_store")}
+            className={cn(
+              "grid size-5 shrink-0 cursor-pointer place-items-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              className,
+            )}
+          >
+            <IconChevronDown size={14} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={cn(
+              "flex min-w-0 cursor-pointer items-center gap-1 text-sm font-medium hover:text-primary",
+              className,
+            )}
+          >
+            <span className="truncate">{item.offer?.store.name ?? t("quote_choose_store")}</span>
+            <IconChevronDown size={14} className="shrink-0 text-muted-foreground" />
+          </button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-card">
         <DialogHeader>
