@@ -294,9 +294,9 @@ describe("me gusta y cotizaciones populares", () => {
     expect(top?.totalCash).toBe(expected);
     expect(top?.totalCash).toBeGreaterThan(0);
     expect(top?.author.username).toBe("ana");
-    expect(list.map((q) => [q.cpu, q.gpu])).toEqual([
+    expect(list.map((q) => q.highlights)).toEqual([
       ["AMD Ryzen 7 7800X3D", "ASUS Dual RTX 4070 SUPER OC 12GB"],
-      ["AMD Ryzen 7 7800X3D", null],
+      ["AMD Ryzen 7 7800X3D"],
     ]);
     expect((await publicList("?limit=1")).map((q) => q.name)).toEqual(["Muy querida"]);
     expect((await publicList("?limit=1&page=2")).map((q) => q.name)).toEqual(["Poco querida"]);
@@ -321,6 +321,39 @@ describe("me gusta y cotizaciones populares", () => {
 
     const [top] = await publicList();
     expect(top?.images).toEqual(["https://img.test/cpu.png", "https://img.test/gpu.png"]);
+  });
+
+  test("suma la RAM y los discos por su cantidad y nombra primero el procesador y la gráfica", async () => {
+    const part = async (slug: string, category: string, capacity?: number) =>
+      (
+        await db.query
+          .insertInto("products")
+          .values({
+            slug,
+            name: slug,
+            category,
+            attributes: JSON.stringify(capacity ? { capacity } : {}),
+            created_at: "2026-01-01T00:00:00.000Z",
+            updated_at: "2026-01-01T00:00:00.000Z",
+          })
+          .returning("id")
+          .executeTakeFirstOrThrow()
+      ).id;
+    const quote = await createQuote(ana, { name: "Pública", visibility: "public" });
+    await addItem(ana, quote.id, seed.asus);
+    await addItem(ana, quote.id, seed.ryzen);
+    await addItem(ana, quote.id, await part("ram-32", "ram", 32), 2);
+    await addItem(ana, quote.id, await part("ssd-1tb", "ssd", 1000));
+    await addItem(ana, quote.id, await part("hdd-2tb", "hdd", 2000));
+
+    const [top] = await publicList();
+    expect(top?.highlights).toEqual(["AMD Ryzen 7 7800X3D", "ASUS Dual RTX 4070 SUPER OC 12GB"]);
+    expect(top?.ramGb).toBe(64);
+    expect(top?.storageGb).toBe(3000);
+
+    const empty = await createQuote(ana, { name: "Sin discos", visibility: "public" });
+    await addItem(ana, empty.id, seed.ryzen);
+    expect((await publicList()).find((q) => q.id === empty.id)).toMatchObject({ ramGb: null, storageGb: null });
   });
 
   test("al hacerse privada deja de aparecer en la lista y al borrarla se van sus me gusta", async () => {

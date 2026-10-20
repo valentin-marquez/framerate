@@ -133,9 +133,11 @@ export const PublicQuoteSchema = QuoteSummarySchema.extend({
   images: z.array(z.url()).max(4),
   /** Para quien mira; `false` sin sesión. */
   likedByMe: z.boolean(),
-  /** Nombre del primer procesador y de la primera tarjeta de video seleccionados; `null` si el armado no los tiene. */
-  cpu: z.string().nullable(),
-  gpu: z.string().nullable(),
+  /** Nombres de hasta dos componentes, por importancia (procesador, gráfica, placa madre...); sin RAM ni discos. */
+  highlights: z.array(z.string()).max(2),
+  /** GB de RAM y de discos (SSD y HDD) que suman los ítems seleccionados; `null` si no hay o ninguno trae su capacidad. */
+  ramGb: z.number().int().positive().nullable(),
+  storageGb: z.number().int().positive().nullable(),
 });
 export type PublicQuote = z.infer<typeof PublicQuoteSchema>;
 

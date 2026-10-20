@@ -5,7 +5,7 @@ import { buttonVariants } from "~/shared/components/primitives/button";
 import { Carousel, CarouselContent, CarouselItem } from "~/shared/components/primitives/carousel";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
-import { QuoteCard } from "./quote-card";
+import { QuoteCard, QuoteSpecs } from "./quote-card";
 import { QuoteLikeToggle } from "./quote-like-toggle";
 
 export const PUBLIC_QUOTES_PAGE_SIZE = 18;
@@ -44,6 +44,9 @@ function Row({ quote, rank }: { quote: PublicQuote; rank: number }) {
           {quote.name}
         </Link>
         <span className="block truncate text-muted-foreground text-paragraph-xs">@{quote.author.username}</span>
+      </div>
+      <div className="hidden min-w-0 flex-1 flex-col gap-1 xl:flex">
+        <QuoteSpecs quote={quote} />
       </div>
       <span className="hidden w-28 shrink-0 text-muted-foreground text-paragraph-sm lg:block">
         {componentes(quote.itemCount)}

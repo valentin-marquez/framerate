@@ -732,6 +732,20 @@ const collageRank = (category: string) => {
   return rank === -1 ? COLLAGE_ORDER.length : rank;
 };
 
+/** Qué componentes se nombran en el texto de la tarjeta; la RAM y los discos van como cifra total. */
+const HIGHLIGHT_ORDER = ["cpu", "gpu", "motherboard", "case", "psu", "cpu_cooler", "case_fan"] as const;
+
+/** GB que suman los ítems de esas categorías (`attributes.capacity`, por la cantidad); `null` si ninguno la trae. */
+function totalGb(items: { category: string; quantity: number; attributes: string }[], categories: string[]) {
+  let total = 0;
+  for (const item of items) {
+    if (!categories.includes(item.category)) continue;
+    const capacity = Number(JSON.parse(item.attributes).capacity);
+    if (capacity > 0) total += capacity * item.quantity;
+  }
+  return total > 0 ? Math.round(total) : null;
+}
+
 /** Las públicas con más "me gusta" (con al menos un componente), con lo que cuestan hoy y fotos de sus componentes. */
 export async function listTopQuotes(
   db: Db,
@@ -768,6 +782,7 @@ export async function listTopQuotes(
         "qi.slot",
         "p.name",
         "p.category",
+        "p.attributes",
         "p.image_url",
         "p.image_key",
         "o.price_cash",
@@ -786,8 +801,12 @@ export async function listTopQuotes(
     return {
       ...toSummary(row, assetsBaseUrl),
       likedByMe: Boolean(row.liked),
-      cpu: own.find((i) => i.slot === "cpu")?.name ?? null,
-      gpu: own.find((i) => i.slot === "gpu")?.name ?? null,
+      highlights: HIGHLIGHT_ORDER.flatMap((category) => own.find((i) => i.category === category)?.name ?? []).slice(
+        0,
+        2,
+      ),
+      ramGb: totalGb(own, ["ram"]),
+      storageGb: totalGb(own, ["ssd", "hdd"]),
       totalCash: own.reduce((sum, i) => sum + (i.price_cash ?? 0) * i.quantity, 0),
       images: own
         .toSorted((a, b) => collageRank(a.category) - collageRank(b.category))

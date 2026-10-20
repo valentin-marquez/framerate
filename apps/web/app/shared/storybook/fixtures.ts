@@ -277,8 +277,9 @@ const quoteOf = (
   totalCash: number,
   likeCount: number,
   images: string[],
-  cpu: string | null,
-  gpu: string | null,
+  highlights: string[],
+  ramGb: number | null,
+  storageGb: number | null,
   description: string | null = null,
 ): PublicQuote => ({
   id,
@@ -292,8 +293,9 @@ const quoteOf = (
   updatedAt: "2026-10-12T12:00:00.000Z",
   totalCash,
   images,
-  cpu,
-  gpu,
+  highlights,
+  ramGb,
+  storageGb,
   likedByMe: false,
 });
 
@@ -310,8 +312,9 @@ export const publicQuotes: PublicQuote[] = [
     1_049_990,
     148,
     [img0, img1, img2, img3],
-    "AMD Ryzen 5 9600X",
-    "ASUS PRIME GeForce RTX 5060 Ti 16GB GDDR7 OC",
+    ["AMD Ryzen 5 9600X", "ASUS PRIME GeForce RTX 5060 Ti 16GB GDDR7 OC"],
+    32,
+    2000,
     "Ryzen 5 y RTX 5060 Ti para jugar fluido a 1440p sin pasarse del presupuesto.",
   ),
   quoteOf(
@@ -323,10 +326,11 @@ export const publicQuotes: PublicQuote[] = [
     889_990,
     96,
     [img1, img2, img3, img0],
-    "Intel Core i5 14400",
-    "Zotac Gaming GeForce RTX 5060 Twin Edge OC 8GB GDDR7",
+    ["Intel Core i5 14400", "Zotac Gaming GeForce RTX 5060 Twin Edge OC 8GB GDDR7"],
+    32,
+    1000,
   ),
-  // Sin tarjeta de video: la tarjeta muestra el autor y los componentes.
+  // Sin tarjeta de video: el segundo componente nombrado es la placa madre.
   quoteOf(
     "T9C4X7M2KD",
     "Oficina y edición liviana",
@@ -336,8 +340,9 @@ export const publicQuotes: PublicQuote[] = [
     639_990,
     61,
     [img2, img3],
-    "AMD Ryzen 5 8600G",
-    null,
+    ["AMD Ryzen 5 8600G", "MSI PRO A620M-E"],
+    16,
+    500,
   ),
   quoteOf(
     "R2W5J8N3PF",
@@ -348,8 +353,9 @@ export const publicQuotes: PublicQuote[] = [
     1_279_990,
     40,
     [img3, img0, img1, img2],
-    "AMD Ryzen 7 9800X3D",
-    "MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC",
+    ["AMD Ryzen 7 9800X3D", "MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC"],
+    64,
+    3500,
   ),
   quoteOf(
     "F6Z3D9K4SB",
@@ -360,7 +366,8 @@ export const publicQuotes: PublicQuote[] = [
     489_990,
     23,
     [img0],
-    "AMD Ryzen 5 5500",
-    "MSI GeForce RTX 3050 6GB VENTUS 2X OC",
+    ["AMD Ryzen 5 5500", "MSI GeForce RTX 3050 6GB VENTUS 2X OC"],
+    16,
+    500,
   ),
 ];
