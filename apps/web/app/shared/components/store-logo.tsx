@@ -2,7 +2,8 @@ import { useState } from "react";
 import { cn } from "~/shared/lib/utils";
 
 interface StoreLogoProps {
-  store: { name: string; slug?: string | null; icon_url?: string | null };
+  /** `iconUrl` es el nombre de los contratos (`StoreSummary`); `icon_url`, el de la tabla `stores`. */
+  store: { name: string; slug?: string | null; icon_url?: string | null; iconUrl?: string | null };
   /** Controla el tamaño/estilo del cuadrado. Default `size-10`. */
   className?: string;
 }
@@ -16,13 +17,14 @@ interface StoreLogoProps {
  */
 export function StoreLogo({ store, className }: StoreLogoProps) {
   const [broken, setBroken] = useState(false);
+  const icon = store.icon_url ?? store.iconUrl;
   const box = cn("relative inline-flex shrink-0 overflow-hidden rounded-lg size-10", className);
 
-  if (store.icon_url && !broken) {
+  if (icon && !broken) {
     return (
       <span className={cn(box, "border border-border/40 bg-secondary/30")}>
         <img
-          src={store.icon_url}
+          src={icon}
           alt={store.name}
           loading="lazy"
           decoding="async"

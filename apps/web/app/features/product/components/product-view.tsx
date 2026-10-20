@@ -357,10 +357,7 @@ function PriceContext({
 function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: number; now: number }) {
   return (
     <li className="relative flex items-center gap-2.5 px-3 py-3 transition-colors hover:bg-secondary/40 sm:gap-3 sm:px-4">
-      <StoreLogo
-        store={{ ...o.store, icon_url: o.store.iconUrl }}
-        className={cn("size-9", !o.inStock && "opacity-50")}
-      />
+      <StoreLogo store={o.store} className={cn("size-9", !o.inStock && "opacity-50")} />
       <div className="min-w-0 flex-1">
         <OutboundLink
           href={o.url}
