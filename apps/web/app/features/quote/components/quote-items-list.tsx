@@ -139,7 +139,7 @@ function SlotRow({
 
   return (
     <li className="relative">
-      {/* El botón cubre la fila para expandirla; el nombre y la tienda son enlaces por encima, así no quedan anidados. */}
+      {/* El botón cubre la fila para expandirla; el nombre y la tienda son enlaces por encima, así no quedan anidados. El panel desplegado va `relative` para quedar sobre esa capa y que sus botones reciban el clic. */}
       <button
         type="button"
         aria-expanded={open}
@@ -247,7 +247,7 @@ function SlotRow({
       </div>
 
       {open && (
-        <div id={panelId} className="space-y-3 bg-secondary/40 px-3 pt-1 pb-3 md:pl-40">
+        <div id={panelId} className="relative space-y-3 bg-secondary/40 px-3 pt-1 pb-3 md:pl-40">
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <div className="min-w-0 space-y-1.5">
               <p className="text-foreground text-label-sm md:hidden">{product.name}</p>
