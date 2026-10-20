@@ -1,4 +1,6 @@
 import { QUOTE_SLOT_LABELS, type QuoteSlot } from "@framerate/contracts";
+import { IconChevronDown } from "@tabler/icons-react";
+import { useState } from "react";
 import { StoreLogo } from "~/shared/components/store-logo";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
@@ -147,5 +149,78 @@ export function OptionCard({
         )}
       </span>
     </label>
+  );
+}
+
+/** En teléfono la columna de un riel o un gráfico de seis no da para "+$564.670": se redondea a miles. */
+export const extraShort = (o: CondenseOption) =>
+  o.extraCash < 1000 ? `+${formatCLP(o.extraCash)}` : `+$${Math.round(o.extraCash / 1000)} mil`;
+
+/** De más tiendas a menos: de izquierda a derecha (o de arriba abajo) el extra sólo sube. */
+export const byStoresDesc = (data: CondenseOptions) => [...data.options].sort((a, b) => b.stores - a.stores);
+
+/** Seis puntos, los llenos son las tiendas que usa la opción (el glifo de nivel de Fintual). */
+export function StoreDots({ used, max = 6 }: { used: number; max?: number }) {
+  return (
+    <span aria-hidden className="flex gap-0.5">
+      {Array.from({ length: max }, (_, i) => (
+        <span
+          // biome-ignore lint/suspicious/noArrayIndexKey: posiciones fijas
+          key={i}
+          className={cn("size-1.5 rounded-full", i < used ? "bg-foreground" : "bg-foreground/15")}
+        />
+      ))}
+    </span>
+  );
+}
+
+const wide = () => typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
+
+/**
+ * El reparto como un recorrido (Google Maps): un nodo por tienda sobre un riel vertical, sólido dentro de cada pedido
+ * y punteado entre uno y otro. Los componentes se pliegan; abiertos en escritorio, cerrados en teléfono. El panel se
+ * monta al abrir el diálogo, así que leer el ancho al montar no salta al hidratar.
+ */
+export function StoreRoute({ option }: { option: CondenseOption }) {
+  const [openByDefault] = useState(wide);
+  const n = option.split.length;
+  return (
+    <section className="space-y-3">
+      <header>
+        <h3 className="text-foreground text-label-md">
+          {n === 1 ? "Llega en 1 pedido" : `Llega en ${n} pedidos, uno por tienda`}
+        </h3>
+        <p className="text-muted-foreground text-paragraph-xs">{SHIPPING_NOTE}</p>
+      </header>
+      <ol>
+        {option.split.map((split, i) => {
+          const count = split.items.length;
+          return (
+            <li key={split.store.slug}>
+              {i > 0 && (
+                <span aria-hidden className="ml-[15px] block h-4 border-foreground/20 border-l-2 border-dashed" />
+              )}
+              <details open={openByDefault} className="group relative pl-11">
+                <span aria-hidden className="absolute top-8 bottom-0 left-[15px] w-0.5 bg-foreground/20" />
+                <summary className="flex cursor-pointer list-none items-center gap-3 rounded-lg py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+                  <StoreLogo store={split.store} className="absolute top-0 left-0 size-8" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-foreground text-label-md">{split.store.name}</span>
+                    <span className="flex items-center gap-1 text-muted-foreground text-paragraph-xs">
+                      {count === 1 ? "1 componente" : `${count} componentes`}
+                      <IconChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
+                    </span>
+                  </span>
+                  <span className="text-foreground text-label-md tabular-nums">{formatCLP(split.subtotalCash)}</span>
+                </summary>
+                <div className="pt-1 pb-2">
+                  <StoreItems split={split} />
+                </div>
+              </details>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }

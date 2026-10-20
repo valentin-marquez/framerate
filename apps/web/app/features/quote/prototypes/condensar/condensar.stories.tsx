@@ -7,6 +7,7 @@ import { highEnd } from "~/features/quote/prototypes/fixtures";
 import { CondensarA } from "./condensar-a";
 import { CondensarB } from "./condensar-b";
 import { CondensarC } from "./condensar-c";
+import { CondensarC1, CondensarC2, CondensarC3 } from "./condensar-c-pulido";
 import { highEndOptions, lowEndOptions } from "./fixtures";
 
 const meta = {
@@ -90,4 +91,43 @@ export const CTelefono: Story = {
   name: "C Perfiles con nombre (teléfono)",
   globals: telefono,
   render: () => <CondensarC data={highEndOptions} defaultOpen />,
+};
+
+export const C1Escritorio: Story = {
+  name: "C1 Riel de escalones (escritorio)",
+  render: () => <CondensarC1 data={highEndOptions} defaultOpen />,
+};
+
+export const C1Telefono: Story = {
+  name: "C1 Riel de escalones (teléfono)",
+  globals: telefono,
+  render: () => <CondensarC1 data={highEndOptions} defaultOpen />,
+};
+
+export const C2Escritorio: Story = {
+  name: "C2 Minigráfico de barras (escritorio)",
+  render: () => <CondensarC2 data={highEndOptions} defaultOpen />,
+};
+
+export const C2Telefono: Story = {
+  name: "C2 Minigráfico de barras (teléfono)",
+  globals: telefono,
+  render: () => <CondensarC2 data={highEndOptions} defaultOpen />,
+};
+
+/** Gama baja: sin opción de una tienda (la RAM sólo está en UG Store); su columna queda sin barra y deshabilitada. */
+export const C2GamaBaja: Story = {
+  name: "C2 Minigráfico de barras (gama baja)",
+  render: () => <CondensarC2 data={lowEndOptions} defaultOpen />,
+};
+
+export const C3Escritorio: Story = {
+  name: "C3 Lista compacta en cadena (escritorio)",
+  render: () => <CondensarC3 data={highEndOptions} defaultOpen />,
+};
+
+export const C3Telefono: Story = {
+  name: "C3 Lista compacta en cadena (teléfono)",
+  globals: telefono,
+  render: () => <CondensarC3 data={highEndOptions} defaultOpen />,
 };
