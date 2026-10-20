@@ -154,19 +154,55 @@ function CondensarCPulido({
 const stop =
   "cursor-pointer has-disabled:cursor-not-allowed has-focus-visible:[&_[data-mark]]:ring-2 has-focus-visible:[&_[data-mark]]:ring-ring/50";
 
-/** C1: riel de escalones (Simyo). Radios nativos: las flechas recorren las paradas y saltan la no disponible. */
+/**
+ * C1: riel de escalones (Simyo). Radios nativos para el teclado (las flechas recorren las paradas y saltan la no
+ * disponible) y un riel que se arrastra: la perilla sigue al dedo sin transición y, al soltar o al tocar una parada o un
+ * preset, se acomoda en la parada con `ease-in-out`. Relleno y perilla se mueven sólo con `transform` (scaleX y
+ * translateX), y el riel no selecciona texto al arrastrar (`select-none`, `touch-none`).
+ */
 function Riel({ data, chosen, onChoose }: ControlProps) {
   const name = useId();
   const options = byStoresDesc(data);
-  const at = options.findIndex((o) => o.stores === chosen);
+  const last = options.length - 1;
+  const at = Math.max(
+    0,
+    options.findIndex((o) => o.stores === chosen),
+  );
+  const track = useRef<HTMLDivElement>(null);
+  // Posición del dedo (0 a 1) mientras se arrastra; `null` en reposo, cuando manda la parada elegida.
+  const [drag, setDrag] = useState<number | null>(null);
+  const [moved, setMoved] = useState(false);
+  const pos = drag ?? at / last;
+
+  const ratioAt = (clientX: number) => {
+    const box = track.current?.getBoundingClientRect();
+    if (!box || box.width === 0) return pos;
+    return Math.min(1, Math.max(0, (clientX - box.left) / box.width));
+  };
+  // La parada disponible más cercana: la no disponible no se puede elegir ni arrastrando.
+  const nearest = (ratio: number) => {
+    const target = ratio * last;
+    return options
+      .map((o, i) => ({ o, d: Math.abs(i - target) }))
+      .filter((x) => x.o.available)
+      .sort((a, b) => a.d - b.d)[0]?.o;
+  };
+  const follow = (clientX: number) => {
+    const ratio = ratioAt(clientX);
+    setDrag(ratio);
+    const o = nearest(ratio);
+    if (o && o.stores !== chosen) onChoose(o.stores);
+  };
+
+  // `overflow-x-clip`: la capa de la perilla mide lo que el riel y al trasladarse se sale; clip no crea scroll.
   return (
-    <fieldset className="rounded-2xl border border-border bg-background pt-3 pb-2.5 sm:px-3">
+    <fieldset className="group select-none overflow-x-clip rounded-2xl border border-border bg-background pt-3 pb-2.5 sm:px-3">
       <legend className="sr-only">Número de tiendas</legend>
       <div className="grid grid-cols-6">
-        {options.map((o, i) => {
+        {options.map((o) => {
           const checked = o.stores === chosen;
           return (
-            <label key={o.stores} className={cn("flex flex-col items-center gap-2 text-center", stop)}>
+            <label key={o.stores} className="cursor-pointer text-center has-disabled:cursor-not-allowed">
               <input
                 type="radio"
                 name={name}
@@ -175,48 +211,103 @@ function Riel({ data, chosen, onChoose }: ControlProps) {
                 disabled={!o.available}
                 onChange={() => onChoose(o.stores)}
               />
-              <span className={cn("text-label-xs", checked ? "text-foreground" : "text-muted-foreground")} aria-hidden>
+              <span
+                className={cn("text-label-xs transition-colors", checked ? "text-foreground" : "text-muted-foreground")}
+                aria-hidden
+              >
                 <span className="sm:hidden">{o.stores}</span>
                 <span className="max-sm:hidden">{storesLabel(o.stores)}</span>
               </span>
               <span className="sr-only">{storesLabel(o.stores)}</span>
-              <span className="relative flex h-4 w-full items-center justify-center">
-                {i > 0 && (
-                  <span
-                    className={cn("absolute right-1/2 left-0 h-1", i <= at ? "bg-foreground" : "bg-foreground/15")}
-                  />
-                )}
-                {i < options.length - 1 && (
-                  <span
-                    className={cn("absolute right-0 left-1/2 h-1", i < at ? "bg-foreground" : "bg-foreground/15")}
-                  />
-                )}
-                <span
-                  data-mark
-                  className={cn(
-                    "relative size-4 rounded-full border-2 bg-card transition-transform",
-                    checked ? "scale-125 border-foreground bg-foreground" : "border-foreground/30",
-                    i < at && "border-foreground",
-                    !o.available && "border-dashed",
-                  )}
-                />
-              </span>
-              <span
-                className={cn(
-                  "text-label-xs tabular-nums",
-                  !o.available ? "text-muted-foreground" : checked ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {o.available ? (
-                  <>
-                    <span className="sm:hidden">{extraShort(o)}</span>
-                    <span className="max-sm:hidden">+{formatCLP(o.extraCash)}</span>
-                  </>
-                ) : (
-                  "No disponible"
-                )}
-              </span>
             </label>
+          );
+        })}
+      </div>
+
+      {/* El riel va del centro de la primera columna al de la última: 1/12 del ancho a cada lado. */}
+      <div
+        ref={track}
+        aria-hidden
+        className={cn("relative mx-[calc(100%/12)] h-8 touch-none", drag === null ? "cursor-grab" : "cursor-grabbing")}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setMoved(false);
+          follow(e.clientX);
+        }}
+        onPointerMove={(e) => {
+          if (drag === null) return;
+          setMoved(true);
+          follow(e.clientX);
+        }}
+        onPointerUp={() => setDrag(null)}
+        onPointerCancel={() => setDrag(null)}
+      >
+        <span className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-foreground/15" />
+        <span
+          className={cn(
+            "absolute inset-x-0 top-1/2 h-1.5 origin-left rounded-full bg-foreground",
+            drag !== null && moved ? "transition-none" : "transition-transform duration-base ease-in-out",
+          )}
+          style={{ transform: `translateY(-50%) scaleX(${pos})` }}
+        />
+        {options.map((o, i) => (
+          <span
+            key={o.stores}
+            className={cn(
+              "absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors",
+              !o.available
+                ? "size-2 border border-foreground/30 border-dashed bg-background"
+                : i <= at
+                  ? "size-1 bg-background/80"
+                  : "size-2 bg-foreground/30",
+            )}
+            style={{ left: `${(i / last) * 100}%` }}
+          />
+        ))}
+        {/* Una capa del ancho del riel que se traslada su propio ancho por `pos`: translateX en % es relativo a sí misma. */}
+        <span
+          className={cn(
+            "pointer-events-none absolute inset-0",
+            drag !== null && moved ? "transition-none" : "transition-transform duration-base ease-in-out",
+          )}
+          style={{ transform: `translateX(${pos * 100}%)` }}
+        >
+          <span
+            className={cn(
+              "absolute top-1/2 left-0 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-background bg-foreground shadow-sm transition-transform",
+              drag !== null && "scale-125",
+              "group-has-[:focus-visible]:ring-2 group-has-[:focus-visible]:ring-ring/50",
+            )}
+          />
+        </span>
+      </div>
+
+      <div className="grid grid-cols-6">
+        {options.map((o) => {
+          const checked = o.stores === chosen;
+          return (
+            <button
+              key={o.stores}
+              type="button"
+              tabIndex={-1}
+              disabled={!o.available}
+              onClick={() => onChoose(o.stores)}
+              className={cn(
+                "cursor-pointer text-center text-label-xs tabular-nums transition-colors disabled:cursor-not-allowed",
+                checked ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {o.available ? (
+                <>
+                  <span className="sm:hidden">{extraShort(o)}</span>
+                  <span className="max-sm:hidden">+{formatCLP(o.extraCash)}</span>
+                </>
+              ) : (
+                "No disponible"
+              )}
+            </button>
           );
         })}
       </div>
