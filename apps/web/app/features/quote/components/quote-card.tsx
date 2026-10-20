@@ -36,7 +36,9 @@ interface QuoteCardProps {
 /** Cotización pública con la geometría de `ProductCard`: texto a la izquierda, fotos a la derecha y pie con total y me gusta. */
 export function QuoteCard({ quote, rank }: QuoteCardProps) {
   return (
-    <article className="group @container relative flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card transition-colors hover:border-foreground/15">
+    // `w-full`: dentro de un `li` flex (la grilla de /cotizaciones) no se estiraría y, con todo su contenido en
+    // porcentajes o absoluto, mediría lo que sus bordes.
+    <article className="group @container relative flex h-full w-full flex-col overflow-hidden rounded-3xl border border-border bg-card transition-colors hover:border-foreground/15">
       <div className="grid min-h-36">
         <Stage images={quote.images} />
         <div className="z-[2] col-start-1 row-start-1 flex w-[58%] min-w-0 flex-col gap-1.5 p-3 pt-3.5 pb-2.5">
