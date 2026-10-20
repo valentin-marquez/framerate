@@ -187,7 +187,12 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
       const fresh = await quotesService.getById(quote.id);
       inFlight.current -= 1;
       if (inFlight.current === 0) setQuote(fresh);
-      toast.success(t("quote_condense_done", { count: plan.storesAfter, extra: formatCLP(plan.extraCash) }));
+      toast.success(
+        t(plan.storesAfter === 1 ? "quote_condense_done_one" : "quote_condense_done", {
+          count: plan.storesAfter,
+          extra: formatCLP(plan.extraCash),
+        }),
+      );
     } catch {
       fail(t("quote_update_error"));
     }

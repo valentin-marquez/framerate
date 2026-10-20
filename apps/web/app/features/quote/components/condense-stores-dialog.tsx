@@ -151,7 +151,9 @@ function CondensePanel({
         {plan?.improves && (
           <Button size="sm" disabled={applying || isPlaceholderData} onClick={() => apply(plan)}>
             {(applying || isPlaceholderData) && <IconLoader2 className="size-4 animate-spin" />}
-            {t("quote_condense_apply", { count: plan.storesAfter })}
+            {t(plan.storesAfter === 1 ? "quote_condense_apply_one" : "quote_condense_apply", {
+              count: plan.storesAfter,
+            })}
           </Button>
         )}
       </DialogFooter>
