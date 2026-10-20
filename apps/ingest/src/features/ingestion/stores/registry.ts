@@ -646,29 +646,6 @@ export const STORES: readonly StoreDefinition[] = [
     }),
   },
   {
-    slug: "tekmachine",
-    name: "Tekmachine",
-    url: "https://tekmachine.cl",
-    adapter: createWooCommerceAdapter({
-      baseUrl: "https://tekmachine.cl",
-      // SKU = MPN ("GV-R906XGAMINGOCICE-16GD"). `price` = "Efectivo/Transferencia" y `regular_price` = "Tarjetas"
-      // (verificado en la ficha, oct. 2026; el recargo va de 5 a 7,5 %). Sin atributo de marca: sale del título.
-      sku: "mpn",
-      cardFromRegular: true,
-      categories: {
-        gpu: ["tarjetas-de-video"],
-        cpu: ["procesadores"],
-        motherboard: ["placas-madres"],
-        ram: ["memorias"],
-        psu: ["fuentes-de-poder"],
-        ssd: ["discos-solidos"],
-        cpu_cooler: ["cpu-cooling"],
-        case: ["gabinetes"],
-        case_fan: ["case-fan"],
-      },
-    }),
-  },
-  {
     slug: "centrale",
     name: "Centrale",
     url: "https://centrale.cl",

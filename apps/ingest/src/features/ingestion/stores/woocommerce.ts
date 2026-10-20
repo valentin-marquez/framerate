@@ -30,11 +30,6 @@ export interface WooCommerceConfig {
   cardMarkup?: number;
   /** Al revés que `cardMarkup`: `price` es el precio tarjeta y la transferencia tiene este descuento (0.05 = −5 %). */
   cashDiscount?: number;
-  /**
-   * En esta tienda `regular_price` es el precio con tarjeta, no el "antes" (verificado en la ficha: Tekmachine muestra
-   * "Tarjetas" y "Efectivo/Transferencia"). Se usa sólo si es mayor que `price`.
-   */
-  cardFromRegular?: boolean;
   /** `false`: el SKU nunca es GTIN aunque pase el dígito verificador (Play Factory usa números internos de 14
    * dígitos y ~1 de cada 10 lo pasa por azar). */
   skuGtin?: false;
@@ -130,7 +125,7 @@ const PART_NUMBER = /\b(?:p\s*\/\s*n|part\s*number|n[uú]mero de parte)\s*[:#]?\
 export function toRawOffer(
   p: WcProduct,
   category: Category,
-  config: Pick<WooCommerceConfig, "sku" | "cardMarkup" | "cashDiscount" | "cardFromRegular" | "skuGtin">,
+  config: Pick<WooCommerceConfig, "sku" | "cardMarkup" | "cashDiscount" | "skuGtin">,
 ): RawOffer {
   const divisor = 10 ** p.prices.currency_minor_unit;
   const toClp = (v: string | undefined) => {
@@ -139,14 +134,11 @@ export function toRawOffer(
   };
   const listed = toClp(p.prices.price) ?? toClp(p.prices.regular_price);
   const price = listed && config.cashDiscount ? Math.round(listed * (1 - config.cashDiscount)) : listed;
-  const regular = toClp(p.prices.regular_price);
   const card = config.cashDiscount
     ? listed
-    : config.cardFromRegular && price && regular && regular > price
-      ? regular
-      : price && config.cardMarkup
-        ? Math.round(price * (1 + config.cardMarkup))
-        : null;
+    : price && config.cardMarkup
+      ? Math.round(price * (1 + config.cardMarkup))
+      : null;
   const sku = p.sku.trim();
   const gtin = config.skuGtin !== false && normalizeGtin(sku) ? sku : null;
   const skuMpn = !gtin && config.sku === "mpn" && sku ? sku : null;
