@@ -38,7 +38,7 @@ export function QuoteItem({
   const { t } = useTranslation();
   const { product, offer, quantity } = item;
 
-  // Va a la derecha del nombre: ahí sobraba espacio y el pie del precio quedaba cargado.
+  // Columna propia entre el nombre y el precio, centrada en la fila: ahí sobraba espacio y el pie del precio quedaba cargado.
   const quantityControl = isOwner ? (
     <div className="flex shrink-0 items-center gap-1">
       <Button
@@ -73,7 +73,7 @@ export function QuoteItem({
       </Button>
     </div>
   ) : quantity > 1 ? (
-    <span className="shrink-0 text-sm font-medium text-muted-foreground tabular-nums">x{quantity}</span>
+    <span className="shrink-0 text-sm font-medium text-muted-foreground tabular-nums">X{quantity}</span>
   ) : null;
 
   return (
@@ -98,15 +98,12 @@ export function QuoteItem({
             </span>
             {product.brand && <span className="text-muted-foreground">{product.brand}</span>}
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
-            <Link
-              to={`/producto/${product.slug}`}
-              className="block min-w-0 flex-[1_1_12rem] font-medium leading-snug text-foreground hover:text-primary"
-            >
-              {product.name}
-            </Link>
-            {quantityControl}
-          </div>
+          <Link
+            to={`/producto/${product.slug}`}
+            className="block font-medium leading-snug text-foreground hover:text-primary"
+          >
+            {product.name}
+          </Link>
           {item.specs.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {item.specs.map((spec) => (
@@ -130,6 +127,8 @@ export function QuoteItem({
           ))}
         </div>
       </div>
+
+      {quantityControl && <div className="shrink-0 pl-18 sm:self-center sm:pl-0">{quantityControl}</div>}
 
       <div className="flex shrink-0 items-end justify-between gap-1 pl-18 sm:flex-col sm:items-end sm:pl-0 sm:text-right">
         <div className="flex flex-col gap-1 sm:items-end">
