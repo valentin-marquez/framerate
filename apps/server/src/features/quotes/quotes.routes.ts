@@ -19,7 +19,6 @@ import {
   condensePlan,
   createQuote,
   deleteQuote,
-  likedByViewer,
   likeQuote,
   listPublicQuotes,
   listQuotes,
@@ -63,11 +62,10 @@ export const quotesRoutes = new Hono<AppEnv>()
     return c.json(await listTopQuotes(c.var.db, limit, page, c.get("user")?.id, c.env.ASSETS_BASE_URL));
   })
   .get("/:id", async (c) => {
-    const viewer = c.get("user");
-    const quote = await loadQuote(c.var.db, c.req.param("id"), c.env.ASSETS_BASE_URL);
-    if (!quote || !canRead(quote, viewer?.id)) throw quoteNotFound();
-    const likedByMe = viewer ? await likedByViewer(c.var.db, c.req.param("id"), viewer.id) : false;
-    return c.json({ ...quote.detail, likedByMe });
+    const viewerId = c.get("user")?.id;
+    const quote = await loadQuote(c.var.db, c.req.param("id"), c.env.ASSETS_BASE_URL, viewerId);
+    if (!quote || !canRead(quote, viewerId)) throw quoteNotFound();
+    return c.json(quote.detail);
   })
   .put("/:id/like", async (c) => {
     const user = currentUser(c);

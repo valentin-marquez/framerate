@@ -321,14 +321,31 @@ export interface LoadedQuote {
   detail: QuoteDetail;
 }
 
-/** Cotización con sus ítems y autor, en un solo viaje. `null` si no existe. */
+const likedQuery = (db: Db, publicId: string, userId: string) =>
+  db.query
+    .selectFrom("quote_likes as l")
+    .innerJoin("quotes as q", "q.id", "l.quote_id")
+    .select("l.quote_id")
+    .where("q.public_id", "=", publicId)
+    .where("l.user_id", "=", userId);
+
+/**
+ * Cotización con sus ítems y autor, en un solo viaje. `null` si no existe. Con `viewerId`, `likedByMe` dice si quien
+ * mira le dio "me gusta".
+ */
 export async function loadQuote(
   db: Db,
   publicId: string,
   assetsBaseUrl: string | undefined,
+  viewerId?: string,
 ): Promise<LoadedQuote | null> {
-  const [[row], ...detail] = await db.read([...detailQueries(db, publicId)]);
-  return row ? { ownerId: row.owner_id, detail: toDetail(row, detail, assetsBaseUrl) } : null;
+  const [[row], items, facts, tdp, tiers, liked] = await db.read([
+    ...detailQueries(db, publicId),
+    likedQuery(db, publicId, viewerId ?? ""),
+  ]);
+  if (!row) return null;
+  const detail = toDetail(row, [items, facts, tdp, tiers], assetsBaseUrl);
+  return { ownerId: row.owner_id, detail: { ...detail, likedByMe: liked.length > 0 } };
 }
 
 /** ¿Puede leerla quien mira? El dueño siempre; los demás sólo si no es privada. */
@@ -756,18 +773,6 @@ const likeState = (db: Db, publicId: string) =>
     .selectFrom("quotes")
     .select(["id", "owner_id", "visibility", "like_count"])
     .where("public_id", "=", publicId);
-
-/** ¿Le dio "me gusta" quien mira? */
-export async function likedByViewer(db: Db, publicId: string, userId: string): Promise<boolean> {
-  const row = await db.query
-    .selectFrom("quote_likes as l")
-    .innerJoin("quotes as q", "q.id", "l.quote_id")
-    .select("l.quote_id")
-    .where("q.public_id", "=", publicId)
-    .where("l.user_id", "=", userId)
-    .executeTakeFirst();
-  return row !== undefined;
-}
 
 /** Sólo las públicas y ajenas reciben "me gusta" (la propia sería inflarse el ranking); idempotente si ya lo había dado. */
 export async function likeQuote(
