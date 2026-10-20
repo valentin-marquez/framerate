@@ -92,6 +92,7 @@ export const ProductDetailSchema = ProductSummarySchema.extend({
 export type ProductDetail = z.infer<typeof ProductDetailSchema>;
 
 export const PricePointSchema = z.object({
+  listingId: z.number().int(),
   store: z.string(),
   storeName: z.string(),
   priceCash: z.number().int().nonnegative(),

@@ -20,6 +20,7 @@ const series = (store: string, storeName: string, base: number, drift: number, p
   Array.from({ length: 30 }, (_, day) => {
     const priceCash = Math.round((base + drift * day + Math.sin(day / 3 + phase) * 8_000) / 1_000) * 1_000 - 10;
     return {
+      listingId: base,
       store,
       storeName,
       priceCash,

@@ -483,6 +483,7 @@ export async function getPriceHistory(db: Db, slug: string, days: number): Promi
       .innerJoin("products as pr", "pr.id", "l.product_id")
       .innerJoin("stores as s", "s.id", "l.store_id")
       .select([
+        "pp.listing_id",
         "s.slug as store",
         "s.name as storeName",
         "pp.price_cash",
@@ -497,6 +498,7 @@ export async function getPriceHistory(db: Db, slug: string, days: number): Promi
   ]);
   if (!product) return null;
   return rows.map((r) => ({
+    listingId: r.listing_id,
     store: r.store,
     storeName: r.storeName,
     priceCash: r.price_cash,

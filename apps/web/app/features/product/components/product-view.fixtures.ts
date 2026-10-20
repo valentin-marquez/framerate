@@ -125,6 +125,7 @@ const series = (o: Offer, base: number, drift: number, phase: number, outFromDay
     const day = 29 - i;
     const priceCash = Math.round((base + drift * i + Math.sin(i / 3 + phase) * 9_000) / 1_000) * 1_000 - 10;
     return {
+      listingId: o.id,
       store: o.store.slug,
       storeName: o.store.name,
       priceCash,

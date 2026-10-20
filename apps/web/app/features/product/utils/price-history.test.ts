@@ -4,7 +4,15 @@ import { bestOf, historyDays, niceTicks, periodFromParam, priceVerdict, summariz
 
 const NOW = Date.parse("2026-09-10T15:00:00Z");
 
-const point = (store: string, day: number, priceCash: number, inStock = true): PricePoint => ({
+// Una publicación por tienda salvo que el test diga otra cosa.
+const point = (
+  store: string,
+  day: number,
+  priceCash: number,
+  inStock = true,
+  listingId = store.charCodeAt(0),
+): PricePoint => ({
+  listingId,
   store,
   storeName: store,
   priceCash,
@@ -13,8 +21,8 @@ const point = (store: string, day: number, priceCash: number, inStock = true): P
   observedAt: `2026-09-${String(day).padStart(2, "0")}T12:00:00.000Z`,
 });
 
-const offer = (store: string, priceCash: number, inStock = true) =>
-  ({ store: { slug: store, name: store, url: "" }, priceCash, inStock }) as Offer;
+const offer = (store: string, priceCash: number, inStock = true, id = store.charCodeAt(0)) =>
+  ({ id, store: { slug: store, name: store, url: "" }, priceCash, inStock }) as Offer;
 
 describe("summarizeHistory", () => {
   test("con menos de 7 días desde el primer dato no hay resumen", () => {
@@ -58,6 +66,14 @@ describe("historyDays y bestOf", () => {
     const ds = historyDays(points, [offer("a", 500), offer("b", 450, false)], 30, NOW);
     expect(ds.map((d) => d.day)).toEqual(["2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10"]);
     expect(ds.map((d) => bestOf(d, "cash")?.store)).toEqual(["b", "b", "a", "a"]);
+  });
+
+  test("una tienda con dos publicaciones: el punto de una no tapa la oferta actual de la otra", () => {
+    // n publica dos veces: la 1 (con stock, sin cambios) y la 2 (se agotó el día 8). w cambió el día 9.
+    const points = [point("n", 8, 540, false, 2), point("w", 9, 675)];
+    const ds = historyDays(points, [offer("n", 638, true, 1), offer("n", 540, false, 2), offer("w", 675)], 30, NOW);
+    expect(bestOf(ds.at(-1)!, "cash")).toMatchObject({ store: "n", cash: 638 });
+    expect(ds.at(-1)?.stores.filter((s) => s.store === "n")).toHaveLength(1);
   });
 });
 

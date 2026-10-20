@@ -9,16 +9,18 @@ export type HistoryDay = { day: string; stores: StoreDay[] };
 
 /**
  * Estado de cada tienda día a día del período. Ingest guarda un punto sólo cuando cambia el precio o el stock, así que
- * cada tienda arrastra su último precio, y la que no cambió en el período tuvo todo el tiempo el de su oferta actual.
- * Parte el primer día con datos (o el inicio del período, si alguna tienda no cambió) y termina hoy.
+ * cada publicación arrastra su último precio, y la que no cambió en el período tuvo todo el tiempo el de su oferta
+ * actual. Se sigue por publicación y no por tienda: una tienda que publica el producto dos veces mezclaría el punto
+ * de una con la oferta de la otra. Cada día queda una fila por tienda, su mejor publicación.
+ * Parte el primer día con datos (o el inicio del período, si alguna publicación no cambió) y termina hoy.
  */
 export function historyDays(points: PricePoint[], offers: Offer[], days: number, now: number): HistoryDay[] {
   const periodStart = isoDay(now - days * DAY);
-  const changed = new Set(points.map((p) => p.store));
-  const last = new Map<string, StoreDay>();
+  const changed = new Set(points.map((p) => p.listingId));
+  const last = new Map<number, StoreDay>();
   for (const o of offers) {
-    if (changed.has(o.store.slug)) continue;
-    last.set(o.store.slug, {
+    if (changed.has(o.id)) continue;
+    last.set(o.id, {
       store: o.store.slug,
       storeName: o.store.name,
       cash: o.priceCash,
@@ -35,7 +37,7 @@ export function historyDays(points: PricePoint[], offers: Offer[], days: number,
   let i = 0;
   for (let day = since, t = Date.parse(`${since}T12:00:00Z`); day <= isoDay(now); t += DAY, day = isoDay(t)) {
     for (let p = sorted[i]; p && p.observedAt.slice(0, 10) <= day; p = sorted[++i]) {
-      last.set(p.store, {
+      last.set(p.listingId, {
         store: p.store,
         storeName: p.storeName,
         cash: p.priceCash,
@@ -43,7 +45,12 @@ export function historyDays(points: PricePoint[], offers: Offer[], days: number,
         inStock: p.inStock,
       });
     }
-    out.push({ day, stores: [...last.values()] });
+    const byStore = new Map<string, StoreDay>();
+    for (const s of last.values()) {
+      const prev = byStore.get(s.store);
+      if (!prev || (s.inStock && (!prev.inStock || s.cash < prev.cash))) byStore.set(s.store, s);
+    }
+    out.push({ day, stores: [...byStore.values()] });
   }
   return out;
 }
