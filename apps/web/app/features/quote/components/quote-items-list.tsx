@@ -104,16 +104,23 @@ function SlotRow({
   const chosenCash = lineCash(item);
 
   return (
-    <li>
+    <li className="relative">
+      {/* El botón cubre la fila para expandirla; el nombre y la tienda son enlaces por encima, así no quedan anidados. */}
       <button
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
+        aria-label={product.name}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "grid w-full cursor-pointer grid-cols-[2rem_minmax(0,1fr)_auto_1rem] items-center gap-x-3 px-3 py-2 text-left transition-colors hover:bg-secondary/40",
-          ROW_GRID,
+          "absolute inset-0 cursor-pointer transition-colors hover:bg-secondary/40",
           open && "bg-secondary/40",
+        )}
+      />
+      <div
+        className={cn(
+          "pointer-events-none relative grid w-full grid-cols-[2rem_minmax(0,1fr)_auto_1rem] items-center gap-x-3 px-3 py-2 text-left",
+          ROW_GRID,
         )}
       >
         <span className="hidden truncate text-muted-foreground text-label-xs md:block">
@@ -136,9 +143,16 @@ function SlotRow({
                   aria-label="Tiene avisos de compatibilidad"
                 />
               )}
-              <span className={cn("truncate text-label-sm", offer ? "text-foreground" : "text-muted-foreground")}>
+              <Link
+                to={`/producto/${product.slug}`}
+                title="Ver el producto en Framerate"
+                className={cn(
+                  "pointer-events-auto relative z-10 min-w-0 truncate text-label-sm underline-offset-2 transition-colors hover:text-primary hover:underline",
+                  offer ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
                 {product.name}
-              </span>
+              </Link>
               {alternatives.length > 0 && (
                 <span className="hidden shrink-0 rounded-md bg-secondary px-1.5 text-label-xs text-muted-foreground tabular-nums md:inline">
                   +{alternatives.length}
@@ -150,10 +164,17 @@ function SlotRow({
         </span>
         <span className="hidden min-w-0 items-center gap-2 md:flex">
           {offer && (
-            <>
+            <OutboundLink
+              href={offer.url}
+              source="quote_item"
+              listingId={String(offer.id)}
+              productId={String(product.id)}
+              title={`Ver el artículo en ${offer.store.name}`}
+              className="pointer-events-auto relative z-10 flex min-w-0 items-center gap-2 transition-colors hover:text-primary hover:underline underline-offset-2"
+            >
               <StoreLogo store={offer.store} className="size-5 rounded-sm text-[9px]" />
               <span className="truncate text-label-xs text-muted-foreground">{offer.store.name}</span>
-            </>
+            </OutboundLink>
           )}
         </span>
         <span className="flex items-center justify-end gap-1.5 text-label-sm tabular-nums">
@@ -174,7 +195,7 @@ function SlotRow({
           aria-hidden
           className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")}
         />
-      </button>
+      </div>
 
       {open && (
         <div id={panelId} className="space-y-3 bg-secondary/40 px-3 pt-1 pb-3 md:pl-40">
