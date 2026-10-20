@@ -1,0 +1,1231 @@
+// Generado por apps/server/scripts/condense-options.ts con datos de producción (2026-10-20).
+
+/** Propuesta de contrato: una opción por número de tiendas, ya calculada en el servidor. */
+export interface CondenseOption {
+  /** Tiendas que usa de verdad el plan. */
+  stores: number;
+  available: boolean;
+  unavailableReason?: string;
+  totalCash: number;
+  /** Diferencia contra el reparto más barato. */
+  extraCash: number;
+  /** La de menor `extraCash + 10.000 × tiendas`. */
+  recommended: boolean;
+  split: CondenseStoreSplit[];
+}
+
+export interface CondenseStoreSplit {
+  store: { slug: string; name: string; iconUrl: string | null };
+  subtotalCash: number;
+  items: {
+    itemId: number;
+    listingId: number;
+    slot: string;
+    name: string;
+    quantity: number;
+    priceCash: number;
+    cheapest: boolean;
+    /** Lo que cuesta de más esta línea (por la cantidad) contra su tienda más barata. */
+    extraCash: number;
+  }[];
+}
+
+export interface CondenseOptions {
+  quoteId: string;
+  itemCount: number;
+  /** Tiendas del reparto más barato. */
+  storesNow: number;
+  minTotalCash: number;
+  options: CondenseOption[];
+}
+
+export const condenseOptions: Record<string, CondenseOptions> = {
+  HPC67R3PRX: {
+    quoteId: "HPC67R3PRX",
+    itemCount: 8,
+    storesNow: 6,
+    minTotalCash: 3080460,
+    options: [
+      {
+        stores: 1,
+        available: true,
+        totalCash: 3645130,
+        extraCash: 564670,
+        recommended: false,
+        split: [
+          {
+            store: {
+              slug: "myshop",
+              name: "MyShop",
+              iconUrl: "https://cdn.framerate.cl/stores/myshop/icon-91cb99befc.webp",
+            },
+            subtotalCash: 3645130,
+            items: [
+              {
+                itemId: 68,
+                listingId: 3382,
+                slot: "cpu",
+                name: "AMD Ryzen 7 9800X3D",
+                quantity: 1,
+                priceCash: 597602,
+                cheapest: false,
+                extraCash: 117612,
+              },
+              {
+                itemId: 69,
+                listingId: 3770,
+                slot: "cpu_cooler",
+                name: "MSI MAG CORELIQUID A13 360",
+                quantity: 1,
+                priceCash: 80728,
+                cheapest: false,
+                extraCash: 16828,
+              },
+              {
+                itemId: 70,
+                listingId: 3451,
+                slot: "motherboard",
+                name: "ASUS TUF Gaming X870-PLUS WIFI",
+                quantity: 1,
+                priceCash: 341990,
+                cheapest: false,
+                extraCash: 12090,
+              },
+              {
+                itemId: 71,
+                listingId: 3591,
+                slot: "ram",
+                name: "Kingston Fury Beast 16GB DDR5 5600 CL36",
+                quantity: 2,
+                priceCash: 309990,
+                cheapest: false,
+                extraCash: 120000,
+              },
+              {
+                itemId: 72,
+                listingId: 1126,
+                slot: "gpu",
+                name: "MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC",
+                quantity: 1,
+                priceCash: 1459990,
+                cheapest: false,
+                extraCash: 280090,
+              },
+              {
+                itemId: 73,
+                listingId: 3628,
+                slot: "storage",
+                name: "Kingston NV3 2TB M.2 2280 PCIe 4.0 x4",
+                quantity: 1,
+                priceCash: 329950,
+                cheapest: false,
+                extraCash: 15960,
+              },
+              {
+                itemId: 75,
+                listingId: 3903,
+                slot: "case",
+                name: "Gigabyte C500 Panoramic Stealth Ice White",
+                quantity: 1,
+                priceCash: 84990,
+                cheapest: false,
+                extraCash: 2090,
+              },
+              {
+                itemId: 84,
+                listingId: 3571,
+                slot: "psu",
+                name: "XPG Core Reactor II 1000W 80 Plus Gold Modular",
+                quantity: 1,
+                priceCash: 129900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        stores: 2,
+        available: true,
+        totalCash: 3173428,
+        extraCash: 92968,
+        recommended: false,
+        split: [
+          {
+            store: {
+              slug: "tekmachine",
+              name: "Tekmachine",
+              iconUrl: "https://cdn.framerate.cl/stores/tekmachine/icon-1c0a913bd6.webp",
+            },
+            subtotalCash: 2205870,
+            items: [
+              {
+                itemId: 68,
+                listingId: 7170,
+                slot: "cpu",
+                name: "AMD Ryzen 7 9800X3D",
+                quantity: 1,
+                priceCash: 525990,
+                cheapest: false,
+                extraCash: 46000,
+              },
+              {
+                itemId: 71,
+                listingId: 7237,
+                slot: "ram",
+                name: "Kingston Fury Beast 16GB DDR5 5600 CL36",
+                quantity: 2,
+                priceCash: 249990,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 72,
+                listingId: 7815,
+                slot: "gpu",
+                name: "MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC",
+                quantity: 1,
+                priceCash: 1179900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "myshop",
+              name: "MyShop",
+              iconUrl: "https://cdn.framerate.cl/stores/myshop/icon-91cb99befc.webp",
+            },
+            subtotalCash: 967558,
+            items: [
+              {
+                itemId: 69,
+                listingId: 3770,
+                slot: "cpu_cooler",
+                name: "MSI MAG CORELIQUID A13 360",
+                quantity: 1,
+                priceCash: 80728,
+                cheapest: false,
+                extraCash: 16828,
+              },
+              {
+                itemId: 70,
+                listingId: 3451,
+                slot: "motherboard",
+                name: "ASUS TUF Gaming X870-PLUS WIFI",
+                quantity: 1,
+                priceCash: 341990,
+                cheapest: false,
+                extraCash: 12090,
+              },
+              {
+                itemId: 73,
+                listingId: 3628,
+                slot: "storage",
+                name: "Kingston NV3 2TB M.2 2280 PCIe 4.0 x4",
+                quantity: 1,
+                priceCash: 329950,
+                cheapest: false,
+                extraCash: 15960,
+              },
+              {
+                itemId: 75,
+                listingId: 3903,
+                slot: "case",
+                name: "Gigabyte C500 Panoramic Stealth Ice White",
+                quantity: 1,
+                priceCash: 84990,
+                cheapest: false,
+                extraCash: 2090,
+              },
+              {
+                itemId: 84,
+                listingId: 3571,
+                slot: "psu",
+                name: "XPG Core Reactor II 1000W 80 Plus Gold Modular",
+                quantity: 1,
+                priceCash: 129900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        stores: 3,
+        available: true,
+        totalCash: 3127428,
+        extraCash: 46968,
+        recommended: false,
+        split: [
+          {
+            store: {
+              slug: "tekmachine",
+              name: "Tekmachine",
+              iconUrl: "https://cdn.framerate.cl/stores/tekmachine/icon-1c0a913bd6.webp",
+            },
+            subtotalCash: 1679880,
+            items: [
+              {
+                itemId: 71,
+                listingId: 7237,
+                slot: "ram",
+                name: "Kingston Fury Beast 16GB DDR5 5600 CL36",
+                quantity: 2,
+                priceCash: 249990,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 72,
+                listingId: 7815,
+                slot: "gpu",
+                name: "MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC",
+                quantity: 1,
+                priceCash: 1179900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "myshop",
+              name: "MyShop",
+              iconUrl: "https://cdn.framerate.cl/stores/myshop/icon-91cb99befc.webp",
+            },
+            subtotalCash: 967558,
+            items: [
+              {
+                itemId: 69,
+                listingId: 3770,
+                slot: "cpu_cooler",
+                name: "MSI MAG CORELIQUID A13 360",
+                quantity: 1,
+                priceCash: 80728,
+                cheapest: false,
+                extraCash: 16828,
+              },
+              {
+                itemId: 70,
+                listingId: 3451,
+                slot: "motherboard",
+                name: "ASUS TUF Gaming X870-PLUS WIFI",
+                quantity: 1,
+                priceCash: 341990,
+                cheapest: false,
+                extraCash: 12090,
+              },
+              {
+                itemId: 73,
+                listingId: 3628,
+                slot: "storage",
+                name: "Kingston NV3 2TB M.2 2280 PCIe 4.0 x4",
+                quantity: 1,
+                priceCash: 329950,
+                cheapest: false,
+                extraCash: 15960,
+              },
+              {
+                itemId: 75,
+                listingId: 3903,
+                slot: "case",
+                name: "Gigabyte C500 Panoramic Stealth Ice White",
+                quantity: 1,
+                priceCash: 84990,
+                cheapest: false,
+                extraCash: 2090,
+              },
+              {
+                itemId: 84,
+                listingId: 3571,
+                slot: "psu",
+                name: "XPG Core Reactor II 1000W 80 Plus Gold Modular",
+                quantity: 1,
+                priceCash: 129900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "megabytes",
+              name: "MegaBytes",
+              iconUrl: "https://cdn.framerate.cl/stores/megabytes/icon-70bcaed496.webp",
+            },
+            subtotalCash: 479990,
+            items: [
+              {
+                itemId: 68,
+                listingId: 20628,
+                slot: "cpu",
+                name: "AMD Ryzen 7 9800X3D",
+                quantity: 1,
+                priceCash: 479990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        stores: 4,
+        available: true,
+        totalCash: 3098510,
+        extraCash: 18050,
+        recommended: false,
+        split: [
+          {
+            store: {
+              slug: "tekmachine",
+              name: "Tekmachine",
+              iconUrl: "https://cdn.framerate.cl/stores/tekmachine/icon-1c0a913bd6.webp",
+            },
+            subtotalCash: 1679880,
+            items: [
+              {
+                itemId: 71,
+                listingId: 7237,
+                slot: "ram",
+                name: "Kingston Fury Beast 16GB DDR5 5600 CL36",
+                quantity: 2,
+                priceCash: 249990,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 72,
+                listingId: 7815,
+                slot: "gpu",
+                name: "MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC",
+                quantity: 1,
+                priceCash: 1179900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "myshop",
+              name: "MyShop",
+              iconUrl: "https://cdn.framerate.cl/stores/myshop/icon-91cb99befc.webp",
+            },
+            subtotalCash: 544840,
+            items: [
+              {
+                itemId: 73,
+                listingId: 3628,
+                slot: "storage",
+                name: "Kingston NV3 2TB M.2 2280 PCIe 4.0 x4",
+                quantity: 1,
+                priceCash: 329950,
+                cheapest: false,
+                extraCash: 15960,
+              },
+              {
+                itemId: 75,
+                listingId: 3903,
+                slot: "case",
+                name: "Gigabyte C500 Panoramic Stealth Ice White",
+                quantity: 1,
+                priceCash: 84990,
+                cheapest: false,
+                extraCash: 2090,
+              },
+              {
+                itemId: 84,
+                listingId: 3571,
+                slot: "psu",
+                name: "XPG Core Reactor II 1000W 80 Plus Gold Modular",
+                quantity: 1,
+                priceCash: 129900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "megabytes",
+              name: "MegaBytes",
+              iconUrl: "https://cdn.framerate.cl/stores/megabytes/icon-70bcaed496.webp",
+            },
+            subtotalCash: 479990,
+            items: [
+              {
+                itemId: 68,
+                listingId: 20628,
+                slot: "cpu",
+                name: "AMD Ryzen 7 9800X3D",
+                quantity: 1,
+                priceCash: 479990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "sandos",
+              name: "Sandos",
+              iconUrl: "https://cdn.framerate.cl/stores/sandos/icon-88f1a78f7d.webp",
+            },
+            subtotalCash: 393800,
+            items: [
+              {
+                itemId: 69,
+                listingId: 4593,
+                slot: "cpu_cooler",
+                name: "MSI MAG CORELIQUID A13 360",
+                quantity: 1,
+                priceCash: 63900,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 70,
+                listingId: 3984,
+                slot: "motherboard",
+                name: "ASUS TUF Gaming X870-PLUS WIFI",
+                quantity: 1,
+                priceCash: 329900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        stores: 5,
+        available: true,
+        totalCash: 3082550,
+        extraCash: 2090,
+        recommended: true,
+        split: [
+          {
+            store: {
+              slug: "tekmachine",
+              name: "Tekmachine",
+              iconUrl: "https://cdn.framerate.cl/stores/tekmachine/icon-1c0a913bd6.webp",
+            },
+            subtotalCash: 1679880,
+            items: [
+              {
+                itemId: 71,
+                listingId: 7237,
+                slot: "ram",
+                name: "Kingston Fury Beast 16GB DDR5 5600 CL36",
+                quantity: 2,
+                priceCash: 249990,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 72,
+                listingId: 7815,
+                slot: "gpu",
+                name: "MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC",
+                quantity: 1,
+                priceCash: 1179900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "megabytes",
+              name: "MegaBytes",
+              iconUrl: "https://cdn.framerate.cl/stores/megabytes/icon-70bcaed496.webp",
+            },
+            subtotalCash: 479990,
+            items: [
+              {
+                itemId: 68,
+                listingId: 20628,
+                slot: "cpu",
+                name: "AMD Ryzen 7 9800X3D",
+                quantity: 1,
+                priceCash: 479990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "sandos",
+              name: "Sandos",
+              iconUrl: "https://cdn.framerate.cl/stores/sandos/icon-88f1a78f7d.webp",
+            },
+            subtotalCash: 393800,
+            items: [
+              {
+                itemId: 69,
+                listingId: 4593,
+                slot: "cpu_cooler",
+                name: "MSI MAG CORELIQUID A13 360",
+                quantity: 1,
+                priceCash: 63900,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 70,
+                listingId: 3984,
+                slot: "motherboard",
+                name: "ASUS TUF Gaming X870-PLUS WIFI",
+                quantity: 1,
+                priceCash: 329900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "tecnomas",
+              name: "Tecnomas",
+              iconUrl: "https://cdn.framerate.cl/stores/tecnomas/icon-08e88b949e.webp",
+            },
+            subtotalCash: 313990,
+            items: [
+              {
+                itemId: 73,
+                listingId: 5407,
+                slot: "storage",
+                name: "Kingston NV3 2TB M.2 2280 PCIe 4.0 x4",
+                quantity: 1,
+                priceCash: 313990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "myshop",
+              name: "MyShop",
+              iconUrl: "https://cdn.framerate.cl/stores/myshop/icon-91cb99befc.webp",
+            },
+            subtotalCash: 214890,
+            items: [
+              {
+                itemId: 75,
+                listingId: 3903,
+                slot: "case",
+                name: "Gigabyte C500 Panoramic Stealth Ice White",
+                quantity: 1,
+                priceCash: 84990,
+                cheapest: false,
+                extraCash: 2090,
+              },
+              {
+                itemId: 84,
+                listingId: 3571,
+                slot: "psu",
+                name: "XPG Core Reactor II 1000W 80 Plus Gold Modular",
+                quantity: 1,
+                priceCash: 129900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        stores: 6,
+        available: true,
+        totalCash: 3080460,
+        extraCash: 0,
+        recommended: false,
+        split: [
+          {
+            store: {
+              slug: "tekmachine",
+              name: "Tekmachine",
+              iconUrl: "https://cdn.framerate.cl/stores/tekmachine/icon-1c0a913bd6.webp",
+            },
+            subtotalCash: 1679880,
+            items: [
+              {
+                itemId: 71,
+                listingId: 7237,
+                slot: "ram",
+                name: "Kingston Fury Beast 16GB DDR5 5600 CL36",
+                quantity: 2,
+                priceCash: 249990,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 72,
+                listingId: 7815,
+                slot: "gpu",
+                name: "MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC",
+                quantity: 1,
+                priceCash: 1179900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "megabytes",
+              name: "MegaBytes",
+              iconUrl: "https://cdn.framerate.cl/stores/megabytes/icon-70bcaed496.webp",
+            },
+            subtotalCash: 479990,
+            items: [
+              {
+                itemId: 68,
+                listingId: 20628,
+                slot: "cpu",
+                name: "AMD Ryzen 7 9800X3D",
+                quantity: 1,
+                priceCash: 479990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "sandos",
+              name: "Sandos",
+              iconUrl: "https://cdn.framerate.cl/stores/sandos/icon-88f1a78f7d.webp",
+            },
+            subtotalCash: 393800,
+            items: [
+              {
+                itemId: 69,
+                listingId: 4593,
+                slot: "cpu_cooler",
+                name: "MSI MAG CORELIQUID A13 360",
+                quantity: 1,
+                priceCash: 63900,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 70,
+                listingId: 3984,
+                slot: "motherboard",
+                name: "ASUS TUF Gaming X870-PLUS WIFI",
+                quantity: 1,
+                priceCash: 329900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "tecnomas",
+              name: "Tecnomas",
+              iconUrl: "https://cdn.framerate.cl/stores/tecnomas/icon-08e88b949e.webp",
+            },
+            subtotalCash: 313990,
+            items: [
+              {
+                itemId: 73,
+                listingId: 5407,
+                slot: "storage",
+                name: "Kingston NV3 2TB M.2 2280 PCIe 4.0 x4",
+                quantity: 1,
+                priceCash: 313990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "pc-express",
+              name: "PC Express",
+              iconUrl: "https://cdn.framerate.cl/stores/pc-express/icon-8678d370ce.webp",
+            },
+            subtotalCash: 129900,
+            items: [
+              {
+                itemId: 84,
+                listingId: 4958,
+                slot: "psu",
+                name: "XPG Core Reactor II 1000W 80 Plus Gold Modular",
+                quantity: 1,
+                priceCash: 129900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "budini",
+              name: "Electrónica Budini",
+              iconUrl: "https://cdn.framerate.cl/stores/budini/icon-f222931035.webp",
+            },
+            subtotalCash: 82900,
+            items: [
+              {
+                itemId: 75,
+                listingId: 9559,
+                slot: "case",
+                name: "Gigabyte C500 Panoramic Stealth Ice White",
+                quantity: 1,
+                priceCash: 82900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  "5JN27XNGZA": {
+    quoteId: "5JN27XNGZA",
+    itemCount: 6,
+    storesNow: 5,
+    minTotalCash: 654060,
+    options: [
+      {
+        stores: 1,
+        available: false,
+        unavailableReason: "Ninguna tienda tiene los 6 componentes",
+        totalCash: 0,
+        extraCash: 0,
+        recommended: false,
+        split: [],
+      },
+      {
+        stores: 2,
+        available: true,
+        totalCash: 690260,
+        extraCash: 36200,
+        recommended: false,
+        split: [
+          {
+            store: {
+              slug: "myshop",
+              name: "MyShop",
+              iconUrl: "https://cdn.framerate.cl/stores/myshop/icon-91cb99befc.webp",
+            },
+            subtotalCash: 430280,
+            items: [
+              {
+                itemId: 41,
+                listingId: 3344,
+                slot: "cpu",
+                name: "AMD Ryzen 5 8600G",
+                quantity: 1,
+                priceCash: 179500,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 42,
+                listingId: 3362,
+                slot: "motherboard",
+                name: "ASUS PRIME A620M-K",
+                quantity: 1,
+                priceCash: 75500,
+                cheapest: false,
+                extraCash: 5510,
+              },
+              {
+                itemId: 44,
+                listingId: 3609,
+                slot: "storage",
+                name: "Kingston NV3 500GB M.2 2280 NVMe PCIe 4.0",
+                quantity: 1,
+                priceCash: 99990,
+                cheapest: false,
+                extraCash: 30090,
+              },
+              {
+                itemId: 45,
+                listingId: 3493,
+                slot: "psu",
+                name: "XPG Pylon 550W 80 Plus Bronze",
+                quantity: 1,
+                priceCash: 47790,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 46,
+                listingId: 3707,
+                slot: "case",
+                name: "GameMax Storm Black",
+                quantity: 1,
+                priceCash: 27500,
+                cheapest: false,
+                extraCash: 600,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "ugstore",
+              name: "UG Store",
+              iconUrl: "https://cdn.framerate.cl/stores/ugstore/icon-b31b2cb8be.webp",
+            },
+            subtotalCash: 259980,
+            items: [
+              {
+                itemId: 43,
+                listingId: 10127,
+                slot: "ram",
+                name: "Patriot Signature Line 8GB DDR5 5600 CL46",
+                quantity: 2,
+                priceCash: 129990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        stores: 3,
+        available: true,
+        totalCash: 660170,
+        extraCash: 6110,
+        recommended: true,
+        split: [
+          {
+            store: {
+              slug: "myshop",
+              name: "MyShop",
+              iconUrl: "https://cdn.framerate.cl/stores/myshop/icon-91cb99befc.webp",
+            },
+            subtotalCash: 330290,
+            items: [
+              {
+                itemId: 41,
+                listingId: 3344,
+                slot: "cpu",
+                name: "AMD Ryzen 5 8600G",
+                quantity: 1,
+                priceCash: 179500,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 42,
+                listingId: 3362,
+                slot: "motherboard",
+                name: "ASUS PRIME A620M-K",
+                quantity: 1,
+                priceCash: 75500,
+                cheapest: false,
+                extraCash: 5510,
+              },
+              {
+                itemId: 45,
+                listingId: 3493,
+                slot: "psu",
+                name: "XPG Pylon 550W 80 Plus Bronze",
+                quantity: 1,
+                priceCash: 47790,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 46,
+                listingId: 3707,
+                slot: "case",
+                name: "GameMax Storm Black",
+                quantity: 1,
+                priceCash: 27500,
+                cheapest: false,
+                extraCash: 600,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "ugstore",
+              name: "UG Store",
+              iconUrl: "https://cdn.framerate.cl/stores/ugstore/icon-b31b2cb8be.webp",
+            },
+            subtotalCash: 259980,
+            items: [
+              {
+                itemId: 43,
+                listingId: 10127,
+                slot: "ram",
+                name: "Patriot Signature Line 8GB DDR5 5600 CL46",
+                quantity: 2,
+                priceCash: 129990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "tekmachine",
+              name: "Tekmachine",
+              iconUrl: "https://cdn.framerate.cl/stores/tekmachine/icon-1c0a913bd6.webp",
+            },
+            subtotalCash: 69900,
+            items: [
+              {
+                itemId: 44,
+                listingId: 7500,
+                slot: "storage",
+                name: "Kingston NV3 500GB M.2 2280 NVMe PCIe 4.0",
+                quantity: 1,
+                priceCash: 69900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        stores: 4,
+        available: true,
+        totalCash: 654660,
+        extraCash: 600,
+        recommended: false,
+        split: [
+          {
+            store: {
+              slug: "ugstore",
+              name: "UG Store",
+              iconUrl: "https://cdn.framerate.cl/stores/ugstore/icon-b31b2cb8be.webp",
+            },
+            subtotalCash: 259980,
+            items: [
+              {
+                itemId: 43,
+                listingId: 10127,
+                slot: "ram",
+                name: "Patriot Signature Line 8GB DDR5 5600 CL46",
+                quantity: 2,
+                priceCash: 129990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "myshop",
+              name: "MyShop",
+              iconUrl: "https://cdn.framerate.cl/stores/myshop/icon-91cb99befc.webp",
+            },
+            subtotalCash: 254790,
+            items: [
+              {
+                itemId: 41,
+                listingId: 3344,
+                slot: "cpu",
+                name: "AMD Ryzen 5 8600G",
+                quantity: 1,
+                priceCash: 179500,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 45,
+                listingId: 3493,
+                slot: "psu",
+                name: "XPG Pylon 550W 80 Plus Bronze",
+                quantity: 1,
+                priceCash: 47790,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 46,
+                listingId: 3707,
+                slot: "case",
+                name: "GameMax Storm Black",
+                quantity: 1,
+                priceCash: 27500,
+                cheapest: false,
+                extraCash: 600,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "todoclick",
+              name: "Todoclick",
+              iconUrl: "https://cdn.framerate.cl/stores/todoclick/icon-ed77422ae4.webp",
+            },
+            subtotalCash: 69990,
+            items: [
+              {
+                itemId: 42,
+                listingId: 4405,
+                slot: "motherboard",
+                name: "ASUS PRIME A620M-K",
+                quantity: 1,
+                priceCash: 69990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "tekmachine",
+              name: "Tekmachine",
+              iconUrl: "https://cdn.framerate.cl/stores/tekmachine/icon-1c0a913bd6.webp",
+            },
+            subtotalCash: 69900,
+            items: [
+              {
+                itemId: 44,
+                listingId: 7500,
+                slot: "storage",
+                name: "Kingston NV3 500GB M.2 2280 NVMe PCIe 4.0",
+                quantity: 1,
+                priceCash: 69900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        stores: 5,
+        available: true,
+        totalCash: 654060,
+        extraCash: 0,
+        recommended: false,
+        split: [
+          {
+            store: {
+              slug: "ugstore",
+              name: "UG Store",
+              iconUrl: "https://cdn.framerate.cl/stores/ugstore/icon-b31b2cb8be.webp",
+            },
+            subtotalCash: 259980,
+            items: [
+              {
+                itemId: 43,
+                listingId: 10127,
+                slot: "ram",
+                name: "Patriot Signature Line 8GB DDR5 5600 CL46",
+                quantity: 2,
+                priceCash: 129990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "myshop",
+              name: "MyShop",
+              iconUrl: "https://cdn.framerate.cl/stores/myshop/icon-91cb99befc.webp",
+            },
+            subtotalCash: 227290,
+            items: [
+              {
+                itemId: 41,
+                listingId: 3344,
+                slot: "cpu",
+                name: "AMD Ryzen 5 8600G",
+                quantity: 1,
+                priceCash: 179500,
+                cheapest: true,
+                extraCash: 0,
+              },
+              {
+                itemId: 45,
+                listingId: 3493,
+                slot: "psu",
+                name: "XPG Pylon 550W 80 Plus Bronze",
+                quantity: 1,
+                priceCash: 47790,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "todoclick",
+              name: "Todoclick",
+              iconUrl: "https://cdn.framerate.cl/stores/todoclick/icon-ed77422ae4.webp",
+            },
+            subtotalCash: 69990,
+            items: [
+              {
+                itemId: 42,
+                listingId: 4405,
+                slot: "motherboard",
+                name: "ASUS PRIME A620M-K",
+                quantity: 1,
+                priceCash: 69990,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "tekmachine",
+              name: "Tekmachine",
+              iconUrl: "https://cdn.framerate.cl/stores/tekmachine/icon-1c0a913bd6.webp",
+            },
+            subtotalCash: 69900,
+            items: [
+              {
+                itemId: 44,
+                listingId: 7500,
+                slot: "storage",
+                name: "Kingston NV3 500GB M.2 2280 NVMe PCIe 4.0",
+                quantity: 1,
+                priceCash: 69900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+          {
+            store: {
+              slug: "infor-ingen",
+              name: "Infor-Ingen",
+              iconUrl: "https://cdn.framerate.cl/stores/infor-ingen/icon-f7e9e6904f.webp",
+            },
+            subtotalCash: 26900,
+            items: [
+              {
+                itemId: 46,
+                listingId: 2435,
+                slot: "case",
+                name: "GameMax Storm Black",
+                quantity: 1,
+                priceCash: 26900,
+                cheapest: true,
+                extraCash: 0,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+};
+
+export const highEndOptions = condenseOptions.HPC67R3PRX as CondenseOptions;
+export const lowEndOptions = condenseOptions["5JN27XNGZA"] as CondenseOptions;
