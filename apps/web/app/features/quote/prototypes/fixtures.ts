@@ -6,6 +6,8 @@ import type { PublicQuote, QuoteCondensePlan, QuoteDetail } from "@framerate/con
 export const publicQuotes = [
   {
     id: "CZKBYX84AP",
+    cpu: "Intel Core i5 14400",
+    gpu: "Zotac Gaming GeForce RTX 5060 Twin Edge OC 8GB GDDR7",
     name: "Streaming y edición en 1080p",
     description:
       "Para jugar y transmitir a la vez o editar video en 1080p. Core i5 14400 con Quick Sync, RTX 5060 con NVENC y 32 GB de RAM para trabajar con proyectos pesados.",
@@ -30,6 +32,8 @@ export const publicQuotes = [
   },
   {
     id: "QY5FTBT8AA",
+    cpu: "AMD Ryzen 5 7600",
+    gpu: "ASUS Dual Radeon RX 9060 XT 16GB",
     name: "Gamer 1440p AMD",
     description:
       "Para jugar en 1440p con buena calidad gráfica. Ryzen 5 7600 y Radeon RX 9060 XT de 16 GB, con espacio para subir de procesador en la misma plataforma AM5.",
@@ -54,6 +58,8 @@ export const publicQuotes = [
   },
   {
     id: "5JN27XNGZA",
+    cpu: "AMD Ryzen 5 8600G",
+    gpu: null,
     name: "PC de oficina y estudio",
     description:
       "Para clases, ofimática, videollamadas y navegar con muchas pestañas. Los gráficos integrados del Ryzen 5 8600G alcanzan para juegos livianos sin tarjeta de video.",
@@ -78,6 +84,8 @@ export const publicQuotes = [
   },
   {
     id: "HPC67R3PRX",
+    cpu: "AMD Ryzen 7 9800X3D",
+    gpu: "MSI GeForce RTX 5070 Ti 16G SHADOW 3X OC",
     name: "Gamer 1440p de alto refresco",
     description:
       "Para jugar en 1440p a más de 144 FPS o en 4K con DLSS. Ryzen 7 9800X3D, RTX 5070 Ti y refrigeración líquida de 360 mm.",
@@ -102,6 +110,8 @@ export const publicQuotes = [
   },
   {
     id: "HGGCYBMGRV",
+    cpu: "Intel Core Ultra 9 285K",
+    gpu: "Zotac Gaming GeForce RTX 5070 Solid OC",
     name: "Estación de trabajo para edición 4K",
     description:
       "Para editar video 4K, renderizar y trabajar en 3D. Core Ultra 9 285K, 64 GB de RAM y RTX 5070 para acelerar los efectos y la exportación.",
@@ -126,6 +136,8 @@ export const publicQuotes = [
   },
   {
     id: "SZNMKB5WH5",
+    cpu: "AMD Ryzen 5 5500",
+    gpu: "MSI GeForce RTX 3050 6GB VENTUS 2X OC",
     name: "Gamer 1080p económico",
     description:
       "Para jugar en 1080p títulos competitivos como Fortnite, Valorant o CS2 gastando lo justo. Ryzen 5 5500 con su cooler de fábrica, RTX 3050 y memoria en doble canal.",
@@ -150,6 +162,8 @@ export const publicQuotes = [
   },
   {
     id: "44CDZ8FTM2",
+    cpu: "AMD Ryzen 5 9600X",
+    gpu: "ASUS PRIME GeForce RTX 5060 Ti 16GB GDDR7 OC",
     name: "TheMACHINE-MK2",
     description: "La evolución de mi primer PC TheMACHINE",
     visibility: "public",
@@ -173,6 +187,8 @@ export const publicQuotes = [
   },
   {
     id: "QWFWCMBHST",
+    cpu: "AMD Athlon 3000G",
+    gpu: null,
     name: "xdnt",
     description: null,
     visibility: "public",

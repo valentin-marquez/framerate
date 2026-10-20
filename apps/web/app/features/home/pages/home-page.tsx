@@ -2,6 +2,7 @@ import { CATEGORIES, CATEGORY_SLUGS, type ProductPage, type ProductSummary } fro
 import { categoriesService } from "@/features/category/services/categories";
 import { productsService } from "@/features/product/services/products";
 import { HomeContent } from "~/features/home/components/home-content";
+import { MIN_PUBLIC_QUOTES } from "~/features/home/components/public-quotes";
 import type { HomeData, HomeRow } from "~/features/home/types";
 import { quotesService } from "~/features/quote/services/quotes";
 import { storesService } from "~/features/stores/services/stores";
@@ -105,7 +106,7 @@ export async function loader() {
       return [];
     }),
     productsService.getTrending(40).catch(() => ({ ids: [] as number[] })),
-    quotesService.getPublic(5).catch(() => []),
+    quotesService.getPublic(MIN_PUBLIC_QUOTES).catch(() => []),
     storesService.listClaimable().then(
       (r) => r.stores.filter((s) => (s.offer_count ?? 0) > 0),
       () => [],

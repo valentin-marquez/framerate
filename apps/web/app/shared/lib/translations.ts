@@ -263,7 +263,6 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_visibility_hint_private: "Sólo tú puedes verla.",
     quote_visibility_hint_unlisted: "La ve quien tenga el enlace.",
     quote_visibility_hint_public: "La ve cualquiera y aparece en tu perfil.",
-    copy_link: "Copiar enlace",
     link_copied: "Enlace copiado",
     edit_quote: "Editar",
     edit_quote_title: "Editar cotización",
@@ -275,8 +274,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_cheapest_badge: "Más barato",
     quote_cheapest_saved: "Ahorras {amount}",
     quote_cheapest_already: "Cada componente ya está en la tienda más barata",
-    quote_psu_recommendation:
-      "Se recomienda una fuente de {recommended}W y, como mínimo, una de {minimum}W para dejar margen sobre el consumo estimado",
+    quote_psu_recommendation: "Fuente mínima {minimum} W y recomendada {recommended} W",
     quote_condense_button: "Condensar tiendas",
     quote_condense_title: "Condensar la compra",
     quote_condense_loading: "Calculando la mejor combinación…",
@@ -397,15 +395,13 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     merge_back: "Volver a Cuenta",
 
     // Quote Details
-    by: "Por {name}",
-    updated_on: "Actualizado el {date}",
+    updated_on: "Actualizada el {date}",
     components: "Componentes",
-    active_items_count: "Activos: {count}",
     product: "Producto",
     price_normal: "Precio con tarjeta",
     price_cash: "Precio efectivo",
     some_items_out_of_stock: "Algunos productos no tienen stock disponible. El total puede variar.",
-    total_normal: "Total con tarjeta",
+    total_normal: "Con tarjeta",
     total_cash: "Total efectivo",
 
     // Quote Actions / Messages
@@ -666,7 +662,6 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_visibility_hint_private: "Only you can see it.",
     quote_visibility_hint_unlisted: "Anyone with the link can see it.",
     quote_visibility_hint_public: "Anyone can see it and it shows on your profile.",
-    copy_link: "Copy link",
     link_copied: "Link copied",
     edit_quote: "Edit",
     edit_quote_title: "Edit quote",
@@ -678,8 +673,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     quote_cheapest_badge: "Cheapest",
     quote_cheapest_saved: "You save {amount}",
     quote_cheapest_already: "Every component is already at the cheapest store",
-    quote_psu_recommendation:
-      "A {recommended}W power supply is recommended, and at least {minimum}W to leave headroom over the estimated draw",
+    quote_psu_recommendation: "Power supply of at least {minimum} W, {recommended} W recommended",
     quote_condense_button: "Consolidate stores",
     quote_condense_title: "Consolidate the purchase",
     quote_condense_loading: "Working out the best combination…",
@@ -798,16 +792,14 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     merge_back: "Back to Account",
 
     // Quote Details
-    by: "By {name}",
     updated_on: "Updated on {date}",
     components: "Components",
-    active_items_count: "Active: {count}",
     product: "Product",
     price_normal: "Normal Price",
     price_cash: "Cash Price",
     some_items_out_of_stock: "Some items are out of stock. Total may vary.",
-    total_normal: "Total Normal",
-    total_cash: "Total Cash",
+    total_normal: "With card",
+    total_cash: "Total cash",
 
     // Quote Actions / Messages
     quote_not_found: "Quote not found",
@@ -1081,10 +1073,8 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     profile_update_error_toast: "Wera adkünun tami che",
 
     // Quote Details
-    by: "Kelu {name}", // kelu = by/from
     updated_on: "Adkünungey {date}", // updated on
     components: "Componentes",
-    active_items_count: "{count} mongey", // mongey = alive/active
     price_normal: "Kullin normal",
     price_cash: "Kullin efectivo",
     some_items_out_of_stock: "Kiñeke productos stock nielay. Total kakey.", // some products no stock. Total varies

@@ -125,6 +125,9 @@ export const PublicQuoteSchema = QuoteSummarySchema.extend({
   images: z.array(z.url()).max(4),
   /** Para quien mira; `false` sin sesión. */
   likedByMe: z.boolean(),
+  /** Nombre del primer procesador y de la primera tarjeta de video seleccionados; `null` si el armado no los tiene. */
+  cpu: z.string().nullable(),
+  gpu: z.string().nullable(),
 });
 export type PublicQuote = z.infer<typeof PublicQuoteSchema>;
 

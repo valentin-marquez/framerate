@@ -1,50 +1,50 @@
-import type { QuoteAuthor } from "@framerate/contracts";
-import { IconCalendar, IconUser } from "@tabler/icons-react";
+import type { QuoteDetail } from "@framerate/contracts";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "~/shared/hooks/use-translation";
 
 interface QuoteHeaderProps {
-  quoteName: string;
-  author: QuoteAuthor;
-  updatedAt: string;
-  /** Lo que va al final de la fila de datos (el me gusta). */
+  quote: Pick<QuoteDetail, "name" | "description" | "author" | "updatedAt">;
+  /** Va junto al autor y la fecha (el me gusta). */
   children?: ReactNode;
+  /** Va a la derecha en escritorio (Compartir y "Guardar como"). */
+  actions?: ReactNode;
 }
 
-export function QuoteHeader({ quoteName, author, updatedAt, children }: QuoteHeaderProps) {
+/** Título, autor, fecha y acciones en una línea, con la descripción debajo; en teléfono, una columna centrada. */
+export function QuoteHeader({ quote, children, actions }: QuoteHeaderProps) {
   const { t } = useTranslation();
+  const { author } = quote;
 
   return (
-    <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-500">
-      <h1 className="text-title-h4 md:text-title-h3 lg:text-title-h2 text-foreground transition-colors">{quoteName}</h1>
-
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium">
-        <Link to={`/u/${author.username}`} className="flex items-center gap-2 group hover:text-foreground">
-          <div className="flex size-6 items-center justify-center rounded-full bg-secondary text-secondary-foreground group-hover:scale-105 transition-transform border border-border/50">
-            <IconUser size={14} />
-          </div>
-          <span>{t("by", { name: author.displayName })}</span>
+    <header className="flex flex-col items-center gap-2 text-center lg:flex-row lg:flex-wrap lg:gap-x-4 lg:text-left">
+      <h1 className="order-1 min-w-0 text-foreground text-title-h5 md:text-title-h4">{quote.name}</h1>
+      {quote.description && (
+        <p className="order-2 max-w-2xl text-muted-foreground text-paragraph-sm lg:order-4 lg:basis-full">
+          {quote.description}
+        </p>
+      )}
+      <div className="order-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-label-xs text-muted-foreground lg:order-2">
+        <Link to={`/u/${author.username}`} className="flex items-center gap-1.5 hover:text-foreground">
+          {author.avatarUrl && (
+            <img src={author.avatarUrl} alt="" className="size-5 rounded-full" referrerPolicy="no-referrer" />
+          )}
+          @{author.username}
         </Link>
-
-        <div className="flex items-center gap-2 cursor-default">
-          <div className="flex size-6 items-center justify-center rounded-full bg-secondary text-secondary-foreground border border-border/50">
-            <IconCalendar size={14} />
-          </div>
-          <span>
-            {t("updated_on", {
-              // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
-              date: new Date(updatedAt).toLocaleDateString("es-CL", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-                timeZone: "America/Santiago",
-              }),
-            })}
-          </span>
-        </div>
+        <span>
+          {t("updated_on", {
+            // react-doctor-disable-next-line rendering-hydration-mismatch-time -- timezone-stabilized output (es-CL, America/Santiago)
+            date: new Date(quote.updatedAt).toLocaleDateString("es-CL", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+              timeZone: "America/Santiago",
+            }),
+          })}
+        </span>
         {children}
       </div>
-    </div>
+      {actions && <div className="order-4 flex items-center gap-2 lg:order-3 lg:ml-auto">{actions}</div>}
+    </header>
   );
 }

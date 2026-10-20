@@ -53,8 +53,9 @@ export const Tiendas: Story = {
 };
 
 /**
- * Fila en carrusel de más a menos "me gusta": la tarjeta de cotización repite la de producto, con las cuatro fotos del
- * armado en el panel derecho (variante C de tres, 20-10-2026). Con menos de tres cotizaciones no se muestra.
+ * Las cuatro públicas con más "me gusta" en grilla de cuatro iguales (dos columnas en teléfono): collage, nombre,
+ * procesador y gráfica, total y me gusta (composición A de #214, 20-10-2026). Sin procesador o sin gráfica, la tarjeta
+ * muestra el autor y los componentes (la tercera). Con menos de cuatro no se muestra.
  */
 export const CotizacionesPopulares: Story = {
   name: "Cotizaciones populares",

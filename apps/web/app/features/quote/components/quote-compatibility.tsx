@@ -47,50 +47,6 @@ export function CompatibilityIssue({ check }: { check: CompatCheck }) {
   );
 }
 
-function summary({ status, checks }: QuoteCompatibility) {
-  const count = (r: CompatCheck["result"]) => checks.filter((c) => c.result === r).length;
-  const incompatible = count("incompatible");
-  const warnings = count("warning");
-  const parts = [
-    incompatible && `${incompatible} ${incompatible === 1 ? "incompatibilidad" : "incompatibilidades"}`,
-    warnings && `${warnings} ${warnings === 1 ? "advertencia" : "advertencias"}`,
-  ].filter(Boolean);
-  if (parts.length > 0) return parts.join(" y ");
-  if (status === "valid") return "Los componentes son compatibles";
-  return checks.length === 0
-    ? "Agrega procesador, placa y RAM para revisar la compatibilidad"
-    : "No pudimos revisar todo: faltan datos de algunos productos";
-}
-
-const BAR_TONE: Record<QuoteCompatibility["status"], string> = {
-  incompatible: "bg-destructive/10 border-destructive/20 text-destructive",
-  warning: "bg-warn/10 border-warn/20 text-warn",
-  unknown: "bg-secondary/40 border-border/40 text-muted-foreground",
-  valid: "bg-success/10 border-success/20 text-success",
-};
-const BAR_RESULT: Record<QuoteCompatibility["status"], CompatCheck["result"]> = {
-  incompatible: "incompatible",
-  warning: "warning",
-  unknown: "unknown",
-  valid: "ok",
-};
-
-/** Estado general en una línea. */
-export function CompatibilityBar({ compatibility }: { compatibility: QuoteCompatibility }) {
-  const Icon = LOOK[BAR_RESULT[compatibility.status]].icon;
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-2 rounded-lg border p-3 text-sm font-medium",
-        BAR_TONE[compatibility.status],
-      )}
-    >
-      <Icon size={20} className="shrink-0" />
-      <span>{summary(compatibility)}</span>
-    </div>
-  );
-}
-
 /** Todos los chequeos: lo que falla primero y los que pasan plegados. */
 export function CompatibilityList({
   compatibility,

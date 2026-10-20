@@ -264,7 +264,7 @@ describe("me gusta y cotizaciones populares", () => {
     expect((await like(beto, quote.id)).status).toBe(403);
   });
 
-  test("la lista pública va de más a menos me gusta, sólo con las públicas (ni privadas ni con enlace) y no vacías, con total y fotos", async () => {
+  test("la lista pública va de más a menos me gusta, sólo con las públicas (ni privadas ni con enlace) y no vacías, con total, fotos, procesador y gráfica", async () => {
     const a = await createQuote(ana, { name: "Poco querida", visibility: "public" });
     const b = await createQuote(ana, { name: "Muy querida", visibility: "public" });
     const empty = await createQuote(ana, { name: "Vacía", visibility: "public" });
@@ -294,6 +294,10 @@ describe("me gusta y cotizaciones populares", () => {
     expect(top?.totalCash).toBe(expected);
     expect(top?.totalCash).toBeGreaterThan(0);
     expect(top?.author.username).toBe("ana");
+    expect(list.map((q) => [q.cpu, q.gpu])).toEqual([
+      ["AMD Ryzen 7 7800X3D", "ASUS Dual RTX 4070 SUPER OC 12GB"],
+      ["AMD Ryzen 7 7800X3D", null],
+    ]);
     expect((await publicList("?limit=1")).map((q) => q.name)).toEqual(["Muy querida"]);
     expect((await publicList("?limit=1&page=2")).map((q) => q.name)).toEqual(["Poco querida"]);
     expect(await publicList("?limit=1&page=3")).toEqual([]);

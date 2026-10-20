@@ -6,12 +6,12 @@ import {
   type QuoteItem,
   quoteTotals,
 } from "@framerate/contracts";
+import { IconShare } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useUser } from "~/features/auth/hooks/useAuth";
 import { QuoteActions } from "~/features/quote/components/quote-actions";
-import { CompatibilityList } from "~/features/quote/components/quote-compatibility";
 import { QuoteHeader } from "~/features/quote/components/quote-header";
 import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
 import { QuoteLikeButton, useLikeHint } from "~/features/quote/components/quote-like-button";
@@ -21,6 +21,7 @@ import { useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/u
 import { quotesService } from "~/features/quote/services/quotes";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { copyToClipboard, exportToExcel } from "~/features/quote/utils/quote-export";
+import { Button } from "~/shared/components/primitives/button";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import { formatCLP } from "~/shared/utils/format";
 import type { Route } from "./+types/quote-details";
@@ -228,10 +229,43 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
     document.body.removeChild(link);
   };
 
+  /** En teléfono abre el menú de compartir del sistema; en escritorio, si no lo hay, copia el enlace. */
+  const handleShare = async () => {
+    const url = `${window.location.origin}/cotizacion/${quote.id}`;
+    if (navigator.share) {
+      // Cerrar el menú sin compartir rechaza la promesa: no es un error.
+      await navigator.share({ title: quote.name, url }).catch(() => {});
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    toast.success(t("link_copied"));
+  };
+
   return (
-    <div className="min-h-screen w-full p-4 md:p-8 flex justify-center">
-      <div className="w-full max-w-7xl space-y-8">
-        <QuoteHeader quoteName={quote.name} author={quote.author} updatedAt={quote.updatedAt}>
+    <div className="flex min-h-screen w-full justify-center p-4 md:p-8">
+      <div className="w-full max-w-6xl space-y-4 pb-16">
+        <QuoteHeader
+          quote={quote}
+          actions={
+            (quote.visibility !== "private" || quote.items.length > 0) && (
+              <>
+                {quote.visibility !== "private" && (
+                  <Button variant="outline" onClick={handleShare}>
+                    <IconShare />
+                    Compartir
+                  </Button>
+                )}
+                {quote.items.length > 0 && (
+                  <QuoteActions
+                    onExportPDF={handleExportPDF}
+                    onExportExcel={() => exportToExcel(quote)}
+                    onCopyClipboard={() => copyToClipboard(quote)}
+                  />
+                )}
+              </>
+            )
+          }
+        >
           {quote.visibility === "public" && (
             <QuoteLikeButton
               liked={quote.likedByMe}
@@ -245,39 +279,18 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
 
         {isOwner && <QuoteOwnerBar quote={quote} onChange={setQuote} />}
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
-          <div className="min-w-0 lg:col-span-8">
-            <QuoteItemsList
-              quote={quote}
-              isOwner={isOwner}
-              onChangeQuantity={handleChangeQuantity}
-              onRemove={handleRemove}
-              onSelect={handleSelect}
-              onChooseOffer={handleChooseOffer}
-              onChooseCheapest={handleChooseCheapest}
-              onCondense={handleCondense}
-            />
-          </div>
+        <QuoteTotals quote={quote} />
 
-          <aside className="min-w-0 space-y-4 lg:col-span-4 lg:sticky lg:top-4">
-            <QuoteTotals
-              totalNormal={quote.totals.card}
-              totalCash={quote.totals.cash}
-              hasOutOfStockItems={quote.items.some((item) => item.isSelected && !item.offer)}
-              compatibility={quote.compatibility}
-            >
-              {quote.items.length > 0 && (
-                <QuoteActions
-                  block
-                  onExportPDF={handleExportPDF}
-                  onExportExcel={() => exportToExcel(quote)}
-                  onCopyClipboard={() => copyToClipboard(quote)}
-                />
-              )}
-            </QuoteTotals>
-            {quote.compatibility.checks.length > 0 && <CompatibilityList compatibility={quote.compatibility} />}
-          </aside>
-        </div>
+        <QuoteItemsList
+          quote={quote}
+          isOwner={isOwner}
+          onChangeQuantity={handleChangeQuantity}
+          onRemove={handleRemove}
+          onSelect={handleSelect}
+          onChooseOffer={handleChooseOffer}
+          onChooseCheapest={handleChooseCheapest}
+          onCondense={handleCondense}
+        />
       </div>
     </div>
   );

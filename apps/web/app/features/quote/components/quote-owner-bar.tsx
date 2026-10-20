@@ -1,5 +1,5 @@
 import { QUOTE_VISIBILITIES, type QuoteDetail, type QuoteVisibility } from "@framerate/contracts";
-import { IconCopy, IconLoader2, IconPencil, IconTrash } from "@tabler/icons-react";
+import { IconLoader2, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ interface QuoteOwnerBarProps {
   onChange: (quote: QuoteDetail) => void;
 }
 
-/** Lo que sólo ve el dueño: quién puede ver la cotización, copiar el enlace, editarla y borrarla. */
+/** Lo que sólo ve el dueño: quién puede ver la cotización, editarla y borrarla. El enlace se copia con Compartir. */
 export function QuoteOwnerBar({ quote, onChange }: QuoteOwnerBarProps) {
   const { t } = useTranslation();
   const update = useUpdateQuote();
@@ -44,11 +44,6 @@ export function QuoteOwnerBar({ quote, onChange }: QuoteOwnerBarProps) {
         },
       },
     );
-  };
-
-  const copyLink = async () => {
-    await navigator.clipboard.writeText(`${window.location.origin}/cotizacion/${quote.id}`);
-    toast.success(t("link_copied"));
   };
 
   return (
@@ -73,13 +68,6 @@ export function QuoteOwnerBar({ quote, onChange }: QuoteOwnerBarProps) {
             </button>
           ))}
         </fieldset>
-
-        {quote.visibility !== "private" && (
-          <Button variant="outline" size="sm" className="gap-2" onClick={copyLink}>
-            <IconCopy className="size-4" />
-            {t("copy_link")}
-          </Button>
-        )}
 
         <div className="ml-auto flex items-center gap-2">
           <EditQuoteDialog quote={quote} onChange={onChange} />

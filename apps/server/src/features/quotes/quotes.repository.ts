@@ -743,7 +743,16 @@ export async function listTopQuotes(
       .selectFrom("quote_items as qi")
       .innerJoin("products as p", "p.id", "qi.product_id")
       .leftJoin("listings as o", (join) => join.on(sql<boolean>`o.id = ${offerListingId}`))
-      .select(["qi.quote_id", "qi.quantity", "p.category", "p.image_url", "p.image_key", "o.price_cash"])
+      .select([
+        "qi.quote_id",
+        "qi.quantity",
+        "qi.slot",
+        "p.name",
+        "p.category",
+        "p.image_url",
+        "p.image_key",
+        "o.price_cash",
+      ])
       .where(
         "qi.quote_id",
         "in",
@@ -758,6 +767,8 @@ export async function listTopQuotes(
     return {
       ...toSummary(row, assetsBaseUrl),
       likedByMe: Boolean(row.liked),
+      cpu: own.find((i) => i.slot === "cpu")?.name ?? null,
+      gpu: own.find((i) => i.slot === "gpu")?.name ?? null,
       totalCash: own.reduce((sum, i) => sum + (i.price_cash ?? 0) * i.quantity, 0),
       images: own
         .toSorted((a, b) => collageRank(a.category) - collageRank(b.category))

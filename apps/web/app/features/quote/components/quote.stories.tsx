@@ -8,18 +8,17 @@ import type {
 } from "@framerate/contracts";
 import { CONDENSE_STORE_VALUE } from "@framerate/contracts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import QuoteRoute from "~/features/quote/pages/quote-details";
 import { Button } from "~/shared/components/primitives/button";
 import { quoteKeys } from "~/shared/lib/query-keys";
+import { sessions } from "~/shared/storybook/fixtures";
 import { withQueryData } from "~/shared/storybook/with-query-data";
 import { CondenseStoresDialog } from "./condense-stores-dialog";
 import { CreateQuoteDialog } from "./create-quote-dialog";
 import { QuoteActions } from "./quote-actions";
-import { CompatibilityBar, CompatibilityList } from "./quote-compatibility";
-import { QuoteHeader } from "./quote-header";
-import { QuoteItemsList } from "./quote-items-list";
-import { QuoteTotals } from "./quote-totals";
+import { CompatibilityList } from "./quote-compatibility";
 
-const meta = { title: "Cotización/Piezas", parameters: { layout: "padded" } } satisfies Meta;
+const meta = { title: "Cotización/Página", parameters: { layout: "padded" } } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -28,6 +27,20 @@ const noop = () => {};
 const author = { username: "ana", displayName: "Ana Pérez", avatarUrl: null };
 
 const img = (hash: string) => `https://cdn.framerate.cl/products/${hash}.webp`;
+
+const store = (slug: string, name: string, icon: string | null) => ({
+  slug,
+  name,
+  url: `https://${slug}.cl`,
+  iconUrl: icon && `https://cdn.framerate.cl/stores/${slug}/icon-${icon}.webp`,
+});
+const STORES = [
+  store("tectec", "TecTec", null),
+  store("tekmachine", "Tekmachine", "1c0a913bd6"),
+  store("myshop", "MyShop", "91cb99befc"),
+  store("sandos", "Sandos", "88f1a78f7d"),
+  store("tecnomas", "Tecnomas", "08e88b949e"),
+];
 
 const item = (
   id: number,
@@ -55,8 +68,8 @@ const item = (
       ? null
       : {
           id: id * 10,
-          store: { slug: "tectec", name: "TecTec", url: "https://tectec.cl", iconUrl: null },
-          url: `https://tectec.cl/p/${id}`,
+          store: STORES[id % STORES.length],
+          url: `https://${STORES[id % STORES.length].slug}.cl/p/${id}`,
           priceCash,
           priceCard: Math.round(priceCash * 1.05),
         },
@@ -130,12 +143,6 @@ const compatibility: QuoteCompatibility = {
   ],
 };
 const unchecked: QuoteCompatibility = { status: "unknown", checks: [], estimatedWatts: null };
-const only = (status: QuoteCompatibility["status"], checks: QuoteCompatibility["checks"]) => ({
-  ...compatibility,
-  status,
-  checks,
-});
-
 const total = (pick: "priceCash" | "priceCard") =>
   items.reduce((sum, i) => (i.isSelected && i.offer ? sum + i.offer[pick] * i.quantity : sum), 0);
 
@@ -153,177 +160,6 @@ const quote: QuoteDetail = {
   items,
   totals: { cash: total("priceCash"), card: total("priceCard") },
   compatibility,
-};
-
-const list = (isOwner: boolean) => (
-  <QuoteItemsList
-    quote={quote}
-    isOwner={isOwner}
-    onChangeQuantity={noop}
-    onRemove={noop}
-    onSelect={noop}
-    onChooseOffer={noop}
-  />
-);
-const summary = (
-  <QuoteTotals
-    totalNormal={quote.totals.card}
-    totalCash={quote.totals.cash}
-    hasOutOfStockItems
-    compatibility={compatibility}
-  >
-    <QuoteActions block onExportPDF={noop} onExportExcel={noop} onCopyClipboard={noop} />
-  </QuoteTotals>
-);
-
-/** La página a ancho real de escritorio: 1440 menos la barra lateral y el padding. */
-export const Pagina: Story = {
-  name: "Página completa: dueño",
-  render: () => (
-    <div className="mx-auto w-full max-w-[1120px] space-y-8">
-      <QuoteHeader quoteName={quote.name} author={author} updatedAt={quote.updatedAt} />
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
-        <div className="min-w-0 lg:col-span-8">{list(true)}</div>
-        <aside className="min-w-0 space-y-4 lg:col-span-4 lg:sticky lg:top-4">
-          {summary}
-          <CompatibilityList compatibility={compatibility} />
-        </aside>
-      </div>
-    </div>
-  ),
-};
-
-export const Cabecera: Story = {
-  render: () => <QuoteHeader quoteName={quote.name} author={author} updatedAt={quote.updatedAt} />,
-};
-
-export const ListaVacia: Story = {
-  name: "Lista de componentes vacía",
-  render: () => (
-    <div className="max-w-3xl">
-      <QuoteItemsList
-        quote={{ id: "q-vacia", name: "Cotización vacía", items: [], itemCount: 0 }}
-        isOwner
-        onChangeQuantity={noop}
-        onRemove={noop}
-        onSelect={noop}
-        onChooseOffer={noop}
-      />
-    </div>
-  ),
-};
-
-/** El caso difícil: cinco alternativas de RAM guardadas (el acordeón empieza cerrado). */
-export const ListaConMuchasAlternativas: Story = {
-  name: "Lista de componentes: dueño con 5 alternativas de RAM",
-  render: () => (
-    <div className="max-w-3xl">
-      <QuoteItemsList
-        quote={{
-          ...quote,
-          items: [
-            ...quote.items,
-            item(21, "ram", "ram", "X-Micro 8GB DDR5 4800 CL40", "X-Micro", 105_990, { isSelected: false }),
-            item(22, "ram", "ram", "Hikvision HSC304U16Z1 4GB DDR3 1600", "Hikvision", 17_990, { isSelected: false }),
-            item(23, "ram", "ram", "Kingston ValueRAM 512MB PC100 SDRAM DIMM", "Kingston", 29_900, {
-              isSelected: false,
-            }),
-            item(24, "ram", "ram", "Corsair Vengeance 16GB DDR5 5600 CL36", "Corsair", 98_990, { isSelected: false }),
-            item(25, "ram", "ram", "G.Skill Ripjaws S5 32GB DDR5 6000 CL30", "G.Skill", 165_990, {
-              isSelected: false,
-            }),
-          ],
-        }}
-        isOwner
-        onChangeQuantity={noop}
-        onRemove={noop}
-        onSelect={noop}
-        onChooseOffer={noop}
-      />
-    </div>
-  ),
-};
-
-export const ListaDelDueno: Story = {
-  name: "Lista de componentes: dueño",
-  render: () => <div className="max-w-3xl">{list(true)}</div>,
-};
-
-export const ListaConTiendaFijada: Story = {
-  name: "Lista de componentes: dueño con una tienda fijada a mano",
-  render: () => (
-    <div className="max-w-3xl">
-      <QuoteItemsList
-        quote={{
-          ...quote,
-          items: quote.items.map((i, n) => (n === 0 ? { ...i, chosenListingId: i.offer?.id ?? 1 } : i)),
-        }}
-        isOwner
-        onChangeQuantity={noop}
-        onRemove={noop}
-        onSelect={noop}
-        onChooseOffer={noop}
-        onChooseCheapest={noop}
-      />
-    </div>
-  ),
-};
-
-export const ListaDeVisitante: Story = {
-  name: "Lista de componentes: visitante",
-  render: () => <div className="max-w-3xl">{list(false)}</div>,
-};
-
-export const Resumen: Story = {
-  name: "Resumen con total",
-  render: () => (
-    <div className="grid max-w-3xl gap-4 sm:grid-cols-2 sm:items-start">
-      {summary}
-      <QuoteTotals totalNormal={1_289_970} totalCash={1_219_970} compatibility={unchecked}>
-        <QuoteActions block onExportPDF={noop} onExportExcel={noop} onCopyClipboard={noop} />
-      </QuoteTotals>
-    </div>
-  ),
-};
-
-export const CompatibilidadEstados: Story = {
-  name: "Compatibilidad: barra en cada estado",
-  render: () => (
-    <div className="max-w-3xl space-y-3">
-      <CompatibilityBar compatibility={compatibility} />
-      <CompatibilityBar compatibility={only("warning", compatibility.checks.slice(2, 3))} />
-      <CompatibilityBar compatibility={only("unknown", compatibility.checks.slice(3, 4))} />
-      <CompatibilityBar compatibility={unchecked} />
-      <CompatibilityBar
-        compatibility={only(
-          "valid",
-          compatibility.checks.filter((c) => c.result === "ok"),
-        )}
-      />
-    </div>
-  ),
-};
-
-export const CompatibilidadDetalle: Story = {
-  name: "Compatibilidad: detalle",
-  render: () => (
-    <div className="max-w-md">
-      <CompatibilityList compatibility={compatibility} />
-    </div>
-  ),
-};
-
-export const Acciones: Story = {
-  render: () => (
-    <div className="h-48">
-      <QuoteActions onExportPDF={noop} onExportExcel={noop} onCopyClipboard={noop} />
-    </div>
-  ),
-};
-
-export const CrearCotizacion: Story = {
-  name: "Diálogo para crear cotización",
-  render: () => <CreateQuoteDialog trigger={<Button>Nueva cotización</Button>} />,
 };
 
 const condensePlan: QuoteCondensePlan = {
@@ -361,6 +197,124 @@ const condensePlan: QuoteCondensePlan = {
     { slug: "tecnomas", name: "Tecnomas", itemIds: [1, 7], subtotalCash: 553_890 },
     { slug: "nuevatec", name: "Nuevatec", itemIds: [2], subtotalCash: 649_990 },
   ],
+};
+
+/** El selector de tienda pide las ofertas del producto: aquí sólo la que ya trae la cotización. */
+const offersOf = (detail: QuoteDetail): [readonly unknown[], unknown][] =>
+  detail.items.flatMap((i) =>
+    i.offer
+      ? [
+          [
+            ["product-offers", i.product.slug],
+            [{ ...i.offer, title: i.product.name, inStock: true, stockQuantity: null, lastSeenAt: detail.updatedAt }],
+          ],
+        ]
+      : [],
+  );
+
+/** La página real, con la cotización como si viniera del loader. */
+const page = (detail: QuoteDetail) => () => (
+  <QuoteRoute {...({ loaderData: { quote: detail } } as unknown as Parameters<typeof QuoteRoute>[0])} />
+);
+
+const withPinned: QuoteDetail = {
+  ...quote,
+  description: "Para jugar en 1440p a más de 144 FPS. Ryzen 7 7800X3D y RTX 5070, con espacio para crecer.",
+  items: quote.items.map((i) => (i.id === 1 ? { ...i, chosenListingId: i.offer?.id ?? null } : i)),
+};
+
+const visitor = { ...sessions.user, user: { ...sessions.user.user, username: "beto" } };
+
+/** Toca la fila de la tarjeta de video para ver la alternativa guardada; el procesador tiene la tienda fijada a mano. */
+export const Dueno: Story = {
+  name: "Dueño con alternativas y una tienda fijada",
+  parameters: { layout: "fullscreen", session: sessions.user },
+  decorators: [
+    withQueryData([...offersOf(withPinned), [quoteKeys.condense(quote.id, CONDENSE_STORE_VALUE), condensePlan]]),
+  ],
+  render: page(withPinned),
+};
+
+export const Visitante: Story = {
+  name: "Visitante",
+  parameters: { layout: "fullscreen", session: visitor },
+  render: page(withPinned),
+};
+
+const lowEndItems = [
+  item(31, "cpu", "cpu", "AMD Ryzen 5 8600G", "AMD", 179_500, { specs: ["AM5", "6 núcleos", "65 W"] }),
+  item(32, "motherboard", "motherboard", "ASUS PRIME A620M-K", "ASUS", 69_990, { specs: ["AM5", "DDR5", "mATX"] }),
+  item(33, "ram", "ram", "Patriot Signature Line 8GB DDR5 5600 CL46", "Patriot", 129_990, {
+    quantity: 2,
+    specs: ["DDR5", "5600 MT/s"],
+  }),
+  item(34, "psu", "psu", "XPG Pylon 550W 80 Plus Bronze", "XPG", 47_790, { specs: ["550 W", "Bronze"] }),
+  item(35, "case", "case", "GameMax Storm Black", "GameMax", 26_900, { specs: ["Hasta ATX"] }),
+  item(36, "storage", "ssd", "Kingston NV3 500GB M.2 2280 NVMe PCIe 4.0", "Kingston", 69_900, {
+    specs: ["500 GB", "NVMe"],
+  }),
+];
+const lowEndTotal = (pick: "priceCash" | "priceCard") =>
+  lowEndItems.reduce((sum, i) => (i.offer ? sum + i.offer[pick] * i.quantity : sum), 0);
+
+export const GamaBaja: Story = {
+  name: "Gama baja sin tarjeta de video",
+  parameters: { layout: "fullscreen" },
+  render: page({
+    ...quote,
+    id: "5JN27XNGZA",
+    name: "PC de oficina y estudio",
+    description: "Para clases, ofimática y videollamadas. Los gráficos integrados del Ryzen 5 8600G alcanzan.",
+    itemCount: lowEndItems.length,
+    items: lowEndItems,
+    totals: { cash: lowEndTotal("priceCash"), card: lowEndTotal("priceCard") },
+    compatibility: {
+      status: "valid",
+      estimatedWatts: 163,
+      checks: [
+        { rule: "socket", result: "ok", itemIds: [31, 32], message: "El procesador y la placa son AM5." },
+        { rule: "memory_type", result: "ok", itemIds: [33, 32], message: "La RAM y la placa son DDR5." },
+        { rule: "psu_wattage", result: "ok", itemIds: [34], message: "La fuente de 550 W cubre los 163 W estimados." },
+      ],
+    },
+  }),
+};
+
+export const Vacia: Story = {
+  name: "Cotización vacía del dueño",
+  parameters: { layout: "fullscreen", session: sessions.user },
+  render: page({
+    ...quote,
+    name: "Mi próximo PC",
+    visibility: "private",
+    itemCount: 0,
+    likeCount: 0,
+    items: [],
+    totals: { cash: 0, card: 0 },
+    compatibility: unchecked,
+  }),
+};
+
+export const CompatibilidadDetalle: Story = {
+  name: "Compatibilidad: detalle",
+  render: () => (
+    <div className="max-w-md">
+      <CompatibilityList compatibility={compatibility} />
+    </div>
+  ),
+};
+
+export const Acciones: Story = {
+  render: () => (
+    <div className="h-48">
+      <QuoteActions onExportPDF={noop} onExportExcel={noop} onCopyClipboard={noop} />
+    </div>
+  ),
+};
+
+export const CrearCotizacion: Story = {
+  name: "Diálogo para crear cotización",
+  render: () => <CreateQuoteDialog trigger={<Button>Nueva cotización</Button>} />,
 };
 
 export const CondensarTiendas: Story = {
