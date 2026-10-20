@@ -136,8 +136,9 @@ describe("checkCompatibility", () => {
     expect(results([cpu, part("cpu_cooler", { type: "air", sockets: "Intel/AMD" })]).cooler_socket).toBe("warning");
     expect(results([cpu, part("cpu_cooler", { type: "air", sockets: "Intel" })]).cooler_socket).toBe("unknown");
     expect(results([cpu]).cooler_missing).toBe("warning");
-    // 75 + 105 + 285 = 465 W: 500 W alcanza pero sin 25 % de margen; 450 W no alcanza.
-    expect(results([cpu, gpu, part("psu", { wattage: 500 })]).psu_wattage).toBe("warning");
+    // 75 + 105 + 285 = 465 W: el mínimo es 700 W (psuSizing), 650 W alcanza pero queda justa; 450 W no alcanza.
+    expect(results([cpu, gpu, part("psu", { wattage: 650 })]).psu_wattage).toBe("warning");
+    expect(results([cpu, gpu, part("psu", { wattage: 700 })]).psu_wattage).toBe("ok");
     expect(results([cpu, gpu, part("psu", { wattage: 450 })]).psu_wattage).toBe("incompatible");
   });
 

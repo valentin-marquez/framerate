@@ -660,7 +660,7 @@ describe("compatibilidad", () => {
       result: "incompatible",
       message: "El procesador es AM5 y la placa LGA1700: no calzan.",
     });
-    // 75 + 120 + 220 = 415 W: 500 W alcanza, pero sin el 25 % de margen.
+    // 75 + 120 + 220 = 415 W: 500 W alcanza, pero bajo el mínimo de 650 W (psuSizing).
     expect(byRule.psu_wattage?.result).toBe("warning");
     expect(byRule.cooler_missing?.result).toBe("warning");
     expect(compatibility.estimatedWatts).toBe(415);

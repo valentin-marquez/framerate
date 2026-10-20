@@ -1,4 +1,10 @@
-import type { Category, CompatCheck, CompatRule, QuoteCompatibility } from "@framerate/contracts";
+import {
+  type Category,
+  type CompatCheck,
+  type CompatRule,
+  psuSizing,
+  type QuoteCompatibility,
+} from "@framerate/contracts";
 import type { PsuTier } from "./psu-tier";
 
 /**
@@ -287,12 +293,14 @@ const RULES: Rule[] = [
         involved,
         `La fuente es de ${watts} W y el equipo consume unos ${need} W.`,
       );
-    if (watts < need * 1.25)
+    // El mismo mínimo que recomienda el resumen de la cotización: si no, uno dice "ok" y el otro pide más.
+    const { minimum } = psuSizing(need);
+    if (watts < minimum)
       return check(
         "psu_wattage",
         "warning",
         involved,
-        `La fuente de ${watts} W queda justa para unos ${need} W de consumo: conviene un 25 % de margen.`,
+        `La fuente de ${watts} W queda justa para unos ${need} W de consumo: conviene una de al menos ${minimum} W.`,
       );
     // El fabricante del chip recomienda una fuente mínima (#180) que considera picos que la suma de TDP no ve.
     const recommended = gpu ? num(gpu.facts.min_psu_w) : null;
