@@ -36,15 +36,25 @@ const CHIP = "rounded-md bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreg
 const capacity = (gb: number) => (gb >= 1000 ? `${+(gb / 1000).toFixed(1)}TB` : `${gb}GB`);
 
 /** Dos líneas de etiquetas: los dos componentes más importantes, cada uno con la RAM y el almacenamiento al lado. */
-export function QuoteSpecs({ quote, spread = false }: { quote: PublicQuote; spread?: boolean }) {
-  const totals = [quote.ramGb && `Ram ${capacity(quote.ramGb)}`, quote.storageGb && `Rom ${capacity(quote.storageGb)}`];
+export function QuoteSpecs({ quote }: { quote: PublicQuote }) {
+  const totals = [
+    quote.ramGb ? (["RAM:", capacity(quote.ramGb)] as const) : null,
+    quote.storageGb ? (["ROM:", capacity(quote.storageGb)] as const) : null,
+  ];
   const lines = [0, 1].flatMap((i) =>
     quote.highlights[i] || totals[i] ? [{ name: quote.highlights[i], total: totals[i] }] : [],
   );
   return lines.map(({ name, total }) => (
-    <p key={name ?? total} className="flex min-w-0 items-center gap-1">
+    // El nombre que no cabe se corta con "…" (`truncate`) y la etiqueta de RAM o ROM no se mueve.
+    <p key={name ?? total?.[0]} className="flex min-w-0 items-center gap-1">
       {name && <span className={cn(CHIP, "min-w-0 truncate")}>{name}</span>}
-      {total && <span className={cn(CHIP, "shrink-0 tabular-nums", spread && "ml-auto")}>{total}</span>}
+      {total && (
+        // Ancho fijo: el rótulo arranca siempre en el mismo punto y la cifra queda a la derecha.
+        <span className={cn(CHIP, "ml-auto flex w-[5.5rem] shrink-0 justify-between tabular-nums")}>
+          <span>{total[0]}</span>
+          <span>{total[1]}</span>
+        </span>
+      )}
     </p>
   ));
 }
@@ -72,7 +82,7 @@ export function QuoteCard({ quote, rank }: QuoteCardProps) {
             {quote.name}
           </Link>
         </h3>
-        <QuoteSpecs quote={quote} spread />
+        <QuoteSpecs quote={quote} />
       </div>
       {/* En teléfono, a dos columnas, el total va en su línea y debajo el autor con el me gusta: juntos se cortaba el total. */}
       <div className="mt-auto grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-1 border-border border-t px-3 py-2 sm:grid-cols-[auto_1fr_auto]">

@@ -17,7 +17,8 @@ function Row({ quote, rank }: { quote: PublicQuote; rank: number }) {
   return (
     <li className="relative flex items-center gap-3 px-3 py-3 transition-colors hover:bg-secondary/30 sm:gap-4 sm:px-4">
       <span className="w-6 shrink-0 text-center text-label-sm text-muted-foreground tabular-nums">{rank}</span>
-      <ul aria-hidden className="flex shrink-0 gap-1">
+      {/* Ancho de cuatro fotos aunque haya menos: el nombre y las etiquetas arrancan en el mismo punto en todas las filas. */}
+      <ul aria-hidden className="flex shrink-0 gap-1 md:w-[11.75rem]">
         {quote.images.slice(0, 4).map((src, i) => (
           <li
             key={src}
@@ -35,7 +36,7 @@ function Row({ quote, rank }: { quote: PublicQuote; rank: number }) {
           </li>
         ))}
       </ul>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 xl:w-72 xl:flex-none">
         <Link
           to={`/cotizacion/${quote.id}`}
           prefetch="intent"
@@ -45,8 +46,10 @@ function Row({ quote, rank }: { quote: PublicQuote; rank: number }) {
         </Link>
         <span className="block truncate text-muted-foreground text-paragraph-xs">@{quote.author.username}</span>
       </div>
-      <div className="hidden min-w-0 flex-1 flex-col gap-1 xl:flex">
-        <QuoteSpecs quote={quote} />
+      <div className="hidden min-w-0 flex-1 xl:block">
+        <div className="flex w-full max-w-[26rem] flex-col gap-1">
+          <QuoteSpecs quote={quote} />
+        </div>
       </div>
       <span className="hidden w-28 shrink-0 text-muted-foreground text-paragraph-sm lg:block">
         {componentes(quote.itemCount)}
