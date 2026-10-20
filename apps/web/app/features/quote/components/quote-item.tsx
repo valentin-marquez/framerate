@@ -38,7 +38,8 @@ export function QuoteItem({
   const { t } = useTranslation();
   const { product, offer, quantity } = item;
 
-  // Columna propia entre el nombre y el precio, centrada en la fila: ahí sobraba espacio y el pie del precio quedaba cargado.
+  // Columna propia entre el nombre y el precio, de ancho fijo (igual que la del precio): así queda en la misma vertical en
+  // todas las filas y no depende de lo ancho que sea el precio.
   const quantityControl = isOwner ? (
     <div className="flex shrink-0 items-center gap-1">
       <Button
@@ -128,9 +129,13 @@ export function QuoteItem({
         </div>
       </div>
 
-      {quantityControl && <div className="shrink-0 pl-18 sm:self-center sm:pl-0">{quantityControl}</div>}
+      {quantityControl && (
+        <div className="shrink-0 pl-18 sm:flex sm:w-36 sm:items-center sm:justify-center sm:pl-0">
+          {quantityControl}
+        </div>
+      )}
 
-      <div className="flex shrink-0 items-end justify-between gap-1 pl-18 sm:flex-col sm:items-end sm:pl-0 sm:text-right">
+      <div className="flex shrink-0 items-end justify-between gap-1 pl-18 sm:w-44 sm:flex-col sm:items-end sm:pl-0 sm:text-right">
         <div className="flex flex-col gap-1 sm:items-end">
           <div className="flex min-w-0 items-center gap-2">
             {offer && <StoreLogo store={offer.store} className="size-5 rounded-sm" />}
