@@ -100,10 +100,10 @@ export function PublicQuotes({ quotes }: { quotes: PublicQuote[] }) {
   // Las celdas chicas dan la altura de la fila (su foto tiene proporción fija); ensancharlas pide una tira más baja.
   const cellOf = (i: number) =>
     rest.length === 2
-      ? { cell: "lg:col-span-2", photos: "aspect-[2/1] lg:aspect-[4/1]" }
+      ? { cell: "lg:col-span-2", photos: "aspect-[2/1] lg:aspect-[6/1]" }
       : rest.length === 3 && i === 2
-        ? { cell: "col-span-2", photos: "aspect-[4/1]" }
-        : { cell: "", photos: "aspect-[2/1]" };
+        ? { cell: "col-span-2", photos: "aspect-[4/1] lg:aspect-[6/1]" }
+        : { cell: "", photos: "aspect-[2/1] lg:aspect-[3/1]" };
   return (
     <section className="space-y-3 [contain-intrinsic-size:auto_300px] [content-visibility:auto]">
       <div className="flex items-end justify-between gap-4">
