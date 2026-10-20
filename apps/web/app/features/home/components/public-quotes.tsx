@@ -1,5 +1,4 @@
 import type { PublicQuote } from "@framerate/contracts";
-import { IconHeart } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { QuoteLikeToggle } from "~/features/quote/components/quote-like-toggle";
 import { cn } from "~/shared/lib/utils";
@@ -11,15 +10,6 @@ export const MIN_PUBLIC_QUOTES = 3;
 
 export const authorLine = (quote: PublicQuote) =>
   `@${quote.author.username} con ${quote.itemCount} ${quote.itemCount === 1 ? "componente" : "componentes"}`;
-
-export function Likes({ count }: { count: number }) {
-  return (
-    <span className="inline-flex items-center gap-1 text-muted-foreground text-sm tabular-nums">
-      <IconHeart className="size-4" aria-label="Me gusta" />
-      {count}
-    </span>
-  );
-}
 
 /**
  * Enlace que cubre toda la tarjeta: el me gusta es un botón y no puede ir dentro de otro enlace. El contenido no
@@ -44,22 +34,27 @@ export function LikeSlot({ quote }: { quote: PublicQuote }) {
   );
 }
 
-/** Las fotos de los componentes en cuadrícula; donde falta una, un degradado propio de la cotización. */
+/** Una foto en su celda: entra entera y centrada; donde falta, un degradado propio de la cotización. */
+function Photo({ quote, index, className }: { quote: PublicQuote; index: number; className?: string }) {
+  const src = quote.images[index];
+  return (
+    <span className={cn("relative block min-h-0 min-w-0 overflow-hidden bg-white", className)}>
+      {src ? (
+        <img src={src} alt="" loading="lazy" className="absolute inset-0 size-full object-contain" />
+      ) : (
+        <span className="absolute inset-0 opacity-55" style={{ background: getGradient(`${quote.id}${index}`) }} />
+      )}
+    </span>
+  );
+}
+
+/** Las fotos de los componentes en cuadrícula, en cuatro celdas iguales (las primeras por importancia de la API). */
 export function Collage({ quote, className }: { quote: PublicQuote; className?: string }) {
   return (
     <span className={cn("grid shrink-0 grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden bg-secondary/40", className)}>
-      {Array.from({ length: 4 }, (_, i) => quote.images[i]).map((src, i) =>
-        src ? (
-          // Cuatro celdas iguales: la foto se centra y entra entera en la suya, sin que una crezca a costa de otra.
-          // biome-ignore lint/suspicious/noArrayIndexKey: son cuatro celdas fijas
-          <span key={i} className="relative min-h-0 min-w-0 bg-white">
-            <img src={src} alt="" loading="lazy" className="absolute inset-0 size-full object-contain" />
-          </span>
-        ) : (
-          // biome-ignore lint/suspicious/noArrayIndexKey: son cuatro celdas fijas
-          <span key={i} className="min-h-0 min-w-0 opacity-55" style={{ background: getGradient(`${quote.id}${i}`) }} />
-        ),
-      )}
+      {[0, 1, 2, 3].map((i) => (
+        <Photo key={i} quote={quote} index={i} />
+      ))}
     </span>
   );
 }
@@ -90,30 +85,25 @@ export function PublicQuoteCard({ quote, rank }: { quote: PublicQuote; rank: num
   );
 }
 
-/** Las dos fotos que dan la cara de la cotización (las primeras por importancia: gabinete, procesador...) en una fila. */
-function Thumbs({ quote }: { quote: PublicQuote }) {
-  return (
-    <span className="pointer-events-none flex shrink-0 gap-1">
-      {[0, 1].map((i) => {
-        const src = quote.images[i];
-        return (
-          <span key={i} className="relative size-10 overflow-hidden rounded-lg bg-white">
-            {src ? (
-              <img src={src} alt="" loading="lazy" className="absolute inset-0 size-full object-contain" />
-            ) : (
-              <span className="absolute inset-0 opacity-55" style={{ background: getGradient(`${quote.id}${i}`) }} />
-            )}
-          </span>
-        );
-      })}
-    </span>
-  );
-}
+const bentoCell =
+  "group relative flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-card transition-colors hover:border-primary/40";
 
-/** Cotizaciones públicas de más "me gusta" a menos: la primera en grande y las siguientes en una lista. */
+/**
+ * Cotizaciones públicas de más "me gusta" a menos en bento: la primera ocupa dos por dos con el collage de cuatro fotos y
+ * las otras (hasta cuatro) una celda con dos fotos. Con tres o cuatro en total, las últimas se ensanchan para no dejar
+ * huecos.
+ */
 export function PublicQuotes({ quotes }: { quotes: PublicQuote[] }) {
-  const [top, ...rest] = quotes;
+  const [top, ...others] = quotes;
   if (!top || quotes.length < MIN_PUBLIC_QUOTES) return null;
+  const rest = others.slice(0, 4);
+  // Las celdas chicas dan la altura de la fila (su foto tiene proporción fija); ensancharlas pide una tira más baja.
+  const cellOf = (i: number) =>
+    rest.length === 2
+      ? { cell: "lg:col-span-2", photos: "aspect-[2/1] lg:aspect-[4/1]" }
+      : rest.length === 3 && i === 2
+        ? { cell: "col-span-2", photos: "aspect-[4/1]" }
+        : { cell: "", photos: "aspect-[2/1]" };
   return (
     <section className="space-y-3 [contain-intrinsic-size:auto_300px] [content-visibility:auto]">
       <div className="flex items-end justify-between gap-4">
@@ -126,42 +116,45 @@ export function PublicQuotes({ quotes }: { quotes: PublicQuote[] }) {
           Ver más
         </Link>
       </div>
-      <div className="grid gap-3 lg:grid-cols-5">
-        <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-card transition-colors hover:border-primary/40 sm:flex-row lg:col-span-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:grid-rows-2">
+        <div className={cn(bentoCell, "col-span-2 row-span-2")}>
           <CardLink quote={top} />
-          <Collage quote={top} className="pointer-events-none aspect-[4/3] w-full sm:w-2/5" />
-          <span className="pointer-events-none flex flex-1 flex-col gap-2 p-4">
-            <span className="font-mono text-muted-foreground text-xs">La más querida, #1</span>
-            <span className="text-foreground text-title-h6 transition-colors group-hover:text-primary">{top.name}</span>
-            {top.description && <span className="line-clamp-3 text-muted-foreground text-sm">{top.description}</span>}
-            <span className="text-muted-foreground text-xs">{authorLine(top)}</span>
-            <span className="mt-auto flex items-center justify-between pt-2">
+          <Collage quote={top} className="pointer-events-none aspect-[4/3] lg:aspect-auto lg:min-h-0 lg:flex-1" />
+          <span className="pointer-events-none flex items-end justify-between gap-3 p-4">
+            <span className="min-w-0">
+              <span className="block font-mono text-muted-foreground text-xs">La más querida, #1</span>
+              <span className="block truncate text-foreground text-title-h6 transition-colors group-hover:text-primary">
+                {top.name}
+              </span>
+              <span className="block truncate text-muted-foreground text-xs">{authorLine(top)}</span>
+            </span>
+            <span className="flex shrink-0 flex-col items-end gap-1">
               <span className="font-mono text-foreground tabular-nums">{formatCLP(top.totalCash)}</span>
               <LikeSlot quote={top} />
             </span>
           </span>
         </div>
-        <ol className="flex flex-col divide-y divide-border/40 overflow-hidden rounded-2xl border border-border/40 bg-card lg:col-span-2">
-          {rest.map((quote, i) => (
-            <li
-              key={quote.id}
-              className="relative flex flex-1 items-center gap-3 px-3 py-2.5 transition-colors hover:bg-secondary/40"
-            >
-              <CardLink quote={quote} />
-              <span className="pointer-events-none w-5 shrink-0 text-center font-mono text-muted-foreground text-sm tabular-nums">
-                {i + 2}
-              </span>
-              <Thumbs quote={quote} />
-              <span className="pointer-events-none min-w-0 flex-1">
-                <span className="block truncate font-medium text-foreground text-sm">{quote.name}</span>
-                <span className="block truncate font-mono text-muted-foreground text-xs tabular-nums">
-                  {formatCLP(quote.totalCash)}
+        {rest.map((quote, i) => (
+          <div key={quote.id} className={cn(bentoCell, cellOf(i).cell)}>
+            <CardLink quote={quote} />
+            <span className={cn("pointer-events-none grid grid-cols-2 gap-0.5 bg-secondary/40", cellOf(i).photos)}>
+              <Photo quote={quote} index={0} />
+              <Photo quote={quote} index={1} />
+            </span>
+            <span className="pointer-events-none flex flex-col gap-1 p-3">
+              <span className="flex items-baseline gap-2">
+                <span className="font-mono text-muted-foreground text-xs tabular-nums">#{i + 2}</span>
+                <span className="truncate font-medium text-foreground text-sm transition-colors group-hover:text-primary">
+                  {quote.name}
                 </span>
               </span>
-              <LikeSlot quote={quote} />
-            </li>
-          ))}
-        </ol>
+              <span className="flex items-center justify-between gap-2">
+                <span className="font-mono text-foreground text-sm tabular-nums">{formatCLP(quote.totalCash)}</span>
+                <LikeSlot quote={quote} />
+              </span>
+            </span>
+          </div>
+        ))}
       </div>
     </section>
   );

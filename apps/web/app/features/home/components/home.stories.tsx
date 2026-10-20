@@ -62,6 +62,17 @@ export const CotizacionesPopulares: Story = {
   render: () => <PublicQuotes quotes={publicQuotes} />,
 };
 
+/** Con tres o cuatro públicas, las últimas celdas se ensanchan para no dejar huecos. */
+export const CotizacionesPocas: Story = {
+  name: "Cotizaciones populares (tres y cuatro)",
+  render: () => (
+    <div className="space-y-10">
+      <PublicQuotes quotes={publicQuotes.slice(0, 3)} />
+      <PublicQuotes quotes={publicQuotes.slice(0, 4)} />
+    </div>
+  ),
+};
+
 export const CotizacionesSinFotos: Story = {
   name: "Cotizaciones populares sin fotos",
   render: () => (
