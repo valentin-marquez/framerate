@@ -304,7 +304,7 @@ describe("me gusta y cotizaciones populares", () => {
     expect((await call("anon", "/v1/quotes/public?limit=99")).status).toBe(400);
   });
 
-  test("las fotos van por importancia (gabinete, procesador, placa, gráfica) y sin foto pasa el siguiente", async () => {
+  test("las fotos van por importancia (gabinete, procesador, gráfica, placa) y sin foto pasa el siguiente", async () => {
     const quote = await createQuote(ana, { name: "Pública", visibility: "public" });
     await db.query
       .updateTable("products")

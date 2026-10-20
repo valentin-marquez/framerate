@@ -718,8 +718,8 @@ export async function condenseOptions(db: Db, publicId: string, ownerId: string)
 const COLLAGE_ORDER: readonly string[] = [
   "case",
   "cpu",
-  "motherboard",
   "gpu",
+  "motherboard",
   "ram",
   "psu",
   "ssd",
