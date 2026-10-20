@@ -200,7 +200,8 @@ function QuotesRailRow({ collapsed }: { collapsed: boolean }) {
   const { signedIn, href, show, dialogs } = useQuoteEntry();
   const icon = <IconLayoutList className="size-[18px] shrink-0" stroke={1.75} />;
   return (
-    <div className="grid items-center [&>*]:col-start-1 [&>*]:row-start-1">
+    // `minmax(0,1fr)`: sin ella la columna mide el texto de la etiqueta y, plegado, el tooltip se ancla lejos del ícono.
+    <div className="grid grid-cols-[minmax(0,1fr)] items-center [&>*]:col-start-1 [&>*]:row-start-1">
       {signedIn ? (
         <RailLink to={href} label="Mis cotizaciones" collapsed={collapsed} icon={icon} />
       ) : (
