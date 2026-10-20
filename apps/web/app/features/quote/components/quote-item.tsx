@@ -38,6 +38,44 @@ export function QuoteItem({
   const { t } = useTranslation();
   const { product, offer, quantity } = item;
 
+  // Va a la derecha del nombre: ahí sobraba espacio y el pie del precio quedaba cargado.
+  const quantityControl = isOwner ? (
+    <div className="flex shrink-0 items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+        onClick={() => onRemove(item)}
+        aria-label="Eliminar producto"
+      >
+        <IconTrash size={14} />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        className="size-7"
+        aria-label="Menos unidades"
+        disabled={quantity <= 1}
+        onClick={() => onChangeQuantity(item, quantity - 1)}
+      >
+        <IconMinus size={14} />
+      </Button>
+      <span className="w-8 text-center text-sm tabular-nums">{quantity}</span>
+      <Button
+        variant="outline"
+        size="icon"
+        className="size-7"
+        aria-label="Más unidades"
+        disabled={quantity >= 99}
+        onClick={() => onChangeQuantity(item, quantity + 1)}
+      >
+        <IconPlus size={14} />
+      </Button>
+    </div>
+  ) : quantity > 1 ? (
+    <span className="shrink-0 text-sm font-medium text-muted-foreground tabular-nums">x{quantity}</span>
+  ) : null;
+
   return (
     <div className="group flex flex-col gap-4 p-4 hover:bg-secondary/30 transition-colors sm:flex-row">
       <div className="flex min-w-0 flex-1 gap-4">
@@ -52,7 +90,7 @@ export function QuoteItem({
             <div className="size-full bg-secondary/50" />
           )}
         </div>
-        <div className="min-w-0 space-y-1.5">
+        <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex items-center gap-2 text-xs">
             {status && <span className={cn("size-2 shrink-0 rounded-full", STATUS_DOT[status])} />}
             <span className="font-medium uppercase tracking-wider text-muted-foreground">
@@ -60,12 +98,15 @@ export function QuoteItem({
             </span>
             {product.brand && <span className="text-muted-foreground">{product.brand}</span>}
           </div>
-          <Link
-            to={`/producto/${product.slug}`}
-            className="block font-medium leading-snug text-foreground hover:text-primary"
-          >
-            {product.name}
-          </Link>
+          <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
+            <Link
+              to={`/producto/${product.slug}`}
+              className="block min-w-0 flex-[1_1_12rem] font-medium leading-snug text-foreground hover:text-primary"
+            >
+              {product.name}
+            </Link>
+            {quantityControl}
+          </div>
           {item.specs.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {item.specs.map((spec) => (
@@ -124,43 +165,6 @@ export function QuoteItem({
             </>
           )}
         </div>
-
-        {isOwner ? (
-          <div className="mt-1 flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
-              onClick={() => onRemove(item)}
-              aria-label="Eliminar producto"
-            >
-              <IconTrash size={14} />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-7"
-              aria-label="Menos unidades"
-              disabled={quantity <= 1}
-              onClick={() => onChangeQuantity(item, quantity - 1)}
-            >
-              <IconMinus size={14} />
-            </Button>
-            <span className="w-8 text-center text-sm tabular-nums">{quantity}</span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-7"
-              aria-label="Más unidades"
-              disabled={quantity >= 99}
-              onClick={() => onChangeQuantity(item, quantity + 1)}
-            >
-              <IconPlus size={14} />
-            </Button>
-          </div>
-        ) : (
-          quantity > 1 && <span className="text-xs text-muted-foreground tabular-nums">x{quantity}</span>
-        )}
       </div>
     </div>
   );
