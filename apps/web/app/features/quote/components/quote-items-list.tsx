@@ -224,6 +224,7 @@ function SlotRow({
             >
               <StoreLogo store={offer.store} className="size-5 rounded-sm text-[9px]" />
               <span className="truncate text-label-xs text-muted-foreground">{offer.store.name}</span>
+              {!isOwner && <IconExternalLink className="size-3 shrink-0 text-muted-foreground" />}
             </OutboundLink>
           )}
           {isOwner && (
@@ -299,19 +300,6 @@ function SlotRow({
               </Link>
             </div>
             <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
-              {!isOwner && offer && (
-                <OutboundLink
-                  href={offer.url}
-                  source="quote_item"
-                  listingId={String(offer.id)}
-                  productId={String(product.id)}
-                  className="flex min-w-0 items-center gap-2 text-label-sm hover:text-primary"
-                >
-                  <StoreLogo store={offer.store} className="size-5 rounded-sm text-[9px]" />
-                  <span className="truncate">Ir a {offer.store.name}</span>
-                  <IconExternalLink className="size-3 shrink-0 text-muted-foreground" />
-                </OutboundLink>
-              )}
               {isOwner && (
                 <QuantityControl
                   item={item}
