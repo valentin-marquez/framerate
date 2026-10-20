@@ -71,6 +71,10 @@
   --success: oklch(0.7014 0.2115 141.59);
   --success-foreground: oklch(0.9787 0.0017 247.84);
   --warn: oklch(0.62 0.16 64);
+  /* Texto de estado sobre su tinte al 10 %: el color pleno no llega a 4,5:1 (#92). */
+  --warn-ink: oklch(0.48 0.12 64);
+  --success-ink: oklch(0.48 0.14 145);
+  --destructive-ink: oklch(0.48 0.18 26);
 }
 
 .dark {
@@ -122,6 +126,9 @@
   --success: oklch(0.7014 0.2115 141.59);
   --success-foreground: oklch(0.9787 0.0017 247.84);
   --warn: oklch(0.8 0.15 72);
+  --warn-ink: var(--warn);
+  --success-ink: oklch(0.78 0.17 145);
+  --destructive-ink: oklch(0.75 0.15 26);
 }
 
 @theme inline {
@@ -139,6 +146,9 @@
   --color-success-foreground: var(--success-foreground);
   --color-success: var(--success);
   --color-warn: var(--warn);
+  --color-warn-ink: var(--warn-ink);
+  --color-success-ink: var(--success-ink);
+  --color-destructive-ink: var(--destructive-ink);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);

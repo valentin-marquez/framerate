@@ -435,7 +435,7 @@ function TicketThread({ ticketId, team, currentUserId }: TicketThreadProps) {
                   disabled={sending}
                   className={cn(
                     "flex items-center gap-1.5 text-sm cursor-pointer transition-colors",
-                    isInternal ? "text-warn font-medium" : "text-muted-foreground",
+                    isInternal ? "text-warn-ink font-medium" : "text-muted-foreground",
                   )}
                 >
                   Nota interna
@@ -472,8 +472,8 @@ function MessageBubble({ authorRole, body, createdAt, isInternalNote, isOriginal
     return (
       <div className="rounded-xl border border-warn/20 border-l-2 border-l-warn bg-warn/5 px-4 py-3">
         <div className="flex items-center gap-1.5 mb-1">
-          <IconLock className="size-3.5 text-warn" />
-          <span className="text-[11px] uppercase tracking-wider font-semibold text-warn">Nota interna</span>
+          <IconLock className="size-3.5 text-warn-ink" />
+          <span className="text-[11px] uppercase tracking-wider font-semibold text-warn-ink">Nota interna</span>
           <span className="text-[11px] text-muted-foreground">Sólo el equipo</span>
           <span className="text-[11px] text-muted-foreground">{timestamp}</span>
         </div>

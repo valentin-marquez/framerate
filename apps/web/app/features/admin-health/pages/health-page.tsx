@@ -75,7 +75,7 @@ export default function HealthPage({ loaderData }: Route.ComponentProps) {
             <span
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-medium",
-                total === 0 && "bg-success/15 text-success",
+                total === 0 && "bg-success/15 text-success-ink",
                 total > 0 && errors === 0 && "bg-warn/20 text-foreground",
                 errors > 0 && "bg-destructive/10 text-destructive",
               )}

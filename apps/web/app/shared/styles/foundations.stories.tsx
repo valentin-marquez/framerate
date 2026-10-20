@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
+import { Badge } from "~/shared/components/primitives/badge";
 import { cn } from "~/shared/lib/utils";
 
 /** Tokens del sistema: lo que se ajusta en `app.css` se ve reflejado aquí (y en todo el sitio). */
@@ -42,6 +43,18 @@ export const Colores: Story = {
         <p className="text-secondary-foreground">secondary-foreground — texto en controles</p>
         <p className="text-primary">primary — énfasis y enlaces</p>
       </div>
+    </div>
+  ),
+};
+
+/** Texto `*-ink` sobre el tinte del mismo estado: 5:1 o más en claro y en oscuro (#92). */
+export const Estados: Story = {
+  render: () => (
+    <div className="flex flex-wrap gap-2 rounded-2xl bg-card p-6">
+      <Badge variant="warn">Abierto</Badge>
+      <Badge variant="success">Resuelto</Badge>
+      <Badge variant="destructive">Falló</Badge>
+      <Badge variant="secondary">Cerrado</Badge>
     </div>
   ),
 };
