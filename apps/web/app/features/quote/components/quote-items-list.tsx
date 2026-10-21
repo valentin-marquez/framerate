@@ -235,6 +235,7 @@ function SlotRow({
               className="pointer-events-auto relative z-10"
             />
           )}
+          {!offer && <span className="text-label-xs text-muted-foreground">{t("out_of_stock")}</span>}
         </span>
         <span className="flex items-center justify-end gap-1.5 text-label-sm tabular-nums">
           {offer && item.chosenListingId === null && (
@@ -246,7 +247,13 @@ function SlotRow({
           {chosenCash !== null ? (
             formatCLP(chosenCash)
           ) : (
-            <span className="text-muted-foreground">{t("out_of_stock")}</span>
+            // La columna de la tienda sólo existe desde `md`: en teléfono el aviso se queda aquí.
+            <span className="text-muted-foreground">
+              <span className="md:hidden">{t("out_of_stock")}</span>
+              <span aria-hidden className="hidden md:inline">
+                —
+              </span>
+            </span>
           )}
         </span>
         <span className="hidden text-right text-label-xs text-muted-foreground tabular-nums md:block">×{quantity}</span>
