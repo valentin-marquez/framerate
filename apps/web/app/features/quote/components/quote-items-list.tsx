@@ -235,7 +235,7 @@ function SlotRow({
               className="pointer-events-auto relative z-10"
             />
           )}
-          {!offer && <span className="text-label-xs text-muted-foreground">{t("out_of_stock")}</span>}
+          {!offer && <span className="pl-7 text-label-xs text-muted-foreground">{t("out_of_stock")}</span>}
         </span>
         <span className="flex items-center justify-end gap-1.5 text-label-sm tabular-nums">
           {offer && item.chosenListingId === null && (
