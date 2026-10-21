@@ -133,8 +133,8 @@ export const PublicQuoteSchema = QuoteSummarySchema.extend({
   images: z.array(z.url()).max(4),
   /** Para quien mira; `false` sin sesión. */
   likedByMe: z.boolean(),
-  /** Nombres de hasta dos componentes, por importancia (procesador, gráfica, placa madre...); sin RAM ni discos. */
-  highlights: z.array(z.string()).max(2),
+  /** Hasta seis componentes, por importancia (procesador, gráfica, placa madre...); sin RAM ni discos. */
+  highlights: z.array(z.object({ category: CategorySchema, name: z.string() })).max(6),
   /** GB de RAM y de discos (SSD y HDD) que suman los ítems seleccionados; `null` si no hay o ninguno trae su capacidad. */
   ramGb: z.number().int().positive().nullable(),
   storageGb: z.number().int().positive().nullable(),

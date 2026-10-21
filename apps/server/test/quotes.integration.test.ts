@@ -295,8 +295,11 @@ describe("me gusta y cotizaciones populares", () => {
     expect(top?.totalCash).toBeGreaterThan(0);
     expect(top?.author.username).toBe("ana");
     expect(list.map((q) => q.highlights)).toEqual([
-      ["AMD Ryzen 7 7800X3D", "ASUS Dual RTX 4070 SUPER OC 12GB"],
-      ["AMD Ryzen 7 7800X3D"],
+      [
+        { category: "cpu", name: "AMD Ryzen 7 7800X3D" },
+        { category: "gpu", name: "ASUS Dual RTX 4070 SUPER OC 12GB" },
+      ],
+      [{ category: "cpu", name: "AMD Ryzen 7 7800X3D" }],
     ]);
     expect((await publicList("?limit=1")).map((q) => q.name)).toEqual(["Muy querida"]);
     expect((await publicList("?limit=1&page=2")).map((q) => q.name)).toEqual(["Poco querida"]);
@@ -347,7 +350,10 @@ describe("me gusta y cotizaciones populares", () => {
     await addItem(ana, quote.id, await part("hdd-2tb", "hdd", 2000));
 
     const [top] = await publicList();
-    expect(top?.highlights).toEqual(["AMD Ryzen 7 7800X3D", "ASUS Dual RTX 4070 SUPER OC 12GB"]);
+    expect(top?.highlights).toEqual([
+      { category: "cpu", name: "AMD Ryzen 7 7800X3D" },
+      { category: "gpu", name: "ASUS Dual RTX 4070 SUPER OC 12GB" },
+    ]);
     expect(top?.ramGb).toBe(64);
     expect(top?.storageGb).toBe(3000);
 

@@ -742,7 +742,7 @@ const collageRank = (category: string) => {
   return rank === -1 ? COLLAGE_ORDER.length : rank;
 };
 
-/** Qué componentes se nombran en el texto de la tarjeta, por prioridad; los que no están aquí van después, así toda cotización tiene texto. */
+/** Qué componentes se nombran en las etiquetas de la tarjeta, por prioridad; la RAM y los discos van aparte (suman GB). */
 const HIGHLIGHT_ORDER: readonly string[] = ["cpu", "gpu", "motherboard", "case", "psu", "cpu_cooler", "case_fan"];
 const highlightRank = (category: string) => {
   const rank = HIGHLIGHT_ORDER.indexOf(category);
@@ -816,9 +816,10 @@ export async function listTopQuotes(
       ...toSummary(row, assetsBaseUrl),
       likedByMe: Boolean(row.liked),
       highlights: own
+        .filter((i) => !["ram", "ssd", "hdd"].includes(i.category))
         .toSorted((a, b) => highlightRank(a.category) - highlightRank(b.category))
-        .map((i) => i.name)
-        .slice(0, 2),
+        .slice(0, 6)
+        .map((i) => ({ category: i.category as Category, name: i.name })),
       ramGb: totalGb(own, ["ram"]),
       storageGb: totalGb(own, ["ssd", "hdd"]),
       totalCash: own.reduce((sum, i) => sum + (i.price_cash ?? 0) * i.quantity, 0),

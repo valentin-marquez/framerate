@@ -35,27 +35,29 @@ const CHIP = "rounded-md bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreg
 
 const capacity = (gb: number) => (gb >= 1000 ? `${+(gb / 1000).toFixed(1)}TB` : `${gb}GB`);
 
-/** Dos líneas de etiquetas: los dos componentes más importantes, cada uno con la RAM y el almacenamiento al lado. */
+/** Etiquetas en un solo flujo: procesador, RAM, ROM, y el resto por importancia. Caben dos líneas; las demás se omiten. */
 export function QuoteSpecs({ quote }: { quote: PublicQuote }) {
-  const totals = [
-    quote.ramGb ? (["RAM:", capacity(quote.ramGb)] as const) : null,
-    quote.storageGb ? (["ROM:", capacity(quote.storageGb)] as const) : null,
+  const cpu = quote.highlights.filter((h) => h.category === "cpu");
+  const rest = quote.highlights.filter((h) => h.category !== "cpu");
+  const chips = [
+    ...cpu.map((h) => ({ text: h.name, fixed: false })),
+    ...(quote.ramGb ? [{ text: `RAM: ${capacity(quote.ramGb)}`, fixed: true }] : []),
+    ...(quote.storageGb ? [{ text: `ROM: ${capacity(quote.storageGb)}`, fixed: true }] : []),
+    ...rest.map((h) => ({ text: h.name, fixed: false })),
   ];
-  const lines = [0, 1].flatMap((i) =>
-    quote.highlights[i] || totals[i] ? [{ name: quote.highlights[i], total: totals[i] }] : [],
-  );
-  return lines.map(({ name, total }) => (
-    // El nombre que no cabe se corta con "…" (`truncate`) y la etiqueta de RAM o ROM no se mueve.
-    <p key={name ?? total?.[0]} className="flex min-w-0 items-center gap-1">
-      {name && <span className={cn(CHIP, "min-w-0 truncate")}>{name}</span>}
-      {total && (
-        <span className={cn(CHIP, "flex shrink-0 gap-1 tabular-nums")}>
-          <span>{total[0]}</span>
-          <span>{total[1]}</span>
+  // El nombre que no cabe en su línea se corta con "…"; RAM y ROM llevan su texto entero.
+  return (
+    <div className="flex max-h-[2.75rem] min-w-0 flex-wrap gap-1 overflow-hidden">
+      {chips.map(({ text, fixed }) => (
+        <span
+          key={text}
+          className={cn(CHIP, fixed ? "shrink-0 whitespace-nowrap tabular-nums" : "min-w-0 max-w-full truncate")}
+        >
+          {text}
         </span>
-      )}
-    </p>
-  ));
+      ))}
+    </div>
+  );
 }
 
 /** Cotización pública: collage, nombre, dos componentes con la RAM y el almacenamiento, y pie con total, autor y me gusta. */
