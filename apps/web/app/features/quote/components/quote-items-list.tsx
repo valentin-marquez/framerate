@@ -226,13 +226,15 @@ function SlotRow({
               <span className="truncate text-label-xs text-muted-foreground">{offer.store.name}</span>
             </OutboundLink>
           )}
-          <StoreSelector
-            item={item}
-            compact
-            viewer={!isOwner}
-            onChoose={(chosen) => onChooseOffer(item, chosen)}
-            className="pointer-events-auto relative z-10"
-          />
+          {offer && (
+            <StoreSelector
+              item={item}
+              compact
+              viewer={!isOwner}
+              onChoose={(chosen) => onChooseOffer(item, chosen)}
+              className="pointer-events-auto relative z-10"
+            />
+          )}
         </span>
         <span className="flex items-center justify-end gap-1.5 text-label-sm tabular-nums">
           {offer && item.chosenListingId === null && (
