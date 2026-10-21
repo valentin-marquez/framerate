@@ -25,12 +25,12 @@ export default function SettingsLayout() {
   ];
 
   return (
-    <div className={cn("mx-auto pb-16", pathname.startsWith("/ajustes/tickets") ? "max-w-5xl" : "max-w-3xl")}>
-      <header className="space-y-5 pt-2">
+    <div className="mx-auto max-w-5xl pb-16">
+      <header className="mx-auto max-w-3xl space-y-5 pt-2">
         <h1 className="text-title-h4 text-foreground">{t("settings")}</h1>
         <nav
           aria-label="Secciones de ajustes"
-          className="-mx-4 flex gap-6 overflow-x-auto border-border border-b px-4 sm:mx-0 sm:px-0"
+          className="-mx-4 flex gap-6 overflow-x-auto border-border border-b px-4 sm:mx-0 sm:overflow-visible sm:px-0"
         >
           {tabs.map((tab, i) => (
             <NavLink
@@ -51,7 +51,7 @@ export default function SettingsLayout() {
           ))}
         </nav>
       </header>
-      <div className="pt-8">
+      <div className={cn("mx-auto pt-8", !pathname.startsWith("/ajustes/tickets") && "max-w-3xl")}>
         <Outlet />
       </div>
     </div>
