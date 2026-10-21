@@ -235,7 +235,12 @@ function SlotRow({
               className="pointer-events-auto relative z-10"
             />
           )}
-          {!offer && <span className="pl-7 text-label-xs text-muted-foreground">{t("out_of_stock")}</span>}
+          {!offer && (
+            <span className="flex min-w-0 items-center gap-1 text-label-xs text-warn">
+              <IconAlertTriangle className="size-3 shrink-0" aria-hidden />
+              <span className="truncate">No disponible en tiendas</span>
+            </span>
+          )}
         </span>
         <span className="flex items-center justify-end gap-1.5 text-label-sm tabular-nums">
           {offer && item.chosenListingId === null && (
@@ -281,7 +286,7 @@ function SlotRow({
                 </div>
               )}
               {!offer && (
-                <p className="flex items-center gap-1 text-label-xs text-warn">
+                <p className="flex items-center gap-1 text-label-xs text-warn md:hidden">
                   <IconAlertTriangle className="size-3" aria-hidden />
                   No disponible en tiendas
                 </p>
