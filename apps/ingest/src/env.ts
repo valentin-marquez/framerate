@@ -1,5 +1,5 @@
 import type { PipelineMessage } from "@framerate/contracts";
-import type { CrawlMessage } from "@/features/ingestion/messages";
+import type { StoreCrawler } from "@/features/ingestion/store-crawler";
 
 /** Bindings del Worker (ver `wrangler.jsonc`). */
 export interface Env {
@@ -8,7 +8,8 @@ export interface Env {
   SNAPSHOTS: R2Bucket;
   /** Bucket público (cdn.framerate.cl): copia propia de las fotos de producto, bajo `products/`. */
   ASSETS: R2Bucket;
-  CRAWL_QUEUE: Queue<CrawlMessage>;
+  /** Coordinador por tienda (#121): un Durable Object por slug, con su cola y su agenda. */
+  STORE_CRAWLER: DurableObjectNamespace<StoreCrawler>;
   /** Productores del pipeline (#153); los consumen `framerate-normalize` y `framerate-match`. */
   NORMALIZE_QUEUE: Queue<PipelineMessage>;
   LINK_QUEUE: Queue<PipelineMessage>;

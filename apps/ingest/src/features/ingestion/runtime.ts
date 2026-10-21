@@ -15,25 +15,29 @@ import type { Env } from "@/env";
 import { type CrawlResult, crawlCategory } from "./crawl-category";
 import type { RawOffer } from "./domain/normalize";
 import { knownOffers, listingsForStage, markPending, retryStuck } from "./ingestion.repository";
-import type { CrawlMessage } from "./messages";
 import type { CrawlContext, StoreDefinition } from "./stores/adapter";
 import { createHttpClient } from "./stores/http";
 import { findStore, STORES } from "./stores/registry";
 import { relayFetch } from "./stores/relay";
 
 /**
- * Conexión de la ingesta con la plataforma (Queues, Cron, R2). La lógica vive
+ * Conexión de la ingesta con la plataforma (Durable Objects, Queues, Cron, R2). La lógica vive
  * en `crawl-category.ts`; aquí sólo se arma el contexto de producción.
  */
 
 /**
- * Pedido de crawls (lo usa la API vía RPC): valida la tienda y encola.
- * La API no conoce las tiendas registradas, sólo las conoce ingest.
+ * Pedido de crawls (la API vía RPC): valida la tienda y encola en su Durable Object. La API no conoce las tiendas
+ * registradas, sólo las conoce ingest. `enqueued` no cuenta lo que ya estaba encolado.
  */
 export async function requestCrawls(env: Env, request: EnqueueCrawlsRequest): Promise<EnqueueCrawlsResult> {
   if (request.store && !findStore(request.store)) return { ok: false, error: "unknown_store" };
-  const enqueued = await enqueueAllCrawls(env, request.requestedBy, request);
-  return { ok: true, enqueued };
+  const counts = await Promise.all(
+    STORES.filter((store) => !store.pausedReason && (!request.store || store.slug === request.store)).map((store) => {
+      const categories = storeCategories(store).filter((c) => !request.category || c === request.category);
+      return categories.length ? storeCrawler(env, store.slug).enqueue(store.slug, categories, request.requestedBy) : 0;
+    }),
+  );
+  return { ok: true, enqueued: counts.reduce((a, b) => a + b, 0) };
 }
 
 /**
@@ -74,50 +78,42 @@ export async function sendInBatches<T>(queue: Pick<Queue<T>, "sendBatch">, bodie
   }
 }
 
-/** Cron: encola una corrida por cada (tienda, categoría) que la tienda vende. */
-export async function enqueueAllCrawls(
-  env: Env,
-  requestedBy: string,
-  filter?: { store?: string; category?: Category },
-) {
-  const requestedAt = new Date().toISOString();
-  const perStore: CrawlMessage[][] = [];
-  for (const store of STORES) {
-    if (store.pausedReason) continue;
-    if (filter?.store && store.slug !== filter.store) continue;
-    const own: CrawlMessage[] = [];
-    for (const [category, slugs] of Object.entries(store.adapter.categories)) {
-      if (!slugs?.length) continue;
-      if (filter?.category && category !== filter.category) continue;
-      own.push({ type: "crawl.category", store: store.slug, category: category as Category, requestedAt, requestedBy });
-    }
-    perStore.push(own);
-  }
-  // Intercaladas por tienda: la cola corre dos corridas a la vez y, en orden de tienda, las dos eran de la misma
-  // (dos clientes HTTP con su propio intervalo contra un sitio; MyBox respondía 429 en cada ciclo).
-  const longest = Math.max(0, ...perStore.map((m) => m.length));
-  const messages = Array.from({ length: longest }, (_, i) => perStore.flatMap((m) => m[i] ?? [])).flat();
-  await sendInBatches(env.CRAWL_QUEUE, messages);
-  return messages.length;
+/** El Durable Object de la tienda, junto a D1 (ENAM): la pista sólo cuenta al crearlo. */
+export function storeCrawler(env: Env, slug: string) {
+  return env.STORE_CRAWLER.get(env.STORE_CRAWLER.idFromName(slug), { locationHint: "enam" });
 }
 
-export async function runCrawlMessage(env: Env, message: CrawlMessage, log: Logger): Promise<CrawlResult | null> {
-  const store = findStore(message.store);
-  if (!store) {
-    log.warn("crawl.unknown_store", { store: message.store });
-    return null;
-  }
+export function storeCategories(store: StoreDefinition): Category[] {
+  return Object.entries(store.adapter.categories)
+    .filter(([, slugs]) => slugs?.length)
+    .map(([category]) => category as Category);
+}
+
+/** Cron horario: cada tienda activa con su agenda y su alarm. */
+export async function ensureAllScheduled(env: Env) {
+  const active = STORES.filter((store) => !store.pausedReason);
+  await Promise.all(active.map((store) => storeCrawler(env, store.slug).ensureScheduled(store.slug)));
+  return active.length;
+}
+
+export async function runCrawl(
+  env: Env,
+  store: StoreDefinition,
+  category: Category,
+  log: Logger,
+  runId: string,
+): Promise<CrawlResult> {
   return crawlCategory(
     {
       db: createDb(env.DB),
       clock: systemClock,
       log,
-      newId: () => crypto.randomUUID(),
-      createContext: (runId) => productionContext(env, store, message.category, runId, log),
+      newId: () => runId,
+      createContext: () => productionContext(env, store, category, runId, log),
       enqueueNormalize: (messages: PipelineMessage[]) => sendInBatches(env.NORMALIZE_QUEUE, messages),
     },
     store,
-    message.category,
+    category,
   );
 }
 
