@@ -263,17 +263,7 @@ function SlotRow({
                   ))}
                 </div>
               )}
-              {offer ? (
-                <p className="text-muted-foreground text-paragraph-xs">
-                  Con tarjeta <span className="tabular-nums">{formatCLP(offer.priceCard * quantity)}</span>
-                  {quantity > 1 && (
-                    <span className="tabular-nums">
-                      {" "}
-                      ({quantity} de {formatCLP(offer.priceCash)} en efectivo)
-                    </span>
-                  )}
-                </p>
-              ) : (
+              {!offer && (
                 <p className="flex items-center gap-1 text-label-xs text-warn">
                   <IconAlertTriangle className="size-3" aria-hidden />
                   No disponible en tiendas
@@ -282,14 +272,19 @@ function SlotRow({
               {issues.map((check) => (
                 <CompatibilityIssue key={check.rule} check={check} />
               ))}
-              <Link
-                to={`/producto/${product.slug}`}
-                className="inline-block text-label-xs text-muted-foreground underline-offset-2 hover:text-primary hover:underline"
-              >
-                Ver ficha del producto
-              </Link>
             </div>
             <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
+              {offer && (
+                // `md:mr-20`: queda justo bajo el precio de la fila, a la altura de su columna.
+                <p className="text-right text-muted-foreground text-paragraph-xs md:mr-20">
+                  Con tarjeta <span className="tabular-nums">{formatCLP(offer.priceCard * quantity)}</span>
+                  {quantity > 1 && (
+                    <span className="block tabular-nums">
+                      ({quantity} de {formatCLP(offer.priceCash)} en efectivo)
+                    </span>
+                  )}
+                </p>
+              )}
               {isOwner && (
                 <QuantityControl
                   item={item}
