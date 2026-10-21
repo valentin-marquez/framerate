@@ -319,7 +319,7 @@ function SlotRow({
                     <li key={alt.id} className="flex items-center gap-3 px-3 py-1.5">
                       <Link
                         to={`/producto/${alt.product.slug}`}
-                        className="min-w-0 flex-1 truncate text-label-sm hover:text-primary"
+                        className="min-w-0 flex-1 truncate text-label-sm underline-offset-2 transition-colors hover:text-primary hover:underline"
                       >
                         {alt.product.name}
                       </Link>
