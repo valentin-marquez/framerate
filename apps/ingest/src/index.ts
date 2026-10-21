@@ -21,11 +21,11 @@ import {
 } from "@/features/ingestion/ingestion.repository";
 import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
 import {
-  enqueueAllCrawls,
+  ensureAllScheduled,
   requestCrawls,
   requestPipeline,
   retryStuckNormalize,
-  runCrawlMessage,
+  storeCrawler,
 } from "@/features/ingestion/runtime";
 import { applyViews7d, fetchViews7d } from "@/features/popularity/views";
 import { emailSender } from "@/shared/email";
@@ -33,12 +33,15 @@ import { emailSender } from "@/shared/email";
 /**
  * Worker de ingesta: todo lo que toca tiendas externas. No recibe tráfico
  * público; sus disparadores son:
- *  - scheduled: Cron → encola un crawl por (tienda, categoría), reintenta lo atascado en el pipeline, copia a R2
- *               las fotos de producto pendientes y recalcula `views_7d` desde Analytics Engine.
- *  - queue:     consume crawls (uno por mensaje, con reintentos y DLQ).
+ *  - scheduled: Cron de 6 h → reintenta lo atascado en el pipeline, copia a R2 las fotos de producto pendientes y
+ *               recalcula `views_7d` desde Analytics Engine. El horario revisa la agenda de cada `StoreCrawler`, que
+ *               es quien crawlea cada tienda (#121).
+ *  - queue:     reenvía al `StoreCrawler` lo que quedó en `framerate-crawl` de antes del coordinador.
  *  - RPC:       `IngestRpc`, que usa apps/server para "crawlear ahora" y para encolar el backfill del pipeline.
  */
 const log = createLogger({ service: "framerate-ingest" });
+/** Debe coincidir con `triggers.crons` de `wrangler.jsonc`. */
+const HOURLY_CRON = "47 * * * *";
 
 export class IngestRpc extends WorkerEntrypoint<Env> implements IngestService {
   async enqueueCrawls(request: EnqueueCrawlsRequest): Promise<EnqueueCrawlsResult> {
@@ -51,11 +54,15 @@ export class IngestRpc extends WorkerEntrypoint<Env> implements IngestService {
   }
 }
 
+export { StoreCrawler } from "@/features/ingestion/store-crawler";
+
 export default {
   async scheduled(controller, env) {
+    if (controller.cron === HOURLY_CRON) {
+      log.info("coordinator.ensured", { stores: await ensureAllScheduled(env) });
+      return;
+    }
     log.info("runs.closed_stuck", { closed: await closeStuckRuns(createDb(env.DB), new Date()) });
-    const enqueued = await enqueueAllCrawls(env, `cron:${controller.cron}`);
-    log.info("cron.enqueued", { enqueued, cron: controller.cron });
     log.info("normalize.retried", { retried: await retryStuckNormalize(env, new Date()) });
     log.info(
       "claims.rechecked",
@@ -85,22 +92,17 @@ export default {
     }
   },
 
+  // Sólo para el deploy A; en el B se borran la cola, este consumidor y `messages.ts` (#201 §7).
   async queue(batch, env) {
     for (const message of batch.messages) {
       const parsed = CrawlMessageSchema.safeParse(message.body);
-      if (!parsed.success) {
-        // Un mensaje inválido nunca va a funcionar: se descarta (ack) y se registra.
-        log.error("queue.invalid_message", { body: message.body, issues: parsed.error.issues });
-        message.ack();
-        continue;
-      }
-      const result = await runCrawlMessage(env, parsed.data, log);
-      if (result?.status === "failed") {
-        // Backoff creciente; tras `max_retries` el mensaje va a la DLQ.
-        message.retry({ delaySeconds: 300 * message.attempts });
+      if (parsed.success) {
+        const { store, category, requestedBy } = parsed.data;
+        await storeCrawler(env, store).enqueue(store, [category], requestedBy);
       } else {
-        message.ack();
+        log.error("queue.invalid_message", { body: message.body, issues: parsed.error.issues });
       }
+      message.ack();
     }
   },
 } satisfies ExportedHandler<Env, CrawlMessage>;

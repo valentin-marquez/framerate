@@ -1,10 +1,11 @@
-import type { PipelineMessage } from "@framerate/contracts";
+import { Database } from "bun:sqlite";
+import type { Category, PipelineMessage } from "@framerate/contracts";
 import { createDb } from "@framerate/database";
 import { silentLogger } from "@framerate/kit";
 import type { Env } from "@/env";
+import { enqueueCrawls, initSchema, type Sql } from "@/features/ingestion/coordinator";
 import type { CrawlCategoryDeps } from "@/features/ingestion/crawl-category";
 import type { RawOffer } from "@/features/ingestion/domain/normalize";
-import type { CrawlMessage } from "@/features/ingestion/messages";
 import type { CrawlContext, StoreDefinition } from "@/features/ingestion/stores/adapter";
 
 /** Tienda falsa cuyo catálogo se controla desde el test. */
@@ -104,18 +105,50 @@ function fakeQueue<T>(sent: T[]): Queue<T> {
   } as unknown as Queue<T>;
 }
 
-/** Env de ingest con colas falsas que registran lo enviado. */
+/** Un `StoreCrawler` por slug con la misma cola SQL del de verdad, sobre `bun:sqlite`; sin alarm. */
+function fakeStoreCrawlers() {
+  const queues = new Map<string, Sql>();
+  const sqlFor = (slug: string) => {
+    let sql = queues.get(slug);
+    if (!sql) {
+      const db = new Database(":memory:");
+      sql = (query, ...params) => db.query(query).all(...params) as never;
+      initSchema(sql);
+      queues.set(slug, sql);
+    }
+    return sql;
+  };
+  const namespace = {
+    idFromName: (name: string) => name,
+    get: (slug: string) => ({
+      enqueue: async (_: string, categories: Category[], requestedBy: string) =>
+        enqueueCrawls(sqlFor(slug), categories, requestedBy, Date.now()),
+      ensureScheduled: async () => {},
+    }),
+  } as unknown as Env["STORE_CRAWLER"];
+  const tasks = () =>
+    [...queues].flatMap(([store, sql]) =>
+      sql("SELECT category, requested_by FROM tasks ORDER BY rowid").map((t) => ({
+        store,
+        category: t.category,
+        requestedBy: t.requested_by,
+      })),
+    );
+  return { namespace, tasks };
+}
+
+/** Env de ingest con colas y coordinadores falsos que registran lo enviado. */
 export function testEnv(d1: D1Database) {
-  const sent: CrawlMessage[] = [];
   const normalize: PipelineMessage[] = [];
   const link: PipelineMessage[] = [];
+  const crawlers = fakeStoreCrawlers();
   const env: Env = {
     DB: d1,
     SNAPSHOTS: {} as R2Bucket,
     ASSETS: {} as R2Bucket,
-    CRAWL_QUEUE: fakeQueue(sent),
+    STORE_CRAWLER: crawlers.namespace,
     NORMALIZE_QUEUE: fakeQueue(normalize),
     LINK_QUEUE: fakeQueue(link),
   };
-  return { env, sent, normalize, link };
+  return { env, tasks: crawlers.tasks, normalize, link };
 }

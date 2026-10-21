@@ -11,8 +11,14 @@
 
   // Este Worker NO recibe tráfico público: sólo Cron, Queue y RPC desde apps/server.
 
-  // Crawl completo cada 6 horas (UTC). Encola un mensaje por (tienda, categoría).
-  "triggers": { "crons": ["17 */6 * * *"] },
+  // Cada 6 h (UTC): fotos, reclamos, cuarentena, `views_7d`. Cada hora: la agenda de cada StoreCrawler, que es
+  // quien crawlea su tienda (#121); el horario debe coincidir con HOURLY_CRON de src/index.ts.
+  "triggers": { "crons": ["17 */6 * * *", "47 * * * *"] },
+
+  // Un DO por tienda: serializa sus corridas y reparte su crawl de 6 h con un desfase propio.
+  // Crear, borrar o renombrar la clase sólo con `wrangler deploy` (no `versions upload`); rollback en #201 §7.
+  "durable_objects": { "bindings": [{ "name": "STORE_CRAWLER", "class_name": "StoreCrawler" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["StoreCrawler"] }],
 
   "vars": {
     // `views_7d` sale de la API SQL de Analytics Engine; el token va aparte: wrangler secret put ANALYTICS_API_TOKEN.
@@ -49,18 +55,15 @@
 
   "queues": {
     "producers": [
-      { "binding": "CRAWL_QUEUE", "queue": "framerate-crawl" },
       // Las consumen framerate-normalize y framerate-match (#153); toda oferta nueva o cambiada pasa por ellas.
       { "binding": "NORMALIZE_QUEUE", "queue": "framerate-normalize" },
       { "binding": "LINK_QUEUE", "queue": "framerate-link" }
     ],
     "consumers": [
       {
+        // Sólo reenvía al StoreCrawler lo que quedó en vuelo del deploy anterior; se borra en el deploy B (#201 §7).
         "queue": "framerate-crawl",
-        // Un crawl por invocación: cada uno tiene su propio presupuesto de CPU y tiempo.
-        "max_batch_size": 1,
-        // Pocos crawls en paralelo: no saturar tiendas ni D1 (un solo escritor).
-        "max_concurrency": 2,
+        "max_batch_size": 10,
         "max_retries": 2,
         "dead_letter_queue": "framerate-crawl-dlq"
       }

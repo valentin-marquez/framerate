@@ -106,6 +106,16 @@ export async function closeStuckRuns(db: Db, now: Date): Promise<number> {
   return Number(result.numUpdatedRows);
 }
 
+/** La del coordinador: si murió después de `finishRun`, la corrida ya cerrada no se toca. */
+export async function closeInterruptedRun(db: Db, runId: string, now: Date) {
+  await db.query
+    .updateTable("crawl_runs")
+    .set({ status: "failed", error: "interrumpida", finished_at: now.toISOString() })
+    .where("id", "=", runId)
+    .where("status", "=", "running")
+    .execute();
+}
+
 /** Un rechazo que ya está registrado con el mismo hash no se repite (UNIQUE de 0022). Devuelve si se insertó. */
 export async function addToQuarantine(
   db: Db,

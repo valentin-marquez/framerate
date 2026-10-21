@@ -46,8 +46,8 @@ flowchart TB
     emailRouting["Email Routing<br/>→ handler email()"]
     emailSend["Email Service<br/>send_email EMAIL"]
 
-    cron(("Cron Trigger<br/>17 */6 * * *"))
-    crawlQ[["Queue<br/>framerate-crawl<br/>(DLQ framerate-crawl-dlq)"]]
+    cron(("Cron Trigger<br/>17 */6 * * * y 47 * * * *"))
+    crawler[["Durable Object StoreCrawler<br/>uno por tienda: cola, agenda y alarm"]]
     ingest["<b>framerate-ingest</b><br/>Worker sin HTTP público<br/>adaptadores, normalizar, matching<br/>RPC IngestRpc"]
     resizer["resizer.nozz.skin<br/>sharp en el servidor propio"]
 
@@ -72,8 +72,8 @@ flowchart TB
   mail --> emailRouting --> server
 
   cron --> ingest
-  ingest -- "1 mensaje = tienda + categoría" --> crawlQ
-  crawlQ -- "consumer, 2 en paralelo" --> ingest
+  ingest -- "enqueue() y ensureScheduled()" --> crawler
+  crawler -- "alarm: una corrida a la vez por tienda" --> stores
   ingest -- "fetch" --> stores
   ingest -- "escribe catálogo" --> d1
   ingest --> snap
@@ -119,9 +119,12 @@ crawls y barre las revisiones pendientes sin veredicto, así que también cubre 
 
 | Tipo | Disparo | Qué hace | Estado |
 |---|---|---|---|
-| **Descubrir** | Cron cada 6 h | Recorre el catálogo completo de cada tienda/categoría. Pesado. | ✅ |
-| **Bajo demanda** | Admin → `POST /v1/admin/crawls` → RPC a `ingest` | Igual que descubrir, para una tienda/categoría. | ✅ |
-| **Refrescar** | Cron frecuente | Re-chequea sólo URLs ya conocidas (precio/stock). Liviano. | pendiente |
+| **Descubrir** | Agenda del `StoreCrawler` cada 6 h, con desfase propio por tienda | Recorre el catálogo completo de cada tienda/categoría, una corrida a la vez por tienda. Pesado. | ✅ |
+| **Bajo demanda** | Admin → `POST /v1/admin/crawls` → RPC a `ingest` → `StoreCrawler` | Igual que descubrir; un pedido repetido mientras espera no se duplica. | ✅ |
+| **Refrescar** | Alarm del `StoreCrawler` cada hora | Re-chequea sólo URLs ya conocidas (precio/stock). Liviano. | pendiente (#121 fase 2) |
+
+El Cron horario (`47 * * * *`) sólo llama `ensureScheduled()` en cada tienda activa: revive una alarm perdida. La
+lógica está en `coordinator.ts` (SQL del DO, testeado sobre `bun:sqlite`) y `agenda.ts`; diseño en #201.
 
 ## 3. Estructura del código
 
@@ -152,6 +155,7 @@ apps/
         crawl-category.ts       caso de uso: una corrida (tienda, categoría)
         ingestion.repository.ts
         runtime.ts              cableado con Cron/Queues/R2 y pedido de crawls
+        store-crawler.ts        Durable Object por tienda (coordinator.ts y agenda.ts: su lógica)
     test/
 packages/
   contracts/                    esquemas Zod de la API + contrato RPC server↔ingest
@@ -196,7 +200,7 @@ de la web, está en **[data-model.md](./data-model.md)**. Resumen del núcleo de
 | `quarantine` | Ofertas rechazadas con motivo y payload. | — |
 | `products_fts` | Búsqueda FTS5 (sin tildes), sincronizada por triggers. | — |
 
-Escrituras idempotentes: si la cola reintenta una corrida, el resultado es el
+Escrituras idempotentes: si el coordinador reintenta una corrida, el resultado es el
 mismo. Oferta + punto de precio se escriben en un `batch` (atómico en D1).
 
 ## 5. Matching (huella de producto)
