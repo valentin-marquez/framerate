@@ -13,7 +13,15 @@ import {
   SLOT_BY_CATEGORY,
 } from "@framerate/contracts";
 import { imageVariant } from "@framerate/kit";
-import { IconAlertTriangle, IconChevronDown, IconMinus, IconPlus, IconTag, IconTrash } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconChevronDown,
+  IconMinus,
+  IconPlus,
+  IconStack2,
+  IconTag,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
@@ -188,9 +196,9 @@ function SlotRow({
                 {product.name}
               </Link>
               {alternatives.length > 0 && (
-                <span className="hidden shrink-0 rounded-md bg-secondary px-1.5 text-label-xs text-muted-foreground tabular-nums md:inline">
-                  +{alternatives.length}
-                  <span className="sr-only"> alternativas</span>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  <IconStack2 className="size-3" aria-hidden />
+                  {alternatives.length} {alternatives.length === 1 ? "alternativa" : "alternativas"}
                 </span>
               )}
               {isOwner && (
