@@ -5,7 +5,8 @@ import type { Db } from "./client";
 /**
  * Resumen de precios de `products` y fila del día en `product_price_daily`, recalculados desde `listings` de todas
  * las tiendas. Se recalcula desde cero (no se suma) para que reintentos de la cola y corridas paralelas den lo mismo.
- * `scripts/backfill-price-daily.sql` repite estas sentencias para todos los productos: mantenerlos iguales.
+ * `scripts/backfill-price-daily.sql` repite estas sentencias para todos los productos, y el trigger
+ * `stores_deactivated_au` (migración 0037) el resumen al desactivar una tienda: mantenerlos iguales.
  */
 
 /**
