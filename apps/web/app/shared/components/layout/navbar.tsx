@@ -378,7 +378,7 @@ export function Navbar({
   const pendingPath = useNavigation().location?.pathname;
   const [selected, setSelected] = useState<string | null>(null);
   // En una categoría, el riel queda compacto y sus filtros van en un panel a su derecha (los datos son los del loader
-  // de esa ruta); en la ficha de un producto queda compacto sin panel. Fuera de ellas, sigue la preferencia guardada.
+  // de esa ruta). Fuera de ella, sigue la preferencia guardada.
   const catalog = useMatches().find((m) => m.id === "features/category/pages/category-page")?.data as
     | CatalogData
     | undefined;
@@ -390,18 +390,16 @@ export function Navbar({
   useEffect(() => {
     hydrated = true;
   }, []);
-  const onProduct = pathname.startsWith("/producto/");
   const [panelOpen, setPanelOpen] = useState(true);
-  const compact = collapsed || inCategory || onProduct;
+  const compact = collapsed || inCategory;
   const wide = !compact || peek;
-  // El hueco del contenido en esas páginas lo pone `data-panel` en el <html> (app.css): root.tsx lo fija desde la ruta y
+  // El hueco del contenido en la categoría lo pone `data-panel` en el <html> (app.css): root.tsx lo fija desde la ruta y
   // aquí sólo se cambia al plegar el panel, sin volver a renderizar la página.
   useEffect(() => {
     const root = document.documentElement;
     if (inCategory) root.dataset.panel = panelOpen ? "open" : "closed";
-    else if (onProduct) root.dataset.panel = "none";
     else delete root.dataset.panel;
-  }, [inCategory, onProduct, panelOpen]);
+  }, [inCategory, panelOpen]);
   const activeFilters = activeFilterCount(useSearchParams()[0]);
   // Cuando la URL llega (o la navegación se cancela) manda la navegación real.
   // biome-ignore lint/correctness/useExhaustiveDependencies: se limpia en cada cambio de página o de pendiente.
@@ -418,12 +416,10 @@ export function Navbar({
       if (e.key === "b" && (e.ctrlKey || e.metaKey) && window.matchMedia("(min-width: 64rem)").matches) {
         e.preventDefault();
         if (inCategory) setPanelOpen((open) => !open);
-        else if (!onProduct) {
-          if (peek) {
-            setPeek(false);
-            (document.activeElement as HTMLElement | null)?.blur();
-          } else onCollapsedChange(!collapsed);
-        }
+        else if (peek) {
+          setPeek(false);
+          (document.activeElement as HTMLElement | null)?.blur();
+        } else onCollapsedChange(!collapsed);
         return;
       }
       // F pliega y despliega el panel de filtros de la categoría abierta.
@@ -483,8 +479,7 @@ export function Navbar({
             aria-expanded={inCategory ? panelOpen : !collapsed}
             className={cn(
               "t-rail-handle fixed top-8 left-0 z-50 hidden size-6 cursor-pointer place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              // En la ficha el riel es siempre compacto: no hay manija.
-              !onProduct && "lg:grid",
+              "lg:grid",
               inCategory ? (panelOpen ? "[--rail:20rem]" : "[--rail:4rem]") : wide ? "[--rail:16rem]" : "[--rail:4rem]",
             )}
           >

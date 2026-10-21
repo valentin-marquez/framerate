@@ -167,7 +167,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       // En una categoría el contenido deja sitio al panel de filtros desde el HTML del servidor, y en la ficha de un
       // producto sólo al riel compacto ("none"); plegar el panel lo cambia el Navbar directo en el <html>, y React no lo
       // pisa mientras la ruta no cambie de grupo.
-      data-panel={pathname.startsWith("/categoria/") ? "open" : pathname.startsWith("/producto/") ? "none" : undefined}
+      data-panel={pathname.startsWith("/categoria/") ? "open" : undefined}
       suppressHydrationWarning
     >
       <head>
