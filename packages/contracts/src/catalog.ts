@@ -24,7 +24,10 @@ export type StoreSummary = z.infer<typeof StoreSummarySchema>;
 
 export const OfferSchema = z.object({
   id: z.number().int(),
-  store: StoreSummarySchema,
+  store: StoreSummarySchema.extend({
+    /** Promedio (un decimal) y cantidad de reseñas de la tienda; null si no tiene. */
+    rating: z.object({ average: z.number(), count: z.number().int().positive() }).nullable().optional(),
+  }),
   url: z.url(),
   title: z.string(),
   priceCash: z.number().int().nonnegative(),

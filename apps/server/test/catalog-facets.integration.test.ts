@@ -214,6 +214,15 @@ describe("filtro por especificación", () => {
     expect(detail.referencePrice).toBe(110_000);
   });
 
+  test("la oferta lleva la nota de su tienda con un decimal, o null sin reseñas", async () => {
+    const offers = async () =>
+      ProductDetailSchema.parse(await (await get("/v1/products/placa-a")).json()).offers.map((o) => o.store.rating);
+    expect(await offers()).toEqual([null]);
+    await db.query.updateTable("stores").set({ rating_count: 3, rating_sum: 14 }).where("slug", "=", "alfa").execute();
+    expect(await offers()).toEqual([{ average: 4.7, count: 3 }]);
+    await db.query.updateTable("stores").set({ rating_count: 0, rating_sum: 0 }).where("slug", "=", "alfa").execute();
+  });
+
   test("clave que no es faceta de la categoría: 400; sin categoría se ignora", async () => {
     const res = await get("/v1/products?category=motherboard&spec=vram:12");
     expect(res.status).toBe(400);

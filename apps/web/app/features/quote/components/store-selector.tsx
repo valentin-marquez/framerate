@@ -3,6 +3,7 @@ import { IconCheck, IconChevronDown } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { productsService } from "~/features/product/services/products";
+import { StoreScore } from "~/features/store-reviews/components/store-score";
 import {
   Dialog,
   DialogContent,
@@ -98,7 +99,10 @@ export function StoreSelector({ item, onChoose, compact, className, viewer }: St
             >
               <StoreLogo store={offer.store} className="size-6 rounded-md" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{offer.store.name}</p>
+                <div className="flex min-w-0 items-baseline gap-2">
+                  <p className="truncate text-sm font-medium">{offer.store.name}</p>
+                  <StoreScore store={offer.store} />
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {offer.inStock
                     ? t("quote_offer_prices", { cash: formatCLP(offer.priceCash), card: formatCLP(offer.priceCard) })

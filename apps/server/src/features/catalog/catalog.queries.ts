@@ -375,6 +375,8 @@ export async function getProduct(
         "s.name as storeName",
         "s.url as storeUrl",
         "s.scraped_icon_url as storeIconUrl",
+        "s.rating_count as storeRatingCount",
+        "s.rating_sum as storeRatingSum",
         "l.url",
         "l.title",
         "l.price_cash",
@@ -413,7 +415,16 @@ export async function getProduct(
     .filter((o) => toBool(o.is_active))
     .map((o) => ({
       id: o.id,
-      store: { slug: o.storeSlug, name: o.storeName, url: o.storeUrl, iconUrl: o.storeIconUrl },
+      store: {
+        slug: o.storeSlug,
+        name: o.storeName,
+        url: o.storeUrl,
+        iconUrl: o.storeIconUrl,
+        rating:
+          o.storeRatingCount > 0
+            ? { average: Math.round((o.storeRatingSum / o.storeRatingCount) * 10) / 10, count: o.storeRatingCount }
+            : null,
+      },
       url: o.url,
       title: o.title,
       priceCash: o.price_cash,

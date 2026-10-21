@@ -23,6 +23,7 @@ import {
   priceVerdict,
   summarizeHistory,
 } from "~/features/product/utils/price-history";
+import { StoreScore } from "~/features/store-reviews/components/store-score";
 import { AdSlot } from "~/shared/components/ad-slot";
 import { OutboundLink } from "~/shared/components/outbound-link";
 import { AsyncImage } from "~/shared/components/primitives/async-image";
@@ -359,15 +360,18 @@ function StoreRow({ offer: o, productId, now }: { offer: Offer; productId: numbe
     <li className="relative flex items-center gap-2.5 px-3 py-3 transition-colors hover:bg-secondary/40 sm:gap-3 sm:px-4">
       <StoreLogo store={o.store} className={cn("size-9", !o.inStock && "opacity-50")} />
       <div className="min-w-0 flex-1">
-        <OutboundLink
-          href={o.url}
-          source="product_details_comparison"
-          listingId={String(o.id)}
-          productId={String(productId)}
-          className="block truncate font-medium text-foreground text-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
-        >
-          {o.store.name}
-        </OutboundLink>
+        <div className="flex min-w-0 items-baseline gap-2">
+          <OutboundLink
+            href={o.url}
+            source="product_details_comparison"
+            listingId={String(o.id)}
+            productId={String(productId)}
+            className="block min-w-0 truncate font-medium text-foreground text-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
+          >
+            {o.store.name}
+          </OutboundLink>
+          <StoreScore store={o.store} link />
+        </div>
         <p className="flex flex-wrap items-center gap-x-3 text-muted-foreground text-xs">
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
             <span
