@@ -123,7 +123,7 @@ describe("checkCompatibility", () => {
   });
 
   test("sin pares que revisar el estado es unknown y no hay chequeos", () => {
-    expect(checkCompatibility([gpu])).toEqual({ status: "unknown", checks: [], estimatedWatts: 75 + 285 });
+    expect(checkCompatibility([gpu])).toEqual({ status: "unknown", checks: [], estimatedWatts: 40 + 285 });
   });
 
   test("advertencias: SO-DIMM, socket que el cooler no lista, CPU sin cooler y fuente justa", () => {
@@ -136,10 +136,10 @@ describe("checkCompatibility", () => {
     expect(results([cpu, part("cpu_cooler", { type: "air", sockets: "Intel/AMD" })]).cooler_socket).toBe("warning");
     expect(results([cpu, part("cpu_cooler", { type: "air", sockets: "Intel" })]).cooler_socket).toBe("unknown");
     expect(results([cpu]).cooler_missing).toBe("warning");
-    // 75 + 105 + 285 = 465 W: el mínimo es 700 W (psuSizing), 650 W alcanza pero queda justa; 450 W no alcanza.
-    expect(results([cpu, gpu, part("psu", { wattage: 650 })]).psu_wattage).toBe("warning");
-    expect(results([cpu, gpu, part("psu", { wattage: 700 })]).psu_wattage).toBe("ok");
-    expect(results([cpu, gpu, part("psu", { wattage: 450 })]).psu_wattage).toBe("incompatible");
+    // 40 + 105 + 285 = 430 W: el mínimo es 650 W (psuSizing), 600 W alcanza pero queda justa; 400 W no alcanza.
+    expect(results([cpu, gpu, part("psu", { wattage: 600 })]).psu_wattage).toBe("warning");
+    expect(results([cpu, gpu, part("psu", { wattage: 650 })]).psu_wattage).toBe("ok");
+    expect(results([cpu, gpu, part("psu", { wattage: 400 })]).psu_wattage).toBe("incompatible");
   });
 
   test("tamaños y cantidades: placa, tarjeta, cooler, radiador y módulos", () => {
@@ -151,8 +151,8 @@ describe("checkCompatibility", () => {
     expect(results([part("ram", { type: "ddr5", modules: 2 }, 3), mb]).memory_slots).toBe("incompatible");
   });
 
-  test("el consumo estimado suma CPU, GPU y 75 W; sin un TDP queda null", () => {
-    expect(checkCompatibility([cpu, gpu]).estimatedWatts).toBe(75 + 105 + 285);
+  test("el consumo estimado suma CPU, GPU y la base de 40 W; sin un TDP queda null", () => {
+    expect(checkCompatibility([cpu, gpu]).estimatedWatts).toBe(40 + 105 + 285);
     expect(checkCompatibility([cpu, part("gpu", {})]).estimatedWatts).toBeNull();
   });
 
@@ -164,7 +164,37 @@ describe("checkCompatibility", () => {
 
   test("del procesador vale su potencia máxima de la ficha oficial si la hay (#179)", () => {
     const i9 = part("cpu", { socket: "LGA1700", tdp_w: 125, max_power_w: 253 });
-    expect(checkCompatibility([i9, gpu]).estimatedWatts).toBe(75 + 253 + 285);
+    expect(checkCompatibility([i9, gpu]).estimatedWatts).toBe(40 + 253 + 285);
+  });
+});
+
+describe("consumo del resto del equipo (#217)", () => {
+  const cpu = part("cpu", { socket: "AM5", tdp_w: 105 });
+  const gpu = part("gpu", { tdp_w: 285 });
+  const watts = (parts: Part[]) => checkCompatibility(parts).estimatedWatts;
+  const normal = [
+    cpu,
+    gpu,
+    part("ram", { modules: 2 }),
+    part("ssd", { interface: "nvme" }),
+    part("case_fan", { quantity: 1 }, 3),
+    part("cpu_cooler", { type: "air" }),
+  ];
+
+  test("un equipo normal queda a ±10 W de los 75 W de antes", () => {
+    expect(Math.abs((watts(normal) ?? 0) - (75 + 105 + 285))).toBeLessThanOrEqual(10);
+  });
+
+  test("4 discos duros y 9 ventiladores suben la estimación por tipo y cantidad", () => {
+    const loaded = [cpu, gpu, part("ram", { modules: 4 }), part("hdd", {}, 4), part("case_fan", { quantity: 3 }, 3)];
+    // 40 + 20 + 40 + 27 + 105 + 285
+    expect(watts(loaded)).toBe(517);
+  });
+
+  test("una AIO suma su bomba y un SSD SATA menos que uno NVMe", () => {
+    expect(watts([cpu, gpu, part("cpu_cooler", { type: "aio" })])).toBe(40 + 6 + 105 + 285);
+    expect(watts([cpu, gpu, part("ssd", { interface: "sata" })])).toBe(40 + 4 + 105 + 285);
+    expect(watts([cpu, gpu, part("ssd", { interface: "nvme" })])).toBe(40 + 8 + 105 + 285);
   });
 });
 

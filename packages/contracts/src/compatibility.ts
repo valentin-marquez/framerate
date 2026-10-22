@@ -32,7 +32,7 @@ export const QuoteCompatibilitySchema = z.object({
   /** El peor resultado de `checks`; `unknown` también si no se pudo revisar nada. */
   status: z.enum(["valid", "warning", "incompatible", "unknown"]),
   checks: z.array(CompatCheckSchema),
-  /** Procesador + GPU + 75 W para el resto; `null` sin procesador ni GPU, o sin el TDP de alguno. */
+  /** Procesador + GPU + el resto estimado por tipo y cantidad (placa, RAM, discos, ventiladores, cooler); `null` sin procesador ni GPU, o sin el TDP de alguno. */
   estimatedWatts: z.number().int().nullable(),
 });
 export type QuoteCompatibility = z.infer<typeof QuoteCompatibilitySchema>;

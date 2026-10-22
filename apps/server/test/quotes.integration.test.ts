@@ -722,10 +722,10 @@ describe("compatibilidad", () => {
       result: "incompatible",
       message: "El procesador es AM5 y la placa LGA1700: no calzan.",
     });
-    // 75 + 120 + 220 = 415 W: 500 W alcanza, pero bajo el mínimo de 650 W (psuSizing).
+    // 40 + 120 + 220 = 380 W: 500 W alcanza, pero bajo el mínimo de 650 W (psuSizing).
     expect(byRule.psu_wattage?.result).toBe("warning");
     expect(byRule.cooler_missing?.result).toBe("warning");
-    expect(compatibility.estimatedWatts).toBe(415);
+    expect(compatibility.estimatedWatts).toBe(380);
     const { items } = await detail(ana, quote.id);
     expect(items.find((i) => i.product.id === seed.ryzen)?.specs).toEqual(["AM5", "120 W"]);
     expect(items.find((i) => i.product.id === board)?.specs).toEqual(["LGA1700", "DDR5"]);

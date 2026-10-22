@@ -22,7 +22,7 @@ export interface Part {
 }
 
 type Parts = Partial<Record<Category, Part>>;
-type Rule = (p: Parts) => CompatCheck | null;
+type Rule = (p: Parts, all: readonly Part[]) => CompatCheck | null;
 
 const check = (rule: CompatRule, result: CompatCheck["result"], parts: Part[], message: string): CompatCheck => ({
   rule,
@@ -100,13 +100,36 @@ export function largestRadiator(v: unknown): number | null {
 
 const label = (s: string) => s.toUpperCase();
 
+/** Consumo típico del resto del equipo (#217): placa y periféricos siempre, y lo demás por tipo y cantidad. */
+const BOARD_W = 40;
+const RAM_MODULE_W = 5;
+const STORAGE_W = { nvme: 8, sata: 4, hdd: 10 } as const;
+const CASE_FAN_W = 3;
+const AIR_COOLER_FAN_W = 2;
+const AIO_PUMP_W = 6;
+
+function restWatts(parts: readonly Part[]): number {
+  let watts = BOARD_W;
+  for (const p of parts) {
+    const f = p.facts;
+    if (p.category === "ram") watts += RAM_MODULE_W * (num(f.modules) ?? 2) * p.quantity;
+    else if (p.category === "ssd") watts += (f.interface === "nvme" ? STORAGE_W.nvme : STORAGE_W.sata) * p.quantity;
+    else if (p.category === "hdd") watts += STORAGE_W.hdd * p.quantity;
+    else if (p.category === "case_fan") watts += CASE_FAN_W * (num(f.quantity) ?? 1) * p.quantity;
+    else if (p.category === "cpu_cooler")
+      watts += f.type === "aio" ? AIO_PUMP_W : AIR_COOLER_FAN_W * (num(f.fan_count) ?? 1);
+  }
+  return watts;
+}
+
 /**
- * Consumo estimado: procesador y GPU más 75 W para el resto. `null` si no hay ninguno de los dos. Del procesador vale
- * su potencia máxima de la ficha oficial (#179: un i9-14900K tiene 125 W de TDP y llega a 253 W); si no está, el TDP.
+ * Consumo estimado: procesador y GPU más el resto por tipo y cantidad (`restWatts`). `null` si no hay ninguno de los
+ * dos. Del procesador vale su potencia máxima de la ficha oficial (#179: un i9-14900K tiene 125 W de TDP y llega a
+ * 253 W); si no está, el TDP.
  */
-function consumption({ cpu, gpu }: Parts): { watts: number } | { missing: Part } | null {
+function consumption({ cpu, gpu }: Parts, all: readonly Part[]): { watts: number } | { missing: Part } | null {
   if (!cpu && !gpu) return null;
-  let watts = 75;
+  let watts = restWatts(all);
   for (const p of [cpu, gpu]) {
     if (!p) continue;
     const tdp = (p === cpu ? num(p.facts.max_power_w) : null) ?? num(p.facts.tdp_w);
@@ -277,12 +300,12 @@ const RULES: Rule[] = [
       : check("cooler_missing", "warning", [cpu], "El procesador no trae cooler: agrega uno a la cotización.");
   },
 
-  ({ psu, cpu, gpu }) => {
+  ({ psu, cpu, gpu }, all) => {
     if (!psu || (!cpu && !gpu)) return null;
     const involved = [psu, cpu, gpu].filter((p): p is Part => p !== undefined);
     const watts = num(psu.facts.wattage);
     if (!watts) return unknown("psu_wattage", involved, "la potencia", psu);
-    const estimate = consumption({ cpu, gpu });
+    const estimate = consumption({ cpu, gpu }, all);
     if (!estimate) return null;
     if ("missing" in estimate) return unknown("psu_wattage", involved, "el consumo", estimate.missing);
     const need = estimate.watts;
@@ -374,8 +397,8 @@ const STATUS = { ok: "valid", unknown: "unknown", warning: "warning", incompatib
 export function checkCompatibility(parts: readonly Part[]): QuoteCompatibility {
   const byCategory: Parts = {};
   for (const p of parts) byCategory[p.category] ??= p;
-  const checks = RULES.flatMap((rule) => rule(byCategory) ?? []);
-  const estimate = consumption(byCategory);
+  const checks = RULES.flatMap((rule) => rule(byCategory, parts) ?? []);
+  const estimate = consumption(byCategory, parts);
   const estimatedWatts = estimate && "watts" in estimate ? estimate.watts : null;
   if (checks.length === 0) return { status: "unknown", checks, estimatedWatts };
   const worst = checks.reduce((a, c) => (SEVERITY[c.result] > SEVERITY[a.result] ? c : a));
