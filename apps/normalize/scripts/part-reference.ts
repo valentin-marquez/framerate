@@ -3,7 +3,7 @@
  * por modelo con su URL); este script las pasa al formato de `listing_identity.specs` que leen las reglas de
  * compatibilidad, y las carga:
  *
- *   bun scripts/part-reference.ts build <cpu_cooler|case> <filas.json>...   agrega a part-reference.json
+ *   bun scripts/part-reference.ts build <cpu_cooler|case|motherboard> <filas.json>...   agrega a part-reference.json
  *   bun scripts/part-reference.ts sql > /tmp/part-reference.sql
  *   cd ../../packages/database && bunx wrangler d1 execute framerate --remote --file /tmp/part-reference.sql
  *
@@ -46,6 +46,24 @@ export function toReference(category: string, r: Record<string, unknown>): PartR
     specs.ram_clearance_mm = num(r.ram_clearance_mm);
     specs.noise_dba_max = num(r.noise_dba_max);
     specs.lighting = typeof r.rgb === "string" && LIGHTING.has(r.rgb) ? r.rgb : null;
+  } else if (category === "motherboard") {
+    // #188: lo que la tienda casi nunca dice y las reglas de compatibilidad usan.
+    specs.socket = typeof r.socket === "string" && r.socket ? r.socket.toUpperCase().replace(/\s+/g, "") : null;
+    specs.memory_slots = num(r.memory_slots);
+    specs.memory_max_gb = num(r.memory_max_gb);
+    specs.memory_max_speed_mt_s = num(r.memory_max_speed_mt_s);
+    specs.m2_slots = num(r.m2_slots);
+    specs.pcie_x16_slots = num(r.pcie_x16_slots);
+    specs.sata_ports = num(r.sata_ports);
+    specs.wifi_standard = typeof r.wifi === "string" && r.wifi ? r.wifi : null;
+    specs.ethernet = typeof r.ethernet === "string" && r.ethernet ? r.ethernet : null;
+    const count = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
+    specs.cpu_fan_headers = count(r.cpu_fan_headers);
+    specs.chassis_fan_headers = count(r.chassis_fan_headers);
+    specs.argb_5v_headers = count(r.argb_5v_headers);
+    specs.rgb_12v_headers = count(r.rgb_12v_headers);
+    specs.usb_c_front_header = typeof r.usb_c_front_header === "boolean" ? r.usb_c_front_header : null;
+    specs.bios_flashback = typeof r.bios_flashback === "boolean" ? r.bios_flashback : null;
   } else {
     const boards = Array.isArray(r.motherboards)
       ? r.motherboards.flatMap((b) => BOARDS[String(b).toLowerCase()] ?? [])
@@ -81,7 +99,8 @@ const q = (v: unknown) => (v === null || v === undefined ? "NULL" : `'${String(v
 const [mode, ...args] = process.argv.slice(2);
 if (import.meta.main && mode === "build") {
   const [category, ...paths] = args;
-  if (category !== "cpu_cooler" && category !== "case") throw new Error("uso: build <cpu_cooler|case> <filas.json>...");
+  if (category !== "cpu_cooler" && category !== "case" && category !== "motherboard")
+    throw new Error("uso: build <cpu_cooler|case|motherboard> <filas.json>...");
   const kept = ((await Bun.file(DATA).exists()) ? JSON.parse(await Bun.file(DATA).text()) : []) as PartReference[];
   const rows = kept.filter((r) => r.category !== category);
   // El mismo modelo puede venir de varias fuentes (búsqueda y ficha bajada): la primera manda y las demás completan
@@ -109,7 +128,9 @@ if (import.meta.main && mode === "build") {
   console.error(
     category === "cpu_cooler"
       ? `${mine.length} coolers; alto ${has("height_mm")}, radiador ${has("radiator_mm")}, sockets ${has("sockets")}`
-      : `${mine.length} gabinetes; GPU ${has("max_gpu_length_mm")}, cooler ${has("max_cpu_cooler_height_mm")}, radiadores ${has("radiator_support_mm")}, placas ${has("supported_motherboard_form_factors")}`,
+      : category === "motherboard"
+        ? `${mine.length} placas; velocidad ${has("memory_max_speed_mt_s")}, ventiladores ${has("chassis_fan_headers")}, ARGB ${has("argb_5v_headers")}, flashback ${has("bios_flashback")}`
+        : `${mine.length} gabinetes; GPU ${has("max_gpu_length_mm")}, cooler ${has("max_cpu_cooler_height_mm")}, radiadores ${has("radiator_support_mm")}, placas ${has("supported_motherboard_form_factors")}`,
   );
 } else if (import.meta.main && mode === "sql") {
   const rows = JSON.parse(await Bun.file(DATA).text()) as PartReference[];

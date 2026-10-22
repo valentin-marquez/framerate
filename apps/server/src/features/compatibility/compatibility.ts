@@ -174,7 +174,11 @@ const RULES: Rule[] = [
         "cpu_support",
         "warning",
         [cpu, mb],
-        `Un ${gen} en una placa ${name} necesita BIOS actualizada: si la placa es de antes que el procesador puede no dar imagen. Conviene una con BIOS Flashback o pedir la actualización a la tienda.`,
+        `Un ${gen} en una placa ${name} necesita BIOS actualizada: si la placa es de antes que el procesador puede no dar imagen. ${
+          mb.facts.bios_flashback === true
+            ? "Esta placa tiene BIOS Flashback, así que se puede actualizar sin otro procesador."
+            : "Conviene una con BIOS Flashback o pedir la actualización a la tienda."
+        }`,
       );
     return check(
       "cpu_support",

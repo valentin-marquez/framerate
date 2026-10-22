@@ -78,6 +78,13 @@ export const SPEC_FIELDS: Record<Category, readonly string[]> = {
     "sata_ports",
     "wifi_standard",
     "ethernet",
+    // Conectores (#188): casi nunca en la tienda, los trae la referencia por placa.
+    "cpu_fan_headers",
+    "chassis_fan_headers",
+    "argb_5v_headers",
+    "rgb_12v_headers",
+    "usb_c_front_header",
+    "bios_flashback",
   ],
   ram: ["timings", "voltage", "heat_spreader", "xmp_expo"],
   psu: ["atx_version", "fanless", "length_mm", "pcie_12vhpwr", "pcie_6_plus_2_pin", "sata_connectors"],

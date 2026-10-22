@@ -2,7 +2,7 @@ import type { IdentityValue } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 
 /** Las categorías con referencia por modelo en `part_reference` (#182). */
-export const PART_CATEGORIES = new Set(["cpu_cooler", "case"]);
+export const PART_CATEGORIES = new Set(["cpu_cooler", "case", "motherboard"]);
 
 /** Referencia de un modelo con sus specs ya en el formato de `listing_identity.specs`. */
 export interface PartReference {

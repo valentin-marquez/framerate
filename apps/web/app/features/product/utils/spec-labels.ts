@@ -33,6 +33,12 @@ const SPECS: Record<string, [label: string, unit?: string]> = {
   sata_ports: ["Puertos SATA"],
   wifi_standard: ["Wi-Fi"],
   ethernet: ["Red cableada"],
+  cpu_fan_headers: ["Conectores de ventilador de CPU"],
+  chassis_fan_headers: ["Conectores de ventilador de gabinete"],
+  argb_5v_headers: ["Conectores ARGB de 5 V"],
+  rgb_12v_headers: ["Conectores RGB de 12 V"],
+  usb_c_front_header: ["USB-C frontal interno"],
+  bios_flashback: ["BIOS Flashback"],
   // RAM
   timings: ["Latencias"],
   voltage: ["Voltaje", "V"],

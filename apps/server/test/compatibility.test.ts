@@ -263,6 +263,10 @@ describe("soporte de procesador por chipset (#188)", () => {
     expect(support(cpu("core i5 13400f", "LGA1700"), mb("B760", "LGA1700"))).toBe("ok");
     expect(support(cpu("core i5 11400", "LGA1200"), mb("B460", "LGA1200"))).toBe("incompatible");
     expect(support(cpu("core ultra 5 245k", "LGA1851"), mb("B860", "LGA1851"))).toBe("ok");
+    const flashback = part("motherboard", { chipset: "B650", socket: "AM5", bios_flashback: true });
+    expect(
+      checkCompatibility([cpu("ryzen 7 9800x3d"), flashback]).checks.find((k) => k.rule === "cpu_support")?.message,
+    ).toContain("tiene BIOS Flashback");
   });
 
   test("sin chipset es desconocido; con otro socket, Threadripper o Xeon no opina", () => {
