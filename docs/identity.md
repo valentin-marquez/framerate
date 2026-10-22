@@ -96,6 +96,22 @@ Supabase mientras la web siga usándolo): `https://api.framerate.cl/v1/auth/call
 (en local `http://localhost:8787/v1/auth/callback/discord`).
 Scopes: `identify` y `email` (ya configurados).
 
+## Rotar secretos
+
+Cada secreto se carga con `bunx wrangler secret put <NOMBRE>` desde `apps/server`; el valor lo escribe quien rota, nunca
+pegado en un chat. Conviene rotar los que hayan pasado por un chat, una captura o un log al cargarlos. Sin eso, basta
+con saber qué rompe cada uno:
+
+| Secreto | Qué rompe al cambiarlo | Después |
+|---|---|---|
+| `BETTER_AUTH_SECRET` | Cierra todas las sesiones y deja ilegibles los tokens OAuth guardados, que van cifrados con él (`auth.ts`). No importa: no se usan después del login. | Nada más; cada persona vuelve a entrar. |
+| `ADMIN_TOKEN` | Los scripts con el token viejo reciben 401. | Actualizar la copia local en `~/.config/framerate/admin-token`. |
+| `ADMIN_TOKENS` | Sólo el token de la persona que se quita o cambia. | Avisarle su token nuevo por un canal privado. |
+| `<PROVEEDOR>_CLIENT_SECRET` | El login con ese proveedor falla entre regenerar el secreto y cargarlo. | Regenerarlo en la consola del proveedor (el client ID no cambia) y cargarlo enseguida. |
+
+Orden para Discord y Google: regenerar en la consola, `wrangler secret put` en cuanto se tenga, y probar un login. El
+secreto se aplica sin desplegar: el Worker lo lee en el siguiente request.
+
 ## Agregar un proveedor
 
 Todo pasa por el registro `apps/server/src/features/identity/providers.ts`
