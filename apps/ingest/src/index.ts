@@ -8,7 +8,7 @@ import {
   type EnqueuePipelineResult,
   type IngestService,
 } from "@framerate/contracts";
-import { createDb, refreshProductsPriceSummary } from "@framerate/database";
+import { createDb, reconcilePriceSummary, refreshProductsPriceSummary } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import type { Env } from "@/env";
 import { recheckClaims } from "@/features/claims/recheck";
@@ -73,6 +73,8 @@ export default {
     const stale = await deactivateStale(createDb(env.DB), new Date());
     if (stale.productIds.length > 0) await refreshProductsPriceSummary(createDb(env.DB), stale.productIds, new Date());
     (stale.skipped ? log.warn : log.info)("listings.stale", { deactivated: stale.deactivated, skipped: stale.skipped });
+    // Red de seguridad del resumen de precios (#219): si corrige algo seguido, hay una causa nueva que buscar.
+    log.info("summary.reconciled", { products: await reconcilePriceSummary(createDb(env.DB), new Date()) });
     const imageLog = log.child({ feature: "images" });
     if (env.RESIZER_URL && env.RESIZER_TOKEN) {
       const resize = resizerClient(env.RESIZER_URL, env.RESIZER_TOKEN);

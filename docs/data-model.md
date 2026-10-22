@@ -136,6 +136,12 @@ Ver [architecture.md](./architecture.md) §4–5 para matching e ingesta. Lo nue
 
 ## stores
 
+- **Desactivar o vetar una tienda** (`stores.is_active = 0`): el trigger
+  `stores_deactivated_au` (migración 0037, #219) apaga sus ofertas y recalcula el
+  resumen de precios de sus productos en la misma transacción, así salen de las
+  listas. Reactivarla no revive sus ofertas: vuelven con su próximo crawl. El Cron
+  de 6 h de ingest además reconcilia los productos cuyo resumen no coincide con
+  sus ofertas (`reconcilePriceSummary`), por si algo las desfasa por otro camino.
 - **`store_profiles`**: capa editable por la organización, con límites en la
   base. Antes no había validación en el servidor, y un `website` inválido
   rompía el header.

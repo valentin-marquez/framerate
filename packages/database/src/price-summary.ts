@@ -1,4 +1,4 @@
-import { CompiledQuery } from "kysely";
+import { CompiledQuery, sql } from "kysely";
 import { bumpCatalogVersionQuery } from "./catalog-version";
 import type { Db } from "./client";
 
@@ -86,4 +86,25 @@ async function refresh(
     ),
     { compile: () => bumpCatalogVersionQuery },
   ]);
+}
+
+/**
+ * Red de seguridad del Cron (#219): productos cuyo resumen dice que hay stock sin ninguna oferta viva con stock, o al
+ * revés (un UPDATE a mano en Studio, un camino de código que olvidó recalcular). Recalcula hasta `limit` por corrida y
+ * devuelve cuántos corrigió: si no es cero seguido, hay otra causa por encontrar.
+ */
+export async function reconcilePriceSummary(db: Db, now: Date, limit = 500): Promise<number> {
+  const { rows } = await sql<{ id: number }>`
+    SELECT p.id FROM products p
+    WHERE (p.in_stock_offer_count > 0) <> EXISTS (
+      SELECT 1 FROM listings l WHERE l.product_id = p.id AND l.is_active = 1 AND l.visible = 1 AND l.in_stock = 1
+        AND l.id NOT IN (SELECT listing_id FROM match_reviews WHERE status = 'pending'))
+    LIMIT ${limit}`.execute(db.query);
+  if (rows.length === 0) return 0;
+  await refreshProductsPriceSummary(
+    db,
+    rows.map((r) => r.id),
+    now,
+  );
+  return rows.length;
 }
