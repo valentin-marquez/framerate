@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export const COMPAT_RULES = [
   "socket",
+  "cpu_support",
   "memory_type",
   "memory_type_cpu",
   "memory_form_factor",

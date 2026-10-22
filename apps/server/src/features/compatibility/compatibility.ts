@@ -5,6 +5,7 @@ import {
   psuSizing,
   type QuoteCompatibility,
 } from "@framerate/contracts";
+import { chipsetKey, cpuFamily, cpuSupport, familyLabel } from "./cpu-support";
 import type { PsuTier } from "./psu-tier";
 
 /**
@@ -151,6 +152,36 @@ const RULES: Rule[] = [
     return a === b
       ? check("socket", "ok", [cpu, mb], `El procesador y la placa usan socket ${label(a)}.`)
       : check("socket", "incompatible", [cpu, mb], `El procesador es ${label(a)} y la placa ${label(b)}: no calzan.`);
+  },
+
+  // Mismo socket no basta: el chipset decide qué generaciones arrancan, y con qué BIOS (#188).
+  ({ cpu, motherboard: mb }) => {
+    if (!cpu || !mb) return null;
+    const a = socket(cpu.facts.socket);
+    const b = socket(mb.facts.socket);
+    if (a && b && a !== b) return null;
+    const family = cpuFamily(cpu.facts.model);
+    if (!family) return null;
+    const chipset = chipsetKey(mb.facts.chipset);
+    if (!chipset) return unknown("cpu_support", [cpu, mb], "el chipset", mb);
+    const name = label(chipset);
+    const gen = familyLabel(family);
+    const support = cpuSupport(chipset, family);
+    if (support === "native")
+      return check("cpu_support", "ok", [cpu, mb], `La placa ${name} soporta ${gen} de fábrica.`);
+    if (support === "bios")
+      return check(
+        "cpu_support",
+        "warning",
+        [cpu, mb],
+        `Un ${gen} en una placa ${name} necesita BIOS actualizada: si la placa es de antes que el procesador puede no dar imagen. Conviene una con BIOS Flashback o pedir la actualización a la tienda.`,
+      );
+    return check(
+      "cpu_support",
+      "incompatible",
+      [cpu, mb],
+      `La placa ${name} no soporta ${gen} aunque el socket coincida.`,
+    );
   },
 
   ({ ram, motherboard: mb }) => {

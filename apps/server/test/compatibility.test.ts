@@ -10,6 +10,7 @@ import {
   socket,
   sockets,
 } from "@/features/compatibility/compatibility";
+import { chipsetKey, cpuFamily } from "@/features/compatibility/cpu-support";
 
 /** Valores tal como los escribe Haiku en producción (`listing_identity`). */
 
@@ -217,4 +218,58 @@ describe("highlights", () => {
     ["ssd", { capacity_gb: 1000, interface: "nvme", pcie_gen: 4 }, ["1 TB", "NVMe", "PCIe 4.0"]],
     ["gpu", {}, []],
   ] as const)("%s", (category, facts, expected) => expect(highlights(category, facts)).toEqual([...expected]));
+});
+
+describe("soporte de procesador por chipset (#188)", () => {
+  const cpu = (model: string, socket = "AM5") => part("cpu", { model, socket, tdp_w: 65 });
+  const mb = (chipset: string, socket = "AM5") => part("motherboard", { chipset, socket, memory_type: "DDR5" });
+  const support = (c: Part, m: Part) =>
+    checkCompatibility([c, m]).checks.find((k) => k.rule === "cpu_support")?.result ?? null;
+
+  test.each([
+    ["ryzen 7 7800x3d", "r7000"],
+    ["ryzen 5 5600g", "r5000g"],
+    ["ryzen 5 5600x", "r5000"],
+    ["ryzen 7 8700g", "r8000g"],
+    ["ryzen 9 9950x3d", "r9000"],
+    ["ryzen 5 pro 4650g", "r4000g"],
+    ["ryzen 5 2400g", "r2000"],
+    ["athlon 3000g", "r3000g"],
+    ["core i5 12400f", "i12"],
+    ["core i9-14900k", "i14"],
+    ["core i7 9700k", "i9"],
+    ["core ultra 7 265k", "u200"],
+    ["celeron g6900", "i12"],
+    ["pentium gold g6405", "i10"],
+    ["ryzen threadripper 7970x", null],
+    ["xeon silver 4410y", null],
+  ])("cpuFamily(%p) = %p", (model, expected) => expect(cpuFamily(model)).toBe(expected));
+
+  test.each([
+    ["B650E", "b650e"],
+    ["AMD X870", "x870"],
+    ["Intel Z790", "z790"],
+    ["TRX50", null],
+    [null, null],
+  ])("chipsetKey(%p) = %p", (input, expected) => expect(chipsetKey(input)).toBe(expected));
+
+  test("de fábrica, con BIOS y no soportado", () => {
+    expect(support(cpu("ryzen 7 7800x3d"), mb("B650"))).toBe("ok");
+    expect(support(cpu("ryzen 7 9800x3d"), mb("B650"))).toBe("warning");
+    expect(support(cpu("ryzen 7 9800x3d"), mb("X870E"))).toBe("ok");
+    expect(support(cpu("ryzen 5 5600x", "AM4"), mb("B450", "AM4"))).toBe("warning");
+    expect(support(cpu("ryzen 5 3400g", "AM4"), mb("B550", "AM4"))).toBe("incompatible");
+    expect(support(cpu("core i5 14600k", "LGA1700"), mb("Z690", "LGA1700"))).toBe("warning");
+    expect(support(cpu("core i5 13400f", "LGA1700"), mb("B760", "LGA1700"))).toBe("ok");
+    expect(support(cpu("core i5 11400", "LGA1200"), mb("B460", "LGA1200"))).toBe("incompatible");
+    expect(support(cpu("core ultra 5 245k", "LGA1851"), mb("B860", "LGA1851"))).toBe("ok");
+  });
+
+  test("sin chipset es desconocido; con otro socket, Threadripper o Xeon no opina", () => {
+    expect(support(cpu("ryzen 7 7800x3d"), part("motherboard", { socket: "AM5" }))).toBe("unknown");
+    expect(support(cpu("ryzen 7 7800x3d"), mb("Z790", "LGA1700"))).toBeNull();
+    expect(
+      support(cpu("ryzen threadripper 7970x", "sTR5"), part("motherboard", { chipset: "TRX50", socket: "sTR5" })),
+    ).toBeNull();
+  });
 });
