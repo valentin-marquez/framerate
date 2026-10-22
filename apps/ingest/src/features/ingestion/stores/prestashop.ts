@@ -49,18 +49,23 @@ const QuickviewSchema = z.object({ product: z.object({ description: z.string().n
 
 const MAX_PAGES = 50;
 
+/** Un listado o quickview que llega como HTML (mantenimiento, anti-bot, ruta cambiada) se dice así y no como error de JSON.parse (#220). */
+function parseJson(text: string, url: string): unknown {
+  if (text.trimStart().startsWith("<")) throw new Error(`${url} devolvió HTML en vez de JSON`);
+  return JSON.parse(text);
+}
+
 export function createPrestaShopAdapter(config: PrestaShopConfig): StoreAdapter {
   return {
     categories: config.categories,
     async *crawlCategory(category: Category, ctx: CrawlContext) {
       for (const path of config.categories[category] ?? []) {
         for (let page = 1; page <= MAX_PAGES; page++) {
-          const res = await ctx.http.get(`${config.baseUrl}/${path}?page=${page}`, {
-            headers: { "X-Requested-With": "XMLHttpRequest" },
-          });
+          const url = `${config.baseUrl}/${path}?page=${page}`;
+          const res = await ctx.http.get(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
           await ctx.snapshot(`${path}/page-${page}.json`, res.text);
 
-          const { products, pagination } = PageSchema.parse(JSON.parse(res.text));
+          const { products, pagination } = PageSchema.parse(parseJson(res.text, url));
           ctx.log.info("prestashop.page", { path, page, items: products.length, pages: pagination.pages_count });
           for (const raw of products) {
             const product = ProductSchema.safeParse(raw);
@@ -88,7 +93,7 @@ async function quickview(ctx: CrawlContext, baseUrl: string, id: string): Promis
     `action=quickview&id_product=${encodeURIComponent(id)}&id_product_attribute=0&ajax=1`,
     { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
   );
-  const parsed = QuickviewSchema.safeParse(JSON.parse(res.text));
+  const parsed = QuickviewSchema.safeParse(parseJson(res.text, `${baseUrl}/index.php?controller=product`));
   return (parsed.success && htmlLines(parsed.data.product.description ?? "")) || null;
 }
 

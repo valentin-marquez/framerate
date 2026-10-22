@@ -132,6 +132,7 @@ function productionContext(
   return {
     http: createHttpClient({
       minIntervalMs: store.minIntervalMs,
+      timeoutMs: store.timeoutMs,
       renders: Boolean(relay),
       fetch: relay
         ? relayFetch({ url: env.RELAY_URL as string, token: env.RELAY_TOKEN as string, log: storeLog })
@@ -145,13 +146,18 @@ function productionContext(
     async snapshot(name, body) {
       // Comprimido: las respuestas JSON/HTML se reducen ~10x. Retención vía regla de ciclo de vida de R2.
       const gz = new Response(new Blob([body]).stream().pipeThrough(new CompressionStream("gzip")));
-      await env.SNAPSHOTS.put(
-        `snapshots/${store.slug}/${category}/${day}/${runId}/${name}.gz`,
-        await gz.arrayBuffer(),
-        {
-          httpMetadata: { contentType: "application/json", contentEncoding: "gzip" },
-        },
-      );
+      try {
+        await env.SNAPSHOTS.put(
+          `snapshots/${store.slug}/${category}/${day}/${runId}/${name}.gz`,
+          await gz.arrayBuffer(),
+          {
+            httpMetadata: { contentType: "application/json", contentEncoding: "gzip" },
+          },
+        );
+      } catch (error) {
+        // El snapshot es diagnóstico, no dato: un error transitorio de R2 (10001) no tumba la corrida (#220).
+        storeLog.warn("snapshot.failed", { name, error: error instanceof Error ? error.message : String(error) });
+      }
     },
   };
 }

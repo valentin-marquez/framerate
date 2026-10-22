@@ -19,7 +19,7 @@ function fakeContext(pages: readonly unknown[], path: string) {
         requests.push({ url, headers: init?.headers });
         const page = pages[Number(new URL(url).searchParams.get("page")) - 1];
         if (!page || !url.startsWith(`https://tienda.example/${path}?`)) throw new HttpError(url, 404);
-        return { status: 200, headers: new Headers(), text: JSON.stringify(page) };
+        return { status: 200, headers: new Headers(), text: typeof page === "string" ? page : JSON.stringify(page) };
       },
       post: async (url) => {
         throw new HttpError(url, 405);
@@ -40,6 +40,11 @@ const crawl = (pages: readonly unknown[], config: Omit<PrestaShopConfig, "baseUr
 };
 
 describe("adaptador PrestaShop", () => {
+  test("un listado que llega como HTML falla diciendo que no es JSON (#220)", async () => {
+    const { offers } = crawl(["<!DOCTYPE html><html><body>Mantenimiento</body></html>"], { reference: "mpn" });
+    await expect(offers).rejects.toThrow("https://tienda.example/68-x?page=1 devolvió HTML en vez de JSON");
+  });
+
   test("pagina con pages_count y pide el JSON del listado con X-Requested-With", async () => {
     const { offers, requests } = crawl(listados.mybox, { reference: "mpn", cashDiscount: 0.05 });
     expect(await offers).toHaveLength(3);
