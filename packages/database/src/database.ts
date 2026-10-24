@@ -770,6 +770,8 @@ export interface PartReferenceTable {
 export interface CatalogVersionTable {
   id: number;
   version: number;
+  /** ISO de la última subida (0038); NULL antes de la primera. */
+  bumped_at: string | null;
 }
 
 export interface Database {

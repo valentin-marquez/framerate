@@ -15,6 +15,7 @@ import type { Env } from "@/env";
 import { type CrawlResult, crawlCategory } from "./crawl-category";
 import type { RawOffer } from "./domain/normalize";
 import { knownOffers, listingsForStage, markPending, retryStuck } from "./ingestion.repository";
+import { type RefreshResult, refreshStore } from "./refresh-store";
 import type { CrawlContext, StoreDefinition } from "./stores/adapter";
 import { createHttpClient } from "./stores/http";
 import { findStore, STORES } from "./stores/registry";
@@ -117,10 +118,24 @@ export async function runCrawl(
   );
 }
 
+/** Refresco horario de la tienda (#121): sus snapshots van bajo `refresh/` en lugar de una categoría. */
+export function runRefresh(env: Env, store: StoreDefinition, log: Logger, runId: string): Promise<RefreshResult> {
+  return refreshStore(
+    {
+      db: createDb(env.DB),
+      clock: systemClock,
+      log,
+      newId: () => runId,
+      createContext: () => productionContext(env, store, "refresh", runId, log),
+    },
+    store,
+  );
+}
+
 function productionContext(
   env: Env,
   store: StoreDefinition,
-  category: Category,
+  category: Category | "refresh",
   runId: string,
   log: Logger,
 ): CrawlContext {

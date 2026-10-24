@@ -270,3 +270,36 @@ describe("cliente HTTP", () => {
     expect(new Headers(seen[1]?.headers).get("content-type")).toBe("application/json");
   });
 });
+
+describe("refresco WooCommerce", () => {
+  const adapter = createWooCommerceAdapter({
+    baseUrl: "https://tienda.example",
+    sku: "mpn",
+    categories: { gpu: ["tarjetas-de-video"] },
+  });
+  const include = (ids: string[]) =>
+    `https://tienda.example/wp-json/wc/store/v1/products?include=${ids.join(",")}&${STOCK}per_page=100`;
+
+  test("pide de a 100 ids, guarda un snapshot por tanda y copia la categoría del OfferRef", async () => {
+    // 230 refs: las dos primeras son las del fixture, el resto la tienda ya no las devuelve.
+    const refs = [
+      ...products.slice(0, 2).map((p) => ({ externalId: String(p.id), url: p.permalink, category: "ram" as const })),
+      ...Array.from({ length: 228 }, (_, i) => ({ externalId: String(9000 + i), url: "x", category: "gpu" as const })),
+    ];
+    const ids = refs.map((r) => r.externalId);
+    const { ctx, requested, snapshots } = fakeContext({
+      [include(ids.slice(0, 100))]: { body: products },
+      [include(ids.slice(100, 200))]: { body: [] },
+      [include(ids.slice(200))]: { body: [] },
+    });
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+
+    expect(requested).toHaveLength(3);
+    expect(snapshots).toEqual(["refresh/chunk-1.json", "refresh/chunk-2.json", "refresh/chunk-3.json"]);
+    // El tercer producto del fixture no se pidió: la respuesta de más se ignora.
+    expect(offers.map((o) => [o.externalId, o.category])).toEqual([
+      [String(products[0]?.id), "ram"],
+      [String(products[1]?.id), "ram"],
+    ]);
+  });
+});

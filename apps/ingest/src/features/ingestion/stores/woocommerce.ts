@@ -3,7 +3,7 @@ import { stripHtml } from "@framerate/kit";
 import { codesInTitle, normalizeGtin, normalizeMpn } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
-import type { CrawlContext, StoreAdapter } from "./adapter";
+import type { CrawlContext, OfferRef, StoreAdapter } from "./adapter";
 
 /**
  * Adaptador genérico para tiendas WooCommerce vía Store API pública
@@ -109,8 +109,30 @@ export function createWooCommerceAdapter(config: WooCommerceConfig): StoreAdapte
         }
       }
     },
+    // `external_id` es el id del producto padre (el listado no trae variaciones), así que `include=` pide los mismos.
+    async *refreshOffers(refs: readonly OfferRef[], ctx: CrawlContext) {
+      const byId = new Map(refs.map((ref) => [ref.externalId, ref]));
+      const ids = [...byId.keys()];
+      for (let i = 0; i < ids.length; i += REFRESH_CHUNK) {
+        const chunk = ids.slice(i, i + REFRESH_CHUNK);
+        // Sin los estados la Store API omite los agotados, y saber que se agotó es justo lo que importa aquí.
+        const url = `${config.baseUrl}/wp-json/wc/store/v1/products?include=${chunk.join(",")}&${STOCK_STATUSES}per_page=${REFRESH_CHUNK}`;
+        const res = await ctx.http.get(url);
+        await ctx.snapshot(`refresh/chunk-${i / REFRESH_CHUNK + 1}.json`, res.text);
+        for (const item of parseItems(res.text)) {
+          const product = WcProductSchema.safeParse(item);
+          const ref = product.success ? byId.get(String(product.data.id)) : undefined;
+          if (!product.success || !ref) continue;
+          if (config.skipSku?.test(product.data.sku)) continue;
+          yield toRawOffer(product.data, ref.category, config);
+        }
+      }
+    },
   };
 }
+
+/** Ids por petición de refresco: el `per_page` máximo de la Store API. */
+const REFRESH_CHUNK = 100;
 
 function parseItems(text: string): unknown[] {
   const data: unknown = JSON.parse(text);

@@ -5,7 +5,7 @@ import { createLogger } from "@framerate/kit";
 import type { Env } from "@/env";
 import { enqueueCrawls, ensureSchedule, initSchema, nextWake, runAlarmStep, type Sql } from "./coordinator";
 import { closeInterruptedRun } from "./ingestion.repository";
-import { runCrawl, storeCategories } from "./runtime";
+import { runCrawl, runRefresh, storeCategories } from "./runtime";
 import type { StoreDefinition } from "./stores/adapter";
 import { findStore } from "./stores/registry";
 
@@ -30,11 +30,16 @@ export class StoreCrawler extends DurableObject<Env> {
     return queued;
   }
 
-  /** Red de seguridad del Cron horario: una alarm que agotó sus reintentos no vuelve sola. */
+  /**
+   * Red de seguridad del Cron horario: una alarm que agotó sus reintentos no vuelve sola. También adelanta la alarm si
+   * apareció un slot antes (el primer refresco de un DO creado antes de la fase 2 esperaría al próximo crawl).
+   */
   async ensureScheduled(slug: string): Promise<void> {
     this.ctx.storage.kv.put("slug", slug);
-    ensureSchedule(this.sql, slug, Date.now());
-    if ((await this.ctx.storage.getAlarm()) === null) await this.wakeAt(nextWake(this.sql, Date.now()));
+    ensureSchedule(this.sql, slug, Date.now(), Boolean(findStore(slug)?.adapter.refreshOffers));
+    const current = await this.ctx.storage.getAlarm();
+    const next = nextWake(this.sql, Date.now());
+    if (current === null || (next !== null && next < current)) await this.wakeAt(next);
   }
 
   override async alarm() {
@@ -51,6 +56,7 @@ export class StoreCrawler extends DurableObject<Env> {
       now: Date.now,
       newId: () => crypto.randomUUID(),
       crawl: (category, runId) => runCrawl(this.env, store as StoreDefinition, category, log, runId),
+      refresh: store?.adapter.refreshOffers ? (runId) => runRefresh(this.env, store, log, runId) : null,
       closeRun: (runId) => closeInterruptedRun(db, runId, new Date()),
       log: storeLog,
     });
