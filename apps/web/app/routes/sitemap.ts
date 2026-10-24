@@ -36,8 +36,7 @@ ${urls}
 </urlset>`;
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const { origin } = new URL(request.url);
+export async function loader({ url: { origin } }: LoaderFunctionArgs) {
   const paths = [...STATIC_PATHS];
 
   try {

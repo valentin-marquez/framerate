@@ -42,7 +42,9 @@ ven en Storybook, Fundamentos/Movimiento.
 - Cambio de página: `<Link viewTransition>` (o `NavLink`); las reglas `::view-transition-*` están en `app.css`. Un
   elemento compartido lleva un `view-transition-name` que tiene que ser único en la página al capturarla: en una lista,
   sólo el elemento que navega lo lleva, y sólo mientras dura la transición (`useViewTransitionState(ruta)` o
-  `isTransitioning` de `NavLink`). Volver atrás repite la transición sola.
+  `isTransitioning` de `NavLink`). Volver atrás repite la transición sola. React Router 8.5 **deprecó** estas tres
+  APIs a favor de `<ViewTransition>` de React 19.3 (siguen funcionando); no sumar usos nuevos, la migración va en su
+  issue.
 - La excepción es una coreografía de varios tiempos sincronizados (la carga de la foto de producto, `.stage-*`): lleva
   su propia duración y curvas por tramo.
 
@@ -53,6 +55,12 @@ ven en Storybook, Fundamentos/Movimiento.
   paleta neutra estilo Luma, superficies en capas (`bg-background` / `bg-card` / `bg-secondary`), radios squircle
   (`rounded-md` inputs, `rounded-xl`/`rounded-2xl` tarjetas, `rounded-3xl` modales).
 - **Texto con estilos con nombre** (escala de AlignUI, tokens de `@theme` en `app.css`): `text-title-h1` a `h6`, `text-label-xl` a `xs`, `text-paragraph-xl` a `xs`, `text-subheading-md` a `2xs` (la escala no fija mayúsculas; su interletrado de 4 a 6% pide `uppercase`) y `text-doc-label`/`text-doc-paragraph`. Una clase lleva tamaño, alto de línea, interletrado y peso: no sumarle `font-*` ni `tracking-*`. Un estilo nuevo se agrega en `app.css` **y** en `TEXT_STYLES` (`shared/lib/cn.config.ts`), si no `cn` lo toma por color y descarta uno de los dos. Se ve en Storybook, Fundamentos/Tokens, Tipografía. Títulos y cifras grandes: `xl` a `title-h6`, `2xl` a `h5`, `3xl` a `h4`, `4xl` a `h3`, `5xl` a `h2`; títulos de sección de 18 px, `text-label-lg`.
+- **React Router 8 en modo framework** (`react-router.config.ts`). Sus docs oficiales vienen en el paquete:
+  `node_modules/react-router/docs/{start,how-to,explanation,upgrading}`; leerlas antes que recordar la API. Los
+  `loader`/`action` reciben el `request` crudo (en una navegación del cliente trae el sufijo `.data` y `_routes`):
+  para la URL de la página se usa el argumento `url`, no `new URL(request.url)`. `meta` recibe `loaderData`, no
+  `data`. Los hooks `useLocation`, `useSearchParams`, `useParams`, `useMatches` y `useNavigation` van camino a
+  `unstable_useRouterState`: no migrar todavía, pero tampoco sumar usos nuevos sin necesidad.
 - **URLs públicas en español** (`/tiendas/:slug`, `/reclamar`, `/buscar`, `/categoria/:slug`, `/producto/:slug`,
   `/cotizacion/:slug`). Al renombrar una ruta, la versión vieja queda como redirect 301
   (`apps/web/app/features/stores/pages/redirect-old-*.tsx`). APIs, tablas y código, en inglés.

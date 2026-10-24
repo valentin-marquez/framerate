@@ -75,7 +75,7 @@ export function shouldRevalidate({ formMethod, defaultShouldRevalidate }: Should
   return formMethod && formMethod !== "GET" ? defaultShouldRevalidate : false;
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, url }: Route.LoaderArgs) {
   const clientEnv = getClientEnv();
   const [{ user, headers: authHeaders }, categories, providers, freshness] = await Promise.all([
     getAuthUser(request),
@@ -131,7 +131,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         clientEnv,
         userPrefs: { theme: getTheme(request), lang },
         // Origin de la request — usado para construir la URL canónica en Layout.
-        origin: new URL(request.url).origin,
+        origin: url.origin,
       },
     },
     {

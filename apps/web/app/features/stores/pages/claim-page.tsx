@@ -13,13 +13,12 @@ export function meta() {
   return [{ title: "Verificar tienda - Framerate" }];
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, url }: Route.LoaderArgs) {
   await requireAuth(request);
 
   // Deep-link: /reclamar?store=<slug> preselecciona la tienda en el wizard.
   // Si el slug no existe o la tienda ya tiene dueño, caemos al picker normal
   // con un toast informativo (manejado en cliente vía `preselectError`).
-  const url = new URL(request.url);
   const preselectSlug = url.searchParams.get("store")?.trim() || null;
 
   let preselectStore: ClaimableStore | null = null;

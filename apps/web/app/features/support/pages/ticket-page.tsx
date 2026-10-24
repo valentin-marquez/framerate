@@ -16,8 +16,8 @@ export function meta() {
   ];
 }
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const token = new URL(request.url).searchParams.get("t") ?? undefined;
+export async function loader({ request, params, url }: Route.LoaderArgs) {
+  const token = url.searchParams.get("t") ?? undefined;
   try {
     return { ticket: await supportClient.get(params.id, token), token };
   } catch (err) {

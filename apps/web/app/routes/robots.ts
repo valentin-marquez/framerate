@@ -3,9 +3,7 @@ import type { LoaderFunctionArgs } from "react-router";
 // Cloudflare bloquea además a los bots de entrenamiento (AI Crawl Control), pero su Bot Preference Sync no llega a este
 // archivo porque lo sirve el Worker: las Content Signals tienen que ir acá. Google-Extended y Applebot-Extended no
 // rastrean; sólo existen en robots.txt para decidir el uso en entrenamiento.
-export const loader = ({ request }: LoaderFunctionArgs) => {
-  const { origin } = new URL(request.url);
-
+export const loader = ({ url: { origin } }: LoaderFunctionArgs) => {
   const robotText = `
 # Los buscadores y asistentes de IA pueden usar Framerate para responder y citarlo, no para entrenar modelos.
 # Content Signals: https://contentsignals.org

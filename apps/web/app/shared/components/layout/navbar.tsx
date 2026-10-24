@@ -379,7 +379,7 @@ export function Navbar({
   const [selected, setSelected] = useState<string | null>(null);
   // En una categoría, el riel queda compacto y sus filtros van en un panel a su derecha (los datos son los del loader
   // de esa ruta). Fuera de ella, sigue la preferencia guardada.
-  const catalog = useMatches().find((m) => m.id === "features/category/pages/category-page")?.data as
+  const catalog = useMatches().find((m) => m.id === "features/category/pages/category-page")?.loaderData as
     | CatalogData
     | undefined;
   const inCategory = !!catalog;

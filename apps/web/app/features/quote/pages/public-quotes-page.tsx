@@ -12,8 +12,8 @@ export function meta() {
   ];
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const raw = Number(new URL(request.url).searchParams.get("pagina"));
+export async function loader({ url }: Route.LoaderArgs) {
+  const raw = Number(url.searchParams.get("pagina"));
   const page = Number.isInteger(raw) && raw >= 1 ? Math.min(raw, 500) : 1;
   const quotes = await quotesService.getPublic(PUBLIC_QUOTES_PAGE_SIZE, page).catch(() => []);
   return { page, quotes };

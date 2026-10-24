@@ -9,7 +9,7 @@ import { Button } from "~/shared/components/primitives/button";
 import { useTranslation } from "~/shared/hooks/use-translation";
 import type { Route } from "./+types/profile-page";
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ loaderData: data }: Route.MetaArgs) {
   if (!data || !data.profileUser) {
     return [{ title: "Perfil no encontrado - Framerate" }];
   }

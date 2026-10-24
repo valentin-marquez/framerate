@@ -2,8 +2,8 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/redirect-old-explore";
 
 // `/buscar` pasó a ser `/buscar`. Los enlaces viejos con `?category=` van directo a la categoría.
-export function loader({ request }: Route.LoaderArgs) {
-  const params = new URL(request.url).searchParams;
+export function loader({ url }: Route.LoaderArgs) {
+  const params = new URLSearchParams(url.search);
   const category = params.get("category");
   params.delete("category");
   const search = params.get("search");

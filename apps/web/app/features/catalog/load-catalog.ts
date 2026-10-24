@@ -21,8 +21,8 @@ export function categoryFacets(category: string | null | undefined) {
  * Datos de la vista de catálogo. La comparten `/buscar` (todo el catálogo, con búsqueda) y `/categoria/:slug` (una
  * categoría): los filtros salen de la URL, así cada vista se puede compartir.
  */
-export async function loadCatalog(request: Request, category?: string) {
-  const params = new URL(request.url).searchParams;
+export async function loadCatalog(url: URL, category?: string) {
+  const params = url.searchParams;
   const search = params.get("q")?.trim() || undefined;
   const brand = params.getAll("brand").filter(Boolean);
   const minPrice = number(params.get("min_price"));

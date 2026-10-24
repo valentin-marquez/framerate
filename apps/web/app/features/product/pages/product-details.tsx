@@ -9,7 +9,7 @@ import { periodFromParam } from "~/features/product/utils/price-history";
 import { isRateLimitError } from "~/shared/lib/api";
 import type { Route } from "./+types/product-details";
 
-export function meta({ data: loaderData }: Route.MetaArgs) {
+export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Producto no encontrado - Framerate" }];
   const { product: data, origin } = loaderData;
 
@@ -54,8 +54,8 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ params, request }: Route.LoaderArgs) {
-  const period = periodFromParam(new URL(request.url).searchParams.get("periodo"));
+export async function loader({ params, url }: Route.LoaderArgs) {
+  const period = periodFromParam(url.searchParams.get("periodo"));
   try {
     const [product, history] = await Promise.all([
       productsService.getBySlug(params.slug),
@@ -65,7 +65,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         .catch((): PricePoint[] => []),
     ]);
 
-    return { product, history, period, now: Date.now(), origin: new URL(request.url).origin };
+    return { product, history, period, now: Date.now(), origin: url.origin };
   } catch (error) {
     // Respeta redirects/respuestas explícitas (incluye `throw redirect(...)`).
     if (error instanceof Response) throw error;

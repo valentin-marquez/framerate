@@ -4,7 +4,7 @@ import { StoreView } from "../components/store-view";
 import { type StoreProductsResponse, storesService, type ViewerStoreRole } from "../services/stores";
 import type { Route } from "./+types/store-page";
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ loaderData: data }: Route.MetaArgs) {
   if (!data?.store) return [{ title: "Tienda no encontrada - Framerate" }];
   return [
     { title: `${data.store.name}: precios y productos en Chile - Framerate` },

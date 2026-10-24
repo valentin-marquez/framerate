@@ -10,9 +10,9 @@ export function meta(_: Route.MetaArgs) {
 
 const FILTERS: UserFilter[] = ["all", "staff", "user", "support", "moderator", "admin", "banned"];
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, url }: Route.LoaderArgs) {
   const { user } = await requireRole(request, "admin");
-  const params = new URL(request.url).searchParams;
+  const params = url.searchParams;
   const q = params.get("q")?.trim() ?? "";
   const filter = FILTERS.find((f) => f === params.get("filter")) ?? "all";
   const page = Math.max(1, Number(params.get("page")) || 1);

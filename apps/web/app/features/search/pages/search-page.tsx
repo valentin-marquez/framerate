@@ -2,7 +2,7 @@ import { CatalogView } from "~/features/catalog/components/catalog-view";
 import { loadCatalog } from "~/features/catalog/load-catalog";
 import type { Route } from "./+types/search-page";
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ loaderData: data }: Route.MetaArgs) {
   const title = data?.search ? `${data.search}: precios en Chile - Framerate` : "Buscar hardware - Framerate";
   return [
     { title },
@@ -19,8 +19,8 @@ export function meta({ data }: Route.MetaArgs) {
   ];
 }
 
-export function loader({ request }: Route.LoaderArgs) {
-  return loadCatalog(request);
+export function loader({ url }: Route.LoaderArgs) {
+  return loadCatalog(url);
 }
 
 export default function SearchPage({ loaderData }: Route.ComponentProps) {

@@ -6,9 +6,7 @@ import type { LoaderFunctionArgs } from "react-router";
  * Claude, AI Overviews). Sigue la convención https://llmstxt.org: H1 con el
  * nombre, blockquote con el resumen, y secciones de enlaces.
  */
-export function loader({ request }: LoaderFunctionArgs) {
-  const { origin } = new URL(request.url);
-
+export function loader({ url: { origin } }: LoaderFunctionArgs) {
   const sections = [
     `# Framerate`,
     "",

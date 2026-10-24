@@ -14,11 +14,11 @@ async function providerUrl(response: Response) {
   return ((await response.json()) as { url?: string }).url;
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, url }: Route.ActionArgs) {
   const formData = await request.formData();
   const action = formData.get("action");
   const provider = formData.get("provider");
-  const site = new URL(request.url).origin;
+  const site = url.origin;
 
   if (action === "logout") {
     const { cookies } = await callAuth(request, "sign-out", {});

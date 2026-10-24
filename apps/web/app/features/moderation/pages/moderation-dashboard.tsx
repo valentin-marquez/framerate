@@ -57,9 +57,9 @@ export function meta(_: Route.MetaArgs) {
   return [{ title: "Moderación - Framerate Admin" }, { name: "robots", content: "noindex" }];
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, url }: Route.LoaderArgs) {
   await requireRole(request, "moderator");
-  const params = new URL(request.url).searchParams;
+  const params = url.searchParams;
   const view: View = VIEWS.find((v) => v.id === params.get("vista"))?.id ?? "cola";
   const page = Math.max(1, Number(params.get("pagina")) || 1);
   const args = { page, pageSize: PAGE_SIZE };

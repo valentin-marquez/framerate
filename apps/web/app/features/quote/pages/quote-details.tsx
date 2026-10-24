@@ -27,7 +27,7 @@ import { useTranslation } from "~/shared/hooks/use-translation";
 import { formatCLP } from "~/shared/utils/format";
 import type { Route } from "./+types/quote-details";
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ loaderData: data }: Route.MetaArgs) {
   if (!data || !data.quote) return [{ title: "Cotización no encontrada - Framerate" }];
   const { quote } = data;
   return [

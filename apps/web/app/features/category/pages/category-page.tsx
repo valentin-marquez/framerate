@@ -4,7 +4,7 @@ import { loadCatalog } from "~/features/catalog/load-catalog";
 import { categoryLabel } from "../utils/categories";
 import type { Route } from "./+types/category-page";
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ loaderData: data }: Route.MetaArgs) {
   if (!data?.category) return [{ title: "Categoría no encontrada - Framerate" }];
   // A media frase va en minúscula: "Precios de fuentes de poder", "de memoria RAM".
   const name = categoryLabel(data.category);
@@ -22,9 +22,9 @@ export function meta({ data }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({ params, url }: Route.LoaderArgs) {
   if (!categoryFromSlug(params.slug)) throw new Response("Category not found", { status: 404 });
-  return loadCatalog(request, params.slug);
+  return loadCatalog(url, params.slug);
 }
 
 export default function CategoryPage({ loaderData }: Route.ComponentProps) {
