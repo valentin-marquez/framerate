@@ -63,6 +63,11 @@ describe("adaptador MyShop", () => {
     expect(offers[1]?.imageUrls).toHaveLength(2);
   });
 
+  test('la foto "nodisponible" de la plataforma no es una foto del producto', async () => {
+    const offers = await Array.fromAsync(adapter.crawlCategory("gpu", fakeContext().ctx));
+    expect(offers[3]).toMatchObject({ externalId: "44106", imageUrls: [] });
+  });
+
   test("un UPC en partno es GTIN, no MPN", async () => {
     const [offer] = await Array.fromAsync(adapter.crawlCategory("gpu", fakeContext().ctx));
     expect(offer).toMatchObject({ gtin: "824142126905", mpn: null });

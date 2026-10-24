@@ -116,6 +116,9 @@ export function toRawOffer(item: MyShopItem, category: Category, baseUrl: string
     // En kits el partno junta los códigos internos de cada producto ("13024+43262"): no es un MPN.
     mpn: !gtin && partno && !partno.includes("+") ? partno : null,
     gtin,
-    imageUrls: [item.foto, item.fotoSecundaria].filter((src): src is string => !!src?.startsWith("http")),
+    // La plataforma manda "fotos/nodisponible_*.png" (su logo con "próximamente imagen") cuando no hay foto.
+    imageUrls: [item.foto, item.fotoSecundaria].filter(
+      (src): src is string => !!src?.startsWith("http") && !src.includes("/nodisponible_"),
+    ),
   };
 }
