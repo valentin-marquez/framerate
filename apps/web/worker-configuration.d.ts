@@ -6,8 +6,6 @@ declare namespace Cloudflare {
     mainModule: typeof import("./workers/app");
   }
   interface Env {
-    VITE_SUPABASE_URL: string;
-    VITE_SUPABASE_ANON_KEY: string;
     VITE_API_URL: string;
     /** Service binding hacia el Worker de la API (framerate-server). */
     API: Fetcher;
@@ -20,7 +18,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 };
 declare namespace NodeJS {
   interface ProcessEnv
-    extends StringifyValues<Pick<Cloudflare.Env, "VITE_SUPABASE_URL" | "VITE_SUPABASE_ANON_KEY" | "VITE_API_URL">> {}
+    extends StringifyValues<Pick<Cloudflare.Env, "VITE_API_URL">> {}
 }
 
 // Begin runtime types
