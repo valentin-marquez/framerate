@@ -1,6 +1,6 @@
 import type { Category } from "@framerate/contracts";
 import type { Logger } from "@framerate/kit";
-import { CRAWL_PERIOD_MS, MAX_ATTEMPTS, nextSlot, retryDelay, storeOffset } from "./agenda";
+import { CRAWL_PERIOD_MS, MAX_ATTEMPTS, nextSlot, REFRESH_PERIOD_MS, retryDelay, storeOffset } from "./agenda";
 import type { CrawlResult } from "./crawl-category";
 
 /**
@@ -41,12 +41,23 @@ export function enqueueCrawls(sql: Sql, categories: readonly Category[], request
   return queued;
 }
 
-/** Crea el slot del crawl completo si falta; uno que ya existe (aunque esté vencido) no se toca. */
-export function ensureSchedule(sql: Sql, slug: string, now: number) {
+/**
+ * Crea los slots que falten; uno que ya existe (aunque esté vencido) no se toca. El de refresco sólo si el adaptador
+ * sabe refrescar: los DO creados antes de la fase 2 lo ganan con el Cron horario.
+ */
+export function ensureSchedule(sql: Sql, slug: string, now: number, refreshable: boolean) {
   sql(
     "INSERT INTO schedule (kind, next_at) VALUES ('crawl', ?) ON CONFLICT DO NOTHING",
     nextSlot(now, CRAWL_PERIOD_MS, storeOffset(slug, CRAWL_PERIOD_MS)),
   );
+  if (refreshable) {
+    sql(
+      "INSERT INTO schedule (kind, next_at) VALUES ('refresh', ?) ON CONFLICT DO NOTHING",
+      nextSlot(now, REFRESH_PERIOD_MS, storeOffset(slug, REFRESH_PERIOD_MS)),
+    );
+  } else {
+    sql("DELETE FROM schedule WHERE kind = 'refresh'");
+  }
 }
 
 /** El próximo despertar: la tarea pendiente o el slot más cercano, nunca antes de `now`. `null` si no hay nada. */
@@ -67,6 +78,8 @@ export interface AlarmDeps {
   now(): number;
   newId(): string;
   crawl(category: Category, runId: string): Promise<Pick<CrawlResult, "status">>;
+  /** Refresco liviano de la tienda; `null` si su adaptador no lo implementa. */
+  refresh: ((runId: string) => Promise<Pick<CrawlResult, "status">>) | null;
   /** Cierra como fallida una corrida que quedó `running` porque el Worker murió a mitad. */
   closeRun(runId: string): Promise<void>;
   log: Logger;
@@ -82,10 +95,10 @@ export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | 
     return null;
   }
   try {
-    for (const task of sql("SELECT key, run_id, attempts FROM tasks WHERE status = 'running'")) {
+    for (const task of sql("SELECT key, kind, run_id, attempts FROM tasks WHERE status = 'running'")) {
       log.warn("coordinator.interrupted", { key: task.key, runId: task.run_id });
       if (task.run_id) await deps.closeRun(String(task.run_id));
-      settleFailure(sql, String(task.key), Number(task.attempts) + 1, deps.now(), log);
+      settleFailure(sql, String(task.key), String(task.kind), Number(task.attempts) + 1, deps.now(), log);
     }
 
     const now = deps.now();
@@ -97,9 +110,26 @@ export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | 
         nextSlot(now + 1, CRAWL_PERIOD_MS, storeOffset(deps.slug, CRAWL_PERIOD_MS)),
       );
     }
+    const [refreshSlot] = sql("SELECT next_at FROM schedule WHERE kind = 'refresh'");
+    if (!deps.refresh) {
+      sql("DELETE FROM schedule WHERE kind = 'refresh'");
+      sql("DELETE FROM tasks WHERE kind = 'refresh'");
+    } else if (refreshSlot && now >= Number(refreshSlot.next_at)) {
+      sql(
+        `INSERT INTO tasks (key, kind, requested_by, requested_at, not_before)
+         VALUES ('refresh', 'refresh', 'schedule', ?, 0) ON CONFLICT DO NOTHING`,
+        now,
+      );
+      sql(
+        "UPDATE schedule SET next_at = ? WHERE kind = 'refresh'",
+        nextSlot(now + 1, REFRESH_PERIOD_MS, storeOffset(deps.slug, REFRESH_PERIOD_MS)),
+      );
+    }
 
+    // El refresco primero: dura ~1 min y es la promesa de frescura; un ciclo de crawls en serie puede durar 40.
     const [task] = sql(
-      "SELECT key, category, attempts FROM tasks WHERE status = 'pending' AND not_before <= ? ORDER BY rowid LIMIT 1",
+      `SELECT key, kind, category, attempts FROM tasks WHERE status = 'pending' AND not_before <= ?
+       ORDER BY kind = 'refresh' DESC, rowid LIMIT 1`,
       now,
     );
     if (task) {
@@ -109,12 +139,14 @@ export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | 
       log.info("coordinator.task_started", { key, attempts: task.attempts, runId });
       let failed: boolean;
       try {
-        failed = (await deps.crawl(task.category as Category, runId)).status === "failed";
+        const run =
+          task.kind === "refresh" && deps.refresh ? deps.refresh(runId) : deps.crawl(task.category as Category, runId);
+        failed = (await run).status === "failed";
       } catch (error) {
         log.error("coordinator.task_failed", { key, error });
         failed = true;
       }
-      if (failed) settleFailure(sql, key, Number(task.attempts) + 1, deps.now(), log);
+      if (failed) settleFailure(sql, key, String(task.kind), Number(task.attempts) + 1, deps.now(), log);
       else sql("DELETE FROM tasks WHERE key = ?", key);
     }
   } catch (error) {
@@ -126,8 +158,9 @@ export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | 
   return wake;
 }
 
-function settleFailure(sql: Sql, key: string, attempts: number, now: number, log: Logger) {
-  if (attempts >= MAX_ATTEMPTS) {
+function settleFailure(sql: Sql, key: string, kind: string, attempts: number, now: number, log: Logger) {
+  // El refresco no se reintenta: en una hora vuelve solo, y reintentarlo correría detrás de los crawls.
+  if (kind === "refresh" || attempts >= MAX_ATTEMPTS) {
     sql("DELETE FROM tasks WHERE key = ?", key);
     log.warn("coordinator.task_dropped", { key, attempts });
     return;

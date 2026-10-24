@@ -22,6 +22,16 @@ export interface StoreAdapter {
   /** Categorías que la tienda vende. Las que no aparecen no se crawlean. */
   readonly categories: Partial<Record<Category, readonly string[]>>;
   crawlCategory(category: Category, ctx: CrawlContext): AsyncIterable<RawOffer>;
+  /** Refresco horario (#121): vuelve a leer ofertas ya conocidas. Entrega sólo las que la tienda devolvió; las demás
+   * se omiten (no es una baja: desactivar es trabajo del crawl completo). Sin implementar, la tienda no se refresca. */
+  refreshOffers?(refs: readonly OfferRef[], ctx: CrawlContext): AsyncIterable<RawOffer>;
+}
+
+/** Una oferta conocida para el refresco. `category` viaja porque la respuesta de la tienda no la trae. */
+export interface OfferRef {
+  externalId: string;
+  url: string;
+  category: Category;
 }
 
 export interface CrawlContext {

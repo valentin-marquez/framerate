@@ -1,5 +1,5 @@
 import { CompiledQuery, sql } from "kysely";
-import { bumpCatalogVersionQuery } from "./catalog-version";
+import { bumpCatalogVersionQuery, throttledBumpCatalogVersionQuery } from "./catalog-version";
 import type { Db } from "./client";
 
 /**
@@ -59,13 +59,32 @@ const PRODUCTS_SCOPE = "SELECT value FROM json_each(?3)";
 
 export function refreshPriceSummary(
   db: Db,
-  input: { storeId: number; category: string; previousProductIds: Iterable<number>; now: Date },
+  input: {
+    storeId: number;
+    category: string;
+    previousProductIds: Iterable<number>;
+    now: Date;
+    /** Ver `refreshProductsPriceSummary`. */
+    throttleVersion?: boolean;
+  },
 ) {
-  return refresh(db, CRAWL_SCOPE, input.storeId, input.category, input.previousProductIds, input.now);
+  const bump = input.throttleVersion ? throttledBumpCatalogVersionQuery : bumpCatalogVersionQuery;
+  return refresh(db, CRAWL_SCOPE, input.storeId, input.category, input.previousProductIds, input.now, bump);
 }
 
-export function refreshProductsPriceSummary(db: Db, productIds: Iterable<number>, now: Date) {
-  return refresh(db, PRODUCTS_SCOPE, null, null, productIds, now);
+/**
+ * `throttleVersion`: la versión del catálogo sube como mucho cada 15 min (#121). La usan los crawls y el refresco, que
+ * desde el coordinador por tienda terminan uno por minuto todo el día; con cada uno subiéndola, la caché del server no
+ * acertaría casi nunca. Las acciones a mano (Gatekeeper, fusiones) la suben siempre: se tienen que ver al instante.
+ */
+export function refreshProductsPriceSummary(
+  db: Db,
+  productIds: Iterable<number>,
+  now: Date,
+  options: { throttleVersion?: boolean } = {},
+) {
+  const bump = options.throttleVersion ? throttledBumpCatalogVersionQuery : bumpCatalogVersionQuery;
+  return refresh(db, PRODUCTS_SCOPE, null, null, productIds, now, bump);
 }
 
 async function refresh(
@@ -75,6 +94,7 @@ async function refresh(
   category: string | null,
   productIds: Iterable<number>,
   now: Date,
+  bump = bumpCatalogVersionQuery,
 ) {
   const params = [storeId, category, JSON.stringify([...productIds]), now.toISOString(), santiagoDay(now)];
   // Las tres en un batch (una transacción): el reference_price lee la fila del día recién escrita. La versión del
@@ -84,7 +104,7 @@ async function refresh(
     ...[[summarySql, params.slice(0, 4)] as const, [dailySql, params] as const, [referenceSql, params] as const].map(
       ([build, values]) => ({ compile: () => CompiledQuery.raw(build(scope), values) }),
     ),
-    { compile: () => bumpCatalogVersionQuery },
+    { compile: () => bump },
   ]);
 }
 

@@ -1,6 +1,8 @@
 /** Cuándo corre cada tienda (#201): lógica pura del coordinador, sin runtime del Durable Object. */
 
 export const CRAWL_PERIOD_MS = 6 * 60 * 60_000;
+/** Refresco liviano de precio y stock (#121, fase 2): cada hora, con su propio desfase por tienda. */
+export const REFRESH_PERIOD_MS = 60 * 60_000;
 /** Tras el tercer intento fallido la tarea se descarta; el slot siguiente la vuelve a crear. */
 export const MAX_ATTEMPTS = 3;
 

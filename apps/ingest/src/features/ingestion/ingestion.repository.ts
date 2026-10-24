@@ -46,6 +46,15 @@ export const emptyStats = (): CrawlStats => ({
   skippedOutOfStock: 0,
 });
 
+/** Una fila de refresco en `crawl_runs` (#121): lo pedido, lo devuelto, lo que cambió de precio o stock. */
+export interface RefreshStats {
+  requested: number;
+  fetched: number;
+  changed: number;
+  missing: number;
+  quarantined: number;
+}
+
 /** Dominio de la tienda sin "www." (base del reclamo por DNS). */
 export function domainOf(url: string): string {
   return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
@@ -63,7 +72,11 @@ export async function ensureStore(db: Db, store: { slug: string; name: string; u
   return { id: row.id, isActive: toBool(row.is_active) };
 }
 
-export async function startRun(db: Db, run: { id: string; storeId: number; category: Category; now: string }) {
+/** `category` es la categoría del crawl o `'refresh'` para el refresco horario (#121): `crawl_runs` no tiene CHECK. */
+export async function startRun(
+  db: Db,
+  run: { id: string; storeId: number; category: Category | "refresh"; now: string },
+) {
   await db.query
     .insertInto("crawl_runs")
     .values({ id: run.id, store_id: run.storeId, category: run.category, status: "running", started_at: run.now })
@@ -73,7 +86,7 @@ export async function startRun(db: Db, run: { id: string; storeId: number; categ
 export async function finishRun(
   db: Db,
   runId: string,
-  result: { status: "succeeded" | "failed"; stats: CrawlStats; error?: string; now: string },
+  result: { status: "succeeded" | "failed"; stats: CrawlStats | RefreshStats; error?: string; now: string },
 ) {
   await db.query
     .updateTable("crawl_runs")
@@ -507,4 +520,89 @@ export async function knownOffers(db: Db, storeSlug: string): Promise<Map<string
       },
     ]),
   );
+}
+
+export interface ImportantOffer {
+  id: number;
+  externalId: string;
+  url: string;
+  category: Category;
+  productId: number;
+  priceCash: number;
+  priceCard: number | null;
+  inStock: boolean;
+  stockQuantity: number | null;
+}
+
+/**
+ * Las ofertas que el refresco horario vuelve a leer (#121): las con stock que hoy deciden el mejor precio de un
+ * producto con competencia, y las de los 500 productos más vistos. Las sin stock esperan al crawl de 6 h a propósito:
+ * refrescarlas multiplica las peticiones, y el caso que importa (la que decide el precio se agota) sí queda cubierto.
+ */
+export async function listImportantOffers(db: Db, storeId: number, limit = 500): Promise<ImportantOffer[]> {
+  const { rows } = await sql<{
+    id: number;
+    external_id: string;
+    url: string;
+    category: Category;
+    product_id: number;
+    price_cash: number;
+    price_card: number | null;
+    in_stock: number;
+    stock_quantity: number | null;
+  }>`
+    SELECT l.id, l.external_id, l.url, l.category, l.product_id, l.price_cash, l.price_card, l.in_stock,
+      l.stock_quantity
+    FROM listings l JOIN products p ON p.id = l.product_id
+    WHERE l.store_id = ${storeId} AND l.is_active = 1 AND l.in_stock = 1
+      AND ((p.offer_count > 1 AND l.price_cash = p.best_price)
+        OR p.id IN (SELECT id FROM products ORDER BY views_7d DESC LIMIT 500))
+    LIMIT ${limit}`.execute(db.query);
+  return rows.map((r) => ({
+    id: r.id,
+    externalId: r.external_id,
+    url: r.url,
+    category: r.category,
+    productId: r.product_id,
+    priceCash: r.price_cash,
+    priceCard: r.price_card,
+    inStock: toBool(r.in_stock),
+    stockQuantity: r.stock_quantity,
+  }));
+}
+
+/**
+ * Precio y stock de una oferta conocida, nada más: título, categoría, marca, producto y `is_active` son del crawl
+ * completo. El punto de precio sale con la misma regla que en `upsertListing`. Devuelve si cambió precio o
+ * disponibilidad (lo que mueve el resumen); `null` si no cambió nada y basta con `touchSeen`.
+ */
+export async function refreshListing(db: Db, current: ImportantOffer, offer: NormalizedOffer, now: string) {
+  const priceChanged =
+    current.priceCash !== offer.priceCash || current.priceCard !== offer.priceCard || current.inStock !== offer.inStock;
+  if (!priceChanged && current.stockQuantity === offer.stockQuantity) return null;
+  await db.batch([
+    db.query
+      .updateTable("listings")
+      .set({
+        price_cash: offer.priceCash,
+        price_card: offer.priceCard,
+        in_stock: fromBool(offer.inStock),
+        stock_quantity: offer.stockQuantity,
+        last_seen_at: now,
+        updated_at: now,
+      })
+      .where("id", "=", current.id),
+    ...(priceChanged
+      ? [
+          db.query.insertInto("price_points").values({
+            listing_id: current.id,
+            price_cash: offer.priceCash,
+            price_card: offer.priceCard,
+            in_stock: fromBool(offer.inStock),
+            observed_at: now,
+          }),
+        ]
+      : []),
+  ]);
+  return { priceChanged };
 }

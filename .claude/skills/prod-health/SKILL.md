@@ -43,6 +43,18 @@ where r.started_at = (select max(started_at) from crawl_runs r2 where r2.store_i
 order by s.slug, r.category
 ```
 
+Refresco horario (#121, `category = 'refresh'`): una tienda WooCommerce sin refresco en más de 2 h tiene el DO sin
+alarm (el Cron de la hora lo revive) o el adaptador sin `refreshOffers`. `missing` alto y estable es normal; uno que
+crece de golpe es la tienda cambiando ids.
+
+```sql
+select s.slug, max(r.started_at) ultimo, sum(r.status = 'failed') fallidos,
+       max(json_extract(r.stats, '$.requested')) pedidas, max(json_extract(r.stats, '$.missing')) faltantes
+from crawl_runs r join stores s on s.id = r.store_id
+where r.category = 'refresh' and r.started_at > datetime('now', '-24 hours')
+group by s.slug order by ultimo
+```
+
 ## Pipeline de normalización (#153)
 
 El tablero es el estado por oferta; lo mismo que muestra `/admin/estado` en el sistema `pipeline`:

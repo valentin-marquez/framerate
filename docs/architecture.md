@@ -121,7 +121,7 @@ crawls y barre las revisiones pendientes sin veredicto, así que también cubre 
 |---|---|---|---|
 | **Descubrir** | Agenda del `StoreCrawler` cada 6 h, con desfase propio por tienda | Recorre el catálogo completo de cada tienda/categoría, una corrida a la vez por tienda. Pesado. | ✅ |
 | **Bajo demanda** | Admin → `POST /v1/admin/crawls` → RPC a `ingest` → `StoreCrawler` | Igual que descubrir; un pedido repetido mientras espera no se duplica. | ✅ |
-| **Refrescar** | Alarm del `StoreCrawler` cada hora | Re-chequea sólo URLs ya conocidas (precio/stock). Liviano. | pendiente (#121 fase 2) |
+| **Refrescar** | Alarm del `StoreCrawler` cada hora, antes que los crawls en cola | Vuelve a leer precio y stock de las ofertas con stock que deciden el mejor precio o son de los 500 productos más vistos (`refresh-store.ts`). No desactiva ni vincula; lo no devuelto queda igual. Sube `catalog_version` como mucho cada 15 min. Sólo adaptadores con `refreshOffers` (WooCommerce). | ✅ WooCommerce (#121 fase 2) |
 
 El Cron horario (`47 * * * *`) sólo llama `ensureScheduled()` en cada tienda activa: revive una alarm perdida. La
 lógica está en `coordinator.ts` (SQL del DO, testeado sobre `bun:sqlite`) y `agenda.ts`; diseño en #201.
