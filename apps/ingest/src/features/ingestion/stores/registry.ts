@@ -448,18 +448,18 @@ export const STORES: readonly StoreDefinition[] = [
   {
     slug: "tecnocam",
     name: "Tecnocam",
-    // Sin www desde octubre de 2026: el 301 convertía el POST al MCP en un GET y daba 404 (#220).
     url: "https://tecnocam.cl",
     minIntervalMs: 1000,
-    adapter: createJumpsellerAdapter({
+    // Pasó de Jumpseller a WooCommerce en octubre de 2026: el MCP de Jumpseller daba 404 (#220).
+    adapter: createWooCommerceAdapter({
       baseUrl: "https://tecnocam.cl",
       // Casi siempre el MPN; a veces un código propio ("TC-SSD-…") o un ASIN de Amazon, que sólo impide el vínculo.
       sku: "mpn",
-      // Precio único (verificado en la ficha, sept. 2026).
+      // Precio único (verificado en la ficha, oct. 2026).
       categories: {
         cpu: ["procesadores"],
         ram: ["memoria-ram"],
-        ssd: ["ssd"],
+        ssd: ["discos-ssd"],
       },
     }),
   },
