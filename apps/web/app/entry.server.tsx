@@ -1,12 +1,54 @@
 import { env } from "cloudflare:workers";
 import crypto from "node:crypto";
+import { createLogger } from "@framerate/kit";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
-import type { EntryContext, HandleErrorFunction } from "react-router";
+import type {
+  EntryContext,
+  HandleErrorFunction,
+  InstrumentationHandlerResult,
+  ServerInstrumentation,
+} from "react-router";
 import { isRouteErrorResponse, ServerRouter } from "react-router";
 import { NonceProvider } from "./shared/hooks/use-nonce";
 import { buildContentSecurityPolicy } from "./shared/lib/csp";
 import { isDevelopment } from "./shared/services/env.server";
+
+const log = createLogger({ feature: "router" });
+const SLOW_MS = 500;
+
+// Una línea por request con el patrón de ruta y el estado (Workers Logs la indexa); los loaders y acciones sólo
+// cuando fallan o tardan, para no multiplicar las líneas por request.
+export const instrumentations: ServerInstrumentation[] = [
+  {
+    handler(handler) {
+      handler.instrument({
+        async request(next, { request }) {
+          const started = performance.now();
+          const result = await next();
+          log.info("request", {
+            method: request.method,
+            path: new URL(request.url).pathname,
+            pattern: result.meta?.pattern,
+            status: result.statusCode,
+            ms: Math.round(performance.now() - started),
+            error: result.error?.message,
+          });
+        },
+      });
+    },
+    route(route) {
+      const timed = (kind: "loader" | "action") => async (next: () => Promise<InstrumentationHandlerResult>) => {
+        const started = performance.now();
+        const result = await next();
+        const ms = Math.round(performance.now() - started);
+        if (result.status === "error") log.error(kind, { route: route.id, ms, error: result.error.message });
+        else if (ms > SLOW_MS) log.warn(kind, { route: route.id, ms });
+      };
+      route.instrument({ loader: timed("loader"), action: timed("action") });
+    },
+  },
+];
 
 export default async function handleRequest(
   request: Request,
