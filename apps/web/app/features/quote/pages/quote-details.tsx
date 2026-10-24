@@ -18,7 +18,7 @@ import { QuoteItemsList } from "~/features/quote/components/quote-items-list";
 import { QuoteLikeButton, useLikeHint } from "~/features/quote/components/quote-like-button";
 import { QuoteOwnerBar } from "~/features/quote/components/quote-owner-bar";
 import { QuoteTotals } from "~/features/quote/components/quote-totals";
-import { useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/useQuotes";
+import { useQuoteAddItem, useQuoteRemoveItem, useQuoteUpdateItem } from "~/features/quote/hooks/useQuotes";
 import { quotesService } from "~/features/quote/services/quotes";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
 import { copyToClipboard, exportToExcel } from "~/features/quote/utils/quote-export";
@@ -61,6 +61,7 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
   const inFlight = useRef(0);
   const user = useUser();
   const revalidator = useRevalidator();
+  const addItem = useQuoteAddItem();
   const updateItem = useQuoteUpdateItem();
   const removeItem = useQuoteRemoveItem();
   const { t } = useTranslation();
@@ -283,12 +284,34 @@ export default function QuoteRoute({ loaderData }: Route.ComponentProps) {
       { quoteId: quote.id, itemId: item.id },
       {
         onSuccess: (detail) => {
-          toast.success(t("product_removed"));
+          toast.success(t("product_removed"), { action: { label: t("undo"), onClick: () => handleRestore(item) } });
           settle(detail);
         },
         onError: () => fail(t("remove_product_error")),
       },
     );
+  };
+
+  /** Deshacer: vuelve a agregarlo y le devuelve lo que `addItem` no sabe: ser el elegido de su slot y su tienda fijada. */
+  const handleRestore = async (item: QuoteItem) => {
+    inFlight.current += 1;
+    try {
+      let detail = await addItem.mutateAsync({
+        quoteId: quote.id,
+        data: { productId: item.product.id, quantity: item.quantity },
+      });
+      const back = detail.items.find((i) => i.product.id === item.product.id);
+      const data = {
+        ...(item.isSelected && back && !back.isSelected && { isSelected: true as const }),
+        ...(item.chosenListingId !== null && { listingId: item.chosenListingId }),
+      };
+      if (back && Object.keys(data).length > 0) {
+        detail = await updateItem.mutateAsync({ quoteId: quote.id, itemId: back.id, data });
+      }
+      settle(detail);
+    } catch {
+      fail(t("quote_update_error"));
+    }
   };
 
   const handleExportPDF = async () => {
