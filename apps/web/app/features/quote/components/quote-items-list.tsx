@@ -132,7 +132,6 @@ function SlotRow({
 
   return (
     <li className="group/hold-row relative">
-      <HoldSweep />
       {/* El botón cubre la fila para expandirla; el nombre y la tienda son enlaces por encima, así no quedan anidados. El panel desplegado va `relative` para quedar sobre esa capa y que sus botones reciban el clic. */}
       <button
         type="button"
@@ -151,6 +150,7 @@ function SlotRow({
           ROW_GRID,
         )}
       >
+        <HoldSweep />
         <span className="hidden truncate text-muted-foreground text-label-xs md:block">
           {QUOTE_SLOT_LABELS[item.slot]}
         </span>
