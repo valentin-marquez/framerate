@@ -9,7 +9,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "sharp": "0.35.4"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@framerate/config": "workspace:*",

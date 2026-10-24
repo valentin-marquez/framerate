@@ -48,7 +48,7 @@ export function AuthFlash() {
         for (const key of FLASH_PARAMS) next.delete(key);
         return next;
       },
-      { replace: true, preventScrollReset: true, unstable_defaultShouldRevalidate: false },
+      { replace: true, preventScrollReset: true, defaultShouldRevalidate: false },
     );
   }, [error, connected, linking, merged, providers, setParams, t]);
 

@@ -16,10 +16,10 @@
     "@framerate/database": "workspace:*",
     "@framerate/kit": "workspace:*",
     "@framerate/matching": "workspace:*",
-    "kysely": "^0.29.6"
+    "kysely": "^0.29.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260930.2",
+    "@cloudflare/workers-types": "^5.20261024.1",
     "@framerate/config": "workspace:*",
     "@types/bun": "1.3.9",
     "typescript": "5.9.3"
