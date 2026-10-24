@@ -5,11 +5,14 @@ import { normalizeOffer, type RawOffer } from "../domain/normalize";
 import pages from "./__fixtures__/myshop-productos.json";
 import type { CrawlContext } from "./adapter";
 import { HttpError } from "./http";
-import { createMyShopAdapter, descriptionOf } from "./myshop";
+import { createMyShopAdapter, descriptionOf, refreshedOffer } from "./myshop";
 
 // Fichas reales recortadas al input ObjectoJSON con su descripción: MyShop p38668 y una de Sandos sin descripción.
 const ficha = await Bun.file(`${import.meta.dir}/__fixtures__/myshop-ficha.html`).text();
 const fichaVacia = await Bun.file(`${import.meta.dir}/__fixtures__/myshop-ficha-sandos-vacia.html`).text();
+const fichaStock = await Bun.file(`${import.meta.dir}/__fixtures__/myshop-ficha-stock.html`).text();
+const fichaAgotada = await Bun.file(`${import.meta.dir}/__fixtures__/myshop-ficha-agotada.html`).text();
+const fichaSandos = await Bun.file(`${import.meta.dir}/__fixtures__/sandos-ficha-stock.html`).text();
 
 function fakeContext(fichas: (url: string) => string | null = () => null, known: RawOffer[] = []) {
   const bodies: unknown[] = [];
@@ -122,4 +125,65 @@ describe("adaptador MyShop", () => {
 
 test('Sandos con "Ficha sin descripción" no tiene texto', () => {
   expect(descriptionOf(fichaVacia)).toBeNull();
+});
+
+describe("refresco por ficha (#121 fase 3)", () => {
+  const ref = { externalId: "46831", url: "https://tienda.example/producto/pny-p46831", category: "gpu" as const };
+
+  test("MyShop: precio transferencia del JSON-LD, otros medios y stock del texto", () => {
+    expect(refreshedOffer(fichaStock, ref)).toMatchObject({
+      externalId: "46831",
+      category: "gpu",
+      title: "Tarjeta de Video PNY NVIDIA RTX PRO 4500 Blackwell Workstation Edition 32GB GDDR7",
+      priceCash: 6_199_500,
+      priceCard: 6_540_473,
+      inStock: true,
+      stockQuantity: 2,
+      brand: "PNY",
+      mpn: "VCNRTXPRO4500B-PB",
+      imageUrls: ["https://static.myshop.cl/myshop/fotos/4/6/8/3/1/1_1792695379000.jpg"],
+    });
+  });
+
+  test("agotada: OutOfStock y 0 unidades", () => {
+    expect(refreshedOffer(fichaAgotada, ref)).toMatchObject({
+      priceCash: 3990,
+      priceCard: 4209,
+      inStock: false,
+      stockQuantity: 0,
+    });
+  });
+
+  test('Sandos: el precio de otros medios va después de la etiqueta y el stock es "Stock online N"', () => {
+    expect(refreshedOffer(fichaSandos, ref)).toMatchObject({
+      priceCash: 6_730_000,
+      priceCard: 7_066_500,
+      inStock: true,
+      stockQuantity: 2,
+    });
+  });
+
+  test("sin JSON-LD de producto no hay oferta", () => {
+    expect(refreshedOffer(ficha, ref)).toBeNull();
+  });
+
+  test("refreshOffers pide cada ficha; la 404 y la que falla se omiten sin cortar la hora", async () => {
+    const adapter = createMyShopAdapter({ baseUrl: "https://tienda.example", categories: { gpu: ["33"] } });
+    const { ctx, gets } = fakeContext((url) => {
+      if (url.endsWith("p404")) return null;
+      if (url.endsWith("p500")) throw new HttpError(url, 500);
+      return url.endsWith("p35027") ? fichaAgotada : fichaStock;
+    });
+    const refs = ["p46831", "p404", "p500", "p35027"].map((id) => ({
+      externalId: id,
+      url: `https://tienda.example/producto/${id}`,
+      category: "gpu" as const,
+    }));
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(gets).toHaveLength(4);
+    expect(offers.map((o) => [o.externalId, o.inStock])).toEqual([
+      ["p46831", true],
+      ["p35027", false],
+    ]);
+  });
 });

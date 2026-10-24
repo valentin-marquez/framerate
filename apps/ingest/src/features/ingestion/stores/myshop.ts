@@ -3,8 +3,8 @@ import { decodeEntities, htmlLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
-import type { CrawlContext, StoreAdapter } from "./adapter";
-import { fichaText, getPage } from "./html";
+import type { CrawlContext, OfferRef, StoreAdapter } from "./adapter";
+import { fichaText, findLd, getPage, parseClp } from "./html";
 
 /**
  * Plataforma propia de MyShop, que también usa Sandos: `POST /servicio/producto` con
@@ -82,7 +82,76 @@ export function createMyShopAdapter(config: MyShopConfig): StoreAdapter {
         }
       }
     },
+    // `/servicio/producto` no acepta pedir por id (spike del 24-10, #121): el refresco es una ficha por oferta.
+    async *refreshOffers(refs: readonly OfferRef[], ctx: CrawlContext) {
+      let failures = 0;
+      for (const ref of refs) {
+        let html: string | null;
+        try {
+          html = await getPage(ctx, ref.url);
+        } catch (error) {
+          ctx.log.warn("myshop.refresh_failed", { url: ref.url, error });
+          // Una ficha caída no tumba la hora; muchas seguidas sí: la tienda está cortando y no hay que insistir.
+          if (++failures >= MAX_REFRESH_FAILURES) throw error;
+          continue;
+        }
+        if (!html) continue;
+        const offer = refreshedOffer(html, ref);
+        if (offer) yield offer;
+        else ctx.log.warn("myshop.refresh_unparsed", { url: ref.url });
+      }
+    },
   };
+}
+
+const MAX_REFRESH_FAILURES = 10;
+
+/**
+ * Oferta leída de la ficha: el JSON-LD trae nombre, códigos, foto, precio transferencia y disponibilidad; el precio de
+ * otros medios y el stock online sólo están en el texto (MyShop: "$X Otros medios de pago", "Stock en Internet N
+ * unidades"; Sandos: "Otros medios de pago $X", "Stock online N").
+ */
+export function refreshedOffer(html: string, ref: OfferRef): RawOffer | null {
+  const product = findLd(html, "Product");
+  const offers = product?.offers as Record<string, unknown> | undefined;
+  const priceCash = Number(offers?.price);
+  if (!product || typeof product.name !== "string" || !Number.isFinite(priceCash)) return null;
+
+  const text = decodeEntities(html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ")).replace(
+    /\s+/g,
+    " ",
+  );
+  const priceCard = parseClp(
+    // Sandos lo pone después de la etiqueta; MyShop antes (y antes de la etiqueta también va el de transferencia).
+    text.match(/Otros medios de pago\s*\$\s?([\d.]+)/)?.[1] ?? text.match(/\$\s?([\d.]+)\s*Otros medios de pago/)?.[1],
+  );
+  const stock = text.match(/Stock (?:en Internet|online)\s*(\d+)/i)?.[1];
+  const inStock = String(offers?.availability ?? "").endsWith("InStock");
+  const brand = (product.brand as { name?: unknown } | undefined)?.name;
+  const gtin = product.gtin13 ?? product.gtin12 ?? product.gtin;
+
+  return {
+    externalId: ref.externalId,
+    url: ref.url,
+    title: product.name,
+    category: ref.category,
+    priceCash,
+    priceCard: priceCard && priceCard > priceCash ? priceCard : null,
+    inStock,
+    // Misma regla que el listado: sobre 20 la tienda no dice la cantidad real.
+    stockQuantity: !inStock ? 0 : stock && Number(stock) <= 20 ? Number(stock) : null,
+    brand: typeof brand === "string" && brand.trim() ? brand.trim() : null,
+    mpn: typeof product.mpn === "string" && product.mpn.trim() ? product.mpn.trim() : null,
+    gtin: typeof gtin === "string" && normalizeGtin(gtin) ? gtin : null,
+    imageUrls: photos([product.image].flat()),
+  };
+}
+
+function photos(srcs: unknown[]): string[] {
+  // La plataforma manda "fotos/nodisponible_*.png" (su logo con "próximamente imagen") cuando no hay foto.
+  return srcs.filter(
+    (src): src is string => typeof src === "string" && src.startsWith("http") && !src.includes("/nodisponible_"),
+  );
 }
 
 /** La ficha trae el producto en un input oculto; la descripción adentro es HTML con sus propias entidades. */
@@ -116,9 +185,6 @@ export function toRawOffer(item: MyShopItem, category: Category, baseUrl: string
     // En kits el partno junta los códigos internos de cada producto ("13024+43262"): no es un MPN.
     mpn: !gtin && partno && !partno.includes("+") ? partno : null,
     gtin,
-    // La plataforma manda "fotos/nodisponible_*.png" (su logo con "próximamente imagen") cuando no hay foto.
-    imageUrls: [item.foto, item.fotoSecundaria].filter(
-      (src): src is string => !!src?.startsWith("http") && !src.includes("/nodisponible_"),
-    ),
+    imageUrls: photos([item.foto, item.fotoSecundaria]),
   };
 }
