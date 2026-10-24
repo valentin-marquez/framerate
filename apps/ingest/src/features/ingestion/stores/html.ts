@@ -1,3 +1,4 @@
+import type { Category } from "@framerate/contracts";
 import { decodeEntities } from "@framerate/kit";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, OfferRef } from "./adapter";
@@ -50,12 +51,13 @@ export async function* refreshByPage(
   refs: readonly OfferRef[],
   ctx: CrawlContext,
   parse: (html: string, ref: OfferRef) => RawOffer | null,
+  fetch: (ref: OfferRef) => Promise<string | null> = (ref) => getPage(ctx, ref.url),
 ): AsyncIterable<RawOffer> {
   let failures = 0;
   for (const ref of refs) {
     let html: string | null;
     try {
-      html = await getPage(ctx, ref.url);
+      html = await fetch(ref);
     } catch (error) {
       ctx.log.warn("refresh.page_failed", { url: ref.url, error });
       if (++failures >= MAX_REFRESH_FAILURES) throw error;
@@ -65,6 +67,23 @@ export async function* refreshByPage(
     const offer = parse(html, ref);
     if (offer) yield offer;
     else ctx.log.warn("refresh.page_unparsed", { url: ref.url });
+  }
+}
+
+/**
+ * Refresco horario (#121) para las tiendas cuyo listado ya trae precio y stock: recorre el listado de cada categoría
+ * pedida y corta en cuanto vio todas sus ofertas. `list` no debe pedir fichas, o el refresco costaría un crawl.
+ */
+export async function* refreshByListing(
+  refs: readonly OfferRef[],
+  list: (category: Category) => AsyncIterable<RawOffer>,
+): AsyncIterable<RawOffer> {
+  for (const category of new Set(refs.map((ref) => ref.category))) {
+    const pending = new Set(refs.filter((ref) => ref.category === category).map((ref) => ref.externalId));
+    for await (const offer of list(category)) {
+      if (pending.delete(offer.externalId)) yield offer;
+      if (pending.size === 0) break;
+    }
   }
 }
 

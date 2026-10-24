@@ -170,3 +170,25 @@ describe("texto de ficha por quickview", () => {
     }
   });
 });
+
+describe("refresco por quickview (#225)", () => {
+  test("una petición por oferta; la que vuelve como HTML se salta sin cortar el resto", async () => {
+    const product = listados.mybox[0]?.products[0];
+    const config = { reference: "mpn", cashDiscount: 0.05 } as const;
+    const adapter = createPrestaShopAdapter({ ...config, baseUrl: "https://tienda.example", categories: {} });
+    const bodies: string[] = [];
+    const { ctx } = fakeContext([], "x");
+    ctx.http.post = async (_url, body) => {
+      bodies.push(String(body));
+      const text = String(body).includes("id_product=1&") ? "<html>Mantenimiento</html>" : JSON.stringify({ product });
+      return { status: 200, headers: new Headers(), text };
+    };
+    const refs = [
+      { externalId: "1", url: "https://tienda.example/1-x.html", category: "gpu" as const },
+      { externalId: "6197", url: "https://tienda.example/6197-x.html", category: "gpu" as const },
+    ];
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(bodies).toHaveLength(2);
+    expect(offers).toEqual([toRawOffer(product as Parameters<typeof toRawOffer>[0], "gpu", config)]);
+  });
+});

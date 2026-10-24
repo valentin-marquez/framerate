@@ -4,7 +4,7 @@ import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { fichaText } from "./html";
+import { fichaText, refreshByPage } from "./html";
 
 /**
  * PrestaShop 1.7+/8: el listado de categoría (`/68-tarjeta-de-video?page=N`) devuelve JSON con `products[]` y
@@ -46,13 +46,14 @@ const ProductSchema = z.object({
 type PrestaShopProduct = z.infer<typeof ProductSchema>;
 
 const QuickviewSchema = z.object({ product: z.object({ description: z.string().nullish() }) });
+const QuickviewProductSchema = z.object({ product: ProductSchema });
 
 const MAX_PAGES = 50;
 
 /** Un listado o quickview que llega como HTML (mantenimiento, anti-bot, ruta cambiada) se dice así y no como error de JSON.parse (#220). */
-function parseJson(text: string, url: string): unknown {
+function notHtml(text: string, url: string): string {
   if (text.trimStart().startsWith("<")) throw new Error(`${url} devolvió HTML en vez de JSON`);
-  return JSON.parse(text);
+  return text;
 }
 
 export function createPrestaShopAdapter(config: PrestaShopConfig): StoreAdapter {
@@ -65,7 +66,7 @@ export function createPrestaShopAdapter(config: PrestaShopConfig): StoreAdapter 
           const res = await ctx.http.get(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
           await ctx.snapshot(`${path}/page-${page}.json`, res.text);
 
-          const { products, pagination } = PageSchema.parse(parseJson(res.text, url));
+          const { products, pagination } = PageSchema.parse(JSON.parse(notHtml(res.text, url)));
           ctx.log.info("prestashop.page", { path, page, items: products.length, pages: pagination.pages_count });
           for (const raw of products) {
             const product = ProductSchema.safeParse(raw);
@@ -83,17 +84,33 @@ export function createPrestaShopAdapter(config: PrestaShopConfig): StoreAdapter 
         }
       }
     },
+    // El quickview trae el mismo producto que el listado (precio, `add_to_cart_url`): una petición por oferta.
+    refreshOffers: (refs, ctx) =>
+      refreshByPage(
+        refs,
+        ctx,
+        (text, ref) => {
+          const product = QuickviewProductSchema.safeParse(JSON.parse(text));
+          return product.success ? toRawOffer(product.data.product, ref.category, config) : null;
+        },
+        (ref) => postQuickview(ctx, config.baseUrl, ref.externalId),
+      ),
   };
 }
 
-async function quickview(ctx: CrawlContext, baseUrl: string, id: string): Promise<string | null> {
+async function postQuickview(ctx: CrawlContext, baseUrl: string, id: string): Promise<string> {
+  const url = `${baseUrl}/index.php?controller=product`;
   // Sin X-Requested-With: el relay no lo reenvía y las cuatro tiendas responden igual.
   const res = await ctx.http.post(
-    `${baseUrl}/index.php?controller=product`,
+    url,
     `action=quickview&id_product=${encodeURIComponent(id)}&id_product_attribute=0&ajax=1`,
     { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
   );
-  const parsed = QuickviewSchema.safeParse(parseJson(res.text, `${baseUrl}/index.php?controller=product`));
+  return notHtml(res.text, url);
+}
+
+async function quickview(ctx: CrawlContext, baseUrl: string, id: string): Promise<string | null> {
+  const parsed = QuickviewSchema.safeParse(JSON.parse(await postQuickview(ctx, baseUrl, id)));
   return (parsed.success && htmlLines(parsed.data.product.description ?? "")) || null;
 }
 

@@ -3,7 +3,7 @@ import { decodeEntities, htmlLines, stripHtml } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { getPage, parseClp } from "./html";
+import { getPage, parseClp, refreshByPage } from "./html";
 
 /**
  * Wei (PHP propio). El listado (`perpage=100`, `page` desde 0) trae URL, código interno y el precio de transferencia,
@@ -64,6 +64,11 @@ export function createWeiAdapter(config: WeiConfig): StoreAdapter {
         }
       }
     },
+    refreshOffers: (refs, ctx) =>
+      refreshByPage(refs, ctx, (html, ref) => {
+        const offer = toRawOffer(html, ref.url, ref.category);
+        return offer.externalId && offer.title ? offer : null;
+      }),
   };
 }
 

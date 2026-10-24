@@ -67,3 +67,10 @@ describe("adaptador Eylstore", () => {
     expect(offers[0]?.sourceText).toBeNull();
   });
 });
+
+test("refresco (#225): el mismo listado, sólo con las ofertas pedidas", async () => {
+  const [, second] = await Array.fromAsync(adapter.crawlCategory("motherboard", ctx));
+  if (!second) throw new Error("faltan ofertas en el fixture");
+  const refs = [{ externalId: second.externalId, url: second.url, category: "motherboard" as const }];
+  expect(await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? [])).toEqual([second]);
+});

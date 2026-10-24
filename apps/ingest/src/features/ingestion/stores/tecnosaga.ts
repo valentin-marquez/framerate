@@ -2,6 +2,7 @@ import type { Category } from "@framerate/contracts";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
+import { refreshByListing } from "./html";
 
 /**
  * Tecno Saga (PHP propio). El listado se arma por XHR: `POST /productos/listadoajax` (formulario, exige
@@ -73,6 +74,10 @@ export function createTecnoSagaAdapter(config: TecnoSagaConfig): StoreAdapter {
           if (items.length === 0 || page >= data.cantidad_paginas) break;
         }
       }
+    },
+    // El listado ya trae precio y stock: el refresco es el mismo recorrido, cortado al ver las ofertas pedidas.
+    refreshOffers(refs, ctx) {
+      return refreshByListing(refs, (category) => this.crawlCategory(category, ctx));
     },
   };
 }

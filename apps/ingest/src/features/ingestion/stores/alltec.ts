@@ -3,7 +3,7 @@ import { decodeEntities, htmlLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { getPage, parseClp } from "./html";
+import { getPage, parseClp, refreshByPage } from "./html";
 
 /**
  * AllTec (PrestaShop 1.6, sin JSON). El listado va de a 50 (`?n=` sólo acepta sus valores fijos) y no trae referencia
@@ -51,6 +51,8 @@ export function createAlltecAdapter(config: AlltecConfig): StoreAdapter {
         }
       }
     },
+    refreshOffers: (refs, ctx) =>
+      refreshByPage(refs, ctx, (html, ref) => toRawOffer(html, ref.externalId, ref.url, ref.category)),
   };
 }
 

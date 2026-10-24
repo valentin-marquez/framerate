@@ -3,7 +3,7 @@ import { htmlLines } from "@framerate/kit";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { fichaText, parseClp } from "./html";
+import { fichaText, parseClp, refreshByListing } from "./html";
 
 /**
  * SP Digital (Gatsby + Saleor). Cada subcategoría se publica dos veces, las dos desde el servidor (sin `render`):
@@ -46,42 +46,52 @@ const PageSchema = z.object({
 });
 
 export function createSpDigitalAdapter(config: SpDigitalConfig): StoreAdapter {
+  async function* listOffers(category: Category, ctx: CrawlContext) {
+    const seen = new Set<string>();
+    for (const slug of config.categories[category] ?? []) {
+      for (let page = 1; page <= MAX_PAGES; page++) {
+        const suffix = page > 1 ? `${page}/` : "";
+        const json = await ctx.http.get(`${config.baseUrl}/page-data/categories/${slug}/${suffix}page-data.json`);
+        const html = await ctx.http.get(`${config.baseUrl}/categories/${slug}/${suffix}`, { accept: "text/html" });
+        await ctx.snapshot(`${slug}/page-${page}.json`, json.text);
+        await ctx.snapshot(`${slug}/page-${page}.html`, html.text);
+
+        const data = PageSchema.parse(JSON.parse(json.text)).result.pageContext;
+        const cash = cardCashPrices(html.text);
+        for (const raw of data.content.items) {
+          const item = ItemSchema.parse(raw);
+          if (seen.has(item.slug)) continue;
+          seen.add(item.slug);
+          const offer = toRawOffer(item, cash.get(item.slug), config.baseUrl, category);
+          if (offer) yield { slug: item.slug, offer };
+          else ctx.log.info("spdigital.omitido", { slug: item.slug });
+        }
+        ctx.log.info("spdigital.page", {
+          slug,
+          page,
+          items: data.content.items.length,
+          pages: data.defaultTotalPages,
+        });
+        if (page >= data.defaultTotalPages) break;
+      }
+    }
+  }
+
   return {
     categories: config.categories,
     async *crawlCategory(category: Category, ctx: CrawlContext) {
-      const seen = new Set<string>();
-      for (const slug of config.categories[category] ?? []) {
-        for (let page = 1; page <= MAX_PAGES; page++) {
-          const suffix = page > 1 ? `${page}/` : "";
-          const json = await ctx.http.get(`${config.baseUrl}/page-data/categories/${slug}/${suffix}page-data.json`);
-          const html = await ctx.http.get(`${config.baseUrl}/categories/${slug}/${suffix}`, { accept: "text/html" });
-          await ctx.snapshot(`${slug}/page-${page}.json`, json.text);
-          await ctx.snapshot(`${slug}/page-${page}.html`, html.text);
-
-          const data = PageSchema.parse(JSON.parse(json.text)).result.pageContext;
-          const cash = cardCashPrices(html.text);
-          for (const raw of data.content.items) {
-            const item = ItemSchema.parse(raw);
-            if (seen.has(item.slug)) continue;
-            seen.add(item.slug);
-            const offer = toRawOffer(item, cash.get(item.slug), config.baseUrl, category);
-            if (offer) {
-              const sourceText = await fichaText(ctx, offer, (config.now ?? Date.now)(), async () =>
-                descriptionText((await ctx.http.get(`${config.baseUrl}/page-data/${item.slug}/page-data.json`)).text),
-              );
-              yield { ...offer, sourceText };
-            } else ctx.log.info("spdigital.omitido", { slug: item.slug });
-          }
-          ctx.log.info("spdigital.page", {
-            slug,
-            page,
-            items: data.content.items.length,
-            pages: data.defaultTotalPages,
-          });
-          if (page >= data.defaultTotalPages) break;
-        }
+      for await (const { slug, offer } of listOffers(category, ctx)) {
+        const sourceText = await fichaText(ctx, offer, (config.now ?? Date.now)(), async () =>
+          descriptionText((await ctx.http.get(`${config.baseUrl}/page-data/${slug}/page-data.json`)).text),
+        );
+        yield { ...offer, sourceText };
       }
     },
+    // El listado trae los dos precios y el stock; el refresco no pide el texto de ficha.
+    refreshOffers: (refs, ctx) =>
+      refreshByListing(refs, async function* (category) {
+        for await (const { offer } of listOffers(category, ctx)) yield offer;
+      }),
   };
 }
 

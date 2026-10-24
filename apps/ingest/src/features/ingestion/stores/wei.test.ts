@@ -77,3 +77,18 @@ describe("adaptador Wei", () => {
     expect(toRawOffer(bare, url, "gpu").sourceText).toBeNull();
   });
 });
+
+describe("refresco por ficha (#225)", () => {
+  test("una ficha por oferta; la retirada se salta", async () => {
+    const [known] = await Array.fromAsync(adapter.crawlCategory("gpu", fakeContext().ctx));
+    if (!known) throw new Error("sin ofertas en el fixture");
+    const { ctx, urls } = fakeContext();
+    const refs = [
+      { externalId: known.externalId, url: known.url, category: "gpu" as const },
+      { externalId: "X", url: `${BASE}/producto/retirado`, category: "gpu" as const },
+    ];
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(urls).toEqual(refs.map((ref) => ref.url));
+    expect(offers).toEqual([known]);
+  });
+});

@@ -4,6 +4,7 @@ import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
+import { refreshByListing } from "./html";
 
 /**
  * Eylstore (Next.js sobre una API Laravel). `GET /api/categorias/<slug>/productos?per_page=100` trae marca, código,
@@ -64,6 +65,10 @@ export function createEylstoreAdapter(config: EylstoreConfig): StoreAdapter {
           if (products.length === 0 || page >= meta.last_page) break;
         }
       }
+    },
+    // El listado ya trae precio y stock: el refresco es el mismo recorrido, cortado al ver las ofertas pedidas.
+    refreshOffers(refs, ctx) {
+      return refreshByListing(refs, (category) => this.crawlCategory(category, ctx));
     },
   };
 }

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { silentLogger } from "@framerate/kit";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext } from "./adapter";
-import { fichaDue, fichaText, findLd, jsonLdNodes, parseClp } from "./html";
+import { fichaDue, fichaText, findLd, jsonLdNodes, parseClp, refreshByListing } from "./html";
 
 const page = `<html><head>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Tienda"},{"@type":["Product"],"sku":"DUAL-RTX3060-O12G-V2","gtin13":"4711081878452"}]}</script>
@@ -58,4 +58,22 @@ test("fichaText: reusa el texto guardado, pide el de la nueva y reintenta la vac
     throw new Error("429");
   };
   expect(await fichaText(ctx, { url: "https://t.example/nueva", inStock: true }, notDue, failing)).toBeNull();
+});
+
+test("refreshByListing: entrega sólo las pedidas y deja de recorrer la categoría al verlas todas", async () => {
+  const listed: string[] = [];
+  async function* list(category: string) {
+    for (const id of ["1", "2", "3", "4"]) {
+      listed.push(`${category}:${id}`);
+      yield { externalId: id } as RawOffer;
+    }
+  }
+  const refs = [
+    { externalId: "2", url: "", category: "gpu" as const },
+    { externalId: "1", url: "", category: "gpu" as const },
+    { externalId: "9", url: "", category: "cpu" as const },
+  ];
+  const offers = await Array.fromAsync(refreshByListing(refs, list));
+  expect(offers.map((o) => o.externalId)).toEqual(["1", "2"]);
+  expect(listed).toEqual(["gpu:1", "gpu:2", "cpu:1", "cpu:2", "cpu:3", "cpu:4"]);
 });

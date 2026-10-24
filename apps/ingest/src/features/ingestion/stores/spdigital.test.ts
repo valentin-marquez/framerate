@@ -104,3 +104,16 @@ describe("adaptador SP Digital", () => {
     );
   });
 });
+
+describe("refresco por listado (#225)", () => {
+  test("recorre el listado sin pedir fichas ni texto", async () => {
+    const { ctx, requested } = context();
+    const adapter = createSpDigitalAdapter({ baseUrl: BASE, categories: { gpu: [SLUG] } });
+    const refs = [{ externalId: "NA0000097521", url: `${BASE}/${GPU}/`, category: "gpu" as const }];
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(requested).toEqual(Object.keys(listingPages));
+    expect(offers.map((o) => [o.externalId, o.priceCash, o.priceCard, o.sourceText])).toEqual([
+      ["NA0000097521", 559_990, 585_195, undefined],
+    ]);
+  });
+});

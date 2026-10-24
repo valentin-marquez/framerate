@@ -102,3 +102,18 @@ describe("adaptador AllTec", () => {
     expect(strix?.sourceText).toBeNull();
   });
 });
+
+describe("refresco por ficha (#225)", () => {
+  test("una ficha por oferta, con el id guardado; la retirada se salta", async () => {
+    const known = (await crawl()).find((o) => o.url === STRIX);
+    if (!known) throw new Error("sin la Strix en el fixture");
+    const { ctx, urls } = fakeContext();
+    const refs = [
+      { externalId: "2350", url: STRIX, category: "gpu" as const },
+      { externalId: "1897", url: `${BASE}/amd/1897-retirado.html`, category: "gpu" as const },
+    ];
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(urls).toEqual(refs.map((ref) => ref.url));
+    expect(offers).toEqual([known]);
+  });
+});
