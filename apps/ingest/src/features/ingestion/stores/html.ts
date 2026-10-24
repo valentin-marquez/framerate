@@ -1,6 +1,6 @@
 import { decodeEntities } from "@framerate/kit";
 import type { RawOffer } from "../domain/normalize";
-import type { CrawlContext } from "./adapter";
+import type { CrawlContext, OfferRef } from "./adapter";
 import { HttpError } from "./http";
 
 export type LdNode = Record<string, unknown>;
@@ -37,6 +37,35 @@ export function findLd(html: string, type: string): LdNode | undefined {
 export function parseClp(text: string | null | undefined): number | null {
   const digits = decodeEntities(text ?? "").replace(/[^\d]/g, "");
   return digits ? Number(digits) : null;
+}
+
+const MAX_REFRESH_FAILURES = 10;
+
+/**
+ * Refresco horario (#121) para las plataformas sin consulta por id: una ficha por oferta conocida, leída con el mismo
+ * parser del crawl. Una 404 se omite (retirarla es trabajo del crawl de 6 h) y una caída también, con aviso; diez
+ * caídas seguidas cortan la hora, porque la tienda está cortando y no hay que insistir.
+ */
+export async function* refreshByPage(
+  refs: readonly OfferRef[],
+  ctx: CrawlContext,
+  parse: (html: string, ref: OfferRef) => RawOffer | null,
+): AsyncIterable<RawOffer> {
+  let failures = 0;
+  for (const ref of refs) {
+    let html: string | null;
+    try {
+      html = await getPage(ctx, ref.url);
+    } catch (error) {
+      ctx.log.warn("refresh.page_failed", { url: ref.url, error });
+      if (++failures >= MAX_REFRESH_FAILURES) throw error;
+      continue;
+    }
+    if (!html) continue;
+    const offer = parse(html, ref);
+    if (offer) yield offer;
+    else ctx.log.warn("refresh.page_unparsed", { url: ref.url });
+  }
 }
 
 /** HTML de una ficha, o null si ya no existe (producto retirado entre el listado y la ficha). */

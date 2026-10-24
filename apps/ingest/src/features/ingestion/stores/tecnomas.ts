@@ -2,7 +2,7 @@ import type { Category } from "@framerate/contracts";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { findLd, getPage, type LdNode, parseClp } from "./html";
+import { findLd, getPage, type LdNode, parseClp, refreshByPage } from "./html";
 
 /**
  * Tecnomas (Rails propio). El listado `/productos?categorias=[Nombre]` sólo muestra productos con stock y trae un
@@ -59,6 +59,7 @@ export function createTecnomasAdapter(config: TecnomasConfig): StoreAdapter {
         }
       }
     },
+    refreshOffers: (refs, ctx) => refreshByPage(refs, ctx, (html, ref) => toRawOffer(html, ref.url, ref.category)),
   };
 }
 

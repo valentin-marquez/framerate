@@ -139,3 +139,16 @@ describe("adaptador Winpy", () => {
     });
   });
 });
+
+describe("refresco por ficha (#121 fase 4)", () => {
+  test("pide la ficha aunque la oferta sea conocida y no le toque el repaso", async () => {
+    const { ctx, urls } = fakeContext({
+      [`${BASE}/venta/${GPU}/`]: { ...toRawOffer(fixture.product, `${BASE}/venta/${GPU}/`, "gpu") },
+    });
+    const refs = [{ externalId: "DUAL-RTX5050-O8G", url: `${BASE}/venta/${GPU}/`, category: "gpu" as const }];
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(urls).toEqual([`${BASE}/venta/${GPU}/`]);
+    expect(offers).toHaveLength(1);
+    expect(offers[0]).toMatchObject({ externalId: "DUAL-RTX5050-O8G", category: "gpu", inStock: true });
+  });
+});

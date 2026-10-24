@@ -77,3 +77,17 @@ describe("adaptador PC Factory", () => {
     expect(requested).toHaveLength(1);
   });
 });
+
+describe("refresco por listado (#121 fase 4)", () => {
+  test("recorre el listado de la categoría sin pedir fichas y entrega sólo las ofertas pedidas", async () => {
+    const adapter = createPcFactoryAdapter({ categories: { gpu: ["334", "378", "454"] } });
+    const { ctx, requested } = fakeContext();
+    const refs = [
+      { externalId: "54708", url: "https://www.pcfactory.cl/producto/54708", category: "gpu" as const },
+      { externalId: "1", url: "https://www.pcfactory.cl/producto/1", category: "gpu" as const },
+    ];
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(requested).toEqual([`${API}/query?page=0&size=48&categorias=334,378,454`]);
+    expect(offers.map((o) => [o.externalId, o.priceCash, o.stockQuantity])).toEqual([["54708", 914_990, 19]]);
+  });
+});

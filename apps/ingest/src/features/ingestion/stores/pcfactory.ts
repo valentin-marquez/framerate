@@ -3,7 +3,7 @@ import { stripHtml } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
-import type { CrawlContext, StoreAdapter } from "./adapter";
+import type { CrawlContext, OfferRef, StoreAdapter } from "./adapter";
 
 /**
  * PC Factory: la web es una SPA que lee su API pública. El listado por categoría trae precios y stock; el MPN
@@ -79,6 +79,25 @@ export function createPcFactoryAdapter(config: PcFactoryConfig): StoreAdapter {
           yield toRawOffer(item.data, await detail(item.data.id, ctx), category);
         }
         if (page + 1 >= pageable.totalPages) break;
+      }
+    },
+    // La ficha por id no trae precio y el listado no filtra por ids: se vuelve a pasear el listado de cada
+    // categoría pedida (48 por página, sin fichas) hasta ver todas sus ofertas.
+    async *refreshOffers(refs: readonly OfferRef[], ctx: CrawlContext) {
+      for (const category of new Set(refs.map((ref) => ref.category))) {
+        const ids = config.categories[category];
+        const pending = new Set(refs.filter((ref) => ref.category === category).map((ref) => ref.externalId));
+        if (!ids?.length) continue;
+        for (let page = 0; page < MAX_PAGES && pending.size > 0; page++) {
+          const res = await ctx.http.get(`${API}/query?page=${page}&size=${PAGE_SIZE}&categorias=${ids.join(",")}`);
+          const { items, pageable } = QuerySchema.parse(JSON.parse(res.text)).content;
+          for (const raw of items) {
+            const item = ItemSchema.safeParse(raw);
+            if (!item.success || !pending.delete(String(item.data.id))) continue;
+            yield toRawOffer(item.data, NO_DETAIL, category);
+          }
+          if (page + 1 >= pageable.totalPages) break;
+        }
       }
     },
   };

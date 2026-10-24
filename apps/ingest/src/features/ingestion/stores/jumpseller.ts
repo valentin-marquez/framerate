@@ -1,10 +1,10 @@
 import type { Category } from "@framerate/contracts";
-import { htmlLines, textLines } from "@framerate/kit";
+import { decodeEntities, htmlLines, textLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
-import type { CrawlContext, StoreAdapter } from "./adapter";
-import { getPage } from "./html";
+import type { CrawlContext, OfferRef, StoreAdapter } from "./adapter";
+import { findLd, getPage, refreshByPage } from "./html";
 
 /**
  * Tiendas Jumpseller. El catálogo sale del servidor MCP público de la plataforma (`POST /api/mcp`, JSON-RPC,
@@ -111,7 +111,37 @@ export function createJumpsellerAdapter(config: JumpsellerConfig): StoreAdapter 
         }
       }
     },
+    // `get_product` del MCP ignora las promociones igual que `list_products`: el precio real sigue en la ficha.
+    refreshOffers: (refs, ctx) => refreshByPage(refs, ctx, (html, ref) => refreshedOffer(html, ref, config)),
   };
+}
+
+/** Oferta leída de la ficha: precio y disponibilidad en los metas `product:*`, nombre, marca y foto en los `og:*`. */
+export function refreshedOffer(html: string, ref: OfferRef, config: JumpsellerConfig): RawOffer | null {
+  const meta = (property: string) =>
+    decodeEntities(html.match(new RegExp(`<meta property="${property}" content="([^"]*)"`))?.[1] ?? "");
+  const listed = Number(meta("product:price:amount"));
+  const name = meta("og:title");
+  if (!name || !Number.isFinite(listed) || listed <= 0) return null;
+  const sku = findLd(html, "Product")?.sku;
+  return toRawOffer(
+    {
+      id: `gid://jumpseller/Product/${ref.externalId}`,
+      name,
+      url: ref.url,
+      price: listed,
+      sku: typeof sku === "string" ? sku : null,
+      brand: meta("og:brand") || null,
+      barcode: null,
+      stock_available: meta("product:availability") === "instock",
+      images: [meta("og:image")].filter((src) => src.startsWith("http")),
+      categories: [],
+      description: null,
+    },
+    Math.round(listed),
+    ref.category,
+    config,
+  );
 }
 
 function parseItems(text: string): unknown[] {

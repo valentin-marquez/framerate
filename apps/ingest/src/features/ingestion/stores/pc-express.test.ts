@@ -118,3 +118,28 @@ describe("adaptador PC Express", () => {
     expect(fan).toMatchObject({ externalId: "2085", inStock: true, stockQuantity: null, priceCash: 1_000 });
   });
 });
+
+describe("refresco por ficha (#121 fase 4)", () => {
+  test("pide sólo las fichas, salta la 404 y devuelve precio y stock de cada una", async () => {
+    const { ctx, urls } = fakeContext();
+    const refs = [
+      {
+        externalId: "20561",
+        url: `${BASE}/20561-procesador-amd-ryzen-5-9600-3800-5200-6core-sam5`,
+        category: "cpu" as const,
+      },
+      { externalId: "19237", url: `${BASE}/19237-retirada`, category: "gpu" as const },
+      {
+        externalId: "2085",
+        url: `${BASE}/2085-ventilador-para-gabinete-80mm-x-25mm-negro`,
+        category: "case_fan" as const,
+      },
+    ];
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(urls).toEqual(refs.map((ref) => ref.url));
+    expect(offers.map((o) => [o.externalId, o.category, o.priceCash])).toEqual([
+      ["20561", "cpu", 238_900],
+      ["2085", "case_fan", 1000],
+    ]);
+  });
+});

@@ -4,7 +4,7 @@ import { normalizeGtin } from "@framerate/matching";
 import { z } from "zod";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, OfferRef, StoreAdapter } from "./adapter";
-import { fichaText, findLd, getPage, parseClp } from "./html";
+import { fichaText, findLd, getPage, parseClp, refreshByPage } from "./html";
 
 /**
  * Plataforma propia de MyShop, que también usa Sandos: `POST /servicio/producto` con
@@ -83,28 +83,9 @@ export function createMyShopAdapter(config: MyShopConfig): StoreAdapter {
       }
     },
     // `/servicio/producto` no acepta pedir por id (spike del 24-10, #121): el refresco es una ficha por oferta.
-    async *refreshOffers(refs: readonly OfferRef[], ctx: CrawlContext) {
-      let failures = 0;
-      for (const ref of refs) {
-        let html: string | null;
-        try {
-          html = await getPage(ctx, ref.url);
-        } catch (error) {
-          ctx.log.warn("myshop.refresh_failed", { url: ref.url, error });
-          // Una ficha caída no tumba la hora; muchas seguidas sí: la tienda está cortando y no hay que insistir.
-          if (++failures >= MAX_REFRESH_FAILURES) throw error;
-          continue;
-        }
-        if (!html) continue;
-        const offer = refreshedOffer(html, ref);
-        if (offer) yield offer;
-        else ctx.log.warn("myshop.refresh_unparsed", { url: ref.url });
-      }
-    },
+    refreshOffers: (refs, ctx) => refreshByPage(refs, ctx, refreshedOffer),
   };
 }
-
-const MAX_REFRESH_FAILURES = 10;
 
 /**
  * Oferta leída de la ficha: el JSON-LD trae nombre, códigos, foto, precio transferencia y disponibilidad; el precio de

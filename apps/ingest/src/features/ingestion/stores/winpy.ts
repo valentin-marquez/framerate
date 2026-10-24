@@ -3,7 +3,7 @@ import { decodeEntities, htmlLines } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { fichaDue, getPage, parseClp } from "./html";
+import { fichaDue, getPage, parseClp, refreshByPage } from "./html";
 
 /**
  * Winpy (Magento, HTML del servidor). El listado (`/<ruta>/?pagina=N`, 40 por página, termina cuando viene vacío)
@@ -65,6 +65,12 @@ export function createWinpyAdapter(config: WinpyConfig): StoreAdapter {
         }
       }
     },
+    // ~12 peticiones por minuto (`minIntervalMs` del registro): las ~100 fichas importantes caben en la hora.
+    refreshOffers: (refs, ctx) =>
+      refreshByPage(refs, ctx, (html, ref) => {
+        const offer = toRawOffer(html, ref.url, ref.category);
+        return offer.externalId && offer.title ? offer : null;
+      }),
   };
 }
 

@@ -3,7 +3,7 @@ import { decodeEntities } from "@framerate/kit";
 import { normalizeGtin } from "@framerate/matching";
 import type { RawOffer } from "../domain/normalize";
 import type { CrawlContext, StoreAdapter } from "./adapter";
-import { findLd, getPage, type LdNode, parseClp } from "./html";
+import { findLd, getPage, type LdNode, parseClp, refreshByPage } from "./html";
 
 /**
  * PC Express (OpenCart). El listado de categoría va de a 100 con `limit=100` (su robots.txt lo prohíbe; se usa igual por
@@ -51,6 +51,8 @@ export function createPcExpressAdapter(config: PcExpressConfig): StoreAdapter {
         }
       }
     },
+    refreshOffers: (refs, ctx) =>
+      refreshByPage(refs, ctx, (html, ref) => toRawOffer(html, ref.externalId, ref.url, ref.category)),
   };
 }
 

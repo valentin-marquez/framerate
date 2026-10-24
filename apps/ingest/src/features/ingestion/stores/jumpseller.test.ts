@@ -134,3 +134,31 @@ describe("adaptador Jumpseller", () => {
     ]);
   });
 });
+
+describe("refresco por ficha (#121 fase 4)", () => {
+  test("lee precio y disponibilidad de los metas de la ficha y aplica el descuento de transferencia", async () => {
+    const adapter = createJumpsellerAdapter({
+      baseUrl: "https://valrod.cl",
+      sku: "mpn",
+      cashDiscount: 0.034,
+      categories: { psu: ["fuentes"] },
+    });
+    const { ctx, fichas } = fakeContext();
+    const refs = [
+      { externalId: "123", url: "https://valrod.cl/fuente-de-poder-cougar-atlas-750", category: "psu" as const },
+      { externalId: "999", url: "https://valrod.cl/retirada", category: "psu" as const },
+    ];
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(fichas).toEqual(refs.map((ref) => ref.url));
+    expect(offers).toHaveLength(1);
+    // La ficha lleva la promoción (54.990, no los 74.990 del "antes").
+    expect(offers[0]).toMatchObject({
+      externalId: "123",
+      title: "Fuente de poder Cougar ATLAS 750",
+      category: "psu",
+      priceCash: Math.round(54_990 * (1 - 0.034)),
+      priceCard: 54_990,
+      inStock: true,
+    });
+  });
+});

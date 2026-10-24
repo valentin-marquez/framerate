@@ -132,3 +132,20 @@ describe("adaptador Tecnomas", () => {
     );
   });
 });
+
+describe("refresco por ficha (#121 fase 4)", () => {
+  test("una ficha por oferta, con el id que la página declara", async () => {
+    const { ctx, requests } = fakeContext();
+    const refs = [
+      {
+        externalId: "87310",
+        url: `${BASE}/producto/intel-core-ultra-9-285k-3-7-ghz-24-core-lga1851`,
+        category: "cpu" as const,
+      },
+      { externalId: "1", url: `${BASE}/producto/retirado`, category: "cpu" as const },
+    ];
+    const offers = await Array.fromAsync(adapter.refreshOffers?.(refs, ctx) ?? []);
+    expect(requests.map((r) => r.url)).toEqual(refs.map((ref) => ref.url));
+    expect(offers.map((o) => [o.externalId, o.priceCash, o.inStock])).toEqual([["87310", 694_990, true]]);
+  });
+});
