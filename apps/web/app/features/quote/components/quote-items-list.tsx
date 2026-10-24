@@ -13,15 +13,7 @@ import {
   SLOT_BY_CATEGORY,
 } from "@framerate/contracts";
 import { imageVariant } from "@framerate/kit";
-import {
-  IconAlertTriangle,
-  IconChevronDown,
-  IconMinus,
-  IconPlus,
-  IconStack2,
-  IconTag,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconAlertTriangle, IconChevronDown, IconMinus, IconPlus, IconStack2, IconTag } from "@tabler/icons-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useQuoteInteractionStore } from "~/features/quote/store/quote-interaction";
@@ -32,6 +24,7 @@ import { useTranslation } from "~/shared/hooks/use-translation";
 import { cn } from "~/shared/lib/utils";
 import { formatCLP } from "~/shared/utils/format";
 import { CondenseStoresDialog } from "./condense-stores-dialog";
+import { HoldSweep, HoldToRemove } from "./hold-to-remove";
 import { CompatibilityIssue, issuesOf } from "./quote-compatibility";
 import { StoreSelector } from "./store-selector";
 
@@ -96,15 +89,7 @@ function QuantityControl({
   const { quantity } = item;
   return (
     <span className={cn("flex shrink-0 items-center gap-1", className)}>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        aria-label="Quitar de la cotización"
-        className="text-muted-foreground hover:text-destructive"
-        onClick={() => onRemove(item)}
-      >
-        <IconTrash />
-      </Button>
+      <HoldToRemove label="Quitar de la cotización" onRemove={() => onRemove(item)} />
       <Button
         variant="outline"
         size="icon-xs"
@@ -146,7 +131,8 @@ function SlotRow({
   const chosenCash = lineCash(item);
 
   return (
-    <li className="relative">
+    <li className="group/hold-row relative">
+      <HoldSweep />
       {/* El botón cubre la fila para expandirla; el nombre y la tienda son enlaces por encima, así no quedan anidados. El panel desplegado va `relative` para quedar sobre esa capa y que sus botones reciban el clic. */}
       <button
         type="button"
@@ -319,7 +305,7 @@ function SlotRow({
           </div>
 
           {alternatives.length > 0 && (
-            <div className="rounded-xl border border-border bg-card">
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
               <p className="border-border border-b px-3 py-1.5 text-label-xs text-muted-foreground">
                 Alternativas guardadas
               </p>
@@ -328,7 +314,8 @@ function SlotRow({
                   const altCash = lineCash(alt);
                   const diff = altCash !== null && chosenCash !== null ? altCash - chosenCash : null;
                   return (
-                    <li key={alt.id} className="flex items-center gap-3 px-3 py-1.5">
+                    <li key={alt.id} className="group/hold-alt relative flex items-center gap-3 px-3 py-1.5">
+                      <HoldSweep scope="alt" />
                       <Link
                         to={`/producto/${alt.product.slug}`}
                         className="min-w-0 flex-1 truncate text-label-sm underline-offset-2 transition-colors hover:text-primary hover:underline"
@@ -348,15 +335,7 @@ function SlotRow({
                           <Button variant="outline" size="xs" onClick={() => onSelect(alt)}>
                             {t("quote_use_this")}
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            aria-label="Quitar alternativa"
-                            className="text-muted-foreground hover:text-destructive"
-                            onClick={() => onRemove(alt)}
-                          >
-                            <IconTrash />
-                          </Button>
+                          <HoldToRemove scope="alt" label="Quitar alternativa" onRemove={() => onRemove(alt)} />
                         </>
                       )}
                     </li>
