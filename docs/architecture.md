@@ -148,7 +148,7 @@ apps/
     test/                       integración contra D1 real (Miniflare)
   ingest/                       Scraping (Worker "framerate-ingest")
     src/
-      index.ts                  entrada: scheduled (Cron) + queue + RPC (IngestRpc)
+      index.ts                  entrada: scheduled (Cron) + RPC (IngestRpc)
       features/ingestion/
         domain/normalize.ts     contrato RawOffer + validación + limpieza (puro)
         stores/                 un adaptador por tienda + cliente HTTP + registro
@@ -337,8 +337,6 @@ bunx wrangler r2 bucket lifecycle add framerate-snapshots snapshots-14d snapshot
 # las sirve tal cual. No se usan las transformaciones de Cloudflare.
 bunx wrangler r2 bucket create framerate-assets --location enam
 bunx wrangler r2 bucket domain add framerate-assets --domain cdn.framerate.cl --zone-id <zone id de framerate.cl>
-bunx wrangler queues create framerate-crawl
-bunx wrangler queues create framerate-crawl-dlq
 
 # Cada cambio de esquema (afecta a ambos Workers)
 bun run db:migrate:remote

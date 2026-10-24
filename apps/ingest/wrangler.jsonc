@@ -58,15 +58,6 @@
       // Las consumen framerate-normalize y framerate-match (#153); toda oferta nueva o cambiada pasa por ellas.
       { "binding": "NORMALIZE_QUEUE", "queue": "framerate-normalize" },
       { "binding": "LINK_QUEUE", "queue": "framerate-link" }
-    ],
-    "consumers": [
-      {
-        // Sólo reenvía al StoreCrawler lo que quedó en vuelo del deploy anterior; se borra en el deploy B (#201 §7).
-        "queue": "framerate-crawl",
-        "max_batch_size": 10,
-        "max_retries": 2,
-        "dead_letter_queue": "framerate-crawl-dlq"
-      }
     ]
   }
 }

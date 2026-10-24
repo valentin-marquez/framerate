@@ -2,7 +2,7 @@ FROM oven/bun:1.4.3-alpine
 WORKDIR /app
 # Sólo sharp: el package.json del monorepo trae dependencias `workspace:*` que fuera del repo no se resuelven.
 # Misma versión que apps/resizer/package.json.
-RUN bun add sharp@0.35.4
+RUN bun add sharp@0.35.5
 COPY src/index.ts ./src/index.ts
 ENV PORT=3000
 EXPOSE 3000

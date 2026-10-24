@@ -19,14 +19,7 @@ import {
   purgeDeletedAccountTickets,
   purgeQuarantine,
 } from "@/features/ingestion/ingestion.repository";
-import { type CrawlMessage, CrawlMessageSchema } from "@/features/ingestion/messages";
-import {
-  ensureAllScheduled,
-  requestCrawls,
-  requestPipeline,
-  retryStuckNormalize,
-  storeCrawler,
-} from "@/features/ingestion/runtime";
+import { ensureAllScheduled, requestCrawls, requestPipeline, retryStuckNormalize } from "@/features/ingestion/runtime";
 import { applyViews7d, fetchViews7d } from "@/features/popularity/views";
 import { emailSender } from "@/shared/email";
 
@@ -36,7 +29,6 @@ import { emailSender } from "@/shared/email";
  *  - scheduled: Cron de 6 h → reintenta lo atascado en el pipeline, copia a R2 las fotos de producto pendientes y
  *               recalcula `views_7d` desde Analytics Engine. El horario revisa la agenda de cada `StoreCrawler`, que
  *               es quien crawlea cada tienda (#121).
- *  - queue:     reenvía al `StoreCrawler` lo que quedó en `framerate-crawl` de antes del coordinador.
  *  - RPC:       `IngestRpc`, que usa apps/server para "crawlear ahora" y para encolar el backfill del pipeline.
  */
 const log = createLogger({ service: "framerate-ingest" });
@@ -93,18 +85,4 @@ export default {
       log.warn("popularity.skipped", { reason: "sin CF_ACCOUNT_ID o ANALYTICS_API_TOKEN" });
     }
   },
-
-  // Sólo para el deploy A; en el B se borran la cola, este consumidor y `messages.ts` (#201 §7).
-  async queue(batch, env) {
-    for (const message of batch.messages) {
-      const parsed = CrawlMessageSchema.safeParse(message.body);
-      if (parsed.success) {
-        const { store, category, requestedBy } = parsed.data;
-        await storeCrawler(env, store).enqueue(store, [category], requestedBy);
-      } else {
-        log.error("queue.invalid_message", { body: message.body, issues: parsed.error.issues });
-      }
-      message.ack();
-    }
-  },
-} satisfies ExportedHandler<Env, CrawlMessage>;
+} satisfies ExportedHandler<Env>;
