@@ -149,7 +149,13 @@ export async function crawlCategory(
       log.warn("crawl.deactivation_skipped", { valid: stats.valid, previousActive });
     }
 
-    await refreshPriceSummary(db, { storeId: storeRow.id, category, previousProductIds: [], now: clock() });
+    await refreshPriceSummary(db, {
+      storeId: storeRow.id,
+      category,
+      previousProductIds: [],
+      now: clock(),
+      throttleVersion: true,
+    });
     await flushNormalize();
     await finishRun(db, runId, { status: "succeeded", stats, now: now() });
     log.info("crawl.succeeded", { ...stats });

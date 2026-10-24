@@ -59,12 +59,24 @@ const PRODUCTS_SCOPE = "SELECT value FROM json_each(?3)";
 
 export function refreshPriceSummary(
   db: Db,
-  input: { storeId: number; category: string; previousProductIds: Iterable<number>; now: Date },
+  input: {
+    storeId: number;
+    category: string;
+    previousProductIds: Iterable<number>;
+    now: Date;
+    /** Ver `refreshProductsPriceSummary`. */
+    throttleVersion?: boolean;
+  },
 ) {
-  return refresh(db, CRAWL_SCOPE, input.storeId, input.category, input.previousProductIds, input.now);
+  const bump = input.throttleVersion ? throttledBumpCatalogVersionQuery : bumpCatalogVersionQuery;
+  return refresh(db, CRAWL_SCOPE, input.storeId, input.category, input.previousProductIds, input.now, bump);
 }
 
-/** `throttleVersion`: el refresco horario sube la versión del catálogo como mucho cada 15 min (#121). */
+/**
+ * `throttleVersion`: la versión del catálogo sube como mucho cada 15 min (#121). La usan los crawls y el refresco, que
+ * desde el coordinador por tienda terminan uno por minuto todo el día; con cada uno subiéndola, la caché del server no
+ * acertaría casi nunca. Las acciones a mano (Gatekeeper, fusiones) la suben siempre: se tienen que ver al instante.
+ */
 export function refreshProductsPriceSummary(
   db: Db,
   productIds: Iterable<number>,
