@@ -444,7 +444,10 @@ async function uniqueSlug(db: Db, text: string): Promise<string> {
   }
 }
 
-/** Vincula (o desvincula, con productId null) una oferta y deja la decisión auditada. */
+/**
+ * Vincula (o desvincula, con productId null) una oferta y deja la decisión auditada. Una oferta que ya era visible
+ * publica su nuevo producto: si no, queda a la vista colgada de uno sin publicar (#228).
+ */
 export async function setListingProduct(
   db: Db,
   input: {
@@ -468,6 +471,14 @@ export async function setListingProduct(
       decided_by: input.decidedBy,
       created_at: input.now,
     }),
+    db.query
+      .updateTable("products")
+      .set({ published_at: input.now })
+      .where("id", "=", input.productId)
+      .where("published_at", "is", null)
+      .where((eb) =>
+        eb.exists(eb.selectFrom("listings").select("id").where("id", "=", input.listingId).where("visible", "=", 1)),
+      ),
   ]);
 }
 

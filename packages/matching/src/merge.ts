@@ -156,7 +156,8 @@ async function mergeProducts(
     [
       `UPDATE products SET
          image_url = COALESCE(image_url, (SELECT image_url FROM products WHERE id = ?1)),
-         views_7d = views_7d + (SELECT views_7d FROM products WHERE id = ?1), updated_at = ?3
+         views_7d = views_7d + (SELECT views_7d FROM products WHERE id = ?1), updated_at = ?3,
+         published_at = COALESCE(published_at, (SELECT published_at FROM products WHERE id = ?1))
        WHERE id = ?2`,
       [from, to, now],
     ],

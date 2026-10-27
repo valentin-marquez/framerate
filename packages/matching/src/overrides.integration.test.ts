@@ -3,6 +3,7 @@ import type { Db } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
 import { buildFingerprint } from "./domain/fingerprint";
 import { matchListing } from "./match-listing";
+import { setListingProduct } from "./repository";
 import { resolveMatchReview } from "./resolve-review";
 import { revertAiDecisions, splitListing } from "./split";
 
@@ -432,5 +433,35 @@ describe("resumen de precios al mover una oferta", () => {
     await splitListing(db, { listingId: id, decidedBy: "valentin", now: NOW });
     expect(await summary(own)).toEqual({ best_price: 100_000, offer_count: 1, in_stock_offer_count: 1 });
     expect(await summary(candidate)).toEqual({ best_price: null, offer_count: 0, in_stock_offer_count: 0 });
+  });
+});
+
+describe("publicación al mover una oferta", () => {
+  const publishedAt = async (id: number) =>
+    (await db.query.selectFrom("products").select("published_at").where("id", "=", id).executeTakeFirstOrThrow())
+      .published_at;
+  const move = (listingId: number, productId: number) =>
+    setListingProduct(db, {
+      listingId,
+      productId,
+      method: "new_product",
+      confidence: 1,
+      evidence: {},
+      decidedBy: "system",
+      now: NOW,
+    });
+
+  test("una oferta visible publica su nuevo producto; una oculta no", async () => {
+    await seedStore();
+    const visible = await listing("1", null);
+    const hidden = await listing("2", null);
+    await db.query.updateTable("listings").set({ visible: 0 }).where("id", "=", hidden).execute();
+    const a = await product("a", TITLE, "Corsair");
+    const b = await product("b", TITLE, "Corsair");
+
+    await move(visible, a);
+    await move(hidden, b);
+    expect(await publishedAt(a)).toBe(NOW);
+    expect(await publishedAt(b)).toBeNull();
   });
 });
