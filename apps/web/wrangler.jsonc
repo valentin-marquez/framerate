@@ -11,6 +11,8 @@
   "services": [{ "binding": "API", "service": "framerate-server" }],
   // Arma la imagen para compartir una ficha (foto del producto sobre la base de la marca).
   "images": { "binding": "IMAGES" },
+  // La tarjeta armada queda en R2 (`og/`): cada armado nuevo es una transformación cobrada; la caché por colo no basta.
+  "r2_buckets": [{ "binding": "ASSETS", "bucket_name": "framerate-assets" }],
   "observability": {
     "enabled": true
   },

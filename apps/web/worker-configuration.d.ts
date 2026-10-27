@@ -10,6 +10,7 @@ declare namespace Cloudflare {
     /** Service binding hacia el Worker de la API (framerate-server). */
     API: Fetcher;
     IMAGES: ImagesBinding;
+    ASSETS: R2Bucket;
   }
 }
 interface Env extends Cloudflare.Env {}
