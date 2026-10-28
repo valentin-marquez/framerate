@@ -39,7 +39,7 @@ const YES_NO = (yes: string, no: string) => ({ true: yes, false: no });
 // `connection` de teclados y mouses, como llega limpio de las specs (mayúsculas). El que tiene ambas sale en las dos.
 const CONNECTION: Pick<FacetDefinition, "key" | "label" | "values" | "combined" | "source"> = {
   key: "connection",
-  label: "Tipo de conexión",
+  label: "Conexión",
   values: { WIRED: "Con cable", "2.4GHZ": "2,4 GHz", BLUETOOTH: "Bluetooth" },
   combined: { "2.4GHZ_BLUETOOTH": ["2.4GHZ", "BLUETOOTH"] },
   source: "specs",
@@ -376,11 +376,9 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       order: ["LINEAR", "TACTILE", "CLICKY", "OPTICAL", "MAGNETIC", "MEMBRANE", "SCISSOR"],
       closed: true,
     },
-    { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
     CONNECTION,
   ],
   mouse: [
-    { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
     CONNECTION,
     {
       key: "weight_g",
