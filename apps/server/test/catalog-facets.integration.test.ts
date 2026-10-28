@@ -238,7 +238,7 @@ describe("filtro por especificación", () => {
     expect(res.status).toBe(400);
     expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("invalid_request");
     const page = await list("spec=nada:1");
-    expect(page.total).toBe(13);
+    expect(page.total).toBe(16);
     expect(page.specUnknown).toBeUndefined();
   });
 });

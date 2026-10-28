@@ -22,9 +22,9 @@ export type Category = (typeof CATEGORIES)[number];
 
 /**
  * Se ingieren y responden por URL (`/categoria/:slug` y sus fichas), pero no se listan: ni menú, home, sitemap, MCP ni
- * listados sin categoría. Periféricos, hasta que se decida publicarlos (#229, #218).
+ * listados sin categoría. Sirve para preparar una categoría antes de publicarla (así entraron teclados y mouses, #229).
  */
-export const HIDDEN_CATEGORIES: ReadonlySet<Category> = new Set(["keyboard", "mouse"]);
+export const HIDDEN_CATEGORIES: ReadonlySet<Category> = new Set<Category>([]);
 export const LISTED_CATEGORIES = CATEGORIES.filter((c) => !HIDDEN_CATEGORIES.has(c));
 
 /** Nombre visible en español (la audiencia es chilena). */
