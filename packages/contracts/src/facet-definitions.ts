@@ -365,6 +365,14 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       threshold: "min",
       steps: [3200, 8000, 16000, 26000],
     },
+    {
+      key: "buttons",
+      label: "Botones mínimos",
+      unit: "botones",
+      source: "specs",
+      threshold: "min",
+      steps: [3, 5, 6, 8, 12],
+    },
   ],
 };
 

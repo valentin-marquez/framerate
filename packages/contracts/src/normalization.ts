@@ -124,7 +124,7 @@ export const SPEC_FIELDS: Record<Category, readonly string[]> = {
     "fan_controller",
   ],
   keyboard: ["form_factor", "switch_type", "wireless", "bluetooth", "backlight"],
-  mouse: ["max_dpi", "polling_hz", "weight_g", "sensor", "wireless", "bluetooth", "side_buttons"],
+  mouse: ["max_dpi", "polling_hz", "weight_g", "sensor", "wireless", "bluetooth", "buttons", "side_buttons"],
 };
 
 export const NUMERIC_IDENTITY_FIELDS = new Set([

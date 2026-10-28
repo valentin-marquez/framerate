@@ -92,6 +92,7 @@ const SPECS: Record<string, [label: string, unit?: string]> = {
   polling_hz: ["Frecuencia de sondeo", "Hz"],
   weight_g: ["Peso", "g"],
   sensor: ["Sensor"],
+  buttons: ["Botones"],
   side_buttons: ["Botones laterales"],
 };
 

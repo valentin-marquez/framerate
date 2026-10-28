@@ -201,6 +201,7 @@ export const MouseSpecsSchema = z.object({
   sensor: str,
   wireless: bool,
   bluetooth: bool,
+  buttons: int,
   side_buttons: int,
   color: list(text),
 });

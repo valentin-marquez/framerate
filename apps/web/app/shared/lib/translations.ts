@@ -86,6 +86,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     polling_hz: "Frecuencia de sondeo (Hz)",
     weight_g: "Peso (g)",
     sensor: "Sensor",
+    buttons: "Botones",
     side_buttons: "Botones laterales",
     sockets: "Sockets",
     memory: "Memoria",
@@ -493,6 +494,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     polling_hz: "Polling Rate (Hz)",
     weight_g: "Weight (g)",
     sensor: "Sensor",
+    buttons: "Buttons",
     side_buttons: "Side Buttons",
     sockets: "Sockets",
 
@@ -891,6 +893,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     polling_hz: "Polling (Hz)",
     weight_g: "Peso (g)",
     sensor: "Sensor",
+    buttons: "Botones",
     side_buttons: "Botones laterales",
     sockets: "Sockets",
 
