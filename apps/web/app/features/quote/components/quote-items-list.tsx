@@ -241,7 +241,16 @@ function SlotRow({
             </span>
           )}
           {chosenCash !== null ? (
-            formatCLP(chosenCash)
+            quantity > 1 && offer ? (
+              <span className="flex flex-col items-end leading-tight">
+                {formatCLP(chosenCash)}
+                <span className="font-normal text-muted-foreground text-label-xs">
+                  {formatCLP(offer.priceCash)} c/u
+                </span>
+              </span>
+            ) : (
+              formatCLP(chosenCash)
+            )
           ) : (
             // La columna de la tienda sólo existe desde `md`: en teléfono el aviso se queda aquí.
             <span className="text-muted-foreground">
