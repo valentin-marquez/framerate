@@ -189,7 +189,7 @@ export const KeyboardSpecsSchema = z.object({
   form_factor: str,
   switch_type: str,
   wireless: bool,
-  bluetooth: bool,
+  connection: str,
   backlight: bool,
   color: list(text),
 });
@@ -200,7 +200,7 @@ export const MouseSpecsSchema = z.object({
   weight_g: num,
   sensor: str,
   wireless: bool,
-  bluetooth: bool,
+  connection: str,
   buttons: int,
   side_buttons: int,
   color: list(text),

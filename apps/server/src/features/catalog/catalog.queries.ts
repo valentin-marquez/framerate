@@ -320,10 +320,15 @@ export async function listFacets(db: Db, category: Category, filters: ListFilter
     items: facets.map((facet, i) => {
       const rows = results[i] ?? [];
       const scale = facetScale(facet);
+      // Una sí/no sólo ofrece sí y no: Haiku dejó texto libre en algunas (`wireless: "2.4GHz"`) antes de los enums.
+      const yesNo = facet.values && "true" in facet.values;
       let values = rows
         .filter(
           (r): r is { value: string; count: number } =>
-            r.value !== null && Number(r.count) > 0 && (!scale || scale.includes(r.value)),
+            r.value !== null &&
+            Number(r.count) > 0 &&
+            (!scale || scale.includes(r.value)) &&
+            (!yesNo || r.value === "true" || r.value === "false"),
         )
         .map((r) => ({ value: r.value, label: facetOptionLabel(facet, r.value), count: Number(r.count) }));
       const at = (v: string) => (scale ? scale.indexOf(v) : Number(v));

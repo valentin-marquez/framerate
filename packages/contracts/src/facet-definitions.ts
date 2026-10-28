@@ -30,6 +30,13 @@ export interface FacetDefinition {
 const MEMORY_TYPES = { ddr3: "DDR3", ddr4: "DDR4", ddr5: "DDR5" };
 const COLORS = { black: "Negro", white: "Blanco", gray: "Gris", pink: "Rosado", red: "Rojo", beige: "Beige" };
 const YES_NO = (yes: string, no: string) => ({ true: yes, false: no });
+// `connection` de teclados y mouses, como llega limpio de las specs (mayúsculas).
+const CONNECTION_TYPES = {
+  WIRED: "Con cable",
+  "2.4GHZ": "2,4 GHz",
+  BLUETOOTH: "Bluetooth",
+  "2.4GHZ_BLUETOOTH": "2,4 GHz y Bluetooth",
+};
 
 export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
   gpu: [
@@ -346,9 +353,11 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       values: { FULL: "Completo", TKL: "TKL", "75": "75 %", "65": "65 %", "60": "60 %" },
     },
     { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
+    { key: "connection", label: "Tipo de conexión", values: CONNECTION_TYPES, source: "specs" },
   ],
   mouse: [
     { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
+    { key: "connection", label: "Tipo de conexión", values: CONNECTION_TYPES, source: "specs" },
     {
       key: "weight_g",
       label: "Peso máximo",

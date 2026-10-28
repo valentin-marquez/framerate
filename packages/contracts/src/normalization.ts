@@ -123,8 +123,24 @@ export const SPEC_FIELDS: Record<Category, readonly string[]> = {
     "lighting",
     "fan_controller",
   ],
-  keyboard: ["form_factor", "switch_type", "wireless", "bluetooth", "backlight"],
-  mouse: ["max_dpi", "polling_hz", "weight_g", "sensor", "wireless", "bluetooth", "buttons", "side_buttons"],
+  keyboard: ["form_factor", "switch_type", "wireless", "connection", "backlight"],
+  mouse: ["max_dpi", "polling_hz", "weight_g", "sensor", "wireless", "connection", "buttons", "side_buttons"],
+};
+
+const CONNECTIONS = ["wired", "2.4ghz", "bluetooth", "2.4ghz_bluetooth"] as const;
+
+/**
+ * Specs de valores cerrados: van como `enum` en el esquema de Haiku y lo demás se descarta al leer. En texto libre
+ * escribía "2.4GHz USB dongle" en `wireless` y la faceta mostraba cada redacción como una opción.
+ */
+export const SPEC_ENUMS: Partial<Record<Category, Record<string, readonly string[]>>> = {
+  keyboard: {
+    form_factor: ["full", "tkl", "75", "65", "60"],
+    wireless: ["true", "false"],
+    connection: CONNECTIONS,
+    backlight: ["true", "false"],
+  },
+  mouse: { wireless: ["true", "false"], connection: CONNECTIONS },
 };
 
 export const NUMERIC_IDENTITY_FIELDS = new Set([
@@ -151,9 +167,10 @@ export const OUTPUT_CATEGORIES = [...CATEGORIES, "other"] as const;
 export function outputSchema(category: Category) {
   const str = { type: "string" };
   const strs = { type: "array", items: str };
-  const obj = (keys: readonly string[]) => ({
+  const enums = SPEC_ENUMS[category] ?? {};
+  const obj = (keys: readonly string[], closed: Record<string, readonly string[]> = {}) => ({
     type: "object",
-    properties: Object.fromEntries(keys.map((k) => [k, str])),
+    properties: Object.fromEntries(keys.map((k) => [k, closed[k] ? { enum: [...closed[k], ""] } : str])),
     required: [...keys],
     additionalProperties: false,
   });
@@ -170,7 +187,7 @@ export function outputSchema(category: Category) {
       identity: obj(IDENTITY_FIELDS[category]),
       identity_from_mpn: strs,
       identity_from_knowledge: strs,
-      specs: obj(SPEC_FIELDS[category]),
+      specs: obj(SPEC_FIELDS[category], enums),
       specs_from_knowledge: strs,
       same_as: str,
       duplicate_candidates: strs,
@@ -231,7 +248,12 @@ export function NormalizationOutputSchema(category: Category) {
     identity: fields(IDENTITY_FIELDS[category], coerceIdentity),
     identity_from_mpn: z.array(z.string()),
     identity_from_knowledge: z.array(z.string()),
-    specs: fields(SPEC_FIELDS[category], (_, v) => coerceSpec(v)),
+    specs: fields(SPEC_FIELDS[category], (field, v) => {
+      const allowed = SPEC_ENUMS[category]?.[field];
+      if (!allowed) return coerceSpec(v);
+      const closed = v.trim().toLowerCase();
+      return allowed.includes(closed) ? coerceSpec(closed) : null;
+    }),
     specs_from_knowledge: z.array(z.string()),
     // Las salidas grabadas antes de #157 no lo traen.
     same_as: z.string().trim().default(""),

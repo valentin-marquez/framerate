@@ -86,7 +86,7 @@ const SPECS: Record<string, [label: string, unit?: string]> = {
   form_factor: ["Formato"],
   switch_type: ["Tipo de switch"],
   wireless: ["Inalámbrico"],
-  bluetooth: ["Bluetooth"],
+  connection: ["Tipo de conexión"],
   backlight: ["Retroiluminación"],
   max_dpi: ["DPI máximo", "DPI"],
   polling_hz: ["Frecuencia de sondeo", "Hz"],
@@ -112,6 +112,11 @@ const VALUES: Record<string, string> = {
   proprietary: "Propietaria",
   led_fixed: "LED de un color",
   "magnetic dome": "Domo magnético",
+  // `connection` de teclados y mouses.
+  wired: "Con cable",
+  "2.4ghz": "2,4 GHz",
+  bluetooth: "Bluetooth",
+  "2.4ghz_bluetooth": "2,4 GHz y Bluetooth",
 };
 
 const number = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 2 });
