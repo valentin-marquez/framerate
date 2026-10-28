@@ -124,6 +124,16 @@ beforeAll(async () => {
     { memory_type: "text", length_mm: "text" },
   );
   await identity(gpu8, 1, { memory_type: "GDDR6" }, { memory_type: "knowledge" });
+  // El de 2,4 GHz y Bluetooth cuenta en las dos opciones; el texto libre viejo en una sí/no no es opción.
+  const mice: [string, Record<string, unknown>][] = [
+    ["Mouse Dual", { connection: "2.4ghz_bluetooth", wireless: true }],
+    ["Mouse BT", { connection: "bluetooth", wireless: "2.4GHz USB dongle" }],
+    ["Mouse Cable", { connection: "wired", wireless: false }],
+  ];
+  for (const [name, specs] of mice) {
+    const listing = await seed(name, "mouse", "{}", 20_000, null);
+    await identity(listing, 1, specs, Object.fromEntries(Object.keys(specs).map((k) => [k, "text"])));
+  }
   await refreshSummaries(db);
   // El recálculo saca el precio habitual del historial diario, que aquí no existe: se vuelve a fijar el sembrado.
   for (const [slug, reference] of references) {
@@ -294,6 +304,30 @@ describe("facetas", () => {
         unknownCount: 0,
       },
     ]);
+  });
+
+  test("un valor combinado cuenta en cada opción y lo trae cualquiera de ellas", async () => {
+    expect(await facet("mouses", "connection")).toMatchObject({
+      values: [
+        { value: "BLUETOOTH", label: "Bluetooth", count: 2 },
+        { value: "2.4GHZ", label: "2,4 GHz", count: 1 },
+        { value: "WIRED", label: "Con cable", count: 1 },
+      ],
+      unknownCount: 0,
+    });
+    const bluetooth = await list("category=mouse&spec=connection:BLUETOOTH");
+    expect(bluetooth.items.map((p) => p.name).sort()).toEqual(["Mouse BT", "Mouse Dual"]);
+    const dongle = await list("category=mouse&spec=connection:2.4GHZ");
+    expect(dongle.items.map((p) => p.name)).toEqual(["Mouse Dual"]);
+  });
+
+  test("una sí/no sólo ofrece sí y no", async () => {
+    expect(await facet("mouses", "wireless")).toMatchObject({
+      values: [
+        { value: "false", count: 1 },
+        { value: "true", count: 1 },
+      ],
+    });
   });
 
   test("cada faceta ignora su propio filtro y aplica los demás", async () => {

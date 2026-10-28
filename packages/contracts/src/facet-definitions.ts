@@ -25,17 +25,20 @@ export interface FacetDefinition {
   threshold?: "min" | "max";
   /** Con umbral numérico: las opciones son estos escalones y no cada valor medido (hay 158 largos de GPU distintos). */
   steps?: readonly number[];
+  /** Valores guardados que valen por varias opciones: cuentan en cada una y los trae cualquiera de ellas. */
+  combined?: Record<string, readonly string[]>;
 }
 
 const MEMORY_TYPES = { ddr3: "DDR3", ddr4: "DDR4", ddr5: "DDR5" };
 const COLORS = { black: "Negro", white: "Blanco", gray: "Gris", pink: "Rosado", red: "Rojo", beige: "Beige" };
 const YES_NO = (yes: string, no: string) => ({ true: yes, false: no });
-// `connection` de teclados y mouses, como llega limpio de las specs (mayúsculas).
-const CONNECTION_TYPES = {
-  WIRED: "Con cable",
-  "2.4GHZ": "2,4 GHz",
-  BLUETOOTH: "Bluetooth",
-  "2.4GHZ_BLUETOOTH": "2,4 GHz y Bluetooth",
+// `connection` de teclados y mouses, como llega limpio de las specs (mayúsculas). El que tiene ambas sale en las dos.
+const CONNECTION: Pick<FacetDefinition, "key" | "label" | "values" | "combined" | "source"> = {
+  key: "connection",
+  label: "Tipo de conexión",
+  values: { WIRED: "Con cable", "2.4GHZ": "2,4 GHz", BLUETOOTH: "Bluetooth" },
+  combined: { "2.4GHZ_BLUETOOTH": ["2.4GHZ", "BLUETOOTH"] },
+  source: "specs",
 };
 
 export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
@@ -353,11 +356,11 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       values: { FULL: "Completo", TKL: "TKL", "75": "75 %", "65": "65 %", "60": "60 %" },
     },
     { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
-    { key: "connection", label: "Tipo de conexión", values: CONNECTION_TYPES, source: "specs" },
+    CONNECTION,
   ],
   mouse: [
     { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
-    { key: "connection", label: "Tipo de conexión", values: CONNECTION_TYPES, source: "specs" },
+    CONNECTION,
     {
       key: "weight_g",
       label: "Peso máximo",
@@ -424,6 +427,17 @@ export function facetOptionLabel(facet: FacetDefinition, value: string): string 
 /** Valores de una faceta con umbral y escala propia (la certificación), de menor a mayor; null si compara por número. */
 export function facetScale(facet: FacetDefinition): string[] | null {
   return facet.threshold && facet.values ? Object.keys(facet.values) : null;
+}
+
+/** Opciones por las que cuenta un valor guardado (él mismo, o sus partes si es `combined`). */
+export function facetOptionsOf(facet: FacetDefinition, value: string): readonly string[] {
+  return facet.combined?.[value] ?? [value];
+}
+
+/** Valores guardados que trae elegir estas opciones: ellas más los `combined` que incluyen alguna. */
+export function facetStoredValues(facet: FacetDefinition, picked: readonly string[]): string[] {
+  const combos = Object.entries(facet.combined ?? {}).filter(([, parts]) => parts.some((p) => picked.includes(p)));
+  return [...picked, ...combos.map(([stored]) => stored)];
 }
 
 export function facetsFor(category: Category): FacetDefinition[] {

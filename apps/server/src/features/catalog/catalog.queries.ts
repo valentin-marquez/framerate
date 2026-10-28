@@ -13,7 +13,15 @@ import type {
   ProductVariant,
   Sitemap,
 } from "@framerate/contracts";
-import { CATEGORY_FACETS, CATEGORY_SLUGS, facetOptionLabel, facetScale, HIDDEN_CATEGORIES } from "@framerate/contracts";
+import {
+  CATEGORY_FACETS,
+  CATEGORY_SLUGS,
+  facetOptionLabel,
+  facetOptionsOf,
+  facetScale,
+  facetStoredValues,
+  HIDDEN_CATEGORIES,
+} from "@framerate/contracts";
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { searchText, slugify } from "@framerate/kit";
 import { normalizeGtin, normalizeMpn, titleTokens } from "@framerate/matching";
@@ -210,7 +218,7 @@ function filteredQuery(
     base = base.where(
       facet?.threshold
         ? thresholdFilter(facet, value, values)
-        : sql<boolean>`coalesce(${value} IN (${sql.join(values)}), 1)`,
+        : sql<boolean>`coalesce(${value} IN (${sql.join(facet ? facetStoredValues(facet, values) : values)}), 1)`,
     );
     unknown.push(value);
   }
@@ -322,15 +330,15 @@ export async function listFacets(db: Db, category: Category, filters: ListFilter
       const scale = facetScale(facet);
       // Una sí/no sólo ofrece sí y no: Haiku dejó texto libre en algunas (`wireless: "2.4GHz"`) antes de los enums.
       const yesNo = facet.values && "true" in facet.values;
-      let values = rows
-        .filter(
-          (r): r is { value: string; count: number } =>
-            r.value !== null &&
-            Number(r.count) > 0 &&
-            (!scale || scale.includes(r.value)) &&
-            (!yesNo || r.value === "true" || r.value === "false"),
-        )
-        .map((r) => ({ value: r.value, label: facetOptionLabel(facet, r.value), count: Number(r.count) }));
+      const counts = new Map<string, number>();
+      for (const r of rows) {
+        if (r.value === null || Number(r.count) <= 0) continue;
+        for (const option of facetOptionsOf(facet, r.value))
+          counts.set(option, (counts.get(option) ?? 0) + Number(r.count));
+      }
+      let values = [...counts]
+        .filter(([value]) => (!scale || scale.includes(value)) && (!yesNo || value === "true" || value === "false"))
+        .map(([value, count]) => ({ value, label: facetOptionLabel(facet, value), count }));
       const at = (v: string) => (scale ? scale.indexOf(v) : Number(v));
       values.sort((a, b) =>
         facet.unit || facet.threshold
