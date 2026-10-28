@@ -18,6 +18,8 @@ export interface FacetDefinition {
   unit?: string;
   /** Etiquetas de valores categóricos; los que no estén se muestran tal cual. */
   values?: Record<string, string>;
+  /** Orden fijo de las opciones (por defecto, de más a menos productos): una escala como el formato de un teclado. */
+  order?: readonly string[];
   /**
    * Umbral en vez de valor exacto: se elige un solo valor y cumple ese valor o más (`min`) o ese valor o menos (`max`).
    * Con `values`, el orden de sus claves (de menor a mayor) es el de la escala (la certificación 80 Plus).
@@ -353,7 +355,8 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       label: "Formato",
       source: "specs",
       // Las specs de texto llegan en mayúsculas y sin espacios (`jsonText` con `clean`).
-      values: { FULL: "Completo", TKL: "TKL", "75": "75 %", "65": "65 %", "60": "60 %" },
+      values: { FULL: "100 %", TKL: "TKL", "75": "75 %", "65": "65 %", "60": "60 %" },
+      order: ["FULL", "TKL", "75", "65", "60"],
     },
     { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
     CONNECTION,

@@ -340,10 +340,13 @@ export async function listFacets(db: Db, category: Category, filters: ListFilter
         .filter(([value]) => (!scale || scale.includes(value)) && (!yesNo || value === "true" || value === "false"))
         .map(([value, count]) => ({ value, label: facetOptionLabel(facet, value), count }));
       const at = (v: string) => (scale ? scale.indexOf(v) : Number(v));
+      const rank = (v: string) => facet.order?.indexOf(v) ?? -1;
       values.sort((a, b) =>
         facet.unit || facet.threshold
           ? at(a.value) - at(b.value)
-          : b.count - a.count || a.value.localeCompare(b.value, "es"),
+          : facet.order && rank(a.value) !== rank(b.value)
+            ? (rank(a.value) + 1 || Infinity) - (rank(b.value) + 1 || Infinity)
+            : b.count - a.count || a.value.localeCompare(b.value, "es"),
       );
       if (facet.steps && facet.threshold) {
         // Cada escalón cuenta lo medido que lo cumple; los conteos ya salen acumulados.
