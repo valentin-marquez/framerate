@@ -608,4 +608,6 @@ export const PROFILES: Record<Category, CategoryProfile> = {
   cpu_cooler: withColor(generic, "said"),
   case: withColor(generic, "said"),
   case_fan: withColor(generic, "said"),
+  keyboard: withColor(generic, "said"),
+  mouse: withColor(generic, "said"),
 };

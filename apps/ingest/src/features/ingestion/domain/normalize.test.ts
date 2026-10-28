@@ -265,3 +265,48 @@ describe("clipSourceText", () => {
     expect(clipSourceText(text)).toBe(text.slice(0, SOURCE_TEXT_MAX));
   });
 });
+
+describe("teclados y mouses", () => {
+  const as = (category: RawOffer["category"], title: string) =>
+    normalizeOffer({ ...base, category, title, mpn: null, priceCash: 30_000, priceCard: 30_000 }, category);
+  const reason = (category: RawOffer["category"], title: string) => {
+    const r = as(category, title);
+    return r.ok ? "ok" : r.reason;
+  };
+
+  test.each([
+    ["mouse", "Mouse Inalámbrico Logitech M170 con receptor USB"],
+    ["mouse", "Mouse Gamer Redragon Cobra M711 RGB para Laptop y PC"],
+    ["keyboard", "Teclado Mecánico Redragon Kumara K552 con Hub USB"],
+    ["keyboard", "Teclado Gamer Logitech G413 con reposamuñecas"],
+  ] as const)("%s legítimo pasa: %s", (category, title) => {
+    expect(reason(category, title)).toBe("ok");
+  });
+
+  test.each([
+    ["mouse", "Mousepad Gamer Razer Goliathus XL", "category:other_product"],
+    ["mouse", "Audífonos Gamer HyperX Cloud Stinger", "category:other_product"],
+    ["mouse", "Webcam Logitech C920", "category:other_product"],
+    ["keyboard", "Set de Keycaps PBT 104 teclas", "category:other_product"],
+    ["keyboard", "Reposamuñecas Teclado Mecánico", "category:other_product"],
+    ["keyboard", "Mouse Logitech G502 Hero", "category:mouse"],
+    ["mouse", "Teclado Mecánico Logitech G Pro", "category:keyboard"],
+  ] as const)("%s mal ubicado: %s", (category, title, expected) => {
+    expect(reason(category, title)).toBe(expected);
+  });
+
+  test("combos de teclado y mouse van a cuarentena como bundle, digan o no 'combo'", () => {
+    expect(reason("keyboard", "Combo Teclado y Mouse Inalámbrico Logitech MK270")).toBe("bundle");
+    expect(reason("keyboard", "Teclado + Mouse Gamer Redragon S101")).toBe("bundle");
+    expect(reason("mouse", "Mouse y Teclado Inalámbrico HP")).toBe("bundle");
+  });
+
+  test("rango de precio", () => {
+    expect(reason("mouse", "Mouse Logitech M90")).toBe("ok");
+    const cheap = normalizeOffer(
+      { ...base, category: "mouse", title: "Mouse Logitech M90", mpn: null, priceCash: 500, priceCard: 500 },
+      "mouse",
+    );
+    expect(cheap).toMatchObject({ ok: false, reason: "price:out_of_range" });
+  });
+});

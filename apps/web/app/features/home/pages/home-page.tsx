@@ -1,4 +1,4 @@
-import { CATEGORIES, CATEGORY_SLUGS, type ProductPage, type ProductSummary } from "@framerate/contracts";
+import { CATEGORY_SLUGS, LISTED_CATEGORIES, type ProductPage, type ProductSummary } from "@framerate/contracts";
 import { categoriesService } from "@/features/category/services/categories";
 import { productsService } from "@/features/product/services/products";
 import { HomeContent } from "~/features/home/components/home-content";
@@ -89,7 +89,7 @@ export async function loader() {
   // Las filas no esperan a las categorías: la lista es fija y cada espera es un viaje a D1 (~140 ms desde Chile).
   // De la API sólo salen el orden, el nombre y el conteo.
   const rowBySlug = new Map(
-    CATEGORIES.map((c) => {
+    LISTED_CATEGORIES.map((c) => {
       const slug = CATEGORY_SLUGS[c];
       return [slug, rowItems(productsService.getAll({ category: slug, sort: "popularity", limit: ROW_LIMIT }), slug)];
     }),

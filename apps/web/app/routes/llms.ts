@@ -1,4 +1,4 @@
-import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SLUGS } from "@framerate/contracts";
+import { CATEGORY_LABELS, CATEGORY_SLUGS, LISTED_CATEGORIES } from "@framerate/contracts";
 import type { LoaderFunctionArgs } from "react-router";
 
 /**
@@ -24,7 +24,7 @@ export function loader({ url: { origin } }: LoaderFunctionArgs) {
   ];
 
   sections.push("", "## Categorías");
-  for (const category of CATEGORIES) {
+  for (const category of LISTED_CATEGORIES) {
     sections.push(`- [${CATEGORY_LABELS[category]}](${origin}/categoria/${CATEGORY_SLUGS[category]})`);
   }
 

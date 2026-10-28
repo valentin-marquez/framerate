@@ -1,9 +1,9 @@
 import {
   bestOf,
-  CATEGORIES,
   CATEGORY_LABELS,
   CategorySchema,
   historyDays,
+  LISTED_CATEGORIES,
   MCP_TOOLS,
   type ProductSummary,
 } from "@framerate/contracts";
@@ -177,7 +177,7 @@ export function createMcpServer(db: Db, env: Env) {
     async () => {
       const counts = new Map((await categoryCounts(db)).map((r) => [r.category, r.products]));
       return json({
-        categorias: CATEGORIES.map((id) => ({
+        categorias: LISTED_CATEGORIES.map((id) => ({
           id,
           nombre: CATEGORY_LABELS[id],
           productosConStock: counts.get(id) ?? 0,

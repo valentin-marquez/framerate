@@ -337,6 +337,35 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       steps: [1, 1.5, 2, 3],
     },
   ],
+  keyboard: [
+    {
+      key: "form_factor",
+      label: "Formato",
+      source: "specs",
+      // Las specs de texto llegan en mayúsculas y sin espacios (`jsonText` con `clean`).
+      values: { FULL: "Completo", TKL: "TKL", "75": "75 %", "65": "65 %", "60": "60 %" },
+    },
+    { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
+  ],
+  mouse: [
+    { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
+    {
+      key: "weight_g",
+      label: "Peso máximo",
+      unit: "g",
+      source: "specs",
+      threshold: "max",
+      steps: [60, 80, 100, 120],
+    },
+    {
+      key: "max_dpi",
+      label: "DPI mínimo",
+      unit: "DPI",
+      source: "specs",
+      threshold: "min",
+      steps: [3200, 8000, 16000, 26000],
+    },
+  ],
 };
 
 /**

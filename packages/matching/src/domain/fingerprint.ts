@@ -150,6 +150,8 @@ const FOLD_INTO: Partial<Record<Category, string>> = {
   case: "model",
   cpu_cooler: "model",
   case_fan: "model",
+  keyboard: "model",
+  mouse: "model",
   gpu: "line",
 };
 

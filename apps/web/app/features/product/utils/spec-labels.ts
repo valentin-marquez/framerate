@@ -82,6 +82,17 @@ const SPECS: Record<string, [label: string, unit?: string]> = {
   bearing: ["Rodamiento"],
   lighting: ["Iluminación"],
   fan_controller: ["Necesita controlador"],
+  // Teclados y mouses
+  form_factor: ["Formato"],
+  switch_type: ["Tipo de switch"],
+  wireless: ["Inalámbrico"],
+  bluetooth: ["Bluetooth"],
+  backlight: ["Retroiluminación"],
+  max_dpi: ["DPI máximo", "DPI"],
+  polling_hz: ["Frecuencia de sondeo", "Hz"],
+  weight_g: ["Peso", "g"],
+  sensor: ["Sensor"],
+  side_buttons: ["Botones laterales"],
 };
 
 // Los códigos que escribe la referencia de ventiladores (#181); lo que no está aquí se muestra tal cual.

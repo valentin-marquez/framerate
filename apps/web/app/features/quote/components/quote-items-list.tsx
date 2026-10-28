@@ -2,6 +2,7 @@ import {
   CATEGORIES,
   CATEGORY_SLUGS,
   type CompatCheck,
+  HIDDEN_CATEGORIES,
   isAdditiveSlot,
   type Offer,
   QUOTE_SLOT_LABELS,
@@ -49,6 +50,10 @@ const categoryHref = (slot: QuoteSlot) => {
   const category = CATEGORIES.find((c) => SLOT_BY_CATEGORY[c] === slot);
   return category ? `/categoria/${CATEGORY_SLUGS[category]}` : "/buscar";
 };
+
+/** Un slot de sólo categorías ocultas no ofrece "Agregar"; lo que ya tenga se muestra igual. */
+const isHiddenSlot = (slot: QuoteSlot) =>
+  CATEGORIES.every((c) => SLOT_BY_CATEGORY[c] !== slot || HIDDEN_CATEGORIES.has(c));
 
 /** Diferencia contra lo elegido, con el signo menos tipográfico. */
 const delta = (n: number) => (n === 0 ? "Mismo precio" : `${n > 0 ? "+" : "−"}${formatCLP(Math.abs(n))}`);
@@ -372,7 +377,7 @@ export function QuoteItemsList({ quote, isOwner, onChooseCheapest, onCondense, .
   const { t } = useTranslation();
   const { items, compatibility, totals } = quote;
   const filled = QUOTE_SLOTS.filter((slot) => items.some((i) => i.slot === slot));
-  const empty = QUOTE_SLOTS.filter((slot) => !filled.includes(slot));
+  const empty = QUOTE_SLOTS.filter((slot) => !filled.includes(slot) && !isHiddenSlot(slot));
   const selected = items.filter((i) => i.isSelected);
   const hasPinned = selected.some((i) => i.chosenListingId !== null);
   // Con menos de dos ítems con precio no hay nada que juntar.

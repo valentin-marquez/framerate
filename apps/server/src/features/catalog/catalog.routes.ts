@@ -1,10 +1,10 @@
 import {
-  CATEGORIES,
   CATEGORY_FACETS,
   CATEGORY_LABELS,
   CATEGORY_SLUGS,
   type Category,
   categoryFromSlug,
+  LISTED_CATEGORIES,
   nextCrawlAt,
   ProductListQuerySchema,
 } from "@framerate/contracts";
@@ -72,7 +72,7 @@ export const catalogRoutes = new Hono<AppEnv>()
   .get("/categories", catalogCache(3600), async (c) => {
     const counts = new Map((await categoryCounts(c.var.db)).map((r) => [r.category, r.products]));
     return c.json({
-      items: CATEGORIES.map((id) => ({
+      items: LISTED_CATEGORIES.map((id) => ({
         id,
         slug: CATEGORY_SLUGS[id],
         label: CATEGORY_LABELS[id],

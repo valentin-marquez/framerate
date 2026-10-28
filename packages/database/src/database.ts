@@ -482,7 +482,17 @@ export interface StoreReviewVotesTable {
 
 // ─── Cotizaciones (0005) ─────────────────────────────────────────────────────
 
-export type QuoteSlot = "cpu" | "motherboard" | "ram" | "gpu" | "psu" | "case" | "cpu_cooler" | "storage" | "case_fan";
+export type QuoteSlot =
+  | "cpu"
+  | "motherboard"
+  | "ram"
+  | "gpu"
+  | "psu"
+  | "case"
+  | "cpu_cooler"
+  | "storage"
+  | "case_fan"
+  | "peripherals";
 
 export interface QuotesTable {
   id: Generated<number>;

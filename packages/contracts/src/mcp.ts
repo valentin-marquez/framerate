@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CATEGORIES, CATEGORY_LABELS, CategorySchema } from "./categories";
+import { CATEGORY_LABELS, CategorySchema, LISTED_CATEGORIES } from "./categories";
 
 /**
  * Herramientas del servidor MCP (`mcp.framerate.cl`): nombre, descripción y parámetros. El servidor las registra y la
@@ -21,7 +21,7 @@ export const MCP_TOOLS = {
     inputSchema: {
       consulta: z.string().trim().min(2).max(100).optional().describe('Texto libre, por ejemplo "RTX 4060" o "B650M"'),
       categoria: CategorySchema.optional().describe(
-        `Una de: ${CATEGORIES.map((c) => `${c} (${CATEGORY_LABELS[c]})`).join(", ")}`,
+        `Una de: ${LISTED_CATEGORIES.map((c) => `${c} (${CATEGORY_LABELS[c]})`).join(", ")}`,
       ),
       marca: z.string().min(1).max(64).optional().describe("Marca, por ejemplo ASUS"),
       tienda: z.string().min(1).max(64).optional().describe("Slug de tienda, de listar_tiendas"),

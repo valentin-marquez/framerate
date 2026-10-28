@@ -94,6 +94,8 @@ const ONE: Record<Category, string> = {
   cpu_cooler: "Refrigeración de CPU",
   case: "Gabinete",
   case_fan: "Ventilador",
+  keyboard: "Teclado",
+  mouse: "Mouse",
 };
 
 const ACCENT = 0x171717;

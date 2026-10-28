@@ -11,6 +11,7 @@ export const QUOTE_SLOTS = [
   "cpu_cooler",
   "storage",
   "case_fan",
+  "peripherals",
 ] as const;
 export type QuoteSlot = (typeof QUOTE_SLOTS)[number];
 
@@ -29,6 +30,8 @@ export const SLOT_BY_CATEGORY: Record<Category, QuoteSlot> = {
   cpu_cooler: "cpu_cooler",
   case: "case",
   case_fan: "case_fan",
+  keyboard: "peripherals",
+  mouse: "peripherals",
 };
 
 export const QUOTE_SLOT_LABELS: Record<QuoteSlot, string> = {
@@ -41,10 +44,11 @@ export const QUOTE_SLOT_LABELS: Record<QuoteSlot, string> = {
   cpu_cooler: "Refrigeración CPU",
   storage: "Almacenamiento",
   case_fan: "Ventilación",
+  peripherals: "Periféricos",
 };
 
 /** En los slots aditivos todos los ítems cuentan; en los demás, sólo el seleccionado. */
-const ADDITIVE_SLOTS: readonly QuoteSlot[] = ["storage", "case_fan"];
+const ADDITIVE_SLOTS: readonly QuoteSlot[] = ["storage", "case_fan", "peripherals"];
 export const isAdditiveSlot = (slot: QuoteSlot) => ADDITIVE_SLOTS.includes(slot);
 
 /** private: sólo el dueño. unlisted: quien tenga el link. public: además aparece en su perfil. */

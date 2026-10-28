@@ -83,6 +83,18 @@ const PATHS: Record<Category, React.ReactNode> = {
       <path d="M12 10.5c0-3 1.5-4.5 3.5-4.5M13.5 12c3 0 4.5 1.5 4.5 3.5M12 13.5c0 3-1.5 4.5-3.5 4.5M10.5 12c-3 0-4.5-1.5-4.5-3.5" />
     </>
   ),
+  keyboard: (
+    <>
+      <rect x="2" y="5.5" width="20" height="13" rx="2" />
+      <path d="M5.5 9.5h.01M9 9.5h.01M12.5 9.5h.01M16 9.5h.01M19 9.5h.01M5.5 13h.01M9 13h.01M12.5 13h.01M16 13h.01M19 13h.01M8 16h8" />
+    </>
+  ),
+  mouse: (
+    <>
+      <rect x="6.5" y="2.5" width="11" height="19" rx="5.5" />
+      <path d="M12 2.5v6.5M6.5 9h11" />
+    </>
+  ),
 };
 
 export function CategoryIcon({ category, className }: { category: Category; className?: string }) {

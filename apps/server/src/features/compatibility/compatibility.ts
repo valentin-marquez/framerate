@@ -466,6 +466,7 @@ export function highlights(category: Category, f: Record<string, unknown>): stri
   };
   const capacity = num(f.capacity_gb);
   const caseBoard = board(f.supported_motherboard_form_factors);
+  const wireless = f.wireless === true ? "Inalámbrico" : f.wireless === false ? "Con cable" : null;
   const byCategory: Record<Category, () => unknown[]> = {
     cpu: () => [s && label(s), n("cores_total", "núcleos"), n("tdp_w", "W")],
     motherboard: () => [s && label(s), ddr && label(ddr), board(f.form_factor), n("memory_slots", "slots")],
@@ -487,6 +488,8 @@ export function highlights(category: Category, f: Record<string, unknown>): stri
     ],
     hdd: () => [capacity && (capacity >= 1000 ? `${capacity / 1000} TB` : `${capacity} GB`), n("rpm", "RPM")],
     case_fan: () => [n("size_mm", "mm"), (num(f.quantity) ?? 1) > 1 && `${num(f.quantity)} unidades`],
+    keyboard: () => [wireless, typeof f.layout === "string" && `Layout ${f.layout.toUpperCase()}`],
+    mouse: () => [wireless],
   };
   return byCategory[category]()
     .filter((x): x is string => typeof x === "string" && x.length > 0)

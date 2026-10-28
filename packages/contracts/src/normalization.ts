@@ -40,6 +40,8 @@ export const IDENTITY_FIELDS: Record<Category, readonly string[]> = {
   cpu_cooler: ["model", "type", "radiator_mm", "color", "rgb"],
   case: ["model", "form_factor", "color", "variant"],
   case_fan: ["model", "size_mm", "quantity", "color", "rgb"],
+  keyboard: ["model", "layout", "wireless", "color"],
+  mouse: ["model", "wireless", "color"],
 };
 
 export const SPEC_FIELDS: Record<Category, readonly string[]> = {
@@ -121,6 +123,8 @@ export const SPEC_FIELDS: Record<Category, readonly string[]> = {
     "lighting",
     "fan_controller",
   ],
+  keyboard: ["form_factor", "switch_type", "wireless", "bluetooth", "backlight"],
+  mouse: ["max_dpi", "polling_hz", "weight_g", "sensor", "wireless", "bluetooth", "side_buttons"],
 };
 
 export const NUMERIC_IDENTITY_FIELDS = new Set([
@@ -136,7 +140,7 @@ export const NUMERIC_IDENTITY_FIELDS = new Set([
   "size_mm",
   "quantity",
 ]);
-export const BOOLEAN_IDENTITY_FIELDS = new Set(["oc", "wifi", "rgb", "ecc", "registered"]);
+export const BOOLEAN_IDENTITY_FIELDS = new Set(["oc", "wifi", "rgb", "ecc", "registered", "wireless"]);
 
 export const CONFIDENCES = ["high", "medium", "low"] as const;
 export type Confidence = (typeof CONFIDENCES)[number];

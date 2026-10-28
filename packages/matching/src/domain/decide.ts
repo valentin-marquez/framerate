@@ -43,6 +43,8 @@ const FREE_TEXT: Partial<Record<Category, readonly string[]>> = {
   cpu_cooler: ["model"],
   case: ["model"],
   case_fan: ["model"],
+  keyboard: ["model"],
+  mouse: ["model"],
 };
 
 export const freeTextFields = (category: string): readonly string[] => FREE_TEXT[category as Category] ?? [];

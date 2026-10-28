@@ -185,6 +185,26 @@ export const CaseFanSpecsSchema = z.object({
   color: list(text),
 });
 
+export const KeyboardSpecsSchema = z.object({
+  form_factor: str,
+  switch_type: str,
+  wireless: bool,
+  bluetooth: bool,
+  backlight: bool,
+  color: list(text),
+});
+
+export const MouseSpecsSchema = z.object({
+  max_dpi: num,
+  polling_hz: num,
+  weight_g: num,
+  sensor: str,
+  wireless: bool,
+  bluetooth: bool,
+  side_buttons: int,
+  color: list(text),
+});
+
 export const SPEC_SCHEMAS = {
   gpu: GpuSpecsSchema,
   cpu: CpuSpecsSchema,
@@ -196,6 +216,8 @@ export const SPEC_SCHEMAS = {
   cpu_cooler: CpuCoolerSpecsSchema,
   case: CaseSpecsSchema,
   case_fan: CaseFanSpecsSchema,
+  keyboard: KeyboardSpecsSchema,
+  mouse: MouseSpecsSchema,
 } as const satisfies Record<Category, z.ZodObject>;
 
 export type SpecsFor<C extends Category> = z.infer<(typeof SPEC_SCHEMAS)[C]>;

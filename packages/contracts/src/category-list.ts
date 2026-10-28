@@ -14,9 +14,18 @@ export const CATEGORIES = [
   "cpu_cooler",
   "case",
   "case_fan",
+  "keyboard",
+  "mouse",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
+
+/**
+ * Se ingieren y responden por URL (`/categoria/:slug` y sus fichas), pero no se listan: ni menú, home, sitemap, MCP ni
+ * listados sin categoría. Periféricos, hasta que se decida publicarlos (#229, #218).
+ */
+export const HIDDEN_CATEGORIES: ReadonlySet<Category> = new Set(["keyboard", "mouse"]);
+export const LISTED_CATEGORIES = CATEGORIES.filter((c) => !HIDDEN_CATEGORIES.has(c));
 
 /** Nombre visible en español (la audiencia es chilena). */
 export const CATEGORY_LABELS: Record<Category, string> = {
@@ -30,6 +39,8 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   cpu_cooler: "Refrigeración CPU",
   case: "Gabinetes",
   case_fan: "Ventiladores",
+  keyboard: "Teclados",
+  mouse: "Mouses",
 };
 
 /** Nombre para listas angostas (riel lateral): donde el visible no cabe, uno corto. */
@@ -50,6 +61,8 @@ export const CATEGORY_SLUGS: Record<Category, string> = {
   cpu_cooler: "coolers-cpu",
   case: "gabinetes",
   case_fan: "ventiladores",
+  keyboard: "teclados",
+  mouse: "mouses",
 };
 
 export function categoryFromSlug(slug: string): Category | undefined {

@@ -77,6 +77,8 @@ const PRICE_RANGE: Record<Category, [min: number, max: number]> = {
   cpu_cooler: [2_500, 2_000_000],
   case: [15_000, 3_000_000],
   case_fan: [2_000, 1_000_000],
+  keyboard: [3_000, 600_000],
+  mouse: [2_000, 400_000],
 };
 
 const NOT_NEW =
@@ -93,12 +95,20 @@ const ACCESSORY =
 const ACCESSORY_ANYWHERE =
   /\b((?<!\bcon (cable )?)splitter|cable divisor|funda|termostato|montaje en rack|bandeja de ventiladores|adaptador (para |de )?(disipador|socket|lga|water ?cooling)|disipador (de calor |aluminio )?(para |de )?(ssd|m\.?2))\b/;
 const OTHER_PRODUCT = /\b(notebook|laptop|all in one|monitor|consola|tablet)\b/;
-// En RAM y SSD "notebook"/"laptop" suele ser compatibilidad (SO-DIMM, "para PC y Laptop"): sólo cuenta al inicio.
+// En RAM, SSD y periféricos "notebook"/"laptop" suele ser compatibilidad (SO-DIMM, "mouse para laptop"): sólo cuenta al inicio.
 const OTHER_PRODUCT_START = /^(notebook|laptop|all in one|monitor|consola|tablet)\b/;
 const FAN_TITLE = /^(ventilador|pack|kit)\b/;
 const CPU_COOLER_CUE = /\b(cpu|torre|tower|disipador|heatpipes?|liquid[ao]|aio|water|lga ?\d{4}|am[45])\b/;
 const HDD_TITLE = /\b(hdd|lff|ultrastar|ironwolf|skyhawk|exos|barracuda|n300|purple|[57]200 ?rpm|(7\.2|10|15)k)\b/;
 const EXTERNAL_DRIVE = /\b(extern[oa]s?|portatil|portable|usb)\b/;
+
+// Periféricos: lo que no es teclado ni mouse (se mira el inicio del título para no sacar "teclado con reposamuñecas"),
+// y los combos sin la palabra "combo".
+const PERIPHERAL_JUNK =
+  /\b(mouse ?pads?|alfombrilla|audifonos?|auriculares|headsets?|webcam|parlantes?)\b|^(pad (para )?mouse|camara|altavoces?|microfono|keycaps?|(set|kit|juego) de (keycaps|teclas)|teclas|(apoya|reposa) ?munecas|muneque|wrist|palm|switches|lubricante|skates?|grips?|gamepad|joystick|volante|cargador)\b/;
+const KEYBOARD_WORD = /\b(teclado|keyboard)\b/;
+const MOUSE_WORD = /\b(mouse|raton)\b/;
+const PERIPHERAL_COMBO = (t: string) => KEYBOARD_WORD.test(t) && MOUSE_WORD.test(t);
 
 /** Lo que las tiendas meten en la categoría equivocada, con el motivo de lo que realmente es. */
 const MISPLACED: Partial<Record<Category, Array<[misplaced: (title: string) => boolean, reason: string]>>> = {
@@ -113,6 +123,16 @@ const MISPLACED: Partial<Record<Category, Array<[misplaced: (title: string) => b
         ),
       "category:cpu_cooler",
     ],
+  ],
+  keyboard: [
+    [PERIPHERAL_COMBO, "bundle"],
+    [(t) => PERIPHERAL_JUNK.test(t), "category:other_product"],
+    [(t) => MOUSE_WORD.test(t), "category:mouse"],
+  ],
+  mouse: [
+    [PERIPHERAL_COMBO, "bundle"],
+    [(t) => PERIPHERAL_JUNK.test(t), "category:other_product"],
+    [(t) => KEYBOARD_WORD.test(t), "category:keyboard"],
   ],
   ssd: [
     [(t) => EXTERNAL_DRIVE.test(t), "category:external_drive"],
@@ -159,7 +179,7 @@ export function normalizeOffer(input: unknown, expectedCategory: Category): Norm
   if (BUNDLE.test(folded) || (raw.category !== "case_fan" && MULTI.test(folded))) {
     return { ok: false, externalId, reason: "bundle" };
   }
-  const otherProduct = raw.category === "ram" || raw.category === "ssd" ? OTHER_PRODUCT_START : OTHER_PRODUCT;
+  const otherProduct = ["ram", "ssd", "keyboard", "mouse"].includes(raw.category) ? OTHER_PRODUCT_START : OTHER_PRODUCT;
   if (otherProduct.test(folded)) return { ok: false, externalId, reason: "category:other_product" };
   if (ACCESSORY.test(folded) || ACCESSORY_ANYWHERE.test(folded))
     return { ok: false, externalId, reason: "category:other_product" };

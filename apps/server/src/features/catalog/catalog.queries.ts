@@ -13,7 +13,7 @@ import type {
   ProductVariant,
   Sitemap,
 } from "@framerate/contracts";
-import { CATEGORY_FACETS, CATEGORY_SLUGS, facetOptionLabel, facetScale } from "@framerate/contracts";
+import { CATEGORY_FACETS, CATEGORY_SLUGS, facetOptionLabel, facetScale, HIDDEN_CATEGORIES } from "@framerate/contracts";
 import { type Db, parseJson, toBool } from "@framerate/database";
 import { searchText, slugify } from "@framerate/kit";
 import { normalizeGtin, normalizeMpn, titleTokens } from "@framerate/matching";
@@ -186,6 +186,7 @@ function filteredQuery(
 ) {
   let base = db.query.selectFrom("products as p").where(IN_STOCK);
   if (filters.category) base = base.where("p.category", "=", filters.category);
+  else base = base.where("p.category", "not in", [...HIDDEN_CATEGORIES]);
   if (brand) base = base.where(sql<boolean>`lower(p.brand) IN (${sql.join(brand.map((b) => sql`lower(${b})`))})`);
   if (filters.store) {
     base = base.where(
@@ -660,6 +661,7 @@ export async function sitemap(db: Db): Promise<Sitemap> {
       // Una ficha que perdió el stock o sus ofertas mantiene su URL y su historial (#144). Sólo falta la de un
       // producto con todas sus ofertas ocultas por el pipeline (la ficha da 404).
       .where(sql<boolean>`not (${HIDDEN_ONLY})`)
+      .where("p.category", "not in", [...HIDDEN_CATEGORIES])
       .orderBy("p.slug")
       .execute(),
     categoryCounts(db),
@@ -669,7 +671,7 @@ export async function sitemap(db: Db): Promise<Sitemap> {
   return {
     products: products.map((p) => p.slug),
     categories: Object.entries(CATEGORY_SLUGS)
-      .filter(([category]) => withProducts.has(category))
+      .filter(([category]) => withProducts.has(category) && !HIDDEN_CATEGORIES.has(category as Category))
       .map(([, slug]) => slug),
     stores: stores.map((s) => s.slug),
   };
