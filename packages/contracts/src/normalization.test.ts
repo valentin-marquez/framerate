@@ -32,4 +32,16 @@ describe("specs cerradas", () => {
     expect(parsed.specs.sensor).toBe("HERO 25K");
     expect(parsed.specs.max_dpi).toBe(12000);
   });
+
+  test("el switch de un teclado es uno de la lista", () => {
+    const keyboard = (switch_type: string) =>
+      NormalizationOutputSchema("keyboard").parse({
+        ...output({}),
+        category: "keyboard",
+        identity: { model: "k552", layout: "", wireless: "false", color: "" },
+        specs: { ...Object.fromEntries(SPEC_FIELDS.keyboard.map((k) => [k, ""])), switch_type },
+      });
+    expect(keyboard("linear").specs.switch_type).toBe("linear");
+    expect(keyboard("Redragon Red linear").specs.switch_type).toBeNull();
+  });
 });

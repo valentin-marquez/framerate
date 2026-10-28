@@ -338,6 +338,7 @@ export async function listFacets(db: Db, category: Category, filters: ListFilter
       }
       let values = [...counts]
         .filter(([value]) => (!scale || scale.includes(value)) && (!yesNo || value === "true" || value === "false"))
+        .filter(([value]) => !facet.closed || (facet.values && Object.hasOwn(facet.values, value)))
         .map(([value, count]) => ({ value, label: facetOptionLabel(facet, value), count }));
       const at = (v: string) => (scale ? scale.indexOf(v) : Number(v));
       const rank = (v: string) => facet.order?.indexOf(v) ?? -1;

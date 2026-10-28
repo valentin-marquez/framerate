@@ -134,6 +134,18 @@ beforeAll(async () => {
     const listing = await seed(name, "mouse", "{}", 20_000, null);
     await identity(listing, 1, specs, Object.fromEntries(Object.keys(specs).map((k) => [k, "text"])));
   }
+  // Un switch en texto libre (de antes del enum) no es opción, aunque el producto siga en el catálogo.
+  const keyboards: [string, string | null][] = [
+    ["Teclado Rojo", "linear"],
+    ["Teclado Marrón", "tactile"],
+    ["Teclado Lineal 2", "linear"],
+    ["Teclado Viejo", "Redragon Red linear"],
+    ["Teclado Sin Dato", null],
+  ];
+  for (const [name, switchType] of keyboards) {
+    const listing = await seed(name, "keyboard", "{}", 30_000, null);
+    if (switchType) await identity(listing, 1, { switch_type: switchType }, { switch_type: "text" });
+  }
   await refreshSummaries(db);
   // El recálculo saca el precio habitual del historial diario, que aquí no existe: se vuelve a fijar el sembrado.
   for (const [slug, reference] of references) {
@@ -238,7 +250,7 @@ describe("filtro por especificación", () => {
     expect(res.status).toBe(400);
     expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("invalid_request");
     const page = await list("spec=nada:1");
-    expect(page.total).toBe(16);
+    expect(page.total).toBe(21);
     expect(page.specUnknown).toBeUndefined();
   });
 });
@@ -319,6 +331,19 @@ describe("facetas", () => {
     expect(bluetooth.items.map((p) => p.name).sort()).toEqual(["Mouse BT", "Mouse Dual"]);
     const dongle = await list("category=mouse&spec=connection:2.4GHZ");
     expect(dongle.items.map((p) => p.name)).toEqual(["Mouse Dual"]);
+  });
+
+  test("una faceta cerrada sólo ofrece sus valores, en su orden", async () => {
+    expect(await facet("teclados", "switch_type")).toMatchObject({
+      values: [
+        { value: "LINEAR", label: "Lineal", count: 2 },
+        { value: "TACTILE", label: "Táctil", count: 1 },
+      ],
+      unknownCount: 1,
+    });
+    const linear = await list("category=keyboard&spec=switch_type:LINEAR");
+    // El de texto libre viejo tiene el dato y no cumple: queda fuera. El que no lo tiene va al final, como siempre.
+    expect(linear.items.map((p) => p.name).sort()).toEqual(["Teclado Lineal 2", "Teclado Rojo", "Teclado Sin Dato"]);
   });
 
   test("una sí/no sólo ofrece sí y no", async () => {

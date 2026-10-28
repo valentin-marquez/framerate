@@ -18,6 +18,8 @@ export interface FacetDefinition {
   unit?: string;
   /** Etiquetas de valores categóricos; los que no estén se muestran tal cual. */
   values?: Record<string, string>;
+  /** Sólo `values` son opciones: lo demás que haya guardado (texto libre de antes de los enums) no se ofrece. */
+  closed?: boolean;
   /** Orden fijo de las opciones (por defecto, de más a menos productos): una escala como el formato de un teclado. */
   order?: readonly string[];
   /**
@@ -357,6 +359,22 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       // Las specs de texto llegan en mayúsculas y sin espacios (`jsonText` con `clean`).
       values: { FULL: "100 %", TKL: "TKL", "75": "75 %", "65": "65 %", "60": "60 %" },
       order: ["FULL", "TKL", "75", "65", "60"],
+    },
+    {
+      key: "switch_type",
+      label: "Tipo de switch",
+      source: "specs",
+      values: {
+        LINEAR: "Lineal",
+        TACTILE: "Táctil",
+        CLICKY: "Clicky",
+        OPTICAL: "Óptico",
+        MAGNETIC: "Magnético",
+        MEMBRANE: "Membrana",
+        SCISSOR: "Tijera",
+      },
+      order: ["LINEAR", "TACTILE", "CLICKY", "OPTICAL", "MAGNETIC", "MEMBRANE", "SCISSOR"],
+      closed: true,
     },
     { key: "wireless", label: "Conexión", values: YES_NO("Inalámbrico", "Con cable"), source: "specs" },
     CONNECTION,

@@ -136,6 +136,7 @@ const CONNECTIONS = ["wired", "2.4ghz", "bluetooth", "2.4ghz_bluetooth"] as cons
 export const SPEC_ENUMS: Partial<Record<Category, Record<string, readonly string[]>>> = {
   keyboard: {
     form_factor: ["full", "tkl", "75", "65", "60"],
+    switch_type: ["linear", "tactile", "clicky", "optical", "magnetic", "membrane", "scissor"],
     wireless: ["true", "false"],
     connection: CONNECTIONS,
     backlight: ["true", "false"],
