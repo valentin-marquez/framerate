@@ -29,9 +29,8 @@ export async function loadCatalog(url: URL, category?: string, view?: CatalogVie
   const brand = params.getAll("brand").filter(Boolean);
   const minPrice = number(params.get("min_price"));
   const maxPrice = number(params.get("max_price"));
-  // Todo el catálogo, sin búsqueda, abre por lo más popular; una categoría o una consulta, por precio.
-  const defaultSort: CatalogSort =
-    view === "drops" ? "discount" : view === "popular" || (!category && !search) ? "popularity" : "price_asc";
+  // El catálogo y cada categoría abren por lo más popular; una consulta con texto, por precio.
+  const defaultSort: CatalogSort = view === "drops" ? "discount" : search ? "price_asc" : "popularity";
   const sortParam = params.get("sort");
   const sort = CATALOG_SORTS.find((s) => s === sortParam) ?? defaultSort;
   const page = Math.max(1, Number(params.get("page")) || 1);
