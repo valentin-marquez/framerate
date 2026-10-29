@@ -61,7 +61,6 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       steps: [200, 250, 300, 330, 360],
     },
     { key: "slots", label: "Ranuras máximas", unit: "ranuras", source: "specs", threshold: "max", steps: [2, 2.5, 3] },
-    { key: "min_psu_w", label: "Fuente recomendada máxima", unit: "W", source: "specs", threshold: "max" },
     {
       key: "tdp_w",
       label: "Consumo máximo",
@@ -70,21 +69,13 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       threshold: "max",
       steps: [150, 200, 250, 300, 450],
     },
+    { key: "min_psu_w", label: "Fuente recomendada máxima", unit: "W", source: "specs", threshold: "max" },
   ],
   cpu: [
     { key: "model", label: "Modelo" },
     { key: "socket", label: "Socket", source: "specs" },
     { key: "cores_total", label: "Núcleos mínimos", unit: "núcleos", source: "specs", threshold: "min" },
     { key: "threads", label: "Hilos mínimos", unit: "hilos", source: "specs", threshold: "min" },
-    { key: "tdp_w", label: "TDP máximo", unit: "W", source: "specs", threshold: "max", steps: [35, 65, 105, 125, 170] },
-    {
-      key: "max_power_w",
-      label: "Potencia máxima",
-      unit: "W",
-      source: "specs",
-      threshold: "max",
-      steps: [65, 120, 180, 250],
-    },
     {
       key: "base_ghz",
       label: "Frecuencia base mínima",
@@ -109,6 +100,15 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       threshold: "min",
       steps: [8, 16, 32, 64, 96],
     },
+    { key: "tdp_w", label: "TDP máximo", unit: "W", source: "specs", threshold: "max", steps: [35, 65, 105, 125, 170] },
+    {
+      key: "max_power_w",
+      label: "Potencia máxima",
+      unit: "W",
+      source: "specs",
+      threshold: "max",
+      steps: [65, 120, 180, 250],
+    },
     {
       key: "includes_cooler",
       label: "Disipador",
@@ -121,7 +121,6 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     { key: "chipset", label: "Chipset" },
     { key: "formFactor", label: "Formato", values: { eatx: "E-ATX", atx: "ATX", matx: "Micro ATX", itx: "Mini ITX" } },
     { key: "memory", label: "Memoria", values: MEMORY_TYPES },
-    { key: "wifi", label: "Wi-Fi", values: YES_NO("Con Wi-Fi", "Sin Wi-Fi") },
     { key: "m2_slots", label: "Ranuras M.2 mínimas", unit: "M.2", source: "specs", threshold: "min" },
     { key: "memory_slots", label: "Ranuras de memoria", unit: "ranuras", source: "specs" },
     { key: "memory_max_gb", label: "Memoria admitida", unit: "GB", source: "specs", threshold: "min" },
@@ -135,17 +134,19 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     },
     { key: "pcie_x16_slots", label: "Ranuras PCIe x16 mínimas", unit: "ranuras", source: "specs", threshold: "min" },
     { key: "sata_ports", label: "Puertos SATA mínimos", unit: "SATA", source: "specs", threshold: "min" },
+    { key: "wifi", label: "Wi-Fi", values: YES_NO("Con Wi-Fi", "Sin Wi-Fi") },
   ],
   ram: [
     { key: "type", label: "Tipo", values: MEMORY_TYPES },
+    { key: "formFactor", label: "Formato", values: { dimm: "PC (DIMM)", sodimm: "Notebook (SO-DIMM)" } },
+    { key: "modules", label: "Módulos", values: { "1": "1 módulo", "2": "Kit de 2", "4": "Kit de 4" } },
     { key: "capacity", label: "Capacidad mínima", unit: "GB", threshold: "min" },
     { key: "speed", label: "Velocidad mínima", unit: "MT/s", threshold: "min" },
-    { key: "modules", label: "Módulos", values: { "1": "1 módulo", "2": "Kit de 2", "4": "Kit de 4" } },
-    { key: "formFactor", label: "Formato", values: { dimm: "PC (DIMM)", sodimm: "Notebook (SO-DIMM)" } },
     { key: "casLatency", label: "Latencia máxima", unit: "CL", threshold: "max" },
     { key: "rgb", label: "Iluminación", values: YES_NO("Con RGB", "Sin RGB") },
   ],
   psu: [
+    { key: "formFactor", label: "Formato", values: { atx: "ATX", sfx: "SFX" } },
     { key: "wattage", label: "Potencia mínima", unit: "W", threshold: "min" },
     {
       key: "efficiency",
@@ -161,7 +162,6 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       },
     },
     { key: "modular", label: "Cables", values: { full: "Modular", semi: "Semimodular", none: "Fijos" } },
-    { key: "formFactor", label: "Formato", values: { atx: "ATX", sfx: "SFX" } },
     {
       key: "length_mm",
       label: "Largo máximo",
@@ -169,12 +169,6 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       source: "specs",
       threshold: "max",
       steps: [140, 150, 160, 180],
-    },
-    {
-      key: "fanless",
-      label: "Ventilador",
-      values: YES_NO("Pasiva, sin ventilador", "Con ventilador"),
-      source: "specs",
     },
     {
       key: "pcie_6_plus_2_pin",
@@ -192,12 +186,18 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       threshold: "min",
       steps: [4, 6, 8],
     },
+    {
+      key: "fanless",
+      label: "Ventilador",
+      values: YES_NO("Pasiva, sin ventilador", "Con ventilador"),
+      source: "specs",
+    },
   ],
   ssd: [
-    { key: "capacity", label: "Capacidad mínima", unit: "GB", threshold: "min" },
-    { key: "interface", label: "Interfaz", values: { nvme: "NVMe", sata: "SATA" } },
     { key: "formFactor", label: "Formato", values: { "2.5": '2,5"', "2230": "M.2 2230", "2280": "M.2 2280" } },
+    { key: "interface", label: "Interfaz", values: { nvme: "NVMe", sata: "SATA" } },
     { key: "pcieGen", label: "PCIe", values: { "3": "PCIe 3.0", "4": "PCIe 4.0", "5": "PCIe 5.0" } },
+    { key: "capacity", label: "Capacidad mínima", unit: "GB", threshold: "min" },
     {
       key: "read_speed_mb_s",
       label: "Lectura mínima",
@@ -207,14 +207,6 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       steps: [500, 2000, 3500, 5000, 7000, 10000, 14000],
     },
     {
-      key: "tbw",
-      label: "Durabilidad mínima",
-      unit: "TBW",
-      source: "specs",
-      threshold: "min",
-      steps: [150, 300, 600, 1200],
-    },
-    {
       key: "write_speed_mb_s",
       label: "Escritura mínima",
       unit: "MB/s",
@@ -222,11 +214,19 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       threshold: "min",
       steps: [500, 2000, 3500, 5000, 7000, 10000, 13000],
     },
+    {
+      key: "tbw",
+      label: "Durabilidad mínima",
+      unit: "TBW",
+      source: "specs",
+      threshold: "min",
+      steps: [150, 300, 600, 1200],
+    },
   ],
   hdd: [
+    { key: "formFactor", label: "Formato", values: { "2.5": '2,5"', "3.5": '3,5"' } },
     { key: "capacity", label: "Capacidad mínima", unit: "GB", threshold: "min" },
     { key: "rpm", label: "Velocidad", unit: "RPM" },
-    { key: "formFactor", label: "Formato", values: { "2.5": '2,5"', "3.5": '3,5"' } },
     {
       key: "cache_mb",
       label: "Caché mínima",
@@ -254,20 +254,20 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       source: "specs",
     },
     {
-      key: "noise_dba_max",
-      label: "Ruido máximo",
-      unit: "dBA",
-      source: "specs",
-      threshold: "max",
-      steps: [20, 25, 30, 35],
-    },
-    {
       key: "tdp_rating_w",
       label: "TDP soportado mínimo",
       unit: "W",
       source: "specs",
       threshold: "min",
       steps: [150, 200, 250, 300],
+    },
+    {
+      key: "noise_dba_max",
+      label: "Ruido máximo",
+      unit: "dBA",
+      source: "specs",
+      threshold: "max",
+      steps: [20, 25, 30, 35],
     },
   ],
   case: [
@@ -284,7 +284,6 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
         itx: "Mini ITX",
       },
     },
-    { key: "color", label: "Color", values: COLORS },
     {
       key: "max_gpu_length_mm",
       label: "Largo de GPU admitido",
@@ -309,6 +308,7 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       threshold: "min",
       steps: [150, 160, 180, 200, 220],
     },
+    { key: "color", label: "Color", values: COLORS },
   ],
   case_fan: [
     { key: "sizeMm", label: "Tamaño", unit: "mm" },
@@ -316,6 +316,14 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       key: "quantity",
       label: "Cantidad",
       values: { "1": "1 ventilador", "2": "Pack de 2", "3": "Pack de 3", "4": "Pack de 4" },
+    },
+    {
+      key: "rpm_max",
+      label: "Velocidad mínima",
+      unit: "RPM",
+      source: "specs",
+      threshold: "min",
+      steps: [1200, 1500, 1800, 2000],
     },
     {
       key: "airflow_cfm_max",
@@ -326,6 +334,14 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       steps: [30, 40, 50, 60, 70],
     },
     {
+      key: "static_pressure_mmh2o",
+      label: "Presión estática mínima",
+      unit: "mmH₂O",
+      source: "specs",
+      threshold: "min",
+      steps: [1, 1.5, 2, 3],
+    },
+    {
       key: "noise_dba_max",
       label: "Ruido máximo",
       unit: "dBA",
@@ -334,22 +350,6 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       steps: [20, 25, 30, 35],
     },
     { key: "pwm", label: "Control de velocidad", values: YES_NO("Con PWM", "Sin PWM"), source: "specs" },
-    {
-      key: "rpm_max",
-      label: "Velocidad mínima",
-      unit: "RPM",
-      source: "specs",
-      threshold: "min",
-      steps: [1200, 1500, 1800, 2000],
-    },
-    {
-      key: "static_pressure_mmh2o",
-      label: "Presión estática mínima",
-      unit: "mmH₂O",
-      source: "specs",
-      threshold: "min",
-      steps: [1, 1.5, 2, 3],
-    },
   ],
   keyboard: [
     {
@@ -388,7 +388,6 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
     CONNECTION,
   ],
   mouse: [
-    CONNECTION,
     {
       key: "grip",
       label: "Agarre",
@@ -397,6 +396,7 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       order: ["PALM", "CLAW", "FINGERTIP"],
       closed: true,
     },
+    CONNECTION,
     {
       key: "weight_g",
       label: "Peso máximo",

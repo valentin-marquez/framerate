@@ -286,15 +286,15 @@ describe("facetas", () => {
       "chipset",
       "formFactor",
       "memory",
-      "wifi",
       "m2_slots",
       "memory_slots",
       "memory_max_gb",
       "memory_max_speed_mt_s",
       "pcie_x16_slots",
       "sata_ports",
+      "wifi",
     ]);
-    expect(items.slice(1, 5)).toEqual([
+    expect([...items.slice(1, 4), items.at(-1)]).toEqual([
       { key: "chipset", label: "Chipset", values: [], unknownCount: 4 },
       { key: "formFactor", label: "Formato", values: [{ value: "atx", label: "ATX", count: 1 }], unknownCount: 3 },
       {
