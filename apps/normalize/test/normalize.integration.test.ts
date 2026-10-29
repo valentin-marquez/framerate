@@ -240,6 +240,16 @@ describe("normalizeListing", () => {
     expect(rows.map((r) => r.input_hash)).toEqual(["hash-2"]);
   });
 
+  test("el backfill vuelve a normalizar aunque la entrada sea la misma", async () => {
+    const id = await seedListing();
+    await run(id, config(fakeHaiku(ok())));
+    const h = fakeHaiku(ok());
+    const backfill = { listingId: id, version: NORMALIZER_VERSION, reason: "backfill" as const };
+    const out = await normalizeListing(db, fakeQueue(), backfill, config(h), { now, attempts: 1, log: silentLogger });
+    expect(out).toEqual({ status: "normalized" });
+    expect(h.calls).toBe(1);
+  });
+
   test("oferta inactiva, sin hash o inexistente: se salta sin pagar (el backfill sí cubre inactivas)", async () => {
     const h = fakeHaiku(ok());
     const inactive = await seedListing({ is_active: 0 });

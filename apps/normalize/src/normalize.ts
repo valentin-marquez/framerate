@@ -113,7 +113,8 @@ export async function normalizeListing(
     .where("listing_id", "=", listingId)
     .where("version", "=", NORMALIZER_VERSION)
     .executeTakeFirst();
-  if (existing?.input_hash === listing.norm_hash) {
+  // El backfill pide volver a normalizar con un prompt nuevo: la entrada no cambió, pero la salida sí.
+  if (reason !== "backfill" && existing?.input_hash === listing.norm_hash) {
     // Misma entrada y misma versión: no se paga dos veces. Si el vínculo no llegó a correr, se vuelve a pedir; también
     // si ingest la dejó `pending` con el mismo hash (volvió de `failed`), o queda así para siempre.
     if (listing.norm_status !== "linked") await link.send({ listingId, version: NORMALIZER_VERSION, reason });
