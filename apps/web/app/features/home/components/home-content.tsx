@@ -14,7 +14,7 @@ export function HomeContent({ categories, rows, drops, trendingIds, quotes, stor
       <div className="flex flex-col gap-10 pb-16 md:gap-12">
         {popular && <ProductRow title={popular.title} href={popular.href} products={popular.products} priority />}
         <PublicQuotes quotes={quotes} />
-        <ProductRow title="Bajadas de precio" href="/buscar?sort=discount" more="Ver todas" products={drops} priority />
+        <ProductRow title="Bajadas de precio" href="/bajadas" more="Ver todas" products={drops} priority />
         <StoresStrip stores={stores} />
         {byCategory.map((row) => (
           <ProductRow key={row.key} title={row.title} href={row.href} products={row.products} trendingIds={trending} />

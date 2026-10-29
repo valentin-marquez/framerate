@@ -21,13 +21,17 @@ export function categoryFacets(category: string | null | undefined) {
  * Datos de la vista de catálogo. La comparten `/buscar` (todo el catálogo, con búsqueda) y `/categoria/:slug` (una
  * categoría): los filtros salen de la URL, así cada vista se puede compartir.
  */
-export async function loadCatalog(url: URL, category?: string) {
+export type CatalogView = "popular" | "drops";
+
+export async function loadCatalog(url: URL, category?: string, view?: CatalogView) {
   const params = url.searchParams;
   const search = params.get("q")?.trim() || undefined;
   const brand = params.getAll("brand").filter(Boolean);
   const minPrice = number(params.get("min_price"));
   const maxPrice = number(params.get("max_price"));
-  const defaultSort: CatalogSort = "price_asc";
+  // Todo el catálogo, sin búsqueda, abre por lo más popular; una categoría o una consulta, por precio.
+  const defaultSort: CatalogSort =
+    view === "drops" ? "discount" : view === "popular" || (!category && !search) ? "popularity" : "price_asc";
   const sortParam = params.get("sort");
   const sort = CATALOG_SORTS.find((s) => s === sortParam) ?? defaultSort;
   const page = Math.max(1, Number(params.get("page")) || 1);
@@ -48,11 +52,19 @@ export async function loadCatalog(url: URL, category?: string) {
   const filters = {
     category: category ?? null,
     search: search ?? null,
+    view: view ?? null,
     brand,
     spec,
     defaultSort,
   };
-  const shared = { brand, search, min_price: minPrice, max_price: maxPrice, spec };
+  const shared = {
+    brand,
+    search,
+    min_price: minPrice,
+    max_price: maxPrice,
+    spec,
+    deals: view === "drops" || undefined,
+  };
 
   try {
     const [{ items: products, total }, brands, priceRange, facets, trending] = await Promise.all([

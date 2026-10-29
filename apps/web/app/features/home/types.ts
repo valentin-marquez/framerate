@@ -12,7 +12,7 @@ export interface HomeData {
   categories: CategoryItem[];
   /** `popular` primero y luego una fila por categoría con suficientes productos. */
   rows: HomeRow[];
-  /** Bajas de precio (lo mismo que `/buscar?sort=discount`); vacía, la fila no se muestra. */
+  /** Bajas de precio (lo mismo que `/bajadas`); vacía, la fila no se muestra. */
   drops: ProductSummary[];
   trendingIds: number[];
   /** Las cuatro públicas con más "me gusta"; con menos, la sección no se muestra. */

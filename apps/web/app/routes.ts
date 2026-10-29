@@ -14,6 +14,8 @@ export default [
 
   // Products & Categories
   route("buscar", "features/search/pages/search-page.tsx"),
+  route("populares", "features/search/pages/popular-page.tsx"),
+  route("bajadas", "features/search/pages/drops-page.tsx"),
   route("explorar", "features/search/pages/redirect-old-explore.tsx"),
   route("categoria/:slug", "features/category/pages/category-page.tsx"),
   route("producto/:slug", "features/product/pages/product-details.tsx"),

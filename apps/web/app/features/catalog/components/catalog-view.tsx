@@ -59,7 +59,7 @@ export function CatalogView({ data }: { data: CatalogData }) {
             brandCount={brands.length}
           />
         ) : (
-          <SearchHeader total={meta.total} search={search} />
+          <SearchHeader total={meta.total} search={search} view={data.view} />
         )}
       </WithAd>
 

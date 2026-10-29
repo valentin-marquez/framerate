@@ -52,14 +52,24 @@ export function CategoryHeader({
 }
 
 /** Cabecera de `/buscar`: la consulta (el campo vive en el navbar) y cuántos productos la cumplen. */
-export function SearchHeader({ total, search }: { total: number; search: string | null }) {
+const VIEW_TITLES = { popular: "Lo más popular", drops: "Bajadas de precio" } as const;
+
+export function SearchHeader({
+  total,
+  search,
+  view,
+}: {
+  total: number;
+  search: string | null;
+  view?: "popular" | "drops" | null;
+}) {
   return (
     <header className={cn("space-y-1 pt-2", enterClass())}>
       {/* Al buscar mientras se escribe, título y conteo cambian en el lugar: la key los vuelve a montar y entran
           con un deslizamiento corto (transitions.dev, "text states swap" y "number pop-in", sin desenfoque). */}
       <h1 className="text-title-h4 text-foreground md:text-title-h3">
         <span key={search ?? ""} className="inline-block slide-in-from-bottom-1 fade-in-0 animate-in duration-fast">
-          {search ? `“${search}”` : "Todo el catálogo"}
+          {search ? `“${search}”` : view ? VIEW_TITLES[view] : "Todo el catálogo"}
         </span>
       </h1>
       <p className="text-muted-foreground text-sm">
@@ -68,7 +78,9 @@ export function SearchHeader({ total, search }: { total: number; search: string 
             ? `${total.toLocaleString("es-CL")} ${total === 1 ? "producto" : "productos"} de las tiendas de Chile`
             : search
               ? "No encontramos productos con esa búsqueda"
-              : "Compara precios de hardware en Chile"}
+              : view === "drops"
+                ? "Por ahora no hay productos con baja de precio"
+                : "Compara precios de hardware en Chile"}
         </span>
       </p>
     </header>
