@@ -1,10 +1,25 @@
-import { CATEGORY_NAV_LABELS, categoryFromSlug } from "@framerate/contracts";
+import { CATEGORY_NAV_LABELS, type Category, categoryFromSlug } from "@framerate/contracts";
 import { CategoryIcon } from "~/features/category/components/category-icon";
 import { SearchField } from "~/features/search/components/search-field";
 import { Button } from "~/shared/components/primitives/button";
 import type { CatalogData } from "../load-catalog";
 import { useFilterParams } from "../use-filter-params";
 import { activeFilterCount, FilterPanel } from "./filter-panel";
+
+const SEARCH_NOUN: Record<Category, string> = {
+  gpu: "tarjeta de video",
+  cpu: "procesador",
+  motherboard: "placa madre",
+  ram: "memoria RAM",
+  psu: "fuente de poder",
+  ssd: "SSD",
+  hdd: "disco duro",
+  cpu_cooler: "refrigeración",
+  case: "gabinete",
+  case_fan: "ventilador",
+  keyboard: "teclado",
+  mouse: "mouse",
+};
 
 /** Lo que va en el panel a la derecha del riel compacto, en una categoría: su título, el buscador y los filtros. */
 export function CategoryPanel({ data }: { data: CatalogData }) {
@@ -20,7 +35,7 @@ export function CategoryPanel({ data }: { data: CatalogData }) {
           {data.meta.total.toLocaleString("es-CL")}
         </span>
       </div>
-      <SearchField withinCategory className="shrink-0" />
+      <SearchField withinCategory className="shrink-0" placeholder={id ? `Buscar ${SEARCH_NOUN[id]}` : undefined} />
       {/* El desvanecido de abajo avisa que hay más campos sin poner una barra de scroll gruesa. */}
       <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto overflow-x-hidden [mask-image:linear-gradient(to_bottom,black_calc(100%-24px),transparent)]">
         <FilterPanel data={data} />

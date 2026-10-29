@@ -33,7 +33,15 @@ export function startSearchSpotlight() {
  * actualiza en su lugar (como el buscador de 21st). La primera búsqueda deja una entrada en el historial; las
  * siguientes la reemplazan, así "atrás" no recorre letra por letra. Sin JS es un formulario GET normal.
  */
-export function SearchField({ className, withinCategory }: { className?: string; withinCategory?: boolean }) {
+export function SearchField({
+  className,
+  withinCategory,
+  placeholder = "Buscar modelo o marca",
+}: {
+  className?: string;
+  withinCategory?: boolean;
+  placeholder?: string;
+}) {
   const { pathname } = useLocation();
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -108,7 +116,7 @@ export function SearchField({ className, withinCategory }: { className?: string;
         aria-label="Buscar productos"
         autoComplete="off"
         enterKeyHint="search"
-        placeholder="Buscar modelo o marca"
+        placeholder={placeholder}
         value={value}
         onChange={(e) => {
           setValue(e.target.value);
