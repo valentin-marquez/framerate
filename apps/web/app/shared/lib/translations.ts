@@ -78,6 +78,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     water_cooled: "Refrigeración líquida",
     radiator_size_mm: "Tamaño del radiador (mm)",
     fan_size_mm: "Tamaño del ventilador (mm)",
+    keyboard_type: "Tipo",
     switch_type: "Tipo de switch",
     wireless: "Inalámbrico",
     connection: "Tipo de conexión",
@@ -486,6 +487,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     water_cooled: "Water Cooled",
     radiator_size_mm: "Radiator Size (mm)",
     fan_size_mm: "Fan Size (mm)",
+    keyboard_type: "Type",
     switch_type: "Switch Type",
     wireless: "Wireless",
     connection: "Connection Type",
@@ -885,6 +887,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     water_cooled: "Ko mew wütreltun", // ko = water, mew = with
     radiator_size_mm: "Radiador fütran (mm)",
     fan_size_mm: "Ventilador fütran (mm)",
+    keyboard_type: "Tipo",
     switch_type: "Tipo de switch",
     wireless: "Wireless",
     connection: "Tipo de conexión",

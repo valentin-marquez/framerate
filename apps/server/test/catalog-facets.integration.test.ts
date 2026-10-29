@@ -135,16 +135,16 @@ beforeAll(async () => {
     await identity(listing, 1, specs, Object.fromEntries(Object.keys(specs).map((k) => [k, "text"])));
   }
   // Un switch en texto libre (de antes del enum) no es opción, aunque el producto siga en el catálogo.
-  const keyboards: [string, string | null][] = [
-    ["Teclado Rojo", "linear"],
-    ["Teclado Marrón", "tactile"],
-    ["Teclado Lineal 2", "linear"],
-    ["Teclado Viejo", "Redragon Red linear"],
+  const keyboards: [string, Record<string, string> | null][] = [
+    ["Teclado Rojo", { keyboard_type: "mechanical", switch_type: "red" }],
+    ["Teclado Marrón", { keyboard_type: "mechanical", switch_type: "brown" }],
+    ["Teclado Rojo 2", { keyboard_type: "magnetic", switch_type: "red" }],
+    ["Teclado Viejo", { keyboard_type: "optical", switch_type: "Redragon Red linear" }],
     ["Teclado Sin Dato", null],
   ];
-  for (const [name, switchType] of keyboards) {
+  for (const [name, specs] of keyboards) {
     const listing = await seed(name, "keyboard", "{}", 30_000, null);
-    if (switchType) await identity(listing, 1, { switch_type: switchType }, { switch_type: "text" });
+    if (specs) await identity(listing, 1, specs, Object.fromEntries(Object.keys(specs).map((k) => [k, "text"])));
   }
   await refreshSummaries(db);
   // El recálculo saca el precio habitual del historial diario, que aquí no existe: se vuelve a fijar el sembrado.
@@ -336,14 +336,20 @@ describe("facetas", () => {
   test("una faceta cerrada sólo ofrece sus valores, en su orden", async () => {
     expect(await facet("teclados", "switch_type")).toMatchObject({
       values: [
-        { value: "LINEAR", label: "Lineal", count: 2 },
-        { value: "TACTILE", label: "Táctil", count: 1 },
+        { value: "RED", label: "Red", count: 2 },
+        { value: "BROWN", label: "Brown", count: 1 },
       ],
       unknownCount: 1,
     });
-    const linear = await list("category=keyboard&spec=switch_type:LINEAR");
+    expect(await facet("teclados", "keyboard_type")).toMatchObject({
+      values: [
+        { value: "MECHANICAL", label: "Mecánico", count: 2 },
+        { value: "MAGNETIC", label: "Magnético", count: 1 },
+      ],
+    });
+    const red = await list("category=keyboard&spec=switch_type:RED");
     // El de texto libre viejo tiene el dato y no cumple: queda fuera. El que no lo tiene va al final, como siempre.
-    expect(linear.items.map((p) => p.name).sort()).toEqual(["Teclado Lineal 2", "Teclado Rojo", "Teclado Sin Dato"]);
+    expect(red.items.map((p) => p.name).sort()).toEqual(["Teclado Rojo", "Teclado Rojo 2", "Teclado Sin Dato"]);
   });
 
   test("cada faceta ignora su propio filtro y aplica los demás", async () => {

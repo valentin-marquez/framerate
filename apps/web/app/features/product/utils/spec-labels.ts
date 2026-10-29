@@ -84,6 +84,7 @@ const SPECS: Record<string, [label: string, unit?: string]> = {
   fan_controller: ["Necesita controlador"],
   // Teclados y mouses
   form_factor: ["Formato"],
+  keyboard_type: ["Tipo"],
   switch_type: ["Tipo de switch"],
   wireless: ["Inalámbrico"],
   connection: ["Tipo de conexión"],

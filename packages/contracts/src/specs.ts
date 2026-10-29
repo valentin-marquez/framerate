@@ -187,6 +187,7 @@ export const CaseFanSpecsSchema = z.object({
 
 export const KeyboardSpecsSchema = z.object({
   form_factor: str,
+  keyboard_type: str,
   switch_type: str,
   wireless: bool,
   connection: str,

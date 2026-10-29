@@ -33,15 +33,17 @@ describe("specs cerradas", () => {
     expect(parsed.specs.max_dpi).toBe(12000);
   });
 
-  test("el switch de un teclado es uno de la lista", () => {
-    const keyboard = (switch_type: string) =>
+  test("el tipo y el switch de un teclado son de una lista", () => {
+    const keyboard = (specs: Record<string, string>) =>
       NormalizationOutputSchema("keyboard").parse({
         ...output({}),
         category: "keyboard",
         identity: { model: "k552", layout: "", wireless: "false", color: "" },
-        specs: { ...Object.fromEntries(SPEC_FIELDS.keyboard.map((k) => [k, ""])), switch_type },
+        specs: { ...Object.fromEntries(SPEC_FIELDS.keyboard.map((k) => [k, ""])), ...specs },
       });
-    expect(keyboard("linear").specs.switch_type).toBe("linear");
-    expect(keyboard("Redragon Red linear").specs.switch_type).toBeNull();
+    const valid = keyboard({ keyboard_type: "mechanical", switch_type: "brown" });
+    expect([valid.specs.keyboard_type, valid.specs.switch_type]).toEqual(["mechanical", "brown"]);
+    const free = keyboard({ keyboard_type: "optical", switch_type: "Redragon Red linear" });
+    expect([free.specs.keyboard_type, free.specs.switch_type]).toEqual([null, null]);
   });
 });

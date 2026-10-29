@@ -123,7 +123,7 @@ export const SPEC_FIELDS: Record<Category, readonly string[]> = {
     "lighting",
     "fan_controller",
   ],
-  keyboard: ["form_factor", "switch_type", "wireless", "connection", "backlight"],
+  keyboard: ["form_factor", "keyboard_type", "switch_type", "wireless", "connection", "backlight"],
   mouse: ["max_dpi", "polling_hz", "weight_g", "sensor", "wireless", "connection", "buttons", "side_buttons"],
 };
 
@@ -136,7 +136,8 @@ const CONNECTIONS = ["wired", "2.4ghz", "bluetooth", "2.4ghz_bluetooth"] as cons
 export const SPEC_ENUMS: Partial<Record<Category, Record<string, readonly string[]>>> = {
   keyboard: {
     form_factor: ["full", "tkl", "75", "65", "60"],
-    switch_type: ["linear", "tactile", "clicky", "optical", "magnetic", "membrane", "scissor"],
+    keyboard_type: ["mechanical", "membrane", "magnetic"],
+    switch_type: ["red", "brown", "blue", "black", "silver", "yellow", "white", "green"],
     wireless: ["true", "false"],
     connection: CONNECTIONS,
     backlight: ["true", "false"],
