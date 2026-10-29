@@ -21,6 +21,7 @@ describe("specs cerradas", () => {
     const specs = outputSchema("mouse").properties.specs.properties as Record<string, unknown>;
     expect(specs.connection).toEqual({ enum: ["wired", "2.4ghz", "bluetooth", "2.4ghz_bluetooth", ""] });
     expect(specs.sensor).toEqual({ type: "string" });
+    expect(specs.grip).toEqual({ enum: ["palm", "claw", "fingertip", ""] });
   });
 
   test("descarta el texto libre y normaliza lo válido", () => {
@@ -31,6 +32,11 @@ describe("specs cerradas", () => {
     expect(parsed.specs.connection).toBe("2.4ghz");
     expect(parsed.specs.sensor).toBe("HERO 25K");
     expect(parsed.specs.max_dpi).toBe(12000);
+  });
+
+  test("el agarre de un mouse es de una lista", () => {
+    const parse = (grip: string) => NormalizationOutputSchema("mouse").parse(output({ grip })).specs.grip;
+    expect([parse("claw"), parse("hybrid claw-palm")]).toEqual(["claw", null]);
   });
 
   test("el tipo y el switch de un teclado son de una lista", () => {

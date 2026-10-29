@@ -124,7 +124,7 @@ export const SPEC_FIELDS: Record<Category, readonly string[]> = {
     "fan_controller",
   ],
   keyboard: ["form_factor", "keyboard_type", "switch_type", "wireless", "connection", "backlight"],
-  mouse: ["max_dpi", "polling_hz", "weight_g", "sensor", "wireless", "connection", "buttons", "side_buttons"],
+  mouse: ["max_dpi", "polling_hz", "weight_g", "sensor", "wireless", "connection", "buttons", "side_buttons", "grip"],
 };
 
 const CONNECTIONS = ["wired", "2.4ghz", "bluetooth", "2.4ghz_bluetooth"] as const;
@@ -142,7 +142,7 @@ export const SPEC_ENUMS: Partial<Record<Category, Record<string, readonly string
     connection: CONNECTIONS,
     backlight: ["true", "false"],
   },
-  mouse: { wireless: ["true", "false"], connection: CONNECTIONS },
+  mouse: { wireless: ["true", "false"], connection: CONNECTIONS, grip: ["palm", "claw", "fingertip"] },
 };
 
 export const NUMERIC_IDENTITY_FIELDS = new Set([

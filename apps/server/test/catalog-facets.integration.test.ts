@@ -126,9 +126,9 @@ beforeAll(async () => {
   await identity(gpu8, 1, { memory_type: "GDDR6" }, { memory_type: "knowledge" });
   // El de 2,4 GHz y Bluetooth cuenta en las dos opciones.
   const mice: [string, Record<string, unknown>][] = [
-    ["Mouse Dual", { connection: "2.4ghz_bluetooth" }],
-    ["Mouse BT", { connection: "bluetooth" }],
-    ["Mouse Cable", { connection: "wired" }],
+    ["Mouse Dual", { connection: "2.4ghz_bluetooth", grip: "claw" }],
+    ["Mouse BT", { connection: "bluetooth", grip: "palm" }],
+    ["Mouse Cable", { connection: "wired", grip: "hybrid" }],
   ];
   for (const [name, specs] of mice) {
     const listing = await seed(name, "mouse", "{}", 20_000, null);
@@ -331,6 +331,17 @@ describe("facetas", () => {
     expect(bluetooth.items.map((p) => p.name).sort()).toEqual(["Mouse BT", "Mouse Dual"]);
     const dongle = await list("category=mouse&spec=connection:2.4GHZ");
     expect(dongle.items.map((p) => p.name)).toEqual(["Mouse Dual"]);
+  });
+
+  test("el agarre de un mouse es una faceta cerrada: un valor fuera de la lista no es opción", async () => {
+    expect(await facet("mouses", "grip")).toMatchObject({
+      values: [
+        { value: "PALM", label: "Palma", count: 1 },
+        { value: "CLAW", label: "Garra", count: 1 },
+      ],
+      unknownCount: 0,
+    });
+    expect((await list("category=mouse&spec=grip:CLAW")).items.map((p) => p.name)).toEqual(["Mouse Dual"]);
   });
 
   test("una faceta cerrada sólo ofrece sus valores, en su orden", async () => {

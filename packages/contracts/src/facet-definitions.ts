@@ -390,6 +390,14 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
   mouse: [
     CONNECTION,
     {
+      key: "grip",
+      label: "Agarre",
+      source: "specs",
+      values: { PALM: "Palma", CLAW: "Garra", FINGERTIP: "Puntas de los dedos" },
+      order: ["PALM", "CLAW", "FINGERTIP"],
+      closed: true,
+    },
+    {
       key: "weight_g",
       label: "Peso máximo",
       unit: "g",

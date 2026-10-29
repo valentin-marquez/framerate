@@ -95,6 +95,7 @@ const SPECS: Record<string, [label: string, unit?: string]> = {
   sensor: ["Sensor"],
   buttons: ["Botones"],
   side_buttons: ["Botones laterales"],
+  grip: ["Agarre"],
 };
 
 // Los códigos que escribe la referencia de ventiladores (#181); lo que no está aquí se muestra tal cual.
@@ -118,6 +119,10 @@ const VALUES: Record<string, string> = {
   "2.4ghz": "2,4 GHz",
   bluetooth: "Bluetooth",
   "2.4ghz_bluetooth": "2,4 GHz y Bluetooth",
+  // `grip` de mouses.
+  palm: "Palma",
+  claw: "Garra",
+  fingertip: "Puntas de los dedos",
 };
 
 const number = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 2 });

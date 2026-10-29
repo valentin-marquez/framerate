@@ -204,6 +204,7 @@ export const MouseSpecsSchema = z.object({
   connection: str,
   buttons: int,
   side_buttons: int,
+  grip: str,
   color: list(text),
 });
 

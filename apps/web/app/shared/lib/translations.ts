@@ -89,6 +89,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     sensor: "Sensor",
     buttons: "Botones",
     side_buttons: "Botones laterales",
+    grip: "Agarre",
     sockets: "Sockets",
     memory: "Memoria",
     type: "Tipo",
@@ -498,6 +499,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     sensor: "Sensor",
     buttons: "Buttons",
     side_buttons: "Side Buttons",
+    grip: "Grip",
     sockets: "Sockets",
 
     // UI (Product Page)
@@ -898,6 +900,7 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     sensor: "Sensor",
     buttons: "Botones",
     side_buttons: "Botones laterales",
+    grip: "Agarre",
     sockets: "Sockets",
 
     // UI (Product Page)
