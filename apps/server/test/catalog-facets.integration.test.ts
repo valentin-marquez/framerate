@@ -126,13 +126,15 @@ beforeAll(async () => {
   await identity(gpu8, 1, { memory_type: "GDDR6" }, { memory_type: "knowledge" });
   // El de 2,4 GHz y Bluetooth cuenta en las dos opciones.
   const mice: [string, Record<string, unknown>][] = [
-    ["Mouse Dual", { connection: "2.4ghz_bluetooth", grip: "claw" }],
-    ["Mouse BT", { connection: "bluetooth", grip: "palm" }],
+    ["Mouse Dual", { connection: "2.4ghz_bluetooth", grip: "claw", length_mm: 118, hand: "ambidextrous" }],
+    ["Mouse BT", { connection: "bluetooth", grip: "palm", length_mm: 125, hand: "right" }],
     ["Mouse Cable", { connection: "wired", grip: "hybrid" }],
   ];
   for (const [name, specs] of mice) {
     const listing = await seed(name, "mouse", "{}", 20_000, null);
-    await identity(listing, 1, specs, Object.fromEntries(Object.keys(specs).map((k) => [k, "text"])));
+    // Las medidas y la mano vienen de la referencia del modelo (#218), no del texto de la tienda.
+    const source = (k: string) => (k === "length_mm" || k === "hand" ? "reference" : "text");
+    await identity(listing, 1, specs, Object.fromEntries(Object.keys(specs).map((k) => [k, source(k)])));
   }
   // Un switch en texto libre (de antes del enum) no es opción, aunque el producto siga en el catálogo.
   const keyboards: [string, Record<string, string> | null][] = [
@@ -331,6 +333,21 @@ describe("facetas", () => {
     expect(bluetooth.items.map((p) => p.name).sort()).toEqual(["Mouse BT", "Mouse Dual"]);
     const dongle = await list("category=mouse&spec=connection:2.4GHZ");
     expect(dongle.items.map((p) => p.name)).toEqual(["Mouse Dual"]);
+  });
+
+  test("largo máximo de un mouse: primero los que cumplen, después los sin dato, y los más largos no salen", async () => {
+    expect(rows(await list("category=mouse&spec=length_mm:120"))).toEqual([
+      ["Mouse Dual", "match"],
+      ["Mouse Cable", "unknown"],
+    ]);
+  });
+
+  test("un mouse ambidiestro sale para las dos manos", async () => {
+    expect(rows(await list("category=mouse&spec=hand:LEFT"))).toEqual([
+      ["Mouse Dual", "match"],
+      ["Mouse Cable", "unknown"],
+    ]);
+    expect((await list("category=mouse&spec=hand:RIGHT")).items.map((p) => p.name)).toContain("Mouse BT");
   });
 
   test("el agarre de un mouse es una faceta cerrada: un valor fuera de la lista no es opción", async () => {

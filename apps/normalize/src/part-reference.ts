@@ -1,8 +1,8 @@
 import type { IdentityValue } from "@framerate/contracts";
 import type { Db } from "@framerate/database";
 
-/** Las categorías con referencia por modelo en `part_reference` (#182). */
-export const PART_CATEGORIES = new Set(["cpu_cooler", "case", "motherboard"]);
+/** Las categorías con referencia por modelo en `part_reference` (#182, #218). */
+export const PART_CATEGORIES = new Set(["cpu_cooler", "case", "motherboard", "mouse"]);
 
 /** Referencia de un modelo con sus specs ya en el formato de `listing_identity.specs`. */
 export interface PartReference {
@@ -40,7 +40,10 @@ export function pickPartReference(refs: readonly PartReference[], model: string,
   return hits.find((r) => Number(r.specs.radiator_mm) === Number(radiatorMm));
 }
 
-/** Completa lo que falta o lo que Haiku puso de memoria; lo que dice la tienda gana. */
+/**
+ * Completa lo que falta o lo que Haiku puso de memoria; lo que dice la tienda gana. En un mouse gana la ficha: el
+ * comparador de formas (#218) necesita las medidas del fabricante, no las que copió cada tienda.
+ */
 export function fillFromPartReference(
   specs: Record<string, IdentityValue>,
   source: Record<string, string>,
@@ -49,7 +52,8 @@ export function fillFromPartReference(
   if (!ref) return { specs, source };
   const out = { specs: { ...specs }, source: { ...source } };
   for (const [key, value] of Object.entries(ref.specs)) {
-    if (value === null || value === "" || (out.specs[key] !== undefined && out.source[key] !== "knowledge")) continue;
+    if (value === null || value === "") continue;
+    if (ref.category !== "mouse" && out.specs[key] !== undefined && out.source[key] !== "knowledge") continue;
     out.specs[key] = value;
     out.source[key] = "reference";
   }

@@ -93,3 +93,15 @@ test("marcas de las tiendas nuevas (#159)", () => {
   expect(detectBrand("Fuente WJ Coolman 600W")).toBe("WJ Coolman");
   expect(detectBrand("Gabinete Segotep Lux")).toBe("Segotep");
 });
+
+test("marcas de periféricos (#218)", () => {
+  expect(detectBrand("Mouse Gamer Logitech G305 lighspeed sensor HERO USB azul")).toBe("Logitech");
+  expect(detectBrand("Teclado Mecánico Royal Kludge RK61")).toBe("Royal Kludge");
+  expect(detectBrand("Mouse Klip Xtreme KMW-340")).toBe("Klip Xtreme");
+  expect(detectBrand("Mouse BenQ Zowie EC2-CW")).toBe("Zowie");
+  expect(detectBrand("Mouse Gamer Pulsaria 5000")).toBeNull();
+  expect(detectBrand("Mouse Pulsar X2 V2 Mini")).toBe("Pulsar");
+  expect(detectBrand("Cooler CPU XYZ Thermax Pulsar 6 Blanco 120mm")).toBeNull();
+  expect(canonicalBrand("Pulsar")).toBe("Pulsar");
+  expect(detectBrand("Mouse HyperX Pulsefire Haste 2")).toBe("Kingston");
+});

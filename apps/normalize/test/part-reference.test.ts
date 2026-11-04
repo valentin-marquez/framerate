@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { socketText, toReference } from "../scripts/part-reference";
+import { mouseProblem, socketText, toReference } from "../scripts/part-reference";
 import { fillFromPartReference, type PartReference, pickPartReference } from "../src/part-reference";
 
 describe("referencia de coolers y gabinetes", () => {
@@ -67,5 +67,72 @@ describe("referencia de coolers y gabinetes", () => {
     );
     expect(out.specs).toEqual({ height_mm: 150, tdp_rating_w: 220 });
     expect(out.source).toEqual({ height_mm: "text", tdp_rating_w: "reference" });
+  });
+});
+
+describe("referencia de mouses (#218)", () => {
+  const url = "https://www.logitechg.com/g305";
+  const mouse = (row: Record<string, unknown>) => {
+    const ref = toReference("mouse", { brand: "Logitech", model: "G305 Lightspeed", source_url: url, ...row });
+    if (!ref) throw new Error("sin referencia");
+    return ref;
+  };
+  const size = { length_mm: 116.6, width_mm: 62.15, height_mm: 38.2 };
+
+  test("forma y mano sólo con valores cerrados, y lo que la ficha no publica queda vacío", () => {
+    expect(mouse({ ...size, shape: "rara", hand: "right" }).specs).toEqual({ ...size, hand: "right" });
+  });
+
+  test("la fila válida pasa, y sin alto también", () => {
+    expect(mouseProblem(mouse(size))).toBeNull();
+    expect(mouseProblem(mouse({ length_mm: 116.6, width_mm: 62.15 }))).toBeNull();
+  });
+
+  test("sin ficha oficial no se carga", () => {
+    expect(mouseProblem(mouse({ ...size, source_url: undefined }))).toBe("sin URL de ficha oficial");
+  });
+
+  test("los ejes cambiados se rechazan", () => {
+    expect(mouseProblem(mouse({ length_mm: 38.2, width_mm: 62.15, height_mm: 116.6 }))).toBe("medida fuera de rango");
+    expect(mouseProblem(mouse({ length_mm: 62, width_mm: 116, height_mm: 38 }))).toBe("el largo no supera al ancho");
+    expect(mouseProblem(mouse({ length_mm: 116, width_mm: 38, height_mm: 62 }))).toBe("el ancho no supera al alto");
+  });
+
+  test("un mouse vertical puede ser más alto que ancho", () => {
+    const lift = { length_mm: 108, width_mm: 71, height_mm: 70.5, shape: "vertical" };
+    expect(mouseProblem(mouse({ ...lift, height_mm: 90 }))).toBeNull();
+  });
+
+  const ref = { ...mouse({ ...size, weight_g: 99 }), aliases: ["g305"] };
+  const text = (specs: Record<string, number>) => ({
+    specs,
+    source: Object.fromEntries(Object.keys(specs).map((k) => [k, "text"])),
+  });
+
+  test("la referencia gana sobre la tienda", () => {
+    const { specs, source } = text({ weight_g: 105 });
+    const out = fillFromPartReference(specs, source, ref);
+    expect(out.specs.weight_g).toBe(99);
+    expect(out.source.weight_g).toBe("reference");
+  });
+
+  test("lo que la referencia no tiene conserva su valor y origen", () => {
+    const { specs, source } = text({ max_dpi: 12000 });
+    const out = fillFromPartReference(specs, source, ref);
+    expect(out.specs.max_dpi).toBe(12000);
+    expect(out.source.max_dpi).toBe("text");
+  });
+
+  test("en un cooler sigue ganando la tienda", () => {
+    const { specs, source } = text({ height_mm: 150 });
+    const cooler = { ...ref, category: "cpu_cooler", specs: { height_mm: 155 } };
+    expect(fillFromPartReference(specs, source, cooler).specs.height_mm).toBe(150);
+  });
+
+  test("calza por nombre o alias, también en las variantes de color, y lo desconocido no toma nada", () => {
+    expect(pickPartReference([ref], "g305")).toBe(ref);
+    expect(pickPartReference([ref], "G305 Lightspeed")).toBe(ref);
+    expect(pickPartReference([ref], "g502 x")).toBeUndefined();
+    expect(pickPartReference([ref], "")).toBeUndefined();
   });
 });

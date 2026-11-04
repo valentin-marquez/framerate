@@ -124,6 +124,21 @@ const BRANDS: Record<string, string[]> = {
   Coolmoon: ["coolmoon"],
   "WJ Coolman": ["wj coolman"],
   PCCOOLER: ["pccooler", "pc cooler"],
+  // Periféricos (#218): sin estas, el 67 % de las ofertas de mouse quedaba sin marca y sin referencia por modelo.
+  Logitech: ["logitech", "logitec"],
+  Razer: ["razer"],
+  Kensington: ["kensington"],
+  SteelSeries: ["steelseries", "steel series"],
+  Genius: ["genius"],
+  "Klip Xtreme": ["klip xtreme", "klipxtreme", "klip"],
+  "Royal Kludge": ["royal kludge"],
+  Glorious: ["glorious"],
+  // Sólo formas inequívocas en el título: "Pulsar" a secas es un modelo de cooler (XYZ Thermax Pulsar 6). Como marca
+  // declarada por la tienda se reconoce igual.
+  Pulsar: ["pulsar gaming", "pulsar x2", "pulsar xlite"],
+  Lamzu: ["lamzu"],
+  Zowie: ["zowie", "benq zowie"],
+  Alienware: ["alienware"],
 };
 
 /** Texto comparable: sin tildes, minúsculas, separadores unificados a un espacio. */

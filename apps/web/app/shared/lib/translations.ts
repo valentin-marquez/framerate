@@ -90,6 +90,10 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     buttons: "Botones",
     side_buttons: "Botones laterales",
     grip: "Agarre",
+    width_mm: "Ancho (mm)",
+    height_mm: "Alto (mm)",
+    shape: "Forma",
+    hand: "Mano",
     sockets: "Sockets",
     memory: "Memoria",
     type: "Tipo",
@@ -500,6 +504,10 @@ export const dictionaries: Record<Lang, Record<string, string>> = {
     buttons: "Buttons",
     side_buttons: "Side Buttons",
     grip: "Grip",
+    width_mm: "Width (mm)",
+    height_mm: "Height (mm)",
+    shape: "Shape",
+    hand: "Hand",
     sockets: "Sockets",
 
     // UI (Product Page)

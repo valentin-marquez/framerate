@@ -96,6 +96,9 @@ const SPECS: Record<string, [label: string, unit?: string]> = {
   buttons: ["Botones"],
   side_buttons: ["Botones laterales"],
   grip: ["Agarre"],
+  width_mm: ["Ancho", "mm"],
+  shape: ["Forma"],
+  hand: ["Mano"],
 };
 
 // Los códigos que escribe la referencia de ventiladores (#181); lo que no está aquí se muestra tal cual.
@@ -123,6 +126,14 @@ const VALUES: Record<string, string> = {
   palm: "Palma",
   claw: "Garra",
   fingertip: "Puntas de los dedos",
+  // `shape` y `hand` de mouses.
+  symmetrical: "Simétrica",
+  ergonomic: "Ergonómica",
+  asymmetrical: "Asimétrica",
+  vertical: "Vertical",
+  right: "Derecha",
+  left: "Izquierda",
+  ambidextrous: "Ambidiestro",
 };
 
 const number = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 2 });

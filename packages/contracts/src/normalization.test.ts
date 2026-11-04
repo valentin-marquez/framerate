@@ -22,6 +22,17 @@ describe("specs cerradas", () => {
     expect(specs.connection).toEqual({ enum: ["wired", "2.4ghz", "bluetooth", "2.4ghz_bluetooth", ""] });
     expect(specs.sensor).toEqual({ type: "string" });
     expect(specs.grip).toEqual({ enum: ["palm", "claw", "fingertip", ""] });
+    expect(specs.shape).toEqual({ enum: ["symmetrical", "ergonomic", "asymmetrical", "vertical", ""] });
+    expect(specs.hand).toEqual({ enum: ["right", "left", "ambidextrous", ""] });
+  });
+
+  test("forma y mano fuera del enum se descartan, y las medidas quedan en números", () => {
+    const { specs } = NormalizationOutputSchema("mouse").parse(
+      output({ shape: "muy ergonómico", hand: "RIGHT", length_mm: "116.6" }),
+    );
+    expect(specs.shape).toBeNull();
+    expect(specs.hand).toBe("right");
+    expect(specs.length_mm).toBe(116.6);
   });
 
   test("descarta el texto libre y normaliza lo válido", () => {

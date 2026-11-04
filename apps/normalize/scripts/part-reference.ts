@@ -3,13 +3,13 @@
  * por modelo con su URL); este script las pasa al formato de `listing_identity.specs` que leen las reglas de
  * compatibilidad, y las carga:
  *
- *   bun scripts/part-reference.ts build <cpu_cooler|case|motherboard> <filas.json>...   agrega a part-reference.json
+ *   bun scripts/part-reference.ts build <cpu_cooler|case|motherboard|mouse> <filas.json>...   agrega a part-reference.json
  *   bun scripts/part-reference.ts sql > /tmp/part-reference.sql
  *   cd ../../packages/database && bunx wrangler d1 execute framerate --remote --file /tmp/part-reference.sql
  *
  * Y para completar lo ya normalizado, sin llamar a Haiku:
  *   bunx wrangler d1 execute framerate --remote --json --command "select listing_id, version, category, brand,
- *     identity, specs, specs_source from listing_identity where category in ('cpu_cooler', 'case')" | bun
+ *     identity, specs, specs_source from listing_identity where category in ('cpu_cooler', 'case', 'mouse')" | bun
  *     ../../apps/normalize/scripts/part-reference.ts backfill > /tmp/part-backfill.sql
  */
 import type { IdentityValue } from "@framerate/contracts";
@@ -20,6 +20,25 @@ const DATA = new URL("./part-reference.json", import.meta.url).pathname;
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null);
 const LIGHTING = new Set(["none", "argb_5v", "rgb_12v", "proprietary"]);
 const BOARDS: Record<string, string> = { eatx: "E-ATX", atx: "ATX", matx: "mATX", itx: "ITX" };
+const MOUSE_SHAPES = new Set(["symmetrical", "ergonomic", "asymmetrical", "vertical"]);
+const MOUSE_HANDS = new Set(["right", "left", "ambidextrous"]);
+const inRange = (v: IdentityValue | undefined, min: number, max: number) =>
+  v === undefined || (typeof v === "number" && v >= min && v <= max);
+
+/**
+ * Por qué una fila de mouse no se carga; null si está bien. Las fichas nombran los ejes a su manera (Logitech llama
+ * "Height" al largo), así que un eje cambiado se detecta por las proporciones. Un vertical es más alto que ancho.
+ */
+export function mouseProblem(ref: PartReference): string | null {
+  if (!ref.source_url) return "sin URL de ficha oficial";
+  const { length_mm: length, width_mm: width, height_mm: height, shape } = ref.specs;
+  if (!inRange(length, 60, 200) || !inRange(width, 30, 150) || !inRange(height, 15, 150))
+    return "medida fuera de rango";
+  if (length !== undefined && width !== undefined && length <= width) return "el largo no supera al ancho";
+  if (shape !== "vertical" && width !== undefined && height !== undefined && width <= height)
+    return "el ancho no supera al alto";
+  return null;
+}
 
 /** "lga1851" → "LGA1851", "lga115x" → "LGA115X", "am5" → "AM5": el texto que lee `sockets()` de la compatibilidad. */
 export function socketText(list: unknown): string | null {
@@ -64,6 +83,13 @@ export function toReference(category: string, r: Record<string, unknown>): PartR
     specs.rgb_12v_headers = count(r.rgb_12v_headers);
     specs.usb_c_front_header = typeof r.usb_c_front_header === "boolean" ? r.usb_c_front_header : null;
     specs.bios_flashback = typeof r.bios_flashback === "boolean" ? r.bios_flashback : null;
+  } else if (category === "mouse") {
+    specs.length_mm = num(r.length_mm);
+    specs.width_mm = num(r.width_mm);
+    specs.height_mm = num(r.height_mm);
+    specs.weight_g = num(r.weight_g);
+    specs.shape = typeof r.shape === "string" && MOUSE_SHAPES.has(r.shape) ? r.shape : null;
+    specs.hand = typeof r.hand === "string" && MOUSE_HANDS.has(r.hand) ? r.hand : null;
   } else {
     const boards = Array.isArray(r.motherboards)
       ? r.motherboards.flatMap((b) => BOARDS[String(b).toLowerCase()] ?? [])
@@ -99,8 +125,8 @@ const q = (v: unknown) => (v === null || v === undefined ? "NULL" : `'${String(v
 const [mode, ...args] = process.argv.slice(2);
 if (import.meta.main && mode === "build") {
   const [category, ...paths] = args;
-  if (category !== "cpu_cooler" && category !== "case" && category !== "motherboard")
-    throw new Error("uso: build <cpu_cooler|case|motherboard> <filas.json>...");
+  if (category !== "cpu_cooler" && category !== "case" && category !== "motherboard" && category !== "mouse")
+    throw new Error("uso: build <cpu_cooler|case|motherboard|mouse> <filas.json>...");
   const kept = ((await Bun.file(DATA).exists()) ? JSON.parse(await Bun.file(DATA).text()) : []) as PartReference[];
   const rows = kept.filter((r) => r.category !== category);
   // El mismo modelo puede venir de varias fuentes (búsqueda y ficha bajada): la primera manda y las demás completan
@@ -110,6 +136,11 @@ if (import.meta.main && mode === "build") {
     for (const raw of JSON.parse(await Bun.file(path).text()) as Record<string, unknown>[]) {
       const ref = toReference(category, raw);
       if (!ref || Object.keys(ref.specs).length === 0) continue;
+      const problem = category === "mouse" ? mouseProblem(ref) : null;
+      if (problem) {
+        console.error(`rechazado ${ref.brand} ${ref.model}: ${problem}`);
+        continue;
+      }
       const k = `${partKey(ref.brand)}|${partKey(ref.model)}|${ref.specs.radiator_mm ?? ""}`;
       const prev = byKey.get(k);
       if (!prev) byKey.set(k, ref);
@@ -126,11 +157,13 @@ if (import.meta.main && mode === "build") {
   const mine = rows.filter((r) => r.category === category);
   const has = (k: string) => mine.filter((r) => r.specs[k] !== undefined).length;
   console.error(
-    category === "cpu_cooler"
-      ? `${mine.length} coolers; alto ${has("height_mm")}, radiador ${has("radiator_mm")}, sockets ${has("sockets")}`
-      : category === "motherboard"
-        ? `${mine.length} placas; velocidad ${has("memory_max_speed_mt_s")}, ventiladores ${has("chassis_fan_headers")}, ARGB ${has("argb_5v_headers")}, flashback ${has("bios_flashback")}`
-        : `${mine.length} gabinetes; GPU ${has("max_gpu_length_mm")}, cooler ${has("max_cpu_cooler_height_mm")}, radiadores ${has("radiator_support_mm")}, placas ${has("supported_motherboard_form_factors")}`,
+    category === "mouse"
+      ? `${mine.length} mouses; largo ${has("length_mm")}, ancho ${has("width_mm")}, alto ${has("height_mm")}, peso ${has("weight_g")}`
+      : category === "cpu_cooler"
+        ? `${mine.length} coolers; alto ${has("height_mm")}, radiador ${has("radiator_mm")}, sockets ${has("sockets")}`
+        : category === "motherboard"
+          ? `${mine.length} placas; velocidad ${has("memory_max_speed_mt_s")}, ventiladores ${has("chassis_fan_headers")}, ARGB ${has("argb_5v_headers")}, flashback ${has("bios_flashback")}`
+          : `${mine.length} gabinetes; GPU ${has("max_gpu_length_mm")}, cooler ${has("max_cpu_cooler_height_mm")}, radiadores ${has("radiator_support_mm")}, placas ${has("supported_motherboard_form_factors")}`,
   );
 } else if (import.meta.main && mode === "sql") {
   const rows = JSON.parse(await Bun.file(DATA).text()) as PartReference[];
@@ -181,5 +214,5 @@ if (import.meta.main && mode === "build") {
   }
   console.error(`${n} de ${rows.length} identidades completadas`);
 } else if (import.meta.main) {
-  throw new Error("uso: build <cpu_cooler|case> <filas.json>... | sql | backfill");
+  throw new Error("uso: build <cpu_cooler|case|motherboard|mouse> <filas.json>... | sql | backfill");
 }
