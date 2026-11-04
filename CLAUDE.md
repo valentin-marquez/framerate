@@ -84,7 +84,7 @@ Logs: los Workers escriben JSON estructurado en Workers Logs (`feature`, `store`
 
 Claude: si falta algo de esta lista, completarlo es lo primero de la sesión, antes de tomar un issue. Se comprueba
 rápido: `ls node_modules apps/server/.dev.vars`, `tea logins ls` (tiene que haber un login a `git.nozz.skin`) y
-`bunx wrangler whoami` (tiene que listar la cuenta `3f50a4a123ebcbcb917dababff3ef8b5`). Si falta, guiar a la persona
+`bunx wrangler whoami` (tiene que listar la cuenta `3f50a4a123ebcbcb917dababff3ef8b5`) y `bunx --bun openspec store list` (tiene que estar `framerate-specs`). Si falta, guiar a la persona
 paso a paso; los secretos los escribe ella, nunca pegados en el chat.
 
 1. `bun install` (instala también los hooks de git).
@@ -104,6 +104,9 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
    `ponytail` y `playwright`. Las skills del proyecto (`deploy`, `prod-health`, `referencias-composicion`) están en
    `.claude/skills/`; los hooks (formateo con Biome, migraciones protegidas) en `.claude/hooks/`. Correr
    `/doctor prompt-audit` para detectar referencias rotas entre CLAUDE.md y las skills.
+7. Specs (repo privado, hay que ser colaborador): `git clone https://git.nozz.skin/valentin/framerate-specs.git
+   ../framerate-specs` y `bunx --bun openspec store register ../framerate-specs`. OpenSpec manda telemetría anónima;
+   se apaga con `OPENSPEC_TELEMETRY=0`.
 
 ## Cómo trabajar aquí
 
@@ -129,6 +132,14 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
   milestone, y se suma al Roadmap. El [proyecto](https://git.nozz.skin/valentin/framerate/projects/1) muestra lo mismo
   en columnas por milestone; la API de Forgejo 8 no tiene proyectos, así que un issue nuevo se agrega desde la web (cae
   en Backlog) y se mueve a la columna de su milestone.
+- **Specs con OpenSpec:** es el medio oficial para especificar cambios. Tras reclamar el issue: `/opsx:explore` para
+  pensarlo, `/opsx:propose` para la propuesta, `/opsx:apply` para implementar y `/opsx:archive` al terminar. Un arreglo
+  chico que no cambia comportamiento no necesita spec. Las specs viven en el store privado `framerate-specs`, nunca en
+  este repo (lo commiteado queda público en GitHub), así que no debe existir una carpeta `openspec/` aquí:
+  - Las skills escriben `openspec`, pero aquí no está en el PATH: correr siempre `bunx --bun openspec … --store
+    framerate-specs`.
+  - El store es otro repo: antes de empezar `git -C ../framerate-specs pull`, y al terminar cada tanda commit y push
+    ahí.
 - **Skills por defecto:** casi siempre usar `/ponytail:ponytail` (la solución más simple que funcione) y sus subskills: `/ponytail:ponytail-review` (revisar sobreingeniería), `/ponytail:ponytail-audit` (auditar el repo entero), `/ponytail:ponytail-debt`, `/ponytail:ponytail-gain`, `/ponytail:ponytail-help`.
 - **Maquetación y UI nueva:** usar `/referencias-composicion` antes de maquetar una página, sección o componente (busca referencias reales y propone 2–3 layouts).
 - **Comentarios: los mínimos.** Sólo el porqué no obvio (una restricción, una trampa, una decisión). Nada que repita lo que dice el código ni bloques de documentación largos. No agregar comentarios de cabecera por costumbre.
@@ -156,5 +167,6 @@ paso a paso; los secretos los escribe ella, nunca pegados en el chat.
   `docs/stores.md` (reclamo de tiendas), `docs/store-candidates.md` (qué tiendas integrar y cómo).
 - [Issues de Forgejo](https://git.nozz.skin/valentin/framerate/issues) y su Roadmap (#67): pendientes concretos.
   #196: registro de deploys. `FUTURE.md`: visión de producto.
-- Specs, planes, investigaciones y propuestas de composición van a un issue con la label `spec` (o como comentario
-  del issue que resuelven), no a archivos del repo: lo que se commitea queda público en GitHub.
+- Specs y planes van a OpenSpec, en el store privado `framerate-specs` (ver "Cómo trabajar aquí"). Investigaciones y
+  propuestas de composición van a un issue con la label `spec` (o como comentario del issue que resuelven), no a
+  archivos del repo: lo que se commitea queda público en GitHub.
