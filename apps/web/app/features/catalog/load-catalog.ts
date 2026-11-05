@@ -1,4 +1,11 @@
-import { categoryFromSlug, type Facet, facetsFor, type ProductSort, SPEC_FILTER_PATTERN } from "@framerate/contracts";
+import {
+  categoryFromSlug,
+  type Facet,
+  facetsFor,
+  MmRangeParamSchema,
+  type ProductSort,
+  SPEC_FILTER_PATTERN,
+} from "@framerate/contracts";
 import { categoriesService } from "~/features/category/services/categories";
 import { productsService } from "~/features/product/services/products";
 import { isRateLimitError } from "~/shared/lib/api";
@@ -8,6 +15,9 @@ export type CatalogSort = (typeof CATALOG_SORTS)[number] & ProductSort;
 
 /** Cuántos productos por página se pueden pedir; el primero es el de siempre. */
 export const PAGE_SIZES = [24, 12, 48] as const;
+
+// Un rango mal escrito en la URL haría fallar la consulta entera (400): se descarta.
+const validRange = (value: string | null) => (value && MmRangeParamSchema.safeParse(value).success ? value : undefined);
 
 const number = (value: string | null) => (value && Number.isFinite(Number(value)) ? Number(value) : undefined);
 
@@ -63,6 +73,8 @@ export async function loadCatalog(url: URL, category?: string, view?: CatalogVie
     max_price: maxPrice,
     spec,
     deals: view === "drops" || undefined,
+    fit_length: validRange(params.get("fit_length")),
+    fit_width: validRange(params.get("fit_width")),
   };
 
   try {

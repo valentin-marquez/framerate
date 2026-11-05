@@ -1,5 +1,7 @@
 import { useLocation, useNavigation, useSearchParams } from "react-router";
 import { Pagination, ProductGrid } from "~/features/explore/components";
+import { MouseFitNotice } from "~/features/mouse-fit/components/mouse-fit-notice";
+import { MouseFitPrompt } from "~/features/mouse-fit/components/mouse-fit-prompt";
 import { WithAd } from "~/shared/components/ad-slot";
 import { enterClass } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
@@ -65,6 +67,14 @@ export function CatalogView({ data }: { data: CatalogData }) {
 
       <div className="flex flex-col gap-3">
         <ActiveChips brands={brands} definitions={categoryFacets(category)} />
+        {category === "mouses" && (
+          <>
+            <MouseFitNotice total={meta.total} />
+            <div className="lg:hidden">
+              <MouseFitPrompt variant="line" />
+            </div>
+          </>
+        )}
         {/* El orden y la paginación van donde están las entradas; los filtros viven en el riel (o en la hoja, en teléfono). */}
         <CatalogToolbar
           total={meta.total}

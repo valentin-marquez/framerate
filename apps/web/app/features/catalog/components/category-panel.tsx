@@ -1,5 +1,6 @@
 import { CATEGORY_NAV_LABELS, type Category, categoryFromSlug } from "@framerate/contracts";
 import { CategoryIcon } from "~/features/category/components/category-icon";
+import { MouseFitPrompt } from "~/features/mouse-fit/components/mouse-fit-prompt";
 import { SearchField } from "~/features/search/components/search-field";
 import { Button } from "~/shared/components/primitives/button";
 import type { CatalogData } from "../load-catalog";
@@ -35,6 +36,7 @@ export function CategoryPanel({ data }: { data: CatalogData }) {
           {data.meta.total.toLocaleString("es-CL")}
         </span>
       </div>
+      {id === "mouse" && <MouseFitPrompt variant="card" />}
       <SearchField withinCategory className="shrink-0" placeholder={id ? `Buscar ${SEARCH_NOUN[id]}` : undefined} />
       {/* El desvanecido de abajo avisa que hay más campos sin poner una barra de scroll gruesa. */}
       <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto overflow-x-hidden [mask-image:linear-gradient(to_bottom,black_calc(100%-24px),transparent)]">
@@ -43,7 +45,9 @@ export function CategoryPanel({ data }: { data: CatalogData }) {
           <Button
             variant="outline"
             className="mt-4 w-full"
-            onClick={() => update({ brand: null, min_price: null, max_price: null, spec: null })}
+            onClick={() =>
+              update({ brand: null, min_price: null, max_price: null, spec: null, fit_length: null, fit_width: null })
+            }
           >
             Limpiar {count} {count === 1 ? "filtro" : "filtros"}
           </Button>

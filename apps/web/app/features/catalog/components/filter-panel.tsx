@@ -16,7 +16,8 @@ export function activeFilterCount(params: URLSearchParams) {
   return (
     params.getAll("brand").length +
     params.getAll("spec").length +
-    (params.get("min_price") || params.get("max_price") ? 1 : 0)
+    (params.get("min_price") || params.get("max_price") ? 1 : 0) +
+    (params.get("fit_length") || params.get("fit_width") ? 1 : 0)
   );
 }
 

@@ -3,6 +3,7 @@ import {
   IconCookie,
   IconDatabase,
   IconGlobe,
+  IconHandStop,
   IconLock,
   IconShield,
   IconUserCheck,
@@ -32,7 +33,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export default function Privacy() {
-  const lastUpdate = "16 de octubre de 2026";
+  const lastUpdate = "5 de noviembre de 2026";
 
   return (
     <div className="container mx-auto max-w-4xl px-6 py-12 lg:py-20">
@@ -87,6 +88,18 @@ export default function Privacy() {
         </div>
 
         <section className="px-4 space-y-8">
+          <div>
+            <h2 className="text-title-h6 mb-3 flex items-center gap-2">
+              <IconHandStop className="size-5 text-primary" /> Medidas de tu mano
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Si usas la orientación de mouses, tus medidas se quedan en tu navegador; con cuenta, se guardan en tu
+              perfil hasta que las borres o des de baja la cuenta. Si además nos cuentas qué mouse usas y qué tal te
+              queda, guardamos esa respuesta con tus medidas y tu agarre para mejorar la orientación, sin tu nombre, tu
+              cuenta ni tu IP, así que después no podemos asociarla a ti ni borrarla.
+            </p>
+          </div>
+
           <div>
             <h2 className="text-title-h6 mb-3 flex items-center gap-2">
               <IconLock className="size-5 text-primary" /> Sesión y seguridad

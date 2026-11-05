@@ -21,6 +21,9 @@ export interface ProductFilters {
   spec?: string[];
   /** Sólo productos bajo su precio habitual. */
   deals?: boolean;
+  /** Rangos en mm de un mouse: `106-122`. */
+  fit_length?: string;
+  fit_width?: string;
 }
 
 /** La API no acepta búsquedas de menos de 2 caracteres. */
@@ -39,6 +42,8 @@ export function listParams(filters: ProductFilters): Record<string, string | str
   if (filters.sort) params.sort = filters.sort;
   if (filters.spec?.length) params.spec = filters.spec;
   if (filters.deals) params.deals = "1";
+  if (filters.fit_length) params.fit_length = filters.fit_length;
+  if (filters.fit_width) params.fit_width = filters.fit_width;
   return params;
 }
 

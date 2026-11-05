@@ -1,4 +1,4 @@
-import { type BrandCount, type FacetDefinition, facetOptionLabel } from "@framerate/contracts";
+import { type BrandCount, type FacetDefinition, facetOptionLabel, MmRangeParamSchema } from "@framerate/contracts";
 import { IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatCLP } from "~/shared/utils/format";
@@ -35,6 +35,15 @@ export function ActiveChips({ brands, definitions }: { brands: BrandCount[]; def
     const label = `${facet.label}: ${facetOptionLabel(facet, specValue(token, facet.key) ?? "")}`;
     chips.push({ label, clear: { spec: specs.filter((t) => t !== token) } });
   }
+  // Sólo lo que el catálogo aplicó: un rango mal escrito en la URL se ignora.
+  const fits = (
+    [
+      ["largo", MmRangeParamSchema.safeParse(params.get("fit_length"))],
+      ["ancho", MmRangeParamSchema.safeParse(params.get("fit_width"))],
+    ] as const
+  ).flatMap(([name, r]) => (r.success ? [`${name} ${r.data.min} a ${r.data.max} mm`] : []));
+  if (fits.length > 0)
+    chips.push({ label: `Tu rango: ${fits.join(", ")}`, clear: { fit_length: null, fit_width: null } });
   if (params.get("q")) chips.push({ label: `“${params.get("q")}”`, clear: { q: null } });
 
   const remove = (labels: string[], change: Parameters<typeof update>[0]) => {
@@ -47,7 +56,15 @@ export function ActiveChips({ brands, definitions }: { brands: BrandCount[]; def
     );
     update(change);
   };
-  const clearAll = { brand: null, min_price: null, max_price: null, q: null, spec: null };
+  const clearAll = {
+    brand: null,
+    min_price: null,
+    max_price: null,
+    q: null,
+    spec: null,
+    fit_length: null,
+    fit_width: null,
+  };
 
   // Los fantasmas vuelven a su posición anterior entre los chips que siguen activos.
   type Item =
