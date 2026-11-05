@@ -22,6 +22,7 @@ import {
   reportsRoutes,
   translationFeedbackRoutes,
 } from "@/features/moderation/moderation.routes";
+import { handProfileRoutes, mouseFitRoutes } from "@/features/mouse-fit/mouse-fit.routes";
 import { pipelineAdminRoutes } from "@/features/pipeline-admin/pipeline-admin.routes";
 import { quotesRoutes } from "@/features/quotes/quotes.routes";
 import { myStoresRoutes } from "@/features/stores/my-stores.routes";
@@ -111,6 +112,7 @@ export function createApp() {
   meApi.use("*", requireUser);
   meApi.route("/merge", mergeRoutes);
   meApi.route("/stores", myStoresRoutes);
+  meApi.route("/hand", handProfileRoutes);
   meApi.route("/", meRoutes);
 
   const claimsApi = new Hono<AppEnv>();
@@ -129,6 +131,12 @@ export function createApp() {
   supportApi.use("*", rateLimit);
   supportApi.use("*", optionalUser);
   supportApi.route("/", supportRoutes);
+
+  const mouseFitApi = new Hono<AppEnv>();
+  mouseFitApi.use("*", credentialedCors);
+  mouseFitApi.use("*", rateLimit);
+  mouseFitApi.use("*", optionalUser);
+  mouseFitApi.route("/", mouseFitRoutes);
 
   const quotesApi = new Hono<AppEnv>();
   quotesApi.use("*", credentialedCors);
@@ -196,6 +204,7 @@ export function createApp() {
   app.route("/v1/claims", claimsApi);
   app.route("/v1/clicks", clicksApi);
   app.route("/v1/support", supportApi);
+  app.route("/v1/mouse-fit", mouseFitApi);
   app.route("/v1/quotes", quotesApi);
   app.route("/v1/reports", reportsApi);
   app.route("/v1/translation-feedback", translationFeedbackApi);

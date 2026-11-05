@@ -11,6 +11,7 @@ export * from "./ingest";
 export * from "./match-review";
 export * from "./mcp";
 export * from "./moderation";
+export * from "./mouse-fit";
 export * from "./normalization";
 export * from "./pipeline";
 export * from "./pipeline-admin";

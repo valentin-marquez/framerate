@@ -86,7 +86,7 @@ export function productImageUrl(
 /** Filtros del listado que también acotan las facetas. */
 type ListFilters = Pick<
   ProductListQuery,
-  "category" | "brand" | "store" | "q" | "minPrice" | "maxPrice" | "spec" | "deals"
+  "category" | "brand" | "store" | "q" | "minPrice" | "maxPrice" | "spec" | "deals" | "fit_length" | "fit_width"
 >;
 
 /**
@@ -118,7 +118,7 @@ const SPEC_SOURCED = new Set(
  * ponytail: subconsulta por producto sobre `listing_identity`; cuando `products.specs` se llene fundido (#153 fase 4),
  * leer de ahí como `attributes`.
  */
-function specValue(key: string) {
+function specValue(key: string, origins = sql`('text', 'reference')`) {
   // Literal y no parámetro: la ruta se repite muchas veces por consulta y D1 acepta 100 variables. Las claves vienen
   // validadas contra `CATEGORY_FACETS` (`SpecFilterSchema` sólo deja letras, dígitos y _).
   const path = sql.lit(`$.${key}`);
@@ -135,7 +135,7 @@ function specValue(key: string) {
   const value =
     key === "socket" ? sql`(CASE WHEN ${raw} GLOB '[0-9][0-9][0-9][0-9]' THEN 'LGA' || ${raw} ELSE ${raw} END)` : raw;
   return sql<string | null>`(SELECT ${value} FROM listings l JOIN listing_identity i ON i.listing_id = l.id
-    WHERE l.product_id = p.id AND l.is_active = 1 AND json_extract(i.specs_source, ${path}) IN ('text', 'reference')
+    WHERE l.product_id = p.id AND l.is_active = 1 AND json_extract(i.specs_source, ${path}) IN ${origins}
       AND i.version = (SELECT max(x.version) FROM listing_identity x WHERE x.listing_id = l.id)
       AND ${value} IS NOT NULL
     GROUP BY 1 ORDER BY count(*) DESC, 1 LIMIT 1)`;
@@ -208,6 +208,18 @@ function filteredQuery(
   // Baja de al menos 3 % bajo el precio habitual, en enteros para no depender de flotantes.
   if (filters.deals)
     base = base.where(sql<boolean>`p.reference_price IS NOT NULL AND p.best_price * 100 <= p.reference_price * 97`);
+
+  // A diferencia de las facetas, lo desconocido no pasa: no se le recomienda a nadie un mouse que no se sabe cuánto mide.
+  if (filters.category === "mouse") {
+    for (const [key, range] of [
+      ["length_mm", filters.fit_length],
+      ["width_mm", filters.fit_width],
+    ] as const) {
+      if (!range) continue;
+      const measured = specValue(key, sql`('reference')`);
+      base = base.where(sql<boolean>`CAST(${measured} AS REAL) BETWEEN ${range.min} AND ${range.max}`);
+    }
+  }
 
   const unknown: ReturnType<typeof specValue>[] = [];
   for (const [key, values] of specGroups(filters.spec)) {

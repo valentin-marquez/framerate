@@ -126,14 +126,18 @@ beforeAll(async () => {
   await identity(gpu8, 1, { memory_type: "GDDR6" }, { memory_type: "knowledge" });
   // El de 2,4 GHz y Bluetooth cuenta en las dos opciones.
   const mice: [string, Record<string, unknown>][] = [
-    ["Mouse Dual", { connection: "2.4ghz_bluetooth", grip: "claw", length_mm: 118, hand: "ambidextrous" }],
+    [
+      "Mouse Dual",
+      { connection: "2.4ghz_bluetooth", grip: "claw", length_mm: 118, width_mm: 62, hand: "ambidextrous" },
+    ],
     ["Mouse BT", { connection: "bluetooth", grip: "palm", length_mm: 125, hand: "right" }],
-    ["Mouse Cable", { connection: "wired", grip: "hybrid" }],
+    ["Mouse Cable", { connection: "wired", grip: "hybrid", width_mm: 61 }],
   ];
   for (const [name, specs] of mice) {
     const listing = await seed(name, "mouse", "{}", 20_000, null);
     // Las medidas y la mano vienen de la referencia del modelo (#218), no del texto de la tienda.
-    const source = (k: string) => (k === "length_mm" || k === "hand" ? "reference" : "text");
+    const source = (k: string) =>
+      k === "length_mm" || k === "hand" || (k === "width_mm" && name === "Mouse Dual") ? "reference" : "text";
     await identity(listing, 1, specs, Object.fromEntries(Object.keys(specs).map((k) => [k, source(k)])));
   }
   // Un switch en texto libre (de antes del enum) no es opción, aunque el producto siga en el catálogo.
@@ -340,6 +344,15 @@ describe("facetas", () => {
       ["Mouse Dual", "match"],
       ["Mouse Cable", "unknown"],
     ]);
+  });
+
+  test("el rango de un mouse sólo trae los que tienen esa medida de referencia, sin desconocidos", async () => {
+    const names = async (q: string) => (await list(`category=mouse&${q}`)).items.map((p) => p.name);
+    expect(await names("fit_length=110-120")).toEqual(["Mouse Dual"]);
+    expect(await names("fit_length=120-130")).toEqual(["Mouse BT"]);
+    expect(await names("fit_length=110-120&spec=connection:BLUETOOTH")).toEqual(["Mouse Dual"]);
+    // Mouse Cable tiene ese ancho, pero leído de la tienda.
+    expect(await names("fit_width=55-65")).toEqual(["Mouse Dual"]);
   });
 
   test("un mouse ambidiestro sale para las dos manos", async () => {

@@ -11,6 +11,7 @@ import { currentUser } from "@/features/identity/middleware";
 import { sendEmailInBackground } from "@/shared/email";
 import { AppError } from "@/shared/http/errors";
 import { timingSafeEqual } from "@/shared/http/middleware";
+import { verifyTurnstile } from "@/shared/http/turnstile";
 import {
   addMessage,
   createTicket,
@@ -27,23 +28,9 @@ import {
  * sola vez al crear el ticket. Un usuario sancionado igual puede escribir: puede querer apelar.
  */
 
-const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-
 const hex = (bytes: ArrayBuffer | Uint8Array) =>
   Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
 const sha256 = async (value: string) => hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
-
-async function verifyTurnstile(c: Context<AppEnv>, secret: string, token: string | undefined) {
-  if (token) {
-    const form = new URLSearchParams({ secret, response: token });
-    const ip = c.req.header("cf-connecting-ip") ?? c.req.header("x-client-ip");
-    if (ip) form.set("remoteip", ip);
-    const res = await fetch(SITEVERIFY_URL, { method: "POST", body: form });
-    const result = (await res.json().catch(() => ({}))) as { success?: boolean };
-    if (result.success) return;
-  }
-  throw new AppError(400, "turnstile_failed", "No pudimos verificar que no eres un robot; intenta de nuevo");
-}
 
 /** Sin acceso responde 404, igual que si no existiera: no revela qué tickets hay. */
 async function accessibleTicket(c: Context<AppEnv>, token: string | undefined) {

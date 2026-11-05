@@ -510,6 +510,24 @@ export interface QuotesTable {
   updated_at: string;
 }
 
+export interface HandProfilesTable {
+  user_id: string;
+  length_mm: number;
+  width_mm: number;
+  grip: "palm" | "claw" | "fingertip";
+  updated_at: string;
+}
+
+export interface MouseFitReportsTable {
+  id: Generated<number>;
+  hand_length_mm: number;
+  hand_width_mm: number;
+  grip: "palm" | "claw" | "fingertip";
+  product_id: number | null;
+  fit: "small" | "right" | "large";
+  reported_on: string;
+}
+
 export interface QuoteLikesTable {
   quote_id: number;
   user_id: string;
@@ -810,6 +828,8 @@ export interface Database {
   comments: CommentsTable;
   comment_likes: CommentLikesTable;
   quote_likes: QuoteLikesTable;
+  hand_profiles: HandProfilesTable;
+  mouse_fit_reports: MouseFitReportsTable;
   reports: ReportsTable;
   moderation_actions: ModerationActionsTable;
   translation_feedback: TranslationFeedbackTable;

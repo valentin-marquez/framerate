@@ -30,6 +30,7 @@ export const USER_REFERENCES: Readonly<Record<string, readonly string[]>> = {
   support_tickets: ["user_id", "assigned_to"],
   support_messages: ["author_id"],
   outbound_clicks: ["user_id"],
+  hand_profiles: ["user_id"],
 };
 
 /** Una fusión pendiente por usuario: empezar otra reemplaza la anterior. */

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CategorySchema } from "./categories";
 import { SpecFilterSchema } from "./facets";
+import { MmRangeParamSchema } from "./mouse-fit";
 
 export * from "./crawl-schedule";
 
@@ -129,6 +130,9 @@ export const ProductListQuerySchema = z.object({
   maxPrice: z.coerce.number().int().min(0).optional(),
   /** Filtros por especificación (`spec=vram:12`, repetible): ver facets.ts. */
   spec: z.preprocess((v) => (v === undefined ? undefined : [v].flat()), z.array(SpecFilterSchema).max(20)).optional(),
+  /** Rango en mm de un mouse (`fit_length=106-122`): sólo los que tienen esa medida de referencia, sin desconocidos. */
+  fit_length: MmRangeParamSchema.optional(),
+  fit_width: MmRangeParamSchema.optional(),
   /** Sólo productos bajo su precio habitual (página de ofertas). */
   deals: z
     .enum(["1", "true"])
