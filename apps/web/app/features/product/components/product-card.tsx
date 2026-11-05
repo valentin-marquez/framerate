@@ -214,7 +214,7 @@ export function ProductCard({ product, priority = false, trending = false, class
           <div className="flex flex-wrap items-baseline gap-x-2">
             {bestPrice ? (
               <>
-                <span className="font-semibold text-foreground tabular-nums">{formatCLP(bestPrice)}</span>
+                <span className="text-foreground text-title-h6 tabular-nums">{formatCLP(bestPrice)}</span>
                 {drop && product.referencePrice && (
                   <s className="text-muted-foreground text-xs tabular-nums" title="Precio habitual">
                     {formatCLP(product.referencePrice)}
