@@ -17,7 +17,7 @@ import { mouseFitClient } from "../services/mouse-fit";
 import { HandGuide } from "./hand-guide";
 import { MouseFitReport } from "./mouse-fit-report";
 
-const GRIP_LABELS: Record<Hand["grip"], string> = { palm: "Palma", claw: "Garra", fingertip: "Puntas" };
+const GRIP_LABELS: Record<Hand["grip"], string> = { palm: "Palm", claw: "Claw", fingertip: "Fingertip" };
 
 const typed = (value: string) => (value.trim() === "" ? Number.NaN : Number(value.replace(",", ".")));
 

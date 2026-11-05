@@ -392,7 +392,7 @@ export const CATEGORY_FACETS: Record<Category, FacetDefinition[]> = {
       key: "grip",
       label: "Agarre",
       source: "specs",
-      values: { PALM: "Palma", CLAW: "Garra", FINGERTIP: "Puntas de los dedos" },
+      values: { PALM: "Palm", CLAW: "Claw", FINGERTIP: "Fingertip" },
       order: ["PALM", "CLAW", "FINGERTIP"],
       closed: true,
     },

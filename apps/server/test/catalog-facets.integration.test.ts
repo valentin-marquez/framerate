@@ -366,8 +366,8 @@ describe("facetas", () => {
   test("el agarre de un mouse es una faceta cerrada: un valor fuera de la lista no es opción", async () => {
     expect(await facet("mouses", "grip")).toMatchObject({
       values: [
-        { value: "PALM", label: "Palma", count: 1 },
-        { value: "CLAW", label: "Garra", count: 1 },
+        { value: "PALM", label: "Palm", count: 1 },
+        { value: "CLAW", label: "Claw", count: 1 },
       ],
       unknownCount: 0,
     });

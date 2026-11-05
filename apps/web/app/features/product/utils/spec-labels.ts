@@ -123,9 +123,9 @@ const VALUES: Record<string, string> = {
   bluetooth: "Bluetooth",
   "2.4ghz_bluetooth": "2,4 GHz y Bluetooth",
   // `grip` de mouses.
-  palm: "Palma",
-  claw: "Garra",
-  fingertip: "Puntas de los dedos",
+  palm: "Palm",
+  claw: "Claw",
+  fingertip: "Fingertip",
   // `shape` y `hand` de mouses.
   symmetrical: "Simétrica",
   ergonomic: "Ergonómica",
