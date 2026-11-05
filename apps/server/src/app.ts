@@ -135,7 +135,6 @@ export function createApp() {
   const mouseFitApi = new Hono<AppEnv>();
   mouseFitApi.use("*", credentialedCors);
   mouseFitApi.use("*", rateLimit);
-  mouseFitApi.use("*", optionalUser);
   mouseFitApi.route("/", mouseFitRoutes);
 
   const quotesApi = new Hono<AppEnv>();

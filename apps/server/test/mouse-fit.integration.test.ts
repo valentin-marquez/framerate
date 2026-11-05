@@ -15,6 +15,7 @@ let turnstilePasses = true;
 
 const hand = { length_mm: 190, width_mm: 95, grip: "palm" };
 const report = { ...hand, product_slug: "mouse-uno", fit: "right" };
+const valid = { ...report, turnstileToken: "x" };
 
 beforeAll(async () => {
   ({ d1, db, dispose } = await createTestD1());
@@ -78,23 +79,22 @@ describe("perfil de mano", () => {
 });
 
 describe("casos de calibración", () => {
-  test("sin sesión exige Turnstile", async () => {
+  test("sin Turnstile válido no se guarda", async () => {
     turnstilePasses = false;
-    expect((await call("anon", "/v1/mouse-fit/reports", "POST", { ...report, turnstileToken: "x" })).status).toBe(400);
+    expect((await call("anon", "/v1/mouse-fit/reports", "POST", valid)).status).toBe(400);
     expect((await call("anon", "/v1/mouse-fit/reports", "POST", report)).status).toBe(400);
     expect(await reports()).toHaveLength(0);
   });
 
   test("con Turnstile válido se guarda", async () => {
-    const res = await call("anon", "/v1/mouse-fit/reports", "POST", { ...report, turnstileToken: "x" });
-    expect(res.status).toBe(204);
+    expect((await call("anon", "/v1/mouse-fit/reports", "POST", valid)).status).toBe(204);
     expect(await reports()).toHaveLength(1);
   });
 
-  test("con sesión no pide Turnstile, y el caso no guarda nada que identifique", async () => {
-    turnstilePasses = false;
+  test("con sesión también exige Turnstile, y el caso no guarda nada que identifique", async () => {
     const userId = await createUser(env, db, { name: "Mano" });
-    expect((await call(userId, "/v1/mouse-fit/reports", "POST", report)).status).toBe(204);
+    expect((await call(userId, "/v1/mouse-fit/reports", "POST", report)).status).toBe(400);
+    expect((await call(userId, "/v1/mouse-fit/reports", "POST", valid)).status).toBe(204);
     const [row] = await reports();
     expect(Object.keys(row ?? {}).sort()).toEqual(
       ["fit", "grip", "hand_length_mm", "hand_width_mm", "id", "product_id", "reported_on"].sort(),
@@ -104,14 +104,14 @@ describe("casos de calibración", () => {
 
   test("un producto que no es mouse se rechaza", async () => {
     const userId = await createUser(env, db, { name: "Mano" });
-    const res = await call(userId, "/v1/mouse-fit/reports", "POST", { ...report, product_slug: "gpu-una" });
+    const res = await call(userId, "/v1/mouse-fit/reports", "POST", { ...valid, product_slug: "gpu-una" });
     expect(res.status).toBe(404);
     expect(await reports()).toHaveLength(0);
   });
 
   test("si el producto se borra, el caso queda sin producto", async () => {
     const userId = await createUser(env, db, { name: "Mano" });
-    await call(userId, "/v1/mouse-fit/reports", "POST", report);
+    await call(userId, "/v1/mouse-fit/reports", "POST", valid);
     await db.query.deleteFrom("products").where("slug", "=", "mouse-uno").execute();
     expect(await reports()).toMatchObject([{ product_id: null }]);
   });

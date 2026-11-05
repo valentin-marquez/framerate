@@ -30,14 +30,15 @@ export const handProfileRoutes = new Hono<AppEnv>()
     return c.body(null, 204);
   });
 
-/** `/v1/mouse-fit`: casos de calibración. Con sesión o sin ella, nada del caso identifica a quien lo envió. */
+/**
+ * `/v1/mouse-fit`: casos de calibración. Turnstile para todos y sin leer la sesión: el endpoint no sabe quién llama, y
+ * una cuenta (aunque esté baneada) no puede saltarse la verificación para sesgar la calibración.
+ */
 export const mouseFitRoutes = new Hono<AppEnv>().post("/reports", async (c) => {
   const input = MouseFitReportRequestSchema.parse(await c.req.json().catch(() => ({})));
-  if (!c.get("user")) {
-    const secret = c.env.TURNSTILE_SECRET_KEY;
-    if (!secret) throw new AppError(503, "mouse_fit_unavailable", "Esto no está disponible por ahora");
-    await verifyTurnstile(c, secret, input.turnstileToken);
-  }
+  const secret = c.env.TURNSTILE_SECRET_KEY;
+  if (!secret) throw new AppError(503, "mouse_fit_unavailable", "Esto no está disponible por ahora");
+  await verifyTurnstile(c, secret, input.turnstileToken);
   const product = await c.var.db.query
     .selectFrom("products")
     .select("id")

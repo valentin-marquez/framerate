@@ -69,6 +69,15 @@ describe("confirmación y sesión", () => {
 });
 
 describe("la baja", () => {
+  test("borra las medidas de la mano, aunque la fila de la cuenta se conserve", async () => {
+    await db.query
+      .insertInto("hand_profiles")
+      .values({ user_id: ana, length_mm: 190, width_mm: 95, grip: "palm", updated_at: NOW })
+      .execute();
+    expect((await deleteMe(ana)).status).toBe(204);
+    expect(await all(db, "hand_profiles")).toHaveLength(0);
+  });
+
   test("anonimiza la cuenta, cierra sus sesiones y la desvincula de los proveedores", async () => {
     await db.query
       .updateTable("users")
