@@ -8754,7 +8754,7 @@
       "shape": "symmetrical"
     },
     "aliases": ["sabre v2 pro ultralight wireless"],
-    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g007-ww/undefined"
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g001-ww/sabre-v2-pro-ultralight-wireless-gaming-mouse-white-ch-931g001-ww"
   },
   {
     "category": "mouse",
@@ -9596,6 +9596,18 @@
   {
     "category": "mouse",
     "brand": "Kingston",
+    "model": "Pulsefire Haste 2 Core Wireless",
+    "specs": {
+      "length_mm": 124.3,
+      "width_mm": 66.8,
+      "height_mm": 38.2
+    },
+    "aliases": ["pulsefire haste 2 core", "haste 2 core"],
+    "source_url": "https://hyperx.com/products/hyperx-pulsefire-haste-2-core-wireless-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kingston",
     "model": "Pulsefire Haste 2 Wireless",
     "specs": {
       "length_mm": 124.3,
@@ -9886,7 +9898,7 @@
       "weight_g": 110,
       "hand": "ambidextrous"
     },
-    "aliases": ["g903 lightspeed", "g903 hero", "g903 hero lightspeed"],
+    "aliases": ["g903", "g903 lightspeed", "g903 hero", "g903 hero lightspeed"],
     "source_url": "https://www.logitechg.com/en-us/shop/p/g903-hero-wireless-gaming-mouse"
   },
   {
@@ -9910,7 +9922,7 @@
       "weight_g": 125,
       "shape": "vertical"
     },
-    "aliases": ["lift", "lift vertical", "vertical lift ergonomic", "lift left", "lift left vertical"],
+    "aliases": [],
     "source_url": "https://www.logitech.com/en-us/shop/p/lift-vertical-ergonomic-mouse-mac"
   },
   {
@@ -9918,10 +9930,21 @@
     "brand": "Logitech",
     "model": "Lift Vertical Ergonomic",
     "specs": {
-      "shape": "vertical"
+      "shape": "vertical",
+      "length_mm": 108,
+      "width_mm": 70,
+      "height_mm": 71,
+      "weight_g": 125
     },
-    "aliases": ["lift vertical ergonomic"],
-    "source_url": "https://www.logitech.com/en-us/shop/p/lift-vertical-ergonomic-mouse"
+    "aliases": [
+      "lift",
+      "lift vertical",
+      "lift vertical ergonomic",
+      "vertical lift ergonomic",
+      "lift left",
+      "lift left vertical"
+    ],
+    "source_url": "https://www.logitech.com/en-us/shop/p/lift-vertical-ergonomic-mouse-mac"
   },
   {
     "category": "mouse",
@@ -10408,7 +10431,7 @@
       "weight_g": 76,
       "hand": "ambidextrous"
     },
-    "aliases": ["pebble mouse 2 m350s", "pebble 2 m350s"],
+    "aliases": ["m350s", "pebble mouse 2 m350s", "pebble 2 m350s"],
     "source_url": "https://www.logitech.com/en-us/shop/p/pebble-2-m350s-wireless-mouse"
   },
   {
@@ -10423,6 +10446,19 @@
     },
     "aliases": [],
     "source_url": "https://www.logitech.com/en-us/shop/p/pop-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "PRO 2 LIGHTSPEED",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 63.5,
+      "height_mm": 40,
+      "weight_g": 80
+    },
+    "aliases": ["g pro 2 lightspeed", "g pro 2", "pro 2 lightspeed"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-2-lightspeed"
   },
   {
     "category": "mouse",
@@ -10958,7 +10994,7 @@
       "shape": "symmetrical",
       "hand": "right"
     },
-    "aliases": ["viper v3 pro"],
+    "aliases": ["viper v3 pro sentinels", "viper v3 pro"],
     "source_url": "https://www.razer.com/gaming-mice/razer-viper-v3-pro"
   },
   {
@@ -11003,8 +11039,8 @@
       "shape": "ergonomic",
       "hand": "right"
     },
-    "aliases": ["aerox 3 onyx", "aerox 3 snow"],
-    "source_url": "https://steelseries.com/gaming-mice/aerox-3-2022"
+    "aliases": ["aerox 3", "aerox 3 onyx", "aerox 3 snow"],
+    "source_url": "https://steelseries.com/gaming-mice/aerox-3"
   },
   {
     "category": "mouse",
@@ -11033,7 +11069,7 @@
       "shape": "ergonomic",
       "hand": "right"
     },
-    "aliases": ["aerox 5 wireless"],
+    "aliases": ["aerox 5", "aerox 5 wireless"],
     "source_url": "https://steelseries.com/gaming-mice/aerox-5"
   },
   {
