@@ -26,8 +26,8 @@ const inRange = (v: IdentityValue | undefined, min: number, max: number) =>
   v === undefined || (typeof v === "number" && v >= min && v <= max);
 
 /**
- * Por qué una fila de mouse no se carga; null si está bien. Las fichas nombran los ejes a su manera (Logitech llama
- * "Height" al largo), así que un eje cambiado se detecta por las proporciones. Un vertical es más alto que ancho.
+ * Por qué una fila de mouse no se carga; null si está bien. Con las tres medidas, `toReference` ya ordenó los ejes; esto
+ * atrapa las filas parciales y lo imposible. Un vertical es más alto que ancho.
  */
 export function mouseProblem(ref: PartReference): string | null {
   if (!ref.source_url) return "sin URL de ficha oficial";
@@ -35,9 +35,37 @@ export function mouseProblem(ref: PartReference): string | null {
   if (!inRange(length, 60, 200) || !inRange(width, 30, 150) || !inRange(height, 15, 150))
     return "medida fuera de rango";
   if (length !== undefined && width !== undefined && length <= width) return "el largo no supera al ancho";
+  if (length !== undefined && height !== undefined && length <= height) return "el largo no supera al alto";
   if (shape !== "vertical" && width !== undefined && height !== undefined && width <= height)
     return "el ancho no supera al alto";
   return null;
+}
+
+/**
+ * Cada nombre del catálogo queda en una sola fila: `pickPartReference` no elige si dos calzan, y las versiones Mac,
+ * Business y reacondicionada de un modelo reclaman los mismos nombres. Se lo queda la fila con ese nombre oficial, y si
+ * no hay, la primera con medidas.
+ */
+export function uniqueAliases(rows: readonly PartReference[]): PartReference[] {
+  const models = new Set(rows.map((r) => partKey(r.model)));
+  const measured = [...rows].sort(
+    (a, b) => Number(b.specs.length_mm !== undefined) - Number(a.specs.length_mm !== undefined),
+  );
+  const taken = new Set<string>();
+  const kept = new Map<PartReference, string[]>();
+  for (const row of measured) {
+    kept.set(
+      row,
+      row.aliases.filter((alias) => {
+        const key = partKey(alias);
+        if (key === partKey(row.model)) return true;
+        if (models.has(key) || taken.has(key)) return false;
+        taken.add(key);
+        return true;
+      }),
+    );
+  }
+  return rows.map((r) => ({ ...r, aliases: kept.get(r) ?? [] }));
 }
 
 /** "lga1851" → "LGA1851", "lga115x" → "LGA115X", "am5" → "AM5": el texto que lee `sockets()` de la compatibilidad. */
@@ -89,6 +117,17 @@ export function toReference(category: string, r: Record<string, unknown>): PartR
     specs.height_mm = num(r.height_mm);
     specs.weight_g = num(r.weight_g);
     specs.shape = typeof r.shape === "string" && MOUSE_SHAPES.has(r.shape) ? r.shape : null;
+    // Cada ficha nombra los ejes a su manera (Logitech llama "Height" al largo), pero los lados de un mouse siempre van
+    // largo > ancho > alto. En un vertical sólo se sabe que el mayor es el largo.
+    const { length_mm: length, width_mm: width, height_mm: height } = specs;
+    if (typeof length === "number" && typeof width === "number" && typeof height === "number") {
+      if (specs.shape !== "vertical") {
+        const [longest = null, middle = null, shortest = null] = [length, width, height].sort((a, b) => b - a);
+        specs.length_mm = longest;
+        specs.width_mm = middle;
+        specs.height_mm = shortest;
+      } else if (height > length) [specs.length_mm, specs.height_mm] = [height, length];
+    }
     specs.hand = typeof r.hand === "string" && MOUSE_HANDS.has(r.hand) ? r.hand : null;
   } else {
     const boards = Array.isArray(r.motherboards)
@@ -151,7 +190,7 @@ if (import.meta.main && mode === "build") {
       }
     }
   }
-  rows.push(...byKey.values());
+  rows.push(...(category === "mouse" ? uniqueAliases([...byKey.values()]) : byKey.values()));
   rows.sort((a, b) => `${a.category} ${a.brand} ${a.model}`.localeCompare(`${b.category} ${b.brand} ${b.model}`));
   await Bun.write(DATA, `${JSON.stringify(rows, null, 1)}\n`);
   const mine = rows.filter((r) => r.category === category);

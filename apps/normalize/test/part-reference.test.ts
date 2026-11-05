@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mouseProblem, socketText, toReference } from "../scripts/part-reference";
+import { mouseProblem, socketText, toReference, uniqueAliases } from "../scripts/part-reference";
 import { fillFromPartReference, type PartReference, pickPartReference } from "../src/part-reference";
 
 describe("referencia de coolers y gabinetes", () => {
@@ -92,15 +92,40 @@ describe("referencia de mouses (#218)", () => {
     expect(mouseProblem(mouse({ ...size, source_url: undefined }))).toBe("sin URL de ficha oficial");
   });
 
-  test("los ejes cambiados se rechazan", () => {
-    expect(mouseProblem(mouse({ length_mm: 38.2, width_mm: 62.15, height_mm: 116.6 }))).toBe("medida fuera de rango");
-    expect(mouseProblem(mouse({ length_mm: 62, width_mm: 116, height_mm: 38 }))).toBe("el largo no supera al ancho");
-    expect(mouseProblem(mouse({ length_mm: 116, width_mm: 38, height_mm: 62 }))).toBe("el ancho no supera al alto");
+  test("con las tres medidas los ejes se ordenan, porque cada ficha los nombra a su manera", () => {
+    const swapped = mouse({ length_mm: 39, width_mm: 60, height_mm: 99 });
+    expect(swapped.specs).toMatchObject({ length_mm: 99, width_mm: 60, height_mm: 39 });
+    expect(mouseProblem(swapped)).toBeNull();
+  });
+
+  test("una fila parcial con los ejes cambiados, o con una medida imposible, se rechaza", () => {
+    expect(mouseProblem(mouse({ length_mm: 62, width_mm: 116 }))).toBe("el largo no supera al ancho");
+    expect(mouseProblem(mouse({ width_mm: 38, height_mm: 62 }))).toBe("el ancho no supera al alto");
+    expect(mouseProblem(mouse({ length_mm: 400, width_mm: 62, height_mm: 38 }))).toBe("medida fuera de rango");
   });
 
   test("un mouse vertical puede ser más alto que ancho", () => {
     const lift = { length_mm: 108, width_mm: 71, height_mm: 70.5, shape: "vertical" };
     expect(mouseProblem(mouse({ ...lift, height_mm: 90 }))).toBeNull();
+  });
+
+  test("en un vertical el lado mayor es el largo, aunque la ficha lo llame Depth", () => {
+    const lift = mouse({ length_mm: 71, width_mm: 70, height_mm: 108, shape: "vertical" });
+    expect(lift.specs).toMatchObject({ length_mm: 108, height_mm: 71 });
+    expect(mouseProblem(lift)).toBeNull();
+  });
+
+  test("un nombre del catálogo queda en una sola fila, la de ese modelo o la primera con medidas", () => {
+    const row = (model: string, aliases: string[], specs = size) => ({ ...mouse(specs), model, aliases });
+    const out = uniqueAliases([
+      row("MX Master 3S for Business", ["mx master 3s", "mx master 3s business"]),
+      row("Lift", ["lift vertical"], {} as typeof size),
+      row("MX Master 3S", ["mx master 3s"]),
+      row("Lift for Mac", ["lift vertical"]),
+    ]);
+    expect(out.map((r) => r.aliases)).toEqual([["mx master 3s business"], [], ["mx master 3s"], ["lift vertical"]]);
+    const hits = out.filter((r) => pickPartReference([r], "mx master 3s"));
+    expect(hits.map((r) => r.model)).toEqual(["MX Master 3S"]);
   });
 
   const ref = { ...mouse({ ...size, weight_g: 99 }), aliases: ["g305"] };

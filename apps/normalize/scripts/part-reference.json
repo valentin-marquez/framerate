@@ -8403,5 +8403,2786 @@
     },
     "aliases": ["z890 e gaming", "Z890-PRO WIFI"],
     "source_url": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-pro-wifi/techspec/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "Darkstar Wireless RGB MMO",
+    "specs": {
+      "shape": "asymmetrical"
+    },
+    "aliases": ["darkstar wireless rgb mmo"],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-931a011-na-rv/darkstar-wireless-rgb-mmo-gaming-mouse-revival-series-ch-931a011-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "DOOM: The Dark Ages M75 WIRELESS",
+    "specs": {
+      "weight_g": 89,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931d01r-na/doom-the-dark-ages-m75-wireless-ch-931d01r-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "Harpoon RGB PRO",
+    "specs": {
+      "weight_g": 85
+    },
+    "aliases": ["harpoon rgb pro"],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-9301111-na-rv/harpoon-rgb-pro-fps-moba-gaming-mouse-revival-series-ch-9301111-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "Harpoon RGB Wireless",
+    "specs": {
+      "weight_g": 99
+    },
+    "aliases": ["harpoon rgb wireless"],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-9311011-na-rv/harpoon-rgb-wireless-gaming-mouse-revival-series-ch-9311011-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "Harpoon v2 Wireless",
+    "specs": {
+      "length_mm": 115.5,
+      "width_mm": 68.3,
+      "height_mm": 40.4,
+      "weight_g": 80,
+      "shape": "asymmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-9311110-ww/harpoon-v2-wireless-gaming-mouse-ch-9311110-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "HARPOON v2 WIRELESS Cyberpunk: Edgerunners 2 Edition",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931111d-ww/harpoon-v2-wireless-gaming-mouse-cyberpunk-edgerunners-2-edition-ch-931111d-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "IRONCLAW RGB",
+    "specs": {
+      "weight_g": 105
+    },
+    "aliases": ["ironclaw rgb"],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-9307011-na/ironclaw-rgb-fps-moba-gaming-mouse-ch-9307011-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "IRONCLAW WIRELESS SE",
+    "specs": {
+      "length_mm": 130,
+      "width_mm": 80,
+      "height_mm": 45,
+      "weight_g": 130,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-9317110-ww-rv/ironclaw-wireless-se-gaming-mouse-ch-9317110-ww-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "KATAR ELITE WIRELESS",
+    "specs": {
+      "weight_g": 69
+    },
+    "aliases": ["katar elite wireless"],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931c111-na/katar-elite-wireless-gaming-mouse-ch-931c111-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "KATAR PRO",
+    "specs": {
+      "weight_g": 69,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-930c011-na-rv/katar-pro-ultra-light-gaming-mouse-revival-series-ch-930c011-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "Katar Pro Wireless",
+    "specs": {
+      "weight_g": 96,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-931c011-na-rv/katar-pro-wireless-gaming-mouse-revival-series-ch-931c011-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "KATAR PRO XT Ultra-Light",
+    "specs": {
+      "weight_g": 73,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-930c111-na/katar-pro-xt-ultra-light-gaming-mouse-ch-930c111-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M55 Lightweight",
+    "specs": {
+      "weight_g": 55,
+      "shape": "symmetrical"
+    },
+    "aliases": ["m55"],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-930f000-ww/m55-lightweight-gaming-mouse-ch-930f000-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M55 WIRELESS",
+    "specs": {
+      "weight_g": 85,
+      "shape": "symmetrical"
+    },
+    "aliases": ["m55 wireless"],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-931f002-na-rv/m55-wireless-gaming-mouse-gray-revival-series-ch-931f002-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 AIR",
+    "specs": {
+      "weight_g": 60,
+      "shape": "symmetrical"
+    },
+    "aliases": ["m75 air"],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931d100-na/corsair-m75-air-wireless-ultra-lightweight-gaming-mouse-black-ch-931d100-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 AIR WIRELESS",
+    "specs": {
+      "weight_g": 60,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-931d101-na-rv/m75-air-wireless-ultra-lightweight-gaming-mouse-white-revival-series-ch-931d101-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 Lightweight RGB",
+    "specs": {
+      "weight_g": 74,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["m75 lightweight rgb"],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-930d010-na/m75-lightweight-rgb-gaming-mouse-ch-930d010-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 WIRELESS",
+    "specs": {
+      "weight_g": 89,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-931d010-na-rv/m75-wireless-lightweight-rgb-gaming-mouse-black-revival-series-ch-931d010-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 WIRELESS Cyberpunk 2077: Arasaka Edition",
+    "specs": {
+      "weight_g": 89,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931db1l-na/m75-wireless-lightweight-rgb-gaming-mouse-cyberpunk-2077-arasaka-edition-ch-931db1l-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 WIRELESS Cyberpunk 2077: Arasaka White Edition",
+    "specs": {
+      "weight_g": 89,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931d01u-na/m75-wireless-lightweight-rgb-gaming-mouse-cyberpunk-2077-arasaka-white-edition-ch-931d01u-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 WIRELESS Lightweight RGB",
+    "specs": {
+      "weight_g": 89,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-931d011-na-rv/m75-wireless-lightweight-rgb-gaming-mouse-white-revival-series-ch-931d011-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 WIRELESS Lightweight RGB Apple Gaming Mouse",
+    "specs": {
+      "weight_g": 89,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931d01f-na/m75-wireless-lightweight-rgb-gaming-mouse-frost-white-ch-931d01f-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 Wireless Lightweight RGB Gaming Mouse - Call of Duty: Black Ops 7 Edition",
+    "specs": {
+      "weight_g": 89,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931db1m-na/m75-wireless-lightweight-rgb-gaming-mouse-call-of-duty-black-ops-7-edition-ch-931db1m-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 WIRELESS Lightweight RGB Gaming Mouse – Glacier Blue",
+    "specs": {
+      "weight_g": 89,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931d01g-na/m75-wireless-lightweight-rgb-gaming-mouse-glacier-blue-ch-931d01g-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "M75 WIRELESS Witcher 3: Wild Hunt 10th Anniversary Edition",
+    "specs": {
+      "weight_g": 89,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931db1k-na/m75-wireless-lightweight-rgb-gaming-mouse-witcher-3-wild-hunt-10th-anniversary-edition-ch-931db1k-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "NIGHTSABRE WIRELESS RGB",
+    "specs": {
+      "shape": "symmetrical"
+    },
+    "aliases": ["nightsabre wireless rgb"],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931b011-na/nightsabre-wireless-rgb-gaming-mouse-ch-931b011-na"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "NIGHTSWORD RGB Tunable FPS/MOBA",
+    "specs": {
+      "shape": "ergonomic"
+    },
+    "aliases": ["nightsword rgb"],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-9306011-na-rv/nightsword-rgb-tunable-fps-moba-gaming-mouse-revival-series-ch-9306011-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "NIGHTSWORD v2 WIRELESS SD",
+    "specs": {
+      "length_mm": 130,
+      "width_mm": 78,
+      "height_mm": 41,
+      "shape": "ergonomic",
+      "hand": "right",
+      "weight_g": 89
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931e010-ww/nightsword-v2-wireless-stream-deck-gaming-mouse-ch-931e010-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE RGB PRO Champion Series Ultra-Light",
+    "specs": {
+      "weight_g": 74,
+      "shape": "ergonomic"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/revival-series/ch-9303111-na-rv/sabre-rgb-pro-champion-series-ultra-light-fps-moba-gaming-mouse-revival-series-ch-9303111-na-rv"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v2 PRO Carbon Fiber Wireless",
+    "specs": {
+      "length_mm": 122.85,
+      "width_mm": 64.12,
+      "height_mm": 38.83,
+      "weight_g": 55,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g200-ww/sabre-v2-pro-carbon-fiber-wireless-gaming-mouse-black-ch-931g200-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v2 PRO Ultralight Wireless",
+    "specs": {
+      "weight_g": 36,
+      "length_mm": 119.25,
+      "width_mm": 62.55,
+      "height_mm": 38.21,
+      "shape": "symmetrical"
+    },
+    "aliases": ["sabre v2 pro ultralight wireless"],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g007-ww/undefined"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v2 PRO Wireless CF Gumayusi Limited Edition",
+    "specs": {
+      "weight_g": 55
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g20c-ww/sabre-v2-pro-wireless-cf-gumayusi-limited-edition-ch-931g20c-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v2 PRO Wireless Magnesium Alloy",
+    "specs": {
+      "length_mm": 122.85,
+      "width_mm": 64.12,
+      "height_mm": 38.83,
+      "weight_g": 56,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g101-ww/sabre-v2-pro-wireless-magnesium-alloy-gaming-mouse-white-ch-931g101-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "Sabre v2 Pro Wireless Magnesium Alloy - ARC Raiders Edition",
+    "specs": {
+      "weight_g": 36
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g70d-ww/arc-raiders-sabre-v2-pro-wireless-magnesium-alloy-gaming-mouse-ch-931g70d-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v3 PRO CF Ergo Wireless",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 67.5,
+      "height_mm": 44,
+      "weight_g": 54,
+      "shape": "asymmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931h200-ww/sabre-v3-pro-purevector-cf-ergo-wireless-gaming-mouse-ch-931h200-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v3 PRO CF Wireless",
+    "specs": {
+      "length_mm": 122.9,
+      "width_mm": 64.1,
+      "height_mm": 38.8,
+      "weight_g": 48,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g600-ww/sabre-v3-pro-purevector-cf-wireless-gaming-mouse-ch-931g600-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v3 PRO PureVector MG Ergo Wireless",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 67.5,
+      "height_mm": 44,
+      "weight_g": 55,
+      "shape": "asymmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931h100-ww/sabre-v3-pro-purevector-mg-ergo-wireless-gaming-mouse-ch-931h100-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v3 PRO PureVector MG Wireless",
+    "specs": {
+      "length_mm": 122.9,
+      "width_mm": 64.1,
+      "height_mm": 38.8,
+      "weight_g": 49,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g501-ww/sabre-v3-pro-purevector-mg-wireless-gaming-mouse-white-ch-931g501-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v3 PRO Ultralight Wireless",
+    "specs": {
+      "length_mm": 119.25,
+      "width_mm": 62.55,
+      "height_mm": 38.21,
+      "weight_g": 37,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931g400-ww/sabre-v3-pro-purevector-ultralight-wireless-gaming-mouse-ch-931g400-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "SABRE v3 PRO Ultralight Wireless Ergo",
+    "specs": {
+      "length_mm": 119,
+      "width_mm": 64.5,
+      "height_mm": 41,
+      "weight_g": 41,
+      "shape": "asymmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-931h001-ww/sabre-v3-pro-purevector-ultralight-wireless-ergo-gaming-mouse-white-ch-931h001-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "Scimitar Elite Wireless SE",
+    "specs": {
+      "length_mm": 119.23,
+      "width_mm": 73.48,
+      "height_mm": 42.17,
+      "weight_g": 114,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-9314014-ww/scimitar-elite-wireless-se-mmo-gaming-mouse-gun-metal-ch-9314014-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Corsair",
+    "model": "Scimitar Elite Wireless SE MMO",
+    "specs": {
+      "weight_g": 114
+    },
+    "aliases": [],
+    "source_url": "https://www.corsair.com/us/en/p/gaming-mouse/ch-9314415-ww/scimitar-elite-wireless-se-mmo-gaming-mouse-black-&-yellow-ch-9314415-ww"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "Aria XD7 Kailh",
+    "specs": {
+      "length_mm": 114,
+      "width_mm": 65,
+      "height_mm": 39,
+      "weight_g": 59,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://fantechworld.com/ja/products/aria-xd7"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "Blake WGC5",
+    "specs": {
+      "length_mm": 121,
+      "width_mm": 62,
+      "height_mm": 38,
+      "weight_g": 70,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://fantechworld.com/ja/products/blake-wireless"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "Crypto II VX7V2",
+    "specs": {
+      "length_mm": 123,
+      "width_mm": 67,
+      "height_mm": 40,
+      "weight_g": 110
+    },
+    "aliases": [],
+    "source_url": "https://fantechworld.com/products/crypto-ii-vx7v2"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "GO W607",
+    "specs": {
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://fantechworld.com/products/go-w607"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "Helios II Pro S XD3V3 4K8K",
+    "specs": {
+      "length_mm": 120,
+      "width_mm": 64,
+      "height_mm": 38.3,
+      "weight_g": 55,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://fantechworld.com/products/helios-%E2%85%B1-pro-s-xd3v3-4k8k"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "HELIOS NEO UX3V2S",
+    "specs": {
+      "length_mm": 126,
+      "width_mm": 64,
+      "height_mm": 38.5,
+      "weight_g": 69,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://fantechworld.com/products/helios-neo-ux3v2s"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "Kanata VX9",
+    "specs": {
+      "weight_g": 77
+    },
+    "aliases": ["kanata vx9"],
+    "source_url": "https://fantechworld.com/ja/products/kanata-vx9"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "Kanata Wireless WG9",
+    "specs": {
+      "length_mm": 122,
+      "width_mm": 67,
+      "height_mm": 40,
+      "weight_g": 94
+    },
+    "aliases": ["kanata wg9rd"],
+    "source_url": "https://fantechworld.com/products/kanata-wireless"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "Kanata Wireless WG9RD",
+    "specs": {
+      "length_mm": 123,
+      "width_mm": 67,
+      "height_mm": 44,
+      "weight_g": 88,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://fantechworld.com/products/kanata-wireless-wg9rd"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "Tanto",
+    "specs": {
+      "length_mm": 122,
+      "width_mm": 64,
+      "height_mm": 36.5,
+      "weight_g": 58
+    },
+    "aliases": [],
+    "source_url": "https://fantechworld.com/ja/products/tanto"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "Tanto Pro WG13P",
+    "specs": {
+      "length_mm": 122,
+      "width_mm": 64,
+      "height_mm": 36.5,
+      "weight_g": 58
+    },
+    "aliases": ["tanto pro wg13p", "wg13p tanto pro"],
+    "source_url": "https://fantechworld.com/ja/products/tanto-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "YARI PRO WG14P",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 68,
+      "height_mm": 43,
+      "weight_g": 58,
+      "shape": "ergonomic"
+    },
+    "aliases": ["wg14p yari pro", "yari pro wg14p"],
+    "source_url": "https://fantechworld.com/ja/products/yari-pro-wg14p"
+  },
+  {
+    "category": "mouse",
+    "brand": "Fantech",
+    "model": "ZENITH PRO WGP18",
+    "specs": {
+      "length_mm": 158.5,
+      "width_mm": 103,
+      "height_mm": 63.9,
+      "weight_g": 240
+    },
+    "aliases": [],
+    "source_url": "https://fantechworld.com/products/zenith-pro-wgp18"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Expert Mouse TB800 EQ",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/expert-mouse-tb800-eq-multi-connection-trackball/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Expert Mouse Wired Trackball",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/expert-mouse-wired-trackball/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Expert Mouse Wireless Trackball",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/expert-mouse-wireless-trackball-1/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Mouse in a Box USB",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": ["mouse in a box"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/mouseinabox-usb5-2/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "MY201 Simple Solutions Wired Mouse",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/my201-simple-solutions-wired-mouse-taa/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "MY230 EQ",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": ["my230 eq"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/my230-eq-rechargeable-mouse-wireless-midsize-1/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "MY430 EQ",
+    "specs": {
+      "hand": "right"
+    },
+    "aliases": ["my430 eq"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/my430-eq-rechargeable-mouse-wireless-multi-device/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Orbit Fusion Wireless Trackball",
+    "specs": {
+      "hand": "right"
+    },
+    "aliases": ["orbit fusion"],
+    "source_url": "https://www.kensington.com/p/products/ergonomic-desk-accessories/ergonomic-input-devices/orbit-fusion-wireless-trackball/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Orbit Optical Trackball",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/orbit-optical-trackball3-1/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Orbit Trackball with Scroll Ring",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": ["orbit trackball con scroll ring"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/orbit-trackball-with-scroll-ring-white-k72500ww-K72500WW/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Orbit Wireless Mobile Trackball",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": ["orbit"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/orbit-wireless-mobile-trackball3-1/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Orbit Wireless Trackball with Scroll Ring",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/orbit-wireless-trackball-with-scroll-ring-black/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Bluetooth Compact Mouse",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-bluetooth-compact-mouse-1/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Bluetooth Mobile Mouse",
+    "specs": {
+      "length_mm": 96.4,
+      "width_mm": 58,
+      "height_mm": 33,
+      "weight_g": 80,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["pro fit mobile"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-bluetooth-mobile-mouse3-1/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo MY435 EQ",
+    "specs": {
+      "length_mm": 106,
+      "width_mm": 75,
+      "height_mm": 37,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-ergo-my435-eq-wired-mouse/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo MY435 EQ Rechargeable Wireless Mouse",
+    "specs": {
+      "length_mm": 106,
+      "width_mm": 75,
+      "height_mm": 37,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-ergo-my435-eq-rechargeable-wireless-mouse/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo MY630 EQ",
+    "specs": {
+      "shape": "vertical",
+      "hand": "right"
+    },
+    "aliases": ["pro fit ergo my630 eq"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-ergo-my630-eq-rechargeable-mouse-2/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo MY630 EQ Rechargeable Mouse",
+    "specs": {
+      "shape": "vertical"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-ergo-my630-eq-rechargeable-mouse-3/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo TB450",
+    "specs": {
+      "length_mm": 138.16,
+      "width_mm": 93.44,
+      "height_mm": 50.1,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["pro fit ergo tb450"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/pro-fit-ergo-tb450-trackball/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo TB450 Trackball",
+    "specs": {
+      "length_mm": 138.16,
+      "width_mm": 93.44,
+      "height_mm": 50.1,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["tb450"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/pro-fit-ergo-tb450-trackball-K72194WW/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo TB550",
+    "specs": {
+      "length_mm": 138.16,
+      "width_mm": 93.44,
+      "height_mm": 50.1,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/pro-fit-ergo-tb550-trackball-white/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo TB675 Vertical Wired Trackball",
+    "specs": {
+      "shape": "vertical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/profitergo-tb675-vertical-wired-trackball-ergonomic-thumb-operated-trackball-K72170WWMY/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo TB675 Vertical Wireless Trackball",
+    "specs": {
+      "shape": "vertical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/profitergo-tb675-vertical-wireless-trackball-ergonomic-wireless-thumb-operated-trackball-K72171WWMY/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo Vertical Wired Trackball",
+    "specs": {
+      "shape": "vertical",
+      "hand": "right"
+    },
+    "aliases": ["vertical pro fit"],
+    "source_url": "https://www.kensington.com/p/products/ergonomic-desk-accessories/ergonomic-input-devices/pro-fit-ergo-vertical-wired-trackball2-1/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo Vertical Wireless Mouse",
+    "specs": {
+      "shape": "vertical",
+      "hand": "right"
+    },
+    "aliases": ["ergo vertical wireless mouse"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-ergo-vertical-wireless-mouse-11/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo Vertical Wireless Trackball",
+    "specs": {
+      "shape": "vertical",
+      "hand": "right"
+    },
+    "aliases": ["pro fit ergo vertical"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/pro-fit-ergo-vertical-wireless-trackball3/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo Wired Mouse",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["pro fit ergo"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-ergo-wired-mouse2/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Ergo Wireless Mouse",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-ergo-wireless-mouse3/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Full-Size Mouse USB",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["pro fit usb full size", "pro fit full size"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-full-size-mouse-usb-3/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Full-Size Wireless Mouse",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-full-size-wireless-mouse3/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Left-Handed Ergo Wireless Mouse",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "left"
+    },
+    "aliases": ["k79810"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-left-handed-ergo-wireless-mouse/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Mid-Size Wireless Mouse",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fitmid-size-wireless-mouse/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Wired Mid-Size Mouse USB",
+    "specs": {
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-wired-mid-size-mouse-usb2/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Wireless Mid-Size",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["pro fit mid size", "pro fit mediano"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-mid-size-mouse-ruby-K72422AMA/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Wireless Mid-Size Mouse",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["pro fit mid size k72355"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-mid-size-wireless-mouse-sapphire-blue-K72421AMA/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Pro Fit Wireless Mobile Mouse",
+    "specs": {
+      "length_mm": 96.4,
+      "width_mm": 58,
+      "height_mm": 33,
+      "weight_g": 80
+    },
+    "aliases": ["pro fit wireless mouse"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/pro-fit-wireless-mobile-mouse/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Simple Solutions Wired Mouse (TAA)",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/simple-solutions-wired-mouse-taa/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "SlimBlade Pro",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/slimblade-pro-trackball/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "SlimBlade Pro EQ",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/slimblade-pro-eq-trackball/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "SlimBlade Trackball",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/trackball-products/slimblade-trackball3-1/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "SureTrack Dual",
+    "specs": {
+      "hand": "right"
+    },
+    "aliases": ["suretrack dual"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/suretrack-dual-wireless-mouse/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "SureTrack Dual Wireless",
+    "specs": {
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/suretrack-dual-wireless-mouse-red-K75352WW/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "ValuLine USB Mouse - Wired",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": ["valumouse con cable"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/valuline-usb-mouse-wired-K75299NA/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "ValuMouse Wireless",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": ["valumouse"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/valumouse-wireless/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Wired Mouse for Life",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": ["for life k72110"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/wired-mouse-for-life/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Wired Three-Button Mouse for Life",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/kensington-wired-three-button-mouse-for-life-1/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Wired USB Mouse for Life",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/wired-usb-mouse-for-life/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kensington",
+    "model": "Wireless Mouse for Life",
+    "specs": {
+      "hand": "ambidextrous"
+    },
+    "aliases": ["mouse for life", "for life", "for life 3", "mouse for life 3 botones", "mouse for life inalambrico"],
+    "source_url": "https://www.kensington.com/p/products/electronic-control-solutions/computer-mice/wireless-mouse-for-life-4/"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kingston",
+    "model": "Pulsefire Haste 2 Wireless",
+    "specs": {
+      "length_mm": 124.3,
+      "width_mm": 66.8,
+      "height_mm": 38.2,
+      "weight_g": 59,
+      "shape": "symmetrical"
+    },
+    "aliases": ["pulsefire haste 2 wireless"],
+    "source_url": "https://hyperx.com/products/hyperx-pulsefire-haste-2-wireless-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kingston",
+    "model": "Pulsefire Haste 3",
+    "specs": {
+      "length_mm": 127.1,
+      "width_mm": 66.9,
+      "height_mm": 38.3,
+      "weight_g": 51,
+      "shape": "symmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://hyperx.com/products/hyperx-pulsefire-haste-3-wireless-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Kingston",
+    "model": "Pulsefire Saga",
+    "specs": {
+      "length_mm": 119.7,
+      "width_mm": 67.2,
+      "height_mm": 39.8,
+      "weight_g": 69,
+      "shape": "asymmetrical"
+    },
+    "aliases": [],
+    "source_url": "https://hyperx.com/products/hyperx-pulsefire-saga-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "B100 Optical USB Mouse for Business",
+    "specs": {
+      "length_mm": 113,
+      "width_mm": 62,
+      "height_mm": 38,
+      "weight_g": 90,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/b100-usb-business-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "ERGO M575",
+    "specs": {
+      "length_mm": 134,
+      "width_mm": 100,
+      "height_mm": 48,
+      "weight_g": 145,
+      "shape": "ergonomic"
+    },
+    "aliases": ["ergo m575"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/ergo-m575-for-business"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "ERGO M575S",
+    "specs": {
+      "length_mm": 134,
+      "width_mm": 100,
+      "height_mm": 48,
+      "weight_g": 145,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["ergo m575s"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/ergo-m575s-wireless-trackball"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G Pro X Superlight",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 63.5,
+      "height_mm": 40,
+      "weight_g": 63
+    },
+    "aliases": ["g pro x superlight"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x-superlight-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G PRO X Superlight 2",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 63.5,
+      "height_mm": 40,
+      "weight_g": 60
+    },
+    "aliases": ["g pro x superlight 2", "pro x 2 superlight"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x2-superlight-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G Pro X Superlight Wireless",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 63.5,
+      "height_mm": 40,
+      "weight_g": 63
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/pro-x-superlight-wireless-mouse-refurb"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G203 LIGHTSYNC",
+    "specs": {
+      "length_mm": 116.6,
+      "width_mm": 62.1,
+      "height_mm": 38.2,
+      "weight_g": 85
+    },
+    "aliases": ["g203 lightsync"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g203-lightsync-rgb-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G305 Lightspeed",
+    "specs": {
+      "length_mm": 116.6,
+      "width_mm": 62.1,
+      "height_mm": 38.2,
+      "weight_g": 99
+    },
+    "aliases": ["g305", "g305 lightspeed"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g305-lightspeed-wireless-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G305 X LIGHTSPEED",
+    "specs": {
+      "length_mm": 116.6,
+      "width_mm": 62.1,
+      "height_mm": 38.2,
+      "weight_g": 57
+    },
+    "aliases": [],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g305x-lightspeed-wireless-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G305 X SUPERLIGHT",
+    "specs": {
+      "length_mm": 117.3,
+      "width_mm": 63.9,
+      "height_mm": 38.2,
+      "weight_g": 59
+    },
+    "aliases": ["g305 x superlight"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g305-x-superlight"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G309 Lightspeed",
+    "specs": {
+      "length_mm": 120,
+      "width_mm": 64,
+      "height_mm": 39,
+      "weight_g": 86
+    },
+    "aliases": ["g309", "g309 lightspeed"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g309-lightspeed-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G403 HERO",
+    "specs": {
+      "length_mm": 124,
+      "width_mm": 68,
+      "height_mm": 43,
+      "weight_g": 87.3
+    },
+    "aliases": ["g403 hero"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g403-hero-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G502 HERO",
+    "specs": {
+      "length_mm": 131.2,
+      "width_mm": 75,
+      "height_mm": 40,
+      "weight_g": 121
+    },
+    "aliases": ["g502 hero"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g502-hero-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G502 LIGHTSPEED",
+    "specs": {
+      "length_mm": 131.2,
+      "width_mm": 75.2,
+      "height_mm": 40,
+      "weight_g": 114
+    },
+    "aliases": ["g502 lightspeed"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g502-lightspeed-wireless-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G502 X",
+    "specs": {
+      "length_mm": 131.4,
+      "width_mm": 79.2,
+      "height_mm": 41.1,
+      "weight_g": 89,
+      "shape": "ergonomic"
+    },
+    "aliases": ["g502 x", "g502 x lightforce"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g502-x-wired-lightforce"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G502 X LIGHTSPEED",
+    "specs": {
+      "length_mm": 131.4,
+      "width_mm": 79.2,
+      "height_mm": 41.1,
+      "shape": "ergonomic"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g502-x-wireless-lightforce"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G502 X Plus",
+    "specs": {
+      "length_mm": 131.4,
+      "width_mm": 79.2,
+      "height_mm": 41.1,
+      "weight_g": 106,
+      "shape": "ergonomic"
+    },
+    "aliases": ["g502 x plus", "g502 x plus lightspeed"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g502-x-plus-wireless-lightforce"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G703 LIGHTSPEED",
+    "specs": {
+      "length_mm": 124,
+      "width_mm": 68,
+      "height_mm": 43,
+      "weight_g": 95
+    },
+    "aliases": ["g703"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g703-hero-wireless-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "G903 LIGHTSPEED",
+    "specs": {
+      "length_mm": 130,
+      "width_mm": 67,
+      "height_mm": 40,
+      "weight_g": 110,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["g903 lightspeed", "g903 hero", "g903 hero lightspeed"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/g903-hero-wireless-gaming-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Lift for Business",
+    "specs": {
+      "shape": "vertical"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/lift-vertical-ergonomic-mouse-business"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Lift for Mac",
+    "specs": {
+      "length_mm": 108,
+      "width_mm": 70,
+      "height_mm": 71,
+      "weight_g": 125,
+      "shape": "vertical"
+    },
+    "aliases": ["lift", "lift vertical", "vertical lift ergonomic", "lift left", "lift left vertical"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/lift-vertical-ergonomic-mouse-mac"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Lift Vertical Ergonomic",
+    "specs": {
+      "shape": "vertical"
+    },
+    "aliases": ["lift vertical ergonomic"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/lift-vertical-ergonomic-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Limited Edition Design Collection",
+    "specs": {
+      "length_mm": 95,
+      "width_mm": 55,
+      "height_mm": 38,
+      "weight_g": 84
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/limited-edition-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M100",
+    "specs": {
+      "length_mm": 113,
+      "width_mm": 62,
+      "height_mm": 38,
+      "weight_g": 90,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["m100"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m100-usb-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M170 Wireless",
+    "specs": {
+      "length_mm": 97.7,
+      "width_mm": 61.5,
+      "height_mm": 35.2,
+      "weight_g": 69.3,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["m170"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m170-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M185",
+    "specs": {
+      "length_mm": 99,
+      "width_mm": 60,
+      "height_mm": 39,
+      "weight_g": 75.2,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["m185"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m185-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M187 Mini Wireless Mouse",
+    "specs": {
+      "length_mm": 81.9,
+      "width_mm": 49.4,
+      "height_mm": 31.8,
+      "weight_g": 51.9
+    },
+    "aliases": ["m187"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m187-mini-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M190",
+    "specs": {
+      "length_mm": 115.4,
+      "width_mm": 66.1,
+      "height_mm": 40.3,
+      "weight_g": 89.9,
+      "shape": "ergonomic",
+      "hand": "ambidextrous"
+    },
+    "aliases": ["m190"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m190-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M196 Bluetooth Mouse",
+    "specs": {
+      "length_mm": 100,
+      "width_mm": 60,
+      "height_mm": 38,
+      "weight_g": 76,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["m196"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m196-bluetooth-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M220",
+    "specs": {
+      "length_mm": 99,
+      "width_mm": 60,
+      "height_mm": 39,
+      "weight_g": 75.2,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m220-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M240 for Business",
+    "specs": {
+      "length_mm": 99,
+      "width_mm": 60,
+      "height_mm": 39,
+      "weight_g": 75.2,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["m240 for business"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m240-wireless-mouse-business"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M240 Silent",
+    "specs": {
+      "length_mm": 99,
+      "width_mm": 60,
+      "height_mm": 39,
+      "weight_g": 73.8,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["m240 silent"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m240-silent-bluetooth-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M310",
+    "specs": {
+      "length_mm": 111,
+      "width_mm": 62,
+      "height_mm": 39,
+      "weight_g": 99,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m310-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M317",
+    "specs": {
+      "length_mm": 95,
+      "width_mm": 55,
+      "height_mm": 38.6,
+      "weight_g": 84,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["m317c"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m317-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M325S",
+    "specs": {
+      "length_mm": 94.7,
+      "width_mm": 57,
+      "height_mm": 39.1,
+      "weight_g": 93,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m325s-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M330 Silent Plus",
+    "specs": {
+      "length_mm": 105.4,
+      "width_mm": 67.9,
+      "height_mm": 38.4,
+      "weight_g": 78,
+      "shape": "asymmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m330-silent-plus-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M331 Silent Plus Wireless",
+    "specs": {
+      "length_mm": 105.4,
+      "width_mm": 67.9,
+      "height_mm": 38.4,
+      "weight_g": 78,
+      "shape": "asymmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m331-silent-plus-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M340",
+    "specs": {
+      "length_mm": 106.7,
+      "width_mm": 58.7,
+      "height_mm": 26.5,
+      "weight_g": 80.8,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m340-wireless-mouse-collection"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M510",
+    "specs": {
+      "length_mm": 120,
+      "width_mm": 65,
+      "height_mm": 41,
+      "weight_g": 129,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m510-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M585 Multi-Device Wireless Mouse with Flow Tech",
+    "specs": {
+      "length_mm": 103,
+      "width_mm": 64,
+      "height_mm": 40,
+      "weight_g": 107,
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m585-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M590 Multi-Device Silent Wireless Mouse",
+    "specs": {
+      "length_mm": 103,
+      "width_mm": 64,
+      "height_mm": 40,
+      "weight_g": 107,
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m590-silent-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M650",
+    "specs": {
+      "length_mm": 108.2,
+      "width_mm": 61,
+      "height_mm": 38.8,
+      "weight_g": 101.4
+    },
+    "aliases": ["m650"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m650-signature-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M705 Marathon",
+    "specs": {
+      "length_mm": 109,
+      "width_mm": 71,
+      "height_mm": 42,
+      "weight_g": 135,
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m705-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "M720 Triathlon",
+    "specs": {
+      "length_mm": 115,
+      "width_mm": 74,
+      "height_mm": 45,
+      "weight_g": 135,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["m720 triathlon"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m720-triathlon"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Mobi Fold Ultra-Portable Wireless Mouse",
+    "specs": {
+      "length_mm": 122,
+      "width_mm": 57,
+      "height_mm": 33,
+      "weight_g": 79,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mobi-fold-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Anywhere 3S",
+    "specs": {
+      "length_mm": 100.5,
+      "width_mm": 65,
+      "height_mm": 34.4,
+      "weight_g": 99
+    },
+    "aliases": ["mx anywhere 3s"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-anywhere-3s"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Anywhere 3S for Business",
+    "specs": {
+      "length_mm": 100.5,
+      "width_mm": 65,
+      "height_mm": 34.4,
+      "weight_g": 99
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-anywhere-3s-business"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Anywhere 3S for Mac",
+    "specs": {
+      "length_mm": 100.5,
+      "width_mm": 65,
+      "height_mm": 34.4,
+      "weight_g": 99,
+      "shape": "ergonomic"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-anywhere-3s-for-mac"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Ergo S",
+    "specs": {
+      "length_mm": 132.5,
+      "width_mm": 99.8,
+      "height_mm": 51.4,
+      "weight_g": 164,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["mx ergo s"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-ergo-s-wireless-trackball-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Master 3S",
+    "specs": {
+      "length_mm": 124.9,
+      "width_mm": 84.3,
+      "height_mm": 51,
+      "weight_g": 141,
+      "shape": "ergonomic"
+    },
+    "aliases": ["mx master 3s"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-master-3s"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Master 3S for Business",
+    "specs": {
+      "length_mm": 124.9,
+      "width_mm": 84.3,
+      "height_mm": 51,
+      "weight_g": 141
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-master-3s-business-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Master 4",
+    "specs": {
+      "length_mm": 128.15,
+      "width_mm": 88.35,
+      "height_mm": 50.8,
+      "weight_g": 150,
+      "shape": "ergonomic"
+    },
+    "aliases": ["mx master 4"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-master-4-refurbished"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Master 4 for Business",
+    "specs": {
+      "length_mm": 128.2,
+      "width_mm": 88.4,
+      "height_mm": 50.8,
+      "weight_g": 150,
+      "shape": "ergonomic"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-master-4-business"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Master 4 for Mac",
+    "specs": {
+      "length_mm": 128.15,
+      "width_mm": 88.35,
+      "height_mm": 50.8,
+      "weight_g": 150
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-master-4-mac-refurbished"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Master 4 Special Edition",
+    "specs": {
+      "length_mm": 128.15,
+      "width_mm": 88.35,
+      "height_mm": 50.8,
+      "weight_g": 150,
+      "shape": "ergonomic"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-master-4-special-edition"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "MX Vertical",
+    "specs": {
+      "length_mm": 120,
+      "width_mm": 79,
+      "height_mm": 78.5,
+      "weight_g": 125,
+      "shape": "vertical"
+    },
+    "aliases": ["mx vertical"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/mx-vertical-ergonomic-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Pebble Mouse 2 M350s",
+    "specs": {
+      "length_mm": 106,
+      "width_mm": 58.7,
+      "height_mm": 26.62,
+      "weight_g": 76,
+      "hand": "ambidextrous"
+    },
+    "aliases": ["pebble mouse 2 m350s", "pebble 2 m350s"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/pebble-2-m350s-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "POP Wireless Mouse with Emoji Button",
+    "specs": {
+      "length_mm": 104.8,
+      "width_mm": 59.4,
+      "height_mm": 35.2,
+      "weight_g": 82
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/pop-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Pro X Superlight",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 63.5,
+      "height_mm": 40,
+      "weight_g": 63
+    },
+    "aliases": ["pro x superlight"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x-superlight-wireless-mouse-refurb"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "PRO X SUPERLIGHT 2",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 63.5,
+      "height_mm": 40,
+      "weight_g": 60
+    },
+    "aliases": ["pro x superlight 2"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x-superlight-2-cyan-refurb"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "PRO X SUPERLIGHT 2 DEX",
+    "specs": {
+      "length_mm": 125.8,
+      "width_mm": 67.7,
+      "height_mm": 43.9,
+      "weight_g": 60,
+      "shape": "asymmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x-superlight-2-dex"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "PRO X SUPERLIGHT 2 DEX SE",
+    "specs": {
+      "length_mm": 125.8,
+      "width_mm": 67.7,
+      "height_mm": 43.9,
+      "weight_g": 60,
+      "shape": "asymmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x-superlight-2-dex-se"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "PRO X Superlight 2 SE",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 63.5,
+      "height_mm": 40,
+      "weight_g": 60
+    },
+    "aliases": ["pro x superlight 2 se", "g pro x superlight 2 se"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x-superlight-2-se"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "PRO X SUPERLIGHT 2c",
+    "specs": {
+      "length_mm": 118.4,
+      "width_mm": 61.4,
+      "height_mm": 38.5,
+      "weight_g": 51
+    },
+    "aliases": ["pro x superlight 2c", "g pro x superlight 2c"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x-superlight-2c"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "PRO X SUPERLIGHT 2c SE",
+    "specs": {
+      "length_mm": 118.4,
+      "width_mm": 61.2,
+      "height_mm": 38.6,
+      "weight_g": 51
+    },
+    "aliases": ["pro x superlight 2c se"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x-superlight-2c-se"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "PRO X2 SUPERSTRIKE",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 63.5,
+      "height_mm": 40,
+      "weight_g": 61,
+      "shape": "symmetrical"
+    },
+    "aliases": ["pro x 2 superstrike", "pro x2 superstrike", "g pro x2 superstrike"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x2-superstrike-mouse-refurb"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "PRO X3 SUPERSTRIKE",
+    "specs": {
+      "length_mm": 125,
+      "width_mm": 63.5,
+      "height_mm": 40,
+      "weight_g": 59
+    },
+    "aliases": ["pro x3 superstrike", "g pro x3 superstrike"],
+    "source_url": "https://www.logitechg.com/en-us/shop/p/pro-x3-superstrike-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Signature M550",
+    "specs": {
+      "length_mm": 108.2,
+      "width_mm": 61,
+      "height_mm": 38.8,
+      "weight_g": 97.4,
+      "shape": "symmetrical",
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m550-signature-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Signature M650",
+    "specs": {
+      "length_mm": 108.2,
+      "width_mm": 61,
+      "height_mm": 38.8,
+      "weight_g": 101.4
+    },
+    "aliases": ["signature m650"],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m650-signature-for-business"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Signature Plus M750",
+    "specs": {
+      "length_mm": 107.19,
+      "width_mm": 61.8,
+      "height_mm": 37.8,
+      "weight_g": 101.2,
+      "shape": "symmetrical",
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m750-signature-plus-wireless-mouse"
+  },
+  {
+    "category": "mouse",
+    "brand": "Logitech",
+    "model": "Signature Wired M520 L for Business",
+    "specs": {
+      "length_mm": 118.7,
+      "width_mm": 66.2,
+      "height_mm": 42,
+      "weight_g": 112.6,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.logitech.com/en-us/shop/p/m520-business"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Basilisk Mobile",
+    "specs": {
+      "length_mm": 111.5,
+      "width_mm": 75.9,
+      "height_mm": 41.4,
+      "weight_g": 76,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-basilisk-mobile"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Basilisk V3",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["basilisk v3"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-basilisk-v3"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Basilisk V3 35K",
+    "specs": {
+      "length_mm": 130,
+      "width_mm": 75.1,
+      "height_mm": 42.5,
+      "weight_g": 101,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-basilisk-v3-35k"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Basilisk V3 Pro",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-basilisk-v3-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Basilisk V3 Pro 35K",
+    "specs": {
+      "length_mm": 130,
+      "width_mm": 75.4,
+      "height_mm": 42.5,
+      "weight_g": 112,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["basilisk v3 pro 35k"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-basilisk-v3-pro-35k"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Basilisk V3 X HyperSpeed",
+    "specs": {
+      "length_mm": 130.1,
+      "width_mm": 75.1,
+      "height_mm": 42.5,
+      "weight_g": 110,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["basilisk v3 x hyperspeed"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-basilisk-v3-x-hyperspeed"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Basilisk V4 HyperSpeed",
+    "specs": {
+      "length_mm": 127.5,
+      "width_mm": 75.8,
+      "height_mm": 42.7,
+      "weight_g": 94,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-basilisk-v4-hyperspeed"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Basilisk V4 Pro",
+    "specs": {
+      "length_mm": 127.5,
+      "width_mm": 75.8,
+      "height_mm": 42.7,
+      "weight_g": 100,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-basilisk-v4-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Boomslang 20th Anniversary Edition",
+    "specs": {
+      "length_mm": 138.4,
+      "width_mm": 81.9,
+      "height_mm": 34.5,
+      "weight_g": 110,
+      "shape": "ergonomic",
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-boomslang-20th-anniversary-edition"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Cobra",
+    "specs": {
+      "length_mm": 119.6,
+      "width_mm": 62.5,
+      "height_mm": 38.1,
+      "weight_g": 58,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": ["cobra"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-cobra"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Cobra HyperSpeed",
+    "specs": {
+      "length_mm": 119.6,
+      "width_mm": 62.5,
+      "height_mm": 38.1,
+      "weight_g": 62,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-cobra-hyperspeed"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Cobra Pro",
+    "specs": {
+      "length_mm": 119.6,
+      "width_mm": 62.5,
+      "height_mm": 38.1,
+      "weight_g": 77,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": ["cobra pro"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-cobra-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "DeathAdder Essential",
+    "specs": {
+      "length_mm": 127.3,
+      "width_mm": 72.7,
+      "height_mm": 42.8,
+      "weight_g": 96,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["deathadder essential"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-deathadder-essential"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "DeathAdder V2 X Hyperspeed",
+    "specs": {
+      "length_mm": 127,
+      "width_mm": 70.1,
+      "height_mm": 42.7,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["deathadder v2 x hyperspeed"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-deathadder-v2-x-hyperspeed"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "DeathAdder V3",
+    "specs": {
+      "length_mm": 128,
+      "width_mm": 68,
+      "height_mm": 44,
+      "weight_g": 59,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["deathadder v3"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-deathadder-v3"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "DeathAdder V3 HyperSpeed",
+    "specs": {
+      "length_mm": 122.2,
+      "width_mm": 64.8,
+      "height_mm": 41.3,
+      "weight_g": 55,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["deathadder v3 hyperspeed"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-deathadder-v3-hyperspeed"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "DeathAdder V3 Pro",
+    "specs": {
+      "length_mm": 128,
+      "width_mm": 68,
+      "height_mm": 44,
+      "weight_g": 63,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-deathadder-v3-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "DeathAdder V4 Pro",
+    "specs": {
+      "length_mm": 128,
+      "width_mm": 68,
+      "height_mm": 44,
+      "weight_g": 56,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["deathadder v4 pro", "deathadder v4 pro niko"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-deathadder-v4-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Naga Left-Handed Edition",
+    "specs": {
+      "shape": "ergonomic",
+      "hand": "left"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-naga-left-handed-edition"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Naga V2 HyperSpeed",
+    "specs": {
+      "length_mm": 119.5,
+      "width_mm": 75,
+      "height_mm": 43.5,
+      "weight_g": 95,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["naga v2 hyperspeed"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-naga-v2-hyperspeed"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Naga V3 Pro",
+    "specs": {
+      "length_mm": 119.5,
+      "width_mm": 75.5,
+      "height_mm": 43.5,
+      "weight_g": 117,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-naga-v3-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Orochi V2",
+    "specs": {
+      "length_mm": 108,
+      "width_mm": 62.6,
+      "height_mm": 38.5,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": ["orochi v2", "orochi v2 quartz"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-orochi-v2"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Viper V2 Pro",
+    "specs": {
+      "weight_g": 58,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-viper-v2-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Viper V3 HyperSpeed",
+    "specs": {
+      "length_mm": 127.1,
+      "width_mm": 63.9,
+      "height_mm": 39.9,
+      "weight_g": 82,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://www.razer.com/gaming-mice/razer-viper-v3-hyperspeed"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Viper V3 Pro",
+    "specs": {
+      "length_mm": 127.1,
+      "width_mm": 63.9,
+      "height_mm": 39.9,
+      "weight_g": 54,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": ["viper v3 pro"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-viper-v3-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Viper V3 Pro SE",
+    "specs": {
+      "length_mm": 127.1,
+      "width_mm": 63.9,
+      "height_mm": 39.9,
+      "weight_g": 54,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": ["viper v3 pro se"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-viper-v3-pro-se"
+  },
+  {
+    "category": "mouse",
+    "brand": "Razer",
+    "model": "Viper V4 Pro",
+    "specs": {
+      "length_mm": 127.1,
+      "width_mm": 63.9,
+      "height_mm": 39.9,
+      "weight_g": 49,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": ["viper v4 pro"],
+    "source_url": "https://www.razer.com/gaming-mice/razer-viper-v4-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Aerox 3 Wireless",
+    "specs": {
+      "length_mm": 120.55,
+      "width_mm": 67.03,
+      "height_mm": 37.98,
+      "weight_g": 68,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["aerox 3 onyx", "aerox 3 snow"],
+    "source_url": "https://steelseries.com/gaming-mice/aerox-3-2022"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Aerox 3 Wireless Gen 2",
+    "specs": {
+      "length_mm": 120.55,
+      "width_mm": 67.03,
+      "height_mm": 37.98,
+      "weight_g": 68,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://steelseries.com/gaming-mice/aerox-3-wireless-gen-2"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Aerox 5 Wireless",
+    "specs": {
+      "length_mm": 128.8,
+      "width_mm": 68.2,
+      "height_mm": 42.1,
+      "weight_g": 74,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["aerox 5 wireless"],
+    "source_url": "https://steelseries.com/gaming-mice/aerox-5"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Aerox 9 Wireless",
+    "specs": {
+      "length_mm": 128.8,
+      "width_mm": 68.2,
+      "height_mm": 42.1,
+      "weight_g": 89,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["aerox 9 wireless"],
+    "source_url": "https://steelseries.com/gaming-mice/aerox-9"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Prime+",
+    "specs": {
+      "length_mm": 125.3,
+      "width_mm": 67.9,
+      "height_mm": 42.4,
+      "weight_g": 71,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://steelseries.com/gaming-mice/prime"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Rival 3 Gen 2",
+    "specs": {
+      "length_mm": 120.6,
+      "width_mm": 67,
+      "height_mm": 38,
+      "weight_g": 77,
+      "shape": "symmetrical",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://steelseries.com/gaming-mice/rival-3-gen-2"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Rival 3 Wireless",
+    "specs": {
+      "length_mm": 120.6,
+      "width_mm": 67,
+      "height_mm": 37.9,
+      "weight_g": 106,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://steelseries.com/gaming-mice/rival-3"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Rival 5",
+    "specs": {
+      "length_mm": 128.8,
+      "width_mm": 62.9,
+      "height_mm": 42.1,
+      "weight_g": 85,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": ["rival 5"],
+    "source_url": "https://steelseries.com/gaming-mice/rival-5"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Rival 600",
+    "specs": {
+      "length_mm": 131,
+      "width_mm": 69,
+      "height_mm": 43,
+      "weight_g": 96,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://steelseries.com/gaming-mice/rival-600"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Rival 650 Wireless",
+    "specs": {
+      "length_mm": 131,
+      "width_mm": 69,
+      "height_mm": 43,
+      "weight_g": 121,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://steelseries.com/gaming-mice/rival-650"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Sensei Pro",
+    "specs": {
+      "length_mm": 125.6,
+      "width_mm": 66.5,
+      "height_mm": 38.6,
+      "weight_g": 53,
+      "shape": "symmetrical",
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://steelseries.com/gaming-mice/sensei-rival-pro"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Sensei Ten",
+    "specs": {
+      "length_mm": 126,
+      "width_mm": 68,
+      "height_mm": 39,
+      "weight_g": 92,
+      "hand": "ambidextrous"
+    },
+    "aliases": [],
+    "source_url": "https://steelseries.com/gaming-mice/sensei-ten"
+  },
+  {
+    "category": "mouse",
+    "brand": "SteelSeries",
+    "model": "Wireless Gaming Mouse CS2 Dragon Lore Edition",
+    "specs": {
+      "length_mm": 120.55,
+      "width_mm": 67.03,
+      "height_mm": 37.98,
+      "weight_g": 71,
+      "shape": "ergonomic",
+      "hand": "right"
+    },
+    "aliases": [],
+    "source_url": "https://steelseries.com/gaming-mice/wireless-gaming-mouse-cs2-dragon-lore"
   }
 ]
