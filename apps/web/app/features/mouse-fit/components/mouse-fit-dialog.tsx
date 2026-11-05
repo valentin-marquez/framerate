@@ -79,7 +79,7 @@ export function MouseFitDialog({ open, onOpenChange }: { open: boolean; onOpenCh
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-border/60 bg-card p-5 sm:p-6">
+      <DialogContent className="max-h-[90dvh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-border/60 bg-card p-5 text-foreground sm:p-6">
         <div className="flex flex-col gap-6">
           <DialogHeader className="text-center sm:text-left">
             <DialogTitle className="text-foreground text-title-h6">Mide tu mano</DialogTitle>

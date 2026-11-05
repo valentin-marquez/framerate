@@ -55,6 +55,28 @@ where r.category = 'refresh' and r.started_at > datetime('now', '-24 hours')
 group by s.slug order by ultimo
 ```
 
+## Calibración de la recomendación de mouses (#218)
+
+Casos por agarre y qué tal le queda a cada uno. Con al menos 100 casos y 20 por agarre, el dueño decide si cambian las
+constantes de `packages/contracts/src/mouse-fit.ts` y si deja de ser orientación:
+
+```sql
+select grip, fit, count(*) casos from mouse_fit_reports group by 1,2 order by 1,2
+```
+
+Proporción entre mano y mouse en los casos "justo", sólo con medidas de referencia. `hand_length_mm` extremo se descarta
+a mano:
+
+```sql
+select r.grip, count(distinct r.id) casos,
+       round(avg(json_extract(i.specs,'$.length_mm') / r.hand_length_mm), 3) largo_mano,
+       round(avg(json_extract(i.specs,'$.width_mm') / r.hand_width_mm), 3) ancho_mano
+from mouse_fit_reports r join listings l on l.product_id = r.product_id
+join listing_identity i on i.listing_id = l.id
+where r.fit = 'right' and json_extract(i.specs_source,'$.length_mm') = 'reference'
+group by 1
+```
+
 ## Pipeline de normalización (#153)
 
 El tablero es el estado por oferta; lo mismo que muestra `/admin/estado` en el sistema `pipeline`:
