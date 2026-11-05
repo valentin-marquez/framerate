@@ -53,6 +53,8 @@ export interface RefreshStats {
   changed: number;
   missing: number;
   quarantined: number;
+  /** El presupuesto de tiempo cortó la corrida: lo que quedó sin pedir sigue en la hora siguiente. */
+  truncated: boolean;
 }
 
 /** Dominio de la tienda sin "www." (base del reclamo por DNS). */
@@ -557,6 +559,7 @@ export async function listImportantOffers(db: Db, storeId: number, limit = 500):
     WHERE l.store_id = ${storeId} AND l.is_active = 1 AND l.in_stock = 1
       AND ((p.offer_count > 1 AND l.price_cash = p.best_price)
         OR p.id IN (SELECT id FROM products ORDER BY views_7d DESC LIMIT 500))
+    ORDER BY l.last_seen_at
     LIMIT ${limit}`.execute(db.query);
   return rows.map((r) => ({
     id: r.id,

@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { catalogVersion, refreshProductsPriceSummary } from "@framerate/database";
 import { all, createTestD1, resetD1 } from "@framerate/database/testing";
+import { silentLogger } from "@framerate/kit";
 import { crawlCategory } from "@/features/ingestion/crawl-category";
 import type { RawOffer } from "@/features/ingestion/domain/normalize";
-import { refreshStore } from "@/features/ingestion/refresh-store";
+import { REFRESH_BUDGET_MS, refreshStore } from "@/features/ingestion/refresh-store";
 import { fakeStore, offer, steppingClock, testDeps } from "./helpers";
 
 let d1: D1Database;
@@ -52,12 +53,46 @@ async function setup() {
   const agedVersion = () => d1.prepare("UPDATE catalog_version SET bumped_at = '2026-01-01T00:00:00.000Z'").run();
   return {
     deps,
+    clock,
     store: tienda.store,
     agedVersion,
     returns(next: Array<Partial<RawOffer>>) {
       refreshed = next;
     },
   };
+}
+
+/** Tienda que tarda `msPerOffer` por petición, como una ficha por oferta; devuelve `pedidas` con los ids que pidió. */
+function slowStore(
+  s: Awaited<ReturnType<typeof setup>>,
+  msPerOffer: number,
+  skip: (id: string) => boolean = () => false,
+) {
+  const pedidas: string[] = [];
+  s.deps.createContext = () => ({
+    http: {
+      get: async () => {
+        s.clock.advance(msPerOffer);
+        return { status: 200, headers: new Headers(), text: "" };
+      },
+      post: () => Promise.reject(new Error("sin red en tests")),
+    },
+    log: silentLogger,
+    snapshot: async () => {},
+  });
+  s.store.adapter.refreshOffers = async function* (refs, ctx) {
+    for (const ref of refs) {
+      await ctx.http.get(ref.url);
+      pedidas.push(ref.externalId);
+      if (skip(ref.externalId)) continue;
+      const i = Number(ref.externalId) - 1;
+      yield {
+        ...offer("alfa", ref.externalId, { ...GPUS[i], priceCash: 500_000 + i }),
+        category: ref.category,
+      } as RawOffer;
+    }
+  };
+  return pedidas;
 }
 
 const pricePoints = async (deps: ReturnType<typeof testDeps>) => (await all(deps.db, "price_points")).length;
@@ -127,5 +162,50 @@ describe("refresco liviano", () => {
       stats: { requested: 3, fetched: 0 },
     });
     expect(await all(s.deps.db, "listings")).toEqual(before);
+  });
+
+  test("al agotar el presupuesto cierra como buena con lo alcanzado, sin contar lo no pedido como faltante", async () => {
+    const s = await setup();
+    const pedidas = slowStore(s, REFRESH_BUDGET_MS * 0.6);
+
+    const run = await refreshStore(s.deps, s.store);
+
+    expect(pedidas).toHaveLength(2);
+    expect(run).toMatchObject({
+      status: "succeeded",
+      stats: { requested: 3, fetched: 2, missing: 0, truncated: true },
+    });
+  });
+
+  test("una corrida que alcanza sigue contando lo que la tienda no devolvió", async () => {
+    const s = await setup();
+    slowStore(s, 1000, (id) => id === "2");
+
+    expect(await refreshStore(s.deps, s.store)).toMatchObject({
+      status: "succeeded",
+      stats: { requested: 3, fetched: 2, missing: 1, truncated: false },
+    });
+  });
+
+  test("si agota el presupuesto sin leer ninguna oferta, la corrida falla", async () => {
+    const s = await setup();
+    slowStore(s, REFRESH_BUDGET_MS * 2, () => true);
+
+    expect(await refreshStore(s.deps, s.store)).toMatchObject({
+      status: "failed",
+      stats: { requested: 3, fetched: 0, truncated: true },
+    });
+  });
+
+  test("la corrida siguiente parte por las ofertas que la anterior no alcanzó a leer", async () => {
+    const s = await setup();
+    const primera = slowStore(s, REFRESH_BUDGET_MS * 0.6);
+    await refreshStore(s.deps, s.store);
+
+    const segunda = slowStore(s, REFRESH_BUDGET_MS * 0.6);
+    await refreshStore(s.deps, s.store);
+
+    expect(segunda[0]).not.toBe(primera[0]);
+    expect(primera).not.toContain(segunda[0]);
   });
 });

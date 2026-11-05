@@ -296,7 +296,8 @@ export const STORES: readonly StoreDefinition[] = [
     slug: "mybox",
     name: "MyBox",
     url: "https://mybox.cl",
-    // 429 en cpu_cooler y case_fan en cada ciclo: la cola corre dos categorías a la vez y 1000 ms por corrida son 2 requests/s.
+    // Corta con 429 a la salida de Workers aunque se le pida una vez cada 15 s (desde el 25-10, #233); desde el relay responde.
+    egress: "relay",
     minIntervalMs: 2500,
     adapter: createPrestaShopAdapter({
       baseUrl: "https://mybox.cl",
@@ -702,6 +703,8 @@ export const STORES: readonly StoreDefinition[] = [
     slug: "centrale",
     name: "Centrale",
     url: "https://centrale.cl",
+    // Cierre deliberado: recorrer el catálogo con búsquedas sería saltárselo. Vuelve si la tienda da acceso (#232, #58).
+    pausedReason: 'La Store API responde 403 "A search term is required." a todo listado (desde el 01-11-2026, #232)',
     adapter: createWooCommerceAdapter({
       baseUrl: "https://centrale.cl",
       // SKU interno numérico ("65673"); marca en `brands`. Sin precio tarjeta: la ficha HTML tiene anti-scraping y

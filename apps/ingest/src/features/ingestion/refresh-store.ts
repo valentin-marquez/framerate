@@ -12,9 +12,17 @@ import {
   startRun,
   touchSeen,
 } from "./ingestion.repository";
-import type { StoreDefinition } from "./stores/adapter";
+import type { CrawlContext, StoreDefinition } from "./stores/adapter";
 
 export type RefreshStoreDeps = Omit<CrawlCategoryDeps, "enqueueNormalize">;
+
+/**
+ * La alarm del Durable Object muere a los 15 min sin cerrar nada. El margen cubre lo que puede tardar la última petición
+ * ya en curso: tres esperas por 429 (90 s) y cuatro timeouts de 20 s.
+ */
+export const REFRESH_BUDGET_MS = 11 * 60_000;
+
+class RefreshBudgetExhausted extends Error {}
 
 export interface RefreshResult {
   runId: string;
@@ -32,7 +40,7 @@ export async function refreshStore(deps: RefreshStoreDeps, store: StoreDefinitio
   const { db, clock } = deps;
   const runId = deps.newId();
   const log = deps.log.child({ feature: "ingestion", store: store.slug, category: "refresh", runId });
-  const stats: RefreshStats = { requested: 0, fetched: 0, changed: 0, missing: 0, quarantined: 0 };
+  const stats: RefreshStats = { requested: 0, fetched: 0, changed: 0, missing: 0, quarantined: 0, truncated: false };
   const now = () => clock().toISOString();
   const refreshOffers = store.adapter.refreshOffers;
   if (!refreshOffers) return { runId, status: "skipped", stats };
@@ -49,8 +57,35 @@ export async function refreshStore(deps: RefreshStoreDeps, store: StoreDefinitio
   const seen = new Set<string>();
   const unchanged: number[] = [];
   const changedProducts = new Set<number>();
+  const context = deps.createContext(runId);
+  const deadline = clock().getTime() + REFRESH_BUDGET_MS;
+  const inBudget = () => {
+    if (clock().getTime() >= deadline) throw new RefreshBudgetExhausted("Se agotó el presupuesto del refresco");
+  };
+  // En cada petición y no en cada oferta: una tienda que devuelve pocas ofertas igual tiene que cortar a tiempo.
+  const budgeted: CrawlContext = {
+    ...context,
+    http: {
+      get: async (url, init) => {
+        inBudget();
+        return context.http.get(url, init);
+      },
+      post: async (url, json, init) => {
+        inBudget();
+        return context.http.post(url, json, init);
+      },
+    },
+  };
+  const offers = async function* () {
+    try {
+      yield* refreshOffers.call(store.adapter, known, budgeted);
+    } catch (error) {
+      if (!(error instanceof RefreshBudgetExhausted)) throw error;
+      stats.truncated = true;
+    }
+  };
   try {
-    for await (const raw of refreshOffers.call(store.adapter, known, deps.createContext(runId))) {
+    for await (const raw of offers()) {
       const current = byExternalId.get(raw.externalId);
       if (!current || seen.has(raw.externalId)) continue;
       seen.add(raw.externalId);
@@ -79,11 +114,13 @@ export async function refreshStore(deps: RefreshStoreDeps, store: StoreDefinitio
         changedProducts.add(current.productId);
       }
     }
-    stats.missing = stats.requested - stats.fetched;
+    // Una corrida cortada no sabe cuántas alcanzó a pedir: lo no pedido no es una falta de la tienda.
+    if (!stats.truncated) stats.missing = stats.requested - stats.fetched;
 
     await touchSeen(db, unchanged, now());
     if (stats.fetched === 0) throw new Error("El refresco no trajo ninguna de las ofertas pedidas (¿cambió la API?)");
-    if (stats.fetched < stats.requested * MIN_HEALTHY_RATIO) log.warn("refresh.low_coverage", { ...stats });
+    if (!stats.truncated && stats.fetched < stats.requested * MIN_HEALTHY_RATIO)
+      log.warn("refresh.low_coverage", { ...stats });
     if (changedProducts.size > 0) {
       await refreshProductsPriceSummary(db, changedProducts, clock(), { throttleVersion: true });
     }
