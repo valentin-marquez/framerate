@@ -47,7 +47,7 @@ La Store API trae `price` y `regular_price`, pero **cada tienda los usa distinto
 
 | Qué significa en la tienda | Tiendas | Cómo se configura hoy |
 |---|---|---|
-| `price` = transferencia; la tarjeta es un recargo que sólo aparece en el HTML | Infor-Ingen (+6 %), Dust2 (+7 %), TecTec (+4 %), Progaming (+5 %), KDTEC (+2,2 %), ETChile (+5 %), CCLink (+5 %), Tecno Master, DazBog, Café Digital, Electronica Budini, Trulu, Notebooksya, MegaBytes, Natcom, RS Tech | `cardMarkup` con el recargo verificado en la ficha; sin él, tarjeta = transferencia |
+| `price` = transferencia; la tarjeta es un recargo que sólo aparece en el HTML | Infor-Ingen (+6 %), Dust2 (+7 %), TecTec (+4 %), Progaming (Shopify, transferencia / 0,94), KDTEC (+2,2 %), ETChile (+5 %), CCLink (+5 %), Tecno Master, DazBog, Café Digital, Electronica Budini, Trulu, Notebooksya, MegaBytes, Natcom, RS Tech | `cardMarkup` con el recargo verificado en la ficha; sin él, tarjeta = transferencia |
 | `price` = **tarjeta**; la transferencia sólo en el HTML | Central Gamer (−5 %), Globalbox, Nuevatec (−5 %), Tecno Shopping (−3,5 %) | `cashDiscount` con el descuento verificado en la ficha |
 | Un solo precio | Cintegral, Play Factory, Fiestalan, Bookcomputer, Mercado Store | Sin configuración |
 
@@ -75,7 +75,7 @@ En muchas, `regular_price` es el **precio "antes"** tachado. Nunca debe guardars
 | ETChile | WooCommerce, `sku: "mpn"`, tarjeta +5 % ("Precio otros métodos de pago") | SKU = MPN real casi siempre; algunas placas traen un código propio (`GBTB550MDS3HAC1W`) |
 | Nuevatec | WooCommerce, `sku: "mpn"`, `cashDiscount: 0.05` | `price` = Webpay; "Oferta Internet - Transferencia" −5 %. Catálogo chico (~80 válidas) |
 | CCLink | WooCommerce, `sku: "mpn"`, tarjeta +5 % | SKU = MPN o UPC. ~130 válidas, fuerte en discos |
-| Progaming | WooCommerce, `sku: "internal"` (EAN), tarjeta +5 % | Mezcla ventiladores en "Refrigeración": `normalize` los aparta (`category:case_fan`) |
+| Progaming | Shopify desde el 03-11-2026 (#231), colecciones por `products.json`, SKU = EAN, tarjeta = transferencia / 0,94 | Limita con 429 desde la casa; desde Workers responde. Mezcla ventiladores en "Refrigeración": `normalize` los aparta (`category:case_fan`) |
 | Central Gamer | WooCommerce, `sku: "internal"`, `cashDiscount: 0.05` | Vende sobre todo PCs armados; ~55 componentes |
 | PC Factory | Adaptador `pcfactory` (API JSON de la SPA), `minIntervalMs: 1000` | Listado `api.pcfactory.cl/…/catalogo/productos/query?categorias=…` con `efectivo` (transferencia/débito), `normal` (otros medios) y `referencia` ("antes"); el `partNumber` sale de la ficha JSON, una petición por producto. ~300 válidas, MPN 85–100 %. Se saltan los `outlet` |
 | PC Express | Adaptador `pc-express` (OpenCart: listado + ficha por producto) | Listado con `limit=100` aunque el robots.txt lo prohíbe (decisión del dueño, 11-10-2026). Tarjeta = transferencia / 0,94 ("valor normal" de tarjetas; contado −6 %). Stock de casa matriz + web. ~530 válidas, ~540 peticiones por ciclo (casi todas fichas) |
@@ -151,7 +151,7 @@ cuarentena por motivo.
 - Fiestalan: su robots.txt prohíbe toda URL con `?` (incluida la Store API) y pide `Crawl-delay: 60` y 6 peticiones por hora (10-10-2026). 11-10-2026: integrada igual por decisión del dueño, con 5 s entre peticiones.
 - Notebooksya: integrada el 11-10-2026 filtrando por atributo (~150 componentes con stock).
 - Xtreme Components (11-10-2026): casi todo agotado, usado u "open box"; las GPU nuevas son preventa y el SKU viene vacío. No se integra. Tarjeta +3,5 % (Mercado Pago), no precio único.
-- Sondeo de tiendas fuera de SoloTodo (11-10-2026), descartadas: CompuElite (Jumpseller; casi todo PC armados y combos, un solo componente suelto), PCMod (sólo PC armados), HyperPC (sus "componentes" son opciones genéricas del configurador), ShopBox (bazar, ~5 componentes con stock), DESIT (Shopify, ~10 componentes, sin SKU ni código de barras; la transferencia va en `compare_at_price`) y Sistemax (OpenCart 3; de ~450 componentes, ~9 de cada 10 son importación a 7 o 14 días). Un adaptador Shopify genérico se justifica recién con una tercera tienda Shopify con volumen (CSByte + DESIT ≈ 45 componentes).
+- Sondeo de tiendas fuera de SoloTodo (11-10-2026), descartadas: CompuElite (Jumpseller; casi todo PC armados y combos, un solo componente suelto), PCMod (sólo PC armados), HyperPC (sus "componentes" son opciones genéricas del configurador), ShopBox (bazar, ~5 componentes con stock), DESIT (Shopify, ~10 componentes, sin SKU ni código de barras; la transferencia va en `compare_at_price`) y Sistemax (OpenCart 3; de ~450 componentes, ~9 de cada 10 son importación a 7 o 14 días). Progaming justificó el adaptador Shopify (`stores/shopify.ts`, #231); CSByte y DESIT (≈ 45 componentes) quedan como configuración, con la transferencia de DESIT en `compare_at_price` por resolver.
 - KDTEC (11-10-2026): la Store API sigue sin responder (timeout de 25 s). Tecno Master: la web sigue "en construcción".
 - AllTec: PrestaShop 1.6 (no devuelve JSON). 11-10-2026: integrada con un adaptador HTML (~305 válidas).
 

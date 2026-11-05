@@ -6,6 +6,7 @@ import { createMyShopAdapter } from "./myshop";
 import { createPcExpressAdapter } from "./pc-express";
 import { createPcFactoryAdapter } from "./pcfactory";
 import { createPrestaShopAdapter } from "./prestashop";
+import { createShopifyAdapter } from "./shopify";
 import { createSpDigitalAdapter } from "./spdigital";
 import { createTecnomasAdapter } from "./tecnomas";
 import { createTecnoSagaAdapter } from "./tecnosaga";
@@ -179,24 +180,24 @@ export const STORES: readonly StoreDefinition[] = [
     slug: "progaming",
     name: "Progaming",
     url: "https://progaming.cl",
-    adapter: createWooCommerceAdapter({
+    // Shopify limita por IP con 429 `local_rate_limited`: desde la casa corta y desde Workers responde (05-11-2026, #231).
+    minIntervalMs: 3000,
+    adapter: createShopifyAdapter({
       baseUrl: "https://progaming.cl",
-      // El SKU es el EAN: se detecta como GTIN.
-      sku: "internal",
-      // Tarjeta +5 % (verificado en la ficha, sept. 2026).
-      cardMarkup: 0.05,
+      // Tarjeta = transferencia / 0,94: exacto en 12 fichas de seis categorías (05-11-2026, #231).
+      cardMarkup: 1 / 0.94 - 1,
       categories: {
-        gpu: ["tarjetas-video"],
-        cpu: ["procesadores-componentes"],
+        gpu: ["tarjetas-de-video"],
+        cpu: ["procesadores"],
         motherboard: ["placas-madres"],
-        ram: ["memorias-ram-componentes"],
-        psu: ["fuentes-poder"],
-        ssd: ["almacenamiento-componentes"],
+        ram: ["memorias-ram"],
+        psu: ["fuentes-de-poder"],
+        ssd: ["almacenamiento-pc"],
         // Mezcla coolers y ventiladores: `normalize` aparta los ventiladores.
-        cpu_cooler: ["refrigeracion"],
-        case: ["gabinetes-componentes"],
+        cpu_cooler: ["refrigeracion-pc"],
+        case: ["gabinetes"],
         keyboard: ["teclados"],
-        mouse: ["mouse-perifericos"],
+        mouse: ["mouse"],
       },
     }),
   },
