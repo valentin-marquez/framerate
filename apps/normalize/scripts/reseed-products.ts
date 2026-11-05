@@ -3,6 +3,7 @@
 // las mueve el re-vínculo (`POST /v1/admin/pipeline/relink`) con PIPELINE_LINK=live. Uso:
 //   bun scripts/reseed-products.ts <dir>           en seco: cifras y muestras en <dir>/reseed.json
 //   bun scripts/reseed-products.ts <dir> --apply   escribe en D1
+//   --categories=mouse,keyboard                    sólo esas categorías: sin esto reescribe todo el catálogo
 
 import { type Category, type IdentityValue, NORMALIZER_VERSION } from "@framerate/contracts";
 import { searchText } from "@framerate/kit";
@@ -34,13 +35,19 @@ async function d1<T>(sql: string): Promise<T[]> {
 const sqlText = (v: string | null) => (v === null ? "NULL" : `'${v.replaceAll("'", "''")}'`);
 const RANK = { high: 3, medium: 2, low: 1 } as const;
 
-const [dir, flag] = process.argv.slice(2);
-if (!dir) throw new Error("uso: reseed-products.ts <dir> [--apply]");
+const [dir, ...flags] = process.argv.slice(2);
+if (!dir) throw new Error("uso: reseed-products.ts <dir> [--apply] [--categories=mouse,keyboard]");
+const categories = flags
+  .find((f) => f.startsWith("--categories="))
+  ?.slice(13)
+  .split(",")
+  .filter((c) => /^[a-z_]+$/.test(c));
+const onlyCategories = categories ? ` AND i.category IN ('${categories.join("','")}')` : "";
 
 const rows = await d1<Row>(`SELECT l.id listing_id, l.product_id, l.mpn, l.gtin, i.category, i.brand, i.name,
   i.mpn imp, i.confidence, i.identity, p.name product_name, p.category product_category
   FROM listings l JOIN listing_identity i ON i.listing_id = l.id AND i.version = ${NORMALIZER_VERSION}
-  JOIN products p ON p.id = l.product_id WHERE l.product_id IS NOT NULL`);
+  JOIN products p ON p.id = l.product_id WHERE l.product_id IS NOT NULL${onlyCategories}`);
 
 const byProduct = new Map<number, (Row & { fp: Fingerprint })[]>();
 for (const r of rows) {
@@ -113,7 +120,7 @@ const summary = {
 await Bun.write(`${dir}/reseed.json`, JSON.stringify({ summary, outliers, renamed }, null, 1));
 await Bun.write(`${dir}/reseed.sql`, statements.join("\n"));
 console.log(JSON.stringify(summary));
-if (flag === "--apply") {
+if (flags.includes("--apply")) {
   await $`bunx wrangler d1 execute framerate --remote --file ${dir}/reseed.sql --yes`.cwd(DB_DIR).quiet();
   console.log("aplicado");
 }
