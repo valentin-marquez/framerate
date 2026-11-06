@@ -1,0 +1,82 @@
+{
+  "products": [
+    {
+      "id": 10072679317790,
+      "title": "Gabinete Exodia Sky Plus Blanco ATX 7 Fans ARGB V. Templado",
+      "handle": "gabinete-exodia-sky-plus-blanco-atx-7-fans-argb-v-templado",
+      "body_html": "El chasis ATX definitivo en un elegante acabado blanco, con máximo flujo de aire y estilo.<br>El Exodia Sky Plus en color blanco ofrece una estética premium y un rendimiento de refrigeración excepcion",
+      "vendor": "Exodia",
+      "product_type": "Gabinetes",
+      "variants": [
+        {
+          "id": 59840241828126,
+          "title": "Default Title",
+          "sku": "76979424941230",
+          "price": "69990",
+          "compare_at_price": null,
+          "available": true
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0990/5795/9198/files/skyplusblanco1-404a3038-d949-440f-ace5-eef38d03caa4.jpg?v=1776798349"
+        },
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0990/5795/9198/files/skyplusblanco2-0bf09a3e-bc44-4189-9d18-c49e1de85ebe.jpg?v=1776798349"
+        }
+      ]
+    },
+    {
+      "id": 16022550642974,
+      "title": "Gabinete MSI MAG PANO M110R Negro Micro-ATX",
+      "handle": "gabinete-msi-mag-pano-m110r-negro-micro-atx",
+      "body_html": "<h4>Gabinete MSI MAG PANO M110R Negro</h4>El <b>MSI MAG PANO M110R</b> es un gabinete Mini Tower diseñado para equipos gaming que buscan combinar una estética moderna con una excelente visualización d",
+      "vendor": "MSI",
+      "product_type": "Gabinetes",
+      "variants": [
+        {
+          "id": 60652942360862,
+          "title": "Default Title",
+          "sku": "4711377405003",
+          "price": "89990",
+          "compare_at_price": null,
+          "available": true
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0990/5795/9198/files/new-project-2026-10-27t135531382-ba707360-70fc-4976-81f8-f886d14f89b9.jpg?v=1793120172"
+        },
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0990/5795/9198/files/new-project-2026-10-27t135542270-05f3e082-61d5-4895-84c7-964435c05eea.jpg?v=1793120172"
+        }
+      ]
+    },
+    {
+      "id": 15971256566046,
+      "title": "Gabinete Thermaltake View 380 XL TG ARGB Mid Tower ATX Sand",
+      "handle": "gabinete-thermaltake-view-380-xl-tg-argb-mid-tower-atx-sand",
+      "body_html": "<h4>Gabinete Thermaltake View 380 XL TG ARGB Gravel Sand Mid Tower</h4><p>El <b>Thermaltake View 380 XL TG ARGB Gravel Sand</b> es un gabinete Mid Tower de doble cámara diseñado para ofrecer amplio es",
+      "vendor": "Thermaltake",
+      "product_type": "Gabinetes",
+      "variants": [
+        {
+          "id": 60231087816990,
+          "title": "Default Title",
+          "sku": "4711475649705",
+          "price": "161990",
+          "compare_at_price": null,
+          "available": false
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0990/5795/9198/files/new-project-98-bf5143ba-dd8c-4335-8af0-d74378ff23ee.jpg?v=1791554046"
+        },
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0990/5795/9198/files/new-project-99-c55cbc58-9c26-48f7-b10f-b70c6f74323f.jpg?v=1791554046"
+        }
+      ]
+    }
+  ]
+}

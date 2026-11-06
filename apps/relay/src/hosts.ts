@@ -12,6 +12,7 @@ export const RELAY_HOSTS: readonly string[] = [
   "electronicabudini.cl",
   "globalbox.cl",
   "www.spdigital.cl",
+  "mybox.cl",
 ];
 
 /**
@@ -21,4 +22,5 @@ export const RELAY_HOSTS: readonly string[] = [
 export const HOST_INTERVAL_MS: Readonly<Record<string, number>> = {
   "www.winpy.cl": 6000,
   "www.spdigital.cl": 5000,
+  "mybox.cl": 2500,
 };

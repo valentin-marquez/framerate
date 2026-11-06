@@ -126,7 +126,7 @@ export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | 
       );
     }
 
-    // El refresco primero: dura ~1 min y es la promesa de frescura; un ciclo de crawls en serie puede durar 40.
+    // El refresco primero: dura a lo más 11 min (`REFRESH_BUDGET_MS`) y es la promesa de frescura; un ciclo de crawls en serie puede durar 40.
     const [task] = sql(
       `SELECT key, kind, category, attempts FROM tasks WHERE status = 'pending' AND not_before <= ?
        ORDER BY kind = 'refresh' DESC, rowid LIMIT 1`,
