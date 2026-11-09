@@ -60,6 +60,12 @@ export function QuoteSpecs({ quote }: { quote: PublicQuote }) {
   );
 }
 
+const MEDALS = [
+  "text-amber-600 dark:text-amber-400",
+  "text-slate-500 dark:text-slate-300",
+  "text-orange-700 dark:text-orange-500",
+];
+
 /** Cotización pública: collage, nombre, dos componentes con la RAM y el almacenamiento, y pie con total, autor y me gusta. */
 export function QuoteCard({ quote, rank }: QuoteCardProps) {
   return (
@@ -67,7 +73,12 @@ export function QuoteCard({ quote, rank }: QuoteCardProps) {
       <div className="relative">
         <Collage images={quote.images} />
         {rank !== undefined && (
-          <span className="absolute top-2.5 left-2.5 rounded-md bg-card/90 px-1.5 py-0.5 text-label-xs text-muted-foreground tabular-nums">
+          <span
+            className={cn(
+              "absolute top-2.5 left-2.5 rounded-md bg-card/90 px-1.5 py-0.5 text-label-xs tabular-nums",
+              MEDALS[rank - 1] ?? "text-muted-foreground",
+            )}
+          >
             #{rank}
           </span>
         )}
@@ -87,7 +98,7 @@ export function QuoteCard({ quote, rank }: QuoteCardProps) {
       </div>
       {/* En teléfono, a dos columnas, el total va en su línea y debajo el autor con el me gusta: juntos se cortaba el total. */}
       <div className="mt-auto grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-1 border-border border-t px-3 py-2 sm:grid-cols-[auto_1fr_auto]">
-        <span className="col-span-2 text-label-sm text-foreground tabular-nums sm:col-span-1">
+        <span className="col-span-2 text-foreground text-title-h6 tabular-nums sm:col-span-1">
           {formatCLP(quote.totalCash)}
         </span>
         <span className="min-w-0 truncate text-muted-foreground text-paragraph-xs sm:text-center">

@@ -55,7 +55,7 @@ function Row({ quote, rank }: { quote: PublicQuote; rank: number }) {
         {componentes(quote.itemCount)}
       </span>
       <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-4">
-        <span className="text-label-sm text-foreground tabular-nums sm:w-24 sm:text-right">
+        <span className="text-foreground text-label-lg tabular-nums sm:w-28 sm:text-right">
           {formatCLP(quote.totalCash)}
         </span>
         <span className="relative z-10">
