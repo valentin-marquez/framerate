@@ -23,7 +23,7 @@ export function PublicQuotes({ quotes }: { quotes: PublicQuote[] }) {
       <ol className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
         {quotes.slice(0, MIN_PUBLIC_QUOTES).map((quote, i) => (
           <li key={quote.id} className="flex min-w-0">
-            <QuoteCard quote={quote} rank={i === 0 ? 1 : undefined} />
+            <QuoteCard quote={quote} rank={i + 1} />
           </li>
         ))}
       </ol>
