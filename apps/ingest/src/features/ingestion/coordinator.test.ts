@@ -5,9 +5,12 @@ import { silentLogger } from "@framerate/kit";
 import { CRAWL_PERIOD_MS, nextSlot, REFRESH_PERIOD_MS, storeOffset } from "./agenda";
 import {
   type AlarmDeps,
+  completeTask,
+  type DispatchedTask,
   enqueueCrawls,
   ensureSchedule,
   initSchema,
+  LEASE_MS,
   nextWake,
   runAlarmStep,
   type Sql,
@@ -20,47 +23,48 @@ function setup() {
   const sql: Sql = (query, ...params) => db.query(query).all(...params) as never;
   initSchema(sql);
   let t = Date.parse("2026-10-20T00:00:00Z");
-  const crawled: Array<Category | "refresh"> = [];
+  const dispatched: DispatchedTask[] = [];
   const closed: string[] = [];
-  let outcome: "succeeded" | "failed" | Error = "succeeded";
+  let dispatchError: Error | null = null;
   let n = 0;
   const deps: AlarmDeps = {
     slug: "tienda",
     categories: ["gpu", "cpu"],
     now: () => t,
     newId: () => `run-${++n}`,
-    crawl: async (category) => {
-      crawled.push(category);
-      if (outcome instanceof Error) throw outcome;
-      return { status: outcome };
+    refreshable: false,
+    dispatch: async (task) => {
+      if (dispatchError) throw dispatchError;
+      dispatched.push(task);
     },
-    refresh: null,
     closeRun: async (runId) => {
       closed.push(runId);
     },
     log: silentLogger,
   };
   const tasks = () => sql("SELECT key, status, attempts, not_before FROM tasks ORDER BY rowid");
-  const refresh: AlarmDeps["refresh"] = async () => {
-    crawled.push("refresh");
-    if (outcome instanceof Error) throw outcome;
-    return { status: outcome };
-  };
   return {
     sql,
     deps,
-    refresh,
-    crawled,
     closed,
     tasks,
+    /** Lo despachado, como categoría o `refresh`. */
+    get crawled(): Array<Category | "refresh"> {
+      return dispatched.map((d) => d.category ?? "refresh");
+    },
     get now() {
       return t;
     },
     advance: (ms: number) => {
       t += ms;
     },
-    result: (next: typeof outcome) => {
-      outcome = next;
+    /** El aviso del consumer para la última tarea despachada. */
+    finish: (failed = false) => {
+      const last = dispatched.at(-1) as DispatchedTask;
+      completeTask(sql, last.key, last.runId, failed, t, silentLogger);
+    },
+    failDispatch: (error: Error | null) => {
+      dispatchError = error;
     },
   };
 }
@@ -73,42 +77,61 @@ describe("coordinador por tienda", () => {
     expect(tasks().map((r) => r.key)).toEqual(["crawl:gpu", "crawl:cpu"]);
   });
 
-  test("una tarea por alarm, en orden de llegada, y el éxito la borra", async () => {
+  test("despacha una tarea a la vez, en orden de llegada, y el aviso de éxito la borra", async () => {
     const s = setup();
     enqueueCrawls(s.sql, ["cpu", "gpu"], "admin:a", s.now);
-    expect(await runAlarmStep(s.sql, s.deps)).toBe(s.now);
+    // Con una en curso sólo espera su lease, no las pendientes.
+    expect(await runAlarmStep(s.sql, s.deps)).toBe(s.now + LEASE_MS);
     expect(s.crawled).toEqual(["cpu"]);
+    await runAlarmStep(s.sql, s.deps);
+    expect(s.crawled).toEqual(["cpu"]);
+    s.finish();
     expect(s.tasks().map((r) => r.key)).toEqual(["crawl:gpu"]);
+    expect(nextWake(s.sql, s.now)).toBe(s.now);
     await runAlarmStep(s.sql, s.deps);
     expect(s.crawled).toEqual(["cpu", "gpu"]);
+    s.finish();
     expect(await runAlarmStep(s.sql, s.deps)).toBeNull();
   });
 
   test("un fallo reintenta con demora y al tercero se descarta", async () => {
     const s = setup();
-    s.result("failed");
     enqueueCrawls(s.sql, ["gpu"], "cron", s.now);
-    expect(await runAlarmStep(s.sql, s.deps)).toBe(s.now + 5 * MIN);
+    await runAlarmStep(s.sql, s.deps);
+    s.finish(true);
     expect(s.tasks()[0]).toMatchObject({ status: "pending", attempts: 1 });
-    // Antes de la demora no corre.
+    expect(nextWake(s.sql, s.now)).toBe(s.now + 5 * MIN);
+    // Antes de la demora no despacha.
     await runAlarmStep(s.sql, s.deps);
     expect(s.crawled).toHaveLength(1);
     s.advance(5 * MIN);
-    s.result(new Error("red"));
-    expect(await runAlarmStep(s.sql, s.deps)).toBe(s.now + 10 * MIN);
+    await runAlarmStep(s.sql, s.deps);
+    s.finish(true);
+    expect(nextWake(s.sql, s.now)).toBe(s.now + 10 * MIN);
     s.advance(10 * MIN);
     await runAlarmStep(s.sql, s.deps);
+    s.finish(true);
     expect(s.crawled).toHaveLength(3);
     expect(s.tasks()).toEqual([]);
   });
 
-  test("una tarea que quedó running se cierra como interrumpida y vuelve a pending", async () => {
+  test("un lease vencido cierra la corrida como interrumpida y su aviso tardío se ignora", async () => {
     const s = setup();
     enqueueCrawls(s.sql, ["gpu"], "cron", s.now);
-    s.sql("UPDATE tasks SET status = 'running', run_id = 'muerta'");
+    await runAlarmStep(s.sql, s.deps);
+    s.advance(LEASE_MS);
     expect(await runAlarmStep(s.sql, s.deps)).toBe(s.now + 5 * MIN);
-    expect(s.closed).toEqual(["muerta"]);
-    expect(s.crawled).toEqual([]);
+    expect(s.closed).toEqual(["run-1"]);
+    expect(s.tasks()[0]).toMatchObject({ status: "pending", attempts: 1 });
+    s.finish();
+    expect(s.tasks()[0]).toMatchObject({ status: "pending", attempts: 1 });
+  });
+
+  test("si no se puede despachar, cuenta como fallo", async () => {
+    const s = setup();
+    enqueueCrawls(s.sql, ["gpu"], "cron", s.now);
+    s.failDispatch(new Error("cola caída"));
+    expect(await runAlarmStep(s.sql, s.deps)).toBe(s.now + 5 * MIN);
     expect(s.tasks()[0]).toMatchObject({ status: "pending", attempts: 1 });
   });
 
@@ -120,6 +143,7 @@ describe("coordinador por tienda", () => {
     s.advance(slot - s.now);
     await runAlarmStep(s.sql, s.deps);
     expect(s.crawled).toEqual(["gpu"]);
+    s.finish();
     expect(s.tasks().map((r) => r.key)).toEqual(["crawl:cpu"]);
     expect(s.sql("SELECT next_at FROM schedule")[0]?.next_at).toBe(slot + CRAWL_PERIOD_MS);
     // Un slot ya creado no se mueve.
@@ -129,7 +153,7 @@ describe("coordinador por tienda", () => {
 
   test("el refresco vence cada hora y pasa antes que los crawls encolados", async () => {
     const s = setup();
-    const deps = { ...s.deps, refresh: s.refresh };
+    const deps = { ...s.deps, refreshable: true };
     enqueueCrawls(s.sql, ["gpu"], "admin:a", s.now);
     ensureSchedule(s.sql, "tienda", s.now, true);
     const slot = nextSlot(s.now, REFRESH_PERIOD_MS, storeOffset("tienda", REFRESH_PERIOD_MS));
@@ -137,18 +161,19 @@ describe("coordinador por tienda", () => {
     await runAlarmStep(s.sql, deps);
     expect(s.crawled).toEqual(["refresh"]);
     expect(s.sql("SELECT next_at FROM schedule WHERE kind = 'refresh'")[0]?.next_at).toBe(slot + REFRESH_PERIOD_MS);
+    s.finish();
     await runAlarmStep(s.sql, deps);
     expect(s.crawled).toEqual(["refresh", "gpu"]);
   });
 
   test("un refresco fallido o interrumpido no se reintenta: vuelve con el próximo slot", async () => {
     const s = setup();
-    const deps = { ...s.deps, refresh: s.refresh };
+    const deps = { ...s.deps, refreshable: true };
     s.sql(
       "INSERT INTO tasks (key, kind, requested_by, requested_at, not_before) VALUES ('refresh', 'refresh', 'schedule', 0, 0)",
     );
-    s.result("failed");
     await runAlarmStep(s.sql, deps);
+    s.finish(true);
     expect(s.tasks()).toEqual([]);
     s.sql(
       "INSERT INTO tasks (key, kind, requested_by, requested_at, not_before, status, run_id) VALUES ('refresh', 'refresh', 'schedule', 0, 0, 'running', 'muerta')",

@@ -11,7 +11,7 @@ import { createDb } from "@framerate/database";
 import type { Logger } from "@framerate/kit";
 import { systemClock } from "@framerate/kit";
 import type { z } from "zod";
-import type { Env } from "@/env";
+import type { CrawlMessage, Env } from "@/env";
 import { type CrawlResult, crawlCategory } from "./crawl-category";
 import type { RawOffer } from "./domain/normalize";
 import { knownOffers, listingsForStage, markPending, retryStuck } from "./ingestion.repository";
@@ -118,7 +118,29 @@ export async function runCrawl(
   );
 }
 
-/** Refresco horario de la tienda (#121): sus snapshots van bajo `refresh/` en lugar de una categoría. */
+/**
+ * Consumer de `framerate-crawl` (#237): corre fuera del Durable Object la tarea que despachó y le avisa cómo terminó.
+ * Si muere a mitad, el lease del DO vence y la da por interrumpida.
+ */
+export async function runDispatchedTask(env: Env, task: CrawlMessage, log: Logger): Promise<void> {
+  const store = findStore(task.slug);
+  let failed = true;
+  try {
+    if (store && !store.pausedReason) {
+      const run =
+        task.kind === "refresh"
+          ? runRefresh(env, store, log, task.runId)
+          : runCrawl(env, store, task.category as Category, log, task.runId);
+      failed = (await run).status === "failed";
+    }
+  } catch (error) {
+    log.error("coordinator.task_failed", { store: task.slug, key: task.key, runId: task.runId, error });
+  } finally {
+    await storeCrawler(env, task.slug).complete(task.key, task.runId, failed);
+  }
+}
+
+/** Refresco de la tienda (#121): sus snapshots van bajo `refresh/` en lugar de una categoría. */
 export function runRefresh(env: Env, store: StoreDefinition, log: Logger, runId: string): Promise<RefreshResult> {
   return refreshStore(
     {

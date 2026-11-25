@@ -147,6 +147,7 @@ export function testEnv(d1: D1Database) {
     SNAPSHOTS: {} as R2Bucket,
     ASSETS: {} as R2Bucket,
     STORE_CRAWLER: crawlers.namespace,
+    CRAWL_QUEUE: fakeQueue([]),
     NORMALIZE_QUEUE: fakeQueue(normalize),
     LINK_QUEUE: fakeQueue(link),
   };

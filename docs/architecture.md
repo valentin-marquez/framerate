@@ -48,6 +48,7 @@ flowchart TB
 
     cron(("Cron Trigger<br/>17 */6 * * * y 47 * * * *"))
     crawler[["Durable Object StoreCrawler<br/>uno por tienda: cola, agenda y alarm"]]
+    crawlQ[["Queue<br/>framerate-crawl"]]
     ingest["<b>framerate-ingest</b><br/>Worker sin HTTP público<br/>adaptadores, normalizar, matching<br/>RPC IngestRpc"]
     resizer["resizer.nozz.skin<br/>sharp en el servidor propio"]
 
@@ -73,7 +74,8 @@ flowchart TB
 
   cron --> ingest
   ingest -- "enqueue() y ensureScheduled()" --> crawler
-  crawler -- "alarm: una corrida a la vez por tienda" --> stores
+  crawler -- "alarm: despacha una corrida a la vez por tienda" --> crawlQ
+  crawlQ -- "consumer: corre el crawl y avisa complete()" --> ingest
   ingest -- "fetch" --> stores
   ingest -- "escribe catálogo" --> d1
   ingest --> snap
@@ -121,7 +123,12 @@ crawls y barre las revisiones pendientes sin veredicto, así que también cubre 
 |---|---|---|---|
 | **Descubrir** | Agenda del `StoreCrawler` cada 3 h, con desfase propio por tienda | Recorre el catálogo completo de cada tienda/categoría, una corrida a la vez por tienda. Pesado. | ✅ |
 | **Bajo demanda** | Admin → `POST /v1/admin/crawls` → RPC a `ingest` → `StoreCrawler` | Igual que descubrir; un pedido repetido mientras espera no se duplica. | ✅ |
-| **Refrescar** | **Apagado desde #235** (`REFRESH_ENABLED` en `store-crawler.ts`): corría en la alarm cada hora y era el 55 % del excedente de Durable Objects. Volver a prenderlo pide ejecutarlo en un consumer de Queue | Vuelve a leer precio y stock de las ofertas con stock que deciden el mejor precio o son de los 500 productos más vistos (`refresh-store.ts`). No desactiva ni vincula; lo no devuelto queda igual. Sube `catalog_version` como mucho cada 15 min. Sólo adaptadores con `refreshOffers`: WooCommerce por ids, PC Factory por listado, el resto una ficha por oferta. | ✅ WooCommerce, MyShop, PC Express, Tecnomas, Winpy, Jumpseller y PC Factory (#121) |
+| **Refrescar** | **Apagado desde #235** (`REFRESH_ENABLED` en `store-crawler.ts`): corría cada hora y era el 55 % del excedente de Durable Objects. Desde #237 corre en la cola como el crawl, así que prenderlo ya no cuesta tiempo de DO | Vuelve a leer precio y stock de las ofertas con stock que deciden el mejor precio o son de los 500 productos más vistos (`refresh-store.ts`). No desactiva ni vincula; lo no devuelto queda igual. Sube `catalog_version` como mucho cada 15 min. Sólo adaptadores con `refreshOffers`: WooCommerce por ids, PC Factory por listado, el resto una ficha por oferta. | ✅ WooCommerce, MyShop, PC Express, Tecnomas, Winpy, Jumpseller y PC Factory (#121) |
+
+La alarm no crawlea (#237): el DO se cobra por tiempo de pared y un crawl pasa casi todo su tiempo esperando a la
+tienda. Marca la tarea `running` con un lease de 30 min y la manda a `framerate-crawl`; el consumer (el mismo Worker,
+una tarea por invocación, sin reintentos) la corre y llama `complete()`. Sin aviso, el lease vence y la tarea cuenta
+como interrumpida. Con una en curso no se despacha otra, así cada tienda sigue en serie.
 
 El Cron horario (`47 * * * *`) sólo llama `ensureScheduled()` en cada tienda activa: revive una alarm perdida. La
 lógica está en `coordinator.ts` (SQL del DO, testeado sobre `bun:sqlite`) y `agenda.ts`; diseño en #201.

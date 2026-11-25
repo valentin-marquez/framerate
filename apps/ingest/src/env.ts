@@ -1,5 +1,8 @@
 import type { PipelineMessage } from "@framerate/contracts";
+import type { DispatchedTask } from "@/features/ingestion/coordinator";
 import type { StoreCrawler } from "@/features/ingestion/store-crawler";
+
+export type CrawlMessage = DispatchedTask & { slug: string };
 
 /** Bindings del Worker (ver `wrangler.jsonc`). */
 export interface Env {
@@ -11,6 +14,8 @@ export interface Env {
   /** Coordinador por tienda (#121): un Durable Object por slug, con su cola y su agenda. */
   STORE_CRAWLER: DurableObjectNamespace<StoreCrawler>;
   /** Productores del pipeline (#153); los consumen `framerate-normalize` y `framerate-match`. */
+  /** Tareas que despacha cada `StoreCrawler` (#237); la consume este mismo Worker. */
+  CRAWL_QUEUE: Queue<CrawlMessage>;
   NORMALIZE_QUEUE: Queue<PipelineMessage>;
   LINK_QUEUE: Queue<PipelineMessage>;
   /** Correos de la plataforma (avisos de reclamos); sin binding (tests) no se envía nada. */

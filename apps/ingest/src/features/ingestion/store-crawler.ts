@@ -3,22 +3,26 @@ import type { Category } from "@framerate/contracts";
 import { createDb } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
 import type { Env } from "@/env";
-import { enqueueCrawls, ensureSchedule, initSchema, nextWake, runAlarmStep, type Sql } from "./coordinator";
+import {
+  completeTask,
+  enqueueCrawls,
+  ensureSchedule,
+  initSchema,
+  nextWake,
+  runAlarmStep,
+  type Sql,
+} from "./coordinator";
 import { closeInterruptedRun } from "./ingestion.repository";
-import { runCrawl, runRefresh, storeCategories } from "./runtime";
-import type { StoreDefinition } from "./stores/adapter";
+import { storeCategories } from "./runtime";
 import { findStore } from "./stores/registry";
 
 const log = createLogger({ service: "framerate-ingest" });
-/**
- * ponytail: refresco apagado (#235). El DO se cobra por tiempo de pared y el refresco horario era el 55 % del excedente;
- * con `false` el coordinador borra sus slots y tareas. Volver a prenderlo pide correrlo en un consumer de Queue.
- */
+/** Refresco liviano apagado (#235): un solo crawl cada 3 h. Con `false` el coordinador borra sus slots y tareas. */
 const REFRESH_ENABLED = false;
 
 /**
- * Un Durable Object por tienda (#121): serializa sus corridas y lleva su agenda. Los RPC sólo escriben en SQLite y
- * programan la alarm; nunca crawlean, así un pedido que llega mientras la alarm espera a la tienda no la toca.
+ * Un Durable Object por tienda (#121): serializa sus corridas y lleva su agenda. Nunca crawlea: la alarm despacha cada
+ * tarea a la cola `framerate-crawl` y el consumer avisa con `complete` (#237).
  */
 export class StoreCrawler extends DurableObject<Env> {
   private readonly sql: Sql = (query, ...params) => this.ctx.storage.sql.exec(query, ...params).toArray() as never;
@@ -47,6 +51,18 @@ export class StoreCrawler extends DurableObject<Env> {
     if (current === null || (next !== null && next < current)) await this.wakeAt(next);
   }
 
+  async complete(key: string, runId: string, failed: boolean): Promise<void> {
+    completeTask(
+      this.sql,
+      key,
+      runId,
+      failed,
+      Date.now(),
+      log.child({ feature: "coordinator", store: this.ctx.storage.kv.get<string>("slug") }),
+    );
+    await this.wakeAt(nextWake(this.sql, Date.now()));
+  }
+
   override async alarm() {
     // Un DO nunca llamado por RPC no tiene slug ni alarm; `ctx.id.name` no está garantizado dentro de la alarm.
     const slug = this.ctx.storage.kv.get<string>("slug");
@@ -60,9 +76,10 @@ export class StoreCrawler extends DurableObject<Env> {
       categories: store ? storeCategories(store) : null,
       now: Date.now,
       newId: () => crypto.randomUUID(),
-      crawl: (category, runId) => runCrawl(this.env, store as StoreDefinition, category, log, runId),
-      refresh:
-        REFRESH_ENABLED && store?.adapter.refreshOffers ? (runId) => runRefresh(this.env, store, log, runId) : null,
+      refreshable: REFRESH_ENABLED && Boolean(store?.adapter.refreshOffers),
+      dispatch: async (task) => {
+        await this.env.CRAWL_QUEUE.send({ slug, ...task });
+      },
       closeRun: (runId) => closeInterruptedRun(db, runId, new Date()),
       log: storeLog,
     });

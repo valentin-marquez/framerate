@@ -15,7 +15,7 @@
   // quien crawlea su tienda (#121); el horario debe coincidir con HOURLY_CRON de src/index.ts.
   "triggers": { "crons": ["17 */6 * * *", "47 * * * *"] },
 
-  // Un DO por tienda: serializa sus corridas y reparte su crawl de 3 h con un desfase propio.
+  // Un DO por tienda: serializa sus corridas y reparte su crawl de 3 h con un desfase propio; no crawlea, despacha.
   // Crear, borrar o renombrar la clase sólo con `wrangler deploy` (no `versions upload`); rollback en #201 §7.
   "durable_objects": { "bindings": [{ "name": "STORE_CRAWLER", "class_name": "StoreCrawler" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["StoreCrawler"] }],
@@ -57,7 +57,14 @@
     "producers": [
       // Las consumen framerate-normalize y framerate-match (#153); toda oferta nueva o cambiada pasa por ellas.
       { "binding": "NORMALIZE_QUEUE", "queue": "framerate-normalize" },
-      { "binding": "LINK_QUEUE", "queue": "framerate-link" }
+      { "binding": "LINK_QUEUE", "queue": "framerate-link" },
+      // Las tareas que despacha cada StoreCrawler (#237): bunx wrangler@latest queues create framerate-crawl
+      { "binding": "CRAWL_QUEUE", "queue": "framerate-crawl" }
+    ],
+    "consumers": [
+      // Corre el crawl fuera del DO, que se cobra por tiempo de pared. Una tarea por invocación (15 min de pared, como
+      // la alarm de antes) y sin reintentos: si muere, el lease del DO la reintenta.
+      { "queue": "framerate-crawl", "max_batch_size": 1, "max_retries": 0 }
     ]
   }
 }

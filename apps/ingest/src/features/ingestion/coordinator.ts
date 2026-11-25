@@ -1,7 +1,6 @@
 import type { Category } from "@framerate/contracts";
 import type { Logger } from "@framerate/kit";
 import { CRAWL_PERIOD_MS, MAX_ATTEMPTS, nextSlot, REFRESH_PERIOD_MS, retryDelay, storeOffset } from "./agenda";
-import type { CrawlResult } from "./crawl-category";
 
 /**
  * Cola y agenda de una tienda (#121, spec #201). El mismo SQL corre sobre `ctx.storage.sql` en el Durable Object
@@ -60,15 +59,33 @@ export function ensureSchedule(sql: Sql, slug: string, now: number, refreshable:
   }
 }
 
-/** El próximo despertar: la tarea pendiente o el slot más cercano, nunca antes de `now`. `null` si no hay nada. */
+/**
+ * Cuánto espera el DO a que el consumer avise que terminó: la invocación muere a los 15 min, y el resto cubre lo que el
+ * mensaje pueda esperar en la cola. Vencido, la tarea se da por interrumpida.
+ */
+export const LEASE_MS = 30 * 60_000;
+
+/**
+ * El próximo despertar, nunca antes de `now`; `null` si no hay nada. Con una tarea en curso, las pendientes esperan a
+ * que termine (`completeTask` despierta la alarm) y sólo cuentan el vencimiento de su lease y los slots.
+ */
 export function nextWake(sql: Sql, now: number): number | null {
+  const [running] = sql("SELECT COUNT(*) AS n FROM tasks WHERE status = 'running'");
   const [row] = sql(
     `SELECT MIN(t) AS t FROM (
-       SELECT MIN(not_before) AS t FROM tasks WHERE status = 'pending'
+       SELECT MIN(not_before) AS t FROM tasks WHERE status = ?
        UNION ALL SELECT next_at FROM schedule
      )`,
+    Number(running?.n) > 0 ? "running" : "pending",
   );
   return row?.t == null ? null : Math.max(now, Number(row.t));
+}
+
+export interface DispatchedTask {
+  key: string;
+  kind: "crawl" | "refresh";
+  category: Category | null;
+  runId: string;
 }
 
 export interface AlarmDeps {
@@ -77,15 +94,20 @@ export interface AlarmDeps {
   categories: readonly Category[] | null;
   now(): number;
   newId(): string;
-  crawl(category: Category, runId: string): Promise<Pick<CrawlResult, "status">>;
-  /** Refresco liviano de la tienda; `null` si su adaptador no lo implementa. */
-  refresh: ((runId: string) => Promise<Pick<CrawlResult, "status">>) | null;
-  /** Cierra como fallida una corrida que quedó `running` porque el Worker murió a mitad. */
+  /** Si la tienda tiene refresco liviano además del crawl. */
+  refreshable: boolean;
+  /** Manda la tarea a ejecutar fuera del DO (cola `framerate-crawl`); quien la corre avisa con `completeTask`. */
+  dispatch(task: DispatchedTask): Promise<void>;
+  /** Cierra como fallida una corrida cuyo lease venció sin aviso (el consumer murió a mitad). */
   closeRun(runId: string): Promise<void>;
   log: Logger;
 }
 
-/** Una alarm: a lo más una tarea, en serie (#32). Devuelve cuándo despertar de nuevo, o `null` para no hacerlo. */
+/**
+ * Una alarm: despacha a lo más una tarea y nunca con otra en curso, así cada tienda corre en serie (#32). El DO no la
+ * ejecuta: se cobra por tiempo de pared y el crawl pasa casi todo su tiempo esperando a la tienda (#237). Devuelve
+ * cuándo despertar de nuevo, o `null` para no hacerlo.
+ */
 export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | null> {
   const { log } = deps;
   if (!deps.categories) {
@@ -95,7 +117,10 @@ export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | 
     return null;
   }
   try {
-    for (const task of sql("SELECT key, kind, run_id, attempts FROM tasks WHERE status = 'running'")) {
+    for (const task of sql(
+      "SELECT key, kind, run_id, attempts FROM tasks WHERE status = 'running' AND not_before <= ?",
+      deps.now(),
+    )) {
       log.warn("coordinator.interrupted", { key: task.key, runId: task.run_id });
       if (task.run_id) await deps.closeRun(String(task.run_id));
       settleFailure(sql, String(task.key), String(task.kind), Number(task.attempts) + 1, deps.now(), log);
@@ -111,7 +136,7 @@ export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | 
       );
     }
     const [refreshSlot] = sql("SELECT next_at FROM schedule WHERE kind = 'refresh'");
-    if (!deps.refresh) {
+    if (!deps.refreshable) {
       sql("DELETE FROM schedule WHERE kind = 'refresh'");
       sql("DELETE FROM tasks WHERE kind = 'refresh'");
     } else if (refreshSlot && now >= Number(refreshSlot.next_at)) {
@@ -127,27 +152,26 @@ export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | 
     }
 
     // El refresco primero: dura a lo más 11 min (`REFRESH_BUDGET_MS`) y es la promesa de frescura; un ciclo de crawls en serie puede durar 40.
-    const [task] = sql(
-      `SELECT key, kind, category, attempts FROM tasks WHERE status = 'pending' AND not_before <= ?
-       ORDER BY kind = 'refresh' DESC, rowid LIMIT 1`,
-      now,
-    );
+    const [busy] = sql("SELECT key FROM tasks WHERE status = 'running'");
+    const [task] = busy
+      ? []
+      : sql(
+          `SELECT key, kind, category, attempts FROM tasks WHERE status = 'pending' AND not_before <= ?
+           ORDER BY kind = 'refresh' DESC, rowid LIMIT 1`,
+          now,
+        );
     if (task) {
       const key = String(task.key);
+      const kind = task.kind === "refresh" ? "refresh" : "crawl";
       const runId = deps.newId();
-      sql("UPDATE tasks SET status = 'running', run_id = ? WHERE key = ?", runId, key);
+      sql("UPDATE tasks SET status = 'running', run_id = ?, not_before = ? WHERE key = ?", runId, now + LEASE_MS, key);
       log.info("coordinator.task_started", { key, attempts: task.attempts, runId });
-      let failed: boolean;
       try {
-        const run =
-          task.kind === "refresh" && deps.refresh ? deps.refresh(runId) : deps.crawl(task.category as Category, runId);
-        failed = (await run).status === "failed";
+        await deps.dispatch({ key, kind, category: (task.category as Category | null) ?? null, runId });
       } catch (error) {
-        log.error("coordinator.task_failed", { key, error });
-        failed = true;
+        log.error("coordinator.dispatch_failed", { key, error });
+        settleFailure(sql, key, kind, Number(task.attempts) + 1, deps.now(), log);
       }
-      if (failed) settleFailure(sql, key, String(task.kind), Number(task.attempts) + 1, deps.now(), log);
-      else sql("DELETE FROM tasks WHERE key = ?", key);
     }
   } catch (error) {
     // La alarm no deja escapar errores: el reintento de la plataforma queda para cuando el Worker muere.
@@ -156,6 +180,25 @@ export async function runAlarmStep(sql: Sql, deps: AlarmDeps): Promise<number | 
   const wake = nextWake(sql, deps.now());
   log.info("coordinator.scheduled", { nextWake: wake === null ? null : new Date(wake).toISOString() });
   return wake;
+}
+
+/**
+ * El aviso del consumer. Si la tarea ya no es esa corrida (venció el lease, la tienda se pausó), se ignora.
+ * ponytail: una entrega duplicada de Queues correría la tarea dos veces; si pasa, reclamarla antes de ejecutar.
+ */
+export function completeTask(sql: Sql, key: string, runId: string, failed: boolean, now: number, log: Logger) {
+  const [task] = sql(
+    "SELECT kind, attempts FROM tasks WHERE key = ? AND run_id = ? AND status = 'running'",
+    key,
+    runId,
+  );
+  if (!task) {
+    log.warn("coordinator.stale_completion", { key, runId });
+    return;
+  }
+  log.info("coordinator.task_finished", { key, runId, failed });
+  if (failed) settleFailure(sql, key, String(task.kind), Number(task.attempts) + 1, now, log);
+  else sql("DELETE FROM tasks WHERE key = ?", key);
 }
 
 function settleFailure(sql: Sql, key: string, kind: string, attempts: number, now: number, log: Logger) {

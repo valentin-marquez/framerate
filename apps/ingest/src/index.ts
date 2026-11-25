@@ -10,7 +10,7 @@ import {
 } from "@framerate/contracts";
 import { createDb, reconcilePriceSummary, refreshProductsPriceSummary } from "@framerate/database";
 import { createLogger } from "@framerate/kit";
-import type { Env } from "@/env";
+import type { CrawlMessage, Env } from "@/env";
 import { recheckClaims } from "@/features/claims/recheck";
 import { addSmallVariants, copyProductImages, resizerClient } from "@/features/images/product-images";
 import {
@@ -19,7 +19,13 @@ import {
   purgeDeletedAccountTickets,
   purgeQuarantine,
 } from "@/features/ingestion/ingestion.repository";
-import { ensureAllScheduled, requestCrawls, requestPipeline, retryStuckNormalize } from "@/features/ingestion/runtime";
+import {
+  ensureAllScheduled,
+  requestCrawls,
+  requestPipeline,
+  retryStuckNormalize,
+  runDispatchedTask,
+} from "@/features/ingestion/runtime";
 import { applyViews7d, fetchViews7d } from "@/features/popularity/views";
 import { emailSender } from "@/shared/email";
 
@@ -28,7 +34,8 @@ import { emailSender } from "@/shared/email";
  * público; sus disparadores son:
  *  - scheduled: Cron de 6 h → reintenta lo atascado en el pipeline, copia a R2 las fotos de producto pendientes y
  *               recalcula `views_7d` desde Analytics Engine. El horario revisa la agenda de cada `StoreCrawler`, que
- *               es quien crawlea cada tienda (#121).
+ *               es quien agenda cada tienda (#121).
+ *  - queue:     `framerate-crawl` → corre el crawl que despachó un `StoreCrawler` (#237).
  *  - RPC:       `IngestRpc`, que usa apps/server para "crawlear ahora" y para encolar el backfill del pipeline.
  */
 const log = createLogger({ service: "framerate-ingest" });
@@ -49,6 +56,18 @@ export class IngestRpc extends WorkerEntrypoint<Env> implements IngestService {
 export { StoreCrawler } from "@/features/ingestion/store-crawler";
 
 export default {
+  async queue(batch, env) {
+    for (const message of batch.messages) {
+      try {
+        await runDispatchedTask(env, message.body, log);
+      } catch (error) {
+        // Sin reintento de Queues: el lease del DO la da por interrumpida y la reintenta él.
+        log.error("crawl_queue.failed", { store: message.body.slug, key: message.body.key, error });
+      }
+      message.ack();
+    }
+  },
+
   async scheduled(controller, env) {
     if (controller.cron === HOURLY_CRON) {
       log.info("coordinator.ensured", { stores: await ensureAllScheduled(env) });
@@ -85,4 +104,4 @@ export default {
       log.warn("popularity.skipped", { reason: "sin CF_ACCOUNT_ID o ANALYTICS_API_TOKEN" });
     }
   },
-} satisfies ExportedHandler<Env>;
+} satisfies ExportedHandler<Env, CrawlMessage>;
