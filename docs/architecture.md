@@ -119,9 +119,9 @@ crawls y barre las revisiones pendientes sin veredicto, así que también cubre 
 
 | Tipo | Disparo | Qué hace | Estado |
 |---|---|---|---|
-| **Descubrir** | Agenda del `StoreCrawler` cada 6 h, con desfase propio por tienda | Recorre el catálogo completo de cada tienda/categoría, una corrida a la vez por tienda. Pesado. | ✅ |
+| **Descubrir** | Agenda del `StoreCrawler` cada 3 h, con desfase propio por tienda | Recorre el catálogo completo de cada tienda/categoría, una corrida a la vez por tienda. Pesado. | ✅ |
 | **Bajo demanda** | Admin → `POST /v1/admin/crawls` → RPC a `ingest` → `StoreCrawler` | Igual que descubrir; un pedido repetido mientras espera no se duplica. | ✅ |
-| **Refrescar** | Alarm del `StoreCrawler` cada hora, antes que los crawls en cola | Vuelve a leer precio y stock de las ofertas con stock que deciden el mejor precio o son de los 500 productos más vistos (`refresh-store.ts`). No desactiva ni vincula; lo no devuelto queda igual. Sube `catalog_version` como mucho cada 15 min. Sólo adaptadores con `refreshOffers`: WooCommerce por ids, PC Factory por listado, el resto una ficha por oferta. | ✅ WooCommerce, MyShop, PC Express, Tecnomas, Winpy, Jumpseller y PC Factory (#121) |
+| **Refrescar** | **Apagado desde #235** (`REFRESH_ENABLED` en `store-crawler.ts`): corría en la alarm cada hora y era el 55 % del excedente de Durable Objects. Volver a prenderlo pide ejecutarlo en un consumer de Queue | Vuelve a leer precio y stock de las ofertas con stock que deciden el mejor precio o son de los 500 productos más vistos (`refresh-store.ts`). No desactiva ni vincula; lo no devuelto queda igual. Sube `catalog_version` como mucho cada 15 min. Sólo adaptadores con `refreshOffers`: WooCommerce por ids, PC Factory por listado, el resto una ficha por oferta. | ✅ WooCommerce, MyShop, PC Express, Tecnomas, Winpy, Jumpseller y PC Factory (#121) |
 
 El Cron horario (`47 * * * *`) sólo llama `ensureScheduled()` en cada tienda activa: revive una alarm perdida. La
 lógica está en `coordinator.ts` (SQL del DO, testeado sobre `bun:sqlite`) y `agenda.ts`; diseño en #201.

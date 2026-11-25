@@ -10,7 +10,7 @@ describe("agenda", () => {
       expect(offset).toBeGreaterThanOrEqual(0);
       expect(offset).toBeLessThan(CRAWL_PERIOD_MS);
     }
-    expect(storeOffset("myshop", CRAWL_PERIOD_MS)).not.toBe(storeOffset("tecnomas", CRAWL_PERIOD_MS));
+    expect(storeOffset("myshop", CRAWL_PERIOD_MS)).not.toBe(storeOffset("winpy", CRAWL_PERIOD_MS));
   });
 
   test("el próximo slot es >= now y avanza un período al pasarlo", () => {

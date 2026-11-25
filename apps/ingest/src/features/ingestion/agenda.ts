@@ -1,12 +1,13 @@
 /** Cuándo corre cada tienda (#201): lógica pura del coordinador, sin runtime del Durable Object. */
 
-export const CRAWL_PERIOD_MS = 6 * 60 * 60_000;
-/** Refresco liviano de precio y stock (#121, fase 2): cada hora, con su propio desfase por tienda. */
+/** Un solo proceso cada 3 h: el refresco horario aparte salía caro en Durable Objects (#235). */
+export const CRAWL_PERIOD_MS = 3 * 60 * 60_000;
+/** Refresco liviano de precio y stock (#121, fase 2), con su propio desfase por tienda. Apagado (#235). */
 export const REFRESH_PERIOD_MS = 60 * 60_000;
 /** Tras el tercer intento fallido la tarea se descarta; el slot siguiente la vuelve a crear. */
 export const MAX_ATTEMPTS = 3;
 
-/** Desfase estable de la tienda dentro del período (FNV-1a del slug), al minuto: reparte las tiendas en las 6 h. */
+/** Desfase estable de la tienda dentro del período (FNV-1a del slug), al minuto: reparte las tiendas en el período. */
 export function storeOffset(slug: string, period: number): number {
   let hash = 0x811c9dc5;
   for (let i = 0; i < slug.length; i++) {

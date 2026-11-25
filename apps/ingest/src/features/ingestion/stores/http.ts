@@ -74,6 +74,26 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
     lastRequestAt.set(host, Date.now());
   }
 
+  // No `AbortSignal.timeout`: su timer sigue vivo tras la respuesta y no deja hibernar al Durable Object (#235).
+  async function fetchWithTimeout(
+    url: string,
+    init: { method?: string; body?: string; headers: Record<string, string>; timeoutMs: number },
+  ) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(new DOMException("timeout", "TimeoutError")), init.timeoutMs);
+    try {
+      const res = await doFetch(url, {
+        method: init.method,
+        body: init.body,
+        headers: init.headers,
+        signal: controller.signal,
+      });
+      return { ok: res.ok, status: res.status, headers: res.headers, text: res.ok ? await res.text() : "" };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async function request(
     url: string,
     init: { headers: Record<string, string>; method?: string; body?: string; timeoutMs?: number },
@@ -82,13 +102,13 @@ export function createHttpClient(options: HttpClientOptions = {}): HttpClient {
     for (let attempt = 0; ; attempt++) {
       await throttle(host);
       try {
-        const res = await doFetch(url, {
+        const res = await fetchWithTimeout(url, {
           method: init.method,
           body: init.body,
           headers: { "User-Agent": USER_AGENT, ...init.headers },
-          signal: AbortSignal.timeout(init.timeoutMs ?? timeoutMs),
+          timeoutMs: init.timeoutMs ?? timeoutMs,
         });
-        if (res.ok) return { status: res.status, headers: res.headers, text: await res.text() };
+        if (res.ok) return res;
         const transient = res.status === 429 || res.status >= 500;
         if (!transient || attempt >= retries) throw new HttpError(url, res.status);
         const retryAfter = Number(res.headers.get("retry-after"));

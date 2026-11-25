@@ -15,7 +15,7 @@
   // quien crawlea su tienda (#121); el horario debe coincidir con HOURLY_CRON de src/index.ts.
   "triggers": { "crons": ["17 */6 * * *", "47 * * * *"] },
 
-  // Un DO por tienda: serializa sus corridas y reparte su crawl de 6 h con un desfase propio.
+  // Un DO por tienda: serializa sus corridas y reparte su crawl de 3 h con un desfase propio.
   // Crear, borrar o renombrar la clase sólo con `wrangler deploy` (no `versions upload`); rollback en #201 §7.
   "durable_objects": { "bindings": [{ "name": "STORE_CRAWLER", "class_name": "StoreCrawler" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["StoreCrawler"] }],

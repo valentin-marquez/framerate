@@ -676,6 +676,7 @@ export const STORES: readonly StoreDefinition[] = [
     // Corta las IPs de Cloudflare (403 de su WAF); desde el relay responde. `robots.txt` pide `Crawl-delay: 5`.
     egress: "relay",
     minIntervalMs: 5000,
+    pausedReason: "Sin corridas exitosas desde el 13-11-2026: HTTP 530 y timeouts por el relay (#236)",
     adapter: createSpDigitalAdapter({
       baseUrl: "https://www.spdigital.cl",
       // Las subcategorías de /categories/componentes, sin RAM de notebook, cables, adaptadores ni modding.

@@ -10,6 +10,11 @@ import type { StoreDefinition } from "./stores/adapter";
 import { findStore } from "./stores/registry";
 
 const log = createLogger({ service: "framerate-ingest" });
+/**
+ * ponytail: refresco apagado (#235). El DO se cobra por tiempo de pared y el refresco horario era el 55 % del excedente;
+ * con `false` el coordinador borra sus slots y tareas. Volver a prenderlo pide correrlo en un consumer de Queue.
+ */
+const REFRESH_ENABLED = false;
 
 /**
  * Un Durable Object por tienda (#121): serializa sus corridas y lleva su agenda. Los RPC sólo escriben en SQLite y
@@ -36,7 +41,7 @@ export class StoreCrawler extends DurableObject<Env> {
    */
   async ensureScheduled(slug: string): Promise<void> {
     this.ctx.storage.kv.put("slug", slug);
-    ensureSchedule(this.sql, slug, Date.now(), Boolean(findStore(slug)?.adapter.refreshOffers));
+    ensureSchedule(this.sql, slug, Date.now(), REFRESH_ENABLED && Boolean(findStore(slug)?.adapter.refreshOffers));
     const current = await this.ctx.storage.getAlarm();
     const next = nextWake(this.sql, Date.now());
     if (current === null || (next !== null && next < current)) await this.wakeAt(next);
@@ -56,7 +61,8 @@ export class StoreCrawler extends DurableObject<Env> {
       now: Date.now,
       newId: () => crypto.randomUUID(),
       crawl: (category, runId) => runCrawl(this.env, store as StoreDefinition, category, log, runId),
-      refresh: store?.adapter.refreshOffers ? (runId) => runRefresh(this.env, store, log, runId) : null,
+      refresh:
+        REFRESH_ENABLED && store?.adapter.refreshOffers ? (runId) => runRefresh(this.env, store, log, runId) : null,
       closeRun: (runId) => closeInterruptedRun(db, runId, new Date()),
       log: storeLog,
     });
