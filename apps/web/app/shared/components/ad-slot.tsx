@@ -18,6 +18,9 @@ export function AdSlot({ slot, className = "h-[100px] @3xl:h-[90px]" }: { slot: 
   // El script entra después de hidratar: si viene en el HTML, mete el suyo en el <head> y React no lo reconoce.
   const pushed = useRef(false);
   useEffect(() => {
+    // Pedir anuncios desde localhost, Storybook o un preview manda URLs que no son el sitio aprobado: AdSense lo cuenta
+    // como datos inexactos en la solicitud.
+    if (location.hostname !== "framerate.cl") return;
     if (!document.querySelector(`script[src="${SCRIPT_SRC}"]`)) {
       const script = document.createElement("script");
       script.async = true;
