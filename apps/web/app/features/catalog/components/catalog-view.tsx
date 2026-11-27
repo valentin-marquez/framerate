@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useLocation, useNavigation, useSearchParams } from "react-router";
 import { Pagination, ProductGrid } from "~/features/explore/components";
 import { MouseFitNotice } from "~/features/mouse-fit/components/mouse-fit-notice";
@@ -27,7 +28,7 @@ export function missingSpecLabel(category: string | null, spec: string[]) {
  * paginación fija y grilla paginada. Los filtros de la categoría viven en un panel junto al riel (`CategoryPanel`).
  * Con `category` es `/categoria/:slug` y sin ella, `/buscar`; en las dos, el anuncio va a la derecha de la cabecera.
  */
-export function CatalogView({ data }: { data: CatalogData }) {
+export function CatalogView({ data, header }: { data: CatalogData; header?: ReactNode }) {
   const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited } = data;
   const [params, setParams] = useSearchParams();
   const loading = useNavigation().state === "loading";
@@ -53,16 +54,17 @@ export function CatalogView({ data }: { data: CatalogData }) {
       )}
 
       <WithAd slot={category ? "3200722793" : "8952577073"}>
-        {category ? (
-          <CategoryHeader
-            category={category}
-            total={brands.reduce((sum, b) => sum + b.count, 0) || meta.total}
-            priceRange={priceRange}
-            brandCount={brands.length}
-          />
-        ) : (
-          <SearchHeader total={meta.total} search={search} view={data.view} />
-        )}
+        {header ??
+          (category ? (
+            <CategoryHeader
+              category={category}
+              total={brands.reduce((sum, b) => sum + b.count, 0) || meta.total}
+              priceRange={priceRange}
+              brandCount={brands.length}
+            />
+          ) : (
+            <SearchHeader total={meta.total} search={search} view={data.view} />
+          ))}
       </WithAd>
 
       <div className="flex flex-col gap-3">

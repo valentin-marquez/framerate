@@ -21,6 +21,7 @@ export default [
   route("producto/:slug", "features/product/pages/product-details.tsx"),
   route("og/producto/:file", "features/product/pages/og-image.ts"),
   route("embed/discord/producto/:slug", "features/product/pages/discord-embed.ts"),
+  route("black-friday", "features/black-friday/pages/black-friday-page.tsx"),
   route("cyber", "features/catalog/redirect-old-cyber.tsx"),
 
   // rutas protegidas (opcionales)

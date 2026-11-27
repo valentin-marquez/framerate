@@ -1031,6 +1031,29 @@
     transparent
   );
 }
+/* Evento destacado del riel: más presente en reposo, con una segunda línea arriba que va en contra. */
+.beam[data-variant="event"] {
+  opacity: 0.8;
+}
+:hover > .beam[data-variant="event"] {
+  opacity: 1;
+}
+.beam[data-variant="event"] > .beam-line {
+  background: linear-gradient(90deg, transparent, #f59e0b 25%, #ef4444 75%, transparent);
+}
+.beam[data-variant="event"] > .beam-glow {
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 100%,
+    rgb(245 158 11 / 0.22),
+    rgb(239 68 68 / 0.12) 55%,
+    transparent
+  );
+}
+.beam > .beam-top {
+  top: 0;
+  bottom: auto;
+  animation-direction: alternate-reverse;
+}
 @keyframes beam {
   from {
     transform: translateX(-30%);
