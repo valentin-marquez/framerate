@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import { CatalogView } from "~/features/catalog/components/catalog-view";
 import { loadCatalog } from "~/features/catalog/load-catalog";
 import { categoriesService } from "~/features/category/services/categories";
-import { isBlackFriday } from "~/shared/lib/black-friday";
+import { blackFridayDaysLeft, isBlackFriday } from "~/shared/lib/black-friday";
 import { BlackFridayHeader, CategoryChips } from "../components/black-friday-header";
 import type { Route } from "./+types/black-friday-page";
 
@@ -32,19 +32,16 @@ export async function loader({ url }: Route.LoaderArgs) {
       () => [],
     ),
   ]);
-  return { catalog, categories };
+  // En el loader y no al dibujar: el servidor y el cliente tienen que contar lo mismo.
+  return { catalog, categories, daysLeft: blackFridayDaysLeft() };
 }
 
-export default function BlackFridayPage({ loaderData: { catalog, categories } }: Route.ComponentProps) {
+export default function BlackFridayPage({ loaderData: { catalog, categories, daysLeft } }: Route.ComponentProps) {
   return (
     <CatalogView
       data={catalog}
-      header={
-        <div className="space-y-4">
-          <BlackFridayHeader total={catalog.meta.total} />
-          {categories.length > 0 && <CategoryChips categories={categories} />}
-        </div>
-      }
+      hero={<BlackFridayHeader total={catalog.meta.total} daysLeft={daysLeft} />}
+      header={categories.length > 0 && <CategoryChips categories={categories} />}
     />
   );
 }

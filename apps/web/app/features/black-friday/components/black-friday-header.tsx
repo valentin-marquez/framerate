@@ -2,30 +2,56 @@ import type { CategoryItem } from "@framerate/contracts";
 import { IconInfoCircle, IconRosetteDiscount } from "@tabler/icons-react";
 import { useFilterParams } from "~/features/catalog/use-filter-params";
 import { BLACK_FRIDAY_UNTIL } from "~/shared/lib/black-friday";
-import { enterClass } from "~/shared/lib/initial-load";
+import { enterClass, enterStyle } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 
-/** La nota dice contra qué se compara: sin ella "bajó" no dice nada. */
-export function BlackFridayHeader({ total }: { total: number }) {
+/**
+ * Franja del evento, oscura y a todo el ancho como el aviso de la portada. Las cifras son las que se pueden
+ * sostener: cuántas bajas hay, cuántos días quedan y el umbral. La nota dice contra qué se compara.
+ */
+export function BlackFridayHeader({ total, daysLeft }: { total: number; daysLeft: number }) {
+  const stats = [
+    { value: total.toLocaleString("es-CL"), label: total === 1 ? "baja de precio" : "bajas de precio" },
+    { value: String(daysLeft), label: daysLeft === 1 ? "día que queda" : "días que quedan" },
+    { value: "3 %", label: "de baja mínima" },
+  ];
   return (
-    <header className={cn("space-y-3 pt-2", enterClass())}>
-      <div className="space-y-1">
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-medium text-sm">
-          <span className="text-foreground/70">{BLACK_FRIDAY_UNTIL}</span>
-          <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
-            <IconRosetteDiscount className="size-4" stroke={1.75} />
-            {total > 0
-              ? `${total.toLocaleString("es-CL")} ${total === 1 ? "baja" : "bajas"} de precio`
-              : "Bajas de precio"}
-          </span>
-        </p>
-        <h1 className="font-bold text-3xl text-foreground tracking-tight md:text-5xl">Black Friday</h1>
-        <span aria-hidden className="block h-1 w-12 rounded-full bg-foreground" />
-        <p className="pt-1 text-pretty text-muted-foreground md:text-lg">
-          Productos al menos 3 % más baratos que su precio habitual.
-        </p>
+    <header
+      className={cn(
+        "relative overflow-hidden rounded-3xl bg-foreground px-5 py-7 text-background md:px-10 md:py-10",
+        enterClass(),
+      )}
+    >
+      <span aria-hidden="true" data-variant="event" className="beam pointer-events-none absolute inset-0 rounded-3xl">
+        <span className="beam-glow" />
+        <span className="beam-line" />
+        <span className="beam-line beam-top" />
+      </span>
+      <div className="relative grid gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <div className="space-y-3">
+          <p className="inline-flex items-center gap-1.5 rounded-full border border-background/20 px-3 py-1 text-background/80 text-sm">
+            <IconRosetteDiscount className="size-4 text-amber-400 dark:text-amber-600" stroke={1.75} />
+            {BLACK_FRIDAY_UNTIL}
+          </p>
+          <h1 className="text-title-h3 md:text-title-h1">Black Friday</h1>
+          <p className="max-w-xl text-pretty text-background/70 md:text-lg">
+            Lo que de verdad está más barato: el precio de hoy contra el de todo el último mes, en todas las tiendas.
+          </p>
+        </div>
+        <dl className="grid grid-cols-3 gap-4 md:gap-8">
+          {stats.map((s, i) => (
+            <div
+              key={s.label}
+              className={cn("flex flex-col-reverse gap-0.5", enterClass())}
+              style={enterStyle(120 + i * 50)}
+            >
+              <dt className="text-background/60 text-xs md:text-sm">{s.label}</dt>
+              <dd className="text-title-h5 tabular-nums md:text-title-h4">{s.value}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
-      <p className="flex max-w-2xl gap-1.5 text-muted-foreground text-xs">
+      <p className="relative mt-6 flex max-w-2xl gap-1.5 text-background/50 text-xs">
         <IconInfoCircle className="mt-px size-3.5 shrink-0" stroke={1.75} />
         <span className="text-pretty">
           El precio habitual es el promedio del mejor precio de cada día del último mes, sin contar los últimos tres: si

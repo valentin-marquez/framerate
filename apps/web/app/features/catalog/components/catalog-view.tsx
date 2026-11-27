@@ -28,7 +28,7 @@ export function missingSpecLabel(category: string | null, spec: string[]) {
  * paginación fija y grilla paginada. Los filtros de la categoría viven en un panel junto al riel (`CategoryPanel`).
  * Con `category` es `/categoria/:slug` y sin ella, `/buscar`; en las dos, el anuncio va a la derecha de la cabecera.
  */
-export function CatalogView({ data, header }: { data: CatalogData; header?: ReactNode }) {
+export function CatalogView({ data, hero, header }: { data: CatalogData; hero?: ReactNode; header?: ReactNode }) {
   const { products, meta, brands, priceRange, category, search, trendingIds, rateLimited } = data;
   const [params, setParams] = useSearchParams();
   const loading = useNavigation().state === "loading";
@@ -52,6 +52,8 @@ export function CatalogView({ data, header }: { data: CatalogData; header?: Reac
           Estamos saturados ahora mismo. Intenta de nuevo en unos segundos.
         </p>
       )}
+
+      {hero}
 
       <WithAd slot={category ? "3200722793" : "8952577073"}>
         {header ??
