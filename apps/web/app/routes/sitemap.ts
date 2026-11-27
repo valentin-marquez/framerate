@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
+import { isBlackFriday } from "~/shared/lib/black-friday";
 
 /**
  * `sitemap.xml` dinámico.
@@ -12,7 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8787";
 
 // Rutas estáticas públicas e indexables. Las URLs visibles van en español
 // (ver CLAUDE.md). Se excluyen auth/settings/admin/perfiles y cotizaciones.
-const STATIC_PATHS = ["/", "/buscar", "/black-friday", "/reclamar", "/privacidad", "/terminos", "/desarrolladores"];
+const STATIC_PATHS = ["/", "/buscar", "/reclamar", "/privacidad", "/terminos", "/desarrolladores"];
 
 interface SitemapData {
   products: string[];
@@ -37,7 +38,7 @@ ${urls}
 }
 
 export async function loader({ url: { origin } }: LoaderFunctionArgs) {
-  const paths = [...STATIC_PATHS];
+  const paths = [...STATIC_PATHS, ...(isBlackFriday() ? ["/black-friday"] : [])];
 
   try {
     const response = await fetch(`${API_URL}/v1/sitemap`);

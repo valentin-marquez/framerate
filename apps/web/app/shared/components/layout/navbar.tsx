@@ -28,6 +28,7 @@ import { activeFilterCount } from "~/features/catalog/components/filter-panel";
 import type { CatalogData } from "~/features/catalog/load-catalog";
 import { CategoryIcon } from "~/features/category/components/category-icon";
 import { focusSearchField, SearchField, startSearchSpotlight } from "~/features/search/components/search-field";
+import { isBlackFriday } from "~/shared/lib/black-friday";
 import { cn } from "~/shared/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../primitives/tooltip";
@@ -407,6 +408,7 @@ export function Navbar({
     // biome-ignore lint/suspicious/noDocumentCookie: preferencia de interfaz sin datos sensibles.
     document.cookie = `rail=${next ? "collapsed" : "open"}; path=/; max-age=31536000; samesite=lax`;
   };
+  const event = isBlackFriday();
   const [sheetOpen, setSheetOpen] = useState(false);
   // Asomarse: con el riel plegado, buscar lo abre por encima del contenido (sin moverlo ni cambiar la preferencia) y
   // se vuelve a plegar al salir del riel.
@@ -586,7 +588,7 @@ export function Navbar({
                 <QuotesRailRow collapsed={!wide} />
               </nav>
 
-              <BlackFridayLink collapsed={!wide} />
+              {event && <BlackFridayLink collapsed={!wide} />}
             </RailGroup>
 
             {/* El alto mínimo hace que, en una ventana muy baja, scrollee el riel entero y no se aplaste la lista. */}
@@ -686,26 +688,31 @@ export function Navbar({
 
       <nav
         aria-label="Atajos"
-        className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-5 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-40 grid h-16 border-border/60 border-t bg-background pb-[env(safe-area-inset-bottom)] lg:hidden",
+          event ? "grid-cols-5" : "grid-cols-4",
+        )}
       >
         <NavLink to="/" end prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
           <IconHome className="size-5" stroke={1.75} />
           Inicio
         </NavLink>
-        <NavLink to="/black-friday" prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
-          <span className="relative -my-1 grid h-7 w-11 place-items-center overflow-hidden rounded-full border border-border/70 bg-card/60">
-            <span
-              aria-hidden="true"
-              data-variant="event"
-              className="beam pointer-events-none absolute inset-0 rounded-full"
-            >
-              <span className="beam-glow" />
-              <span className="beam-line" />
+        {event && (
+          <NavLink to="/black-friday" prefetch="intent" className={({ isActive }) => tabClass(isActive)}>
+            <span className="relative -my-1 grid h-7 w-11 place-items-center overflow-hidden rounded-full border border-border/70 bg-card/60">
+              <span
+                aria-hidden="true"
+                data-variant="event"
+                className="beam pointer-events-none absolute inset-0 rounded-full"
+              >
+                <span className="beam-glow" />
+                <span className="beam-line" />
+              </span>
+              <IconRosetteDiscount className="relative size-[18px] text-amber-600 dark:text-amber-400" stroke={1.75} />
             </span>
-            <IconRosetteDiscount className="relative size-[18px] text-amber-600 dark:text-amber-400" stroke={1.75} />
-          </span>
-          Black Friday
-        </NavLink>
+            Black Friday
+          </NavLink>
+        )}
         <button type="button" className={tabClass(sheetOpen)} onClick={() => setSheetOpen(true)}>
           <IconCategory className="size-5" stroke={1.75} />
           Categorías
@@ -720,10 +727,12 @@ export function Navbar({
       <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
         {/* Hoja que sube desde abajo (transitions.dev, "panel reveal"): se desliza en vez de crecer desde el centro. */}
         <DialogContent className="top-auto bottom-0 max-h-[80dvh] w-full max-w-none translate-y-0 overflow-y-auto rounded-t-3xl rounded-b-none border-x-0 border-b-0 p-3 pb-8 zoom-in-100 zoom-out-100 slide-in-from-bottom-24 slide-out-to-bottom-24 lg:hidden">
-          <div className="px-1 pt-2 pb-3">
-            <BlackFridayLink onClick={() => setSheetOpen(false)} />
-          </div>
-          <DialogTitle className="px-2.5 pb-3">Categorías</DialogTitle>
+          {event && (
+            <div className="px-1 pt-2">
+              <BlackFridayLink onClick={() => setSheetOpen(false)} />
+            </div>
+          )}
+          <DialogTitle className="px-2.5 pt-2 pb-3">Categorías</DialogTitle>
           {categories.map((c) => (
             <RailLink
               key={c.id}

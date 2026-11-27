@@ -1,6 +1,7 @@
 import type { CategoryItem } from "@framerate/contracts";
 import { IconInfoCircle, IconRosetteDiscount } from "@tabler/icons-react";
 import { useFilterParams } from "~/features/catalog/use-filter-params";
+import { BLACK_FRIDAY_UNTIL } from "~/shared/lib/black-friday";
 import { enterClass } from "~/shared/lib/initial-load";
 import { cn } from "~/shared/lib/utils";
 
@@ -10,7 +11,7 @@ export function BlackFridayHeader({ total }: { total: number }) {
     <header className={cn("space-y-3 pt-2", enterClass())}>
       <div className="space-y-1">
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-medium text-sm">
-          <span className="text-foreground/70">Desde el 27 de noviembre</span>
+          <span className="text-foreground/70">{BLACK_FRIDAY_UNTIL}</span>
           <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
             <IconRosetteDiscount className="size-4" stroke={1.75} />
             {total > 0

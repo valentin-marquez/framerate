@@ -1,7 +1,9 @@
 import { categoryFromSlug } from "@framerate/contracts";
+import { redirect } from "react-router";
 import { CatalogView } from "~/features/catalog/components/catalog-view";
 import { loadCatalog } from "~/features/catalog/load-catalog";
 import { categoriesService } from "~/features/category/services/categories";
+import { isBlackFriday } from "~/shared/lib/black-friday";
 import { BlackFridayHeader, CategoryChips } from "../components/black-friday-header";
 import type { Route } from "./+types/black-friday-page";
 
@@ -21,6 +23,7 @@ export function meta() {
 }
 
 export async function loader({ url }: Route.LoaderArgs) {
+  if (!isBlackFriday()) throw redirect("/bajadas", 302);
   const slug = url.searchParams.get("category");
   const [catalog, categories] = await Promise.all([
     loadCatalog(url, slug && categoryFromSlug(slug) ? slug : undefined, "drops"),

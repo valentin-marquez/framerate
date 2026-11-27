@@ -1035,6 +1035,10 @@
 .beam[data-variant="event"] {
   opacity: 0.8;
 }
+/* El destacado tiene que llamar la atención: se mueve siempre, no sólo con hover. */
+.beam[data-variant="event"] > span {
+  animation-play-state: running;
+}
 :hover > .beam[data-variant="event"] {
   opacity: 1;
 }

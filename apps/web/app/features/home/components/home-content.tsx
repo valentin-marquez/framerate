@@ -1,4 +1,6 @@
+import { isBlackFriday } from "~/shared/lib/black-friday";
 import type { HomeData } from "../types";
+import { BlackFridayBanner } from "./black-friday-banner";
 import { StoresStrip } from "./home-blocks";
 import { HomeIntro } from "./home-intro";
 import { ProductRow } from "./product-row";
@@ -8,13 +10,21 @@ import { PublicQuotes } from "./public-quotes";
 export function HomeContent({ categories, rows, drops, trendingIds, quotes, stores }: HomeData) {
   const trending = new Set(trendingIds);
   const [popular, ...byCategory] = rows;
+  const event = isBlackFriday();
   return (
     <>
       <HomeIntro productCount={categories.reduce((sum, c) => sum + c.productCount, 0)} storeCount={stores.length} />
       <div className="flex flex-col gap-10 pb-16 md:gap-12">
+        {event && <BlackFridayBanner drops={drops} />}
         {popular && <ProductRow title={popular.title} href={popular.href} products={popular.products} priority />}
         <PublicQuotes quotes={quotes} />
-        <ProductRow title="Bajadas de precio" href="/black-friday" more="Ver todas" products={drops} priority />
+        <ProductRow
+          title="Bajadas de precio"
+          href={event ? "/black-friday" : "/bajadas"}
+          more="Ver todas"
+          products={drops}
+          priority
+        />
         <StoresStrip stores={stores} />
         {byCategory.map((row) => (
           <ProductRow key={row.key} title={row.title} href={row.href} products={row.products} trendingIds={trending} />
